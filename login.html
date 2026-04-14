@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR4 Distribuidora — Login</title>
+<link rel="icon" type="image/png" href="./assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #FF6B1A;
+    --orange-dark: #e85d0f;
+    --bg: #F3F4F6;
+    --white: #FFFFFF;
+    --text: #1A1A2E;
+    --muted: #6B7280;
+    --border: #E5E7EB;
+    --error: #EF4444;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .login-card {
+    background: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,.05), 0 20px 40px rgba(0,0,0,.08);
+    padding: 2.5rem 2rem;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .logo-wrap {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .logo-wrap img {
+    height: 56px;
+    object-fit: contain;
+  }
+
+  .login-title {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-align: center;
+    margin-bottom: 1.75rem;
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .4rem;
+    letter-spacing: .3px;
+  }
+
+  input {
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Inter', sans-serif;
+    font-size: .93rem;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+  }
+
+  input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,107,26,.12);
+  }
+
+  .senha-wrap {
+    position: relative;
+  }
+
+  .senha-wrap input { padding-right: 3rem; }
+
+  .toggle-senha {
+    position: absolute;
+    right: .85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 1.1rem;
+    padding: .25rem;
+    line-height: 1;
+  }
+
+  .toggle-senha:hover { color: var(--orange); }
+
+  .btn-entrar {
+    width: 100%;
+    padding: .85rem;
+    background: var(--orange);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Inter', sans-serif;
+    font-size: .95rem;
+    font-weight: 700;
+    letter-spacing: .5px;
+    cursor: pointer;
+    transition: background .2s, transform .1s, box-shadow .2s;
+    margin-top: .5rem;
+  }
+
+  .btn-entrar:hover { background: var(--orange-dark); box-shadow: 0 4px 12px rgba(255,107,26,.3); }
+  .btn-entrar:active { transform: scale(.98); }
+  .btn-entrar:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+
+  .msg-erro {
+    background: rgba(239,68,68,.08);
+    border: 1px solid rgba(239,68,68,.25);
+    border-radius: 8px;
+    color: var(--error);
+    font-size: .82rem;
+    font-weight: 500;
+    padding: .65rem 1rem;
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  .msg-erro.show { display: block; }
+
+  .rodape {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: .72rem;
+    color: var(--muted);
+  }
+
+  .loading-dots span {
+    display: inline-block;
+    animation: dot 1.4s infinite;
+    font-size: 1.2rem;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: .2s; }
+  .loading-dots span:nth-child(3) { animation-delay: .4s; }
+  @keyframes dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="logo-wrap">
+    <img src="./assets/logo.png" alt="MR4 Distribuidora">
+  </div>
+
+  <p class="login-title">Acesso ao Sistema</p>
+
+  <div class="msg-erro" id="msgErro"></div>
+
+  <div class="field">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+  </div>
+
+  <div class="field">
+    <label for="senha">Senha</label>
+    <div class="senha-wrap">
+      <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+      <button class="toggle-senha" onclick="toggleSenha()" type="button" title="Mostrar/ocultar senha">👁</button>
+    </div>
+  </div>
+
+  <button class="btn-entrar" id="btnEntrar" onclick="fazerLogin()">ENTRAR</button>
+
+  <div class="rodape">MR4 Distribuidora &copy; 2026 &mdash; Acesso restrito</div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain: "mr4-ponto.firebaseapp.com",
+    projectId: "mr4-ponto",
+    storageBucket: "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId: "1:848211361584:web:2732e1893122f4a23452f5"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Se já está logado, vai direto pro sistema
+  onAuthStateChanged(auth, user => {
+    if (user) window.location.href = './index.html';
+  });
+
+  window.fazerLogin = async function() {
+    const email  = document.getElementById('email').value.trim();
+    const senha  = document.getElementById('senha').value;
+    const btn    = document.getElementById('btnEntrar');
+    const erro   = document.getElementById('msgErro');
+
+    erro.classList.remove('show');
+
+    if (!email || !senha) {
+      mostrarErro('Preencha e-mail e senha.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+      window.location.href = './index.html';
+    } catch (e) {
+      const msgs = {
+        'auth/user-not-found':    'Usuário não encontrado.',
+        'auth/wrong-password':    'Senha incorreta.',
+        'auth/invalid-email':     'E-mail inválido.',
+        'auth/too-many-requests': 'Muitas tentativas. Tente mais tarde.',
+        'auth/invalid-credential':'E-mail ou senha incorretos.',
+      };
+      mostrarErro(msgs[e.code] || 'Erro ao entrar. Tente novamente.');
+      btn.disabled = false;
+      btn.textContent = 'ENTRAR';
+    }
+  };
+
+  window.toggleSenha = function() {
+    const inp = document.getElementById('senha');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+  };
+
+  function mostrarErro(msg) {
+    const el = document.getElementById('msgErro');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  // Enter para logar
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.fazerLogin();
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR4 Distribuidora — Sistema</title>
+<link rel="icon" type="image/png" href="./assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:   #FF6B1A;
+    --orange-dk:#e85d0f;
+    --bg:       #F3F4F6;
+    --white:    #FFFFFF;
+    --text:     #1A1A2E;
+    --muted:    #6B7280;
+    --border:   #E5E7EB;
+    --green:    #10B981;
+    --yellow:   #F59E0B;
+    --red:      #EF4444;
+    --sidebar-w:240px;
+  }
+
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo img { height: 36px; object-fit: contain; }
+
+  .sidebar-user {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  .sidebar-nav { flex: 1; padding: .75rem 0; }
+
+  .nav-section {
+    font-size: .62rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: .75rem 1.25rem .3rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .6rem 1.25rem;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    margin: .1rem 0;
+  }
+
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: rgba(255,107,26,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+  .nav-item.locked { opacity: .4; cursor: not-allowed; pointer-events: none; }
+
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-sair {
+    width: 100%;
+    padding: .6rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .btn-sair:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.05); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    margin-bottom: 2rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -.3px;
+  }
+
+  .page-sub {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-top: .25rem;
+  }
+
+  /* ── MÓDULOS GRID ── */
+  .modulos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .modulo-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .modulo-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--orange);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+
+  .modulo-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.09); transform: translateY(-2px); border-color: rgba(255,107,26,.2); }
+  .modulo-card:hover::before { opacity: 1; }
+
+  .modulo-card.locked {
+    opacity: .5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .modulo-card.locked::after {
+    content: '🔒';
+    position: absolute;
+    top: 1rem; right: 1rem;
+    font-size: 1rem;
+  }
+
+  .modulo-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .modulo-nome {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.2px;
+  }
+
+  .modulo-desc {
+    font-size: .78rem;
+    color: var(--muted);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .modulo-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-top: auto;
+  }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    position: fixed; inset: 0;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  #loadingScreen img { height: 48px; object-fit: contain; }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESPONSIVE ── */
+  @media(max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
+    .main { margin-left: 0; }
+    body { flex-direction: column; }
+    .sidebar-nav { display: flex; overflow-x: auto; padding: .5rem; }
+    .nav-section { display: none; }
+    .nav-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+    .nav-item.active { border-left-color: transparent; border-bottom-color: var(--orange); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <img src="./assets/logo.png" alt="MR4">
+  <div class="spinner"></div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <div class="sidebar-logo">
+    <img src="./assets/logo.png" alt="MR4 Distribuidora">
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="userName">Carregando...</div>
+      <div class="user-role" id="userRole">—</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" id="sidebarNav">
+    <div class="nav-section">Módulos</div>
+    <!-- gerado por JS -->
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-sair" onclick="sair()">↩ Sair do sistema</button>
+  </div>
+</aside>
+
+<!-- Conteúdo principal -->
+<main class="main" id="mainContent" style="display:none">
+  <div class="page-header">
+    <h1 class="page-title" id="bemVindo">Bem-vindo!</h1>
+    <p class="page-sub">Selecione um módulo para começar</p>
+  </div>
+
+  <div class="modulos-grid" id="modulosGrid">
+    <!-- gerado por JS -->
+  </div>
+</main>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain: "mr4-ponto.firebaseapp.com",
+    projectId: "mr4-ponto",
+    storageBucket: "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId: "1:848211361584:web:2732e1893122f4a23452f5"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // Definição dos módulos
+  const MODULOS = [
+    { id: 'ponto',     nome: 'Ponto',          icon: '📍', desc: 'Registro e controle de ponto dos funcionários.',       url: './modulos/ponto.html'     },
+    { id: 'vendas',    nome: 'Painel de Vendas',icon: '📊', desc: 'Metas, faturamento e performance da equipe.',          url: './modulos/vendas.html'    },
+    { id: 'catalogo',  nome: 'Catálogo',        icon: '📦', desc: 'Produtos, preços e pedidos B2B.',                      url: 'https://catalogo.mr4distribuidora.com.br' },
+    { id: 'expedicao', nome: 'Expedição',       icon: '🚚', desc: 'Controle de pedidos, envios e entregas.',              url: './modulos/expedicao.html' },
+    { id: 'marketing', nome: 'Marketing',       icon: '📢', desc: 'Campanhas, materiais e divulgação.',                   url: './modulos/marketing.html' },
+    { id: 'garantia',  nome: 'Garantia',        icon: '🛡️', desc: 'Gestão de garantias e acompanhamento de processos.',   url: './modulos/garantia.html'  },
+    { id: 'admin',     nome: 'Administração',   icon: '⚙️', desc: 'Usuários, permissões e configurações do sistema.',     url: './modulos/admin.html'     },
+  ];
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) {
+      window.location.href = './login.html';
+      return;
+    }
+
+    // Busca perfil no Firestore
+    let perfil = { nome: user.displayName || user.email.split('@')[0], cargo: 'Usuário', modulos: ['catalogo'] };
+
+    try {
+      const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        perfil.nome    = d.nome    || perfil.nome;
+        perfil.cargo   = d.cargo   || perfil.cargo;
+        perfil.modulos = d.modulos || perfil.modulos;
+        if (d.admin) perfil.modulos = MODULOS.map(m => m.id); // admin vê tudo
+      }
+    } catch(e) {
+      console.log('perfil não encontrado, usando padrão');
+    }
+
+    renderizar(perfil, user.email);
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display = '';
+    document.getElementById('mainContent').style.display = '';
+  });
+
+  function renderizar(perfil, email) {
+    // Header
+    const primeiroNome = perfil.nome.split(' ')[0];
+    document.getElementById('userName').textContent    = perfil.nome;
+    document.getElementById('userRole').textContent    = perfil.cargo;
+    document.getElementById('userAvatar').textContent  = primeiroNome[0].toUpperCase();
+    document.getElementById('bemVindo').textContent    = `Olá, ${primeiroNome}! 👋`;
+
+    // Sidebar nav
+    const nav = document.getElementById('sidebarNav');
+    nav.innerHTML = '<div class="nav-section">Módulos</div>';
+    MODULOS.forEach(m => {
+      const temAcesso = perfil.modulos.includes(m.id);
+      const a = document.createElement('a');
+      a.className = 'nav-item' + (temAcesso ? '' : ' locked');
+      a.href = temAcesso ? m.url : '#';
+      a.innerHTML = `<span class="nav-icon">${m.icon}</span> ${m.nome}`;
+      nav.appendChild(a);
+    });
+
+    // Cards de módulos
+    const grid = document.getElementById('modulosGrid');
+    grid.innerHTML = '';
+    MODULOS.forEach(m => {
+      const temAcesso = perfil.modulos.includes(m.id);
+      const card = document.createElement('a');
+      card.className = 'modulo-card' + (temAcesso ? '' : ' locked');
+      card.href = temAcesso ? m.url : '#';
+      card.innerHTML = `
+        <div class="modulo-icon">${m.icon}</div>
+        <div class="modulo-nome">${m.nome}</div>
+        <div class="modulo-desc">${m.desc}</div>
+        ${temAcesso ? '<div class="modulo-btn">Acessar →</div>' : ''}
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  window.sair = async function() {
+    await signOut(auth);
+    window.location.href = './login.html';
+  };
+</script>
+
+</body>
+</html>

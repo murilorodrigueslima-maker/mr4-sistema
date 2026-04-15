@@ -1,1 +1,10 @@
-{"atualizado_em":"","contas_vencidas":[],"contas_vencendo":[],"contas_receber":[],"fluxo_caixa":[],"inadimplencia_pct":0,"total_vencido":0,"total_a_receber":0,"total_a_pagar":0}
+{
+  "atualizado_em": "2026-04-14T21:10:07",
+  "contas_vencidas": [],
+  "contas_vencendo": [],
+  "fluxo_caixa": [],
+  "inadimplencia_pct": 0,
+  "total_vencido": 0,
+  "total_a_receber": 0,
+  "total_a_pagar": 0
+}

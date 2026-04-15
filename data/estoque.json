@@ -1,1 +1,359 @@
-{"atualizado_em":"","total_produtos":0,"valor_total_estoque":0,"abaixo_minimo":[],"sem_giro":[],"margem_baixa":[],"candidatos_promocao":[]}
+{
+  "atualizado_em": "2026-04-14T21:10:12",
+  "total_produtos": 906,
+  "valor_total_estoque": 387335.28000000084,
+  "abaixo_minimo": [],
+  "sem_giro": [],
+  "margem_baixa": [
+    {
+      "ref": "TP-2002",
+      "nome": "SOQUETES T10 2002",
+      "margem": "-647.8",
+      "preco": 2.3,
+      "custo": 17.2
+    },
+    {
+      "ref": "TP-2003",
+      "nome": "SOQUETES T10 2003",
+      "margem": "-641.9",
+      "preco": 2.7,
+      "custo": 20.03
+    },
+    {
+      "ref": "TP-2041",
+      "nome": "SOQUETE H7 CERAMICA (2041)",
+      "margem": "-629.2",
+      "preco": 2.95,
+      "custo": 21.51
+    },
+    {
+      "ref": "TP-2005",
+      "nome": "SOQUETES T10 2005",
+      "margem": "-596.5",
+      "preco": 2.3,
+      "custo": 16.02
+    },
+    {
+      "ref": "TP-2055",
+      "nome": "CHICOTE SOM 16 VIAS MACHO 2055",
+      "margem": "-592.3",
+      "preco": 15,
+      "custo": 103.84
+    },
+    {
+      "ref": "TP-2016",
+      "nome": "SOQUETES BA15D LISO 2 POLOS 2016",
+      "margem": "-590.9",
+      "preco": 2.2,
+      "custo": 15.2
+    },
+    {
+      "ref": "TP-2012",
+      "nome": "SOQUETES BA15D HASTE “L“ 2 POLOS 2012",
+      "margem": "-590.9",
+      "preco": 2.2,
+      "custo": 15.2
+    },
+    {
+      "ref": "TP-2018",
+      "nome": "PORTA FUSÍVEL",
+      "margem": "-588.0",
+      "preco": 2.5,
+      "custo": 17.2
+    },
+    {
+      "ref": "TP-2020",
+      "nome": "CHICOTES SOM 4 VIAS 2020",
+      "margem": "-587.8",
+      "preco": 10.3,
+      "custo": 70.84
+    },
+    {
+      "ref": "TP-2015",
+      "nome": "SOQUETES BA15S LISO 1 POLO 2015",
+      "margem": "-575.7",
+      "preco": 1.85,
+      "custo": 12.5
+    },
+    {
+      "ref": "TP-2033",
+      "nome": "SOQUETE H4 PLASTICO 2033",
+      "margem": "-558.1",
+      "preco": 3.94,
+      "custo": 25.93
+    },
+    {
+      "ref": "TP-2009",
+      "nome": "SOQUETES T20 2 POLOS 2009",
+      "margem": "-557.9",
+      "preco": 6.65,
+      "custo": 43.75
+    },
+    {
+      "ref": "TP-2048",
+      "nome": "SOQUETES BA15D 2 POLOS PLASTICO 2048",
+      "margem": "-525.9",
+      "preco": 2.66,
+      "custo": 16.65
+    },
+    {
+      "ref": "TP-2059",
+      "nome": "PORTA FUSIVEL LAMINA MAX PLASTICO 2059",
+      "margem": "-525.7",
+      "preco": 4.24,
+      "custo": 26.53
+    },
+    {
+      "ref": "TP-2021",
+      "nome": "CHICOTES SOM 2 VIAS 2021",
+      "margem": "-525.4",
+      "preco": 5.11,
+      "custo": 31.96
+    },
+    {
+      "ref": "TP-2040",
+      "nome": "SOQUETES H4 CERAMICO EMBORRACHADO PRETO 2040",
+      "margem": "-525.3",
+      "preco": 4.63,
+      "custo": 28.95
+    },
+    {
+      "ref": "TP-2006",
+      "nome": "CONECTORES T10 2006",
+      "margem": "-525.3",
+      "preco": 4.07,
+      "custo": 25.45
+    },
+    {
+      "ref": "TP-2035",
+      "nome": "SOQUETE H4 CERAMICA (2035)",
+      "margem": "-525.3",
+      "preco": 4.63,
+      "custo": 28.95
+    },
+    {
+      "ref": "TP-2032",
+      "nome": "SOQUETE H8/H11 CERAMICO (2032)",
+      "margem": "-525.0",
+      "preco": 6.08,
+      "custo": 38
+    },
+    {
+      "ref": "TP-2028",
+      "nome": "SOQUETE 9006 HB4 CERAMICA (2028)",
+      "margem": "-525.0",
+      "preco": 6.08,
+      "custo": 38
+    },
+    {
+      "ref": "TP-2026",
+      "nome": "SOQUETE 9005 HB3 CERAMICA (2026)",
+      "margem": "-525.0",
+      "preco": 6.08,
+      "custo": 38
+    },
+    {
+      "ref": "TP-2008",
+      "nome": "SOQUETES T5 2008",
+      "margem": "-524.9",
+      "preco": 2.49,
+      "custo": 15.56
+    },
+    {
+      "ref": "TP-2049",
+      "nome": "SOQUETES BA15S 1 POLO GARRA PLASTICO 2049",
+      "margem": "-524.9",
+      "preco": 5.23,
+      "custo": 32.68
+    },
+    {
+      "ref": "TP-2047",
+      "nome": "SOQUETES BA15S 1 POLO PLASTICO 2047",
+      "margem": "-524.8",
+      "preco": 2.26,
+      "custo": 14.12
+    },
+    {
+      "ref": "TP-2030",
+      "nome": "SOQUETES H1/H3 CERAMICO 2030",
+      "margem": "-524.6",
+      "preco": 3.05,
+      "custo": 19.05
+    },
+    {
+      "ref": "TP-2010",
+      "nome": "SOQUETES T20 1 POLO 2010",
+      "margem": "-522.7",
+      "preco": 7.3,
+      "custo": 45.46
+    },
+    {
+      "ref": "TP-2027",
+      "nome": "SOQUETE 9006 HB4 PLASTICO 2027",
+      "margem": "-515.8",
+      "preco": 3.87,
+      "custo": 23.83
+    },
+    {
+      "ref": "TP-2025",
+      "nome": "SOQUETE 9005 HB3 PLASTICO 2025",
+      "margem": "-515.8",
+      "preco": 3.87,
+      "custo": 23.83
+    },
+    {
+      "ref": "TP-2031",
+      "nome": "SOQUETE H8/H11 PLASTICO 2031",
+      "margem": "-510.4",
+      "preco": 4.05,
+      "custo": 24.72
+    },
+    {
+      "ref": "IP09-0275/V1",
+      "nome": "MOLDURA 2 DIN 9 TOYOTA COROLLA 2008/13 CINZA (CH) JOKER",
+      "margem": "-75.6",
+      "preco": 54.09,
+      "custo": 95
+    },
+    {
+      "ref": "860.352",
+      "nome": "LAMPADA HALOGENA INDIVIDUAL PROMOÇÃO",
+      "margem": "-73.4",
+      "preco": 5,
+      "custo": 8.67
+    },
+    {
+      "ref": "KPC-HO-0049C",
+      "nome": "PC JOKER KING HONDA UNIFICADO PADRAO CIVIC/CRV 2012/15 PARA CABLE CANBOX",
+      "margem": "-60.6",
+      "preco": 117.99,
+      "custo": 189.52
+    },
+    {
+      "ref": "6175",
+      "nome": "MOLDURA 9“ VW GOL/ SAVEIRO E PARATI G4 (APARELHO CHASSI PEQUENO)",
+      "margem": "-45.6",
+      "preco": 160,
+      "custo": 233
+    },
+    {
+      "ref": "RPX062",
+      "nome": "CHAVE CANIVETE OCA ADAPTAÇÃO TOYOTA",
+      "margem": "-21.7",
+      "preco": 29.85,
+      "custo": 36.33
+    },
+    {
+      "ref": "MAXHB4",
+      "nome": "REF: HB4 - LAMPADA AUTOMOTIVA",
+      "margem": "0.0",
+      "preco": 260,
+      "custo": 260
+    },
+    {
+      "ref": "MAXH11",
+      "nome": "REF: H11 - LAMPADA AUTOMOTIVA",
+      "margem": "0.0",
+      "preco": 260,
+      "custo": 260
+    },
+    {
+      "ref": "I-SLIMH27",
+      "nome": "H27 SLIM RAY X 11.000 LUMENS",
+      "margem": "0.0",
+      "preco": 135,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH16",
+      "nome": "H16 SLIM RAY X 11.000 LUMENS",
+      "margem": "0.6",
+      "preco": 135,
+      "custo": 134.25
+    },
+    {
+      "ref": "TP-4024",
+      "nome": "FITA NEON BRANCA 2M",
+      "margem": "5.3",
+      "preco": 21.39,
+      "custo": 20.25
+    },
+    {
+      "ref": "5859",
+      "nome": "MOLD 9\" S10 16+ AR-ANALOGICO BLK PIANO 1UN X 1UN",
+      "margem": "9.4",
+      "preco": 265,
+      "custo": 240
+    },
+    {
+      "ref": "I-SLIMHB3",
+      "nome": "HB3 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH11",
+      "nome": "H11 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH7",
+      "nome": "H7 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH1",
+      "nome": "H1 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH4",
+      "nome": "H4 SLIM RAY X 11.000 LUMENS",
+      "margem": "11.8",
+      "preco": 170,
+      "custo": 150
+    },
+    {
+      "ref": "30801580",
+      "nome": "MLV 608 PLUS- 4 VIDROS COMUNS, 01 OU 02 VIDROS AUTOMATIZADOS (M 608 PLUS)",
+      "margem": "12.5",
+      "preco": 201.08,
+      "custo": 175.87
+    },
+    {
+      "ref": "ET-SEN 01 PRE",
+      "nome": "SENSOR ESTAC. 4 PONTOS PRETO",
+      "margem": "13.8",
+      "preco": 65,
+      "custo": 56
+    },
+    {
+      "ref": "2107-0",
+      "nome": "ULTRA LED CSP H27 70W 10.000 LUMENS BIVOLT - ASX1027",
+      "margem": "14.1",
+      "preco": 135,
+      "custo": 116.01
+    },
+    {
+      "ref": "IP09-0161/V1",
+      "nome": "TOYOTA HILUX 2012/15, SW4 COM UMA MOLDURA AUXILIAR PARA A/C DIGITAL, UMA MOLDURA AUXILIAR PARA A/C ANALOGICO E ADESIVO, BLACK PIANO",
+      "margem": "14.4",
+      "preco": 172.8,
+      "custo": 147.89
+    },
+    {
+      "ref": "AF10000139",
+      "nome": "QUADRIAXIAL 4“",
+      "margem": "16.7",
+      "preco": 90.34,
+      "custo": 75.28
+    }
+  ]
+}

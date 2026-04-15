@@ -1,1 +1,47 @@
-{"atualizado_em":"","hoje":0,"semana":0,"mes":0,"meta_mes":200000,"meta_dia":8000,"meta_semana":40000,"vendedores":[{"nome":"Ademir","faturamento":0,"pedidos":0},{"nome":"Fabiana","faturamento":0,"pedidos":0}],"ultimos_7_dias":[]}
+{
+  "atualizado_em": "2026-04-14T21:10:06",
+  "hoje": 0,
+  "semana": 0,
+  "mes": 0,
+  "meta_mes": 200000,
+  "meta_dia": 8000,
+  "meta_semana": 40000,
+  "vendedores": [],
+  "ultimos_7_dias": [
+    {
+      "data": "2026-04-08",
+      "label": "qua., 08/04",
+      "valor": 0
+    },
+    {
+      "data": "2026-04-09",
+      "label": "qui., 09/04",
+      "valor": 0
+    },
+    {
+      "data": "2026-04-10",
+      "label": "sex., 10/04",
+      "valor": 0
+    },
+    {
+      "data": "2026-04-11",
+      "label": "sáb., 11/04",
+      "valor": 0
+    },
+    {
+      "data": "2026-04-12",
+      "label": "dom., 12/04",
+      "valor": 0
+    },
+    {
+      "data": "2026-04-13",
+      "label": "seg., 13/04",
+      "valor": 0
+    },
+    {
+      "data": "2026-04-14",
+      "label": "ter., 14/04",
+      "valor": 0
+    }
+  ]
+}

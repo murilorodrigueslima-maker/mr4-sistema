@@ -122,12 +122,10 @@ header{
 
 /* Linha de topo: pedido · hora · elapsed */
 .card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
-.card-num{font-family:var(--mono);font-size:.75rem;font-weight:700;flex:1}
-.col-ag .card-num{color:var(--ag)}
-.col-se .card-num{color:var(--se)}
-.col-pr .card-num{color:var(--pr)}
-.col-de .card-num{color:var(--de)}
-.card-hora{font-size:.68rem;color:var(--dim);font-family:var(--mono)}
+/* Número do pedido: branco, neutro — não compete com o elapsed colorido */
+.card-num{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--sub);flex:1}
+/* Hora: visível, contrastada */
+.card-hora{font-size:.75rem;color:var(--text);font-family:var(--mono);font-weight:600;opacity:.75}
 
 /* Elapsed — 3 estados: ok / atenção / crítico */
 .card-elapsed{font-size:.68rem;font-family:var(--mono);padding:.1rem .48rem;border-radius:99px;white-space:nowrap}

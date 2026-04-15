@@ -78,21 +78,22 @@ async function syncVendas() {
   const META_DIA    = 8000;
   const META_SEMANA = 40000;
 
-  let pedidos = [];
+  let vendas = [];
   try {
-    // Busca pedidos dos últimos 30 dias
+    // Endpoint correto: /vendas com data_inicio e data_fim
     const inicio = diasAtras(30);
     let pagina = 1;
     while (true) {
-      const r = await fetchGC(`/pedidos?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}&status=finalizado`);
-      const data = r.data || r.pedidos || [];
-      pedidos = pedidos.concat(data);
+      const r = await fetchGC(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
+      const data = r.data || [];
+      vendas = vendas.concat(data);
       const meta = r.meta || {};
       if (pagina >= (Number(meta.total_paginas) || 1)) break;
       pagina++;
     }
+    console.log(`  → ${vendas.length} vendas encontradas`);
   } catch(e) {
-    console.log('⚠️ Erro ao buscar pedidos:', e.message);
+    console.log('⚠️ Erro ao buscar vendas:', e.message);
   }
 
   // Calcula faturamento
@@ -104,10 +105,10 @@ async function syncVendas() {
   const vendedorMap = {};
   const diaMap = {};
 
-  pedidos.forEach(p => {
-    const data  = (p.data || p.data_pedido || '').slice(0,10);
-    const valor = Number(p.valor_total || p.total || 0);
-    const vend  = p.nome_vendedor || p.vendedor || 'Outros';
+  vendas.forEach(p => {
+    const data  = (p.data || p.data_venda || p.data_pedido || '').slice(0,10);
+    const valor = Number(p.valor_total || p.total || p.valor || 0);
+    const vend  = p.nome_vendedor || p.vendedor || p.nome_usuario || 'Outros';
 
     if (data === hojStr)   fatHoje   += valor;
     if (data >= semStr)    fatSemana += valor;
@@ -220,50 +221,52 @@ async function syncEstoque() {
 // ── FINANCEIRO ───────────────────────────────────────────────────────────────
 async function syncFinanceiro() {
   console.log('💰 Sincronizando financeiro...');
-  let contasPagar = [], contasReceber = [];
+  // Endpoint correto: /pagamentos filtrado por entidade (I=entrada, O=saída)
+  let lancamentos = [];
 
   try {
-    const rPagar    = await fetchGC(`/financeiro/contas-pagar?pagina=1&limite=100`);
-    contasPagar     = rPagar.data || [];
-  } catch(e) { console.log('⚠️ Contas a pagar:', e.message); }
-
-  try {
-    const rReceber  = await fetchGC(`/financeiro/contas-receber?pagina=1&limite=100`);
-    contasReceber   = rReceber.data || [];
-  } catch(e) { console.log('⚠️ Contas a receber:', e.message); }
+    const inicio = diasAtras(60);
+    const fim    = diasAtras(-30); // 30 dias à frente
+    let pagina = 1;
+    while (true) {
+      const r = await fetchGC(`/pagamentos?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${fim}`);
+      const data = r.data || [];
+      lancamentos = lancamentos.concat(data);
+      const meta = r.meta || {};
+      if (pagina >= (Number(meta.total_paginas) || 1)) break;
+      pagina++;
+    }
+    console.log(`  → ${lancamentos.length} lançamentos encontrados`);
+  } catch(e) {
+    console.log('⚠️ Erro ao buscar pagamentos:', e.message);
+  }
 
   const hojStr = hoje();
-  const em7    = new Date(); em7.setDate(em7.getDate() + 7);
-  const em7Str = em7.toISOString().slice(0,10);
+  const em7    = diasAtras(-7);
 
   let totalVencido = 0, totalPagar = 0, totalReceber = 0;
   const vencidas = [], vencendo = [];
 
-  contasPagar.forEach(c => {
-    const venc  = (c.data_vencimento || '').slice(0,10);
-    const valor = Number(c.valor || 0);
-    const nome  = c.nome_fornecedor || c.descricao || '—';
-    totalPagar += valor;
-    if (venc < hojStr) {
-      totalVencido += valor;
-      const dias = Math.floor((Date.now() - new Date(venc).getTime()) / 86400000);
-      vencidas.push({ nome, valor, vencimento: venc, dias_atraso: dias, tipo: 'Pagar' });
-    } else if (venc <= em7Str) {
-      vencendo.push({ nome, valor, vencimento: venc, tipo: 'Pagar' });
-    }
-  });
+  // entidade='I' = entrada (contas a receber), 'O' = saída (contas a pagar)
+  lancamentos.forEach(c => {
+    const venc      = (c.data_vencimento || '').slice(0,10);
+    const valor     = Number(c.valor || 0);
+    const nome      = c.nome_cliente || c.nome_fornecedor || c.descricao || c.observacao || '—';
+    const liquidado = c.liquidado === '1' || c.liquidado === true;
+    const entidade  = c.entidade || '';
+    const tipo      = entidade === 'I' ? 'Receber' : 'Pagar';
 
-  contasReceber.forEach(c => {
-    const venc  = (c.data_vencimento || '').slice(0,10);
-    const valor = Number(c.valor || 0);
-    const nome  = c.nome_cliente || c.descricao || '—';
-    totalReceber += valor;
+    if (liquidado) return; // ignora já pagos
+
+    if (entidade === 'O') totalPagar    += valor;
+    if (entidade === 'I') totalReceber  += valor;
+
     if (venc < hojStr) {
       totalVencido += valor;
       const dias = Math.floor((Date.now() - new Date(venc).getTime()) / 86400000);
-      vencidas.push({ nome, valor, vencimento: venc, dias_atraso: dias, tipo: 'Receber' });
-    } else if (venc <= em7Str) {
-      vencendo.push({ nome, valor, vencimento: venc, tipo: 'Receber' });
+      vencidas.push({ nome, valor, vencimento: venc, dias_atraso: dias, tipo });
+    } else if (venc <= em7) {
+      vencendo.push({ nome, valor, vencimento: venc, tipo });
     }
   });
 

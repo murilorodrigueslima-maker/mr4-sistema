@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-15T15:50:13",
-  "total": 44,
+  "atualizado_em": "2026-04-15T18:39:03",
+  "total": 48,
   "pedidos": [
+    {
+      "id": "363665479",
+      "numero": "363665479",
+      "data": "2026-04-15",
+      "hora": "",
+      "cliente": "Antônio Jason Lima de Almeida",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 103.4,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "363663288",
+      "numero": "363663288",
+      "data": "2026-04-15",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "363658899",
+      "numero": "363658899",
+      "data": "2026-04-15",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 4230,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "363651889",
+      "numero": "363651889",
+      "data": "2026-04-15",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 255,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "363645396",
       "numero": "363645396",

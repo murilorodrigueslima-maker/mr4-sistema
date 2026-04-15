@@ -237,11 +237,6 @@ async function syncFinanceiro() {
       pagina++;
     }
     console.log(`  → ${lancamentos.length} lançamentos encontrados`);
-    if (lancamentos.length > 0) {
-      const l = lancamentos[0];
-      console.log('  → Campos:', Object.keys(l).join(', '));
-      console.log('  → entidade:', l.entidade, '| tipo:', l.tipo, '| liquidado:', l.liquidado, '| valor:', l.valor);
-    }
   } catch(e) {
     console.log('⚠️ Erro ao buscar pagamentos:', e.message);
   }

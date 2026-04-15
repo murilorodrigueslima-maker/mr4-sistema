@@ -93,6 +93,8 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:.
 .e-rota-manha{background:#451A03;color:#FCD34D;border:1px solid #92400E}
 .e-rota-tarde{background:#022C22;color:#6EE7B7;border:1px solid #065F46}
 .e-nd{background:#1C2333;color:var(--muted);border:1px solid var(--border)}
+.card-vendedor{display:flex;align-items:center;gap:.35rem;font-size:.72rem;font-weight:600;color:var(--text);margin-bottom:.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-vendedor-icon{font-size:.75rem;flex-shrink:0}
 .card-info{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;font-size:.7rem;color:var(--muted);margin-bottom:.65rem}
 .card-dot{color:var(--border)}
 .card-info .val{font-family:var(--mono);color:var(--text);font-weight:600;font-size:.72rem}
@@ -243,7 +245,7 @@ const CFG={
   api_url:'../data/pedidos.json',  // dados reais do GestãoClick
   intervalo:60,                    // segundos entre atualizações
   alerta_horas:2,                  // horas parado p/ alerta
-  storage_key:'mr4_exp_v3',        // bump de versão limpa cache antigo
+  storage_key:'mr4_exp_v4',        // v4 = início de uso real (zera cache)
 };
 
 // ── ENVIOS ────────────────────────────────────────────────────────────────────
@@ -484,8 +486,8 @@ function renderCard(p){
   </div>
   <div class="card-cliente" title="${p.cliente}">${limparNome(p.cliente)}${p.cidade?`<span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:.4rem">${p.cidade}</span>`:''}</div>
   <div class="card-envio"><span class="badge-envio ${ev.cls}">${ev.icon} ${ev.label}</span></div>
+  <div class="card-vendedor"><span class="card-vendedor-icon">👤</span>${p.vendedor||'—'}</div>
   <div class="card-info">
-    <span>${p.vendedor}</span><span class="card-dot">·</span>
     <span>${p.itens} item${p.itens>1?'s':''}</span><span class="card-dot">·</span>
     <span class="val">${brl(p.valor)}</span>
   </div>

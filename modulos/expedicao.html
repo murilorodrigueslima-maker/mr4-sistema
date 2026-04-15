@@ -240,9 +240,10 @@ onAuthStateChanged(auth, async user => {
 <script>
 // ── CONFIG ─────────────────────────────────────────────────────────────────────
 const CFG={
-  api_url:null,     // null=simulado | '../data/pedidos.json'=real
-  intervalo:60,     // segundos
-  alerta_horas:2,   // horas parado p/ alerta
+  api_url:'../data/pedidos.json',  // dados reais do GestãoClick
+  intervalo:60,                    // segundos entre atualizações
+  alerta_horas:2,                  // horas parado p/ alerta
+  storage_key:'mr4_exp_v3',        // bump de versão limpa cache antigo
 };
 
 // ── ENVIOS ────────────────────────────────────────────────────────────────────
@@ -275,10 +276,10 @@ const S={
 };
 
 // ── PERSISTÊNCIA ─────────────────────────────────────────────────────────────
-function salvar(){try{localStorage.setItem('mr4_exp2',JSON.stringify({pedidos:S.pedidos,colunas:S.colunas,seq:S.seq}));}catch(e){}}
+function salvar(){try{localStorage.setItem(CFG.storage_key,JSON.stringify({pedidos:S.pedidos,colunas:S.colunas,seq:S.seq}));}catch(e){}}
 function restaurar(){
   try{
-    const d=JSON.parse(localStorage.getItem('mr4_exp2')||'null');
+    const d=JSON.parse(localStorage.getItem(CFG.storage_key)||'null');
     if(!d?.pedidos||!d?.colunas)return false;
     const ids=Object.keys(d.pedidos);
     if(!ids.length)return false;
@@ -358,11 +359,16 @@ async function fetchPedidos(){
     (json.pedidos||[]).forEach(p=>{
       if(nums.has(String(p.numero)))return;
       S.seq++;
+      // Usa hora real se disponível, senão assume abertura às 08:00
+      const horaStr = p.hora || '08:00';
+      const criadoEm = p.data
+        ? new Date(`${p.data}T${horaStr}:00`).getTime()
+        : Date.now();
       const x={id:'A'+S.seq,numero:String(p.numero||S.seq),
-        criadoEm:p.data?new Date(p.data+'T09:00:00').getTime():Date.now(),
-        movidoEm:Date.now(),coluna:'ag',cliente:p.cliente||'—',
-        vendedor:p.vendedor||'—',itens:p.itens||1,valor:p.valor||0,
-        envio:null,saidaEm:null};
+        criadoEm, movidoEm:Date.now(),coluna:'ag',
+        cliente:p.cliente||'—',vendedor:p.vendedor||'—',
+        itens:p.itens||1,valor:p.valor||0,
+        cidade:p.cidade||'',envio:null,saidaEm:null};
       S.pedidos[x.id]=x;S.colunas.ag.unshift(x.id);n++;
     });
     if(n){toast(`📬 ${n} novo${n>1?'s':''} pedido${n>1?'s':''} importado${n>1?'s':''}`,'t-info');salvar();render();}
@@ -472,7 +478,7 @@ function renderCard(p){
     <span class="card-hora">${horaFmt(p.criadoEm)}</span>
     <span class="card-elapsed" id="el-${p.id}">${elapsedFmt(p.criadoEm)}</span>
   </div>
-  <div class="card-cliente" title="${p.cliente}">${p.cliente}</div>
+  <div class="card-cliente" title="${p.cliente}">${p.cliente}${p.cidade?`<span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:.4rem">${p.cidade}</span>`:''}</div>
   <div class="card-envio"><span class="badge-envio ${ev.cls}">${ev.icon} ${ev.label}</span></div>
   <div class="card-info">
     <span>${p.vendedor}</span><span class="card-dot">·</span>

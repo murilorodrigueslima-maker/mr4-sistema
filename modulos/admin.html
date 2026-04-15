@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administração — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:    #FF6B1A;
+    --orange-dk: #e85d0f;
+    --bg:        #F3F4F6;
+    --white:     #FFFFFF;
+    --text:      #1A1A2E;
+    --muted:     #6B7280;
+    --border:    #E5E7EB;
+    --green:     #10B981;
+    --yellow:    #F59E0B;
+    --red:       #EF4444;
+    --blue:      #3B82F6;
+    --sidebar-w: 240px;
+    --mono:      'JetBrains Mono', monospace;
+  }
+
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+  #loadingScreen { position:fixed; inset:0; background:var(--white); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:1rem; }
+  #loadingScreen img { height:48px; object-fit:contain; }
+  .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .sidebar { width:var(--sidebar-w); background:var(--white); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; overflow-y:auto; }
+  .sidebar-logo { padding:1.5rem 1.25rem 1rem; border-bottom:1px solid var(--border); }
+  .sidebar-logo img { height:36px; object-fit:contain; }
+  .sidebar-user { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.75rem; }
+  .user-avatar { width:36px; height:36px; border-radius:50%; background:var(--orange); color:#fff; font-weight:700; font-size:.9rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .user-info { flex:1; min-width:0; }
+  .user-name { font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-role { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .sidebar-nav { flex:1; padding:.75rem 0; }
+  .nav-section { font-size:.62rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; padding:.75rem 1.25rem .3rem; }
+  .nav-item { display:flex; align-items:center; gap:.65rem; padding:.6rem 1.25rem; font-size:.84rem; font-weight:500; color:var(--muted); text-decoration:none; border-left:3px solid transparent; transition:all .15s; }
+  .nav-item:hover { background:var(--bg); color:var(--text); }
+  .nav-item.active { background:rgba(255,107,26,.07); color:var(--orange); border-left-color:var(--orange); font-weight:600; }
+  .nav-icon { font-size:1rem; width:20px; text-align:center; }
+  .sidebar-footer { padding:1rem 1.25rem; border-top:1px solid var(--border); }
+  .btn-sair { width:100%; padding:.6rem; border:1.5px solid var(--border); border-radius:8px; background:none; font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; }
+  .btn-sair:hover { border-color:var(--red); color:var(--red); }
+
+  .main { margin-left:var(--sidebar-w); flex:1; padding:2rem; min-height:100vh; }
+
+  .page-header { margin-bottom:1.75rem; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+  .page-title { font-size:1.4rem; font-weight:800; letter-spacing:-.3px; }
+  .page-sub { font-size:.8rem; color:var(--muted); margin-top:.2rem; }
+
+  /* ALERT */
+  .alert { padding:.85rem 1.1rem; border-radius:10px; font-size:.82rem; font-weight:500; margin-bottom:1.25rem; display:none; }
+  .alert.show { display:block; }
+  .alert-error   { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.25);  color:#c0392b; }
+  .alert-success { background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.25); color:#0a7a52; }
+
+  /* USERS TABLE */
+  .section { background:var(--white); border-radius:14px; border:1px solid var(--border); overflow:hidden; margin-bottom:1.5rem; }
+  .section-header { padding:1rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .section-title { font-size:.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; }
+  .btn-novo { padding:.45rem 1rem; background:var(--orange); color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; transition:background .15s; }
+  .btn-novo:hover { background:var(--orange-dk); }
+
+  .data-table { width:100%; border-collapse:collapse; font-size:.83rem; }
+  .data-table th { background:var(--bg); padding:.65rem 1rem; text-align:left; font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
+  .data-table td { padding:.75rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:rgba(243,244,246,.6); }
+
+  .badge-admin { display:inline-flex; align-items:center; padding:.2rem .7rem; border-radius:99px; font-size:.68rem; font-weight:700; background:rgba(255,107,26,.12); color:var(--orange); border:1px solid rgba(255,107,26,.3); }
+  .badge-user  { display:inline-flex; align-items:center; padding:.2rem .7rem; border-radius:99px; font-size:.68rem; font-weight:700; background:var(--bg); color:var(--muted); border:1px solid var(--border); }
+
+  .modulos-pills { display:flex; flex-wrap:wrap; gap:.3rem; }
+  .modulo-pill { font-size:.65rem; font-weight:600; padding:.15rem .55rem; border-radius:99px; background:rgba(59,130,246,.1); color:var(--blue); border:1px solid rgba(59,130,246,.25); }
+
+  .btn-edit { padding:.3rem .75rem; border:1.5px solid var(--border); border-radius:6px; font-size:.72rem; font-weight:700; font-family:'Inter',sans-serif; background:none; color:var(--muted); cursor:pointer; transition:all .12s; }
+  .btn-edit:hover { border-color:var(--orange); color:var(--orange); }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; display:none; align-items:center; justify-content:center; padding:1rem; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--white); border-radius:16px; padding:2rem; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:90vh; overflow-y:auto; }
+  .modal-title { font-size:1.05rem; font-weight:700; margin-bottom:1.5rem; }
+
+  .form-row { display:grid; gap:1rem; margin-bottom:1rem; }
+  .form-row-2 { grid-template-columns:1fr 1fr; }
+  .form-field { display:flex; flex-direction:column; gap:.4rem; }
+  .form-field label { font-size:.75rem; font-weight:700; color:var(--text); letter-spacing:.3px; }
+  .form-field input, .form-field select { padding:.65rem .9rem; border:1.5px solid var(--border); border-radius:8px; font-size:.85rem; font-family:'Inter',sans-serif; color:var(--text); outline:none; transition:border-color .15s; }
+  .form-field input:focus, .form-field select:focus { border-color:var(--orange); }
+  .form-hint { font-size:.72rem; color:var(--muted); }
+
+  .modulos-grid-chk { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; margin-top:.25rem; }
+  .chk-item { display:flex; align-items:center; gap:.45rem; padding:.45rem .6rem; border:1.5px solid var(--border); border-radius:8px; cursor:pointer; transition:all .12s; user-select:none; }
+  .chk-item:hover { border-color:var(--orange); background:rgba(255,107,26,.04); }
+  .chk-item.checked { border-color:var(--orange); background:rgba(255,107,26,.07); }
+  .chk-item input { display:none; }
+  .chk-icon { font-size:.9rem; }
+  .chk-nome { font-size:.75rem; font-weight:600; color:var(--text); }
+  .chk-check { margin-left:auto; width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:.65rem; flex-shrink:0; }
+  .chk-item.checked .chk-check { background:var(--orange); border-color:var(--orange); color:#fff; }
+
+  .toggle-admin { display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; margin-bottom:1rem; transition:all .15s; user-select:none; }
+  .toggle-admin:hover { border-color:var(--orange); }
+  .toggle-admin.on { border-color:var(--orange); background:rgba(255,107,26,.05); }
+  .toggle-label { flex:1; }
+  .toggle-label strong { display:block; font-size:.82rem; font-weight:700; color:var(--text); }
+  .toggle-label span { font-size:.72rem; color:var(--muted); }
+  .toggle-switch { width:38px; height:22px; border-radius:99px; background:var(--border); position:relative; transition:background .2s; flex-shrink:0; }
+  .toggle-switch::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
+  .toggle-admin.on .toggle-switch { background:var(--orange); }
+  .toggle-admin.on .toggle-switch::after { transform:translateX(16px); }
+
+  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1.25rem; }
+  .btn-cancel { padding:.65rem 1.2rem; border:1.5px solid var(--border); border-radius:8px; background:none; font-size:.82rem; font-weight:600; color:var(--muted); cursor:pointer; font-family:'Inter',sans-serif; }
+  .btn-save { padding:.65rem 1.5rem; border:none; border-radius:8px; background:var(--orange); color:#fff; font-size:.82rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:background .15s; }
+  .btn-save:hover { background:var(--orange-dk); }
+  .btn-save:disabled { opacity:.6; cursor:not-allowed; }
+
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .empty-state .empty-icon { font-size:2.5rem; margin-bottom:.75rem; }
+
+  @media(max-width:700px) { .main { padding:1rem; } .form-row-2 { grid-template-columns:1fr; } .modulos-grid-chk { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <img src="../assets/logo.png" alt="MR4">
+  <div class="spinner"></div>
+</div>
+
+<aside class="sidebar" id="sidebar"></aside>
+
+<main class="main" id="mainContent" style="display:none">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">⚙️ Administração</h1>
+      <p class="page-sub">Gerenciamento de usuários e permissões</p>
+    </div>
+  </div>
+
+  <div class="alert alert-error"   id="alertErr"></div>
+  <div class="alert alert-success" id="alertOk"></div>
+
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">👥 Usuários do Sistema</span>
+      <button class="btn-novo" onclick="abrirModalNovo()">+ Novo Usuário</button>
+    </div>
+    <div id="usuariosWrap">
+      <div class="empty-state"><div class="empty-icon">⏳</div><p>Carregando usuários...</p></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal Usuário -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Novo Usuário</div>
+
+    <div class="form-row form-row-2">
+      <div class="form-field">
+        <label>Nome completo</label>
+        <input type="text" id="fNome" placeholder="João Silva">
+      </div>
+      <div class="form-field">
+        <label>Cargo</label>
+        <input type="text" id="fCargo" placeholder="Vendedor, Expedição...">
+      </div>
+    </div>
+
+    <div class="form-row form-row-2">
+      <div class="form-field">
+        <label>E-mail</label>
+        <input type="email" id="fEmail" placeholder="joao@mr4.com.br">
+        <span class="form-hint" id="emailHint"></span>
+      </div>
+      <div class="form-field">
+        <label>Senha <span id="senhaLabel">(mínimo 6 caracteres)</span></label>
+        <input type="password" id="fSenha" placeholder="••••••••">
+        <span class="form-hint" id="senhaHint">Deixe em branco para não alterar</span>
+      </div>
+    </div>
+
+    <div class="toggle-admin" id="toggleAdmin" onclick="alternarAdmin()">
+      <div class="toggle-label">
+        <strong>⚙️ Administrador</strong>
+        <span>Acesso total a todos os módulos</span>
+      </div>
+      <div class="toggle-switch"></div>
+    </div>
+
+    <div id="modulosSection">
+      <div style="font-size:.75rem;font-weight:700;margin-bottom:.6rem;color:var(--text);">MÓDULOS COM ACESSO</div>
+      <div class="modulos-grid-chk" id="modulosChk"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save"   id="btnSalvar" onclick="salvarUsuario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp }                                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut,
+           createUserWithEmailAndPassword, updateProfile,
+           sendPasswordResetEmail }                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc,
+           collection, getDocs, serverTimestamp }                     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getApp, initializeApp as initApp2 }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain:        "mr4-ponto.firebaseapp.com",
+    projectId:         "mr4-ponto",
+    storageBucket:     "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId:             "1:848211361584:web:2732e1893122f4a23452f5"
+  };
+
+  const MODULOS_DEF = [
+    { id:'vendas',     nome:'Vendas',     icon:'📊' },
+    { id:'estoque',    nome:'Estoque',    icon:'🗄️' },
+    { id:'financeiro', nome:'Financeiro', icon:'💰' },
+    { id:'catalogo',   nome:'Catálogo',   icon:'📦' },
+    { id:'expedicao',  nome:'Expedição',  icon:'🚚' },
+    { id:'ponto',      nome:'Ponto',      icon:'📍' },
+    { id:'marketing',  nome:'Marketing',  icon:'📢' },
+    { id:'garantia',   nome:'Garantia',   icon:'🛡️' },
+    { id:'admin',      nome:'Admin',      icon:'⚙️' },
+  ];
+
+  const MODULOS_SIDEBAR = [
+    { id:'vendas',     nome:'Painel de Vendas', icon:'📊', url:'./vendas.html'     },
+    { id:'estoque',    nome:'Estoque',           icon:'🗄️', url:'./estoque.html'    },
+    { id:'financeiro', nome:'Financeiro',        icon:'💰', url:'./financeiro.html' },
+    { id:'catalogo',   nome:'Catálogo',          icon:'📦', url:'https://catalogo.mr4distribuidora.com.br' },
+    { id:'expedicao',  nome:'Expedição',         icon:'🚚', url:'./expedicao.html'  },
+    { id:'ponto',      nome:'Ponto',             icon:'📍', url:'./ponto.html'      },
+    { id:'marketing',  nome:'Marketing',         icon:'📢', url:'./marketing.html'  },
+    { id:'garantia',   nome:'Garantia',          icon:'🛡️', url:'./garantia.html'   },
+    { id:'admin',      nome:'Administração',     icon:'⚙️', url:'./admin.html'      },
+  ];
+
+  // App principal (autenticação da sessão)
+  const app  = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // App auxiliar para criar usuários sem deslogar o admin
+  let app2;
+  try { app2 = initApp2(FIREBASE_CONFIG, 'aux'); }
+  catch(e) { app2 = getApp('aux'); }
+  const auth2 = getAuth(app2);
+
+  let usuarioAtual = null;
+  let modoEdicao   = false;
+  let uidEditando  = null;
+  let isAdmin      = false;
+
+  // ── AUTH ────────────────────────────────────────────────────────────────────
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = '../login.html'; return; }
+    usuarioAtual = user;
+
+    let perfil = { nome: user.displayName || user.email.split('@')[0], cargo:'Usuário', modulos:[], admin:false };
+    try {
+      const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        perfil = { ...perfil, ...d };
+        if (d.admin) perfil.modulos = MODULOS_SIDEBAR.map(m => m.id);
+      }
+    } catch(e) {}
+
+    if (!perfil.admin) { window.location.href = '../index.html'; return; }
+
+    renderSidebar(perfil, user.email);
+    document.getElementById('mainContent').style.display = '';
+    document.getElementById('loadingScreen').style.display = 'none';
+
+    await carregarUsuarios();
+  });
+
+  // ── SIDEBAR ─────────────────────────────────────────────────────────────────
+  function renderSidebar(perfil, email) {
+    const sidebar = document.getElementById('sidebar');
+    const inicial = (perfil.nome || '?')[0].toUpperCase();
+    let navItems = '';
+    MODULOS_SIDEBAR.forEach(m => {
+      const tem   = perfil.admin || perfil.modulos.includes(m.id);
+      const ativo = m.id === 'admin' ? ' active' : '';
+      if (tem) navItems += `<a class="nav-item${ativo}" href="${m.url}"><span class="nav-icon">${m.icon}</span>${m.nome}</a>`;
+    });
+    sidebar.innerHTML = `
+      <div class="sidebar-logo"><img src="../assets/logo.png" alt="MR4 Distribuidora"></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">${inicial}</div>
+        <div class="user-info">
+          <div class="user-name">${perfil.nome || email}</div>
+          <div class="user-role">${perfil.cargo || 'Usuário'}</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Módulos</div>
+        ${navItems}
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-sair" onclick="window._sair()">↩ Sair do sistema</button>
+      </div>`;
+    window._sair = async () => { await signOut(auth); window.location.href = '../login.html'; };
+  }
+
+  // ── CARREGAR USUÁRIOS ────────────────────────────────────────────────────────
+  async function carregarUsuarios() {
+    try {
+      const snap = await getDocs(collection(db, 'sistema_usuarios'));
+      const usuarios = [];
+      snap.forEach(d => usuarios.push({ uid: d.id, ...d.data() }));
+      renderUsuarios(usuarios);
+    } catch(e) {
+      mostrarErro('Erro ao carregar usuários: ' + e.message);
+    }
+  }
+
+  function renderUsuarios(lista) {
+    if (!lista.length) {
+      document.getElementById('usuariosWrap').innerHTML =
+        `<div class="empty-state"><div class="empty-icon">👥</div><p>Nenhum usuário cadastrado.</p></div>`;
+      return;
+    }
+
+    const linhas = lista.map(u => {
+      const badgeTipo = u.admin
+        ? `<span class="badge-admin">⚙️ Admin</span>`
+        : `<span class="badge-user">Usuário</span>`;
+
+      const modulos = u.admin
+        ? '<span style="font-size:.72rem;color:var(--orange);font-weight:600">Todos os módulos</span>'
+        : (u.modulos || []).map(m => {
+            const md = MODULOS_DEF.find(x => x.id === m);
+            return md ? `<span class="modulo-pill">${md.icon} ${md.nome}</span>` : '';
+          }).join('') || '<span style="font-size:.72rem;color:var(--muted)">Sem acesso</span>';
+
+      return `<tr>
+        <td><strong>${u.nome || '—'}</strong></td>
+        <td style="color:var(--muted);font-size:.8rem">${u.cargo || '—'}</td>
+        <td style="font-size:.78rem;color:var(--muted);font-family:var(--mono)">${u.email || '—'}</td>
+        <td>${badgeTipo}</td>
+        <td><div class="modulos-pills">${modulos}</div></td>
+        <td><button class="btn-edit" onclick="abrirModalEditar('${u.uid}')">✏️ Editar</button></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('usuariosWrap').innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Cargo</th>
+            <th>E-mail</th>
+            <th>Tipo</th>
+            <th>Módulos</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>`;
+  }
+
+  // ── MODAL NOVO ───────────────────────────────────────────────────────────────
+  window.abrirModalNovo = function() {
+    modoEdicao = false;
+    uidEditando = null;
+    isAdmin = false;
+
+    document.getElementById('modalTitle').textContent = '+ Novo Usuário';
+    document.getElementById('fNome').value    = '';
+    document.getElementById('fCargo').value   = '';
+    document.getElementById('fEmail').value   = '';
+    document.getElementById('fSenha').value   = '';
+    document.getElementById('fEmail').disabled = false;
+    document.getElementById('emailHint').textContent = '';
+    document.getElementById('senhaHint').textContent = 'Mínimo 6 caracteres';
+    document.getElementById('senhaLabel').textContent = '(mínimo 6 caracteres)';
+    document.getElementById('toggleAdmin').classList.remove('on');
+    renderModulosChk([]);
+    document.getElementById('modulosSection').style.display = '';
+    document.getElementById('modalOverlay').classList.add('open');
+  };
+
+  // ── MODAL EDITAR ─────────────────────────────────────────────────────────────
+  window.abrirModalEditar = async function(uid) {
+    modoEdicao = true;
+    uidEditando = uid;
+
+    try {
+      const snap = await getDoc(doc(db, 'sistema_usuarios', uid));
+      if (!snap.exists()) { mostrarErro('Usuário não encontrado.'); return; }
+      const d = snap.data();
+
+      document.getElementById('modalTitle').textContent = '✏️ Editar Usuário';
+      document.getElementById('fNome').value    = d.nome    || '';
+      document.getElementById('fCargo').value   = d.cargo   || '';
+      document.getElementById('fEmail').value   = d.email   || '';
+      document.getElementById('fEmail').disabled = true;
+      document.getElementById('emailHint').textContent = 'E-mail não pode ser alterado';
+      document.getElementById('fSenha').value   = '';
+      document.getElementById('senhaHint').textContent = 'Deixe em branco para não alterar';
+      document.getElementById('senhaLabel').textContent = '(deixe vazio para manter)';
+
+      isAdmin = !!d.admin;
+      const toggle = document.getElementById('toggleAdmin');
+      toggle.classList.toggle('on', isAdmin);
+
+      renderModulosChk(d.modulos || []);
+      document.getElementById('modulosSection').style.display = isAdmin ? 'none' : '';
+      document.getElementById('modalOverlay').classList.add('open');
+    } catch(e) {
+      mostrarErro('Erro: ' + e.message);
+    }
+  };
+
+  // ── MÓDULOS CHECKBOXES ───────────────────────────────────────────────────────
+  function renderModulosChk(selecionados) {
+    const container = document.getElementById('modulosChk');
+    container.innerHTML = MODULOS_DEF.map(m => {
+      const checked = selecionados.includes(m.id);
+      return `<div class="chk-item ${checked?'checked':''}" onclick="toggleModulo(this,'${m.id}')">
+        <span class="chk-icon">${m.icon}</span>
+        <span class="chk-nome">${m.nome}</span>
+        <div class="chk-check">${checked?'✓':''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  window.toggleModulo = function(el, id) {
+    el.classList.toggle('checked');
+    el.querySelector('.chk-check').textContent = el.classList.contains('checked') ? '✓' : '';
+  };
+
+  window.alternarAdmin = function() {
+    const toggle = document.getElementById('toggleAdmin');
+    isAdmin = !isAdmin;
+    toggle.classList.toggle('on', isAdmin);
+    document.getElementById('modulosSection').style.display = isAdmin ? 'none' : '';
+  };
+
+  // ── SALVAR ───────────────────────────────────────────────────────────────────
+  window.salvarUsuario = async function() {
+    const nome  = document.getElementById('fNome').value.trim();
+    const cargo = document.getElementById('fCargo').value.trim();
+    const email = document.getElementById('fEmail').value.trim();
+    const senha = document.getElementById('fSenha').value;
+    const btn   = document.getElementById('btnSalvar');
+
+    if (!nome)  { mostrarErro('Informe o nome.'); return; }
+    if (!cargo) { mostrarErro('Informe o cargo.'); return; }
+
+    const modulosSelecionados = isAdmin
+      ? MODULOS_DEF.map(m => m.id)
+      : Array.from(document.querySelectorAll('.chk-item.checked')).map(el => el.getAttribute('onclick').match(/'([^']+)'\)$/)[1]);
+
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    try {
+      if (!modoEdicao) {
+        // CRIAR NOVO USUÁRIO
+        if (!email) throw new Error('Informe o e-mail.');
+        if (!senha || senha.length < 6) throw new Error('Senha deve ter no mínimo 6 caracteres.');
+
+        const cred = await createUserWithEmailAndPassword(auth2, email, senha);
+        const uid  = cred.user.uid;
+
+        await setDoc(doc(db, 'sistema_usuarios', uid), {
+          nome, cargo, email,
+          admin:    isAdmin,
+          modulos:  modulosSelecionados,
+          criado_em: serverTimestamp(),
+          criado_por: usuarioAtual.uid,
+        });
+
+        await auth2.signOut();
+        mostrarSucesso(`Usuário ${nome} criado com sucesso!`);
+
+      } else {
+        // EDITAR USUÁRIO EXISTENTE
+        const dadosUpdate = { nome, cargo, admin: isAdmin, modulos: modulosSelecionados };
+
+        // Resetar senha se fornecida
+        if (senha) {
+          if (senha.length < 6) throw new Error('Senha deve ter no mínimo 6 caracteres.');
+          const d = await getDoc(doc(db, 'sistema_usuarios', uidEditando));
+          if (d.exists() && d.data().email) {
+            await sendPasswordResetEmail(auth, d.data().email);
+            mostrarSucesso('E-mail de redefinição de senha enviado!');
+          }
+        }
+
+        await setDoc(doc(db, 'sistema_usuarios', uidEditando), dadosUpdate, { merge: true });
+        mostrarSucesso(`Usuário ${nome} atualizado!`);
+      }
+
+      fecharModal();
+      await carregarUsuarios();
+
+    } catch(e) {
+      const msgs = {
+        'auth/email-already-in-use': 'Este e-mail já está em uso.',
+        'auth/invalid-email':        'E-mail inválido.',
+        'auth/weak-password':        'Senha fraca. Use ao menos 6 caracteres.',
+      };
+      mostrarErro(msgs[e.code] || e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
+  };
+
+  window.fecharModal = function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  };
+
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) fecharModal();
+  });
+
+  // ── ALERTAS ──────────────────────────────────────────────────────────────────
+  function mostrarErro(msg) {
+    const el = document.getElementById('alertErr');
+    el.textContent = '❌ ' + msg;
+    el.classList.add('show');
+    document.getElementById('alertOk').classList.remove('show');
+    setTimeout(() => el.classList.remove('show'), 6000);
+  }
+
+  function mostrarSucesso(msg) {
+    const el = document.getElementById('alertOk');
+    el.textContent = '✅ ' + msg;
+    el.classList.add('show');
+    document.getElementById('alertErr').classList.remove('show');
+    setTimeout(() => el.classList.remove('show'), 5000);
+  }
+
+</script>
+</body>
+</html>

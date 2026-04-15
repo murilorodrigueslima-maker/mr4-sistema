@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expedição — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:    #FF6B1A;
+    --orange-dk: #e85d0f;
+    --bg:        #F3F4F6;
+    --white:     #FFFFFF;
+    --text:      #1A1A2E;
+    --muted:     #6B7280;
+    --border:    #E5E7EB;
+    --green:     #10B981;
+    --yellow:    #F59E0B;
+    --red:       #EF4444;
+    --blue:      #3B82F6;
+    --purple:    #8B5CF6;
+    --sidebar-w: 240px;
+    --mono:      'JetBrains Mono', monospace;
+  }
+
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+  /* LOADING */
+  #loadingScreen { position:fixed; inset:0; background:var(--white); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:1rem; }
+  #loadingScreen img { height:48px; object-fit:contain; }
+  .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* SIDEBAR */
+  .sidebar { width:var(--sidebar-w); background:var(--white); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; overflow-y:auto; }
+  .sidebar-logo { padding:1.5rem 1.25rem 1rem; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .sidebar-logo img { height:36px; object-fit:contain; }
+  .sidebar-user { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.75rem; }
+  .user-avatar { width:36px; height:36px; border-radius:50%; background:var(--orange); color:#fff; font-weight:700; font-size:.9rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .user-info { flex:1; min-width:0; }
+  .user-name { font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .user-role { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+  .sidebar-nav { flex:1; padding:.75rem 0; }
+  .nav-section { font-size:.62rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; padding:.75rem 1.25rem .3rem; }
+  .nav-item { display:flex; align-items:center; gap:.65rem; padding:.6rem 1.25rem; font-size:.84rem; font-weight:500; color:var(--muted); cursor:pointer; transition:all .15s; text-decoration:none; border-left:3px solid transparent; }
+  .nav-item:hover { background:var(--bg); color:var(--text); }
+  .nav-item.active { background:rgba(255,107,26,.07); color:var(--orange); border-left-color:var(--orange); font-weight:600; }
+  .nav-icon { font-size:1rem; width:20px; text-align:center; }
+  .sidebar-footer { padding:1rem 1.25rem; border-top:1px solid var(--border); }
+  .btn-sair { width:100%; padding:.6rem; border:1.5px solid var(--border); border-radius:8px; background:none; font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; }
+  .btn-sair:hover { border-color:var(--red); color:var(--red); }
+
+  /* MAIN */
+  .main { margin-left:var(--sidebar-w); flex:1; padding:2rem; min-height:100vh; }
+
+  /* PAGE HEADER */
+  .page-header { margin-bottom:1.75rem; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
+  .page-title { font-size:1.4rem; font-weight:800; letter-spacing:-.3px; }
+  .page-sub { font-size:.8rem; color:var(--muted); margin-top:.2rem; }
+  .header-actions { display:flex; align-items:center; gap:.75rem; }
+  .update-info { font-size:.68rem; color:var(--muted); font-family:var(--mono); }
+
+  /* KPI CARDS */
+  .cards-row { display:grid; gap:1rem; margin-bottom:1.5rem; grid-template-columns:repeat(5,1fr); }
+  .kpi-card { background:var(--white); border-radius:14px; border:1px solid var(--border); padding:1.25rem 1.5rem; }
+  .kpi-label { font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:.5rem; }
+  .kpi-value { font-family:var(--mono); font-size:1.6rem; font-weight:600; color:var(--text); line-height:1; }
+  .kpi-sub { font-size:.73rem; color:var(--muted); margin-top:.35rem; }
+  .kpi-card.yellow .kpi-value { color:var(--yellow); }
+  .kpi-card.blue   .kpi-value { color:var(--blue);   }
+  .kpi-card.orange .kpi-value { color:var(--orange); }
+  .kpi-card.purple .kpi-value { color:var(--purple); }
+  .kpi-card.green  .kpi-value { color:var(--green);  }
+
+  /* FILTER BAR */
+  .filter-bar { background:var(--white); border-radius:14px; border:1px solid var(--border); padding:1rem 1.5rem; margin-bottom:1.25rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; }
+  .filter-tabs { display:flex; gap:.4rem; flex-wrap:wrap; flex:1; }
+  .filter-tab { padding:.35rem .85rem; border-radius:99px; font-size:.78rem; font-weight:600; border:1.5px solid var(--border); background:none; cursor:pointer; color:var(--muted); transition:all .15s; font-family:'Inter',sans-serif; }
+  .filter-tab:hover { border-color:var(--orange); color:var(--orange); }
+  .filter-tab.active { background:var(--orange); border-color:var(--orange); color:#fff; }
+  .filter-tab.tab-pendente.active   { background:var(--yellow); border-color:var(--yellow); }
+  .filter-tab.tab-separando.active  { background:var(--blue);   border-color:var(--blue);   }
+  .filter-tab.tab-pronto.active     { background:var(--orange); border-color:var(--orange); }
+  .filter-tab.tab-enviado.active    { background:var(--purple); border-color:var(--purple); }
+  .filter-tab.tab-entregue.active   { background:var(--green);  border-color:var(--green);  }
+  .search-wrap { position:relative; }
+  .search-input { padding:.45rem 1rem .45rem 2.2rem; border:1.5px solid var(--border); border-radius:8px; font-size:.82rem; font-family:'Inter',sans-serif; outline:none; color:var(--text); width:220px; transition:border-color .15s; }
+  .search-input:focus { border-color:var(--orange); }
+  .search-icon { position:absolute; left:.7rem; top:50%; transform:translateY(-50%); color:var(--muted); font-size:.85rem; pointer-events:none; }
+  .btn-refresh { padding:.45rem .9rem; background:var(--orange); color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; transition:background .15s; }
+  .btn-refresh:hover { background:var(--orange-dk); }
+
+  /* TABLE */
+  .section { background:var(--white); border-radius:14px; border:1px solid var(--border); overflow:hidden; }
+  .section-header { padding:1rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .section-title { font-size:.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; }
+  .count-badge { background:var(--bg); border:1px solid var(--border); border-radius:99px; font-size:.72rem; font-weight:700; color:var(--muted); padding:.15rem .6rem; font-family:var(--mono); }
+
+  .data-table { width:100%; border-collapse:collapse; font-size:.83rem; }
+  .data-table th { background:var(--bg); padding:.65rem 1rem; text-align:left; font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  .data-table td { padding:.7rem 1rem; border-bottom:1px solid var(--border); color:var(--text); vertical-align:middle; }
+  .data-table tr:last-child td { border-bottom:none; }
+  .data-table tr:hover td { background:rgba(243,244,246,.6); }
+
+  /* STATUS BADGE */
+  .status-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.3rem .8rem; border-radius:99px; font-size:.72rem; font-weight:700; white-space:nowrap; }
+  .status-pendente  { background:rgba(245,158,11,.12); color:#92660a; border:1px solid rgba(245,158,11,.3); }
+  .status-separando { background:rgba(59,130,246,.12);  color:#1e5fb0; border:1px solid rgba(59,130,246,.3); }
+  .status-pronto    { background:rgba(255,107,26,.12);  color:#c04a00; border:1px solid rgba(255,107,26,.3); }
+  .status-enviado   { background:rgba(139,92,246,.12);  color:#5b3ea6; border:1px solid rgba(139,92,246,.3); }
+  .status-entregue  { background:rgba(16,185,129,.12);  color:#0a7a52; border:1px solid rgba(16,185,129,.3); }
+
+  /* ACTION BUTTONS */
+  .btn-action { padding:.3rem .65rem; border-radius:6px; font-size:.72rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; border:1.5px solid; transition:all .12s; white-space:nowrap; }
+  .btn-avancar { background:none; border-color:var(--orange); color:var(--orange); }
+  .btn-avancar:hover { background:var(--orange); color:#fff; }
+  .btn-rastreio { background:none; border-color:var(--blue); color:var(--blue); }
+  .btn-rastreio:hover { background:var(--blue); color:#fff; }
+  .btn-voltar { background:none; border-color:var(--border); color:var(--muted); }
+  .btn-voltar:hover { border-color:var(--red); color:var(--red); }
+  .btns-cell { display:flex; gap:.4rem; flex-wrap:nowrap; }
+
+  /* MONO */
+  .mono { font-family:var(--mono); font-size:.82rem; }
+  .brl  { font-family:var(--mono); }
+
+  /* EMPTY */
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .empty-state .empty-icon { font-size:2.5rem; margin-bottom:.75rem; }
+  .empty-state p { font-size:.85rem; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; display:none; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--white); border-radius:16px; padding:1.75rem; width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+  .modal-title { font-size:1rem; font-weight:700; margin-bottom:1.25rem; }
+  .modal-info { font-size:.82rem; color:var(--muted); margin-bottom:1.25rem; line-height:1.6; }
+  .modal-field { margin-bottom:1rem; }
+  .modal-field label { display:block; font-size:.75rem; font-weight:700; color:var(--text); margin-bottom:.4rem; letter-spacing:.3px; }
+  .modal-field input, .modal-field select, .modal-field textarea { width:100%; padding:.65rem .9rem; border:1.5px solid var(--border); border-radius:8px; font-size:.85rem; font-family:'Inter',sans-serif; color:var(--text); outline:none; transition:border-color .15s; }
+  .modal-field input:focus, .modal-field select:focus, .modal-field textarea:focus { border-color:var(--orange); }
+  .modal-field textarea { resize:vertical; min-height:70px; }
+  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:1.25rem; }
+  .btn-cancel { padding:.6rem 1.1rem; border:1.5px solid var(--border); border-radius:8px; background:none; font-size:.82rem; font-weight:600; color:var(--muted); cursor:pointer; font-family:'Inter',sans-serif; }
+  .btn-save { padding:.6rem 1.25rem; border:none; border-radius:8px; background:var(--orange); color:#fff; font-size:.82rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:background .15s; }
+  .btn-save:hover { background:var(--orange-dk); }
+
+  /* RESPONSIVE */
+  @media(max-width:1100px) { .cards-row { grid-template-columns:repeat(3,1fr); } }
+  @media(max-width:900px)  { .cards-row { grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:700px)  { .main { padding:1rem; } .cards-row { grid-template-columns:1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <img src="../assets/logo.png" alt="MR4">
+  <div class="spinner"></div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar"></aside>
+
+<!-- Conteúdo principal -->
+<main class="main" id="mainContent" style="display:none">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🚚 Expedição</h1>
+      <p class="page-sub" id="pageSubtitle">Controle de separação e envio de pedidos</p>
+    </div>
+    <div class="header-actions">
+      <span class="update-info" id="updateInfo">—</span>
+      <button class="btn-refresh" onclick="recarregar()">↻ Atualizar</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="cards-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total (14 dias)</div>
+      <div class="kpi-value" id="kpiTotal">—</div>
+      <div class="kpi-sub">pedidos encontrados</div>
+    </div>
+    <div class="kpi-card yellow">
+      <div class="kpi-label">Pendentes</div>
+      <div class="kpi-value" id="kpiPendente">—</div>
+      <div class="kpi-sub">aguardando separação</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Em Separação</div>
+      <div class="kpi-value" id="kpiSeparando">—</div>
+      <div class="kpi-sub">sendo preparados</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-label">Enviados</div>
+      <div class="kpi-value" id="kpiEnviado">—</div>
+      <div class="kpi-sub">em trânsito</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Entregues</div>
+      <div class="kpi-value" id="kpiEntregue">—</div>
+      <div class="kpi-sub">concluídos</div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filter-bar">
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-status="todos" onclick="filtrar('todos',this)">Todos</button>
+      <button class="filter-tab tab-pendente"  data-status="pendente"  onclick="filtrar('pendente',this)">⏳ Pendente</button>
+      <button class="filter-tab tab-separando" data-status="separando" onclick="filtrar('separando',this)">📦 Separando</button>
+      <button class="filter-tab tab-pronto"    data-status="pronto"    onclick="filtrar('pronto',this)">✅ Pronto</button>
+      <button class="filter-tab tab-enviado"   data-status="enviado"   onclick="filtrar('enviado',this)">🚚 Enviado</button>
+      <button class="filter-tab tab-entregue"  data-status="entregue"  onclick="filtrar('entregue',this)">🎯 Entregue</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Cliente ou nº pedido..." oninput="renderTabela()">
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-title">Pedidos</span>
+      <span class="count-badge" id="countBadge">0</span>
+    </div>
+    <div id="tabelaWrap">
+      <div class="empty-state">
+        <div class="empty-icon">🚚</div>
+        <p>Carregando pedidos...</p>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal Rastreio/Obs -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">📦 Detalhes do Pedido</div>
+    <div class="modal-info" id="modalInfo"></div>
+    <div class="modal-field">
+      <label>Transportadora</label>
+      <input type="text" id="mdTransportadora" placeholder="Ex: Correios, Jadlog, Mercado Envios...">
+    </div>
+    <div class="modal-field">
+      <label>Código de Rastreio</label>
+      <input type="text" id="mdRastreio" placeholder="Ex: BR123456789BR">
+    </div>
+    <div class="modal-field">
+      <label>Observação</label>
+      <textarea id="mdObs" placeholder="Informações adicionais..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-save"   onclick="salvarModal()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase + Lógica -->
+<script type="module">
+  import { initializeApp }                                      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut }               from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain:        "mr4-ponto.firebaseapp.com",
+    projectId:         "mr4-ponto",
+    storageBucket:     "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId:             "1:848211361584:web:2732e1893122f4a23452f5"
+  };
+
+  const MODULOS = [
+    { id:'vendas',     nome:'Painel de Vendas', icon:'📊', url:'./vendas.html'     },
+    { id:'estoque',    nome:'Estoque',           icon:'🗄️', url:'./estoque.html'    },
+    { id:'financeiro', nome:'Financeiro',        icon:'💰', url:'./financeiro.html' },
+    { id:'catalogo',   nome:'Catálogo',          icon:'📦', url:'https://catalogo.mr4distribuidora.com.br' },
+    { id:'expedicao',  nome:'Expedição',         icon:'🚚', url:'./expedicao.html'  },
+    { id:'ponto',      nome:'Ponto',             icon:'📍', url:'./ponto.html'      },
+    { id:'marketing',  nome:'Marketing',         icon:'📢', url:'./marketing.html'  },
+    { id:'garantia',   nome:'Garantia',          icon:'🛡️', url:'./garantia.html'   },
+    { id:'admin',      nome:'Administração',     icon:'⚙️', url:'./admin.html'      },
+  ];
+
+  const app  = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  // ── Estado ──────────────────────────────────────────────────────────────────
+  let pedidosGC     = [];   // dados do GestãoClick (pedidos.json)
+  let statusFS      = {};   // { [pedidoId]: { status, rastreio, transportadora, obs } }
+  let filtroAtual   = 'todos';
+  let pedidoModal   = null; // pedido em edição no modal
+  let usuarioLogado = null;
+
+  // ── AUTH + INIT ─────────────────────────────────────────────────────────────
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = '../login.html'; return; }
+    usuarioLogado = user;
+
+    let perfil = { nome: user.displayName || user.email.split('@')[0], cargo:'Usuário', modulos:[], admin:false };
+    try {
+      const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        perfil = { ...perfil, ...d };
+        if (d.admin) perfil.modulos = MODULOS.map(m => m.id);
+      }
+    } catch(e) {}
+
+    if (!perfil.admin && !perfil.modulos.includes('expedicao')) {
+      window.location.href = '../index.html';
+      return;
+    }
+
+    renderSidebar(perfil, user.email);
+    document.getElementById('mainContent').style.display = '';
+    document.getElementById('loadingScreen').style.display = 'none';
+
+    await carregarDados();
+  });
+
+  // ── SIDEBAR ─────────────────────────────────────────────────────────────────
+  function renderSidebar(perfil, email) {
+    const sidebar = document.getElementById('sidebar');
+    const inicial = (perfil.nome || '?')[0].toUpperCase();
+    let navItems = '';
+    MODULOS.forEach(m => {
+      const tem   = perfil.admin || perfil.modulos.includes(m.id);
+      const ativo = m.id === 'expedicao' ? ' active' : '';
+      if (tem) navItems += `<a class="nav-item${ativo}" href="${m.url}"><span class="nav-icon">${m.icon}</span>${m.nome}</a>`;
+    });
+    sidebar.innerHTML = `
+      <div class="sidebar-logo"><img src="../assets/logo.png" alt="MR4 Distribuidora"></div>
+      <div class="sidebar-user">
+        <div class="user-avatar">${inicial}</div>
+        <div class="user-info">
+          <div class="user-name">${perfil.nome || email}</div>
+          <div class="user-role">${perfil.cargo || 'Usuário'}</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Módulos</div>
+        ${navItems}
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn-sair" onclick="window._sair()">↩ Sair do sistema</button>
+      </div>`;
+    window._sair = async () => { await signOut(auth); window.location.href = '../login.html'; };
+  }
+
+  // ── CARREGAR DADOS ──────────────────────────────────────────────────────────
+  async function carregarDados() {
+    try {
+      // 1. Pedidos do JSON (GestãoClick)
+      const resp = await fetch('../data/pedidos.json?v=' + Date.now());
+      const json = await resp.json();
+      pedidosGC = json.pedidos || [];
+
+      const atuEm = json.atualizado_em || '—';
+      document.getElementById('updateInfo').textContent = 'Atualizado: ' + atuEm.replace('T', ' ');
+
+      // 2. Status do Firestore
+      statusFS = {};
+      const snap = await getDocs(collection(db, 'expedicao'));
+      snap.forEach(d => { statusFS[d.id] = d.data(); });
+
+    } catch(e) {
+      console.warn('Erro ao carregar dados:', e);
+    }
+
+    atualizarKPIs();
+    renderTabela();
+  }
+
+  // ── KPIs ────────────────────────────────────────────────────────────────────
+  function atualizarKPIs() {
+    const contagem = { pendente:0, separando:0, pronto:0, enviado:0, entregue:0 };
+    pedidosGC.forEach(p => {
+      const st = (statusFS[p.id]?.status) || 'pendente';
+      if (contagem[st] !== undefined) contagem[st]++;
+    });
+    document.getElementById('kpiTotal').textContent    = pedidosGC.length;
+    document.getElementById('kpiPendente').textContent  = contagem.pendente;
+    document.getElementById('kpiSeparando').textContent = contagem.separando + (contagem.pronto || 0);
+    document.getElementById('kpiEnviado').textContent   = contagem.enviado;
+    document.getElementById('kpiEntregue').textContent  = contagem.entregue;
+  }
+
+  // ── RENDER TABELA ───────────────────────────────────────────────────────────
+  window.renderTabela = function() {
+    const busca = (document.getElementById('searchInput')?.value || '').toLowerCase();
+
+    const filtrados = pedidosGC.filter(p => {
+      const st = (statusFS[p.id]?.status) || 'pendente';
+      if (filtroAtual !== 'todos' && st !== filtroAtual) return false;
+      if (busca) {
+        const haystack = (p.cliente + p.numero + p.vendedor).toLowerCase();
+        if (!haystack.includes(busca)) return false;
+      }
+      return true;
+    });
+
+    document.getElementById('countBadge').textContent = filtrados.length;
+
+    if (!filtrados.length) {
+      document.getElementById('tabelaWrap').innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p>Nenhum pedido encontrado.</p>
+        </div>`;
+      return;
+    }
+
+    const linhas = filtrados.map(p => {
+      const fsData = statusFS[p.id] || {};
+      const st     = fsData.status || 'pendente';
+      const rastreio     = fsData.rastreio || '';
+      const transportadora = fsData.transportadora || '';
+
+      const badge = `<span class="status-badge status-${st}">${iconeStatus(st)} ${labelStatus(st)}</span>`;
+
+      const btnAvancar = st !== 'entregue'
+        ? `<button class="btn-action btn-avancar" onclick="avancar('${p.id}')">Avançar ›</button>`
+        : '';
+      const btnRastreio = `<button class="btn-action btn-rastreio" onclick="abrirModal('${p.id}')">📋 Detalhes</button>`;
+      const btnVoltar   = st !== 'pendente'
+        ? `<button class="btn-action btn-voltar" onclick="voltar('${p.id}')">‹ Voltar</button>`
+        : '';
+
+      const rastreioCell = rastreio
+        ? `<span class="mono" style="font-size:.75rem;color:var(--muted)">${transportadora ? transportadora + ' · ' : ''}${rastreio}</span>`
+        : `<span style="color:var(--border)">—</span>`;
+
+      const dataFmt = p.data ? new Date(p.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const valorFmt = p.valor.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+
+      return `<tr>
+        <td class="mono">#${p.numero}</td>
+        <td>${dataFmt}</td>
+        <td><strong>${p.cliente}</strong>${p.cidade ? `<br><span style="font-size:.72rem;color:var(--muted)">${p.cidade}</span>` : ''}</td>
+        <td style="color:var(--muted);font-size:.8rem">${p.vendedor}</td>
+        <td class="brl">${valorFmt}</td>
+        <td>${badge}</td>
+        <td>${rastreioCell}</td>
+        <td><div class="btns-cell">${btnRastreio}${btnAvancar}${btnVoltar}</div></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('tabelaWrap').innerHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nº Pedido</th>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Vendedor</th>
+            <th>Valor</th>
+            <th>Status</th>
+            <th>Rastreio</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>${linhas}</tbody>
+      </table>`;
+  };
+
+  // ── HELPERS STATUS ──────────────────────────────────────────────────────────
+  const STATUS_ORDER = ['pendente','separando','pronto','enviado','entregue'];
+  function labelStatus(s) {
+    return { pendente:'Pendente', separando:'Separando', pronto:'Pronto p/ Envio', enviado:'Enviado', entregue:'Entregue' }[s] || s;
+  }
+  function iconeStatus(s) {
+    return { pendente:'⏳', separando:'📦', pronto:'✅', enviado:'🚚', entregue:'🎯' }[s] || '•';
+  }
+
+  // ── AVANÇAR / VOLTAR STATUS ─────────────────────────────────────────────────
+  window.avancar = async function(id) {
+    const st  = statusFS[id]?.status || 'pendente';
+    const idx = STATUS_ORDER.indexOf(st);
+    if (idx >= STATUS_ORDER.length - 1) return;
+    const novo = STATUS_ORDER[idx + 1];
+    await salvarStatus(id, { ...statusFS[id], status: novo });
+    atualizarKPIs();
+    renderTabela();
+  };
+
+  window.voltar = async function(id) {
+    const st  = statusFS[id]?.status || 'pendente';
+    const idx = STATUS_ORDER.indexOf(st);
+    if (idx <= 0) return;
+    const novo = STATUS_ORDER[idx - 1];
+    await salvarStatus(id, { ...statusFS[id], status: novo });
+    atualizarKPIs();
+    renderTabela();
+  };
+
+  async function salvarStatus(id, dados) {
+    const payload = {
+      status:         dados.status         || 'pendente',
+      rastreio:       dados.rastreio        || '',
+      transportadora: dados.transportadora  || '',
+      obs:            dados.obs             || '',
+      atualizado_por: usuarioLogado?.uid    || '',
+      atualizado_em:  new Date().toISOString(),
+    };
+    await setDoc(doc(db, 'expedicao', id), payload, { merge: true });
+    statusFS[id] = payload;
+  }
+
+  // ── MODAL ───────────────────────────────────────────────────────────────────
+  window.abrirModal = function(id) {
+    pedidoModal = pedidosGC.find(p => p.id === id);
+    if (!pedidoModal) return;
+
+    const fsData = statusFS[id] || {};
+    const valorFmt = pedidoModal.valor.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+    const dataFmt  = pedidoModal.data
+      ? new Date(pedidoModal.data + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+
+    document.getElementById('modalInfo').innerHTML =
+      `<b>#${pedidoModal.numero}</b> · ${pedidoModal.cliente}<br>
+       📅 ${dataFmt} · 👤 ${pedidoModal.vendedor} · ${valorFmt}`;
+
+    document.getElementById('mdTransportadora').value = fsData.transportadora || '';
+    document.getElementById('mdRastreio').value        = fsData.rastreio       || '';
+    document.getElementById('mdObs').value             = fsData.obs            || '';
+
+    document.getElementById('modalOverlay').classList.add('open');
+  };
+
+  window.fecharModal = function() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    pedidoModal = null;
+  };
+
+  window.salvarModal = async function() {
+    if (!pedidoModal) return;
+    const fsData = statusFS[pedidoModal.id] || {};
+    await salvarStatus(pedidoModal.id, {
+      ...fsData,
+      transportadora: document.getElementById('mdTransportadora').value.trim(),
+      rastreio:       document.getElementById('mdRastreio').value.trim(),
+      obs:            document.getElementById('mdObs').value.trim(),
+    });
+    fecharModal();
+    renderTabela();
+  };
+
+  // Fechar modal clicando fora
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modalOverlay')) fecharModal();
+  });
+
+  // ── FILTRO ──────────────────────────────────────────────────────────────────
+  window.filtrar = function(status, btn) {
+    filtroAtual = status;
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderTabela();
+  };
+
+  // ── RECARREGAR ──────────────────────────────────────────────────────────────
+  window.recarregar = async function() {
+    document.getElementById('updateInfo').textContent = 'Atualizando...';
+    await carregarDados();
+  };
+
+</script>
+</body>
+</html>

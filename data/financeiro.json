@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-14T21:14:09",
+  "atualizado_em": "2026-04-15T03:24:11",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -196,21 +196,23 @@
       "vencimento": "2026-04-13",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1521.73,
       "vencimento": "2026-04-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 964.12,
       "vencimento": "2026-04-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "sistema gestãoclick inter",
       "valor": 16,
@@ -346,7 +348,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46749.55999999999,
+  "total_vencido": 49235.409999999996,
   "total_a_receber": 0,
-  "total_a_pagar": 21073.170000000002
+  "total_a_pagar": 23513.640000000007
 }

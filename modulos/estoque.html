@@ -135,9 +135,114 @@
 
   .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--white); cursor: pointer; font-size: 1.1rem; }
 
+  /* ── TABS ── */
+  .tab-bar { display: flex; gap: 0; margin-bottom: 1.75rem; border-bottom: 2px solid var(--border); }
+  .tab-btn { padding: .65rem 1.35rem; font-size: .85rem; font-weight: 600; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; display: flex; align-items: center; gap: .4rem; white-space: nowrap; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 700; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── EQUIVALENTES ── */
+  .eq-toolbar { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .eq-search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .eq-search-wrap input { width: 100%; background: var(--white); border: 1.5px solid var(--border); border-radius: 8px; padding: .48rem .85rem .48rem 2.1rem; color: var(--text); font-size: .83rem; outline: none; transition: border-color .15s; font-family: 'Inter', sans-serif; }
+  .eq-search-wrap input:focus { border-color: var(--orange); }
+  .eq-search-wrap input::placeholder { color: var(--muted); }
+  .eq-search-ico { position: absolute; left: .7rem; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: .85rem; pointer-events: none; }
+  .btn-eq-novo { padding: .5rem 1.1rem; background: var(--orange); color: #fff; border: none; border-radius: 8px; font-size: .82rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .15s; white-space: nowrap; }
+  .btn-eq-novo:hover { background: var(--orange-dk); }
+
+  .eq-stats { display: flex; gap: .75rem; margin-bottom: 1.25rem; }
+  .eq-stat { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .65rem 1.1rem; text-align: center; min-width: 120px; }
+  .eq-stat-lbl { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: .2rem; }
+  .eq-stat-val { font-size: 1.5rem; font-weight: 800; font-family: var(--mono); color: var(--orange); }
+
+  .eq-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 1rem; }
+  .eq-card { background: var(--white); border: 1px solid var(--border); border-left: 4px solid var(--orange); border-radius: 12px; overflow: hidden; transition: box-shadow .15s; }
+  .eq-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.07); }
+  .eq-card-head { padding: .85rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: .6rem; background: rgba(255,107,26,.03); }
+  .eq-card-ico { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+  .eq-card-info { flex: 1; min-width: 0; }
+  .eq-card-nome { font-size: .9rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+  .eq-card-desc { font-size: .73rem; color: var(--muted); margin-top: .15rem; }
+  .eq-card-acts { display: flex; gap: .3rem; flex-shrink: 0; }
+  .eq-btn-ico { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border); background: none; cursor: pointer; font-size: .8rem; display: flex; align-items: center; justify-content: center; transition: all .12s; color: var(--muted); }
+  .eq-btn-ico:hover.edit { border-color: var(--blue); color: var(--blue); background: rgba(59,130,246,.07); }
+  .eq-btn-ico:hover.del  { border-color: var(--red);  color: var(--red);  background: rgba(239,68,68,.07); }
+  .eq-card-body { padding: .75rem 1rem; }
+  .eq-table { width: 100%; border-collapse: collapse; }
+  .eq-table th { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .7px; color: var(--muted); padding: .25rem .4rem; text-align: left; border-bottom: 1px solid var(--border); }
+  .eq-table td { font-size: .8rem; padding: .45rem .4rem; border-bottom: 1px solid rgba(229,231,235,.6); color: var(--text); vertical-align: middle; }
+  .eq-table tr:last-child td { border-bottom: none; }
+  .eq-table tr:hover td { background: rgba(243,244,246,.5); }
+  .eq-td-cod { font-family: var(--mono); font-weight: 700; color: var(--orange); white-space: nowrap; }
+  .eq-td-fab { display: inline-flex; align-items: center; padding: .14rem .5rem; border-radius: 99px; font-size: .68rem; font-weight: 600; background: rgba(59,130,246,.08); color: var(--blue); border: 1px solid rgba(59,130,246,.2); white-space: nowrap; }
+  .eq-card-foot { padding: .4rem 1rem .6rem; font-size: .7rem; color: var(--muted); }
+  .eq-card-foot b { color: var(--orange); }
+
+  .eq-empty { text-align: center; padding: 4rem 2rem; }
+  .eq-empty-ico { font-size: 3rem; margin-bottom: .85rem; opacity: .45; }
+  .eq-empty-ttl { font-size: .95rem; font-weight: 700; color: var(--text); margin-bottom: .35rem; }
+  .eq-empty-sub { font-size: .8rem; color: var(--muted); max-width: 340px; margin: 0 auto; line-height: 1.6; }
+  .eq-empty-btn { margin-top: 1.1rem; padding: .5rem 1.4rem; background: var(--orange); color: #fff; border: none; border-radius: 8px; font-size: .83rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .eq-empty-btn:hover { background: var(--orange-dk); }
+
+  /* ── MODAL EQUIVALENTES ── */
+  .eq-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(2px); z-index: 500; display: none; align-items: flex-start; justify-content: center; padding: 2rem 1rem; overflow-y: auto; }
+  .eq-overlay.open { display: flex; }
+  .eq-modal { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; width: 100%; max-width: 640px; box-shadow: 0 20px 50px rgba(0,0,0,.15); animation: mIn .2s ease; margin: auto; }
+  @keyframes mIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .eq-modal-ttl { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 1.25rem; padding-bottom: .75rem; border-bottom: 1px solid var(--border); }
+  .eq-form-row { margin-bottom: .85rem; }
+  .eq-form-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: .35rem; display: block; }
+  .eq-form-inp { width: 100%; background: var(--bg); border: 1.5px solid var(--border); border-radius: 8px; padding: .52rem .85rem; color: var(--text); font-size: .85rem; outline: none; transition: border-color .15s; font-family: 'Inter', sans-serif; }
+  .eq-form-inp:focus { border-color: var(--orange); }
+  .eq-form-inp::placeholder { color: var(--muted); }
+
+  .eq-prod-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: .55rem; }
+  .eq-prod-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+  .btn-eq-add { padding: .26rem .8rem; background: rgba(16,185,129,.1); color: var(--green); border: 1px solid rgba(16,185,129,.3); border-radius: 6px; font-size: .73rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .12s; }
+  .btn-eq-add:hover { background: var(--green); color: #fff; border-color: var(--green); }
+  .eq-col-hd { display: grid; grid-template-columns: 120px 1fr 135px 32px; gap: .4rem; padding: 0 0 .3rem; border-bottom: 1px solid var(--border); margin-bottom: .4rem; }
+  .eq-col-hd span { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); padding: 0 .4rem; }
+  .eq-prod-rows { display: flex; flex-direction: column; gap: .4rem; max-height: 300px; overflow-y: auto; padding-right: .2rem; }
+  .eq-prod-rows::-webkit-scrollbar { width: 4px; }
+  .eq-prod-rows::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  .eq-prod-row { display: grid; grid-template-columns: 120px 1fr 135px 32px; gap: .4rem; align-items: center; }
+  .eq-prod-row .eq-form-inp { font-size: .78rem; padding: .4rem .6rem; }
+  .eq-prod-row .eq-form-inp.cod { font-family: var(--mono); }
+  .btn-eq-rm { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: none; cursor: pointer; font-size: .85rem; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: all .12s; flex-shrink: 0; }
+  .btn-eq-rm:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.07); }
+  .eq-prod-hint { font-size: .7rem; color: var(--muted); margin-top: .45rem; opacity: .7; }
+
+  .eq-modal-foot { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.3rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .btn-eq-cancel { padding: .52rem 1.1rem; border: 1.5px solid var(--border); border-radius: 8px; background: none; color: var(--muted); font-size: .8rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .12s; }
+  .btn-eq-cancel:hover { border-color: var(--red); color: var(--red); }
+  .btn-eq-save { padding: .52rem 1.5rem; border: none; border-radius: 8px; background: var(--orange); color: #fff; font-size: .8rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .12s; }
+  .btn-eq-save:hover { background: var(--orange-dk); }
+  .btn-eq-save:disabled { opacity: .38; cursor: not-allowed; }
+
+  .eq-confirm-box { background: rgba(239,68,68,.07); border: 1px solid rgba(239,68,68,.25); border-radius: 10px; padding: .9rem 1.1rem; margin-bottom: 1.1rem; }
+  .eq-confirm-box p { font-size: .85rem; color: var(--text); line-height: 1.6; }
+  .eq-confirm-box strong { color: var(--red); }
+  .btn-eq-del { padding: .52rem 1.4rem; border: none; border-radius: 8px; background: var(--red); color: #fff; font-size: .8rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: background .12s; }
+  .btn-eq-del:hover { background: #c53030; }
+  .btn-eq-del:disabled { opacity: .38; cursor: not-allowed; }
+
+  /* ── TOAST ── */
+  .toast-wrap { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999; display: flex; flex-direction: column; gap: .4rem; pointer-events: none; }
+  .toast { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .7rem 1rem; font-size: .82rem; color: var(--text); display: flex; align-items: center; gap: .5rem; min-width: 220px; max-width: 310px; box-shadow: 0 6px 20px rgba(0,0,0,.1); animation: tIn .25s ease; pointer-events: auto; }
+  .toast.out { animation: tOut .25s ease forwards; }
+  .toast.ok  { border-left: 3px solid var(--green); }
+  .toast.err { border-left: 3px solid var(--red); }
+  .toast.inf { border-left: 3px solid var(--blue); }
+  @keyframes tIn  { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes tOut { from { opacity: 1; } to { opacity: 0; transform: translateX(8px); } }
+
   /* ── PRINT ── */
   @media print {
-    .sidebar, .page-header, .kpi-card, #secAbaixoMinimo, #secSemGiro, #secMargemBaixa, .btn-print, #loadingScreen { display: none !important; }
+    .sidebar, .page-header, .kpi-card, #secAbaixoMinimo, #secSemGiro, #secMargemBaixa, .btn-print, #loadingScreen, .tab-bar, #tabEquivalentes { display: none !important; }
     .main { margin-left: 0 !important; padding: 0 !important; }
     #secListaCompras { border: none !important; box-shadow: none !important; }
     .section-header .btn-print { display: none !important; }
@@ -197,6 +302,15 @@
     </div>
     <button class="mobile-menu-btn" id="menuBtn" aria-label="Menu">☰</button>
   </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="trocarTab('estoque', this)">🗄️ Visão Geral</button>
+    <button class="tab-btn" onclick="trocarTab('equivalentes', this)">🔗 Equivalentes</button>
+  </div>
+
+  <!-- ══ PANE: Estoque ══ -->
+  <div class="tab-pane active" id="tabEstoque">
 
   <!-- KPI Row -->
   <div class="cards-row">
@@ -296,9 +410,86 @@
         <div class="empty-desc">A lista de reposição será gerada automaticamente a partir dos produtos abaixo do mínimo.</div>
       </div>
     </div>
-  </div>
+  </div><!-- /secListaCompras -->
+
+  </div><!-- /tabEstoque -->
+
+  <!-- ══ PANE: Equivalentes ══ -->
+  <div class="tab-pane" id="tabEquivalentes">
+
+    <div class="eq-toolbar">
+      <div class="eq-search-wrap">
+        <span class="eq-search-ico">🔍</span>
+        <input type="text" id="eqSearch" placeholder="Buscar por código, nome ou fabricante…" oninput="eqFiltrar(this.value)">
+      </div>
+      <button class="btn-eq-novo" onclick="eqAbrirNovo()">＋ Novo Grupo</button>
+    </div>
+
+    <div class="eq-stats">
+      <div class="eq-stat"><div class="eq-stat-lbl">Grupos</div><div class="eq-stat-val" id="eqStatGrupos">—</div></div>
+      <div class="eq-stat"><div class="eq-stat-lbl">Produtos agrupados</div><div class="eq-stat-val" id="eqStatProd">—</div></div>
+    </div>
+
+    <div id="eqContent">
+      <div class="eq-empty">
+        <div class="eq-empty-ico">🔗</div>
+        <div class="eq-empty-ttl">Carregando grupos…</div>
+      </div>
+    </div>
+
+  </div><!-- /tabEquivalentes -->
 
 </main>
+
+<!-- Modal Equivalentes: Criar/Editar -->
+<div class="eq-overlay" id="eqOverlayEdit">
+  <div class="eq-modal">
+    <div class="eq-modal-ttl" id="eqModalTtl">➕ Novo Grupo de Equivalentes</div>
+    <div class="eq-form-row">
+      <label class="eq-form-lbl" for="eqNome">Nome do grupo <span style="color:var(--red)">*</span></label>
+      <input class="eq-form-inp" id="eqNome" placeholder="Ex: Moldura 9″ Hyundai IX35 2010/2022" maxlength="120">
+    </div>
+    <div class="eq-form-row">
+      <label class="eq-form-lbl" for="eqDesc">Observação</label>
+      <input class="eq-form-inp" id="eqDesc" placeholder="Opcional — aplicação, nota sobre equivalência…" maxlength="240">
+    </div>
+    <div class="eq-form-row" style="margin-bottom:.3rem">
+      <div class="eq-prod-hd">
+        <span class="eq-prod-lbl">Produtos equivalentes <span style="color:var(--red)">*</span></span>
+        <button class="btn-eq-add" onclick="eqAddLinha()">＋ Adicionar</button>
+      </div>
+      <div class="eq-col-hd">
+        <span style="padding-left:.4rem">Código / Ref.</span>
+        <span>Nome / Descrição</span>
+        <span>Fabricante</span>
+        <span></span>
+      </div>
+      <div class="eq-prod-rows" id="eqProdRows"></div>
+      <div class="eq-prod-hint">💡 Preencha ao menos o código ou o nome de cada produto.</div>
+    </div>
+    <div class="eq-modal-foot">
+      <button class="btn-eq-cancel" onclick="eqFecharEdit()">Cancelar</button>
+      <button class="btn-eq-save" id="eqBtnSalvar" onclick="eqSalvar()">Salvar grupo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Equivalentes: Confirmar Delete -->
+<div class="eq-overlay" id="eqOverlayDel">
+  <div class="eq-modal" style="max-width:420px">
+    <div class="eq-modal-ttl">🗑️ Excluir grupo</div>
+    <div class="eq-confirm-box">
+      <p>Você está prestes a excluir:<br><strong id="eqDelNome"></strong></p>
+      <p style="margin-top:.4rem;font-size:.77rem;color:var(--muted)">Esta ação não pode ser desfeita.</p>
+    </div>
+    <div class="eq-modal-foot">
+      <button class="btn-eq-cancel" onclick="eqFecharDel()">Cancelar</button>
+      <button class="btn-eq-del" id="eqBtnDel" onclick="eqExecutarDel()">Sim, excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
 
 <!-- Firebase + Logic -->
 <script type="module">
@@ -563,6 +754,279 @@
   document.getElementById('menuBtn')?.addEventListener('click', () => {
     document.getElementById('sidebar').classList.toggle('open');
   });
+
+  // ── Expõe db para o script de Equivalentes ──
+  window.__db = db;
+
+  // ── TABS ──────────────────────────────────────────────────────────────────
+  window.trocarTab = function(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    if (tab === 'equivalentes' && !window._eqCarregado) {
+      window._eqCarregado = true;
+      eqCarregar();
+    }
+  };
+</script>
+
+<!-- Equivalentes logic -->
+<script>
+  // ── Estado ────────────────────────────────────────────────────────────────
+  let _eqGrupos  = [];
+  let _eqFiltro  = '';
+  let _eqEditId  = null;
+  let _eqDelId   = null;
+  let _eqRowSeq  = 0;
+
+  // ── Firestore helper ──────────────────────────────────────────────────────
+  async function fsEq(fn) {
+    const m = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    return fn(m);
+  }
+
+  // ── Carregar ──────────────────────────────────────────────────────────────
+  async function eqCarregar() {
+    document.getElementById('eqContent').innerHTML =
+      '<div class="eq-empty"><div class="eq-empty-ico">🔗</div><div class="eq-empty-ttl">Carregando…</div></div>';
+    try {
+      await fsEq(async ({ collection, getDocs }) => {
+        const snap = await getDocs(collection(window.__db, 'produto_equivalentes'));
+        _eqGrupos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        _eqGrupos.sort((a, b) => (a.nome||'').localeCompare(b.nome||'', 'pt-BR'));
+      });
+      eqRenderStats();
+      eqRenderGrid();
+    } catch(e) {
+      console.error(e);
+      eqToast('Erro ao carregar grupos', 'err');
+    }
+  }
+
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  function eqRenderStats() {
+    document.getElementById('eqStatGrupos').textContent = _eqGrupos.length;
+    document.getElementById('eqStatProd').textContent   = _eqGrupos.reduce((s, g) => s + (g.produtos||[]).length, 0);
+  }
+
+  // ── Grid ──────────────────────────────────────────────────────────────────
+  function eqRenderGrid() {
+    const content = document.getElementById('eqContent');
+    const q = _eqFiltro.toLowerCase().trim();
+    const lista = q
+      ? _eqGrupos.filter(g =>
+          (g.nome||'').toLowerCase().includes(q) ||
+          (g.descricao||'').toLowerCase().includes(q) ||
+          (g.produtos||[]).some(p =>
+            (p.codigo||'').toLowerCase().includes(q) ||
+            (p.nome||'').toLowerCase().includes(q) ||
+            (p.fabricante||'').toLowerCase().includes(q)
+          )
+        )
+      : _eqGrupos;
+
+    if (_eqGrupos.length === 0) {
+      content.innerHTML = `
+        <div class="eq-empty">
+          <div class="eq-empty-ico">🔗</div>
+          <div class="eq-empty-ttl">Nenhum grupo cadastrado ainda</div>
+          <div class="eq-empty-sub">Agrupe códigos diferentes que representam a mesma peça para evitar pedidos em duplicidade.</div>
+          <button class="eq-empty-btn" onclick="eqAbrirNovo()">＋ Criar primeiro grupo</button>
+        </div>`;
+      return;
+    }
+    if (lista.length === 0) {
+      content.innerHTML = `
+        <div class="eq-empty">
+          <div class="eq-empty-ico" style="font-size:2.2rem">🔎</div>
+          <div class="eq-empty-ttl">Nenhum resultado</div>
+          <div class="eq-empty-sub">Nenhum grupo encontrado para "<strong>${eqEsc(_eqFiltro)}</strong>".</div>
+        </div>`;
+      return;
+    }
+
+    content.innerHTML = `<div class="eq-grid">${lista.map(eqCardHtml).join('')}</div>`;
+  }
+
+  function eqCardHtml(g) {
+    const prods = g.produtos || [];
+    const linhas = prods.map(p => `
+      <tr>
+        <td class="eq-td-cod">${eqEsc(p.codigo)}</td>
+        <td>${eqEsc(p.nome)}</td>
+        <td>${p.fabricante ? `<span class="eq-td-fab">${eqEsc(p.fabricante)}</span>` : '<span style="color:var(--muted);font-size:.7rem">—</span>'}</td>
+      </tr>`).join('');
+    return `
+      <div class="eq-card" id="eqc-${g.id}">
+        <div class="eq-card-head">
+          <span class="eq-card-ico">🔗</span>
+          <div class="eq-card-info">
+            <div class="eq-card-nome">${eqEsc(g.nome)}</div>
+            ${g.descricao ? `<div class="eq-card-desc">${eqEsc(g.descricao)}</div>` : ''}
+          </div>
+          <div class="eq-card-acts">
+            <button class="eq-btn-ico edit" title="Editar"  onclick="eqAbrirEdicao('${g.id}')">✏️</button>
+            <button class="eq-btn-ico del"  title="Excluir" onclick="eqAbrirDel('${g.id}')">🗑️</button>
+          </div>
+        </div>
+        <div class="eq-card-body">
+          <table class="eq-table">
+            <thead><tr><th>Código / Ref.</th><th>Nome / Descrição</th><th>Fabricante</th></tr></thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>
+        <div class="eq-card-foot">
+          <b>${prods.length}</b> produto${prods.length !== 1 ? 's' : ''} equivalente${prods.length !== 1 ? 's' : ''}
+          ${g.atualizado_em ? ` · atualizado ${eqFmtData(g.atualizado_em)}` : ''}
+        </div>
+      </div>`;
+  }
+
+  // ── Filtro ────────────────────────────────────────────────────────────────
+  window.eqFiltrar = function(v) { _eqFiltro = v; eqRenderGrid(); };
+
+  // ── Modal criar ───────────────────────────────────────────────────────────
+  window.eqAbrirNovo = function() {
+    _eqEditId = null;
+    document.getElementById('eqModalTtl').textContent   = '➕ Novo Grupo de Equivalentes';
+    document.getElementById('eqBtnSalvar').textContent  = 'Salvar grupo';
+    document.getElementById('eqNome').value = '';
+    document.getElementById('eqDesc').value = '';
+    document.getElementById('eqProdRows').innerHTML = '';
+    _eqRowSeq = 0;
+    eqAddLinha(); eqAddLinha();
+    document.getElementById('eqOverlayEdit').classList.add('open');
+    setTimeout(() => document.getElementById('eqNome').focus(), 80);
+  };
+
+  // ── Modal editar ──────────────────────────────────────────────────────────
+  window.eqAbrirEdicao = function(id) {
+    const g = _eqGrupos.find(x => x.id === id);
+    if (!g) return;
+    _eqEditId = id;
+    document.getElementById('eqModalTtl').textContent  = '✏️ Editar Grupo';
+    document.getElementById('eqBtnSalvar').textContent = 'Salvar alterações';
+    document.getElementById('eqNome').value = g.nome || '';
+    document.getElementById('eqDesc').value = g.descricao || '';
+    document.getElementById('eqProdRows').innerHTML = '';
+    _eqRowSeq = 0;
+    (g.produtos || []).forEach(p => eqAddLinha(p));
+    if (!(g.produtos||[]).length) { eqAddLinha(); eqAddLinha(); }
+    document.getElementById('eqOverlayEdit').classList.add('open');
+    setTimeout(() => document.getElementById('eqNome').focus(), 80);
+  };
+
+  window.eqFecharEdit = function() {
+    document.getElementById('eqOverlayEdit').classList.remove('open');
+    _eqEditId = null;
+  };
+
+  // ── Linha de produto ──────────────────────────────────────────────────────
+  window.eqAddLinha = function(p = {}) {
+    _eqRowSeq++;
+    const id = 'eqr' + _eqRowSeq;
+    const div = document.createElement('div');
+    div.className = 'eq-prod-row'; div.id = id;
+    div.innerHTML = `
+      <input class="eq-form-inp cod" placeholder="Ex: MD09-0102"  data-f="codigo"     value="${eqEsc(p.codigo||'')}">
+      <input class="eq-form-inp"     placeholder="Nome do produto" data-f="nome"       value="${eqEsc(p.nome||'')}">
+      <input class="eq-form-inp"     placeholder="Fabricante"      data-f="fabricante" value="${eqEsc(p.fabricante||'')}">
+      <button class="btn-eq-rm" onclick="eqRmLinha('${id}')" title="Remover">✕</button>`;
+    document.getElementById('eqProdRows').appendChild(div);
+  };
+
+  window.eqRmLinha = function(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  };
+
+  // ── Salvar ────────────────────────────────────────────────────────────────
+  window.eqSalvar = async function() {
+    const nome = document.getElementById('eqNome').value.trim();
+    if (!nome) { eqToast('Informe o nome do grupo', 'err'); return; }
+    const produtos = [];
+    document.querySelectorAll('#eqProdRows .eq-prod-row').forEach(row => {
+      const codigo     = row.querySelector('[data-f="codigo"]').value.trim();
+      const nomeProd   = row.querySelector('[data-f="nome"]').value.trim();
+      const fabricante = row.querySelector('[data-f="fabricante"]').value.trim();
+      if (codigo || nomeProd) produtos.push({ codigo, nome: nomeProd, fabricante });
+    });
+    if (!produtos.length) { eqToast('Adicione ao menos 1 produto', 'err'); return; }
+
+    const btn = document.getElementById('eqBtnSalvar');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try {
+      const data = { nome, descricao: document.getElementById('eqDesc').value.trim(), produtos, atualizado_em: new Date().toISOString() };
+      if (_eqEditId) {
+        await fsEq(async ({ doc, updateDoc }) => await updateDoc(doc(window.__db, 'produto_equivalentes', _eqEditId), data));
+        eqToast('Grupo atualizado!', 'ok');
+      } else {
+        data.criado_em = new Date().toISOString();
+        await fsEq(async ({ collection, addDoc }) => await addDoc(collection(window.__db, 'produto_equivalentes'), data));
+        eqToast('Grupo criado!', 'ok');
+      }
+      eqFecharEdit();
+      await eqCarregar();
+    } catch(e) {
+      console.error(e);
+      eqToast('Erro ao salvar', 'err');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = _eqEditId ? 'Salvar alterações' : 'Salvar grupo';
+    }
+  };
+
+  // ── Delete ────────────────────────────────────────────────────────────────
+  window.eqAbrirDel = function(id) {
+    const g = _eqGrupos.find(x => x.id === id);
+    if (!g) return;
+    _eqDelId = id;
+    document.getElementById('eqDelNome').textContent = g.nome;
+    document.getElementById('eqOverlayDel').classList.add('open');
+  };
+  window.eqFecharDel = function() {
+    document.getElementById('eqOverlayDel').classList.remove('open');
+    _eqDelId = null;
+  };
+  window.eqExecutarDel = async function() {
+    if (!_eqDelId) return;
+    const btn = document.getElementById('eqBtnDel');
+    btn.disabled = true; btn.textContent = 'Excluindo…';
+    try {
+      await fsEq(async ({ doc, deleteDoc }) => await deleteDoc(doc(window.__db, 'produto_equivalentes', _eqDelId)));
+      eqToast('Grupo excluído', 'inf');
+      eqFecharDel();
+      await eqCarregar();
+    } catch(e) {
+      eqToast('Erro ao excluir', 'err');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Sim, excluir';
+    }
+  };
+
+  // Fecha ao clicar fora
+  ['eqOverlayEdit','eqOverlayDel'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+      if (e.target.id === id) id === 'eqOverlayEdit' ? eqFecharEdit() : eqFecharDel();
+    });
+  });
+
+  // ── Utils ─────────────────────────────────────────────────────────────────
+  function eqEsc(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function eqFmtData(iso) {
+    try { return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}); } catch { return ''; }
+  }
+  function eqToast(msg, tipo='inf', dur=3000) {
+    const wrap = document.getElementById('toastWrap');
+    const el   = document.createElement('div');
+    el.className = `toast ${tipo}`;
+    el.innerHTML = `<span>${{ok:'✅',err:'❌',inf:'ℹ️'}[tipo]||'💬'}</span><span>${msg}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, dur);
+  }
 </script>
 
 </body>

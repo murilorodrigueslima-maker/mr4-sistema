@@ -122,8 +122,8 @@ header{
 
 /* Linha de topo: pedido · hora · elapsed */
 .card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
-/* Número do pedido: branco, neutro — não compete com o elapsed colorido */
-.card-num{font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--sub);flex:1}
+/* Número do pedido: número completo do GestãoClick */
+.card-num{font-family:var(--mono);font-size:.7rem;font-weight:600;color:var(--sub);flex:1;letter-spacing:.3px}
 /* Hora: visível, contrastada */
 .card-hora{font-size:.75rem;color:var(--text);font-family:var(--mono);font-weight:600;opacity:.75}
 
@@ -402,8 +402,8 @@ function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',cur
 function horaFmt(ts){return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 function randN(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
-// Exibe últimos 6 dígitos do ID longo do GestãoClick
-function numCurto(n){const s=String(n);return s.length>6?s.slice(-6):s;}
+// Número completo do pedido (igual ao GestãoClick)
+function numCurto(n){return String(n||'');}
 // Remove CNPJ/CPF que às vezes vem na frente do nome no GC (ex: "51.908.552 Nome...")
 function limparNome(s){return (s||'').replace(/^\d{2,3}[\.\d]*\s+/,'').trim()||s;}
 function elapsedFmt(ts){

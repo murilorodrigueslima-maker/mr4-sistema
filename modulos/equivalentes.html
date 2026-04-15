@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Equivalentes — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1B2D; --surface:#152337; --card:#1B2D42; --card-hv:#22364E;
+  --border:#2B3F58; --text:#E8EFF7; --sub:#7A97B3; --dim:#4D6680;
+  --ag:#D4883A;  --ag-bg:rgba(212,136,58,.1);
+  --se:#3A82C4;  --se-bg:rgba(58,130,196,.1);
+  --pr:#2DA86A;  --pr-bg:rgba(45,168,106,.1);
+  --re:#C04040;  --re-bg:rgba(192,64,64,.1);
+  --mono:'Courier New',monospace;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOADING */
+#loadingScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1rem}
+#loadingScreen .logo{font-size:1.4rem;font-weight:800;color:var(--ag)}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--ag);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* HEADER */
+header{background:var(--surface);border-bottom:2px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:.85rem;position:sticky;top:0;z-index:100;flex-wrap:wrap}
+.hd-logo{font-size:1.05rem;font-weight:800;color:var(--ag);white-space:nowrap}
+.hd-div{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.hd-title{font-size:.85rem;font-weight:700;color:var(--text);white-space:nowrap}
+.hd-sep{flex:1;min-width:.5rem}
+.search-wrap{position:relative;display:flex;align-items:center}
+.search-wrap input{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.4rem .9rem .4rem 2.1rem;color:var(--text);font-size:.82rem;width:280px;outline:none;transition:border-color .15s;font-family:inherit}
+.search-wrap input::placeholder{color:var(--sub)}
+.search-wrap input:focus{border-color:var(--ag)}
+.search-ico{position:absolute;left:.65rem;color:var(--sub);font-size:.85rem;pointer-events:none;user-select:none}
+.btn-novo{padding:.4rem 1.1rem;background:var(--ag);color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;white-space:nowrap;flex-shrink:0}
+.btn-novo:hover{background:#b8742e}
+.hd-back{padding:.3rem .8rem;border:1px solid var(--border);border-radius:6px;background:none;color:var(--sub);font-size:.78rem;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;font-family:inherit;white-space:nowrap}
+.hd-back:hover{border-color:var(--ag);color:var(--ag)}
+
+/* STATS BAR */
+.stats-bar{display:flex;background:var(--surface);border-bottom:1px solid var(--border)}
+.stat{flex:1;padding:.65rem 1.25rem;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sub);margin-bottom:.15rem}
+.stat-val{font-size:1.6rem;font-weight:800;font-family:var(--mono);color:var(--text)}
+.stat-val.col-ag{color:var(--ag)}
+.stat-val.col-se{color:var(--se)}
+
+/* MAIN */
+main{padding:1.25rem 1.5rem}
+
+/* ESTADOS */
+.empty-state,.no-result{display:flex;flex-direction:column;align-items:center;padding:5rem 2rem;text-align:center;opacity:.55}
+.empty-ico{font-size:3.5rem;margin-bottom:1rem}
+.empty-ttl{font-size:1rem;font-weight:700;margin-bottom:.4rem}
+.empty-sub{font-size:.82rem;color:var(--sub);max-width:340px;line-height:1.6}
+.empty-btn{margin-top:1.25rem;padding:.5rem 1.4rem;background:var(--ag);color:#fff;border:none;border-radius:8px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;opacity:1}
+.empty-btn:hover{background:#b8742e}
+
+/* GRID DE GRUPOS */
+.groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(480px,1fr));gap:1rem}
+
+/* CARD DE GRUPO */
+.group-card{background:var(--card);border:1px solid var(--border);border-left:5px solid var(--ag);border-radius:12px;overflow:hidden;transition:border-color .15s,background .15s}
+.group-card:hover{background:var(--card-hv)}
+.group-head{padding:.9rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:.65rem}
+.group-ico{font-size:1.2rem;flex-shrink:0;margin-top:.1rem;opacity:.85}
+.group-info{flex:1;min-width:0}
+.group-name{font-size:.95rem;font-weight:700;color:var(--text);line-height:1.3}
+.group-desc{font-size:.75rem;color:var(--sub);margin-top:.2rem;line-height:1.5}
+.group-acts{display:flex;gap:.35rem;flex-shrink:0}
+.btn-ico{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:none;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;transition:all .12s;color:var(--sub)}
+.btn-ico.edit:hover{border-color:var(--se);color:var(--se);background:var(--se-bg)}
+.btn-ico.del:hover{border-color:var(--re);color:var(--re);background:var(--re-bg)}
+
+/* TABELA INTERNA DO CARD */
+.group-body{padding:.75rem 1.1rem}
+.pt{width:100%;border-collapse:collapse}
+.pt th{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);padding:.3rem .5rem;text-align:left;border-bottom:1px solid var(--border)}
+.pt td{font-size:.8rem;padding:.5rem .5rem;border-bottom:1px solid rgba(43,63,88,.5);color:var(--text);vertical-align:middle}
+.pt tr:last-child td{border-bottom:none}
+.pt tr:hover td{background:rgba(255,255,255,.02)}
+.td-cod{font-family:var(--mono);font-weight:700;color:var(--ag);white-space:nowrap}
+.td-fab{display:inline-flex;align-items:center;padding:.18rem .55rem;border-radius:99px;font-size:.7rem;font-weight:700;background:var(--se-bg);color:var(--se);border:1px solid rgba(58,130,196,.25);white-space:nowrap}
+.td-obs{font-size:.72rem;color:var(--sub);font-style:italic}
+.group-footer{margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--border);font-size:.72rem;color:var(--sub)}
+.group-footer b{color:var(--ag)}
+
+/* OVERLAY + MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(3px);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.overlay.open{display:flex}
+.modal{background:#1B2D42;border:1px solid var(--border);border-radius:16px;padding:1.75rem;width:100%;max-width:660px;box-shadow:0 25px 60px rgba(0,0,0,.65);animation:mIn .2s ease;margin:auto}
+@keyframes mIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.modal-ttl{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.form-row{margin-bottom:.9rem}
+.form-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub);margin-bottom:.4rem;display:block}
+.form-inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.55rem .85rem;color:var(--text);font-size:.85rem;outline:none;transition:border-color .15s;font-family:inherit}
+.form-inp:focus{border-color:var(--ag)}
+.form-inp::placeholder{color:var(--dim)}
+
+/* Editor de produtos dentro do modal */
+.prod-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem}
+.prod-hd-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--sub)}
+.btn-add{padding:.28rem .85rem;background:var(--pr-bg);color:var(--pr);border:1px solid rgba(45,168,106,.35);border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-add:hover{background:var(--pr);color:#fff;border-color:var(--pr)}
+.prod-col-hd{display:grid;grid-template-columns:130px 1fr 145px 34px;gap:.4rem;padding:0 0 .35rem;border-bottom:1px solid var(--border);margin-bottom:.4rem}
+.prod-col-hd span{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--dim);padding:0 .5rem}
+.prod-rows{display:flex;flex-direction:column;gap:.4rem;max-height:320px;overflow-y:auto;padding-right:.25rem}
+.prod-rows::-webkit-scrollbar{width:4px}
+.prod-rows::-webkit-scrollbar-track{background:transparent}
+.prod-rows::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+.prod-row{display:grid;grid-template-columns:130px 1fr 145px 34px;gap:.4rem;align-items:center}
+.prod-row .form-inp{font-size:.8rem;padding:.42rem .65rem}
+.prod-row .form-inp.cod{font-family:var(--mono)}
+.btn-rm{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:none;cursor:pointer;font-size:.9rem;color:var(--sub);display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+.btn-rm:hover{border-color:var(--re);color:var(--re);background:var(--re-bg)}
+.prod-hint{font-size:.72rem;color:var(--sub);margin-top:.5rem;opacity:.7}
+
+.modal-foot{display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.35rem;padding-top:1.1rem;border-top:1px solid var(--border)}
+.btn-cancel{padding:.55rem 1.1rem;border:1.5px solid var(--border);border-radius:8px;background:none;color:var(--sub);font-size:.82rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-cancel:hover{border-color:var(--re);color:var(--re)}
+.btn-save{padding:.55rem 1.5rem;border:none;border-radius:8px;background:var(--ag);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .12s}
+.btn-save:hover{background:#b8742e}
+.btn-save:disabled{opacity:.38;cursor:not-allowed}
+
+/* MODAL DE CONFIRMAÇÃO DE DELETE */
+.confirm-box{background:var(--re-bg);border:1px solid rgba(192,64,64,.4);border-radius:10px;padding:.9rem 1.1rem;margin-bottom:1.1rem}
+.confirm-box p{font-size:.85rem;color:var(--text);line-height:1.6}
+.confirm-box strong{color:#e86060}
+.btn-del{padding:.55rem 1.4rem;border:none;border-radius:8px;background:var(--re);color:#fff;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .12s}
+.btn-del:hover{background:#a33030}
+.btn-del:disabled{opacity:.38;cursor:not-allowed}
+
+/* TOASTS */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.4rem;pointer-events:none}
+.toast{background:#1B2D42;border:1px solid var(--border);border-radius:10px;padding:.7rem 1.1rem;font-size:.82rem;color:var(--text);display:flex;align-items:center;gap:.55rem;min-width:230px;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:tIn .25s ease;pointer-events:auto}
+.toast.out{animation:tOut .25s ease forwards}
+.toast.ok {border-left:3px solid var(--pr)}
+.toast.err{border-left:3px solid var(--re)}
+.toast.inf{border-left:3px solid var(--se)}
+@keyframes tIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateX(8px)}}
+
+@media(max-width:760px){
+  .search-wrap input{width:180px}
+  .groups-grid{grid-template-columns:1fr}
+  .prod-col-hd,.prod-row{grid-template-columns:110px 1fr 110px 30px}
+}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="logo">MR4 Distribuidora</div>
+  <div class="spinner"></div>
+</div>
+
+<header id="mainHeader" style="display:none">
+  <span class="hd-logo">MR4 Distribuidora</span>
+  <div class="hd-div"></div>
+  <span class="hd-title">🔗 Produtos Equivalentes</span>
+  <div class="hd-sep"></div>
+  <div class="search-wrap">
+    <span class="search-ico">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar por código, nome ou fabricante…" oninput="filtrar(this.value)">
+  </div>
+  <button class="btn-novo" onclick="abrirNovo()">＋ Novo Grupo</button>
+  <a class="hd-back" href="../index.html">← Sistema</a>
+</header>
+
+<div class="stats-bar" id="statsBar" style="display:none">
+  <div class="stat"><div class="stat-lbl">Grupos cadastrados</div><div class="stat-val col-ag" id="statGrupos">0</div></div>
+  <div class="stat"><div class="stat-lbl">Produtos agrupados</div><div class="stat-val col-se" id="statProd">0</div></div>
+  <div class="stat"><div class="stat-lbl">Última atualização</div><div class="stat-val" id="statData" style="font-size:1rem;padding-top:.35rem">—</div></div>
+</div>
+
+<main id="mainContent" style="display:none">
+  <!-- empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-ico">🔗</div>
+    <div class="empty-ttl">Nenhum grupo cadastrado ainda</div>
+    <div class="empty-sub">Agrupe produtos com códigos e fabricantes diferentes que representam a mesma peça — para evitar pedidos em duplicidade.</div>
+    <button class="empty-btn" onclick="abrirNovo()">＋ Criar primeiro grupo</button>
+  </div>
+
+  <!-- no-result -->
+  <div class="no-result" id="noResult" style="display:none">
+    <div class="empty-ico" style="font-size:2.5rem">🔎</div>
+    <div class="empty-ttl">Nenhum resultado</div>
+    <div class="empty-sub">Nenhum grupo encontrado para "<span id="noResultTerm"></span>".</div>
+  </div>
+
+  <!-- grid -->
+  <div class="groups-grid" id="groupsGrid"></div>
+</main>
+
+<!-- ── MODAL CRIAR / EDITAR ── -->
+<div class="overlay" id="overlayEdit">
+  <div class="modal">
+    <div class="modal-ttl" id="modalTtl">➕ Novo Grupo de Equivalentes</div>
+
+    <div class="form-row">
+      <label class="form-lbl" for="inNome">Nome do grupo <span style="color:var(--re)">*</span></label>
+      <input class="form-inp" id="inNome" placeholder="Ex: Filtro de Óleo Motor 1.0 Flex" maxlength="120">
+    </div>
+
+    <div class="form-row">
+      <label class="form-lbl" for="inDesc">Descrição / observação</label>
+      <input class="form-inp" id="inDesc" placeholder="Opcional — anotação sobre a equivalência" maxlength="240">
+    </div>
+
+    <div class="form-row" style="margin-bottom:.3rem">
+      <div class="prod-hd">
+        <span class="prod-hd-lbl">Produtos equivalentes <span style="color:var(--re)">*</span></span>
+        <button class="btn-add" onclick="addLinha()">＋ Adicionar produto</button>
+      </div>
+      <div class="prod-col-hd">
+        <span style="padding-left:.5rem">Código / Ref.</span>
+        <span>Nome / Descrição</span>
+        <span>Fabricante</span>
+        <span class="ph"></span>
+      </div>
+      <div class="prod-rows" id="prodRows"></div>
+      <div class="prod-hint">💡 Preencha ao menos o código ou o nome de cada produto.</div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="fecharEdit()">Cancelar</button>
+      <button class="btn-save" id="btnSalvar" onclick="salvar()">Salvar grupo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MODAL CONFIRMAR DELETE ── -->
+<div class="overlay" id="overlayDel">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-ttl">🗑️ Excluir grupo</div>
+    <div class="confirm-box">
+      <p>Você está prestes a excluir o grupo:<br><strong id="delNome"></strong></p>
+      <p style="margin-top:.5rem;font-size:.78rem;color:var(--sub)">Esta ação não pode ser desfeita.</p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="fecharDel()">Cancelar</button>
+      <button class="btn-del" id="btnDel" onclick="executarDel()">Sim, excluir</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- ── FIREBASE AUTH GUARD ── -->
+<script type="module">
+import { initializeApp }                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = '../login.html'; return; }
+  let ok = false;
+  try {
+    const s = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+    if (s.exists()) {
+      const d = s.data();
+      ok = d.admin || (d.modulos || []).includes('estoque') || (d.modulos || []).includes('equivalentes');
+    }
+  } catch(e) { ok = true; }
+  if (!ok) { window.location.href = '../index.html'; return; }
+
+  // Expõe instâncias para o script principal
+  window.__db = db;
+  document.getElementById('loadingScreen').style.display = 'none';
+  ['mainHeader','statsBar','mainContent'].forEach(id => document.getElementById(id).style.display = '');
+  window.iniciar();
+});
+</script>
+
+<!-- ── LÓGICA PRINCIPAL ── -->
+<script>
+// ── Imports Firestore (carregados de forma lazy via window.__db) ──────────
+async function fsOp(fn) {
+  const { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } =
+    await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+  return fn({ collection, getDocs, addDoc, updateDoc, deleteDoc, doc, db: window.__db });
+}
+
+// ── Estado ────────────────────────────────────────────────────────────────
+let grupos      = [];
+let filtroAtual = '';
+let editId      = null;   // null = novo grupo
+let delId       = null;
+let rowSeq      = 0;
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.iniciar = async function() {
+  await carregarGrupos();
+};
+
+// ── Firestore: carregar ───────────────────────────────────────────────────
+async function carregarGrupos() {
+  try {
+    await fsOp(async ({ collection, getDocs, db }) => {
+      const snap = await getDocs(collection(db, 'produto_equivalentes'));
+      grupos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      grupos.sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+    });
+    renderStats();
+    renderGrupos();
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao carregar grupos', 'err');
+  }
+}
+
+// ── Render: stats ─────────────────────────────────────────────────────────
+function renderStats() {
+  document.getElementById('statGrupos').textContent = grupos.length;
+  document.getElementById('statProd').textContent   = grupos.reduce((s, g) => s + (g.produtos || []).length, 0);
+  document.getElementById('statData').textContent   = new Date().toLocaleString('pt-BR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Render: grid ──────────────────────────────────────────────────────────
+function renderGrupos() {
+  const grid   = document.getElementById('groupsGrid');
+  const empty  = document.getElementById('emptyState');
+  const noRes  = document.getElementById('noResult');
+
+  const q = filtroAtual.toLowerCase().trim();
+  const lista = q
+    ? grupos.filter(g =>
+        (g.nome||'').toLowerCase().includes(q) ||
+        (g.descricao||'').toLowerCase().includes(q) ||
+        (g.produtos||[]).some(p =>
+          (p.codigo||'').toLowerCase().includes(q) ||
+          (p.nome||'').toLowerCase().includes(q) ||
+          (p.fabricante||'').toLowerCase().includes(q)
+        )
+      )
+    : grupos;
+
+  if (grupos.length === 0) {
+    empty.style.display = ''; noRes.style.display = 'none'; grid.innerHTML = ''; return;
+  }
+  empty.style.display = 'none';
+
+  if (lista.length === 0) {
+    noRes.style.display = ''; grid.innerHTML = '';
+    document.getElementById('noResultTerm').textContent = filtroAtual;
+    return;
+  }
+  noRes.style.display = 'none';
+
+  grid.innerHTML = lista.map(g => cardHtml(g)).join('');
+}
+
+function cardHtml(g) {
+  const prods  = g.produtos || [];
+  const linhas = prods.map(p => `
+    <tr>
+      <td class="td-cod">${esc(p.codigo)}</td>
+      <td>${esc(p.nome)}</td>
+      <td><span class="td-fab">${esc(p.fabricante)}</span></td>
+      <td class="td-obs">${p.obs ? esc(p.obs) : ''}</td>
+    </tr>`).join('');
+
+  const qt = prods.length;
+  return `
+    <div class="group-card" id="gc-${g.id}">
+      <div class="group-head">
+        <span class="group-ico">🔗</span>
+        <div class="group-info">
+          <div class="group-name">${esc(g.nome)}</div>
+          ${g.descricao ? `<div class="group-desc">${esc(g.descricao)}</div>` : ''}
+        </div>
+        <div class="group-acts">
+          <button class="btn-ico edit" title="Editar"   onclick="abrirEdicao('${g.id}')">✏️</button>
+          <button class="btn-ico del"  title="Excluir"  onclick="abrirDel('${g.id}')">🗑️</button>
+        </div>
+      </div>
+      <div class="group-body">
+        <table class="pt">
+          <thead><tr>
+            <th>Código / Ref.</th><th>Nome / Descrição</th><th>Fabricante</th><th>Obs.</th>
+          </tr></thead>
+          <tbody>${linhas}</tbody>
+        </table>
+        <div class="group-footer">
+          <b>${qt}</b> produto${qt !== 1 ? 's' : ''} equivalente${qt !== 1 ? 's' : ''}
+          ${g.atualizado_em ? ` · atualizado ${fmtData(g.atualizado_em)}` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Filtro ────────────────────────────────────────────────────────────────
+window.filtrar = function(v) {
+  filtroAtual = v;
+  renderGrupos();
+};
+
+// ── Modal criar ───────────────────────────────────────────────────────────
+window.abrirNovo = function() {
+  editId = null;
+  document.getElementById('modalTtl').textContent  = '➕ Novo Grupo de Equivalentes';
+  document.getElementById('btnSalvar').textContent = 'Salvar grupo';
+  document.getElementById('inNome').value  = '';
+  document.getElementById('inDesc').value  = '';
+  document.getElementById('prodRows').innerHTML = '';
+  rowSeq = 0;
+  addLinha(); addLinha(); // começa com 2 linhas
+  document.getElementById('overlayEdit').classList.add('open');
+  setTimeout(() => document.getElementById('inNome').focus(), 80);
+};
+
+// ── Modal editar ──────────────────────────────────────────────────────────
+window.abrirEdicao = function(id) {
+  const g = grupos.find(x => x.id === id);
+  if (!g) return;
+  editId = id;
+  document.getElementById('modalTtl').textContent  = '✏️ Editar Grupo';
+  document.getElementById('btnSalvar').textContent = 'Salvar alterações';
+  document.getElementById('inNome').value  = g.nome || '';
+  document.getElementById('inDesc').value  = g.descricao || '';
+  document.getElementById('prodRows').innerHTML = '';
+  rowSeq = 0;
+  (g.produtos || []).forEach(p => addLinha(p));
+  if ((g.produtos || []).length === 0) { addLinha(); addLinha(); }
+  document.getElementById('overlayEdit').classList.add('open');
+  setTimeout(() => document.getElementById('inNome').focus(), 80);
+};
+
+window.fecharEdit = function() {
+  document.getElementById('overlayEdit').classList.remove('open');
+  editId = null;
+};
+
+// ── Linha de produto ──────────────────────────────────────────────────────
+window.addLinha = function(p = {}) {
+  rowSeq++;
+  const id = 'pr' + rowSeq;
+  const div = document.createElement('div');
+  div.className = 'prod-row'; div.id = id;
+  div.innerHTML = `
+    <input class="form-inp cod" placeholder="Ex: WL-7070"          data-f="codigo"     value="${esc(p.codigo||'')}">
+    <input class="form-inp"     placeholder="Nome / Descrição"      data-f="nome"       value="${esc(p.nome||'')}">
+    <input class="form-inp"     placeholder="Fabricante"            data-f="fabricante" value="${esc(p.fabricante||'')}">
+    <button class="btn-rm" onclick="rmLinha('${id}')" title="Remover">✕</button>`;
+  document.getElementById('prodRows').appendChild(div);
+};
+
+window.rmLinha = function(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+};
+
+// ── Salvar ────────────────────────────────────────────────────────────────
+window.salvar = async function() {
+  const nome = document.getElementById('inNome').value.trim();
+  if (!nome) { toast('Informe o nome do grupo', 'err'); return; }
+
+  const produtos = [];
+  document.querySelectorAll('#prodRows .prod-row').forEach(row => {
+    const codigo     = row.querySelector('[data-f="codigo"]').value.trim();
+    const nomeProd   = row.querySelector('[data-f="nome"]').value.trim();
+    const fabricante = row.querySelector('[data-f="fabricante"]').value.trim();
+    if (codigo || nomeProd) produtos.push({ codigo, nome: nomeProd, fabricante });
+  });
+
+  if (produtos.length < 1) { toast('Adicione ao menos 1 produto', 'err'); return; }
+
+  const btn = document.getElementById('btnSalvar');
+  btn.disabled = true; btn.textContent = 'Salvando…';
+
+  try {
+    const data = {
+      nome,
+      descricao:     document.getElementById('inDesc').value.trim(),
+      produtos,
+      atualizado_em: new Date().toISOString(),
+    };
+
+    if (editId) {
+      await fsOp(async ({ doc, updateDoc, db }) => {
+        await updateDoc(doc(db, 'produto_equivalentes', editId), data);
+      });
+      toast('Grupo atualizado!', 'ok');
+    } else {
+      data.criado_em = new Date().toISOString();
+      await fsOp(async ({ collection, addDoc, db }) => {
+        await addDoc(collection(db, 'produto_equivalentes'), data);
+      });
+      toast('Grupo criado!', 'ok');
+    }
+
+    fecharEdit();
+    await carregarGrupos();
+  } catch(e) {
+    console.error(e);
+    toast('Erro ao salvar — tente novamente', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = editId ? 'Salvar alterações' : 'Salvar grupo';
+  }
+};
+
+// ── Delete ────────────────────────────────────────────────────────────────
+window.abrirDel = function(id) {
+  const g = grupos.find(x => x.id === id);
+  if (!g) return;
+  delId = id;
+  document.getElementById('delNome').textContent = g.nome;
+  document.getElementById('overlayDel').classList.add('open');
+};
+
+window.fecharDel = function() {
+  document.getElementById('overlayDel').classList.remove('open');
+  delId = null;
+};
+
+window.executarDel = async function() {
+  if (!delId) return;
+  const btn = document.getElementById('btnDel');
+  btn.disabled = true; btn.textContent = 'Excluindo…';
+  try {
+    await fsOp(async ({ doc, deleteDoc, db }) => {
+      await deleteDoc(doc(db, 'produto_equivalentes', delId));
+    });
+    toast('Grupo excluído', 'inf');
+    fecharDel();
+    await carregarGrupos();
+  } catch(e) {
+    toast('Erro ao excluir', 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sim, excluir';
+  }
+};
+
+// Fecha modais ao clicar fora
+['overlayEdit','overlayDel'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    if (e.target.id === id) {
+      if (id === 'overlayEdit') fecharEdit();
+      else fecharDel();
+    }
+  });
+});
+
+// Enter no campo nome abre o próximo campo
+document.getElementById('inNome').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('inDesc').focus();
+});
+
+// ── Utils ─────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmtData(iso) {
+  try {
+    return new Date(iso).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'2-digit' });
+  } catch { return ''; }
+}
+
+function toast(msg, tipo='inf', dur=3200) {
+  const wrap = document.getElementById('toastWrap');
+  const el   = document.createElement('div');
+  const ico  = { ok:'✅', err:'❌', inf:'ℹ️' };
+  el.className = `toast ${tipo}`;
+  el.innerHTML = `<span>${ico[tipo]||'💬'}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, dur);
+}
+</script>
+</body>
+</html>

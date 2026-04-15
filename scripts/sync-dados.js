@@ -319,8 +319,8 @@ async function syncPedidos() {
     const hora = horaMatch ? horaMatch[1] : '';
 
     return {
-      id:        String(p.id || p.codigo || ''),
-      numero:    String(p.numero || p.codigo_venda || p.id || ''),
+      id:        String(p.id || ''),
+      numero:    String(p.codigo || p.numero || p.codigo_venda || p.id || ''),
       data:      dataBase,
       hora:      hora,
       cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',

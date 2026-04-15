@@ -295,7 +295,7 @@ async function syncPedidos() {
   let vendas = [];
 
   try {
-    const inicio = diasAtras(14); // últimos 14 dias
+    const inicio = diasAtras(2); // hoje + ontem (expedição é operacional)
     let pagina = 1;
     while (true) {
       const r = await fetchGC(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
@@ -310,17 +310,27 @@ async function syncPedidos() {
     console.log('⚠️ Erro ao buscar pedidos:', e.message);
   }
 
-  const pedidos = vendas.map(p => ({
-    id:        String(p.id || p.codigo || ''),
-    numero:    String(p.numero || p.codigo_venda || p.id || ''),
-    data:      (p.data || p.data_venda || p.data_pedido || '').slice(0, 10),
-    cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',
-    vendedor:  p.nome_vendedor || p.vendedor || p.nome_usuario || '—',
-    valor:     Number(p.valor_total || p.total || p.valor || 0),
-    itens:     Number(p.quantidade_produtos || (p.produtos || []).length || 0),
-    status_gc: p.status || p.situacao || '',
-    cidade:    p.cidade_cliente || p.cidade || '',
-  }));
+  const pedidos = vendas.map(p => {
+    // Tenta extrair hora exata do pedido (vários nomes de campo possíveis)
+    const dataHora = p.data_hora || p.data_criacao || p.created_at || p.data_pedido || '';
+    const dataBase = (p.data || p.data_venda || p.data_pedido || '').slice(0, 10);
+    // Extrai HH:MM se disponível no campo datetime
+    const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
+    const hora = horaMatch ? horaMatch[1] : '';
+
+    return {
+      id:        String(p.id || p.codigo || ''),
+      numero:    String(p.numero || p.codigo_venda || p.id || ''),
+      data:      dataBase,
+      hora:      hora,
+      cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',
+      vendedor:  p.nome_vendedor || p.vendedor || p.nome_usuario || '—',
+      valor:     Number(p.valor_total || p.total || p.valor || 0),
+      itens:     Number(p.quantidade_produtos || (p.produtos || []).length || 0),
+      status_gc: p.status || p.situacao || '',
+      cidade:    p.cidade_cliente || p.cidade || '',
+    };
+  });
 
   pedidos.sort((a, b) => b.data.localeCompare(a.data) || b.numero.localeCompare(a.numero));
 

@@ -191,7 +191,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:.
 
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
-    <div class="modal-title">🚀 Confirmar Despacho</div>
+    <div class="modal-title" id="modalTitle">🚀 Confirmar Despacho</div>
     <div class="modal-info" id="modalInfo"></div>
     <div class="modal-sub">Selecione a forma de envio</div>
     <div class="envio-grid">
@@ -204,7 +204,7 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:.
     </div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-confirm" id="btnConfirm" onclick="confirmarDespacho()" disabled>Confirmar Despacho</button>
+      <button class="btn-confirm" id="btnConfirm" onclick="confirmarModal()" disabled>Confirmar</button>
     </div>
   </div>
 </div>
@@ -270,6 +270,7 @@ const S={
   seq:1000,
   cdAtual:null,
   envioSel:null,
+  modalMode:null,   // 'separacao' | 'despacho'
   cd:CFG.intervalo,
 };
 
@@ -309,7 +310,7 @@ function novoPedido(extra={}){
   const now=Date.now();
   return{id:'P'+S.seq,numero:String(10000+S.seq),criadoEm:now,movidoEm:now,
     coluna:'ag',cliente:rand(CL),vendedor:rand(VD),itens:randN(1,8),
-    valor:randN(150,8500),envio:rand(EV),saidaEm:null,...extra};
+    valor:randN(150,8500),envio:null,saidaEm:null,...extra};
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
@@ -320,9 +321,9 @@ window.iniciarPainel=function(){
       {coluna:'ag',criadoEm:now-10*60e3,movidoEm:now-10*60e3},
       {coluna:'ag',criadoEm:now-95*60e3,movidoEm:now-95*60e3},
       {coluna:'ag',criadoEm:now-135*60e3,movidoEm:now-135*60e3},
-      {coluna:'se',criadoEm:now-90*60e3,movidoEm:now-55*60e3},
-      {coluna:'se',criadoEm:now-40*60e3,movidoEm:now-25*60e3},
-      {coluna:'pr',criadoEm:now-80*60e3,movidoEm:now-35*60e3},
+      {coluna:'se',criadoEm:now-90*60e3,movidoEm:now-55*60e3,envio:'rota-tarde'},
+      {coluna:'se',criadoEm:now-40*60e3,movidoEm:now-25*60e3,envio:'uber-mr4'},
+      {coluna:'pr',criadoEm:now-80*60e3,movidoEm:now-35*60e3,envio:'retirada-terc'},
       {coluna:'de',criadoEm:now-180*60e3,movidoEm:now-150*60e3,saidaEm:now-150*60e3,envio:'rota-manha'},
       {coluna:'de',criadoEm:now-120*60e3,movidoEm:now-100*60e3,saidaEm:now-100*60e3,envio:'uber-mr4'},
       {coluna:'de',criadoEm:now-60*60e3,movidoEm:now-45*60e3,saidaEm:now-45*60e3,envio:'retirada'},
@@ -361,7 +362,7 @@ async function fetchPedidos(){
         criadoEm:p.data?new Date(p.data+'T09:00:00').getTime():Date.now(),
         movidoEm:Date.now(),coluna:'ag',cliente:p.cliente||'—',
         vendedor:p.vendedor||'—',itens:p.itens||1,valor:p.valor||0,
-        envio:rand(EV),saidaEm:null};
+        envio:null,saidaEm:null};
       S.pedidos[x.id]=x;S.colunas.ag.unshift(x.id);n++;
     });
     if(n){toast(`📬 ${n} novo${n>1?'s':''} pedido${n>1?'s':''} importado${n>1?'s':''}`,'t-info');salvar();render();}
@@ -369,37 +370,64 @@ async function fetchPedidos(){
 }
 
 // ── AÇÕES ─────────────────────────────────────────────────────────────────────
-window.iniciarSeparacao=function(id){mover(id,'ag','se');toast(`📦 Separação iniciada — Pedido #${S.pedidos[id].numero}`,'t-success');};
 window.marcarSeparado=function(id){mover(id,'se','pr');toast(`✅ Pedido #${S.pedidos[id].numero} pronto para despacho`,'t-success');};
 
-window.abrirDespacho=function(id){
-  S.cdAtual=id;S.envioSel=null;
+function abrirModal(id, modo){
+  S.cdAtual=id; S.envioSel=null; S.modalMode=modo;
   const p=S.pedidos[id];
+
+  // Limpa seleção
   document.querySelectorAll('.envio-opt').forEach(o=>o.classList.remove('sel'));
   document.getElementById('btnConfirm').disabled=true;
+
+  // Se o pedido já tem envio definido (edição no despacho), pré-seleciona
+  if(p.envio){
+    const opt=document.querySelector(`.envio-opt[data-envio="${p.envio}"]`);
+    if(opt){opt.classList.add('sel');S.envioSel=p.envio;document.getElementById('btnConfirm').disabled=false;}
+  }
+
+  // Título e botão dinâmicos
+  if(modo==='separacao'){
+    document.getElementById('modalTitle').textContent='📦 Iniciar Separação';
+    document.getElementById('btnConfirm').textContent='Iniciar Separação';
+  } else {
+    document.getElementById('modalTitle').textContent='🚀 Confirmar Despacho';
+    document.getElementById('btnConfirm').textContent='Confirmar Despacho';
+  }
+
   document.getElementById('modalInfo').innerHTML=
     `<strong>#${p.numero}</strong> — ${p.cliente}<br>
      <span style="opacity:.7;font-size:.72rem">${p.itens} item${p.itens>1?'s':''} · ${brl(p.valor)} · Vendedor: ${p.vendedor}</span>`;
   document.getElementById('modalOverlay').classList.add('open');
-};
+}
+
+window.iniciarSeparacao=function(id){ abrirModal(id,'separacao'); };
+window.abrirDespacho=function(id)  { abrirModal(id,'despacho');  };
 
 window.selEnvio=function(el){
   document.querySelectorAll('.envio-opt').forEach(o=>o.classList.remove('sel'));
-  el.classList.add('sel');S.envioSel=el.dataset.envio;
+  el.classList.add('sel'); S.envioSel=el.dataset.envio;
   document.getElementById('btnConfirm').disabled=false;
 };
 
 window.fecharModal=function(){
   document.getElementById('modalOverlay').classList.remove('open');
-  S.cdAtual=S.envioSel=null;
+  S.cdAtual=S.envioSel=S.modalMode=null;
 };
 
-window.confirmarDespacho=function(){
+window.confirmarModal=function(){
   if(!S.envioSel||!S.cdAtual)return;
   const p=S.pedidos[S.cdAtual];
-  p.envio=S.envioSel;p.saidaEm=Date.now();
-  mover(p.id,'pr','de');fecharModal();
-  toast(`🚀 Pedido #${p.numero} despachado — ${ENVIO[p.envio]?.label||p.envio}`,'t-success');
+  p.envio=S.envioSel;
+
+  if(S.modalMode==='separacao'){
+    mover(p.id,'ag','se'); fecharModal();
+    toast(`📦 Separação iniciada — #${p.numero} · ${ENVIO[p.envio]?.label}`,'t-success');
+  } else {
+    p.saidaEm=Date.now();
+    mover(p.id,'pr','de'); fecharModal();
+    toast(`🚀 Pedido #${p.numero} despachado — ${ENVIO[p.envio]?.label||p.envio}`,'t-success');
+  }
 };
 
 document.getElementById('modalOverlay').addEventListener('click',e=>{
@@ -432,7 +460,7 @@ function render(){
 function renderCard(p){
   if(!p)return'';
   const al=isAlerta(p);
-  const ev=ENVIO[p.envio]||{label:p.envio||'—',icon:'📦',cls:'e-nd'};
+  const ev=p.envio ? (ENVIO[p.envio]||{label:p.envio,icon:'📦',cls:'e-nd'}) : {label:'A definir',icon:'❓',cls:'e-nd'};
   let botao='';
   if(p.coluna==='ag')      botao=`<button class="btn-act b-iniciar"  onclick="iniciarSeparacao('${p.id}')">▶ Iniciar Separação</button>`;
   else if(p.coluna==='se') botao=`<button class="btn-act b-separado" onclick="marcarSeparado('${p.id}')">✓ Marcar Separado</button>`;

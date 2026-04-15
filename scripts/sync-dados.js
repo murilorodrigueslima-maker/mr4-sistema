@@ -92,6 +92,15 @@ async function syncVendas() {
       pagina++;
     }
     console.log(`  → ${vendas.length} vendas encontradas`);
+    if (vendas.length > 0) {
+      const v = vendas[0];
+      console.log('  → Campos da 1ª venda:', Object.keys(v).join(', '));
+      console.log('  → data:', v.data, '| data_venda:', v.data_venda, '| valor_total:', v.valor_total, '| total:', v.total, '| vendedor:', v.nome_vendedor || v.vendedor || v.nome_usuario);
+    } else {
+      // testa sem filtro de data
+      const r2 = await fetchGC(`/vendas?pagina=1&limite=5`);
+      console.log('  → Sem filtro: meta=', JSON.stringify(r2.meta), '| 1º item keys:', Object.keys(r2.data?.[0]||{}).join(', '));
+    }
   } catch(e) {
     console.log('⚠️ Erro ao buscar vendas:', e.message);
   }

@@ -245,7 +245,7 @@ const CFG={
   api_url:'../data/pedidos.json',  // dados reais do GestãoClick
   intervalo:60,                    // segundos entre atualizações
   alerta_horas:2,                  // horas parado p/ alerta
-  storage_key:'mr4_exp_v4',        // v4 = início de uso real (zera cache)
+  storage_key:'mr4_exp_v5',        // v5 = remove demo, só dados reais
 };
 
 // ── ENVIOS ────────────────────────────────────────────────────────────────────
@@ -323,25 +323,31 @@ function novoPedido(extra={}){
 // ── INIT ──────────────────────────────────────────────────────────────────────
 window.iniciarPainel=function(){
   if(!restaurar()){
-    const now=Date.now();
-    [
-      {coluna:'ag',criadoEm:now-10*60e3,movidoEm:now-10*60e3},
-      {coluna:'ag',criadoEm:now-95*60e3,movidoEm:now-95*60e3},
-      {coluna:'ag',criadoEm:now-135*60e3,movidoEm:now-135*60e3},
-      {coluna:'se',criadoEm:now-90*60e3,movidoEm:now-55*60e3,envio:'rota-tarde'},
-      {coluna:'se',criadoEm:now-40*60e3,movidoEm:now-25*60e3,envio:'uber-mr4'},
-      {coluna:'pr',criadoEm:now-80*60e3,movidoEm:now-35*60e3,envio:'retirada-terc'},
-      {coluna:'de',criadoEm:now-180*60e3,movidoEm:now-150*60e3,saidaEm:now-150*60e3,envio:'rota-manha'},
-      {coluna:'de',criadoEm:now-120*60e3,movidoEm:now-100*60e3,saidaEm:now-100*60e3,envio:'uber-mr4'},
-      {coluna:'de',criadoEm:now-60*60e3,movidoEm:now-45*60e3,saidaEm:now-45*60e3,envio:'retirada'},
-    ].forEach(d=>{const p=novoPedido(d);S.pedidos[p.id]=p;S.colunas[p.coluna].push(p.id);});
-    salvar();
+    // Modo real (api_url configurada): inicia vazio — fetchPedidos() logo abaixo carrega os dados
+    // Modo mock (sem api_url): cria cards de demonstração
+    if(!CFG.api_url){
+      const now=Date.now();
+      [
+        {coluna:'ag',criadoEm:now-10*60e3,movidoEm:now-10*60e3},
+        {coluna:'ag',criadoEm:now-95*60e3,movidoEm:now-95*60e3},
+        {coluna:'ag',criadoEm:now-135*60e3,movidoEm:now-135*60e3},
+        {coluna:'se',criadoEm:now-90*60e3,movidoEm:now-55*60e3,envio:'rota-tarde'},
+        {coluna:'se',criadoEm:now-40*60e3,movidoEm:now-25*60e3,envio:'uber-mr4'},
+        {coluna:'pr',criadoEm:now-80*60e3,movidoEm:now-35*60e3,envio:'retirada-terc'},
+        {coluna:'de',criadoEm:now-180*60e3,movidoEm:now-150*60e3,saidaEm:now-150*60e3,envio:'rota-manha'},
+        {coluna:'de',criadoEm:now-120*60e3,movidoEm:now-100*60e3,saidaEm:now-100*60e3,envio:'uber-mr4'},
+        {coluna:'de',criadoEm:now-60*60e3,movidoEm:now-45*60e3,saidaEm:now-45*60e3,envio:'retirada'},
+      ].forEach(d=>{const p=novoPedido(d);S.pedidos[p.id]=p;S.colunas[p.coluna].push(p.id);});
+      salvar();
+    }
   }
   atualizarHeader();
   render();
   setInterval(tickElapsed,8000);
   setInterval(atualizarHeader,30000);
   iniciarContagem();
+  // Modo real: busca os pedidos imediatamente ao abrir o painel (não espera 60s)
+  if(CFG.api_url) fetchPedidos();
 };
 
 // ── FETCH ─────────────────────────────────────────────────────────────────────

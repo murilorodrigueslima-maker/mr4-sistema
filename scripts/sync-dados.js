@@ -289,6 +289,51 @@ async function syncFinanceiro() {
   console.log(`✅ Financeiro: vencido R$ ${totalVencido.toFixed(2)} | a receber R$ ${totalReceber.toFixed(2)}`);
 }
 
+// ── PEDIDOS (Expedição) ───────────────────────────────────────────────────────
+async function syncPedidos() {
+  console.log('🚚 Sincronizando pedidos para expedição...');
+  let vendas = [];
+
+  try {
+    const inicio = diasAtras(14); // últimos 14 dias
+    let pagina = 1;
+    while (true) {
+      const r = await fetchGC(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
+      const data = r.data || [];
+      vendas = vendas.concat(data);
+      const meta = r.meta || {};
+      if (pagina >= (Number(meta.total_paginas) || 1)) break;
+      pagina++;
+    }
+    console.log(`  → ${vendas.length} pedidos encontrados`);
+  } catch(e) {
+    console.log('⚠️ Erro ao buscar pedidos:', e.message);
+  }
+
+  const pedidos = vendas.map(p => ({
+    id:        String(p.id || p.codigo || ''),
+    numero:    String(p.numero || p.codigo_venda || p.id || ''),
+    data:      (p.data || p.data_venda || p.data_pedido || '').slice(0, 10),
+    cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',
+    vendedor:  p.nome_vendedor || p.vendedor || p.nome_usuario || '—',
+    valor:     Number(p.valor_total || p.total || p.valor || 0),
+    itens:     Number(p.quantidade_produtos || (p.produtos || []).length || 0),
+    status_gc: p.status || p.situacao || '',
+    cidade:    p.cidade_cliente || p.cidade || '',
+  }));
+
+  pedidos.sort((a, b) => b.data.localeCompare(a.data) || b.numero.localeCompare(a.numero));
+
+  const out = {
+    atualizado_em: dataISO(),
+    total: pedidos.length,
+    pedidos,
+  };
+
+  fs.writeFileSync(path.join(DATA_DIR, 'pedidos.json'), JSON.stringify(out, null, 2));
+  console.log(`✅ Pedidos: ${pedidos.length} registros salvos`);
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 (async () => {
   console.log(`🔄 Iniciando sync — ${agora()}`);
@@ -296,6 +341,7 @@ async function syncFinanceiro() {
     syncVendas(),
     syncEstoque(),
     syncFinanceiro(),
+    syncPedidos(),
   ]);
   console.log('🏁 Sync concluído!');
 })();

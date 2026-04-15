@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Importar Equivalências — MR4</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#0F1B2D;color:#E8EFF7;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;padding:2rem}
+  .box{background:#1B2D42;border:1px solid #2B3F58;border-radius:16px;padding:2rem;max-width:640px;width:100%}
+  h2{margin:0 0 .5rem;font-size:1.1rem;color:#D4883A}
+  p{font-size:.85rem;color:#7A97B3;margin:.4rem 0 1.2rem;line-height:1.6}
+  .grupo{background:#152337;border:1px solid #2B3F58;border-radius:10px;padding:.9rem 1rem;margin-bottom:.75rem}
+  .grupo-nome{font-weight:700;font-size:.9rem;margin-bottom:.5rem}
+  .prod{font-size:.78rem;color:#7A97B3;padding:.2rem 0;border-bottom:1px solid rgba(43,63,88,.5)}
+  .prod:last-child{border-bottom:none}
+  .prod code{color:#D4883A;font-family:monospace}
+  button{padding:.65rem 1.75rem;background:#D4883A;color:#fff;border:none;border-radius:8px;font-size:.88rem;font-weight:700;cursor:pointer;margin-top:1rem}
+  button:hover{background:#b8742e}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  #status{margin-top:1rem;font-size:.82rem;padding:.65rem .9rem;border-radius:8px;display:none}
+  .ok {background:rgba(45,168,106,.15);color:#55C990;border:1px solid rgba(45,168,106,.3)}
+  .err{background:rgba(192,64,64,.15);color:#e86060;border:1px solid rgba(192,64,64,.3)}
+  .loading{background:rgba(58,130,196,.1);color:#7CB9E8;border:1px solid rgba(58,130,196,.25)}
+</style>
+</head>
+<body>
+<div class="box">
+  <h2>📦 Importar Equivalências do Painel Antigo</h2>
+  <p>Os 3 grupos abaixo foram extraídos do banco de dados do painel gestor antigo (<code>mr4.db</code>). Clique em <strong>Importar</strong> para enviá-los ao Firestore do sistema novo.</p>
+
+  <div id="preview"></div>
+
+  <button id="btnImport" onclick="importar()">⬆ Importar para o Sistema</button>
+  <div id="status"></div>
+</div>
+
+<script type="module">
+import { initializeApp }                              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged }                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, addDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app  = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── Dados extraídos do mr4.db (equivalencias + produtos JOIN) ──────────
+const GRUPOS = [
+  {
+    nome: 'Moldura 9" — Fiat Strada 2021 / Fiorino / Peugeot Partner Rapid',
+    descricao: 'Moldura compatível com Fiat Strada 2021/22, Fiorino e Peugeot Partner Rapid 22 — preta',
+    criado_em: '2026-04-02T13:08:21',
+    atualizado_em: new Date().toISOString(),
+    produtos: [
+      { codigo: '4234',         nome: 'MOLDURA 9 CHINES FIAT STRADA 21, FIORINO E PEUGEOT PARTNER RAPID 22 - PRETA', fabricante: '' },
+      { codigo: 'MD09-0102/V1', nome: 'MOLDURA PLASTICA 9 POL. COMPATIVEL COM FIAT STRADA 2021/22 PRETO FOSCO',       fabricante: '' },
+    ],
+  },
+  {
+    nome: 'Moldura 9" — Mitsubishi Pajero TR4 2004/2015',
+    descricao: 'Moldura 9 polegadas compatível com Mitsubishi Pajero TR4 2004/15 — preta fosca',
+    criado_em: '2026-04-08T19:15:22',
+    atualizado_em: new Date().toISOString(),
+    produtos: [
+      { codigo: '6067MD',       nome: 'MOLDURA 9 CHINES MITSUBISHI PAJERO TR4 10/15 - PRETA',           fabricante: '' },
+      { codigo: 'IP09-0349/V1', nome: 'I-PANEL 09 POL. MITSUBISHI PAJERO TR4 2004/15 PRETO FOSCO',      fabricante: 'I-PANEL' },
+    ],
+  },
+  {
+    nome: 'Moldura 9" — Hyundai IX35 2010/2022',
+    descricao: 'Moldura 9 polegadas compatível com Hyundai IX35 2010/22 — preta fosca',
+    criado_em: '2026-04-08T19:23:24',
+    atualizado_em: new Date().toISOString(),
+    produtos: [
+      { codigo: '6079MD',       nome: 'MOLDURA 9 CHINES HYUNDAI IX35 10/22 - PRETA FOSCA',              fabricante: '' },
+      { codigo: 'IP09-0085/V1', nome: 'MOLDURA 2 DIN 9 HYUNDAI IX35 2010/19 PRETO FOSCO (CH) JOKER',   fabricante: 'JOKER' },
+    ],
+  },
+];
+
+// Renderiza preview
+function renderPreview() {
+  document.getElementById('preview').innerHTML = GRUPOS.map(g => `
+    <div class="grupo">
+      <div class="grupo-nome">🔗 ${g.nome}</div>
+      ${g.produtos.map(p => `
+        <div class="prod">
+          <code>${p.codigo}</code> — ${p.nome}
+          ${p.fabricante ? `<span style="margin-left:.5rem;background:rgba(58,130,196,.15);color:#7CB9E8;padding:.1rem .4rem;border-radius:4px;font-size:.7rem">${p.fabricante}</span>` : ''}
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+function setStatus(msg, tipo) {
+  const el = document.getElementById('status');
+  el.textContent = msg; el.className = tipo; el.style.display = '';
+}
+
+// Verifica login
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    setStatus('⚠️ Você precisa estar logado no sistema. Abra o sistema, faça login e então abra esta página.', 'err');
+    document.getElementById('btnImport').disabled = true;
+  }
+});
+
+renderPreview();
+
+window.importar = async function() {
+  const btn = document.getElementById('btnImport');
+  btn.disabled = true; btn.textContent = 'Importando…';
+  setStatus('Verificando duplicatas e importando…', 'loading');
+
+  try {
+    // Verifica se já existe algum grupo (evita duplicata)
+    const existing = await getDocs(collection(db, 'produto_equivalentes'));
+    if (!existing.empty) {
+      const confirmar = confirm(
+        `Já existem ${existing.size} grupo(s) cadastrados no sistema.\n\nDeseja importar mesmo assim? (não haverá duplicatas automáticas — você pode deletar os repetidos depois)`
+      );
+      if (!confirmar) {
+        setStatus('Importação cancelada.', 'loading');
+        btn.disabled = false; btn.textContent = '⬆ Importar para o Sistema';
+        return;
+      }
+    }
+
+    let ok = 0;
+    for (const g of GRUPOS) {
+      await addDoc(collection(db, 'produto_equivalentes'), g);
+      ok++;
+    }
+    setStatus(`✅ ${ok} grupo(s) importado(s) com sucesso! Você já pode fechar esta página e abrir o módulo Equivalentes.`, 'ok');
+    btn.textContent = '✓ Importado';
+  } catch(e) {
+    console.error(e);
+    setStatus('❌ Erro ao importar: ' + e.message, 'err');
+    btn.disabled = false; btn.textContent = '⬆ Importar para o Sistema';
+  }
+};
+</script>
+</body>
+</html>

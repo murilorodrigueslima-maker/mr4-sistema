@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-15T07:45:19",
+  "atualizado_em": "2026-04-15T11:58:17",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -116,6 +116,27 @@
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 251.05,
+      "vencimento": "2026-04-06",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO REF MÊS MARÇO",
+      "valor": 800,
+      "vencimento": "2026-04-06",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO SALARIO MARÇO",
+      "valor": 603.1,
+      "vencimento": "2026-04-06",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO SALARIO MARÇO",
+      "valor": 1136.97,
       "vencimento": "2026-04-06",
       "dias_atraso": 9,
       "tipo": "Pagar"
@@ -348,7 +369,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49235.409999999996,
+  "total_vencido": 51775.479999999996,
   "total_a_receber": 0,
   "total_a_pagar": 23513.640000000007
 }

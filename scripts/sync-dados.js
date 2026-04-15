@@ -146,7 +146,7 @@ async function syncVendas() {
       ticket_medio: v.pedidos > 0 ? v.faturamento / v.pedidos : 0
     }));
 
-  const vendas = {
+  const dadosVendas = {
     atualizado_em: dataISO(),
     hoje:     fatHoje,
     semana:   fatSemana,
@@ -158,7 +158,7 @@ async function syncVendas() {
     ultimos_7_dias: ultimos7,
   };
 
-  fs.writeFileSync(path.join(DATA_DIR, 'vendas.json'), JSON.stringify(vendas, null, 2));
+  fs.writeFileSync(path.join(DATA_DIR, 'vendas.json'), JSON.stringify(dadosVendas, null, 2));
   console.log(`✅ Vendas: hoje R$ ${fatHoje.toFixed(2)} | mês R$ ${fatMes.toFixed(2)}`);
 }
 

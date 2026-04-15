@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR4 — Financeiro</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:    #FF6B1A;
+    --orange-dk: #e85d0f;
+    --bg:        #F3F4F6;
+    --white:     #FFFFFF;
+    --text:      #1A1A2E;
+    --muted:     #6B7280;
+    --border:    #E5E7EB;
+    --green:     #10B981;
+    --green-bg:  #D1FAE5;
+    --yellow:    #F59E0B;
+    --yellow-bg: #FEF3C7;
+    --red:       #EF4444;
+    --red-bg:    #FEE2E2;
+    --sidebar-w: 240px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    position: fixed; inset: 0;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  #loadingScreen img { height: 48px; object-fit: contain; }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-logo img { height: 36px; object-fit: contain; }
+
+  .sidebar-user {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  .sidebar-nav { flex: 1; padding: .75rem 0; }
+
+  .nav-section {
+    font-size: .62rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: .75rem 1.25rem .3rem;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .6rem 1.25rem;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    margin: .1rem 0;
+  }
+
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: rgba(255,107,26,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-sair {
+    width: 100%;
+    padding: .6rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+
+  .btn-sair:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.05); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    margin-bottom: 1.75rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -.3px;
+  }
+
+  .page-sub {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-top: .25rem;
+  }
+
+  .last-update {
+    font-size: .75rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .4rem .75rem;
+  }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .kpi-card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .kpi-card.red::before   { background: var(--red); }
+  .kpi-card.green::before { background: var(--green); }
+  .kpi-card.orange::before{ background: var(--orange); }
+  .kpi-card.yellow::before{ background: var(--yellow); }
+
+  .kpi-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--muted);
+  }
+
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.55rem;
+    font-weight: 600;
+    letter-spacing: -.5px;
+    line-height: 1.1;
+  }
+
+  .kpi-card.red   .kpi-value { color: var(--red); }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.orange .kpi-value{ color: var(--orange); }
+  .kpi-card.yellow .kpi-value{ color: var(--yellow); }
+
+  .kpi-icon {
+    position: absolute;
+    right: 1.25rem; top: 50%;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    opacity: .1;
+  }
+
+  /* ── CONTENT CARDS ── */
+  .content-card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .content-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .card-red::before    { background: var(--red); }
+  .card-yellow::before { background: var(--yellow); }
+  .card-blue::before   { background: #6366F1; }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.2px;
+  }
+
+  .card-count {
+    font-size: .72rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    padding: .2rem .6rem;
+    border-radius: 20px;
+    background: var(--bg);
+    color: var(--muted);
+  }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .84rem;
+  }
+
+  thead th {
+    padding: .6rem .75rem;
+    text-align: left;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background .12s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+
+  tbody td {
+    padding: .75rem .75rem;
+    color: var(--text);
+    vertical-align: middle;
+  }
+
+  .td-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+
+  .td-muted { color: var(--muted); font-size: .8rem; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .2rem .55rem;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+    white-space: nowrap;
+  }
+
+  .badge-red    { background: var(--red-bg);    color: var(--red); }
+  .badge-green  { background: var(--green-bg);  color: #065F46; }
+  .badge-orange { background: #FEF0E7;          color: var(--orange-dk); }
+  .badge-yellow { background: var(--yellow-bg); color: #92400E; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    padding: 2rem 1rem;
+    font-size: .88rem;
+    font-weight: 500;
+    color: #065F46;
+    background: var(--green-bg);
+    border-radius: 10px;
+  }
+
+  .empty-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    padding: 2rem 1rem;
+    font-size: .88rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--bg);
+    border-radius: 10px;
+  }
+
+  /* ── CHART ── */
+  .chart-container {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: .5rem;
+  }
+
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+    min-height: 160px;
+    padding: 0 .25rem;
+  }
+
+  .chart-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 28px;
+    gap: 4px;
+  }
+
+  .chart-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 130px;
+    width: 100%;
+  }
+
+  .chart-bar {
+    width: 100%;
+    max-width: 36px;
+    border-radius: 4px 4px 0 0;
+    min-height: 4px;
+    position: relative;
+    transition: opacity .15s;
+    cursor: default;
+  }
+
+  .chart-bar:hover { opacity: .8; }
+  .chart-bar.pos { background: var(--green); }
+  .chart-bar.neg { background: var(--red); }
+
+  .chart-bar-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: #fff;
+    font-size: .65rem;
+    font-family: 'JetBrains Mono', monospace;
+    padding: .2rem .45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-bottom: 4px;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .chart-bar:hover .chart-bar-tooltip { display: block; }
+
+  .chart-label {
+    font-size: .6rem;
+    color: var(--muted);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 36px;
+  }
+
+  .chart-legend {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 1rem;
+    font-size: .75rem;
+    color: var(--muted);
+  }
+
+  .legend-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    margin-right: .3rem;
+    vertical-align: middle;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 100%;
+      height: auto;
+      position: relative;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .main { margin-left: 0; padding: 1rem; }
+    body { flex-direction: column; }
+    .sidebar-nav { display: flex; overflow-x: auto; padding: .5rem; }
+    .nav-section { display: none; }
+    .nav-item {
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+    }
+    .nav-item.active {
+      border-left-color: transparent;
+      border-bottom-color: var(--orange);
+    }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .page-header { flex-direction: column; align-items: flex-start; }
+  }
+
+  @media (max-width: 480px) {
+    .kpi-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <img src="../assets/logo.png" alt="MR4">
+  <div class="spinner"></div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <div class="sidebar-logo">
+    <img src="../assets/logo.png" alt="MR4 Distribuidora">
+  </div>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="userName">Carregando...</div>
+      <div class="user-role" id="userRole">—</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Módulos</div>
+    <a class="nav-item" href="vendas.html">
+      <span class="nav-icon">📊</span> Painel de Vendas
+    </a>
+    <a class="nav-item" href="estoque.html">
+      <span class="nav-icon">🗄️</span> Estoque
+    </a>
+    <a class="nav-item active" href="financeiro.html">
+      <span class="nav-icon">💰</span> Financeiro
+    </a>
+    <a class="nav-item" href="https://catalogo.mr4distribuidora.com.br" target="_blank">
+      <span class="nav-icon">📦</span> Catálogo
+    </a>
+    <a class="nav-item" href="expedicao.html">
+      <span class="nav-icon">🚚</span> Expedição
+    </a>
+    <a class="nav-item" href="ponto.html">
+      <span class="nav-icon">📍</span> Ponto
+    </a>
+    <a class="nav-item" href="marketing.html">
+      <span class="nav-icon">📢</span> Marketing
+    </a>
+    <a class="nav-item" href="garantia.html">
+      <span class="nav-icon">🛡️</span> Garantia
+    </a>
+    <a class="nav-item" href="admin.html">
+      <span class="nav-icon">⚙️</span> Administração
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-sair" id="btnSair">↩ Sair do sistema</button>
+  </div>
+</aside>
+
+<!-- Main content -->
+<main class="main" id="mainContent" style="display:none">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">💰 Financeiro</h1>
+      <p class="page-sub">Contas a pagar, a receber e fluxo de caixa</p>
+    </div>
+    <div class="last-update" id="lastUpdate">Sincronizando...</div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi-card red">
+      <span class="kpi-label">Total Vencido</span>
+      <span class="kpi-value" id="kpiVencido">R$ 0,00</span>
+      <span class="kpi-icon">🚨</span>
+    </div>
+    <div class="kpi-card green">
+      <span class="kpi-label">A Receber</span>
+      <span class="kpi-value" id="kpiReceber">R$ 0,00</span>
+      <span class="kpi-icon">💵</span>
+    </div>
+    <div class="kpi-card orange">
+      <span class="kpi-label">A Pagar</span>
+      <span class="kpi-value" id="kpiPagar">R$ 0,00</span>
+      <span class="kpi-icon">📤</span>
+    </div>
+    <div class="kpi-card yellow">
+      <span class="kpi-label">Inadimplência</span>
+      <span class="kpi-value" id="kpiInadimplencia">0,0%</span>
+      <span class="kpi-icon">⚠️</span>
+    </div>
+  </div>
+
+  <!-- Contas Vencidas -->
+  <div class="content-card card-red">
+    <div class="card-header">
+      <span class="card-title">🚨 Contas Vencidas</span>
+      <span class="card-count" id="countVencidas">0</span>
+    </div>
+    <div class="table-wrap" id="wrapVencidas">
+      <div class="empty-state">✅ Nenhuma conta vencida</div>
+    </div>
+  </div>
+
+  <!-- Vencendo em 7 dias -->
+  <div class="content-card card-yellow">
+    <div class="card-header">
+      <span class="card-title">⚠️ Vencendo nos Próximos 7 Dias</span>
+      <span class="card-count" id="countVencendo">0</span>
+    </div>
+    <div class="table-wrap" id="wrapVencendo">
+      <div class="empty-state" style="background:var(--yellow-bg);color:#92400E">
+        ✅ Nenhum vencimento nos próximos 7 dias
+      </div>
+    </div>
+  </div>
+
+  <!-- Fluxo de Caixa Projetado -->
+  <div class="content-card card-blue">
+    <div class="card-header">
+      <span class="card-title">📈 Fluxo de Caixa Projetado — 30 Dias</span>
+    </div>
+    <div id="wrapFluxo">
+      <div class="empty-data">⏳ Aguardando sincronização de dados</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Firebase -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain: "mr4-ponto.firebaseapp.com",
+    projectId: "mr4-ponto",
+    storageBucket: "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId: "1:848211361584:web:2732e1893122f4a23452f5"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) {
+      window.location.href = '../login.html';
+      return;
+    }
+
+    // Show UI
+    const nome = user.displayName || user.email.split('@')[0];
+    document.getElementById('userName').textContent   = nome;
+    document.getElementById('userRole').textContent   = 'Usuário';
+    document.getElementById('userAvatar').textContent = nome[0].toUpperCase();
+
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display       = '';
+    document.getElementById('mainContent').style.display   = '';
+
+    // Load financial data
+    await carregarFinanceiro();
+  });
+
+  document.getElementById('btnSair').addEventListener('click', async () => {
+    await signOut(auth);
+    window.location.href = '../login.html';
+  });
+
+  // ── UTILS ──────────────────────────────────────────────────────────────────
+
+  function brl(valor) {
+    const n = Number(valor) || 0;
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    // accepts "2026-04-14" or full ISO
+    const parts = iso.substring(0, 10).split('-');
+    if (parts.length !== 3) return iso;
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+
+  function fmtDatetime(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ── RENDER TABLES ──────────────────────────────────────────────────────────
+
+  function renderVencidas(rows) {
+    const wrap = document.getElementById('wrapVencidas');
+    document.getElementById('countVencidas').textContent = rows.length;
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state">✅ Nenhuma conta vencida</div>';
+      return;
+    }
+
+    const html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente / Fornecedor</th>
+            <th>Valor</th>
+            <th>Vencimento</th>
+            <th>Dias em Atraso</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${escHtml(r.nome || '—')}</td>
+              <td class="td-mono">${brl(r.valor)}</td>
+              <td class="td-muted">${fmtDate(r.vencimento)}</td>
+              <td>
+                <span class="badge badge-red">${Number(r.dias_atraso) || 0} dia${Number(r.dias_atraso) !== 1 ? 's' : ''}</span>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    wrap.innerHTML = html;
+  }
+
+  function renderVencendo(rows) {
+    const wrap = document.getElementById('wrapVencendo');
+    document.getElementById('countVencendo').textContent = rows.length;
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty-state" style="background:var(--yellow-bg);color:#92400E">✅ Nenhum vencimento nos próximos 7 dias</div>';
+      return;
+    }
+
+    const html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente / Fornecedor</th>
+            <th>Valor</th>
+            <th>Vencimento</th>
+            <th>Tipo</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const tipo  = (r.tipo || '').trim();
+            const lower = tipo.toLowerCase();
+            const badgeClass = lower === 'receber' ? 'badge-green' : 'badge-orange';
+            return `
+              <tr>
+                <td>${escHtml(r.nome || '—')}</td>
+                <td class="td-mono">${brl(r.valor)}</td>
+                <td class="td-muted">${fmtDate(r.vencimento)}</td>
+                <td><span class="badge ${badgeClass}">${escHtml(tipo || '—')}</span></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+    wrap.innerHTML = html;
+  }
+
+  function renderFluxo(rows) {
+    const wrap = document.getElementById('wrapFluxo');
+
+    if (!rows || !rows.length) {
+      wrap.innerHTML = '<div class="empty-data">⏳ Aguardando sincronização de dados</div>';
+      return;
+    }
+
+    // Determine max absolute saldo for scaling
+    const saldos  = rows.map(r => Number(r.saldo) || 0);
+    const maxAbs  = Math.max(...saldos.map(Math.abs), 1);
+
+    const bars = rows.map(r => {
+      const saldo   = Number(r.saldo) || 0;
+      const entrada = Number(r.entrada) || 0;
+      const saida   = Number(r.saida)   || 0;
+      const pct     = Math.round(Math.abs(saldo) / maxAbs * 100);
+      const cls     = saldo >= 0 ? 'pos' : 'neg';
+      const dayLbl  = fmtDate(r.data).substring(0, 5); // dd/mm
+      const tooltip = `Entrada: ${brl(entrada)}<br>Saída: ${brl(saida)}<br>Saldo: ${brl(saldo)}`;
+
+      return `
+        <div class="chart-col">
+          <div class="chart-bar-wrap">
+            <div class="chart-bar ${cls}" style="height:${Math.max(pct, 3)}%;" title="${escAttr(`Saldo: ${brl(saldo)}`)}">
+              <span class="chart-bar-tooltip">${escHtml(brl(saldo))}</span>
+            </div>
+          </div>
+          <span class="chart-label">${escHtml(dayLbl)}</span>
+        </div>
+      `;
+    }).join('');
+
+    wrap.innerHTML = `
+      <div class="chart-container">
+        <div class="chart-bars">${bars}</div>
+        <div class="chart-legend">
+          <span><span class="legend-dot" style="background:var(--green)"></span>Saldo positivo</span>
+          <span><span class="legend-dot" style="background:var(--red)"></span>Saldo negativo</span>
+        </div>
+      </div>
+    `;
+  }
+
+  // ── LOAD DATA ──────────────────────────────────────────────────────────────
+
+  async function carregarFinanceiro() {
+    let data = {
+      atualizado_em:    null,
+      contas_vencidas:  [],
+      contas_vencendo:  [],
+      contas_receber:   [],
+      fluxo_caixa:      [],
+      inadimplencia_pct: 0,
+      total_vencido:    0,
+      total_a_receber:  0,
+      total_a_pagar:    0
+    };
+
+    try {
+      const resp = await fetch('../data/financeiro.json', { cache: 'no-cache' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const raw = await resp.json();
+      data = Object.assign(data, raw);
+    } catch (err) {
+      console.warn('financeiro.json não encontrado ou inválido:', err.message);
+      document.getElementById('lastUpdate').textContent = 'Dados não disponíveis';
+    }
+
+    // KPIs
+    document.getElementById('kpiVencido').textContent      = brl(data.total_vencido);
+    document.getElementById('kpiReceber').textContent      = brl(data.total_a_receber);
+    document.getElementById('kpiPagar').textContent        = brl(data.total_a_pagar);
+    document.getElementById('kpiInadimplencia').textContent =
+      (Number(data.inadimplencia_pct) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+
+    // Timestamp
+    if (data.atualizado_em) {
+      document.getElementById('lastUpdate').textContent = 'Atualizado: ' + fmtDatetime(data.atualizado_em);
+    }
+
+    // Tables & chart
+    renderVencidas(Array.isArray(data.contas_vencidas) ? data.contas_vencidas : []);
+    renderVencendo(Array.isArray(data.contas_vencendo) ? data.contas_vencendo : []);
+    renderFluxo(Array.isArray(data.fluxo_caixa) ? data.fluxo_caixa : []);
+  }
+
+  // ── SECURITY HELPERS ───────────────────────────────────────────────────────
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function escAttr(str) {
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+</script>
+
+</body>
+</html>

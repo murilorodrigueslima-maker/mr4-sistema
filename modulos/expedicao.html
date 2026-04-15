@@ -296,6 +296,10 @@ function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',cur
 function horaFmt(ts){return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
 function rand(a){return a[Math.floor(Math.random()*a.length)];}
 function randN(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+// Exibe últimos 6 dígitos do ID longo do GestãoClick
+function numCurto(n){const s=String(n);return s.length>6?s.slice(-6):s;}
+// Remove CNPJ/CPF que às vezes vem na frente do nome no GC (ex: "51.908.552 Nome...")
+function limparNome(s){return (s||'').replace(/^\d{2,3}[\.\d]*\s+/,'').trim()||s;}
 function elapsedFmt(ts){
   const s=Math.floor((Date.now()-ts)/1000);
   if(s<60)return s+'s';
@@ -402,7 +406,7 @@ function abrirModal(id, modo){
   }
 
   document.getElementById('modalInfo').innerHTML=
-    `<strong>#${p.numero}</strong> — ${p.cliente}<br>
+    `<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}<br>
      <span style="opacity:.7;font-size:.72rem">${p.itens} item${p.itens>1?'s':''} · ${brl(p.valor)} · Vendedor: ${p.vendedor}</span>`;
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -474,11 +478,11 @@ function renderCard(p){
   else if(p.coluna==='de') botao=`<span class="dispatch-time">🕐 Saiu às ${horaFmt(p.saidaEm)}</span>`;
   return`<div class="card${al?' alerta':''}" id="card-${p.id}">
   <div class="card-top">
-    <span class="card-num">#${p.numero}</span>
+    <span class="card-num">#${numCurto(p.numero)}</span>
     <span class="card-hora">${horaFmt(p.criadoEm)}</span>
     <span class="card-elapsed" id="el-${p.id}">${elapsedFmt(p.criadoEm)}</span>
   </div>
-  <div class="card-cliente" title="${p.cliente}">${p.cliente}${p.cidade?`<span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:.4rem">${p.cidade}</span>`:''}</div>
+  <div class="card-cliente" title="${p.cliente}">${limparNome(p.cliente)}${p.cidade?`<span style="font-size:.65rem;font-weight:400;color:var(--muted);margin-left:.4rem">${p.cidade}</span>`:''}</div>
   <div class="card-envio"><span class="badge-envio ${ev.cls}">${ev.icon} ${ev.label}</span></div>
   <div class="card-info">
     <span>${p.vendedor}</span><span class="card-dot">·</span>

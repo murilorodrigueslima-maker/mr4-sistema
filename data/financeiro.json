@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-16T07:47:10",
+  "atualizado_em": "2026-04-16T13:11:16",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -273,6 +273,13 @@
       "vencimento": "2026-04-15",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 543.97,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -369,7 +376,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53409.22999999999,
+  "total_vencido": 53953.19999999999,
   "total_a_receber": 0,
   "total_a_pagar": 23291.190000000002
 }

@@ -5,557 +5,611 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Administração — MR4 Distribuidora</title>
 <link rel="icon" type="image/png" href="../assets/logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#FF6B1A; --orange-dk:#e85d0f;
+  --bg:#F3F4F6; --white:#FFFFFF;
+  --text:#1A1A2E; --muted:#6B7280;
+  --border:#E5E7EB; --border-dk:#D1D5DB;
+  --green:#10B981; --yellow:#F59E0B; --red:#EF4444; --blue:#3B82F6;
+  --red-bg:rgba(239,68,68,.06); --green-bg:rgba(16,185,129,.06);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 
-  :root {
-    --orange:    #FF6B1A;
-    --orange-dk: #e85d0f;
-    --bg:        #F3F4F6;
-    --white:     #FFFFFF;
-    --text:      #1A1A2E;
-    --muted:     #6B7280;
-    --border:    #E5E7EB;
-    --green:     #10B981;
-    --yellow:    #F59E0B;
-    --red:       #EF4444;
-    --blue:      #3B82F6;
-    --sidebar-w: 240px;
-    --mono:      'JetBrains Mono', monospace;
-  }
+/* LOADING */
+#loadingScreen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1rem}
+#loadingScreen .brand{font-size:1.2rem;font-weight:800;color:var(--orange)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:80}
+.topbar-logo{font-size:1rem;font-weight:800;color:var(--orange)}
+.topbar-div{width:1px;height:18px;background:var(--border)}
+.topbar-title{font-size:.85rem;font-weight:700;color:var(--text);letter-spacing:-.2px}
+.topbar-sep{flex:1}
+.btn-back{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:.4rem;transition:all .15s}
+.btn-back:hover{border-color:var(--orange);color:var(--orange)}
 
-  #loadingScreen { position:fixed; inset:0; background:var(--white); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:1rem; }
-  #loadingScreen img { height:48px; object-fit:contain; }
-  .spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--orange); border-radius:50%; animation:spin .7s linear infinite; }
-  @keyframes spin { to { transform:rotate(360deg); } }
+/* MAIN */
+.main{padding:2rem;max-width:1100px;margin:0 auto}
+.page-header{margin-bottom:1.75rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.page-title{font-size:1.4rem;font-weight:800;letter-spacing:-.3px}
+.page-sub{font-size:.84rem;color:var(--muted);margin-top:.2rem}
+.btn-primary{padding:.55rem 1.2rem;background:var(--orange);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:.45rem;white-space:nowrap}
+.btn-primary:hover{background:var(--orange-dk)}
 
-  .sidebar { width:var(--sidebar-w); background:var(--white); border-right:1px solid var(--border); display:flex; flex-direction:column; position:fixed; top:0; left:0; bottom:0; z-index:100; overflow-y:auto; }
-  .sidebar-logo { padding:1.5rem 1.25rem 1rem; border-bottom:1px solid var(--border); }
-  .sidebar-logo img { height:36px; object-fit:contain; }
-  .sidebar-user { padding:1rem 1.25rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.75rem; }
-  .user-avatar { width:36px; height:36px; border-radius:50%; background:var(--orange); color:#fff; font-weight:700; font-size:.9rem; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .user-info { flex:1; min-width:0; }
-  .user-name { font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .user-role { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
-  .sidebar-nav { flex:1; padding:.75rem 0; }
-  .nav-section { font-size:.62rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1.2px; padding:.75rem 1.25rem .3rem; }
-  .nav-item { display:flex; align-items:center; gap:.65rem; padding:.6rem 1.25rem; font-size:.84rem; font-weight:500; color:var(--muted); text-decoration:none; border-left:3px solid transparent; transition:all .15s; }
-  .nav-item:hover { background:var(--bg); color:var(--text); }
-  .nav-item.active { background:rgba(255,107,26,.07); color:var(--orange); border-left-color:var(--orange); font-weight:600; }
-  .nav-icon { font-size:1rem; width:20px; text-align:center; }
-  .sidebar-footer { padding:1rem 1.25rem; border-top:1px solid var(--border); }
-  .btn-sair { width:100%; padding:.6rem; border:1.5px solid var(--border); border-radius:8px; background:none; font-family:'Inter',sans-serif; font-size:.8rem; font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; }
-  .btn-sair:hover { border-color:var(--red); color:var(--red); }
+/* STATS */
+.stats-row{display:flex;gap:1rem;margin-bottom:1.75rem;flex-wrap:wrap}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;flex:1;min-width:140px}
+.stat-val{font-size:1.6rem;font-weight:800;letter-spacing:-.5px}
+.stat-lbl{font-size:.74rem;color:var(--muted);margin-top:.15rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
 
-  .main { margin-left:var(--sidebar-w); flex:1; padding:2rem; min-height:100vh; }
+/* TABLE */
+.table-card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.table-head{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.table-head-title{font-size:.9rem;font-weight:700}
+.search-box{padding:.45rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.82rem;outline:none;transition:border-color .15s;width:220px}
+.search-box:focus{border-color:var(--orange)}
+table{width:100%;border-collapse:collapse}
+th{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:.75rem 1rem;text-align:left;border-bottom:1px solid var(--border);background:#FAFAFA}
+td{padding:.9rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle;font-size:.84rem}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAFA}
+.user-cell{display:flex;align-items:center;gap:.75rem}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--orange);color:#fff;font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase}
+.user-name{font-weight:600;font-size:.84rem}
+.user-email{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.cargo-badge{display:inline-block;padding:.25rem .65rem;border-radius:99px;font-size:.7rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.cargo-badge.admin{background:rgba(255,107,26,.1);color:var(--orange);border-color:rgba(255,107,26,.25)}
+.cargo-badge.gerente{background:rgba(59,130,246,.08);color:var(--blue);border-color:rgba(59,130,246,.2)}
+.modulos-list{display:flex;flex-wrap:wrap;gap:.3rem}
+.mod-chip{display:inline-block;padding:.18rem .5rem;border-radius:5px;font-size:.65rem;font-weight:600;background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.mod-chip.on{background:rgba(16,185,129,.09);color:var(--green);border-color:rgba(16,185,129,.22)}
+.mod-chip.admin-all{background:rgba(255,107,26,.09);color:var(--orange);border-color:rgba(255,107,26,.22)}
+.btn-icon{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border);background:none;cursor:pointer;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-icon:hover{border-color:var(--orange);background:rgba(255,107,26,.07)}
+.btn-icon.del:hover{border-color:var(--red);background:var(--red-bg)}
+.actions-cell{display:flex;gap:.4rem;justify-content:flex-end}
+.status-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .6rem;border-radius:99px;font-size:.68rem;font-weight:700}
+.status-badge.ativo{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.status-badge.bloqueado{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.empty-row td{text-align:center;padding:3rem;color:var(--muted);font-size:.85rem}
 
-  .page-header { margin-bottom:1.75rem; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:1rem; }
-  .page-title { font-size:1.4rem; font-weight:800; letter-spacing:-.3px; }
-  .page-sub { font-size:.8rem; color:var(--muted); margin-top:.2rem; }
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:560px;padding:2rem;position:relative;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:1.1rem;font-weight:800;margin-bottom:.3rem}
+.modal-sub{font-size:.8rem;color:var(--muted);margin-bottom:1.5rem}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+label.fl{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+input[type=text],input[type=email],select{padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.84rem;outline:none;transition:border-color .15s;background:var(--white);color:var(--text)}
+input[type=text]:focus,input[type=email]:focus,select:focus{border-color:var(--orange)}
+input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
+.modulos-grid-form{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.4rem}
+.mod-toggle{display:flex;align-items:center;gap:.5rem;padding:.5rem .7rem;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;user-select:none;font-size:.78rem;font-weight:500}
+.mod-toggle:hover{border-color:var(--orange)}
+.mod-toggle.checked{border-color:var(--green);background:var(--green-bg);color:#0d9068;font-weight:600}
+.mod-toggle input{display:none}
+.mod-toggle.admin-on{border-color:var(--orange);background:rgba(255,107,26,.06);color:var(--orange);cursor:default;opacity:.8}
+.admin-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;margin-bottom:1rem}
+.admin-toggle-label{font-size:.84rem;font-weight:600}
+.admin-toggle-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.switch{position:relative;width:44px;height:24px;flex-shrink:0}
+.switch input{opacity:0;width:0;height:0;position:absolute}
+.switch-track{position:absolute;inset:0;background:var(--border-dk);border-radius:99px;cursor:pointer;transition:background .2s}
+.switch input:checked+.switch-track{background:var(--orange)}
+.switch-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.switch input:checked~.switch-thumb{transform:translateX(20px)}
+.modal-actions{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.btn-secondary{padding:.55rem 1.2rem;border:1.5px solid var(--border);border-radius:9px;background:none;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-secondary:hover{border-color:var(--orange);color:var(--orange)}
+.btn-danger{padding:.55rem 1.2rem;background:var(--red);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-danger:hover{background:#dc2626}
+.confirm-modal{max-width:400px}
+.confirm-icon{font-size:2.5rem;margin-bottom:.75rem;text-align:center}
+.confirm-msg{font-size:.87rem;color:var(--muted);margin-bottom:.25rem;line-height:1.6;text-align:center}
+.confirm-modal .modal-title{text-align:center}
+.confirm-modal .modal-actions{justify-content:center}
+.uid-hint{font-size:.72rem;color:var(--muted);margin-top:.3rem;line-height:1.5;padding:.6rem .85rem;background:#FAFAFA;border-radius:7px;border:1px solid var(--border)}
 
-  /* ALERT */
-  .alert { padding:.85rem 1.1rem; border-radius:10px; font-size:.82rem; font-weight:500; margin-bottom:1.25rem; display:none; }
-  .alert.show { display:block; }
-  .alert-error   { background:rgba(239,68,68,.08);  border:1px solid rgba(239,68,68,.25);  color:#c0392b; }
-  .alert-success { background:rgba(16,185,129,.08); border:1px solid rgba(16,185,129,.25); color:#0a7a52; }
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:.75rem 1.1rem;border-radius:10px;font-size:.8rem;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,.25);animation:slideUp .3s ease;max-width:300px;border-left:3px solid var(--green)}
+.toast.err{border-left-color:var(--red)}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-  /* USERS TABLE */
-  .section { background:var(--white); border-radius:14px; border:1px solid var(--border); overflow:hidden; margin-bottom:1.5rem; }
-  .section-header { padding:1rem 1.5rem; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-  .section-title { font-size:.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; }
-  .btn-novo { padding:.45rem 1rem; background:var(--orange); color:#fff; border:none; border-radius:8px; font-size:.78rem; font-weight:700; font-family:'Inter',sans-serif; cursor:pointer; transition:background .15s; }
-  .btn-novo:hover { background:var(--orange-dk); }
-
-  .data-table { width:100%; border-collapse:collapse; font-size:.83rem; }
-  .data-table th { background:var(--bg); padding:.65rem 1rem; text-align:left; font-size:.68rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); }
-  .data-table td { padding:.75rem 1rem; border-bottom:1px solid var(--border); vertical-align:middle; }
-  .data-table tr:last-child td { border-bottom:none; }
-  .data-table tr:hover td { background:rgba(243,244,246,.6); }
-
-  .badge-admin { display:inline-flex; align-items:center; padding:.2rem .7rem; border-radius:99px; font-size:.68rem; font-weight:700; background:rgba(255,107,26,.12); color:var(--orange); border:1px solid rgba(255,107,26,.3); }
-  .badge-user  { display:inline-flex; align-items:center; padding:.2rem .7rem; border-radius:99px; font-size:.68rem; font-weight:700; background:var(--bg); color:var(--muted); border:1px solid var(--border); }
-
-  .modulos-pills { display:flex; flex-wrap:wrap; gap:.3rem; }
-  .modulo-pill { font-size:.65rem; font-weight:600; padding:.15rem .55rem; border-radius:99px; background:rgba(59,130,246,.1); color:var(--blue); border:1px solid rgba(59,130,246,.25); }
-
-  .btn-edit { padding:.3rem .75rem; border:1.5px solid var(--border); border-radius:6px; font-size:.72rem; font-weight:700; font-family:'Inter',sans-serif; background:none; color:var(--muted); cursor:pointer; transition:all .12s; }
-  .btn-edit:hover { border-color:var(--orange); color:var(--orange); }
-
-  /* MODAL */
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:500; display:none; align-items:center; justify-content:center; padding:1rem; }
-  .modal-overlay.open { display:flex; }
-  .modal { background:var(--white); border-radius:16px; padding:2rem; width:100%; max-width:520px; box-shadow:0 20px 60px rgba(0,0,0,.2); max-height:90vh; overflow-y:auto; }
-  .modal-title { font-size:1.05rem; font-weight:700; margin-bottom:1.5rem; }
-
-  .form-row { display:grid; gap:1rem; margin-bottom:1rem; }
-  .form-row-2 { grid-template-columns:1fr 1fr; }
-  .form-field { display:flex; flex-direction:column; gap:.4rem; }
-  .form-field label { font-size:.75rem; font-weight:700; color:var(--text); letter-spacing:.3px; }
-  .form-field input, .form-field select { padding:.65rem .9rem; border:1.5px solid var(--border); border-radius:8px; font-size:.85rem; font-family:'Inter',sans-serif; color:var(--text); outline:none; transition:border-color .15s; }
-  .form-field input:focus, .form-field select:focus { border-color:var(--orange); }
-  .form-hint { font-size:.72rem; color:var(--muted); }
-
-  .modulos-grid-chk { display:grid; grid-template-columns:repeat(3,1fr); gap:.5rem; margin-top:.25rem; }
-  .chk-item { display:flex; align-items:center; gap:.45rem; padding:.45rem .6rem; border:1.5px solid var(--border); border-radius:8px; cursor:pointer; transition:all .12s; user-select:none; }
-  .chk-item:hover { border-color:var(--orange); background:rgba(255,107,26,.04); }
-  .chk-item.checked { border-color:var(--orange); background:rgba(255,107,26,.07); }
-  .chk-item input { display:none; }
-  .chk-icon { font-size:.9rem; }
-  .chk-nome { font-size:.75rem; font-weight:600; color:var(--text); }
-  .chk-check { margin-left:auto; width:16px; height:16px; border-radius:4px; border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:.65rem; flex-shrink:0; }
-  .chk-item.checked .chk-check { background:var(--orange); border-color:var(--orange); color:#fff; }
-
-  .toggle-admin { display:flex; align-items:center; gap:.75rem; padding:.75rem 1rem; border:1.5px solid var(--border); border-radius:10px; cursor:pointer; margin-bottom:1rem; transition:all .15s; user-select:none; }
-  .toggle-admin:hover { border-color:var(--orange); }
-  .toggle-admin.on { border-color:var(--orange); background:rgba(255,107,26,.05); }
-  .toggle-label { flex:1; }
-  .toggle-label strong { display:block; font-size:.82rem; font-weight:700; color:var(--text); }
-  .toggle-label span { font-size:.72rem; color:var(--muted); }
-  .toggle-switch { width:38px; height:22px; border-radius:99px; background:var(--border); position:relative; transition:background .2s; flex-shrink:0; }
-  .toggle-switch::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .2s; }
-  .toggle-admin.on .toggle-switch { background:var(--orange); }
-  .toggle-admin.on .toggle-switch::after { transform:translateX(16px); }
-
-  .modal-actions { display:flex; gap:.75rem; justify-content:flex-end; margin-top:1.5rem; border-top:1px solid var(--border); padding-top:1.25rem; }
-  .btn-cancel { padding:.65rem 1.2rem; border:1.5px solid var(--border); border-radius:8px; background:none; font-size:.82rem; font-weight:600; color:var(--muted); cursor:pointer; font-family:'Inter',sans-serif; }
-  .btn-save { padding:.65rem 1.5rem; border:none; border-radius:8px; background:var(--orange); color:#fff; font-size:.82rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif; transition:background .15s; }
-  .btn-save:hover { background:var(--orange-dk); }
-  .btn-save:disabled { opacity:.6; cursor:not-allowed; }
-
-  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
-  .empty-state .empty-icon { font-size:2.5rem; margin-bottom:.75rem; }
-
-  @media(max-width:700px) { .main { padding:1rem; } .form-row-2 { grid-template-columns:1fr; } .modulos-grid-chk { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:640px){
+  .main{padding:1rem}
+  .form-row{grid-template-columns:1fr}
+  .modulos-grid-form{grid-template-columns:repeat(2,1fr)}
+  table{font-size:.78rem}
+  th,td{padding:.65rem .75rem}
+  .search-box{width:100%}
+}
 </style>
 </head>
 <body>
 
 <div id="loadingScreen">
-  <img src="../assets/logo.png" alt="MR4">
+  <div class="brand">MR4</div>
   <div class="spinner"></div>
 </div>
 
-<aside class="sidebar" id="sidebar"></aside>
+<div id="appWrap" style="display:none">
 
-<main class="main" id="mainContent" style="display:none">
+<!-- Topbar -->
+<div class="topbar">
+  <span class="topbar-logo">MR4</span>
+  <div class="topbar-div"></div>
+  <span class="topbar-title">⚙️ Administração</span>
+  <div class="topbar-sep"></div>
+  <a href="../index.html" class="btn-back">← Sistema</a>
+</div>
+
+<!-- Main -->
+<div class="main">
 
   <div class="page-header">
     <div>
-      <h1 class="page-title">⚙️ Administração</h1>
-      <p class="page-sub">Gerenciamento de usuários e permissões</p>
+      <h1 class="page-title">Usuários do Sistema</h1>
+      <p class="page-sub">Gerencie permissões e acessos dos colaboradores</p>
+    </div>
+    <button class="btn-primary" onclick="abrirModalNovo()">+ Novo Usuário</button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-val" id="statTotal">—</div>
+      <div class="stat-lbl">Total de usuários</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statAdmins" style="color:var(--orange)">—</div>
+      <div class="stat-lbl">Administradores</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statAtivos" style="color:var(--green)">—</div>
+      <div class="stat-lbl">Ativos</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" id="statBloq" style="color:var(--red)">—</div>
+      <div class="stat-lbl">Bloqueados</div>
     </div>
   </div>
 
-  <div class="alert alert-error"   id="alertErr"></div>
-  <div class="alert alert-success" id="alertOk"></div>
-
-  <div class="section">
-    <div class="section-header">
-      <span class="section-title">👥 Usuários do Sistema</span>
-      <button class="btn-novo" onclick="abrirModalNovo()">+ Novo Usuário</button>
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-head-title">Colaboradores</span>
+      <input class="search-box" type="text" placeholder="🔍  Buscar nome ou e-mail…"
+             oninput="filtrar(this.value)" id="busca">
     </div>
-    <div id="usuariosWrap">
-      <div class="empty-state"><div class="empty-icon">⏳</div><p>Carregando usuários...</p></div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Cargo</th>
+            <th>Módulos</th>
+            <th>Status</th>
+            <th style="text-align:right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyUsuarios">
+          <tr class="empty-row"><td colspan="5">Carregando…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
-</main>
+</div><!-- /main -->
+</div><!-- /appWrap -->
 
-<!-- Modal Usuário -->
-<div class="modal-overlay" id="modalOverlay">
+<!-- ── MODAL CRIAR / EDITAR ── -->
+<div class="overlay" id="modalOverlay">
   <div class="modal">
-    <div class="modal-title" id="modalTitle">Novo Usuário</div>
+    <div class="modal-title" id="modalTitulo">Novo Usuário</div>
+    <div class="modal-sub"  id="modalSub">Preencha os dados e defina os módulos disponíveis</div>
 
-    <div class="form-row form-row-2">
-      <div class="form-field">
-        <label>Nome completo</label>
-        <input type="text" id="fNome" placeholder="João Silva">
+    <input type="hidden" id="editUid">
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="fl">Nome completo</label>
+        <input type="text" id="fNome" placeholder="Ex: João Silva">
       </div>
-      <div class="form-field">
-        <label>Cargo</label>
-        <input type="text" id="fCargo" placeholder="Vendedor, Expedição...">
+      <div class="form-group">
+        <label class="fl">E-mail</label>
+        <input type="email" id="fEmail" placeholder="joao@empresa.com">
       </div>
     </div>
 
-    <div class="form-row form-row-2">
-      <div class="form-field">
-        <label>E-mail</label>
-        <input type="email" id="fEmail" placeholder="joao@mr4.com.br">
-        <span class="form-hint" id="emailHint"></span>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="fl">Cargo / Função</label>
+        <input type="text" id="fCargo" placeholder="Vendedor, Operador, Gerente…">
       </div>
-      <div class="form-field">
-        <label>Senha <span id="senhaLabel">(mínimo 6 caracteres)</span></label>
-        <input type="password" id="fSenha" placeholder="••••••••">
-        <span class="form-hint" id="senhaHint">Deixe em branco para não alterar</span>
+      <div class="form-group">
+        <label class="fl">UID Firebase Auth</label>
+        <input type="text" id="fUid" placeholder="Cole o UID do usuário">
+        <div class="uid-hint">💡 O UID aparece no console do Firebase Authentication após o primeiro login do colaborador.</div>
       </div>
     </div>
 
-    <div class="toggle-admin" id="toggleAdmin" onclick="alternarAdmin()">
-      <div class="toggle-label">
-        <strong>⚙️ Administrador</strong>
-        <span>Acesso total a todos os módulos</span>
+    <!-- Admin toggle -->
+    <div class="admin-toggle-row">
+      <div>
+        <div class="admin-toggle-label">🔑 Administrador</div>
+        <div class="admin-toggle-sub">Acessa todos os módulos e esta tela de administração</div>
       </div>
-      <div class="toggle-switch"></div>
+      <label class="switch">
+        <input type="checkbox" id="fAdmin" onchange="onAdminChange()">
+        <div class="switch-track"></div>
+        <div class="switch-thumb"></div>
+      </label>
     </div>
 
-    <div id="modulosSection">
-      <div style="font-size:.75rem;font-weight:700;margin-bottom:.6rem;color:var(--text);">MÓDULOS COM ACESSO</div>
-      <div class="modulos-grid-chk" id="modulosChk"></div>
+    <!-- Módulos -->
+    <div class="form-group">
+      <label class="fl">Módulos liberados</label>
+      <div class="modulos-grid-form" id="modulosForm"><!-- JS --></div>
+    </div>
+
+    <!-- Bloqueado -->
+    <div class="admin-toggle-row" style="margin-top:.25rem">
+      <div>
+        <div class="admin-toggle-label">🚫 Bloquear acesso</div>
+        <div class="admin-toggle-sub">Usuário vê apenas o catálogo público (sem login)</div>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="fBloqueado">
+        <div class="switch-track"></div>
+        <div class="switch-thumb"></div>
+      </label>
     </div>
 
     <div class="modal-actions">
-      <button class="btn-cancel" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-save"   id="btnSalvar" onclick="salvarUsuario()">Salvar</button>
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-primary"   onclick="salvarUsuario()">💾 Salvar</button>
     </div>
   </div>
 </div>
 
+<!-- ── MODAL CONFIRMAR EXCLUSÃO ── -->
+<div class="overlay" id="delOverlay">
+  <div class="modal confirm-modal">
+    <div class="confirm-icon">🗑️</div>
+    <div class="modal-title">Remover usuário?</div>
+    <p class="confirm-msg" id="delMsg">Este usuário será removido do sistema e perderá todas as permissões.</p>
+    <p class="confirm-msg" style="font-size:.72rem;margin-top:.5rem">A conta Firebase Auth <strong>não</strong> é excluída — somente o perfil de permissões.</p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="fecharDelModal()">Não, manter</button>
+      <button class="btn-danger"    onclick="confirmarExclusao()">Sim, remover</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- Firebase Auth + Firestore -->
 <script type="module">
-  import { initializeApp }                                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, onAuthStateChanged, signOut,
-           createUserWithEmailAndPassword, updateProfile,
-           sendPasswordResetEmail }                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc, setDoc,
-           collection, getDocs, serverTimestamp }                     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-  import { getApp, initializeApp as initApp2 }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut }
+                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
+                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-  const FIREBASE_CONFIG = {
-    apiKey:            "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
-    authDomain:        "mr4-ponto.firebaseapp.com",
-    projectId:         "mr4-ponto",
-    storageBucket:     "mr4-ponto.firebasestorage.app",
-    messagingSenderId: "848211361584",
-    appId:             "1:848211361584:web:2732e1893122f4a23452f5"
-  };
+const firebaseConfig = {
+  apiKey:            "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:        "mr4-ponto.firebaseapp.com",
+  projectId:         "mr4-ponto",
+  storageBucket:     "mr4-ponto.firebasestorage.app",
+  messagingSenderId: "848211361584",
+  appId:             "1:848211361584:web:2732e1893122f4a23452f5"
+};
 
-  const MODULOS_DEF = [
-    { id:'vendas',     nome:'Vendas',     icon:'📊' },
-    { id:'estoque',    nome:'Estoque',    icon:'🗄️' },
-    { id:'financeiro', nome:'Financeiro', icon:'💰' },
-    { id:'catalogo',   nome:'Catálogo',   icon:'📦' },
-    { id:'expedicao',  nome:'Expedição',  icon:'🚚' },
-    { id:'ponto',      nome:'Ponto',      icon:'📍' },
-    { id:'marketing',  nome:'Marketing',  icon:'📢' },
-    { id:'garantia',   nome:'Garantia',   icon:'🛡️' },
-    { id:'admin',      nome:'Admin',      icon:'⚙️' },
-  ];
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
 
-  const MODULOS_SIDEBAR = [
-    { id:'vendas',     nome:'Painel de Vendas', icon:'📊', url:'./vendas.html'     },
-    { id:'estoque',    nome:'Estoque',           icon:'🗄️', url:'./estoque.html'    },
-    { id:'financeiro', nome:'Financeiro',        icon:'💰', url:'./financeiro.html' },
-    { id:'catalogo',   nome:'Catálogo',          icon:'📦', url:'https://catalogo.mr4distribuidora.com.br' },
-    { id:'expedicao',  nome:'Expedição',         icon:'🚚', url:'./expedicao.html'  },
-    { id:'ponto',      nome:'Ponto',             icon:'📍', url:'./ponto.html'      },
-    { id:'marketing',  nome:'Marketing',         icon:'📢', url:'./marketing.html'  },
-    { id:'garantia',   nome:'Garantia',          icon:'🛡️', url:'./garantia.html'   },
-    { id:'admin',      nome:'Administração',     icon:'⚙️', url:'./admin.html'      },
-  ];
+// Expor helpers globais
+window._db        = db;
+window._col       = (n)         => collection(db, n);
+window._doc       = (n, id)     => doc(db, n, id);
+window._getDoc    = (ref)       => getDoc(ref);
+window._getDocs   = (ref)       => getDocs(ref);
+window._setDoc    = (ref, d, o) => setDoc(ref, d, o||{});
+window._deleteDoc = (ref)       => deleteDoc(ref);
+window._signOut   = ()          => signOut(auth);
 
-  // App principal (autenticação da sessão)
-  const app  = initializeApp(FIREBASE_CONFIG);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = '../login.html'; return; }
 
-  // App auxiliar para criar usuários sem deslogar o admin
-  let app2;
-  try { app2 = initApp2(FIREBASE_CONFIG, 'aux'); }
-  catch(e) { app2 = getApp('aux'); }
-  const auth2 = getAuth(app2);
-
-  let usuarioAtual = null;
-  let modoEdicao   = false;
-  let uidEditando  = null;
-  let isAdmin      = false;
-
-  // ── AUTH ────────────────────────────────────────────────────────────────────
-  onAuthStateChanged(auth, async user => {
-    if (!user) { window.location.href = '../login.html'; return; }
-    usuarioAtual = user;
-
-    let perfil = { nome: user.displayName || user.email.split('@')[0], cargo:'Usuário', modulos:[], admin:false };
-    try {
-      const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
-      if (snap.exists()) {
-        const d = snap.data();
-        perfil = { ...perfil, ...d };
-        if (d.admin) perfil.modulos = MODULOS_SIDEBAR.map(m => m.id);
-      }
-    } catch(e) {}
-
-    if (!perfil.admin) { window.location.href = '../index.html'; return; }
-
-    renderSidebar(perfil, user.email);
-    document.getElementById('mainContent').style.display = '';
-    document.getElementById('loadingScreen').style.display = 'none';
-
-    await carregarUsuarios();
-  });
-
-  // ── SIDEBAR ─────────────────────────────────────────────────────────────────
-  function renderSidebar(perfil, email) {
-    const sidebar = document.getElementById('sidebar');
-    const inicial = (perfil.nome || '?')[0].toUpperCase();
-    let navItems = '';
-    MODULOS_SIDEBAR.forEach(m => {
-      const tem   = perfil.admin || perfil.modulos.includes(m.id);
-      const ativo = m.id === 'admin' ? ' active' : '';
-      if (tem) navItems += `<a class="nav-item${ativo}" href="${m.url}"><span class="nav-icon">${m.icon}</span>${m.nome}</a>`;
-    });
-    sidebar.innerHTML = `
-      <div class="sidebar-logo"><img src="../assets/logo.png" alt="MR4 Distribuidora"></div>
-      <div class="sidebar-user">
-        <div class="user-avatar">${inicial}</div>
-        <div class="user-info">
-          <div class="user-name">${perfil.nome || email}</div>
-          <div class="user-role">${perfil.cargo || 'Usuário'}</div>
-        </div>
-      </div>
-      <nav class="sidebar-nav">
-        <div class="nav-section">Módulos</div>
-        ${navItems}
-      </nav>
-      <div class="sidebar-footer">
-        <button class="btn-sair" onclick="window._sair()">↩ Sair do sistema</button>
-      </div>`;
-    window._sair = async () => { await signOut(auth); window.location.href = '../login.html'; };
-  }
-
-  // ── CARREGAR USUÁRIOS ────────────────────────────────────────────────────────
-  async function carregarUsuarios() {
-    try {
-      const snap = await getDocs(collection(db, 'sistema_usuarios'));
-      const usuarios = [];
-      snap.forEach(d => usuarios.push({ uid: d.id, ...d.data() }));
-      renderUsuarios(usuarios);
-    } catch(e) {
-      mostrarErro('Erro ao carregar usuários: ' + e.message);
-    }
-  }
-
-  function renderUsuarios(lista) {
-    if (!lista.length) {
-      document.getElementById('usuariosWrap').innerHTML =
-        `<div class="empty-state"><div class="empty-icon">👥</div><p>Nenhum usuário cadastrado.</p></div>`;
+  // Verifica admin
+  try {
+    const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+    if (!snap.exists() || !snap.data().admin) {
+      alert('⛔ Acesso negado. Apenas administradores podem acessar esta área.');
+      window.location.href = '../index.html';
       return;
     }
-
-    const linhas = lista.map(u => {
-      const badgeTipo = u.admin
-        ? `<span class="badge-admin">⚙️ Admin</span>`
-        : `<span class="badge-user">Usuário</span>`;
-
-      const modulos = u.admin
-        ? '<span style="font-size:.72rem;color:var(--orange);font-weight:600">Todos os módulos</span>'
-        : (u.modulos || []).map(m => {
-            const md = MODULOS_DEF.find(x => x.id === m);
-            return md ? `<span class="modulo-pill">${md.icon} ${md.nome}</span>` : '';
-          }).join('') || '<span style="font-size:.72rem;color:var(--muted)">Sem acesso</span>';
-
-      return `<tr>
-        <td><strong>${u.nome || '—'}</strong></td>
-        <td style="color:var(--muted);font-size:.8rem">${u.cargo || '—'}</td>
-        <td style="font-size:.78rem;color:var(--muted);font-family:var(--mono)">${u.email || '—'}</td>
-        <td>${badgeTipo}</td>
-        <td><div class="modulos-pills">${modulos}</div></td>
-        <td><button class="btn-edit" onclick="abrirModalEditar('${u.uid}')">✏️ Editar</button></td>
-      </tr>`;
-    }).join('');
-
-    document.getElementById('usuariosWrap').innerHTML = `
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Cargo</th>
-            <th>E-mail</th>
-            <th>Tipo</th>
-            <th>Módulos</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody>${linhas}</tbody>
-      </table>`;
+  } catch(e) {
+    alert('Erro ao verificar permissões: ' + e.message);
+    window.location.href = '../index.html';
+    return;
   }
 
-  // ── MODAL NOVO ───────────────────────────────────────────────────────────────
-  window.abrirModalNovo = function() {
-    modoEdicao = false;
-    uidEditando = null;
-    isAdmin = false;
-
-    document.getElementById('modalTitle').textContent = '+ Novo Usuário';
-    document.getElementById('fNome').value    = '';
-    document.getElementById('fCargo').value   = '';
-    document.getElementById('fEmail').value   = '';
-    document.getElementById('fSenha').value   = '';
-    document.getElementById('fEmail').disabled = false;
-    document.getElementById('emailHint').textContent = '';
-    document.getElementById('senhaHint').textContent = 'Mínimo 6 caracteres';
-    document.getElementById('senhaLabel').textContent = '(mínimo 6 caracteres)';
-    document.getElementById('toggleAdmin').classList.remove('on');
-    renderModulosChk([]);
-    document.getElementById('modulosSection').style.display = '';
-    document.getElementById('modalOverlay').classList.add('open');
-  };
-
-  // ── MODAL EDITAR ─────────────────────────────────────────────────────────────
-  window.abrirModalEditar = async function(uid) {
-    modoEdicao = true;
-    uidEditando = uid;
-
-    try {
-      const snap = await getDoc(doc(db, 'sistema_usuarios', uid));
-      if (!snap.exists()) { mostrarErro('Usuário não encontrado.'); return; }
-      const d = snap.data();
-
-      document.getElementById('modalTitle').textContent = '✏️ Editar Usuário';
-      document.getElementById('fNome').value    = d.nome    || '';
-      document.getElementById('fCargo').value   = d.cargo   || '';
-      document.getElementById('fEmail').value   = d.email   || '';
-      document.getElementById('fEmail').disabled = true;
-      document.getElementById('emailHint').textContent = 'E-mail não pode ser alterado';
-      document.getElementById('fSenha').value   = '';
-      document.getElementById('senhaHint').textContent = 'Deixe em branco para não alterar';
-      document.getElementById('senhaLabel').textContent = '(deixe vazio para manter)';
-
-      isAdmin = !!d.admin;
-      const toggle = document.getElementById('toggleAdmin');
-      toggle.classList.toggle('on', isAdmin);
-
-      renderModulosChk(d.modulos || []);
-      document.getElementById('modulosSection').style.display = isAdmin ? 'none' : '';
-      document.getElementById('modalOverlay').classList.add('open');
-    } catch(e) {
-      mostrarErro('Erro: ' + e.message);
-    }
-  };
-
-  // ── MÓDULOS CHECKBOXES ───────────────────────────────────────────────────────
-  function renderModulosChk(selecionados) {
-    const container = document.getElementById('modulosChk');
-    container.innerHTML = MODULOS_DEF.map(m => {
-      const checked = selecionados.includes(m.id);
-      return `<div class="chk-item ${checked?'checked':''}" onclick="toggleModulo(this,'${m.id}')">
-        <span class="chk-icon">${m.icon}</span>
-        <span class="chk-nome">${m.nome}</span>
-        <div class="chk-check">${checked?'✓':''}</div>
-      </div>`;
-    }).join('');
-  }
-
-  window.toggleModulo = function(el, id) {
-    el.classList.toggle('checked');
-    el.querySelector('.chk-check').textContent = el.classList.contains('checked') ? '✓' : '';
-  };
-
-  window.alternarAdmin = function() {
-    const toggle = document.getElementById('toggleAdmin');
-    isAdmin = !isAdmin;
-    toggle.classList.toggle('on', isAdmin);
-    document.getElementById('modulosSection').style.display = isAdmin ? 'none' : '';
-  };
-
-  // ── SALVAR ───────────────────────────────────────────────────────────────────
-  window.salvarUsuario = async function() {
-    const nome  = document.getElementById('fNome').value.trim();
-    const cargo = document.getElementById('fCargo').value.trim();
-    const email = document.getElementById('fEmail').value.trim();
-    const senha = document.getElementById('fSenha').value;
-    const btn   = document.getElementById('btnSalvar');
-
-    if (!nome)  { mostrarErro('Informe o nome.'); return; }
-    if (!cargo) { mostrarErro('Informe o cargo.'); return; }
-
-    const modulosSelecionados = isAdmin
-      ? MODULOS_DEF.map(m => m.id)
-      : Array.from(document.querySelectorAll('.chk-item.checked')).map(el => el.getAttribute('onclick').match(/'([^']+)'\)$/)[1]);
-
-    btn.disabled = true;
-    btn.textContent = 'Salvando...';
-
-    try {
-      if (!modoEdicao) {
-        // CRIAR NOVO USUÁRIO
-        if (!email) throw new Error('Informe o e-mail.');
-        if (!senha || senha.length < 6) throw new Error('Senha deve ter no mínimo 6 caracteres.');
-
-        const cred = await createUserWithEmailAndPassword(auth2, email, senha);
-        const uid  = cred.user.uid;
-
-        await setDoc(doc(db, 'sistema_usuarios', uid), {
-          nome, cargo, email,
-          admin:    isAdmin,
-          modulos:  modulosSelecionados,
-          criado_em: serverTimestamp(),
-          criado_por: usuarioAtual.uid,
-        });
-
-        await auth2.signOut();
-        mostrarSucesso(`Usuário ${nome} criado com sucesso!`);
-
-      } else {
-        // EDITAR USUÁRIO EXISTENTE
-        const dadosUpdate = { nome, cargo, admin: isAdmin, modulos: modulosSelecionados };
-
-        // Resetar senha se fornecida
-        if (senha) {
-          if (senha.length < 6) throw new Error('Senha deve ter no mínimo 6 caracteres.');
-          const d = await getDoc(doc(db, 'sistema_usuarios', uidEditando));
-          if (d.exists() && d.data().email) {
-            await sendPasswordResetEmail(auth, d.data().email);
-            mostrarSucesso('E-mail de redefinição de senha enviado!');
-          }
-        }
-
-        await setDoc(doc(db, 'sistema_usuarios', uidEditando), dadosUpdate, { merge: true });
-        mostrarSucesso(`Usuário ${nome} atualizado!`);
-      }
-
-      fecharModal();
-      await carregarUsuarios();
-
-    } catch(e) {
-      const msgs = {
-        'auth/email-already-in-use': 'Este e-mail já está em uso.',
-        'auth/invalid-email':        'E-mail inválido.',
-        'auth/weak-password':        'Senha fraca. Use ao menos 6 caracteres.',
-      };
-      mostrarErro(msgs[e.code] || e.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Salvar';
-    }
-  };
-
-  window.fecharModal = function() {
-    document.getElementById('modalOverlay').classList.remove('open');
-  };
-
-  document.getElementById('modalOverlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('modalOverlay')) fecharModal();
-  });
-
-  // ── ALERTAS ──────────────────────────────────────────────────────────────────
-  function mostrarErro(msg) {
-    const el = document.getElementById('alertErr');
-    el.textContent = '❌ ' + msg;
-    el.classList.add('show');
-    document.getElementById('alertOk').classList.remove('show');
-    setTimeout(() => el.classList.remove('show'), 6000);
-  }
-
-  function mostrarSucesso(msg) {
-    const el = document.getElementById('alertOk');
-    el.textContent = '✅ ' + msg;
-    el.classList.add('show');
-    document.getElementById('alertErr').classList.remove('show');
-    setTimeout(() => el.classList.remove('show'), 5000);
-  }
-
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('appWrap').style.display = '';
+  window.dispatchEvent(new Event('firebaseReady'));
+});
 </script>
+
+<script>
+// ── Definição de módulos ─────────────────────────────────────────────────────
+const MODULOS_DEF = [
+  { id:'vendas',     nome:'Vendas',     icon:'📊' },
+  { id:'estoque',    nome:'Estoque',    icon:'🗄️' },
+  { id:'financeiro', nome:'Financeiro', icon:'💰' },
+  { id:'catalogo',   nome:'Catálogo',   icon:'📦' },
+  { id:'expedicao',  nome:'Expedição',  icon:'🚚' },
+  { id:'ponto',      nome:'Ponto',      icon:'📍' },
+  { id:'marketing',  nome:'Marketing',  icon:'📢' },
+  { id:'garantia',   nome:'Garantia',   icon:'🛡️' },
+  { id:'admin',      nome:'Admin',      icon:'⚙️'  },
+];
+
+let todosUsuarios  = [];
+let uidParaExcluir = null;
+
+// ── Carrega lista de usuários ────────────────────────────────────────────────
+async function carregarUsuarios() {
+  try {
+    const snap = await window._getDocs(window._col('sistema_usuarios'));
+    todosUsuarios = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+    todosUsuarios.sort((a,b) => (a.nome||'').localeCompare(b.nome||''));
+    renderTabela(todosUsuarios);
+    atualizarStats(todosUsuarios);
+  } catch(e) {
+    toast('Erro ao carregar usuários: ' + e.message, true);
+  }
+}
+
+function atualizarStats(lista) {
+  document.getElementById('statTotal').textContent  = lista.length;
+  document.getElementById('statAdmins').textContent = lista.filter(u => u.admin).length;
+  document.getElementById('statAtivos').textContent = lista.filter(u => !u.bloqueado).length;
+  document.getElementById('statBloq').textContent   = lista.filter(u =>  u.bloqueado).length;
+}
+
+function renderTabela(lista) {
+  const tbody = document.getElementById('tbodyUsuarios');
+  if (!lista.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhum usuário encontrado</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(u => {
+    const iniciais = ((u.nome||u.email||'?').trim().substring(0,2)).toUpperCase();
+    const nome     = u.nome  || '—';
+    const email    = u.email || '—';
+    const cargo    = u.cargo || '—';
+    const isAdmin  = !!u.admin;
+    const bloq     = !!u.bloqueado;
+
+    // Cargo badge
+    let cargoCls = 'cargo-badge';
+    if (isAdmin) cargoCls += ' admin';
+    else if ((cargo).toLowerCase().includes('gerente')) cargoCls += ' gerente';
+    const cargoHtml = isAdmin
+      ? `<span class="${cargoCls}">${cargo} ⭐</span>`
+      : `<span class="${cargoCls}">${cargo}</span>`;
+
+    // Módulos
+    let modsHtml;
+    if (isAdmin) {
+      modsHtml = '<span class="mod-chip admin-all">⭐ Todos os módulos</span>';
+    } else {
+      const mods = u.modulos || [];
+      const chips = MODULOS_DEF
+        .filter(m => mods.includes(m.id))
+        .map(m => `<span class="mod-chip on">${m.icon} ${m.nome}</span>`)
+        .join('');
+      modsHtml = chips || '<span class="mod-chip">Sem acesso</span>';
+    }
+
+    // Status
+    const statusHtml = bloq
+      ? `<span class="status-badge bloqueado"><span class="status-dot"></span>Bloqueado</span>`
+      : `<span class="status-badge ativo"><span class="status-dot"></span>Ativo</span>`;
+
+    return `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="avatar" style="${bloq?'opacity:.4':'background:var(--orange)'}">${iniciais}</div>
+            <div>
+              <div class="user-name">${nome}</div>
+              <div class="user-email">${email}</div>
+            </div>
+          </div>
+        </td>
+        <td>${cargoHtml}</td>
+        <td><div class="modulos-list">${modsHtml}</div></td>
+        <td>${statusHtml}</td>
+        <td>
+          <div class="actions-cell">
+            <button class="btn-icon" title="Editar" onclick="abrirModalEditar('${u.uid}')">✏️</button>
+            <button class="btn-icon del" title="Remover" onclick="abrirDelModal('${u.uid}')">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ── Filtro ───────────────────────────────────────────────────────────────────
+window.filtrar = function(q) {
+  const lq = (q||'').toLowerCase();
+  const lista = lq
+    ? todosUsuarios.filter(u =>
+        (u.nome ||'').toLowerCase().includes(lq) ||
+        (u.email||'').toLowerCase().includes(lq) ||
+        (u.cargo||'').toLowerCase().includes(lq)
+      )
+    : todosUsuarios;
+  renderTabela(lista);
+};
+
+// ── Toggles de módulos no formulário ────────────────────────────────────────
+function renderModulosForm(selecionados, isAdmin) {
+  document.getElementById('modulosForm').innerHTML = MODULOS_DEF.map(m => {
+    const on  = isAdmin || (selecionados||[]).includes(m.id);
+    const cls = isAdmin ? 'mod-toggle admin-on' : (on ? 'mod-toggle checked' : 'mod-toggle');
+    return `
+      <label class="${cls}" id="mtog_${m.id}">
+        <input type="checkbox" value="${m.id}" ${on?'checked':''} ${isAdmin?'disabled':''}
+               onchange="onModToggle(this)">
+        ${m.icon} ${m.nome}
+      </label>`;
+  }).join('');
+}
+
+window.onAdminChange = function() {
+  const isAdmin = document.getElementById('fAdmin').checked;
+  renderModulosForm(getModsSelecionados(), isAdmin);
+};
+
+window.onModToggle = function(el) {
+  el.closest('label').classList.toggle('checked', el.checked);
+};
+
+function getModsSelecionados() {
+  return [...document.querySelectorAll('#modulosForm input[type=checkbox]:not(:disabled):checked')]
+    .map(e => e.value);
+}
+
+// ── Abrir modal Novo ─────────────────────────────────────────────────────────
+window.abrirModalNovo = function() {
+  document.getElementById('editUid').value      = '';
+  document.getElementById('fNome').value        = '';
+  document.getElementById('fEmail').value       = '';
+  document.getElementById('fCargo').value       = '';
+  document.getElementById('fUid').value         = '';
+  document.getElementById('fUid').disabled      = false;
+  document.getElementById('fAdmin').checked     = false;
+  document.getElementById('fBloqueado').checked = false;
+  document.getElementById('modalTitulo').textContent = 'Novo Usuário';
+  document.getElementById('modalSub').textContent    = 'Cadastre um novo colaborador e defina os módulos';
+  renderModulosForm(['catalogo'], false);
+  document.getElementById('modalOverlay').classList.add('show');
+};
+
+// ── Abrir modal Editar ───────────────────────────────────────────────────────
+window.abrirModalEditar = function(uid) {
+  const u = todosUsuarios.find(x => x.uid === uid);
+  if (!u) return;
+  document.getElementById('editUid').value      = uid;
+  document.getElementById('fNome').value        = u.nome  || '';
+  document.getElementById('fEmail').value       = u.email || '';
+  document.getElementById('fCargo').value       = u.cargo || '';
+  document.getElementById('fUid').value         = uid;
+  document.getElementById('fUid').disabled      = true;  // UID não pode mudar na edição
+  document.getElementById('fAdmin').checked     = !!u.admin;
+  document.getElementById('fBloqueado').checked = !!u.bloqueado;
+  document.getElementById('modalTitulo').textContent = 'Editar Usuário';
+  document.getElementById('modalSub').textContent    = `Editando: ${u.nome || u.email || uid}`;
+  renderModulosForm(u.modulos||[], !!u.admin);
+  document.getElementById('modalOverlay').classList.add('show');
+};
+
+window.fecharModal = function() {
+  document.getElementById('modalOverlay').classList.remove('show');
+};
+
+// ── Salvar usuário (criar ou editar) ─────────────────────────────────────────
+window.salvarUsuario = async function() {
+  const editUid = document.getElementById('editUid').value.trim();
+  const uid     = editUid || document.getElementById('fUid').value.trim();
+  const nome    = document.getElementById('fNome').value.trim();
+  const email   = document.getElementById('fEmail').value.trim();
+  const cargo   = document.getElementById('fCargo').value.trim();
+  const isAdmin = document.getElementById('fAdmin').checked;
+  const bloq    = document.getElementById('fBloqueado').checked;
+  const modulos = isAdmin ? MODULOS_DEF.map(m => m.id) : getModsSelecionados();
+
+  if (!uid)   { toast('Informe o UID Firebase Auth do usuário!', true); return; }
+  if (!nome)  { toast('Informe o nome completo!', true); return; }
+  if (!cargo) { toast('Informe o cargo ou função!', true); return; }
+
+  const dados = { nome, cargo, modulos, admin: isAdmin, bloqueado: bloq };
+  if (email) dados.email = email;
+
+  try {
+    await window._setDoc(window._doc('sistema_usuarios', uid), dados, { merge: true });
+    toast(editUid ? '✅ Usuário atualizado!' : '✅ Usuário cadastrado com sucesso!');
+    fecharModal();
+    await carregarUsuarios();
+  } catch(e) {
+    toast('Erro ao salvar: ' + e.message, true);
+  }
+};
+
+// ── Modal de exclusão ────────────────────────────────────────────────────────
+window.abrirDelModal = function(uid) {
+  uidParaExcluir = uid;
+  const u    = todosUsuarios.find(x => x.uid === uid);
+  const nome = u ? (u.nome || u.email || uid) : uid;
+  document.getElementById('delMsg').textContent =
+    `"${nome}" será removido do sistema.`;
+  document.getElementById('delOverlay').classList.add('show');
+};
+
+window.fecharDelModal = function() {
+  document.getElementById('delOverlay').classList.remove('show');
+  uidParaExcluir = null;
+};
+
+window.confirmarExclusao = async function() {
+  if (!uidParaExcluir) return;
+  try {
+    await window._deleteDoc(window._doc('sistema_usuarios', uidParaExcluir));
+    toast('🗑️ Usuário removido do sistema.');
+    fecharDelModal();
+    await carregarUsuarios();
+  } catch(e) {
+    toast('Erro ao remover: ' + e.message, true);
+  }
+};
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function toast(msg, err=false) {
+  const wrap = document.getElementById('toastWrap');
+  const el   = document.createElement('div');
+  el.className = 'toast' + (err ? ' err' : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+window.addEventListener('firebaseReady', () => {
+  carregarUsuarios();
+});
+
+// Fechar modais ao clicar fora
+document.getElementById('modalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) fecharModal();
+});
+document.getElementById('delOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) fecharDelModal();
+});
+</script>
+
 </body>
 </html>

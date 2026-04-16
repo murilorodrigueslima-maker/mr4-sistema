@@ -412,10 +412,11 @@ window.iniciarPainel = async function(){
     const hojeStr = hoje();
 
     todos.forEach(p=>{
-      // Mostra TODOS os ag/se/pr (independente da data — pedidos pendentes de dias anteriores ficam)
-      // Para 'de' e 'cancelado': só mostra de hoje
-      if((p.coluna==='de'||p.coluna==='cancelado')&&p.data!==hojeStr)return;
-      if(p.coluna==='cancelado')return; // cancelados nunca aparecem no board
+      // Cancelados nunca aparecem no board (mas ficam no Firestore como histórico)
+      if(p.coluna==='cancelado')return;
+      // Todos os demais (ag, se, pr, de) entram em S.pedidos para que
+      // fetchPedidos() saiba que eles já existem e não os re-adicione como 'ag'.
+      // O render() já filtra 'de' para exibir somente os despachados hoje.
       S.pedidos[String(p.numero)]=p;
     });
   }catch(e){
@@ -442,8 +443,10 @@ async function fetchPedidos(){
     for(const p of (json.pedidos||[])){
       const num=String(p.numero||p.id||'');
       if(!num||nums.has(num))continue;
-      // Verifica se já está no Firestore (pode ter sido despachado e removido de S.pedidos)
-      // A checagem de nums acima é suficiente porque carregamos TODOS do Firestore no init
+      // Segurança extra: consulta Firestore antes de criar, evita re-adicionar
+      // pedidos que já existem mas por algum motivo não foram carregados no init
+      const jaExiste = await window._fsGetOne('expedicao_pedidos', num);
+      if(jaExiste){ S.pedidos[num]=jaExiste; continue; }
       const now=Date.now();
       const novo={
         numero: num,

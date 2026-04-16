@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-15T21:06:09",
+  "atualizado_em": "2026-04-16T03:25:29",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -210,63 +210,72 @@
       "vencimento": "2026-04-14",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "sistema gestãoclick inter",
       "valor": 16,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SERASA",
       "valor": 52.4,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MONITOR COMPUTADOR",
       "valor": 200.7,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CURSO PARA SWYANNE",
       "valor": 1482.9,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "3 VENTILADOR/1 BEBEDOURO",
       "valor": 207.04,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
       "valor": 218.82,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SELOS DE GARANTIA MR4",
       "valor": 38.33,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SISTEMA GESTÃOCLICK",
       "valor": 224.28,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "POPNOW",
       "valor": 3437.79,
       "vencimento": "2026-04-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -344,11 +353,23 @@
       "valor": 227.07,
       "vencimento": "2026-04-21",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
+      "valor": 1663.74,
+      "vencimento": "2026-04-23",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
+      "valor": 1083.85,
+      "vencimento": "2026-04-23",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47530.96999999999,
+  "total_vencido": 53409.22999999999,
   "total_a_receber": 0,
   "total_a_pagar": 23291.190000000002
 }

@@ -1,0 +1,11 @@
+name = "gc-proxy-mr4"
+main = "gc-proxy.js"
+compatibility_date = "2024-01-01"
+
+# Variáveis de ambiente — preencha no painel do Cloudflare (Workers > Settings > Variables)
+# Não coloque os tokens aqui! Use o painel web para segurança.
+#
+# [vars]
+# GC_ACCESS_TOKEN        = "..."   ← NÃO colocar aqui, usar painel Cloudflare
+# GC_SECRET_ACCESS_TOKEN = "..."   ← NÃO colocar aqui, usar painel Cloudflare
+# ALLOWED_ORIGIN         = "https://murilorodrigueslima-maker.github.io"

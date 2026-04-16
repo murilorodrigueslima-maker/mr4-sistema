@@ -321,9 +321,8 @@ onAuthStateChanged(auth, async user => {
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const CFG={
-  // Worker Cloudflare (direto, sem atraso). Deixe vazio '' para usar só o JSON.
-  // Exemplo: 'https://gc-proxy-mr4.SEU-USUARIO.workers.dev'
-  worker_url: '',
+  // Worker Cloudflare — proxy direto para GestãoClick (sem atraso)
+  worker_url: 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev',
 
   api_url:'../data/pedidos.json',  // fallback quando worker_url estiver vazio
   intervalo:15,          // 15 segundos entre syncs

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ponto — MR4</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<style>
+:root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:var(--preto);color:var(--branco);min-height:100vh;}
+#loadingScreen{position:fixed;inset:0;background:var(--preto);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:999;}
+.spinner{width:32px;height:32px;border:3px solid #333;border-top-color:var(--laranja);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#dashboard{display:none;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--cinza-escuro);border-bottom:1px solid var(--cinza-borda);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-nome{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;}
+.topbar-nome span{color:var(--laranja);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-data{font-size:12px;color:var(--cinza-texto);}
+.btn-voltar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.btn-voltar:hover{border-color:var(--laranja);color:var(--laranja);}
+.btn-sair{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-sair:hover{border-color:var(--vermelho);color:var(--vermelho);}
+.sync-badge{font-size:11px;color:var(--verde);display:flex;align-items:center;gap:4px;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--verde);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.notif-badge{background:var(--vermelho);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
+.dash-nav{background:var(--cinza-escuro);border-bottom:1px solid var(--cinza-borda);display:flex;padding:0 1.5rem;gap:2px;overflow-x:auto;flex-shrink:0;}
+.nav-item{padding:12px 16px;font-size:13px;font-weight:500;color:var(--cinza-texto);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:6px;}
+.nav-item.ativo{color:var(--laranja);border-bottom-color:var(--laranja);}
+.nav-item:hover{color:var(--branco);}
+.dash-body{flex:1;overflow-y:auto;padding:1.5rem;}
+.dash-secao{display:none;}
+.dash-secao.ativa{display:block;}
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem;}
+.metric-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:16px;}
+.metric-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:8px;}
+.metric-valor{font-size:28px;font-weight:700;font-family:'Barlow Condensed',sans-serif;}
+.metric-valor.verde{color:var(--verde);}
+.metric-valor.vermelho{color:var(--vermelho);}
+.metric-valor.laranja{color:var(--laranja);}
+.secao-titulo{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:12px;}
+.secao-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
+.tabela-wrap{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;overflow:hidden;margin-bottom:1.5rem;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px;}
+th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza-texto);border-bottom:1px solid var(--cinza-borda);}
+td{padding:12px 16px;border-bottom:1px solid #222;color:var(--branco);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,107,26,.04);}
+.vazio{text-align:center;padding:2rem;color:var(--cinza-texto);font-size:14px;}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+.badge.presente{background:rgba(34,197,94,.15);color:var(--verde);}
+.badge.ausente{background:rgba(239,68,68,.15);color:var(--vermelho);}
+.badge.atrasou{background:rgba(245,158,11,.15);color:var(--amarelo);}
+.badge.extra{background:rgba(34,197,94,.15);color:var(--verde);}
+.badge.debito{background:rgba(239,68,68,.15);color:var(--vermelho);}
+.badge.dentro{background:rgba(34,197,94,.15);color:var(--verde);}
+.badge.fora{background:rgba(245,158,11,.15);color:var(--amarelo);}
+.badge.pendente{background:rgba(245,158,11,.2);color:var(--amarelo);}
+.badge.aprovado{background:rgba(34,197,94,.15);color:var(--verde);}
+.badge.rejeitado{background:rgba(239,68,68,.15);color:var(--vermelho);}
+.badge.assinado{background:rgba(34,197,94,.15);color:var(--verde);}
+.badge.aguardando{background:rgba(245,158,11,.15);color:var(--amarelo);}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--laranja-escuro);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;overflow:hidden;flex-shrink:0;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.func-cell{display:flex;align-items:center;gap:10px;}
+.func-cell-info .nome{font-size:13px;font-weight:500;}
+.func-cell-info .cargo{font-size:11px;color:var(--cinza-texto);}
+.btn-acao{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-acao:hover{border-color:var(--laranja);color:var(--laranja);}
+.btn-acao.danger:hover{border-color:var(--vermelho);color:var(--vermelho);}
+.btn-acao.success{border-color:var(--verde);color:var(--verde);}
+.btn-novo{background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-novo:hover{background:var(--laranja-escuro);}
+.btn-ghost{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:8px 14px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-ghost:hover{border-color:var(--laranja);color:var(--laranja);}
+.barra-wrap{background:#333;border-radius:99px;height:5px;margin-top:5px;}
+.barra{height:5px;border-radius:99px;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.aberto{display:flex;}
+.modal{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-titulo{font-size:17px;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;}
+.modal-fechar{background:transparent;border:none;color:var(--cinza-texto);font-size:20px;cursor:pointer;}
+.modal-fechar:hover{color:var(--branco);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-grid .full{grid-column:1/-1;}
+.form-campo{display:flex;flex-direction:column;gap:5px;}
+.form-campo label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);}
+.form-campo input,.form-campo select,.form-campo textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;}
+.form-campo input:focus,.form-campo select:focus,.form-campo textarea:focus{outline:none;border-color:var(--laranja);}
+.form-campo select option{background:var(--cinza-escuro);}
+.form-campo textarea{resize:vertical;min-height:80px;}
+.foto-upload{border:2px dashed var(--cinza-borda);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;margin-bottom:1rem;}
+.foto-preview{width:80px;height:80px;border-radius:50%;margin:0 auto 8px;overflow:hidden;background:var(--cinza-medio);display:flex;align-items:center;justify-content:center;}
+.foto-preview img{width:100%;height:100%;object-fit:cover;}
+.modal-footer{display:flex;gap:10px;margin-top:1.25rem;justify-content:flex-end;}
+.btn-cancelar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px 18px;font-size:14px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-salvar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-salvar:hover{background:var(--laranja-escuro);}
+.btn-aprovar{background:var(--verde);color:white;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-rejeitar{background:var(--vermelho);color:white;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.ficha{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:12px;padding:1.5rem;margin-bottom:1rem;}
+.ficha-header{display:flex;align-items:center;gap:16px;margin-bottom:1rem;}
+.ficha-avatar{width:64px;height:64px;border-radius:50%;background:var(--laranja-escuro);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;overflow:hidden;flex-shrink:0;}
+.ficha-avatar img{width:100%;height:100%;object-fit:cover;}
+.ficha-nome{font-size:18px;font-weight:700;}
+.ficha-cargo{font-size:13px;color:var(--cinza-texto);margin-top:2px;}
+.ficha-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1rem;}
+.ficha-campo{background:var(--cinza-medio);border-radius:8px;padding:10px 12px;}
+.ficha-campo .fc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:4px;}
+.ficha-campo .fc-valor{font-size:14px;}
+.ficha-acoes{display:flex;gap:8px;flex-wrap:wrap;}
+.estrelas{display:flex;gap:4px;}
+.estrela{font-size:20px;cursor:pointer;color:#444;}
+.estrela.ativa{color:var(--laranja);}
+.obs-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:1rem;}
+.obs-card textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:80px;resize:vertical;margin-bottom:8px;}
+.link-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.link-url{font-size:12px;color:var(--laranja);word-break:break-all;flex:1;}
+.btn-copiar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;flex-shrink:0;}
+.btn-copiar:hover{border-color:var(--laranja);color:var(--laranja);}
+.justif-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;}
+.justif-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
+.justif-nome{font-size:14px;font-weight:600;}
+.justif-info{font-size:12px;color:var(--cinza-texto);margin-bottom:8px;}
+.justif-motivo{font-size:13px;color:var(--branco);margin-bottom:8px;padding:8px 10px;background:var(--cinza-medio);border-radius:7px;}
+.espelho-preview{background:white;color:#111;padding:1.5rem;border-radius:10px;font-family:'Barlow',sans-serif;font-size:12px;margin-bottom:1rem;border:1px solid #ddd;}
+.espelho-header{text-align:center;margin-bottom:1rem;padding-bottom:1rem;border-bottom:2px solid #333;}
+.espelho-titulo{font-size:18px;font-weight:700;margin-bottom:4px;}
+.espelho-sub{font-size:13px;color:#555;}
+.espelho-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:1rem;}
+.espelho-table th{background:#333;color:white;padding:7px 8px;text-align:left;border:1px solid #555;font-weight:600;}
+.espelho-table td{padding:6px 8px;border:1px solid #ccc;color:#111;font-size:11px;}
+.espelho-table tr:nth-child(even) td{background:#f5f5f5;}
+.espelho-assinatura{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #ddd;}
+.assin-box{text-align:center;}
+.assin-linha{border-bottom:1px solid #333;margin-bottom:6px;height:40px;}
+.assin-label{font-size:11px;color:#555;}
+.assinatura-area{border:2px dashed var(--cinza-borda);border-radius:10px;background:var(--cinza-medio);cursor:crosshair;display:block;touch-action:none;}
+.espelho-func-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.notif{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 18px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
+.notif.verde{border-color:var(--verde);color:var(--verde);}
+.notif.vermelho{border-color:var(--vermelho);color:var(--vermelho);}
+@media(max-width:480px){.dash-body{padding:1rem;}.topbar{padding:0 1rem;}.form-grid{grid-template-columns:1fr;}.form-grid .full{grid-column:1;}}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+
+<div id="loadingScreen">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
+  <div class="spinner"></div>
+</div>
+
+<div id="dashboard">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <svg width="28" height="28" viewBox="0 0 44 44" fill="none"><path d="M8 32 Q4 22 8 14 L14 10 Q18 8 22 8 Q26 8 30 10 L36 14 Q40 22 36 32 L30 36 Q26 38 22 38 Q18 38 14 36 Z" stroke="#FF6B1A" stroke-width="2" fill="none"/><path d="M10 26 L16 20 L22 24 L28 18 L34 22" stroke="#FF6B1A" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="16" r="3" fill="#FF6B1A"/></svg>
+      <div class="topbar-nome"><span>MR4</span> PONTO</div>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-badge"><div class="sync-dot"></div>Firebase</div>
+      <div class="topbar-data" id="topbar-data"></div>
+      <a href="../index.html" class="btn-voltar">← Sistema</a>
+      <button class="btn-sair" onclick="sair()">Sair</button>
+    </div>
+  </div>
+  <div class="dash-nav">
+    <div class="nav-item ativo" onclick="mudarSecao('hoje',this)">Hoje</div>
+    <div class="nav-item" onclick="mudarSecao('registros',this)">Registros</div>
+    <div class="nav-item" onclick="mudarSecao('banco',this)">Banco de horas</div>
+    <div class="nav-item" onclick="mudarSecao('justificativas',this)">Justificativas <span class="notif-badge" id="badge-justif" style="display:none">0</span></div>
+    <div class="nav-item" onclick="mudarSecao('espelho',this)">Espelho de ponto</div>
+    <div class="nav-item" onclick="mudarSecao('funcionarios',this)">Funcionários</div>
+    <div class="nav-item" onclick="mudarSecao('links',this)">Links</div>
+  </div>
+  <div class="dash-body">
+
+    <div class="dash-secao ativa" id="sec-hoje">
+      <div class="metrics-grid" id="metrics-hoje"></div>
+      <div class="secao-titulo">Status hoje</div>
+      <div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Status</th></tr></thead><tbody id="tbody-hoje"><tr><td colspan="7" class="vazio">Carregando...</td></tr></tbody></table></div>
+      <div class="secao-titulo">Últimas batidas</div>
+      <div id="ultimas-batidas"></div>
+    </div>
+
+    <div class="dash-secao" id="sec-registros">
+      <div class="secao-header">
+        <div class="secao-titulo" style="margin:0">Registros</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="fil-func-reg" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;"><option value="">Todos</option></select>
+          <input type="month" id="fil-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+          <button class="btn-ghost" onclick="renderRegistros()">Filtrar</button>
+        </div>
+      </div><br>
+      <div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Data</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>GPS</th><th>Facial</th><th>Foto</th></tr></thead><tbody id="tbody-registros"><tr><td colspan="11" class="vazio">Nenhum registro.</td></tr></tbody></table></div>
+    </div>
+
+    <div class="dash-secao" id="sec-banco">
+      <div class="metrics-grid" id="metrics-banco"></div>
+      <div id="banco-cards"></div>
+    </div>
+
+    <div class="dash-secao" id="sec-justificativas">
+      <div class="ficha" style="margin-bottom:1.5rem;">
+        <div class="secao-titulo">Lançar ocorrência (gestor)</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
+          <div class="form-campo"><label>Funcionário</label><select id="gest-func" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"><option value="">Selecione...</option></select></div>
+          <div class="form-campo"><label>Data</label><input type="date" id="gest-data" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+          <div class="form-campo"><label>Tipo de ocorrência</label>
+            <select id="gest-tipo" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;">
+              <option value="">Selecione...</option>
+              <optgroup label="Feriados"><option value="Feriado nacional">Feriado nacional</option><option value="Feriado estadual">Feriado estadual (Ceará)</option><option value="Feriado municipal">Feriado municipal (Fortaleza)</option></optgroup>
+              <optgroup label="Folgas"><option value="Folga compensatória">Folga compensatória</option><option value="Folga remunerada">Folga remunerada</option><option value="Folga não remunerada">Folga não remunerada</option></optgroup>
+              <optgroup label="Ausências"><option value="Atestado médico">Atestado médico</option><option value="Falta justificada">Falta justificada</option><option value="Falta injustificada">Falta injustificada</option><option value="Licença maternidade/paternidade">Licença maternidade/paternidade</option></optgroup>
+              <optgroup label="Outros"><option value="Saída antecipada autorizada">Saída antecipada autorizada</option><option value="Atraso autorizado">Atraso autorizado</option><option value="Outro">Outro</option></optgroup>
+            </select>
+          </div>
+        </div>
+        <div class="form-campo" style="margin-bottom:12px;"><label>Observação</label><input type="text" id="gest-obs" placeholder="Detalhes adicionais (opcional)" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-novo" onclick="lancarOcorrenciaGestor()">Lançar ocorrência</button>
+          <button class="btn-ghost" onclick="abrirFeriados2026()">Ver feriados 2026 — Fortaleza</button>
+        </div>
+        <div id="gest-info" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div>
+      </div>
+      <div class="secao-header">
+        <div class="secao-titulo" style="margin:0">Histórico de ocorrências</div>
+        <select id="fil-justif" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+          <option value="pendente">Pendentes (funcionário)</option>
+          <option value="todos">Todas</option>
+          <option value="aprovado">Aprovadas</option>
+          <option value="rejeitado">Rejeitadas</option>
+          <option value="gestor">Lançadas pelo gestor</option>
+        </select>
+      </div><br>
+      <div id="lista-justificativas"><div class="vazio">Nenhuma ocorrência.</div></div>
+    </div>
+
+    <div class="dash-secao" id="sec-espelho">
+      <div class="secao-header">
+        <div class="secao-titulo" style="margin:0">Espelho de ponto mensal</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="esp-func" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;"><option value="">Selecione funcionário</option></select>
+          <input type="month" id="esp-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+          <button class="btn-novo" onclick="gerarEspelho()">Gerar espelho</button>
+        </div>
+      </div><br>
+      <div id="espelho-conteudo"></div>
+    </div>
+
+    <div class="dash-secao" id="sec-funcionarios">
+      <div class="secao-header">
+        <div class="secao-titulo" style="margin:0">Funcionários</div>
+        <button class="btn-novo" onclick="abrirModalFunc()">+ Novo funcionário</button>
+      </div><br>
+      <div id="lista-funcionarios"><div class="vazio">Carregando...</div></div>
+    </div>
+
+    <div class="dash-secao" id="sec-links">
+      <div class="secao-titulo">Links de acesso para funcionários</div>
+      <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;">Envie o link para o funcionário acessar a tela de ponto no celular.</p>
+      <div id="lista-links"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL FUNCIONÁRIO -->
+<div class="modal-overlay" id="modal-func">
+  <div class="modal">
+    <div class="modal-titulo"><span id="modal-func-titulo">Novo funcionário</span><button class="modal-fechar" onclick="fecharModal('modal-func')">×</button></div>
+    <div style="background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--laranja);margin-bottom:1rem;">A foto é obrigatória para reconhecimento facial</div>
+    <div style="text-align:center;margin-bottom:12px;">
+      <div class="foto-preview" id="foto-preview" style="width:100px;height:100px;margin:0 auto 10px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
+      <div id="foto-status" style="font-size:12px;color:var(--cinza-texto);">Nenhuma foto cadastrada</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;">
+      <button type="button" onclick="abrirCameraFoto()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;">Tirar foto agora</button>
+      <button type="button" onclick="document.getElementById('inp-foto').click()" style="background:transparent;color:var(--cinza-texto);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;">Enviar arquivo</button>
+    </div>
+    <input type="file" id="inp-foto" accept="image/*" style="display:none" onchange="previewFoto(this)">
+    <div id="cam-cadastro" style="display:none;background:var(--cinza-medio);border-radius:12px;overflow:hidden;margin-bottom:1rem;">
+      <div style="position:relative;"><video id="video-cadastro" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transform:scaleX(-1);" autoplay playsinline muted></video><div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><div style="width:140px;height:140px;border-radius:50%;border:3px solid rgba(255,255,255,.6);"></div></div></div>
+      <div style="padding:10px;font-size:12px;text-align:center;color:var(--cinza-texto);">Centralize o rosto no círculo</div>
+      <div style="display:flex;gap:8px;padding:0 10px 10px;">
+        <button type="button" onclick="fecharCameraFoto()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:9px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;">Cancelar</button>
+        <button type="button" onclick="capturarFotoCadastro()" style="flex:2;background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;">Capturar foto</button>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-campo full"><label>Nome completo *</label><input type="text" id="f-nome"></div>
+      <div class="form-campo"><label>CPF</label><input type="text" id="f-cpf"></div>
+      <div class="form-campo"><label>RG</label><input type="text" id="f-rg"></div>
+      <div class="form-campo"><label>Nascimento</label><input type="date" id="f-nasc"></div>
+      <div class="form-campo"><label>Telefone</label><input type="text" id="f-tel"></div>
+      <div class="form-campo full"><label>Endereço</label><input type="text" id="f-end"></div>
+      <div class="form-campo full"><label>Cargo *</label><input type="text" id="f-cargo"></div>
+      <div class="form-campo"><label>Admissão</label><input type="date" id="f-admissao"></div>
+      <div class="form-campo"><label>Salário (R$)</label><input type="number" id="f-salario" min="0" step="0.01"></div>
+      <div class="form-campo full"><label>Jornada</label><select id="f-jornada"><option value="8">8h/dia — 44h/semana</option><option value="6">6h/dia — 30h/semana</option></select></div>
+      <div class="form-campo full"><label>Observações</label><textarea id="f-obs"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn-cancelar" onclick="fecharModal('modal-func')">Cancelar</button><button class="btn-salvar" onclick="salvarFuncionario()">Salvar</button></div>
+  </div>
+</div>
+
+<!-- MODAL FICHA/AVALIAÇÃO -->
+<div class="modal-overlay" id="modal-ficha">
+  <div class="modal">
+    <div class="modal-titulo"><span>Ficha do funcionário</span><button class="modal-fechar" onclick="fecharModal('modal-ficha')">×</button></div>
+    <div id="ficha-conteudo"></div>
+    <div class="secao-titulo" style="margin-top:1rem;">Avaliação</div>
+    <div class="obs-card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:13px;color:var(--cinza-texto);">Nota:</span><div class="estrelas" id="estrelas-av"></div></div>
+      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Metas</label><input type="text" id="inp-metas" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Observações</label><textarea id="inp-obs-av" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:70px;resize:vertical;"></textarea></div>
+      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Advertências</label><textarea id="inp-adv" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:60px;resize:vertical;"></textarea></div>
+      <button class="btn-salvar" style="width:100%" onclick="salvarAvaliacao()">Salvar avaliação</button>
+    </div>
+    <div class="modal-footer"><button class="btn-cancelar" onclick="fecharModal('modal-ficha')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- MODAL JUSTIFICATIVA GESTOR -->
+<div class="modal-overlay" id="modal-justif-gestor">
+  <div class="modal">
+    <div class="modal-titulo"><span>Analisar justificativa</span><button class="modal-fechar" onclick="fecharModal('modal-justif-gestor')">×</button></div>
+    <div id="justif-detalhe"></div>
+    <div class="form-campo" style="margin-bottom:1rem;"><label>Observação do gestor (opcional)</label><textarea id="justif-obs-gestor" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:80px;resize:vertical;"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="fecharModal('modal-justif-gestor')">Cancelar</button>
+      <button class="btn-rejeitar" onclick="responderJustificativa('rejeitado')">Rejeitar</button>
+      <button class="btn-aprovar" onclick="responderJustificativa('aprovado')">Aprovar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL FOTO REGISTRO -->
+<div class="modal-overlay" id="modal-foto-reg">
+  <div class="modal" style="max-width:320px;text-align:center;">
+    <div class="modal-titulo"><span>Foto do registro</span><button class="modal-fechar" onclick="fecharModal('modal-foto-reg')">×</button></div>
+    <img id="foto-reg-img" src="" style="width:100%;border-radius:10px;max-height:300px;object-fit:cover;">
+    <div class="modal-footer" style="justify-content:center;"><button class="btn-cancelar" onclick="fecharModal('modal-foto-reg')">Fechar</button></div>
+  </div>
+</div>
+
+<!-- Firebase Auth Guard -->
+<script type="module">
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+window._db=db; window._col=collection; window._doc=doc;
+window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
+window._deleteDoc=deleteDoc;
+window._signOut = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  if (!user) { window.location.href='../login.html'; return; }
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('dashboard').style.display='flex';
+  window._firebaseReady=true;
+  window.dispatchEvent(new Event('firebaseReady'));
+});
+</script>
+
+<script>
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function db(){return window._db;}
+function col(n){return window._col(db(),n);}
+function docRef(n,id){return window._doc(db(),n,id);}
+async function fbGet(c){const s=await window._getDocs(col(c));return s.docs.map(d=>({id:d.id,...d.data()}));}
+async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});}
+async function fbDel(c,id){await window._deleteDoc(docRef(c,id));}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function hoje(){return new Date().toISOString().slice(0,10);}
+function mesAtual(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
+function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function fmtMin(m){if(m===null||m===undefined)return'—';const s=m<0?'-':'';const a=Math.abs(Math.round(m));return s+Math.floor(a/60)+'h'+String(a%60).padStart(2,'0');}
+function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+function fmtData(d){if(!d)return'—';const[y,m,dd]=d.split('-');return `${dd}/${m}/${y}`;}
+function calcTotal(e,sa,ra,s){if(!e||!s)return null;let t=toMin(s)-toMin(e);if(sa&&ra)t-=(toMin(ra)-toMin(sa));return t;}
+function notif(msg,tipo='verde'){const el=document.getElementById('notif');el.textContent=msg;el.className='notif '+tipo;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+
+function facialBadge(score){
+  if(score===false||score===0)return{txt:'Bloqueada',cls:'ausente',cor:'var(--vermelho)'};
+  if(score===null||score===undefined)return{txt:'—',cls:'',cor:'var(--cinza-texto)'};
+  if(score>=70)return{txt:'Validada '+score+'%',cls:'presente',cor:'var(--verde)'};
+  return{txt:'Suspeita '+score+'%',cls:'atrasou',cor:'var(--amarelo)'};
+}
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function sair(){
+  if(window._signOut) await window._signOut();
+  window.location.href='../login.html';
+}
+window.sair=sair;
+
+function atualizarData(){
+  const n=new Date();const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  document.getElementById('topbar-data').textContent=`${dias[n.getDay()]}, ${n.getDate()} ${meses[n.getMonth()]}`;
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+async function atualizarBadgeJustif(){
+  const justifs=await fbGet('justificativas');
+  const pendentes=justifs.filter(j=>j.status==='pendente').length;
+  const badge=document.getElementById('badge-justif');
+  if(pendentes>0){badge.textContent=pendentes;badge.style.display='flex';}else{badge.style.display='none';}
+}
+
+async function renderHoje(){
+  const funcs=await fbGet('funcionarios');const regs=await fbGet('registros');
+  const regsHoje=regs.filter(r=>r.data===hoje());
+  let presentes=0,ausentes=0,atrasados=0;
+  funcs.forEach(f=>{
+    const rf=regsHoje.filter(r=>r.funcId===f.id);
+    if(rf.length)presentes++;else ausentes++;
+    const ent=rf.find(r=>r.tipo==='entrada');
+    if(ent&&toMin(ent.hora.slice(0,5))>toMin('08:05'))atrasados++;
+  });
+  document.getElementById('metrics-hoje').innerHTML=`
+    <div class="metric-card"><div class="metric-label">Funcionários</div><div class="metric-valor">${funcs.length}</div></div>
+    <div class="metric-card"><div class="metric-label">Presentes hoje</div><div class="metric-valor verde">${presentes}</div></div>
+    <div class="metric-card"><div class="metric-label">Ausentes</div><div class="metric-valor ${ausentes?'vermelho':''}">${ausentes}</div></div>
+    <div class="metric-card"><div class="metric-label">Atrasados</div><div class="metric-valor ${atrasados?'laranja':''}">${atrasados}</div></div>`;
+  if(!funcs.length){document.getElementById('tbody-hoje').innerHTML='<tr><td colspan="7" class="vazio">Nenhum funcionário.</td></tr>';return;}
+  document.getElementById('tbody-hoje').innerHTML=funcs.map(f=>{
+    const rf=regsHoje.filter(r=>r.funcId===f.id);
+    const get=tipo=>{const r=rf.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
+    const total=calcTotal(e,sa,ra,s);
+    const atrasou=e&&toMin(e)>toMin('08:05');
+    const status=rf.length===0?'ausente':atrasou?'atrasou':'presente';
+    const labels={presente:'Presente',ausente:'Ausente',atrasou:'Atrasou'};
+    return `<tr><td><div class="func-cell"><div class="avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''}</div></div></div></td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td><span class="badge ${status}">${labels[status]}</span></td></tr>`;
+  }).join('');
+  const ultimas=[...regs].sort((a,b)=>a.criadoEm>b.criadoEm?-1:1).slice(0,5);
+  document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th><th>Facial</th><th>Foto</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${r.funcNome}</td><td>${r.tipoLabel}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span class="badge ${facialBadge(r.facialScore).cls}" style="color:${facialBadge(r.facialScore).cor}">${facialBadge(r.facialScore).txt}</span></td><td>${r.foto?`<button class="btn-acao" onclick="verFoto('${r.id}')">Ver</button>`:'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
+}
+
+async function verFoto(regId){
+  const snap=await window._getDoc(docRef('registros',regId));
+  if(!snap.exists()||!snap.data().foto)return;
+  document.getElementById('foto-reg-img').src=snap.data().foto;
+  document.getElementById('modal-foto-reg').classList.add('aberto');
+}
+window.verFoto=verFoto;
+
+async function renderRegistros(){
+  const funcFil=document.getElementById('fil-func-reg').value;
+  const mesFil=document.getElementById('fil-mes').value;
+  let regs=await fbGet('registros');
+  if(funcFil)regs=regs.filter(r=>r.funcId===funcFil);
+  if(mesFil)regs=regs.filter(r=>r.data.startsWith(mesFil));
+  const grupos={};
+  regs.forEach(r=>{const k=r.funcId+'|'+r.data;if(!grupos[k])grupos[k]={funcId:r.funcId,funcNome:r.funcNome,data:r.data,regs:[]};grupos[k].regs.push(r);});
+  const rows=Object.values(grupos).sort((a,b)=>a.data>b.data?-1:1);
+  const funcs=await fbGet('funcionarios');
+  if(!rows.length){document.getElementById('tbody-registros').innerHTML='<tr><td colspan="11" class="vazio">Nenhum registro.</td></tr>';return;}
+  document.getElementById('tbody-registros').innerHTML=rows.map(({funcId,funcNome,data,regs})=>{
+    const get=tipo=>{const r=regs.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
+    const total=calcTotal(e,sa,ra,s);
+    const func=funcs.find(f=>f.id===funcId);
+    const jornMin=(parseFloat(func?.jornada)||8)*60;
+    const saldo=total!==null?total-jornMin:null;
+    const fotoReg=regs.find(r=>r.foto);
+    const dentroRaio=regs.some(r=>r.dentroRaio===true)?true:regs.some(r=>r.dentroRaio===false)?false:null;
+    const scores=regs.map(r=>r.facialScore).filter(s=>s!=null);
+    const facialScore=scores.length?Math.min(...scores):null;
+    const fb=facialBadge(facialScore);
+    return `<tr><td>${funcNome}</td><td>${fmtData(data)}</td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td>${saldo!==null?`<span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span>`:'—'}</td><td>${dentroRaio===true?'<span class="badge dentro">Dentro</span>':dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span style="color:${fb.cor};font-size:11px;">${fb.txt}</span></td><td>${fotoReg?`<button class="btn-acao" onclick="verFoto('${fotoReg.id}')">Ver</button>`:'—'}</td></tr>`;
+  }).join('');
+}
+window.renderRegistros=renderRegistros;
+
+async function renderBanco(){
+  const funcs=await fbGet('funcionarios');const regs=await fbGet('registros');const creditos=await fbGet('creditos_jornada');
+  if(!funcs.length){document.getElementById('banco-cards').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Nenhum funcionário.</div>';document.getElementById('metrics-banco').innerHTML='';return;}
+  let totalPos=0,totalNeg=0;
+  const cards=funcs.map(f=>{
+    const regsF=regs.filter(r=>r.funcId===f.id&&r.data.startsWith(mesAtual()));
+    const credF=creditos.filter(c=>c.funcId===f.id&&c.data.startsWith(mesAtual()));
+    const dias={};regsF.forEach(r=>{if(!dias[r.data])dias[r.data]={};dias[r.data][r.tipo]=r.hora;});
+    let trabMin=0;Object.values(dias).forEach(d=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t)trabMin+=t;});
+    credF.forEach(c=>trabMin+=c.minutos||0);
+    const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
+    const diasTrab=Object.keys(dias).length+diasComCredito.length;
+    const jornMin=(parseFloat(f.jornada)||8)*60;const esperMin=diasTrab*jornMin;const saldo=trabMin-esperMin;
+    if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
+    const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
+    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div></div>`;
+  }).join('');
+  document.getElementById('banco-cards').innerHTML=cards;
+  document.getElementById('metrics-banco').innerHTML=`<div class="metric-card"><div class="metric-label">Funcionários</div><div class="metric-valor">${funcs.length}</div></div><div class="metric-card"><div class="metric-label">Registros</div><div class="metric-valor">${regs.length}</div></div><div class="metric-card"><div class="metric-label">Extras acum.</div><div class="metric-valor verde">+${fmtMin(totalPos)}</div></div><div class="metric-card"><div class="metric-label">Débitos acum.</div><div class="metric-valor vermelho">${fmtMin(totalNeg)}</div></div>`;
+}
+
+// ── Feriados 2026 ─────────────────────────────────────────────────────────────
+const FERIADOS_2026=[{data:'2026-01-01',nome:'Ano Novo',tipo:'Feriado nacional'},{data:'2026-02-16',nome:'Carnaval (segunda)',tipo:'Feriado nacional'},{data:'2026-02-17',nome:'Carnaval (terça)',tipo:'Feriado nacional'},{data:'2026-02-18',nome:'Quarta-feira de Cinzas',tipo:'Feriado nacional'},{data:'2026-03-19',nome:'São José (Ceará)',tipo:'Feriado estadual'},{data:'2026-04-03',nome:'Sexta-feira Santa',tipo:'Feriado nacional'},{data:'2026-04-05',nome:'Páscoa',tipo:'Feriado nacional'},{data:'2026-04-21',nome:'Tiradentes',tipo:'Feriado nacional'},{data:'2026-05-01',nome:'Dia do Trabalho',tipo:'Feriado nacional'},{data:'2026-06-04',nome:'Corpus Christi',tipo:'Feriado nacional'},{data:'2026-07-25',nome:'Abolição Escravatura CE',tipo:'Feriado estadual'},{data:'2026-08-15',nome:'N.Sra. da Assunção',tipo:'Feriado municipal'},{data:'2026-09-07',nome:'Independência do Brasil',tipo:'Feriado nacional'},{data:'2026-10-12',nome:'N.Sra. Aparecida',tipo:'Feriado nacional'},{data:'2026-11-02',nome:'Finados',tipo:'Feriado nacional'},{data:'2026-11-15',nome:'Proclamação da República',tipo:'Feriado nacional'},{data:'2026-11-20',nome:'Consciência Negra',tipo:'Feriado nacional'},{data:'2026-12-08',nome:'N.Sra. da Conceição',tipo:'Feriado municipal'},{data:'2026-12-25',nome:'Natal',tipo:'Feriado nacional'}];
+
+function abrirFeriados2026(){
+  const lista=FERIADOS_2026.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--cinza-borda);font-size:13px;gap:10px;"><div><span style="font-weight:600;">${fmtData(f.data)}</span><span style="color:var(--cinza-texto);margin-left:8px;">${f.nome}</span></div><span class="badge ${f.tipo.includes('nacional')?'presente':f.tipo.includes('estadual')?'atrasou':'pendente'}" style="font-size:10px;">${f.tipo.replace('Feriado ','')}</span></div>`).join('');
+  document.getElementById('foto-reg-img').style.display='none';
+  document.getElementById('modal-foto-reg').querySelector('.modal').innerHTML=`<div class="modal-titulo"><span>Feriados 2026 — Fortaleza/CE</span><button class="modal-fechar" onclick="fecharFeriados()">×</button></div><div style="font-size:12px;color:var(--cinza-texto);margin-bottom:12px;">Selecione funcionário e clique em "Aplicar para todos".</div><div style="max-height:400px;overflow-y:auto;">${lista}</div><div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;"><select id="feriado-func-sel" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;"><option value="todos">Todos os funcionários</option></select><button class="btn-novo" onclick="aplicarFeriados2026()">Aplicar todos feriados</button></div><div id="feriados-status" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div><div class="modal-footer"><button class="btn-cancelar" onclick="fecharFeriados()">Fechar</button></div>`;
+  fbGet('funcionarios').then(funcs=>{const sel=document.getElementById('feriado-func-sel');funcs.forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.nome}</option>`);});
+  document.getElementById('modal-foto-reg').classList.add('aberto');
+}
+window.abrirFeriados2026=abrirFeriados2026;
+
+function fecharFeriados(){document.getElementById('modal-foto-reg').classList.remove('aberto');document.getElementById('foto-reg-img').style.display='';}
+window.fecharFeriados=fecharFeriados;
+
+async function aplicarFeriados2026(){
+  const funcSel=document.getElementById('feriado-func-sel').value;
+  const funcs=await fbGet('funcionarios');
+  const alvo=funcSel==='todos'?funcs:funcs.filter(f=>f.id===funcSel);
+  const status=document.getElementById('feriados-status');status.textContent='Aplicando...';
+  let count=0;
+  for(const func of alvo){for(const fer of FERIADOS_2026){const id=uid();await fbSet('justificativas',id,{id,funcId:func.id,funcNome:func.nome,data:fer.data,motivo:fer.tipo,descricao:fer.nome,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(func.id,func.nome,fer.data,jornMin,fer.tipo);count++;}}
+  status.textContent=`${count} feriados aplicados para ${alvo.length} funcionário(s)!`;status.style.color='var(--verde)';renderJustificativas();
+}
+window.aplicarFeriados2026=aplicarFeriados2026;
+
+// ── Ocorrências gestor ────────────────────────────────────────────────────────
+async function lancarOcorrenciaGestor(){
+  const funcId=document.getElementById('gest-func').value,data=document.getElementById('gest-data').value,tipo=document.getElementById('gest-tipo').value,obs=document.getElementById('gest-obs').value.trim(),info=document.getElementById('gest-info');
+  if(!funcId||!data||!tipo){notif('Preencha funcionário, data e tipo','vermelho');return;}
+  const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===funcId);
+  const id=uid();await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data,motivo:tipo,descricao:obs||tipo,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
+  const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(funcId,func.nome,data,jornMin,tipo);
+  document.getElementById('gest-data').value='';document.getElementById('gest-tipo').value='';document.getElementById('gest-obs').value='';
+  info.textContent=`✓ ${tipo} lançado para ${func.nome} em ${fmtData(data)}`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',4000);
+  notif('Ocorrência lançada!');renderJustificativas();atualizarBadgeJustif();
+}
+window.lancarOcorrenciaGestor=lancarOcorrenciaGestor;
+
+async function renderJustificativas(){
+  const filtro=document.getElementById('fil-justif').value;
+  let justifs=await fbGet('justificativas');
+  if(filtro==='pendente')justifs=justifs.filter(j=>j.status==='pendente'&&!j.lancadoPorGestor);
+  else if(filtro==='gestor')justifs=justifs.filter(j=>j.lancadoPorGestor);
+  else if(filtro!=='todos')justifs=justifs.filter(j=>j.status===filtro);
+  justifs.sort((a,b)=>a.data>b.data?-1:1);
+  const el=document.getElementById('lista-justificativas');
+  if(!justifs.length){el.innerHTML='<div class="vazio">Nenhuma ocorrência encontrada.</div>';return;}
+  el.innerHTML=justifs.map(j=>{
+    const sClass=j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado';
+    const sLabel=j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovado':'Rejeitado';
+    const origem=j.lancadoPorGestor?'<span style="font-size:10px;color:var(--laranja);margin-left:6px;">pelo gestor</span>':'';
+    return `<div class="justif-card"><div class="justif-header"><div><div class="justif-nome">${j.funcNome}${origem}</div><div class="justif-info">${fmtData(j.data)} · ${j.motivo}</div></div><span class="badge ${sClass}">${sLabel}</span></div>${j.descricao&&j.descricao!==j.motivo?`<div class="justif-motivo">${j.descricao}</div>`:''} ${j.anexoNome?`<div style="margin-bottom:8px;"><button class="btn-acao" onclick="verAnexo('${j.id}')">📎 ${j.anexoNome}</button></div>`:''} ${j.obsGestor?`<div style="font-size:12px;color:var(--cinza-texto);margin-bottom:8px;">Obs: ${j.obsGestor}</div>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;">${j.status==='pendente'&&!j.lancadoPorGestor?`<button class="btn-acao success" onclick="abrirJustifGestor('${j.id}')">Analisar</button>`:''}<button class="btn-acao danger" onclick="excluirOcorrencia('${j.id}')">Excluir</button></div></div>`;
+  }).join('');
+  atualizarBadgeJustif();
+}
+window.renderJustificativas=renderJustificativas;
+
+async function excluirOcorrencia(id){if(!confirm('Excluir esta ocorrência?'))return;await fbDel('justificativas',id);renderJustificativas();notif('Excluído','vermelho');}
+window.excluirOcorrencia=excluirOcorrencia;
+
+async function verAnexo(justifId){
+  const snap=await window._getDoc(docRef('justificativas',justifId));
+  if(!snap.exists()||!snap.data().anexo)return;
+  const d=snap.data();
+  if(d.anexoTipo==='application/pdf'){const w=window.open();w.document.write(`<iframe src="${d.anexo}" style="width:100%;height:100%;border:none;"></iframe>`);}
+  else{document.getElementById('foto-reg-img').src=d.anexo;document.getElementById('modal-foto-reg').classList.add('aberto');}
+}
+window.verAnexo=verAnexo;
+
+let justifAtualId=null;
+async function abrirJustifGestor(id){
+  justifAtualId=id;
+  const snap=await window._getDoc(docRef('justificativas',id));const j=snap.data();
+  const pontoInfo=j.tipoPonto?`<div style="background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);border-radius:7px;padding:10px;margin-top:8px;"><div style="font-size:12px;color:var(--laranja);font-weight:600;margin-bottom:4px;">Ponto não batido — lançamento automático</div><div style="font-size:13px;">Batida: <strong>${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[j.tipoPonto]}</strong></div><div style="font-size:13px;">Horário: <strong>${j.horarioPonto}</strong></div><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">Ao aprovar, esta batida será lançada automaticamente.</div></div>`:'';
+  document.getElementById('justif-detalhe').innerHTML=`<div style="background:var(--cinza-medio);border-radius:8px;padding:12px;margin-bottom:1rem;"><div style="font-size:15px;font-weight:600;margin-bottom:4px;">${j.funcNome}</div><div style="font-size:13px;color:var(--cinza-texto);margin-bottom:6px;">${fmtData(j.data)} · ${j.motivo}</div>${j.descricao?`<div style="font-size:13px;">${j.descricao}</div>`:''}${pontoInfo}${j.anexoNome?`<div style="margin-top:8px;"><button class="btn-acao" onclick="verAnexo('${id}')">📎 Ver ${j.anexoNome}</button></div>`:''}</div>`;
+  document.getElementById('justif-obs-gestor').value='';
+  document.getElementById('modal-justif-gestor').classList.add('aberto');
+}
+window.abrirJustifGestor=abrirJustifGestor;
+
+async function responderJustificativa(status){
+  const obs=document.getElementById('justif-obs-gestor').value.trim();
+  await fbSet('justificativas',justifAtualId,{status,obsGestor:obs,respondidoEm:new Date().toISOString()});
+  if(status==='aprovado'){
+    const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
+    const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
+    if(j.tipoPonto&&j.horarioPonto){
+      const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
+      const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida lançada automaticamente!','verde');
+    }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornMin,j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
+  }
+  fecharModal('modal-justif-gestor');
+  if(status!=='aprovado')notif('Justificativa rejeitada.','vermelho');
+  renderJustificativas();
+}
+window.responderJustificativa=responderJustificativa;
+
+async function creditarJornada(funcId,funcNome,data,jornMin,motivo){
+  const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
+  if(tiposSemCredito.includes(motivo))return;
+  const id='cred_'+funcId+'_'+data;
+  await fbSet('creditos_jornada',id,{id,funcId,funcNome,data,minutos:jornMin,motivo,criadoEm:new Date().toISOString()});
+}
+
+// ── Espelho ───────────────────────────────────────────────────────────────────
+async function gerarEspelho(){
+  const funcId=document.getElementById('esp-func').value,mes=document.getElementById('esp-mes').value;
+  if(!funcId||!mes){notif('Selecione funcionário e mês','vermelho');return;}
+  const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===funcId);if(!func)return;
+  const regs=await fbGet('registros');const justifs=await fbGet('justificativas');
+  const regsDoMes=regs.filter(r=>r.funcId===funcId&&r.data.startsWith(mes));
+  const justifDoMes=justifs.filter(j=>j.funcId===funcId&&j.data.startsWith(mes)&&j.status==='aprovado');
+  const [ano,mesNum]=mes.split('-').map(Number);
+  const diasNoMes=new Date(ano,mesNum,0).getDate();
+  const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];
+  const jornMin=(parseFloat(func.jornada)||8)*60;let totalTrabMin=0,totalEsperadoMin=0;
+  const creditosDoMes=await fbGet('creditos_jornada');
+  const creditosFuncMes=creditosDoMes.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
+  const hojeStr=hoje();const linhas=[];
+  for(let d=1;d<=diasNoMes;d++){
+    const dataStr=`${ano}-${String(mesNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const diaSemana=new Date(ano,mesNum-1,d).getDay();
+    const nomesDia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const ehFimSemana=diaSemana===0||diaSemana===6,ehFuturo=dataStr>hojeStr;
+    const regsD=regsDoMes.filter(r=>r.data===dataStr);
+    const justifD=justifDoMes.find(j=>j.data===dataStr);
+    const creditoD=creditosFuncMes.find(c=>c.data===dataStr);
+    const get=tipo=>{const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
+    let total=calcTotal(e,sa,ra,s);
+    if(total===null&&creditoD)total=creditoD.minutos||jornMin;
+    if(!ehFimSemana&&!ehFuturo){totalEsperadoMin+=jornMin;if(total!==null)totalTrabMin+=total;}
+    const saldoDia=(!ehFimSemana&&!ehFuturo&&total!==null)?total-jornMin:null;
+    let totalLabel='—';
+    if(!ehFimSemana){if(creditoD&&total!==null&&regsD.length===0)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
+    let ocorrencia=null;if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
+    linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:!!creditoD});
+  }
+  const saldoTotal=totalTrabMin-totalEsperadoMin;
+  const espelhos=await fbGet('espelhos');const espExist=espelhos.find(e=>e.funcId===funcId&&e.mes===mes);
+  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div></div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${linhas.map(l=>{const bgColor=l.ehFimSemana?'background:#eeeeee;':l.temCredito&&!l.entrada?'background:#f0fff4;':l.justif?'background:#fff8e1;':'';const totalColor=l.totalLabel==='Falta'?'color:#c0392b;font-weight:600;':l.totalLabel==='Incompleto'?'color:#e67e22;font-weight:600;':'color:#111;';const saldoColor=l.saldoDia>0?'color:#1a7a3a;font-weight:600;':l.saldoDia<0?'color:#c0392b;font-weight:600;':'color:#111;';const ocorrenciaColor=l.temCredito&&!l.entrada?'color:#1a7a3a;':'color:#c0392b;';return `<tr style="${bgColor}"><td style="color:#111;font-weight:600;"><strong>${l.diaN}</strong> ${l.diaSem}</td><td style="color:#111;">${l.entrada||'—'}</td><td style="color:#111;">${l.sAlmoco||'—'}</td><td style="color:#111;">${l.retorno||'—'}</td><td style="color:#111;">${l.saida||'—'}</td><td style="${totalColor}">${l.totalLabel}</td><td style="${saldoColor}">${l.saldoDia!==null?(l.saldoDia>=0?'+':'')+fmtMin(l.saldoDia):'—'}</td><td style="${ocorrenciaColor}font-size:10px;">${l.justif||''}</td></tr>`;}).join('')}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(totalTrabMin)}</td><td style="color:${saldoTotal>=0?'#4ade80':'#f87171'};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${espExist.assinaturaImg}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${func.nome}<br>${espExist?.assinado?'Assinado em '+fmtData(espExist.assinadoEm?.slice(0,10)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
+  const espId=espExist?.id||uid();
+  const statusAssin=espExist?.assinado?`<span class="badge assinado">✓ Assinado por ${espExist.assinadoPor}</span>`:`<span class="badge aguardando">Aguardando assinatura</span>`;
+  document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button><button class="btn-ghost" onclick="enviarParaAssinar('${espId}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button></div>${espelhoHTML}`;
+}
+window.gerarEspelho=gerarEspelho;
+
+async function enviarParaAssinar(espId,funcId,mes,mesLabel){
+  const espelhos=await fbGet('espelhos');const exist=espelhos.find(e=>e.id===espId);
+  if(!exist)await fbSet('espelhos',espId,{id:espId,funcId,mes,mesLabel,assinado:false,criadoEm:new Date().toISOString()});
+  notif('Espelho disponível para assinatura no app do funcionário!');
+}
+window.enviarParaAssinar=enviarParaAssinar;
+
+function exportarEspelhoPDF(){
+  const el=document.getElementById('espelho-html');if(!el){notif('Gere o espelho primeiro','vermelho');return;}
+  if(!window.jspdf){notif('Aguarde o carregamento do PDF...','vermelho');return;}
+  const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  doc.html(el,{callback:function(doc){doc.save('espelho-ponto.pdf');},x:10,y:10,width:190,windowWidth:800});
+}
+window.exportarEspelhoPDF=exportarEspelhoPDF;
+
+// ── Funcionários ──────────────────────────────────────────────────────────────
+let editFuncId=null,fotoNova=null,notaAv=0,avalFuncId=null,streamCamCadastroLocal=null;
+
+async function renderFuncionarios(){
+  const funcs=await fbGet('funcionarios');const avals=await fbGet('avaliacoes');
+  if(!funcs.length){document.getElementById('lista-funcionarios').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;padding:1rem 0;">Nenhum funcionário.</div>';return;}
+  document.getElementById('lista-funcionarios').innerHTML=funcs.map(f=>{
+    const av=avals.find(a=>a.id===f.id);const estrelas=av?.nota?'★'.repeat(av.nota)+'☆'.repeat(5-av.nota):'☆☆☆☆☆';
+    const temFoto=f.foto?`<span style="font-size:11px;color:var(--verde);">✓ Foto</span>`:`<span style="font-size:11px;color:var(--vermelho);">⚠ Sem foto</span>`;
+    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div class="ficha-nome">${f.nome}</div><div class="ficha-cargo">${f.cargo||'Sem cargo'} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${f.cpf||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${f.telefone||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${f.jornada||8}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${f.endereco||'—'}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${f.id}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${f.id}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${f.id}')">Remover</button></div></div>`;
+  }).join('');
+  const sels=['fil-func-reg','esp-func','gest-func'];
+  sels.forEach(sid=>{const sel=document.getElementById(sid);if(!sel)return;const val=sel.value;sel.innerHTML='<option value="">'+( sid==='esp-func'?'Selecione funcionário':'Todos')+'</option>'+funcs.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');sel.value=val;});
+}
+
+async function renderLinks(){
+  const funcs=await fbGet('funcionarios');
+  const funcUrl=new URL('./ponto-func.html',window.location.href).href;
+  if(!funcs.length){document.getElementById('lista-links').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Cadastre funcionários primeiro.</div>';return;}
+  document.getElementById('lista-links').innerHTML=funcs.map(f=>{const url=`${funcUrl}?f=${f.id}`;return `<div class="link-card"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">${f.nome}</div><div class="link-url">${url}</div></div><button class="btn-copiar" onclick="copiarLink('${url}',this)">Copiar</button></div>`;}).join('');
+}
+function copiarLink(url,btn){navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copiado!';setTimeout(()=>btn.textContent='Copiar',2000);});}
+window.copiarLink=copiarLink;
+
+async function abrirModalFunc(id){
+  editFuncId=id||null;fotoNova=null;
+  document.getElementById('modal-func-titulo').textContent=id?'Editar funcionário':'Novo funcionário';
+  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
+  else{['f-nome','f-cpf','f-rg','f-nasc','f-tel','f-end','f-cargo','f-admissao','f-salario','f-obs'].forEach(i=>document.getElementById(i).value='');document.getElementById('foto-preview').innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;document.getElementById('foto-status').textContent='Nenhuma foto cadastrada';document.getElementById('foto-status').style.color='var(--cinza-texto)';}
+  document.getElementById('modal-func').classList.add('aberto');
+}
+window.abrirModalFunc=abrirModalFunc;
+function editarFunc(id){abrirModalFunc(id);}
+window.editarFunc=editarFunc;
+
+function previewFoto(inp){const file=inp.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{fotoNova=e.target.result;document.getElementById('foto-preview').innerHTML=`<img src="${fotoNova}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto pronta';document.getElementById('foto-status').style.color='var(--verde)';};reader.readAsDataURL(file);}
+window.previewFoto=previewFoto;
+
+async function abrirCameraFoto(){
+  try{streamCamCadastroLocal=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false});document.getElementById('video-cadastro').srcObject=streamCamCadastroLocal;document.getElementById('cam-cadastro').style.display='block';}
+  catch{notif('Câmera não disponível','vermelho');}
+}
+window.abrirCameraFoto=abrirCameraFoto;
+
+function fecharCameraFoto(){if(streamCamCadastroLocal){streamCamCadastroLocal.getTracks().forEach(t=>t.stop());streamCamCadastroLocal=null;}document.getElementById('cam-cadastro').style.display='none';}
+window.fecharCameraFoto=fecharCameraFoto;
+
+function capturarFotoCadastro(){
+  const video=document.getElementById('video-cadastro');const canvas=document.createElement('canvas');
+  canvas.width=video.videoWidth||320;canvas.height=video.videoHeight||240;
+  const ctx=canvas.getContext('2d');ctx.scale(-1,1);ctx.drawImage(video,-canvas.width,0);
+  fotoNova=canvas.toDataURL('image/jpeg',0.7);fecharCameraFoto();
+  document.getElementById('foto-preview').innerHTML=`<img src="${fotoNova}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+  document.getElementById('foto-status').textContent='Foto capturada!';document.getElementById('foto-status').style.color='var(--verde)';notif('Foto capturada!');
+}
+window.capturarFotoCadastro=capturarFotoCadastro;
+
+async function salvarFuncionario(){
+  const nome=document.getElementById('f-nome').value.trim();if(!nome){notif('Nome é obrigatório','vermelho');return;}
+  const id=editFuncId||uid();
+  const data={nome,cpf:document.getElementById('f-cpf').value,rg:document.getElementById('f-rg').value,nascimento:document.getElementById('f-nasc').value,telefone:document.getElementById('f-tel').value,endereco:document.getElementById('f-end').value,cargo:document.getElementById('f-cargo').value,admissao:document.getElementById('f-admissao').value,salario:document.getElementById('f-salario').value,jornada:document.getElementById('f-jornada').value,obs:document.getElementById('f-obs').value,atualizadoEm:new Date().toISOString()};
+  if(fotoNova)data.foto=fotoNova;if(!editFuncId)data.criadoEm=new Date().toISOString();
+  await fbSet('funcionarios',id,data);fotoNova=null;editFuncId=null;fecharModal('modal-func');renderFuncionarios();notif('Funcionário salvo!');
+}
+window.salvarFuncionario=salvarFuncionario;
+
+async function removerFunc(id){if(!confirm('Remover este funcionário?'))return;await fbDel('funcionarios',id);renderFuncionarios();notif('Removido','vermelho');}
+window.removerFunc=removerFunc;
+
+async function abrirFicha(id){
+  avalFuncId=id;const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();
+  const avSnap=await window._getDoc(docRef('avaliacoes',id));const av=avSnap.exists()?avSnap.data():{};
+  notaAv=av.nota||0;
+  document.getElementById('ficha-conteudo').innerHTML=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding:14px;background:var(--cinza-medio);border-radius:10px;"><div class="ficha-avatar" style="width:54px;height:54px;font-size:18px;flex-shrink:0;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div style="font-size:17px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div></div>`;
+  renderEstrelas();document.getElementById('inp-metas').value=av.metas||'';document.getElementById('inp-obs-av').value=av.obs||'';document.getElementById('inp-adv').value=av.advertencias||'';
+  document.getElementById('modal-ficha').classList.add('aberto');
+}
+window.abrirFicha=abrirFicha;
+
+function renderEstrelas(){document.getElementById('estrelas-av').innerHTML=[1,2,3,4,5].map(n=>`<div class="estrela ${n<=notaAv?'ativa':''}" onclick="setNota(${n})">★</div>`).join('');}
+function setNota(n){notaAv=n;renderEstrelas();}
+window.setNota=setNota;
+
+async function salvarAvaliacao(){
+  await fbSet('avaliacoes',avalFuncId,{nota:notaAv,metas:document.getElementById('inp-metas').value,obs:document.getElementById('inp-obs-av').value,advertencias:document.getElementById('inp-adv').value,atualizadoEm:new Date().toISOString()});
+  notif('Avaliação salva!');fecharModal('modal-ficha');renderFuncionarios();
+}
+window.salvarAvaliacao=salvarAvaliacao;
+
+// ── Navegação ─────────────────────────────────────────────────────────────────
+function mudarSecao(id,el){
+  document.querySelectorAll('.dash-secao').forEach(s=>s.classList.remove('ativa'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('ativo'));
+  document.getElementById('sec-'+id).classList.add('ativa');el.classList.add('ativo');
+  if(id==='hoje')renderHoje();
+  if(id==='registros'){document.getElementById('fil-mes').value=mesAtual();renderRegistros();}
+  if(id==='banco')renderBanco();
+  if(id==='justificativas')renderJustificativas();
+  if(id==='espelho'){document.getElementById('esp-mes').value=mesAtual();renderFuncionarios();}
+  if(id==='funcionarios')renderFuncionarios();
+  if(id==='links')renderLinks();
+}
+window.mudarSecao=mudarSecao;
+
+function fecharModal(id){document.getElementById(id).classList.remove('aberto');if(id==='modal-func')fecharCameraFoto();}
+window.fecharModal=fecharModal;
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('firebaseReady',()=>{
+  atualizarData();renderHoje();atualizarBadgeJustif();
+  document.getElementById('fil-mes').value=mesAtual();
+  document.getElementById('esp-mes').value=mesAtual();
+});
+</script>
+</body>
+</html>

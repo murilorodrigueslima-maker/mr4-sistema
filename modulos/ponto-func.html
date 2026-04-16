@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MR4 — Ponto Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+:root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:var(--preto);color:var(--branco);min-height:100vh;}
+
+/* Loading */
+#loadingScreen{position:fixed;inset:0;background:var(--preto);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:999;}
+.spinner{width:32px;height:32px;border:3px solid #333;border-top-color:var(--laranja);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* App */
+.func-app{display:none;flex-direction:column;min-height:100vh;max-width:420px;margin:0 auto;}
+.func-topbar{background:var(--laranja);padding:16px 20px 14px;display:flex;align-items:center;justify-content:space-between;}
+.func-topbar-logo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:white;}
+.func-topbar-user{font-size:12px;color:rgba(255,255,255,.85);text-align:right;}
+.func-topbar-user strong{display:block;font-size:13px;color:white;}
+.func-body{flex:1;padding:1.5rem 1.25rem;overflow-y:auto;}
+.func-relogio{text-align:center;margin-bottom:1.5rem;}
+.func-hora{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:700;line-height:1;}
+.func-data{font-size:13px;color:var(--cinza-texto);margin-top:4px;}
+.btn-ponto-wrap{display:flex;justify-content:center;margin-bottom:1.5rem;}
+.btn-ponto-grande{width:130px;height:130px;border-radius:50%;border:3px solid var(--laranja);background:rgba(255,107,26,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;transition:all .2s;}
+.btn-ponto-grande:hover{background:rgba(255,107,26,.2);transform:scale(.97);}
+.btn-ponto-grande.saida-almoco{border-color:var(--amarelo);background:rgba(245,158,11,.1);}
+.btn-ponto-grande.retorno{border-color:var(--verde);background:rgba(34,197,94,.1);}
+.btn-ponto-grande.saida{border-color:var(--vermelho);background:rgba(239,68,68,.1);}
+.btn-ponto-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
+.camera-area{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;margin-bottom:1rem;position:relative;}
+.camera-video{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transform:scaleX(-1);}
+.camera-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
+.face-guide{width:160px;height:160px;border-radius:50%;border:3px solid rgba(255,255,255,.4);}
+.face-guide.detectando{border-color:var(--amarelo);animation:blink .8s infinite;}
+.face-guide.detectado{border-color:var(--verde);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+.camera-status{padding:8px 12px;font-size:12px;text-align:center;color:var(--cinza-texto);background:var(--cinza-medio);}
+.camera-controles{padding:12px;display:flex;gap:10px;}
+.btn-capturar{flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-capturar:disabled{opacity:.4;cursor:not-allowed;}
+.btn-cancelar-cam{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.loc-info{display:flex;align-items:center;gap:8px;background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:13px;}
+.loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.loc-dot.ok{background:var(--verde);}
+.loc-dot.warn{background:var(--amarelo);}
+.loc-dot.loading{background:var(--cinza-texto);}
+.comprovante{background:var(--cinza-escuro);border:1px solid var(--laranja);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.comp-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--laranja);margin-bottom:12px;}
+.comp-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2a2a;font-size:13px;}
+.comp-row:last-child{border-bottom:none;}
+.comp-label{color:var(--cinza-texto);}
+.comp-val{font-weight:600;}
+.comp-val.verde{color:var(--verde);}
+.comp-val.warn{color:var(--amarelo);}
+.hist-titulo{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:10px;}
+.hist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a1a1a;}
+.hist-item:last-child{border-bottom:none;}
+.hist-hora{font-size:13px;font-weight:600;min-width:44px;}
+.hist-tipo{font-size:13px;color:var(--cinza-texto);flex:1;}
+.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.banco-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:14px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;}
+.banco-label{font-size:12px;color:var(--cinza-texto);margin-bottom:4px;}
+.banco-valor{font-size:20px;font-weight:700;font-family:'Barlow Condensed',sans-serif;}
+.func-tabs{display:flex;background:var(--cinza-escuro);border-top:1px solid var(--cinza-borda);}
+.func-tab{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--cinza-texto);cursor:pointer;border-top:2px solid transparent;}
+.func-tab.ativo{color:var(--laranja);border-top-color:var(--laranja);}
+.func-aba{display:none;}
+.func-aba.ativa{display:block;}
+.aviso{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--amarelo);margin-bottom:1rem;}
+.aviso-erro{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px;font-size:14px;color:var(--vermelho);margin-bottom:1rem;text-align:center;}
+.aviso-erro strong{display:block;font-size:16px;margin-bottom:4px;}
+.msg-estado{text-align:center;padding:1.5rem;font-size:14px;color:var(--cinza-texto);}
+.loading-spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+.notif{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 18px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
+.notif.verde{border-color:var(--verde);color:var(--verde);}
+.notif.vermelho{border-color:var(--vermelho);color:var(--vermelho);}
+canvas#canvasFoto{display:none;}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
+.badge.pendente{background:rgba(245,158,11,.2);color:var(--amarelo);}
+.badge.aprovado{background:rgba(34,197,94,.15);color:var(--verde);}
+.badge.rejeitado{background:rgba(239,68,68,.15);color:var(--vermelho);}
+.badge.assinado{background:rgba(34,197,94,.15);color:var(--verde);}
+.espelho-func-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.assinatura-area{border:2px dashed var(--cinza-borda);border-radius:10px;background:var(--cinza-medio);cursor:crosshair;display:block;touch-action:none;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:1rem;}
+.modal-overlay.aberto{display:flex;}
+.modal{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-titulo{font-size:17px;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;}
+.modal-fechar{background:transparent;border:none;color:var(--cinza-texto);font-size:20px;cursor:pointer;}
+.modal-footer{display:flex;gap:10px;margin-top:1.25rem;justify-content:flex-end;}
+.btn-cancelar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px 18px;font-size:14px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-salvar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-laranja{width:100%;background:var(--laranja);color:white;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-laranja:hover{background:var(--laranja-escuro);}
+.form-campo{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
+.form-campo label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);}
+.form-campo input,.form-campo select,.form-campo textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;}
+.form-campo textarea{resize:vertical;min-height:70px;}
+
+/* Tela de seleção */
+#tela-selec{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem;flex-direction:column;gap:1rem;}
+.selec-titulo{font-size:20px;font-weight:700;margin-bottom:.5rem;text-align:center;}
+.selec-sub{font-size:14px;color:var(--cinza-texto);margin-bottom:1.5rem;text-align:center;}
+.func-btn-lista{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;}
+.func-btn-item{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;}
+.func-btn-item:hover{border-color:var(--laranja);background:rgba(255,107,26,.07);}
+.func-btn-avatar{width:40px;height:40px;border-radius:50%;background:var(--laranja-escuro);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;overflow:hidden;flex-shrink:0;}
+.func-btn-avatar img{width:100%;height:100%;object-fit:cover;}
+.func-btn-nome{font-size:14px;font-weight:600;}
+.func-btn-cargo{font-size:12px;color:var(--cinza-texto);}
+</style>
+</head>
+<body>
+
+<div class="notif" id="notif"></div>
+<canvas id="canvasFoto"></canvas>
+
+<div id="loadingScreen">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Seleção de funcionário (quando não tem ?f= na URL) -->
+<div id="tela-selec">
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
+  <div class="selec-titulo">Quem é você?</div>
+  <div class="selec-sub">Selecione seu nome para bater o ponto</div>
+  <div class="func-btn-lista" id="lista-func-selec"></div>
+</div>
+
+<!-- App do funcionário -->
+<div class="func-app" id="func-app">
+  <div class="func-topbar">
+    <div class="func-topbar-logo">MR4 PONTO</div>
+    <div class="func-topbar-user"><strong id="func-nome-top">—</strong>Ponto digital</div>
+  </div>
+  <div class="func-body">
+    <!-- ABA PONTO -->
+    <div class="func-aba ativa" id="aba-ponto">
+      <div class="func-relogio">
+        <div class="func-hora" id="func-hora">00:00</div>
+        <div class="func-data" id="func-data-str">—</div>
+      </div>
+      <div id="est-aguardando">
+        <div class="btn-ponto-wrap">
+          <div class="btn-ponto-grande" id="btn-bater" onclick="iniciarBatida()">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="18" r="14"/><polyline points="18 10 18 18 22 22"/></svg>
+            <div class="btn-ponto-label" id="lbl-prox">Entrada</div>
+          </div>
+        </div>
+        <div class="loc-info"><div class="loc-dot loading" id="loc-dot"></div><span id="loc-txt">Obtendo localização...</span></div>
+      </div>
+      <div id="est-camera" style="display:none;">
+        <div class="aviso">Posicione seu rosto no círculo</div>
+        <div class="camera-area">
+          <video id="video-cam" class="camera-video" autoplay playsinline muted></video>
+          <div class="camera-overlay"><div class="face-guide" id="face-guide"></div></div>
+        </div>
+        <div class="camera-status" id="cam-status">Aguardando rosto...</div>
+        <div class="camera-controles">
+          <button class="btn-cancelar-cam" onclick="cancelarCam()">Cancelar</button>
+          <button class="btn-capturar" id="btn-capturar" onclick="capturarFoto()" disabled>Verificando...</button>
+        </div>
+      </div>
+      <div id="est-bloqueado" style="display:none;">
+        <div class="aviso-erro"><strong>Acesso negado</strong>Rosto não reconhecido.</div>
+        <button class="btn-laranja" onclick="voltarAguardando()">Tentar novamente</button>
+      </div>
+      <div id="est-proc" style="display:none;"><div class="msg-estado"><span class="loading-spin"></span>Salvando...</div></div>
+      <div id="est-comp" style="display:none;"><div class="comprovante" id="comp-content"></div><button class="btn-laranja" onclick="voltarPonto()">OK</button></div>
+      <div style="margin-top:1.5rem;">
+        <div class="hist-titulo">Hoje</div>
+        <div id="hist-dia"><div style="font-size:13px;color:var(--cinza-texto);">Nenhum registro ainda.</div></div>
+      </div>
+    </div>
+
+    <!-- ABA BANCO -->
+    <div class="func-aba" id="aba-banco"><div id="banco-func"></div></div>
+
+    <!-- ABA JUSTIFICATIVAS -->
+    <div class="func-aba" id="aba-justif">
+      <div style="margin-bottom:1rem;">
+        <div class="hist-titulo">Enviar justificativa</div>
+        <div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;">
+          <div class="form-campo"><label>Data da ocorrência</label><input type="date" id="justif-data"></div>
+          <div class="form-campo"><label>Tipo de ocorrência</label>
+            <select id="justif-tipo-ocorr" onchange="toggleCamposPonto()">
+              <option value="">Selecione...</option>
+              <option value="ponto_nao_batido">Ponto não batido</option>
+              <option value="Atestado médico">Atestado médico / Falta médica</option>
+              <option value="Falta justificada">Falta justificada</option>
+              <option value="Atraso justificado">Atraso justificado</option>
+              <option value="Saída antecipada">Saída antecipada</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div id="campos-ponto-nao-batido" style="display:none;">
+            <div style="background:rgba(255,107,26,.08);border:1px solid rgba(255,107,26,.3);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--laranja);">Informe qual batida não foi registrada e o horário correto</div>
+            <div class="form-campo"><label>Qual batida não foi registrada?</label>
+              <select id="justif-batida">
+                <option value="">Selecione...</option>
+                <option value="entrada">Entrada</option>
+                <option value="saida_almoco">Saída para almoço</option>
+                <option value="retorno_almoco">Retorno do almoço</option>
+                <option value="saida">Saída</option>
+              </select>
+            </div>
+            <div class="form-campo"><label>Horário que deveria ter batido</label><input type="time" id="justif-horario"></div>
+          </div>
+          <div class="form-campo"><label>Motivo / descrição</label><textarea id="justif-desc" placeholder="Explique o motivo..."></textarea></div>
+          <div class="form-campo">
+            <label>Anexar atestado ou documento (PDF ou imagem)</label>
+            <input type="file" id="justif-anexo" accept=".pdf,image/*">
+            <div id="justif-anexo-nome" style="font-size:11px;color:var(--cinza-texto);margin-top:4px;"></div>
+          </div>
+          <button class="btn-laranja" onclick="enviarJustificativa()">Enviar justificativa</button>
+        </div>
+      </div>
+      <div>
+        <div class="hist-titulo">Minhas justificativas</div>
+        <div id="lista-justif-func"></div>
+      </div>
+    </div>
+
+    <!-- ABA ESPELHO -->
+    <div class="func-aba" id="aba-espelho">
+      <div id="espelhos-func-lista"></div>
+    </div>
+  </div>
+  <div class="func-tabs">
+    <div class="func-tab ativo" onclick="mudarAba('ponto',this)">Ponto</div>
+    <div class="func-tab" onclick="mudarAba('banco',this)">Banco</div>
+    <div class="func-tab" onclick="mudarAba('justif',this)">Justificar</div>
+    <div class="func-tab" onclick="mudarAba('espelho',this)">Espelho</div>
+  </div>
+</div>
+
+<!-- MODAL ASSINATURA ESPELHO -->
+<div class="modal-overlay" id="modal-assinar">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-titulo"><span>Assinar espelho de ponto</span><button class="modal-fechar" onclick="fecharModal('modal-assinar')">×</button></div>
+    <div id="assinar-info" style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;"></div>
+    <div style="font-size:12px;color:var(--cinza-texto);margin-bottom:6px;">Assine no campo abaixo:</div>
+    <canvas id="canvas-assinatura" class="assinatura-area" width="440" height="150"></canvas>
+    <div style="display:flex;gap:8px;margin-top:8px;"><button onclick="limparAssinatura()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;cursor:pointer;">Limpar</button></div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="fecharModal('modal-assinar')">Cancelar</button>
+      <button class="btn-salvar" onclick="confirmarAssinatura()">Confirmar assinatura</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase (sem Auth — acesso público) -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const db = getFirestore(app);
+window._db=db; window._col=collection; window._doc=doc;
+window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
+window._deleteDoc=deleteDoc;
+window._firebaseReady=true;
+window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<script>
+const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200, JORNADA=8, FACE_THRESHOLD=0.6;
+let funcAtivo=null, streamCam=null, locAtual=null;
+let notaAv=0, fotoNova=null, faceDetectionInterval=null, rostoVerificado=false;
+let fotoCapturadaBase64=null, modelsCarregados=false, facialScoreGlobal=null;
+let justifAtualId=null, espelhoAtualFuncId=null;
+let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
+
+function db(){return window._db;}
+function col(n){return window._col(db(),n);}
+function docRef(n,id){return window._doc(db(),n,id);}
+async function fbGet(c){const s=await window._getDocs(col(c));return s.docs.map(d=>({id:d.id,...d.data()}));}
+async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function hoje(){return new Date().toISOString().slice(0,10);}
+function mesAtual(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
+function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
+function fmtMin(m){if(m===null||m===undefined)return'—';const s=m<0?'-':'';const a=Math.abs(Math.round(m));return s+Math.floor(a/60)+'h'+String(a%60).padStart(2,'0');}
+function fmtData(d){if(!d)return'—';const[y,mo,dd]=d.split('-');return `${dd}/${mo}/${y}`;}
+function distM(la1,lo1,la2,lo2){const R=6371000;const dL=(la2-la1)*Math.PI/180;const dO=(lo2-lo1)*Math.PI/180;const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function calcTotal(e,sa,ra,s){if(!e||!s)return null;let t=toMin(s)-toMin(e);if(sa&&ra)t-=(toMin(ra)-toMin(sa));return t;}
+function notif(msg,tipo='verde'){const el=document.getElementById('notif');el.textContent=msg;el.className='notif '+tipo;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
+function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
+
+function facialBadge(score){
+  if(score===false||score===0)return{txt:'Bloqueada',cor:'var(--vermelho)'};
+  if(score===null||score===undefined)return{txt:'—',cor:'var(--cinza-texto)'};
+  if(score>=70)return{txt:'Validada '+score+'%',cor:'var(--verde)'};
+  return{txt:'Suspeita '+score+'%',cor:'var(--amarelo)'};
+}
+
+// ── Face API ──────────────────────────────────────────────────────────────────
+async function carregarModelos(){
+  if(modelsCarregados)return true;
+  try{
+    const U='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';
+    await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(U),faceapi.nets.faceRecognitionNet.loadFromUri(U)]);
+    modelsCarregados=true;return true;
+  }catch{return false;}
+}
+async function obterDescritorDaFoto(src){
+  return new Promise(res=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=async()=>{try{const d=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions()).withFaceDescriptor();res(d?d.descriptor:null);}catch{res(null);}};
+    img.onerror=()=>res(null);img.src=src;
+  });
+}
+async function verificarRosto(refs){
+  const video=document.getElementById('video-cam');if(!video||!video.readyState)return null;
+  try{
+    const det=await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({inputSize:160,scoreThreshold:0.4})).withFaceDescriptor();
+    if(!det)return null;
+    let min=Infinity;for(const d of refs){const dist=faceapi.euclideanDistance(det.descriptor,d);if(dist<min)min=dist;}
+    return{descriptor:det.descriptor,distancia:min,reconhecido:min<FACE_THRESHOLD};
+  }catch{return null;}
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init(){
+  const params=new URLSearchParams(window.location.search);
+  const fid=params.get('f');
+  if(fid){
+    const snap=await window._getDoc(docRef('funcionarios',fid));
+    if(snap.exists()){iniciarAppFunc({id:snap.id,...snap.data()});return;}
+  }
+  // sem ID — mostra lista
+  await mostrarSelecFuncionario();
+}
+
+async function mostrarSelecFuncionario(){
+  document.getElementById('loadingScreen').style.display='none';
+  const funcs=await fbGet('funcionarios');
+  if(!funcs.length){
+    document.getElementById('tela-selec').style.display='flex';
+    document.getElementById('lista-func-selec').innerHTML='<p style="color:var(--cinza-texto);font-size:14px;text-align:center;">Nenhum funcionário cadastrado.<br>Acesse o painel do gestor.</p>';
+    return;
+  }
+  document.getElementById('lista-func-selec').innerHTML=funcs.map(f=>`
+    <div class="func-btn-item" onclick="iniciarAppFunc({id:'${f.id}',nome:'${f.nome.replace(/'/g,"\\'")}',cargo:'${(f.cargo||'').replace(/'/g,"\\'")}',foto:'${f.foto||''}',jornada:'${f.jornada||8}'})">
+      <div class="func-btn-avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div>
+      <div><div class="func-btn-nome">${f.nome}</div><div class="func-btn-cargo">${f.cargo||''}</div></div>
+    </div>`).join('');
+  document.getElementById('tela-selec').style.display='flex';
+}
+
+function iniciarAppFunc(func){
+  funcAtivo=func;
+  document.getElementById('tela-selec').style.display='none';
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('func-app').style.display='flex';
+  document.getElementById('func-nome-top').textContent=func.nome.split(' ')[0];
+  iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();carregarModelos();
+  document.getElementById('justif-data').value=hoje();
+  document.getElementById('justif-anexo').addEventListener('change',e=>{
+    const f=e.target.files[0];document.getElementById('justif-anexo-nome').textContent=f?f.name:'';
+  });
+}
+window.iniciarAppFunc=iniciarAppFunc;
+
+function iniciarRelogio(){
+  function tick(){
+    const n=new Date();document.getElementById('func-hora').textContent=n.toTimeString().slice(0,5);
+    const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    document.getElementById('func-data-str').textContent=`${dias[n.getDay()]}, ${n.getDate()} de ${meses[n.getMonth()]}`;
+  }
+  tick();setInterval(tick,1000);
+}
+
+function obterLoc(){
+  const dot=document.getElementById('loc-dot'),txt=document.getElementById('loc-txt');
+  if(!navigator.geolocation){txt.textContent='GPS não disponível';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    locAtual={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const dist=Math.round(distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG));
+    if(dist<=RAIO){dot.className='loc-dot ok';txt.textContent=`Dentro do raio (${dist}m)`;}
+    else{dot.className='loc-dot warn';txt.textContent=`Fora do raio (${dist}m)`;}
+  },()=>{txt.textContent='Localização não obtida';dot.className='loc-dot warn';});
+}
+
+async function proxPonto(){
+  const regs=await fbGet('registros');
+  const regHoje=regs.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
+  const ult=regHoje[regHoje.length-1];
+  if(!ult)return{tipo:'entrada',label:'Entrada',classe:''};
+  if(ult.tipo==='entrada')return{tipo:'saida_almoco',label:'Saída almoço',classe:'saida-almoco'};
+  if(ult.tipo==='saida_almoco')return{tipo:'retorno_almoco',label:'Retorno',classe:'retorno'};
+  if(ult.tipo==='retorno_almoco')return{tipo:'saida',label:'Saída',classe:'saida'};
+  return null;
+}
+
+async function iniciarBatida(){
+  const prox=await proxPonto();
+  if(!prox){notif('Ponto do dia completo!');return;}
+  if(!funcAtivo.foto){notif('Cadastre sua foto antes de bater ponto','vermelho');return;}
+  document.getElementById('btn-bater').className='btn-ponto-grande '+(prox.classe||'');
+  document.getElementById('lbl-prox').textContent=prox.label;
+  document.getElementById('est-aguardando').style.display='none';
+  document.getElementById('est-camera').style.display='block';
+  rostoVerificado=false;fotoCapturadaBase64=null;facialScoreGlobal=null;
+  document.getElementById('btn-capturar').disabled=true;
+  document.getElementById('btn-capturar').textContent='Verificando...';
+  document.getElementById('face-guide').className='face-guide detectando';
+  document.getElementById('cam-status').textContent='Aguardando rosto...';
+  try{
+    streamCam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
+    document.getElementById('video-cam').srcObject=streamCam;
+    await carregarModelos();iniciarDeteccaoFacial();
+  }catch{cancelarCam();await finalizarBatida(null,prox,null);}
+}
+window.iniciarBatida=iniciarBatida;
+
+async function iniciarDeteccaoFacial(){
+  let descRef=null;
+  try{descRef=await obterDescritorDaFoto(funcAtivo.foto);}catch{}
+  if(!descRef){
+    document.getElementById('cam-status').textContent='Referência sem rosto. Capture assim mesmo.';
+    document.getElementById('face-guide').className='face-guide detectado';
+    document.getElementById('btn-capturar').disabled=false;
+    document.getElementById('btn-capturar').textContent='Registrar ponto';
+    rostoVerificado=true;return;
+  }
+  let tentativas=0;
+  faceDetectionInterval=setInterval(async()=>{
+    if(rostoVerificado)return;tentativas++;
+    const r=await verificarRosto([descRef]);
+    if(!r){document.getElementById('cam-status').textContent='Nenhum rosto detectado.';document.getElementById('face-guide').className='face-guide detectando';return;}
+    if(r.reconhecido){
+      clearInterval(faceDetectionInterval);rostoVerificado=true;facialScoreGlobal=Math.round((1-r.distancia)*100);
+      document.getElementById('face-guide').className='face-guide detectado';
+      document.getElementById('cam-status').textContent=`Identidade confirmada (${facialScoreGlobal}%)`;
+      document.getElementById('btn-capturar').disabled=false;document.getElementById('btn-capturar').textContent='Registrar ponto';
+      capturarFotoCanvas();
+    }else if(tentativas>5){
+      clearInterval(faceDetectionInterval);pararCamera();
+      document.getElementById('est-camera').style.display='none';document.getElementById('est-bloqueado').style.display='block';
+    }else{const pct=Math.round((1-r.distancia)*100);document.getElementById('cam-status').textContent=`Verificando... (${pct}%)`;}
+  },700);
+}
+
+function capturarFotoCanvas(){
+  const video=document.getElementById('video-cam'),canvas=document.getElementById('canvasFoto');
+  canvas.width=video.videoWidth||320;canvas.height=video.videoHeight||240;
+  const ctx=canvas.getContext('2d');ctx.scale(-1,1);ctx.drawImage(video,-canvas.width,0);
+  fotoCapturadaBase64=canvas.toDataURL('image/jpeg',0.5);
+}
+
+function capturarFoto(){
+  if(!rostoVerificado){notif('Aguarde a verificação','vermelho');return;}
+  if(!fotoCapturadaBase64)capturarFotoCanvas();
+  pararCamera();
+  document.getElementById('est-camera').style.display='none';document.getElementById('est-proc').style.display='block';
+  proxPonto().then(prox=>finalizarBatida(fotoCapturadaBase64,prox,facialScoreGlobal||100));
+}
+window.capturarFoto=capturarFoto;
+
+function pararCamera(){if(faceDetectionInterval){clearInterval(faceDetectionInterval);faceDetectionInterval=null;}if(streamCam){streamCam.getTracks().forEach(t=>t.stop());streamCam=null;}}
+function cancelarCam(){pararCamera();document.getElementById('est-camera').style.display='none';document.getElementById('est-aguardando').style.display='block';}
+function voltarAguardando(){document.getElementById('est-bloqueado').style.display='none';document.getElementById('est-aguardando').style.display='block';}
+window.cancelarCam=cancelarCam;window.voltarAguardando=voltarAguardando;
+
+async function finalizarBatida(foto,prox,score){
+  if(!prox)return;
+  const dentroRaio=locAtual?distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG)<=RAIO:null;
+  const id=uid();
+  const reg={id,funcId:funcAtivo.id,funcNome:funcAtivo.nome,data:hoje(),hora:new Date().toTimeString().slice(0,8),tipo:prox.tipo,tipoLabel:prox.label,lat:locAtual?.lat||null,lng:locAtual?.lng||null,dentroRaio,foto:foto||null,facialScore:score,criadoEm:new Date().toISOString()};
+  try{
+    await fbSet('registros',id,reg);
+    document.getElementById('est-proc').style.display='none';
+    mostrarComp(reg,dentroRaio,score);renderHistDia();renderBancoFunc();
+  }catch{
+    document.getElementById('est-proc').style.display='none';document.getElementById('est-aguardando').style.display='block';notif('Erro ao salvar.','vermelho');
+  }
+}
+
+function mostrarComp(reg,dentroRaio,score){
+  const locTxt=dentroRaio===true?'Dentro do raio':dentroRaio===false?'Fora do raio':'Não obtida';
+  const locClass=dentroRaio===true?'verde':'warn';const fb=facialBadge(score);
+  document.getElementById('comp-content').innerHTML=`
+    <div class="comp-titulo">✓ Ponto registrado</div>
+    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${reg.funcNome}</span></div>
+    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel}</span></div>
+    <div class="comp-row"><span class="comp-label">Horário</span><span class="comp-val">${reg.hora.slice(0,5)}</span></div>
+    <div class="comp-row"><span class="comp-label">Localização</span><span class="comp-val ${locClass}">${locTxt}</span></div>
+    <div class="comp-row"><span class="comp-label">Facial</span><span class="comp-val" style="color:${fb.cor}">${fb.txt}</span></div>
+    ${reg.foto?`<div style="margin-top:10px;"><img src="${reg.foto}" style="width:100%;border-radius:8px;max-height:140px;object-fit:cover;"></div>`:''}`;
+  document.getElementById('est-comp').style.display='block';
+}
+
+async function voltarPonto(){
+  document.getElementById('est-comp').style.display='none';document.getElementById('est-aguardando').style.display='block';obterLoc();
+  const prox=await proxPonto();const btn=document.getElementById('btn-bater');
+  if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}
+  else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}
+}
+window.voltarPonto=voltarPonto;
+
+async function renderHistDia(){
+  if(!funcAtivo)return;
+  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
+  const cores={entrada:'#22C55E',saida_almoco:'#F59E0B',retorno_almoco:'#60A5FA',saida:'#EF4444'};
+  const el=document.getElementById('hist-dia');
+  if(!regs.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum registro ainda.</div>';return;}
+  el.innerHTML=regs.map(r=>`<div class="hist-item"><div class="hist-dot" style="background:${cores[r.tipo]||'#888'}"></div><div class="hist-hora">${r.hora.slice(0,5)}</div><div class="hist-tipo">${r.tipoLabel}</div>${r.facialScore>=70?'<span style="font-size:10px;color:var(--verde)">✓</span>':r.facialScore>=50?'<span style="font-size:10px;color:var(--amarelo)">⚠</span>':''}</div>`).join('');
+  const prox=await proxPonto();const btn=document.getElementById('btn-bater');
+  if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}
+  else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}
+}
+
+async function renderBancoFunc(){
+  if(!funcAtivo)return;
+  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mesAtual()));
+  const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mesAtual()));
+  const dias={};regs.forEach(r=>{if(!dias[r.data])dias[r.data]={};dias[r.data][r.tipo]=r.hora;});
+  let trabMin=0;Object.values(dias).forEach(d=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t)trabMin+=t;});
+  credF.forEach(c=>trabMin+=c.minutos||0);
+  const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
+  const diasTrab=Object.keys(dias).length+diasComCredito.length;
+  const esperMin=diasTrab*JORNADA*60;const saldo=trabMin-esperMin;
+  document.getElementById('banco-func').innerHTML=`
+    <div class="banco-card"><div><div class="banco-label">Trabalhado no mês</div><div class="banco-valor">${fmtMin(trabMin)}</div></div><div style="text-align:right"><div class="banco-label">Saldo banco</div><div class="banco-valor" style="color:${saldo>=0?'var(--verde)':'var(--vermelho)'}">${saldo>=0?'+':''}${fmtMin(saldo)}</div></div></div>
+    <div class="banco-card"><div><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div><div style="text-align:right"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div></div>`;
+}
+
+// ── Justificativas ────────────────────────────────────────────────────────────
+function toggleCamposPonto(){
+  const tipo=document.getElementById('justif-tipo-ocorr').value;
+  document.getElementById('campos-ponto-nao-batido').style.display=tipo==='ponto_nao_batido'?'block':'none';
+}
+window.toggleCamposPonto=toggleCamposPonto;
+
+async function enviarJustificativa(){
+  const data=document.getElementById('justif-data').value,tipoOcorr=document.getElementById('justif-tipo-ocorr').value,desc=document.getElementById('justif-desc').value.trim();
+  if(!data||!tipoOcorr){notif('Preencha data e tipo de ocorrência','vermelho');return;}
+  let batida=null,horarioBatida=null;
+  if(tipoOcorr==='ponto_nao_batido'){batida=document.getElementById('justif-batida').value;horarioBatida=document.getElementById('justif-horario').value;if(!batida||!horarioBatida){notif('Informe qual batida e o horário','vermelho');return;}}
+  let anexoBase64=null,anexoNome=null,anexoTipo=null;
+  const anexoFile=document.getElementById('justif-anexo').files[0];
+  if(anexoFile){if(anexoFile.size>5*1024*1024){notif('Arquivo muito grande (máx 5MB)','vermelho');return;}anexoBase64=await new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(anexoFile);});anexoNome=anexoFile.name;anexoTipo=anexoFile.type;}
+  const motivo=tipoOcorr==='ponto_nao_batido'?`Ponto não batido — ${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[batida]} às ${horarioBatida}`:tipoOcorr;
+  const id=uid();
+  await fbSet('justificativas',id,{id,funcId:funcAtivo.id,funcNome:funcAtivo.nome,data,motivo,descricao:desc,tipoPonto:tipoOcorr==='ponto_nao_batido'?batida:null,horarioPonto:horarioBatida||null,anexo:anexoBase64||null,anexoNome:anexoNome||null,anexoTipo:anexoTipo||null,status:'pendente',criadoEm:new Date().toISOString()});
+  document.getElementById('justif-data').value=hoje();document.getElementById('justif-tipo-ocorr').value='';document.getElementById('justif-desc').value='';document.getElementById('justif-anexo').value='';document.getElementById('justif-anexo-nome').textContent='';document.getElementById('campos-ponto-nao-batido').style.display='none';
+  notif('Justificativa enviada! Aguarde aprovação.');renderJustifFunc();
+}
+window.enviarJustificativa=enviarJustificativa;
+
+async function renderJustifFunc(){
+  if(!funcAtivo)return;
+  const justifs=(await fbGet('justificativas')).filter(j=>j.funcId===funcAtivo.id).sort((a,b)=>a.criadoEm>b.criadoEm?-1:1);
+  const el=document.getElementById('lista-justif-func');
+  if(!justifs.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhuma justificativa enviada.</div>';return;}
+  el.innerHTML=justifs.map(j=>`
+    <div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <span style="font-size:13px;font-weight:600;">${fmtData(j.data)} — ${j.motivo}</span>
+        <span class="badge ${j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado'}">${j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovada':'Rejeitada'}</span>
+      </div>
+      ${j.descricao?`<div style="font-size:12px;color:var(--cinza-texto);">${j.descricao}</div>`:''}
+      ${j.obsGestor?`<div style="font-size:12px;color:var(--amarelo);margin-top:4px;">Gestor: ${j.obsGestor}</div>`:''}
+    </div>`).join('');
+}
+
+// ── Espelho ───────────────────────────────────────────────────────────────────
+async function renderEspelhosFunc(){
+  if(!funcAtivo)return;
+  const espelhos=(await fbGet('espelhos')).filter(e=>e.funcId===funcAtivo.id).sort((a,b)=>a.mes>b.mes?-1:1);
+  const el=document.getElementById('espelhos-func-lista');
+  if(!espelhos.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum espelho disponível.</div>';return;}
+  el.innerHTML=`<div class="hist-titulo">Espelhos para assinar</div>`+espelhos.map(e=>`
+    <div class="espelho-func-card">
+      <div>
+        <div style="font-size:14px;font-weight:600;">${e.mesLabel||e.mes}</div>
+        <div style="font-size:12px;color:var(--cinza-texto);">${e.assinado?'Assinado em '+fmtData(e.assinadoEm?.slice(0,10)):'Aguardando sua assinatura'}</div>
+      </div>
+      ${e.assinado?`<span class="badge assinado">✓ Assinado</span>`:`<button class="btn-laranja" style="padding:8px 16px;font-size:13px;width:auto;" onclick="abrirAssinar('${e.id}')">Assinar</button>`}
+    </div>`).join('');
+}
+
+function abrirAssinar(espelhoId){
+  espelhoAtualFuncId=espelhoId;
+  document.getElementById('assinar-info').textContent='Assine para confirmar que está de acordo com seu espelho de ponto.';
+  document.getElementById('modal-assinar').classList.add('aberto');
+  setTimeout(iniciarCanvas,100);
+}
+window.abrirAssinar=abrirAssinar;
+
+function iniciarCanvas(){
+  assinaturaCanvas=document.getElementById('canvas-assinatura');assinaturaCtx=assinaturaCanvas.getContext('2d');
+  assinaturaCtx.fillStyle='#1A1A1A';assinaturaCtx.fillRect(0,0,assinaturaCanvas.width,assinaturaCanvas.height);
+  assinaturaCtx.strokeStyle='#FF6B1A';assinaturaCtx.lineWidth=2;assinaturaCtx.lineCap='round';
+  const getPos=(e)=>{const r=assinaturaCanvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(assinaturaCanvas.width/r.width),y:(src.clientY-r.top)*(assinaturaCanvas.height/r.height)};};
+  assinaturaCanvas.onmousedown=assinaturaCanvas.ontouchstart=(e)=>{e.preventDefault();desenhando=true;const p=getPos(e);assinaturaCtx.beginPath();assinaturaCtx.moveTo(p.x,p.y);};
+  assinaturaCanvas.onmousemove=assinaturaCanvas.ontouchmove=(e)=>{e.preventDefault();if(!desenhando)return;const p=getPos(e);assinaturaCtx.lineTo(p.x,p.y);assinaturaCtx.stroke();};
+  assinaturaCanvas.onmouseup=assinaturaCanvas.ontouchend=()=>{desenhando=false;};
+}
+
+function limparAssinatura(){if(!assinaturaCtx)return;assinaturaCtx.fillStyle='#1A1A1A';assinaturaCtx.fillRect(0,0,assinaturaCanvas.width,assinaturaCanvas.height);}
+window.limparAssinatura=limparAssinatura;
+
+async function confirmarAssinatura(){
+  if(!assinaturaCanvas){notif('Erro na assinatura','vermelho');return;}
+  const assinaturaImg=assinaturaCanvas.toDataURL('image/png');
+  await fbSet('espelhos',espelhoAtualFuncId,{assinado:true,assinaturaImg,assinadoEm:new Date().toISOString(),assinadoPor:funcAtivo.nome});
+  fecharModal('modal-assinar');notif('Espelho assinado com sucesso!');renderEspelhosFunc();
+}
+window.confirmarAssinatura=confirmarAssinatura;
+
+// ── Navegação ─────────────────────────────────────────────────────────────────
+function mudarAba(aba,el){
+  document.querySelectorAll('.func-aba').forEach(a=>a.classList.remove('ativa'));
+  document.querySelectorAll('.func-tab').forEach(t=>t.classList.remove('ativo'));
+  document.getElementById('aba-'+aba).classList.add('ativa');el.classList.add('ativo');
+  if(aba==='banco')renderBancoFunc();
+  if(aba==='justif')renderJustifFunc();
+  if(aba==='espelho')renderEspelhosFunc();
+}
+window.mudarAba=mudarAba;
+
+function fecharModal(id){document.getElementById(id).classList.remove('aberto');}
+window.fecharModal=fecharModal;
+
+// ── Start ─────────────────────────────────────────────────────────────────────
+window.addEventListener('firebaseReady',init);
+window.addEventListener('DOMContentLoaded',()=>{if(window._firebaseReady)init();});
+</script>
+</body>
+</html>

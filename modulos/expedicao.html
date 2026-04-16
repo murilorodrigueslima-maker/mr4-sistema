@@ -210,7 +210,7 @@ header{
   <div class="hd-sep"></div>
   <span class="hd-date" id="hdDate"></span>
   <div class="live-badge"><span class="live-dot"></span>Ao vivo</div>
-  <span class="countdown" id="countdown">↻ 30s</span>
+  <span class="countdown" id="countdown">↻ 15s</span>
   <a class="hd-back" id="btnSyncManual" href="https://github.com/murilorodrigueslima-maker/mr4-sistema/actions/workflows/sync-dados.yml" target="_blank" title="Forçar sincronização agora">⚡ Sync</a>
   <a class="hd-back" href="../index.html">← Sistema</a>
 </header>
@@ -321,8 +321,12 @@ onAuthStateChanged(auth, async user => {
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const CFG={
-  api_url:'../data/pedidos.json',
-  intervalo:30,          // 30 segundos entre syncs
+  // Worker Cloudflare (direto, sem atraso). Deixe vazio '' para usar só o JSON.
+  // Exemplo: 'https://gc-proxy-mr4.SEU-USUARIO.workers.dev'
+  worker_url: '',
+
+  api_url:'../data/pedidos.json',  // fallback quando worker_url estiver vazio
+  intervalo:15,          // 15 segundos entre syncs
   alerta_horas:2,
 };
 
@@ -433,49 +437,101 @@ window.iniciarPainel = async function(){
 };
 
 // ── FETCH ─────────────────────────────────────────────────────────────────────
+// Busca pedidos: via Worker Cloudflare (direto, sem atraso) ou pedidos.json (fallback)
 async function fetchPedidos(){
   try{
-    const r=await fetch(CFG.api_url+'?v='+Date.now());
-    const json=await r.json();
-    // Números já conhecidos (em qualquer coluna, incluindo despachados)
-    const nums=new Set(Object.keys(S.pedidos));
-    // Também checa despachados de hoje no Firestore para não readicionar
-    let n=0;
-    for(const p of (json.pedidos||[])){
-      const num=String(p.numero||p.id||'');
-      if(!num||nums.has(num))continue;
-      // Segurança extra: consulta Firestore antes de criar, evita re-adicionar
-      // pedidos que já existem mas por algum motivo não foram carregados no init
+    let pedidosRaw = [];
+
+    if(CFG.worker_url){
+      // ── Modo Worker: chama GestãoClick diretamente via proxy ──
+      pedidosRaw = await fetchViaWorker();
+    } else {
+      // ── Modo fallback: lê pedidos.json (atualizado pelo GitHub Actions) ──
+      const r    = await fetch(CFG.api_url+'?v='+Date.now());
+      const json = await r.json();
+      pedidosRaw = json.pedidos || [];
+    }
+
+    const nums = new Set(Object.keys(S.pedidos));
+    let n = 0;
+
+    for(const p of pedidosRaw){
+      const num = String(p.numero||p.id||'');
+      if(!num || nums.has(num)) continue;
+
+      // Camada extra de segurança: verifica no Firestore antes de criar
       const jaExiste = await window._fsGetOne('expedicao_pedidos', num);
-      if(jaExiste){ S.pedidos[num]=jaExiste; continue; }
-      const now=Date.now();
-      const novo={
-        numero: num,
-        data:   p.data||hoje(),
-        hora:   p.hora||'',      // hora real do GC (pode ser vazia)
-        ingresadoEm: now,        // quando apareceu no board (para elapsed)
+      if(jaExiste){ S.pedidos[num] = jaExiste; continue; }
+
+      const now = Date.now();
+      const novo = {
+        numero:      num,
+        data:        p.data   || hoje(),
+        hora:        p.hora   || '',
+        ingresadoEm: now,
         movidoEm:    now,
-        coluna:'ag',
-        cliente: p.cliente||'—',
-        vendedor:p.vendedor||'—',
-        itens:   Number(p.itens||1),
-        valor:   Number(p.valor||0),
-        cidade:  p.cidade||'',
-        envio:   null,
-        saidaEm: null,
+        coluna:      'ag',
+        cliente:     p.cliente  || '—',
+        vendedor:    p.vendedor || '—',
+        itens:       Number(p.itens  || 1),
+        valor:       Number(p.valor  || 0),
+        cidade:      p.cidade  || '',
+        envio:       null,
+        saidaEm:     null,
       };
-      S.pedidos[num]=novo;
+      S.pedidos[num] = novo;
       await fsSalvar(novo);
       n++;
     }
+
     if(n){
-      toast(`📬 ${n} novo${n>1?'s':''} pedido${n>1?'s':''} importado${n>1?'s':''}`,'t-info');
+      toast(`📬 ${n} novo${n>1?'s':''} pedido${n>1?'s':''} chegou!`, 't-info');
       beep(n);
       render();
     }
   }catch(e){
-    console.warn('fetch:',e.message);
+    console.warn('fetchPedidos:', e.message);
   }
+}
+
+// Busca os últimos 2 dias de vendas direto no GestãoClick via Worker
+async function fetchViaWorker(){
+  function diasAtras(n){
+    const d=new Date(); d.setDate(d.getDate()-n);
+    return d.toISOString().slice(0,10);
+  }
+  const inicio = diasAtras(2);
+  const fim    = hoje();
+
+  let todos=[], pagina=1;
+  while(true){
+    const params = `pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${fim}`;
+    const url    = `${CFG.worker_url}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
+    const r      = await fetch(url);
+    const json   = await r.json();
+    const data   = json.data || [];
+    todos        = todos.concat(data);
+    const meta   = json.meta || {};
+    if(pagina >= (Number(meta.total_paginas)||1)) break;
+    pagina++;
+  }
+
+  // Normaliza campos (igual ao sync-dados.js)
+  return todos.map(p=>{
+    const dataHora  = p.data_hora || p.data_criacao || p.created_at || p.data_pedido || '';
+    const dataBase  = (p.data || p.data_venda || p.data_pedido || '').slice(0,10);
+    const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
+    return {
+      numero:  String(p.codigo || p.numero || p.codigo_venda || p.id || ''),
+      data:    dataBase,
+      hora:    horaMatch ? horaMatch[1] : '',
+      cliente: p.nome_cliente  || p.cliente  || p.razao_social || '—',
+      vendedor:p.nome_vendedor || p.vendedor || p.nome_usuario  || '—',
+      valor:   Number(p.valor_total || p.total || p.valor || 0),
+      itens:   Number(p.quantidade_produtos || (p.produtos||[]).length || 0),
+      cidade:  p.cidade_cliente || p.cidade || '',
+    };
+  });
 }
 
 // ── AÇÕES ─────────────────────────────────────────────────────────────────────

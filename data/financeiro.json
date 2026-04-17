@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-16T21:06:32",
+  "atualizado_em": "2026-04-17T03:24:51",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -378,5 +378,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 53953.19999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 23291.190000000002
+  "total_a_pagar": 26291.190000000002
 }

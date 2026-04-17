@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Garantia — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#FF6B1A;--orange-dk:#e85d0f;--orange-lt:rgba(255,107,26,.08);
+  --bg:#F3F4F6;--white:#fff;--text:#1A1A2E;--muted:#6B7280;
+  --border:#E5E7EB;--border-dk:#D1D5DB;
+  --green:#10B981;--yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --green-bg:rgba(16,185,129,.08);--yellow-bg:rgba(245,158,11,.08);
+  --red-bg:rgba(239,68,68,.07);--blue-bg:rgba(59,130,246,.07);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOADING */
+#loadingScreen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1rem}
+.brand{font-size:1.2rem;font-weight:800;color:var(--orange)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:80}
+.topbar-logo{font-size:1rem;font-weight:800;color:var(--orange)}
+.topbar-div{width:1px;height:18px;background:var(--border)}
+.topbar-title{font-size:.85rem;font-weight:700}
+.topbar-sep{flex:1}
+.btn-back{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:.4rem;transition:all .15s}
+.btn-back:hover{border-color:var(--orange);color:var(--orange)}
+
+/* TABS */
+.tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 2rem;gap:0}
+.tab{padding:.75rem 1.25rem;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:.4rem}
+.tab:hover{color:var(--text)}
+.tab.ativo{color:var(--orange);border-bottom-color:var(--orange)}
+
+/* SEÇÕES */
+.secao{display:none;padding:1.75rem 2rem}
+.secao.ativa{display:block}
+
+/* ALERTA CRÍTICO */
+.alerta-critico{background:var(--red-bg);border:1.5px solid rgba(239,68,68,.25);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:none}
+.alerta-critico.visivel{display:block}
+.alerta-top{display:flex;align-items:center;gap:.6rem;margin-bottom:.75rem}
+.alerta-titulo{font-size:.9rem;font-weight:800;color:var(--red)}
+.alerta-lista{display:flex;flex-direction:column;gap:.5rem}
+.alerta-item{background:var(--white);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:.7rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.alerta-item-info{font-size:.82rem}
+.alerta-item-nome{font-weight:700;margin-bottom:.15rem}
+.alerta-item-sub{color:var(--muted);font-size:.75rem}
+.alerta-dias{font-size:.75rem;font-weight:700;color:var(--red);background:var(--red-bg);padding:.2rem .6rem;border-radius:99px;border:1px solid rgba(239,68,68,.2);white-space:nowrap}
+
+/* STATS */
+.stats-row{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem;flex:1;min-width:130px}
+.stat-val{font-size:1.7rem;font-weight:800;letter-spacing:-.5px}
+.stat-lbl{font-size:.72rem;color:var(--muted);margin-top:.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+
+/* PIPELINE */
+.pipeline-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.pipeline-titulo{font-size:1rem;font-weight:800}
+.btn-primary{padding:.55rem 1.2rem;background:var(--orange);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s;display:inline-flex;align-items:center;gap:.45rem;white-space:nowrap}
+.btn-primary:hover{background:var(--orange-dk)}
+
+.kanban{display:grid;grid-template-columns:repeat(7,1fr);gap:.75rem;align-items:start;overflow-x:auto;padding-bottom:.5rem}
+.kol{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-width:160px}
+.kol-head{padding:.75rem .85rem;display:flex;align-items:center;gap:.45rem;border-bottom:1px solid var(--border)}
+.kol-bar{width:3px;height:14px;border-radius:99px;flex-shrink:0}
+.kol-nome{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;flex:1}
+.kol-cnt{font-size:.72rem;font-weight:700;font-family:monospace;padding:.12rem .45rem;border-radius:99px;border:1px solid;color:inherit}
+.kol-body{padding:.6rem;display:flex;flex-direction:column;gap:.5rem;min-height:60px}
+.kol-empty{text-align:center;padding:1.25rem .5rem;font-size:.72rem;color:var(--muted);opacity:.4}
+
+/* ETAPA CORES */
+.et-recebido {--c:#6B7280}
+.et-em_teste {--c:#3B82F6}
+.et-aprovado {--c:#10B981}
+.et-substituido{--c:#8B5CF6}
+.et-ag_envio  {--c:#EF4444}
+.et-enviado   {--c:#F59E0B}
+.et-encerrado {--c:#10B981}
+.et-reprovado {--c:#9CA3AF}
+
+/* CARD */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:.8rem;cursor:pointer;transition:all .14s;border-left:3px solid var(--c,var(--border))}
+.card:hover{background:var(--white);box-shadow:0 3px 10px rgba(0,0,0,.08);border-top-color:var(--border);border-right-color:var(--border);border-bottom-color:var(--border)}
+.card-titulo{font-size:.8rem;font-weight:700;margin-bottom:.25rem;line-height:1.3}
+.card-sub{font-size:.7rem;color:var(--muted);margin-bottom:.5rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:.3rem;flex-wrap:wrap}
+.card-dias{font-size:.65rem;font-weight:600;color:var(--muted)}
+.card-dias.urgente{color:var(--red)}
+.card-acoes{display:flex;gap:.25rem}
+.btn-xs{width:24px;height:24px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;font-size:.75rem;display:inline-flex;align-items:center;justify-content:center;transition:all .12s}
+.btn-xs:hover{border-color:var(--orange);background:var(--orange-lt)}
+.btn-xs.del:hover{border-color:var(--red);background:var(--red-bg)}
+.badge-gc{font-size:.6rem;font-weight:700;padding:.1rem .4rem;border-radius:4px;background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+
+/* HISTÓRICO */
+.hist-filtros{display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.filtro-btn{padding:.3rem .8rem;border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;background:none;color:var(--muted);transition:all .15s}
+.filtro-btn.ativo{background:var(--orange);border-color:var(--orange);color:#fff}
+.hist-tabela{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{padding:.7rem 1rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;background:#FAFAFA}
+td{padding:.8rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFAFA}
+.etapa-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:99px;font-size:.68rem;font-weight:700;border:1px solid}
+.empty-row td{text-align:center;padding:2.5rem;color:var(--muted);font-size:.85rem}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:600px;padding:2rem;max-height:90vh;overflow-y:auto}
+.modal-titulo{font-size:1.05rem;font-weight:800;margin-bottom:1.25rem}
+.modal-section{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:.75rem 0 .5rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.85rem}
+.form-group label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.form-group input,.form-group select,.form-group textarea{padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.84rem;outline:none;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--orange)}
+.form-group textarea{resize:vertical;min-height:65px}
+.modal-foot{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.btn-sec{padding:.55rem 1.2rem;border:1.5px solid var(--border);border-radius:9px;background:none;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-sec:hover{border-color:var(--orange);color:var(--orange)}
+.btn-danger{padding:.55rem 1.2rem;background:var(--red);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer}
+
+/* MODAL GC */
+.gc-box{background:#f0fdf4;border:1.5px solid rgba(16,185,129,.3);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+.gc-box-titulo{font-size:.82rem;font-weight:700;color:var(--green);margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem}
+.gc-linha{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(16,185,129,.12);font-size:.82rem}
+.gc-linha:last-child{border-bottom:none}
+.gc-key{color:var(--muted);font-weight:500}
+.gc-val{font-weight:700}
+.gc-steps{margin:.75rem 0;padding-left:1.2rem;font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:.35rem;list-style:decimal}
+.gc-steps li{line-height:1.6}
+.gc-steps strong{color:var(--text)}
+
+/* MODAL ETAPA */
+.etapa-opts{display:flex;flex-direction:column;gap:.5rem;margin:1rem 0}
+.etapa-opt{padding:.85rem 1rem;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:.75rem;font-size:.85rem;font-weight:500}
+.etapa-opt:hover{border-color:var(--orange);background:var(--orange-lt)}
+.etapa-opt.atual{border-color:var(--orange);background:var(--orange-lt);font-weight:700}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:.7rem 1rem;border-radius:10px;font-size:.8rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:tUp .25s ease;border-left:3px solid var(--green);max-width:300px}
+.toast.err{border-left-color:var(--red)}
+@keyframes tUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:900px){.kanban{grid-template-columns:repeat(4,minmax(150px,1fr))}}
+@media(max-width:640px){.secao{padding:1rem}.kanban{grid-template-columns:repeat(3,minmax(140px,1fr))}.form-row{grid-template-columns:1fr}.stats-row{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen"><div class="brand">MR4</div><div class="spinner"></div></div>
+
+<div id="appWrap" style="display:none">
+
+<div class="topbar">
+  <span class="topbar-logo">MR4</span>
+  <div class="topbar-div"></div>
+  <span class="topbar-title">🛡️ Garantias</span>
+  <div class="topbar-sep"></div>
+  <a href="../index.html" class="btn-back">← Sistema</a>
+</div>
+
+<div class="tabs">
+  <div class="tab ativo" onclick="mudarTab('visao',this)">📊 Visão Geral</div>
+  <div class="tab" onclick="mudarTab('pipeline',this)">🔄 Pipeline</div>
+  <div class="tab" onclick="mudarTab('historico',this)">📋 Histórico</div>
+</div>
+
+<!-- ── VISÃO GERAL ── -->
+<div class="secao ativa" id="sec-visao">
+
+  <!-- Alerta crítico -->
+  <div class="alerta-critico" id="alertaCritico">
+    <div class="alerta-top">
+      <span style="font-size:1.1rem">🚨</span>
+      <span class="alerta-titulo" id="alertaTitulo">Produtos aguardando envio ao fornecedor</span>
+    </div>
+    <div class="alerta-lista" id="alertaLista"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-val" id="stTotal">—</div>
+      <div class="stat-lbl">Em andamento</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stAgEnvio" style="color:var(--red)">—</div>
+      <div class="stat-lbl">Ag. envio fornecedor</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stValor" style="color:var(--red)">—</div>
+      <div class="stat-lbl">Valor em risco (R$)</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stMes" style="color:var(--green)">—</div>
+      <div class="stat-lbl">Encerradas este mês</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" id="stSemGC" style="color:var(--yellow)">—</div>
+      <div class="stat-lbl">Sem baixa no GC</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem">
+    <div style="font-size:.9rem;font-weight:700">Últimas garantias abertas</div>
+    <button class="btn-primary" onclick="abrirModalNova()">+ Nova garantia</button>
+  </div>
+
+  <div id="lista-recentes"></div>
+</div>
+
+<!-- ── PIPELINE ── -->
+<div class="secao" id="sec-pipeline">
+  <div class="pipeline-header">
+    <div style="font-size:1rem;font-weight:800">Pipeline de Garantias</div>
+    <button class="btn-primary" onclick="abrirModalNova()">+ Nova garantia</button>
+  </div>
+  <div class="kanban" id="kanban"></div>
+</div>
+
+<!-- ── HISTÓRICO ── -->
+<div class="secao" id="sec-historico">
+  <div class="hist-filtros" id="hist-filtros"></div>
+  <div class="hist-tabela">
+    <table>
+      <thead><tr>
+        <th>Cliente</th><th>Produto</th><th>Fornecedor</th>
+        <th>Etapa</th><th>GC</th><th>Dias</th><th>Ações</th>
+      </tr></thead>
+      <tbody id="hist-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /appWrap -->
+
+<!-- MODAL NOVA/EDITAR GARANTIA -->
+<div class="overlay" id="modalGarantia">
+  <div class="modal">
+    <div class="modal-titulo" id="modalGarantiaTit">Nova Garantia</div>
+    <input type="hidden" id="g-id">
+
+    <div class="modal-section">👤 Cliente</div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome</label><input type="text" id="g-cliNome" placeholder="Nome do cliente"></div>
+      <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" id="g-cliTel" placeholder="(85) 9 0000-0000"></div>
+    </div>
+
+    <div class="modal-section">📦 Produto com defeito</div>
+    <div class="form-row">
+      <div class="form-group"><label>Nome do produto</label><input type="text" id="g-prodNome" placeholder="Ex: Capacitor 100µF"></div>
+      <div class="form-group"><label>Código GestãoClick</label><input type="text" id="g-prodCod" placeholder="Ex: 1234"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Fornecedor</label><input type="text" id="g-fornec" placeholder="Ex: Distribuidora ABC"></div>
+      <div class="form-group"><label>Prazo garantia fornecedor</label><input type="text" id="g-prazo" placeholder="Ex: 6 meses, 1 ano"></div>
+    </div>
+    <div class="form-group"><label>Descrição do defeito</label><textarea id="g-defeito" placeholder="Descreva o defeito relatado pelo cliente..."></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor do produto (R$)</label><input type="number" id="g-valor" placeholder="0,00" step="0.01" min="0"></div>
+      <div class="form-group"><label>Etapa atual</label>
+        <select id="g-etapa">
+          <option value="recebido">📋 Recebido</option>
+          <option value="em_teste">🔍 Em Teste</option>
+          <option value="aprovado">✅ Defeito confirmado</option>
+          <option value="substituido">📦 Substituído</option>
+          <option value="ag_envio">🚚 Ag. Envio Fornecedor</option>
+          <option value="enviado">✈️ Enviado ao Fornecedor</option>
+          <option value="encerrado">🏁 Encerrado</option>
+          <option value="reprovado">❌ Reprovado (produto ok)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-section">🔄 Substituição (preencher quando aplicável)</div>
+    <div class="form-row">
+      <div class="form-group"><label>Produto dado ao cliente</label><input type="text" id="g-substNome" placeholder="Nome do produto substituto"></div>
+      <div class="form-group"><label>Código GC do substituto</label><input type="text" id="g-substCod" placeholder="Código para ajuste de estoque"></div>
+    </div>
+
+    <div class="modal-section">📝 Observações</div>
+    <div class="form-group"><textarea id="g-obs" placeholder="Observações internas, rastreio de envio, etc..."></textarea></div>
+
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharModal('modalGarantia')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarGarantia()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AVANÇAR ETAPA -->
+<div class="overlay" id="modalEtapa">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-titulo" id="modalEtapaTit">Atualizar etapa</div>
+    <div style="font-size:.82rem;color:var(--muted);margin-bottom:.5rem" id="modalEtapaSub"></div>
+    <div class="etapa-opts" id="etapaOpts"></div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharModal('modalEtapa')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BAIXA GC -->
+<div class="overlay" id="modalGC">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-titulo">📉 Registrar baixa de estoque no GestãoClick</div>
+    <div class="gc-box">
+      <div class="gc-box-titulo">✅ Dados para o ajuste de estoque</div>
+      <div id="gc-dados"></div>
+    </div>
+    <div style="font-size:.84rem;font-weight:700;margin-bottom:.5rem">Como fazer no GestãoClick:</div>
+    <ol class="gc-steps">
+      <li>Acesse <strong>Estoque → Ajuste de Estoque</strong></li>
+      <li>Busque o produto pelo código ou nome acima</li>
+      <li>Selecione <strong>Saída</strong> e quantidade <strong>1</strong></li>
+      <li>No motivo escreva: <strong id="gc-motivo-txt"></strong></li>
+      <li>Confirme o ajuste</li>
+    </ol>
+    <div style="background:var(--yellow-bg);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:.75rem;font-size:.8rem;color:#92400e;margin-bottom:1rem">
+      ⚠️ Faça o ajuste no GestãoClick antes de confirmar aqui.
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharModal('modalGC')">Cancelar</button>
+      <button class="btn-primary" onclick="confirmarBaixaGC()" style="background:var(--green)">✅ Confirmei o ajuste no GC</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app  = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth=getAuth(app), db=getFirestore(app);
+window._db=db;
+window._col=(n)=>collection(db,n);
+window._doc=(n,id)=>doc(db,n,id);
+window._getDocs=(r)=>getDocs(r);
+window._setDoc=(r,d,o)=>setDoc(r,d,o||{});
+window._deleteDoc=(r)=>deleteDoc(r);
+
+onAuthStateChanged(auth, user=>{
+  if(!user){window.location.href='../login.html';return;}
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('appWrap').style.display='';
+  window.dispatchEvent(new Event('firebaseReady'));
+});
+</script>
+
+<script>
+// ── ETAPAS ────────────────────────────────────────────────────────────────────
+const ETAPAS=[
+  {id:'recebido',   icon:'📋', nome:'Recebido',            cls:'et-recebido' },
+  {id:'em_teste',   icon:'🔍', nome:'Em Teste',            cls:'et-em_teste' },
+  {id:'aprovado',   icon:'✅', nome:'Defeito Confirmado',  cls:'et-aprovado' },
+  {id:'substituido',icon:'📦', nome:'Substituído',         cls:'et-substituido'},
+  {id:'ag_envio',   icon:'🚚', nome:'Ag. Envio Fornecedor',cls:'et-ag_envio' },
+  {id:'enviado',    icon:'✈️', nome:'Enviado Fornecedor',  cls:'et-enviado'  },
+  {id:'encerrado',  icon:'🏁', nome:'Encerrado',           cls:'et-encerrado'},
+  {id:'reprovado',  icon:'❌', nome:'Reprovado',           cls:'et-reprovado'},
+];
+const ETAPA_MAP = Object.fromEntries(ETAPAS.map(e=>[e.id,e]));
+const ABERTAS   = ['recebido','em_teste','aprovado','substituido','ag_envio','enviado'];
+
+let garantias=[], gcAtualId=null;
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function hoje(){return new Date().toISOString().slice(0,10);}
+function mesAtual(){const n=new Date();return`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
+function diasDesde(ts){return Math.floor((Date.now()-ts)/86400000);}
+function brl(v){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function fmtData(ts){if(!ts)return'—';return new Date(ts).toLocaleDateString('pt-BR');}
+
+function toast(msg,err=false){
+  const el=document.createElement('div');
+  el.className='toast'+(err?' err':'');el.textContent=msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+window.mudarTab=function(id,el){
+  document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('ativo'));
+  document.getElementById('sec-'+id).classList.add('ativa');
+  el.classList.add('ativo');
+  if(id==='pipeline') renderKanban();
+  if(id==='historico') renderHistorico();
+};
+
+// ── CARREGAR ─────────────────────────────────────────────────────────────────
+async function carregar(){
+  const snap=await window._getDocs(window._col('garantias'));
+  garantias=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.criadoEm-a.criadoEm);
+  renderVisaoGeral();
+}
+
+// ── VISÃO GERAL ──────────────────────────────────────────────────────────────
+function renderVisaoGeral(){
+  const abertas  = garantias.filter(g=>ABERTAS.includes(g.etapa));
+  const agEnvio  = garantias.filter(g=>g.etapa==='ag_envio');
+  const semGC    = garantias.filter(g=>g.substCod&&!g.lancadoGC&&g.etapa!=='reprovado');
+  const valorRisco=agEnvio.reduce((s,g)=>s+Number(g.valor||0),0);
+  const encMes   = garantias.filter(g=>g.etapa==='encerrado'&&g.encerradoEm&&new Date(g.encerradoEm).toISOString().slice(0,7)===mesAtual());
+
+  document.getElementById('stTotal').textContent   = abertas.length;
+  document.getElementById('stAgEnvio').textContent = agEnvio.length;
+  document.getElementById('stValor').textContent   = brl(valorRisco);
+  document.getElementById('stMes').textContent     = encMes.length;
+  document.getElementById('stSemGC').textContent   = semGC.length;
+
+  // Alerta crítico
+  const alertEl=document.getElementById('alertaCritico');
+  if(agEnvio.length){
+    alertEl.classList.add('visivel');
+    document.getElementById('alertaTitulo').textContent=`🚨 ${agEnvio.length} produto${agEnvio.length>1?'s':''} aguardando envio ao fornecedor`;
+    document.getElementById('alertaLista').innerHTML=agEnvio.map(g=>{
+      const dias=diasDesde(g.substituidoEm||g.criadoEm);
+      return`<div class="alerta-item">
+        <div class="alerta-item-info">
+          <div class="alerta-item-nome">${g.prodNome||'—'} · <span style="font-weight:400">${g.fornec||'Fornecedor não informado'}</span></div>
+          <div class="alerta-item-sub">Cliente: ${g.cliNome||'—'} · Valor: R$ ${brl(g.valor)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
+          <span class="alerta-dias">${dias}d parado</span>
+          <button class="btn-primary" style="padding:.35rem .8rem;font-size:.75rem" onclick="mudarEtapaRapido('${g.id}','enviado')">✈️ Marcar enviado</button>
+        </div>
+      </div>`;
+    }).join('');
+  }else{
+    alertEl.classList.remove('visivel');
+  }
+
+  // Recentes
+  const recentes=garantias.filter(g=>ABERTAS.includes(g.etapa)).slice(0,8);
+  const listEl=document.getElementById('lista-recentes');
+  if(!recentes.length){listEl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.85rem">Nenhuma garantia em andamento. Tudo certo! ✅</div>';return;}
+  listEl.innerHTML=`<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+    <table><thead><tr><th>Cliente</th><th>Produto</th><th>Fornecedor</th><th>Etapa</th><th>Dias</th><th>GC</th><th></th></tr></thead>
+    <tbody>${recentes.map(g=>linhaTabela(g)).join('')}</tbody></table></div>`;
+}
+
+function linhaTabela(g){
+  const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
+  const dias=diasDesde(g.criadoEm);
+  const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+g.id+'\')">⚠️ GC</button>'):'—';
+  return`<tr>
+    <td><div style="font-weight:600">${g.cliNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.cliTel||''}</div></td>
+    <td><div style="font-weight:600">${g.prodNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.prodCod?'#'+g.prodCod:''}</div></td>
+    <td style="font-size:.82rem">${g.fornec||'—'}</td>
+    <td><span class="etapa-badge" style="color:var(--c,#888);border-color:var(--c,#888);background:rgba(0,0,0,.03)" class="${et.cls}">${et.icon} ${et.nome}</span></td>
+    <td><span style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</span></td>
+    <td>${gcBadge}</td>
+    <td><div style="display:flex;gap:.3rem">
+      <button class="btn-xs" title="Editar" onclick="editarGarantia('${g.id}')">✏️</button>
+      <button class="btn-xs" title="Avançar etapa" onclick="abrirModalEtapa('${g.id}')">→</button>
+    </div></td>
+  </tr>`;
+}
+
+// ── KANBAN ────────────────────────────────────────────────────────────────────
+function renderKanban(){
+  document.getElementById('kanban').innerHTML=ETAPAS.map(e=>{
+    const lista=garantias.filter(g=>g.etapa===e.id);
+    return`<div class="kol ${e.cls}">
+      <div class="kol-head">
+        <div class="kol-bar" style="background:var(--c)"></div>
+        <div class="kol-nome">${e.icon} ${e.nome}</div>
+        <div class="kol-cnt" style="color:var(--c);border-color:var(--c);background:rgba(0,0,0,.03)">${lista.length}</div>
+      </div>
+      <div class="kol-body">
+        ${lista.length?lista.map(g=>{
+          const dias=diasDesde(g.criadoEm);
+          const gcTag=g.substCod&&!g.lancadoGC?'<span style="font-size:.6rem;color:var(--yellow)">⚠️ sem GC</span>':'';
+          return`<div class="card ${e.cls}" onclick="abrirModalEtapa('${g.id}')">
+            <div class="card-titulo">${g.prodNome||'Sem nome'}</div>
+            <div class="card-sub">${g.cliNome||'—'}${g.fornec?' · '+g.fornec:''}</div>
+            <div class="card-foot">
+              <span class="card-dias${dias>7?' urgente':''}">${dias}d</span>
+              <div class="card-acoes" onclick="event.stopPropagation()">
+                ${gcTag}
+                <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
+              </div>
+            </div>
+          </div>`;
+        }).join(''):`<div class="kol-empty">Nenhuma</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── HISTÓRICO ─────────────────────────────────────────────────────────────────
+let histFiltro='todas';
+function renderHistorico(){
+  const filtros=['todas','encerrado','reprovado','ag_envio','enviado'];
+  document.getElementById('hist-filtros').innerHTML=filtros.map(f=>`
+    <button class="filtro-btn${histFiltro===f?' ativo':''}" onclick="setHistFiltro('${f}')">${
+      f==='todas'?'Todas':ETAPA_MAP[f]?ETAPA_MAP[f].icon+' '+ETAPA_MAP[f].nome:f
+    }</button>`).join('');
+
+  const lista=histFiltro==='todas'?garantias:garantias.filter(g=>g.etapa===histFiltro);
+  const tbody=document.getElementById('hist-tbody');
+  if(!lista.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">Nenhum registro.</td></tr>';return;}
+  tbody.innerHTML=lista.map(g=>{
+    const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
+    const dias=diasDesde(g.criadoEm);
+    const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+g.id+'\')">⚠️ Lançar</button>'):'—';
+    return`<tr>
+      <td><div style="font-weight:600">${g.cliNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.cliTel||''}</div></td>
+      <td><div style="font-weight:600">${g.prodNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.prodCod?'#'+g.prodCod:''}</div></td>
+      <td style="font-size:.82rem">${g.fornec||'—'}</td>
+      <td><span class="etapa-badge" style="color:var(--c,#888);border-color:rgba(0,0,0,.1)">${et.icon} ${et.nome}</span></td>
+      <td>${gcBadge}</td>
+      <td style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</td>
+      <td><div style="display:flex;gap:.3rem">
+        <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
+        <button class="btn-xs del" onclick="excluirGarantia('${g.id}')">🗑</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+window.setHistFiltro=function(f){histFiltro=f;renderHistorico();};
+
+// ── CRUD ─────────────────────────────────────────────────────────────────────
+window.abrirModalNova=function(){
+  document.getElementById('g-id').value='';
+  ['g-cliNome','g-cliTel','g-prodNome','g-prodCod','g-fornec','g-prazo','g-defeito','g-substNome','g-substCod','g-obs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('g-valor').value='';
+  document.getElementById('g-etapa').value='recebido';
+  document.getElementById('modalGarantiaTit').textContent='Nova Garantia';
+  document.getElementById('modalGarantia').classList.add('show');
+};
+
+window.editarGarantia=function(id){
+  const g=garantias.find(x=>x.id===id);if(!g)return;
+  document.getElementById('g-id').value=g.id;
+  document.getElementById('g-cliNome').value=g.cliNome||'';
+  document.getElementById('g-cliTel').value=g.cliTel||'';
+  document.getElementById('g-prodNome').value=g.prodNome||'';
+  document.getElementById('g-prodCod').value=g.prodCod||'';
+  document.getElementById('g-fornec').value=g.fornec||'';
+  document.getElementById('g-prazo').value=g.prazo||'';
+  document.getElementById('g-defeito').value=g.defeito||'';
+  document.getElementById('g-valor').value=g.valor||'';
+  document.getElementById('g-etapa').value=g.etapa||'recebido';
+  document.getElementById('g-substNome').value=g.substNome||'';
+  document.getElementById('g-substCod').value=g.substCod||'';
+  document.getElementById('g-obs').value=g.obs||'';
+  document.getElementById('modalGarantiaTit').textContent='Editar Garantia';
+  document.getElementById('modalGarantia').classList.add('show');
+};
+
+window.salvarGarantia=async function(){
+  const editId=document.getElementById('g-id').value;
+  const id=editId||uid();
+  const prodNome=document.getElementById('g-prodNome').value.trim();
+  const cliNome=document.getElementById('g-cliNome').value.trim();
+  if(!prodNome||!cliNome){toast('Informe cliente e produto!',true);return;}
+  const existing=garantias.find(x=>x.id===id)||{};
+  const dados={
+    id,
+    cliNome,
+    cliTel:   document.getElementById('g-cliTel').value.trim(),
+    prodNome,
+    prodCod:  document.getElementById('g-prodCod').value.trim(),
+    fornec:   document.getElementById('g-fornec').value.trim(),
+    prazo:    document.getElementById('g-prazo').value.trim(),
+    defeito:  document.getElementById('g-defeito').value.trim(),
+    valor:    Number(document.getElementById('g-valor').value||0),
+    etapa:    document.getElementById('g-etapa').value,
+    substNome:document.getElementById('g-substNome').value.trim(),
+    substCod: document.getElementById('g-substCod').value.trim(),
+    obs:      document.getElementById('g-obs').value.trim(),
+    lancadoGC:existing.lancadoGC||false,
+    criadoEm: existing.criadoEm||Date.now(),
+    atualizadoEm:Date.now(),
+  };
+  if(dados.etapa==='substituido'&&!existing.substituidoEm) dados.substituidoEm=Date.now();
+  if(dados.etapa==='enviado'&&!existing.enviadoEm)         dados.enviadoEm=Date.now();
+  if((dados.etapa==='encerrado'||dados.etapa==='reprovado')&&!existing.encerradoEm) dados.encerradoEm=Date.now();
+
+  await window._setDoc(window._doc('garantias',id),dados);
+  const idx=garantias.findIndex(x=>x.id===id);
+  if(idx>=0)garantias[idx]=dados;else garantias.unshift(dados);
+  fecharModal('modalGarantia');
+  renderVisaoGeral();
+  toast('✅ Garantia salva!');
+
+  // Sugere baixa GC se tem produto substituto e não foi lançado
+  if(dados.substCod&&!dados.lancadoGC&&(dados.etapa==='substituido'||dados.etapa==='ag_envio')){
+    setTimeout(()=>abrirModalGC(id),400);
+  }
+};
+
+window.excluirGarantia=async function(id){
+  if(!confirm('Excluir este registro de garantia?'))return;
+  await window._deleteDoc(window._doc('garantias',id));
+  garantias=garantias.filter(x=>x.id!==id);
+  renderVisaoGeral();renderHistorico();
+  toast('🗑️ Garantia removida');
+};
+
+// ── AVANÇAR ETAPA ─────────────────────────────────────────────────────────────
+window.abrirModalEtapa=function(id){
+  const g=garantias.find(x=>x.id===id);if(!g)return;
+  const et=ETAPA_MAP[g.etapa];
+  document.getElementById('modalEtapaTit').textContent=`${g.prodNome||'Produto'} — ${g.cliNome||'Cliente'}`;
+  document.getElementById('modalEtapaSub').textContent=`Etapa atual: ${et?et.icon+' '+et.nome:'—'}`;
+  document.getElementById('etapaOpts').innerHTML=ETAPAS.map(e=>`
+    <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${id}','${e.id}')">
+      <span style="font-size:1.1rem">${e.icon}</span> ${e.nome}
+      ${g.etapa===e.id?'<span style="margin-left:auto;font-size:.72rem;color:var(--orange)">Atual</span>':''}
+    </div>`).join('');
+  document.getElementById('modalEtapa').classList.add('show');
+};
+
+window.mudarEtapaRapido=async function(id,novaEtapa){
+  const g=garantias.find(x=>x.id===id);if(!g)return;
+  g.etapa=novaEtapa;g.atualizadoEm=Date.now();
+  if(novaEtapa==='substituido'&&!g.substituidoEm) g.substituidoEm=Date.now();
+  if(novaEtapa==='enviado'&&!g.enviadoEm)         g.enviadoEm=Date.now();
+  if((novaEtapa==='encerrado'||novaEtapa==='reprovado')&&!g.encerradoEm) g.encerradoEm=Date.now();
+  await window._setDoc(window._doc('garantias',id),g);
+  fecharModal('modalEtapa');
+  renderVisaoGeral();
+  const et=ETAPA_MAP[novaEtapa];
+  toast(`${et.icon} Movido para ${et.nome}`);
+  if(novaEtapa==='substituido'&&g.substCod&&!g.lancadoGC) setTimeout(()=>abrirModalGC(id),400);
+};
+
+// ── BAIXA GC ─────────────────────────────────────────────────────────────────
+window.abrirModalGC=function(id){
+  gcAtualId=id;
+  const g=garantias.find(x=>x.id===id);if(!g)return;
+  const motivo=`Garantia - ${g.cliNome||'Cliente'}`;
+  document.getElementById('gc-motivo-txt').textContent=motivo;
+  document.getElementById('gc-dados').innerHTML=`
+    <div class="gc-linha"><span class="gc-key">Produto</span><span class="gc-val">${g.substNome||g.prodNome||'—'}</span></div>
+    <div class="gc-linha"><span class="gc-key">Código GC</span><span class="gc-val">${g.substCod||g.prodCod||'—'}</span></div>
+    <div class="gc-linha"><span class="gc-key">Tipo</span><span class="gc-val">Saída (−1 unidade)</span></div>
+    <div class="gc-linha"><span class="gc-key">Motivo</span><span class="gc-val">${motivo}</span></div>
+    <div class="gc-linha"><span class="gc-key">Valor</span><span class="gc-val">R$ ${brl(g.valor)}</span></div>`;
+  document.getElementById('modalGC').classList.add('show');
+};
+
+window.confirmarBaixaGC=async function(){
+  if(!gcAtualId)return;
+  const g=garantias.find(x=>x.id===gcAtualId);if(!g)return;
+  g.lancadoGC=true;g.lancadoGCEm=Date.now();
+  await window._setDoc(window._doc('garantias',gcAtualId),g);
+  fecharModal('modalGC');
+  renderVisaoGeral();
+  toast('✅ Baixa de estoque confirmada no GC!');
+  gcAtualId=null;
+};
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+window.fecharModal=function(id){document.getElementById(id).classList.remove('show');};
+['modalGarantia','modalEtapa','modalGC'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('firebaseReady', carregar);
+</script>
+
+</body>
+</html>

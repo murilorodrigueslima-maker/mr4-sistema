@@ -331,7 +331,7 @@
     { id: 'financeiro', nome: 'Financeiro',        icon: '💰', desc: 'Contas a pagar, receber e fluxo de caixa.',           url: './modulos/financeiro.html' },
     { id: 'catalogo',   nome: 'Catálogo',          icon: '📦', desc: 'Produtos, preços e pedidos B2B.',                     url: 'https://catalogo.mr4distribuidora.com.br' },
     { id: 'expedicao',  nome: 'Expedição',         icon: '🚚', desc: 'Controle de pedidos, envios e entregas.',             url: './modulos/expedicao.html'  },
-    { id: 'ponto',      nome: 'Ponto',             icon: '📍', desc: 'Registro e controle de ponto dos funcionários.',      url: './modulos/ponto.html'      },
+    { id: 'ponto',      nome: 'Ponto',             icon: '📍', desc: 'Registro e controle de ponto dos funcionários.',      url: 'https://murilorodrigueslima-maker.github.io/mr4-ponto/' },
     { id: 'marketing',  nome: 'Marketing',         icon: '📢', desc: 'Campanhas, materiais e divulgação.',                  url: './modulos/marketing.html'  },
     { id: 'garantia',   nome: 'Garantia',          icon: '🛡️', desc: 'Gestão de garantias e acompanhamento de processos.',  url: './modulos/garantia.html'   },
     { id: 'admin',      nome: 'Administração',     icon: '⚙️', desc: 'Usuários, permissões e configurações do sistema.',    url: './modulos/admin.html'      },
@@ -381,6 +381,7 @@
       const a = document.createElement('a');
       a.className = 'nav-item' + (temAcesso ? '' : ' locked');
       a.href = temAcesso ? m.url : '#';
+      if(temAcesso && m.url.startsWith('http')) a.target = '_blank';
       a.innerHTML = `<span class="nav-icon">${m.icon}</span> ${m.nome}`;
       nav.appendChild(a);
     });
@@ -393,6 +394,7 @@
       const card = document.createElement('a');
       card.className = 'modulo-card' + (temAcesso ? '' : ' locked');
       card.href = temAcesso ? m.url : '#';
+      if(temAcesso && m.url.startsWith('http')) card.target = '_blank';
       card.innerHTML = `
         <div class="modulo-icon">${m.icon}</div>
         <div class="modulo-nome">${m.nome}</div>

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marketing — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#FF6B1A; --orange-dk:#e85d0f; --orange-lt:rgba(255,107,26,.08);
+  --bg:#F3F4F6; --white:#fff;
+  --text:#1A1A2E; --muted:#6B7280;
+  --border:#E5E7EB; --border-dk:#D1D5DB;
+  --green:#10B981; --yellow:#F59E0B; --red:#EF4444; --blue:#3B82F6; --purple:#8B5CF6;
+  --green-bg:rgba(16,185,129,.08); --yellow-bg:rgba(245,158,11,.08);
+  --red-bg:rgba(239,68,68,.06); --blue-bg:rgba(59,130,246,.06);
+  --purple-bg:rgba(139,92,246,.07);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOADING */
+#loadingScreen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1rem}
+.brand{font-size:1.2rem;font-weight:800;color:var(--orange)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOPBAR */
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:80}
+.topbar-logo{font-size:1rem;font-weight:800;color:var(--orange)}
+.topbar-div{width:1px;height:18px;background:var(--border)}
+.topbar-title{font-size:.85rem;font-weight:700}
+.topbar-sep{flex:1}
+.btn-back{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:.4rem;transition:all .15s}
+.btn-back:hover{border-color:var(--orange);color:var(--orange)}
+
+/* TABS */
+.tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 2rem;gap:0;overflow-x:auto}
+.tab{padding:.75rem 1.25rem;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:.4rem}
+.tab:hover{color:var(--text)}
+.tab.ativo{color:var(--orange);border-bottom-color:var(--orange)}
+
+/* SECOES */
+.secao{display:none;padding:1.75rem 2rem}
+.secao.ativa{display:block}
+
+/* PIPELINE */
+.pipeline-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem}
+.pipeline-titulo{font-size:1.2rem;font-weight:800}
+.btn-primary{padding:.55rem 1.2rem;background:var(--orange);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:background .15s;display:inline-flex;align-items:center;gap:.45rem}
+.btn-primary:hover{background:var(--orange-dk)}
+
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;align-items:start}
+.kol{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.kol-head{padding:.85rem 1rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid var(--border)}
+.kol-head-bar{width:4px;height:16px;border-radius:99px;flex-shrink:0}
+.kol-head-nome{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;flex:1}
+.kol-head-cnt{font-size:.78rem;font-weight:700;font-family:monospace;padding:.15rem .5rem;border-radius:99px;border:1px solid}
+.kol-body{padding:.75rem;display:flex;flex-direction:column;gap:.6rem;min-height:80px}
+.kol-empty{text-align:center;padding:1.5rem .5rem;font-size:.75rem;color:var(--muted);opacity:.5}
+
+/* ETAPAS */
+.e-ideia   {--c:#8B5CF6;--bg:rgba(139,92,246,.07)}
+.e-gravar  {--c:#F59E0B;--bg:rgba(245,158,11,.08)}
+.e-editar  {--c:#3B82F6;--bg:rgba(59,130,246,.07)}
+.e-publicar{--c:#FF6B1A;--bg:rgba(255,107,26,.08)}
+.e-publicado{--c:#10B981;--bg:rgba(16,185,129,.07)}
+
+/* CARD */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.85rem;cursor:pointer;transition:all .15s;position:relative}
+.card:hover{border-color:var(--orange);background:var(--white);box-shadow:0 4px 12px rgba(0,0,0,.07)}
+.card-tipo{display:inline-flex;align-items:center;gap:.3rem;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.18rem .55rem;border-radius:99px;margin-bottom:.55rem;border:1px solid}
+.card-titulo{font-size:.85rem;font-weight:700;margin-bottom:.35rem;line-height:1.3}
+.card-desc{font-size:.75rem;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:.6rem}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+.card-data{font-size:.68rem;color:var(--muted)}
+.card-acoes{display:flex;gap:.3rem}
+.btn-sm{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;font-size:.8rem;display:inline-flex;align-items:center;justify-content:center;transition:all .12s}
+.btn-sm:hover{border-color:var(--orange);background:var(--orange-lt)}
+.btn-sm.del:hover{border-color:var(--red);background:var(--red-bg)}
+.btn-sm.avancar{border-color:var(--green);color:var(--green)}
+.btn-sm.avancar:hover{background:var(--green-bg)}
+
+/* TIPO chips */
+.t-reels   {color:#E1306C;border-color:rgba(225,48,108,.25);background:rgba(225,48,108,.07)}
+.t-story   {color:#833AB4;border-color:rgba(131,58,180,.25);background:rgba(131,58,180,.07)}
+.t-post    {color:#3B82F6;border-color:rgba(59,130,246,.25);background:rgba(59,130,246,.07)}
+.t-carrossel{color:#F59E0B;border-color:rgba(245,158,11,.25);background:rgba(245,158,11,.07)}
+
+/* IDEIAS RAPIDAS */
+.ideias-wrap{max-width:700px}
+.ideia-form{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.25rem;margin-bottom:1.5rem}
+.ideia-form-titulo{font-size:.9rem;font-weight:700;margin-bottom:1rem}
+.ideia-input{width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:9px;font-family:inherit;font-size:.9rem;outline:none;transition:border-color .15s;resize:none}
+.ideia-input:focus{border-color:var(--orange)}
+.ideia-form-foot{display:flex;align-items:center;justify-content:space-between;margin-top:.75rem;flex-wrap:wrap;gap:.5rem}
+.ideia-tipo-sel{display:flex;gap:.4rem;flex-wrap:wrap}
+.tipo-btn{padding:.3rem .7rem;border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;background:none;transition:all .15s}
+.tipo-btn.sel{background:var(--orange);border-color:var(--orange);color:#fff}
+.ideias-lista{display:flex;flex-direction:column;gap:.6rem}
+.ideia-item{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;display:flex;align-items:flex-start;gap:.75rem}
+.ideia-icon{font-size:1.2rem;flex-shrink:0;margin-top:.1rem}
+.ideia-txt{flex:1}
+.ideia-nome{font-size:.85rem;font-weight:600;margin-bottom:.2rem}
+.ideia-meta{font-size:.72rem;color:var(--muted)}
+.ideia-acoes{display:flex;gap:.4rem;flex-shrink:0}
+
+/* LEGENDAS */
+.legendas-wrap{max-width:800px}
+.legenda-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.legenda-filtros{display:flex;gap:.4rem;flex-wrap:wrap}
+.filtro-btn{padding:.3rem .8rem;border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;background:none;color:var(--muted);transition:all .15s}
+.filtro-btn.ativo{background:var(--orange);border-color:var(--orange);color:#fff}
+.legendas-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.legenda-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1.1rem}
+.legenda-cat{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--orange);margin-bottom:.5rem}
+.legenda-nome{font-size:.88rem;font-weight:700;margin-bottom:.6rem}
+.legenda-texto{font-size:.8rem;color:var(--muted);line-height:1.7;white-space:pre-wrap;background:var(--bg);border-radius:8px;padding:.75rem;margin-bottom:.75rem;max-height:120px;overflow-y:auto}
+.legenda-foot{display:flex;gap:.5rem}
+.btn-copiar{flex:1;padding:.5rem;border:1.5px solid var(--orange);border-radius:8px;background:none;font-family:inherit;font-size:.78rem;font-weight:700;color:var(--orange);cursor:pointer;transition:all .15s}
+.btn-copiar:hover{background:var(--orange);color:#fff}
+.btn-copiar.copiado{background:var(--green);border-color:var(--green);color:#fff}
+
+/* CALENDÁRIO */
+.cal-wrap{max-width:900px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem}
+.cal-nav{display:flex;align-items:center;gap:.75rem}
+.cal-mes{font-size:1rem;font-weight:700;min-width:160px;text-align:center}
+.btn-cal-nav{width:32px;height:32px;border:1.5px solid var(--border);border-radius:8px;background:none;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.btn-cal-nav:hover{border-color:var(--orange);color:var(--orange)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dia-nome{text-align:center;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:.5rem 0}
+.cal-dia{min-height:80px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:.5rem;cursor:pointer;transition:all .15s}
+.cal-dia:hover{border-color:var(--orange)}
+.cal-dia.outro-mes{background:#fafafa;opacity:.5}
+.cal-dia.hoje{border-color:var(--orange);border-width:2px}
+.cal-dia-num{font-size:.8rem;font-weight:700;margin-bottom:.3rem}
+.cal-dia.hoje .cal-dia-num{color:var(--orange)}
+.cal-post-chip{font-size:.62rem;font-weight:600;padding:.1rem .4rem;border-radius:4px;background:var(--orange);color:#fff;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:16px;width:100%;max-width:520px;padding:2rem;max-height:90vh;overflow-y:auto}
+.modal-titulo{font-size:1.05rem;font-weight:800;margin-bottom:1.25rem}
+.form-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.form-group label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.form-group input,.form-group select,.form-group textarea{padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.84rem;outline:none;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--orange)}
+.form-group textarea{resize:vertical;min-height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.modal-foot{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1.25rem;border-top:1px solid var(--border)}
+.btn-sec{padding:.55rem 1.2rem;border:1.5px solid var(--border);border-radius:9px;background:none;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-sec:hover{border-color:var(--orange);color:var(--orange)}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.toast{background:var(--text);color:#fff;padding:.7rem 1rem;border-radius:10px;font-size:.8rem;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);animation:tUp .3s ease;border-left:3px solid var(--green);max-width:280px}
+@keyframes tUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:900px){.kanban{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:640px){
+  .kanban{grid-template-columns:1fr 1fr}
+  .legendas-grid{grid-template-columns:1fr}
+  .cal-grid{grid-template-columns:repeat(7,1fr)}
+  .cal-dia{min-height:55px}
+  .secao{padding:1rem}
+  .tabs{padding:0 1rem}
+}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen">
+  <div class="brand">MR4</div>
+  <div class="spinner"></div>
+</div>
+
+<div id="appWrap" style="display:none">
+
+<!-- Topbar -->
+<div class="topbar">
+  <span class="topbar-logo">MR4</span>
+  <div class="topbar-div"></div>
+  <span class="topbar-title">📢 Marketing</span>
+  <div class="topbar-sep"></div>
+  <a href="../index.html" class="btn-back">← Sistema</a>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab ativo" onclick="mudarTab('pipeline',this)">🎬 Pipeline</div>
+  <div class="tab" onclick="mudarTab('ideias',this)">💡 Ideias</div>
+  <div class="tab" onclick="mudarTab('legendas',this)">📝 Legendas</div>
+  <div class="tab" onclick="mudarTab('calendario',this)">📅 Calendário</div>
+</div>
+
+<!-- ── PIPELINE ── -->
+<div class="secao ativa" id="sec-pipeline">
+  <div class="pipeline-header">
+    <div>
+      <div class="pipeline-titulo">Pipeline de Conteúdo</div>
+      <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">Gerencie seus vídeos do Instagram em cada etapa</div>
+    </div>
+    <button class="btn-primary" onclick="abrirModalConteudo()">+ Novo conteúdo</button>
+  </div>
+
+  <div class="kanban" id="kanban">
+    <!-- Colunas geradas por JS -->
+  </div>
+</div>
+
+<!-- ── IDEIAS ── -->
+<div class="secao" id="sec-ideias">
+  <div class="ideias-wrap">
+    <div class="ideia-form">
+      <div class="ideia-form-titulo">💡 Anotar ideia rapidamente</div>
+      <textarea class="ideia-input" id="ideia-txt" rows="2" placeholder="Ex: Mostrar os novos produtos que chegaram hoje..."></textarea>
+      <div class="ideia-form-foot">
+        <div class="ideia-tipo-sel">
+          <button class="tipo-btn sel" data-tipo="Reels" onclick="selTipo(this)">🎥 Reels</button>
+          <button class="tipo-btn" data-tipo="Story" onclick="selTipo(this)">⬆️ Story</button>
+          <button class="tipo-btn" data-tipo="Post" onclick="selTipo(this)">🖼️ Post</button>
+          <button class="tipo-btn" data-tipo="Carrossel" onclick="selTipo(this)">📑 Carrossel</button>
+        </div>
+        <button class="btn-primary" onclick="salvarIdeia()">Salvar ideia</button>
+      </div>
+    </div>
+    <div class="ideias-lista" id="lista-ideias"></div>
+  </div>
+</div>
+
+<!-- ── LEGENDAS ── -->
+<div class="secao" id="sec-legendas">
+  <div class="legendas-wrap">
+    <div class="legenda-header">
+      <div>
+        <div style="font-size:1.1rem;font-weight:800">Legendas prontas</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">Clique em copiar e cole direto no Instagram</div>
+      </div>
+      <button class="btn-primary" onclick="abrirModalLegenda()">+ Nova legenda</button>
+    </div>
+    <div class="legenda-filtros" id="filtros-legenda" style="margin-bottom:1.25rem"></div>
+    <div class="legendas-grid" id="grid-legendas"></div>
+  </div>
+</div>
+
+<!-- ── CALENDÁRIO ── -->
+<div class="secao" id="sec-calendario">
+  <div class="cal-wrap">
+    <div class="cal-header">
+      <div>
+        <div style="font-size:1.1rem;font-weight:800">Calendário Editorial</div>
+        <div style="font-size:.8rem;color:var(--muted);margin-top:.2rem">Planeje seus posts por dia</div>
+      </div>
+      <div class="cal-nav">
+        <button class="btn-cal-nav" onclick="navMes(-1)">‹</button>
+        <div class="cal-mes" id="cal-mes-label"></div>
+        <button class="btn-cal-nav" onclick="navMes(1)">›</button>
+      </div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
+</div><!-- /appWrap -->
+
+<!-- MODAL CONTEÚDO -->
+<div class="overlay" id="modalConteudo">
+  <div class="modal">
+    <div class="modal-titulo" id="modalConteudoTitulo">Novo Conteúdo</div>
+    <input type="hidden" id="c-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" id="c-titulo" placeholder="Ex: Chegou produto novo!">
+      </div>
+      <div class="form-group">
+        <label>Formato</label>
+        <select id="c-tipo">
+          <option value="Reels">🎥 Reels</option>
+          <option value="Story">⬆️ Story</option>
+          <option value="Post">🖼️ Post</option>
+          <option value="Carrossel">📑 Carrossel</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>O que mostrar / roteiro</label>
+      <textarea id="c-desc" placeholder="Ex: Mostrar caixa chegando, abrir e apresentar cada produto, destacar preço e disponibilidade..."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Legenda pronta para o Instagram</label>
+      <textarea id="c-legenda" placeholder="Digite ou cole a legenda que vai usar no post..."></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Etapa</label>
+        <select id="c-etapa">
+          <option value="ideia">💡 Ideia</option>
+          <option value="gravar">🎬 Gravar</option>
+          <option value="editar">✂️ Editar</option>
+          <option value="publicar">📤 Publicar</option>
+          <option value="publicado">✅ Publicado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Data planejada</label>
+        <input type="date" id="c-data">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharModal('modalConteudo')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarConteudo()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LEGENDA -->
+<div class="overlay" id="modalLegenda">
+  <div class="modal">
+    <div class="modal-titulo">Nova Legenda</div>
+    <div class="form-group">
+      <label>Nome da legenda</label>
+      <input type="text" id="l-nome" placeholder="Ex: Chegou novidade">
+    </div>
+    <div class="form-group">
+      <label>Categoria</label>
+      <select id="l-cat">
+        <option value="Novidade">🆕 Novidade</option>
+        <option value="Estoque">📦 Estoque</option>
+        <option value="Promoção">🔥 Promoção</option>
+        <option value="Geral">💬 Geral</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Texto da legenda</label>
+      <textarea id="l-texto" rows="6" placeholder="Digite o texto da legenda com emojis, hashtags..."></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-sec" onclick="fecharModal('modalLegenda')">Cancelar</button>
+      <button class="btn-primary" onclick="salvarLegenda()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toasts -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, orderBy }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app  = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app), db = getFirestore(app);
+
+window._db        = db;
+window._getDocs   = (ref) => getDocs(ref);
+window._setDoc    = (ref, d, o) => setDoc(ref, d, o||{});
+window._deleteDoc = (ref) => deleteDoc(ref);
+window._col       = (n)   => collection(db, n);
+window._doc       = (n,id)=> doc(db, n, id);
+window._query     = query;
+window._orderBy   = orderBy;
+
+onAuthStateChanged(auth, async user => {
+  if(!user){ window.location.href='../login.html'; return; }
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('appWrap').style.display='';
+  window.dispatchEvent(new Event('firebaseReady'));
+});
+</script>
+
+<script>
+// ── ETAPAS ────────────────────────────────────────────────────────────────────
+const ETAPAS = [
+  { id:'ideia',    icon:'💡', nome:'Ideia',    cls:'e-ideia'    },
+  { id:'gravar',   icon:'🎬', nome:'Gravar',   cls:'e-gravar'   },
+  { id:'editar',   icon:'✂️', nome:'Editar',   cls:'e-editar'   },
+  { id:'publicar', icon:'📤', nome:'Publicar', cls:'e-publicar' },
+  { id:'publicado',icon:'✅', nome:'Publicado',cls:'e-publicado'},
+];
+const ETAPA_PROX = {ideia:'gravar',gravar:'editar',editar:'publicar',publicar:'publicado'};
+const TIPO_CLS   = {Reels:'t-reels',Story:'t-story',Post:'t-post',Carrossel:'t-carrossel'};
+
+let conteudos = [], ideias = [], legendas = [];
+let filtroLegenda = 'Todos';
+let calData = new Date();
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,5); }
+function hoje(){ return new Date().toISOString().slice(0,10); }
+function fmtData(d){ if(!d)return'—'; const[y,m,dd]=d.split('-'); return`${dd}/${m}`; }
+
+function toast(msg){
+  const el=document.createElement('div');
+  el.className='toast';el.textContent=msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+window.mudarTab = function(id, el){
+  document.querySelectorAll('.secao').forEach(s=>s.classList.remove('ativa'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('ativo'));
+  document.getElementById('sec-'+id).classList.add('ativa');
+  el.classList.add('ativo');
+  if(id==='legendas')  renderLegendas();
+  if(id==='calendario')renderCalendario();
+  if(id==='ideias')    renderIdeias();
+};
+
+// ── FIRESTORE ─────────────────────────────────────────────────────────────────
+async function carregar(){
+  const [sc, si, sl] = await Promise.all([
+    window._getDocs(window._col('marketing_conteudos')),
+    window._getDocs(window._col('marketing_ideias')),
+    window._getDocs(window._col('marketing_legendas')),
+  ]);
+  conteudos = sc.docs.map(d=>({id:d.id,...d.data()}));
+  ideias    = si.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>b.criadoEm-a.criadoEm);
+  legendas  = sl.docs.map(d=>({id:d.id,...d.data()}));
+  if(!legendas.length) await seedLegendas();
+  renderKanban();
+}
+
+// Legendas padrão para começar
+async function seedLegendas(){
+  const seeds=[
+    {id:uid(),nome:'Chegou novidade',cat:'Novidade',texto:'🚨 CHEGOU!\n\nPessoal, acabou de chegar [produto] aqui na MR4! 📦✨\n\n✅ Disponível agora\n✅ Entrega rápida\n✅ Preço especial\n\nManda mensagem e garanta o seu! 👇\n\n#MR4Distribuidora #Novidade #Chegou'},
+    {id:uid(),nome:'Estoque disponível',cat:'Estoque',texto:'📦 ESTOQUE DISPONÍVEL!\n\n[Produto] em estoque e pronto pra entregar! 🚚\n\nNão perca essa oportunidade.\nFale com a gente pelo direct! 💬\n\n#MR4 #EstoqueDisponível #Distribuidora'},
+    {id:uid(),nome:'Promoção do dia',cat:'Promoção',texto:'🔥 PROMOÇÃO IMPERDÍVEL!\n\n[Produto] com condição especial só hoje! 🏷️\n\n👉 Preço: [valor]\n👉 Condição: [forma pagamento]\n\nCorre que é por tempo limitado! ⏰\nChama no direct!\n\n#Promoção #MR4 #OfertaDodia'},
+    {id:uid(),nome:'Bastidores',cat:'Geral',texto:'📸 Por trás da MR4!\n\nÉ assim que trabalhamos todos os dias para garantir os melhores produtos pra vocês. 💪\n\nEquipe dedicada, estoque organizado e muita disposição! 🙌\n\n#MR4Distribuidora #Bastidores #Equipe'},
+  ];
+  for(const s of seeds){
+    await window._setDoc(window._doc('marketing_legendas',s.id),{...s,criadoEm:Date.now()});
+  }
+  legendas = seeds.map(s=>({...s,criadoEm:Date.now()}));
+}
+
+// ── KANBAN ────────────────────────────────────────────────────────────────────
+function renderKanban(){
+  const kanban = document.getElementById('kanban');
+  kanban.innerHTML = ETAPAS.map(e=>{
+    const lista = conteudos.filter(c=>c.etapa===e.id).sort((a,b)=>b.criadoEm-a.criadoEm);
+    const cntCls = e.cls;
+    return `
+      <div class="kol ${e.cls}">
+        <div class="kol-head">
+          <div class="kol-head-bar" style="background:var(--c)"></div>
+          <div class="kol-head-nome">${e.icon} ${e.nome}</div>
+          <div class="kol-head-cnt" style="color:var(--c);border-color:var(--c);background:var(--bg)">${lista.length}</div>
+        </div>
+        <div class="kol-body">
+          ${lista.length ? lista.map(c=>renderCard(c)).join('') : '<div class="kol-empty">Nenhum aqui</div>'}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderCard(c){
+  const tipoCls = TIPO_CLS[c.tipo]||'t-post';
+  const prox = ETAPA_PROX[c.etapa];
+  return `
+    <div class="card" onclick="editarConteudo('${c.id}')">
+      <div class="card-tipo ${tipoCls}">${c.tipo||'Post'}</div>
+      <div class="card-titulo">${c.titulo||'Sem título'}</div>
+      ${c.desc?`<div class="card-desc">${c.desc}</div>`:''}
+      <div class="card-foot">
+        <div class="card-data">${fmtData(c.data)}</div>
+        <div class="card-acoes" onclick="event.stopPropagation()">
+          ${prox?`<button class="btn-sm avancar" title="Avançar etapa" onclick="avancarEtapa('${c.id}')">→</button>`:''}
+          <button class="btn-sm del" title="Excluir" onclick="excluirConteudo('${c.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── CONTEÚDO CRUD ─────────────────────────────────────────────────────────────
+window.abrirModalConteudo = function(){
+  document.getElementById('c-id').value      = '';
+  document.getElementById('c-titulo').value  = '';
+  document.getElementById('c-desc').value    = '';
+  document.getElementById('c-legenda').value = '';
+  document.getElementById('c-tipo').value    = 'Reels';
+  document.getElementById('c-etapa').value   = 'ideia';
+  document.getElementById('c-data').value    = hoje();
+  document.getElementById('modalConteudoTitulo').textContent = 'Novo Conteúdo';
+  document.getElementById('modalConteudo').classList.add('show');
+};
+
+window.editarConteudo = function(id){
+  const c = conteudos.find(x=>x.id===id); if(!c)return;
+  document.getElementById('c-id').value      = c.id;
+  document.getElementById('c-titulo').value  = c.titulo||'';
+  document.getElementById('c-desc').value    = c.desc||'';
+  document.getElementById('c-legenda').value = c.legenda||'';
+  document.getElementById('c-tipo').value    = c.tipo||'Reels';
+  document.getElementById('c-etapa').value   = c.etapa||'ideia';
+  document.getElementById('c-data').value    = c.data||'';
+  document.getElementById('modalConteudoTitulo').textContent = 'Editar Conteúdo';
+  document.getElementById('modalConteudo').classList.add('show');
+};
+
+window.salvarConteudo = async function(){
+  const id     = document.getElementById('c-id').value || uid();
+  const titulo = document.getElementById('c-titulo').value.trim();
+  if(!titulo){ toast('Informe o título!'); return; }
+  const dados = {
+    id, titulo,
+    desc:    document.getElementById('c-desc').value.trim(),
+    legenda: document.getElementById('c-legenda').value.trim(),
+    tipo:    document.getElementById('c-tipo').value,
+    etapa:   document.getElementById('c-etapa').value,
+    data:    document.getElementById('c-data').value,
+    criadoEm: Date.now(),
+  };
+  await window._setDoc(window._doc('marketing_conteudos',id), dados);
+  const idx = conteudos.findIndex(x=>x.id===id);
+  if(idx>=0) conteudos[idx]=dados; else conteudos.push(dados);
+  fecharModal('modalConteudo');
+  renderKanban();
+  toast('✅ Conteúdo salvo!');
+};
+
+window.avancarEtapa = async function(id){
+  const c = conteudos.find(x=>x.id===id); if(!c)return;
+  const prox = ETAPA_PROX[c.etapa]; if(!prox)return;
+  c.etapa = prox;
+  await window._setDoc(window._doc('marketing_conteudos',id),{etapa:prox},{merge:true});
+  renderKanban();
+  const e = ETAPAS.find(x=>x.id===prox);
+  toast(`${e.icon} Movido para ${e.nome}`);
+};
+
+window.excluirConteudo = async function(id){
+  if(!confirm('Excluir este conteúdo?')) return;
+  await window._deleteDoc(window._doc('marketing_conteudos',id));
+  conteudos = conteudos.filter(x=>x.id!==id);
+  renderKanban();
+  toast('🗑️ Conteúdo removido');
+};
+
+// ── IDEIAS ────────────────────────────────────────────────────────────────────
+let tipoSel = 'Reels';
+window.selTipo = function(el){
+  document.querySelectorAll('.tipo-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  tipoSel = el.dataset.tipo;
+};
+
+window.salvarIdeia = async function(){
+  const txt = document.getElementById('ideia-txt').value.trim();
+  if(!txt){ toast('Escreva a ideia!'); return; }
+  const id = uid();
+  const dados = {id, texto:txt, tipo:tipoSel, criadoEm:Date.now()};
+  await window._setDoc(window._doc('marketing_ideias',id), dados);
+  ideias.unshift(dados);
+  document.getElementById('ideia-txt').value='';
+  renderIdeias();
+  toast('💡 Ideia salva!');
+};
+
+function renderIdeias(){
+  const el = document.getElementById('lista-ideias');
+  if(!ideias.length){ el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.85rem">Nenhuma ideia ainda. Anote a próxima!</div>'; return; }
+  el.innerHTML = ideias.map(i=>`
+    <div class="ideia-item">
+      <div class="ideia-icon">💡</div>
+      <div class="ideia-txt">
+        <div class="ideia-nome">${i.texto}</div>
+        <div class="ideia-meta">${i.tipo||'Reels'} · ${new Date(i.criadoEm).toLocaleDateString('pt-BR')}</div>
+      </div>
+      <div class="ideia-acoes">
+        <button class="btn-sm" title="Criar conteúdo a partir desta ideia" onclick="ideiaPraConteudo('${i.id}')">🎬</button>
+        <button class="btn-sm del" title="Excluir" onclick="excluirIdeia('${i.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+window.ideiaPraConteudo = function(id){
+  const i = ideias.find(x=>x.id===id); if(!i)return;
+  document.getElementById('c-id').value      = '';
+  document.getElementById('c-titulo').value  = i.texto.substring(0,60);
+  document.getElementById('c-desc').value    = '';
+  document.getElementById('c-legenda').value = '';
+  document.getElementById('c-tipo').value    = i.tipo||'Reels';
+  document.getElementById('c-etapa').value   = 'gravar';
+  document.getElementById('c-data').value    = hoje();
+  document.getElementById('modalConteudoTitulo').textContent = 'Criar conteúdo da ideia';
+  document.getElementById('modalConteudo').classList.add('show');
+  // Muda para aba pipeline após fechar
+  mudarTab('pipeline', document.querySelector('.tab'));
+};
+
+window.excluirIdeia = async function(id){
+  await window._deleteDoc(window._doc('marketing_ideias',id));
+  ideias = ideias.filter(x=>x.id!==id);
+  renderIdeias();
+};
+
+// ── LEGENDAS ─────────────────────────────────────────────────────────────────
+window.abrirModalLegenda = function(){
+  document.getElementById('l-nome').value  = '';
+  document.getElementById('l-cat').value   = 'Novidade';
+  document.getElementById('l-texto').value = '';
+  document.getElementById('modalLegenda').classList.add('show');
+};
+
+window.salvarLegenda = async function(){
+  const nome  = document.getElementById('l-nome').value.trim();
+  const texto = document.getElementById('l-texto').value.trim();
+  if(!nome||!texto){ toast('Preencha nome e texto!'); return; }
+  const id = uid();
+  const dados = {id, nome, cat:document.getElementById('l-cat').value, texto, criadoEm:Date.now()};
+  await window._setDoc(window._doc('marketing_legendas',id), dados);
+  legendas.push(dados);
+  fecharModal('modalLegenda');
+  renderLegendas();
+  toast('✅ Legenda salva!');
+};
+
+function renderLegendas(){
+  // Filtros
+  const cats = ['Todos',...new Set(legendas.map(l=>l.cat))];
+  document.getElementById('filtros-legenda').innerHTML = cats.map(c=>
+    `<button class="filtro-btn${filtroLegenda===c?' ativo':''}" onclick="setFiltroLeg('${c}')">${c}</button>`
+  ).join('');
+
+  const lista = filtroLegenda==='Todos' ? legendas : legendas.filter(l=>l.cat===filtroLegenda);
+  const grid  = document.getElementById('grid-legendas');
+  if(!lista.length){ grid.innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:1rem">Nenhuma legenda nesta categoria.</div>'; return; }
+  grid.innerHTML = lista.map(l=>`
+    <div class="legenda-card">
+      <div class="legenda-cat">${l.cat||'Geral'}</div>
+      <div class="legenda-nome">${l.nome}</div>
+      <div class="legenda-texto">${l.texto}</div>
+      <div class="legenda-foot">
+        <button class="btn-copiar" id="cp-${l.id}" onclick="copiarLegenda('${l.id}')">📋 Copiar</button>
+        <button class="btn-sm del" onclick="excluirLegenda('${l.id}')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+window.setFiltroLeg = function(cat){ filtroLegenda=cat; renderLegendas(); };
+
+window.copiarLegenda = function(id){
+  const l = legendas.find(x=>x.id===id); if(!l)return;
+  navigator.clipboard.writeText(l.texto).then(()=>{
+    const btn = document.getElementById('cp-'+id);
+    btn.textContent='✅ Copiado!'; btn.classList.add('copiado');
+    setTimeout(()=>{ btn.textContent='📋 Copiar'; btn.classList.remove('copiado'); },2000);
+  });
+};
+
+window.excluirLegenda = async function(id){
+  if(!confirm('Excluir esta legenda?')) return;
+  await window._deleteDoc(window._doc('marketing_legendas',id));
+  legendas = legendas.filter(x=>x.id!==id);
+  renderLegendas();
+};
+
+// ── CALENDÁRIO ───────────────────────────────────────────────────────────────
+const DIAS_SEM = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const MESES    = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+window.navMes = function(d){ calData.setMonth(calData.getMonth()+d); renderCalendario(); };
+
+function renderCalendario(){
+  const ano = calData.getFullYear(), mes = calData.getMonth();
+  document.getElementById('cal-mes-label').textContent = `${MESES[mes]} ${ano}`;
+  const hojeStr = hoje();
+  const primeiro = new Date(ano,mes,1).getDay();
+  const ultimo   = new Date(ano,mes+1,0).getDate();
+
+  let html = DIAS_SEM.map(d=>`<div class="cal-dia-nome">${d}</div>`).join('');
+
+  // Dias do mês anterior
+  const diasAntes = new Date(ano,mes,0).getDate();
+  for(let i=primeiro-1;i>=0;i--){
+    html += `<div class="cal-dia outro-mes"><div class="cal-dia-num">${diasAntes-i}</div></div>`;
+  }
+
+  // Dias deste mês
+  for(let d=1;d<=ultimo;d++){
+    const dataStr = `${ano}-${String(mes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const postsHoje = conteudos.filter(c=>c.data===dataStr&&c.etapa!=='ideia');
+    const isHoje   = dataStr===hojeStr;
+    html += `
+      <div class="cal-dia${isHoje?' hoje':''}">
+        <div class="cal-dia-num">${d}</div>
+        ${postsHoje.map(p=>`<div class="cal-post-chip" onclick="editarConteudo('${p.id}')" title="${p.titulo}">${p.tipo} — ${p.titulo.substring(0,12)}</div>`).join('')}
+      </div>`;
+  }
+
+  // Completar última semana
+  const total = primeiro + ultimo;
+  const resto = total%7 ? 7-(total%7) : 0;
+  for(let i=1;i<=resto;i++) html += `<div class="cal-dia outro-mes"><div class="cal-dia-num">${i}</div></div>`;
+
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+// ── MODAL UTILS ──────────────────────────────────────────────────────────────
+window.fecharModal = function(id){ document.getElementById(id).classList.remove('show'); };
+['modalConteudo','modalLegenda'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{ if(e.target===e.currentTarget) fecharModal(id); });
+});
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('firebaseReady', carregar);
+</script>
+
+</body>
+</html>

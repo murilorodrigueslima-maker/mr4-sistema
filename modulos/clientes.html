@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM Clientes — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#FF6B1A;--orange-dk:#e85d0f;--bg:#F3F4F6;--white:#FFFFFF;
+  --text:#1A1A2E;--muted:#6B7280;--border:#E5E7EB;
+  --green:#10B981;--yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* HEADER */
+.hd{background:var(--white);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:50}
+.hd-back{font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.4rem .75rem;border:1px solid var(--border);border-radius:8px;transition:all .15s}
+.hd-back:hover{color:var(--text);border-color:#ccc}
+.hd-title{font-size:1.1rem;font-weight:800;color:var(--text);flex:1}
+.hd-sub{font-size:.78rem;color:var(--muted)}
+
+/* MAIN */
+.main{max-width:1200px;margin:0 auto;padding:1.5rem}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem}
+.stat-label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:1.6rem;font-weight:800;color:var(--text);margin-top:.2rem}
+.stat-card.blue .stat-value{color:var(--blue)}
+.stat-card.green .stat-value{color:var(--green)}
+.stat-card.orange .stat-value{color:var(--orange)}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.search-box{flex:1;min-width:220px;position:relative}
+.search-box input{width:100%;padding:.6rem .9rem .6rem 2.2rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;color:var(--text);background:var(--white);transition:border .15s;outline:none}
+.search-box input:focus{border-color:var(--orange)}
+.search-box::before{content:'🔍';position:absolute;left:.7rem;top:50%;transform:translateY(-50%);font-size:.85rem}
+.filter-select{padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.83rem;color:var(--text);background:var(--white);cursor:pointer;outline:none}
+.btn{padding:.6rem 1.2rem;border-radius:10px;font-family:'Inter',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:var(--orange-dk)}
+.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:#ccc;color:var(--text)}
+
+/* GRID */
+.clientes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+
+/* CARD */
+.cliente-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.25rem;transition:all .2s;cursor:pointer;position:relative}
+.cliente-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-2px);border-color:rgba(255,107,26,.2)}
+.card-header{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.85rem}
+.card-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ff9a5c);color:#fff;font-weight:700;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-info{flex:1;min-width:0}
+.card-nome{font-size:.95rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-cidade{font-size:.75rem;color:var(--muted);margin-top:.1rem}
+.card-badges{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
+.badge{font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+.badge-pf{background:#EFF6FF;color:#1D4ED8}
+.badge-pj{background:#F0FDF4;color:#15803D}
+.badge-vip{background:#FFF7ED;color:#C2410C}
+.badge-atacado{background:#F5F3FF;color:#7C3AED}
+.badge-varejo{background:#F0F9FF;color:#0369A1}
+.badge-inadimplente{background:#FEF2F2;color:#B91C1C}
+.card-contato{display:flex;gap:.75rem;font-size:.78rem;color:var(--muted);margin-bottom:.85rem;flex-wrap:wrap}
+.card-contato span{display:flex;align-items:center;gap:.3rem}
+.card-footer{display:flex;gap:.5rem;justify-content:flex-end}
+.btn-sm{padding:.35rem .7rem;font-size:.72rem;border-radius:7px}
+.btn-wpp{background:#25D366;color:#fff;border:none}
+.btn-wpp:hover{background:#1da851}
+.btn-detail{background:var(--bg);color:var(--muted);border:1.5px solid var(--border)}
+.btn-detail:hover{color:var(--text)}
+.btn-edit{background:rgba(255,107,26,.08);color:var(--orange);border:1.5px solid rgba(255,107,26,.2)}
+.btn-edit:hover{background:rgba(255,107,26,.15)}
+.garantia-badge{position:absolute;top:.85rem;right:.85rem;background:var(--red);color:#fff;font-size:.65rem;font-weight:700;padding:.15rem .45rem;border-radius:20px}
+
+/* EMPTY */
+.empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
+.empty-icon{font-size:3rem;margin-bottom:.75rem}
+.empty-title{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:.35rem}
+.empty-sub{font-size:.82rem}
+
+/* MODAL OVERLAY */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:18px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.18)}
+.modal-header{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-size:1rem;font-weight:800}
+.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1;padding:.2rem}
+.modal-body{padding:1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.75rem;justify-content:flex-end}
+
+/* FORM */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.4rem}
+.form-input,.form-select,.form-textarea{width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.85rem;color:var(--text);background:var(--white);outline:none;transition:border .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-hint{font-size:.72rem;color:var(--muted);margin-top:.3rem}
+
+/* TAGS SELECTOR */
+.tags-grid{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.4rem}
+.tag-btn{padding:.3rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--muted);transition:all .15s}
+.tag-btn.selected{border-color:var(--orange);background:rgba(255,107,26,.08);color:var(--orange)}
+
+/* DETALHE MODAL */
+.detail-section{margin-bottom:1.5rem}
+.detail-section-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.detail-item{}
+.detail-item-label{font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.detail-item-value{font-size:.88rem;color:var(--text);font-weight:500;margin-top:.1rem}
+
+/* NOTAS */
+.notas-list{display:flex;flex-direction:column;gap:.75rem;max-height:220px;overflow-y:auto}
+.nota-item{background:var(--bg);border-radius:10px;padding:.75rem 1rem;position:relative}
+.nota-data{font-size:.68rem;color:var(--muted);margin-bottom:.3rem}
+.nota-texto{font-size:.83rem;color:var(--text);line-height:1.5}
+.nota-del{position:absolute;top:.5rem;right:.5rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.8rem;opacity:.5}
+.nota-del:hover{opacity:1;color:var(--red)}
+.nota-input-row{display:flex;gap:.5rem;margin-top:.75rem}
+.nota-input-row input{flex:1;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;outline:none}
+.nota-input-row input:focus{border-color:var(--orange)}
+
+/* GARANTIAS VINCULADAS */
+.garantia-item{background:var(--bg);border-radius:8px;padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.garantia-item-nome{font-size:.82rem;font-weight:600;color:var(--text)}
+.garantia-item-status{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px}
+
+/* LOADING */
+.loading{text-align:center;padding:3rem;color:var(--muted);font-size:.88rem}
+
+@media(max-width:600px){
+  .form-row{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr}
+  .stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <a class="hd-back" href="../index.html">← Início</a>
+  <div>
+    <div class="hd-title">👥 CRM Clientes</div>
+    <div class="hd-sub">Histórico, contatos e anotações</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- STATS -->
+  <div class="stats" id="statsRow">
+    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="stTotal">—</div></div>
+    <div class="stat-card blue"><div class="stat-label">PJ</div><div class="stat-value" id="stPJ">—</div></div>
+    <div class="stat-card green"><div class="stat-label">PF</div><div class="stat-value" id="stPF">—</div></div>
+    <div class="stat-card orange"><div class="stat-label">Novos este mês</div><div class="stat-value" id="stNovos">—</div></div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Buscar por nome, telefone ou cidade…" oninput="filtrar()">
+    </div>
+    <select class="filter-select" id="filterTipo" onchange="filtrar()">
+      <option value="">Todos os tipos</option>
+      <option value="PF">PF</option>
+      <option value="PJ">PJ</option>
+    </select>
+    <select class="filter-select" id="filterTag" onchange="filtrar()">
+      <option value="">Todas as tags</option>
+      <option value="VIP">VIP</option>
+      <option value="Atacado">Atacado</option>
+      <option value="Varejo">Varejo</option>
+      <option value="Inadimplente">Inadimplente</option>
+    </select>
+    <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Cliente</button>
+  </div>
+
+  <!-- GRID -->
+  <div class="clientes-grid" id="clientesGrid">
+    <div class="loading">Carregando clientes…</div>
+  </div>
+</div>
+
+<!-- MODAL CRIAR/EDITAR -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Novo Cliente</div>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Nome completo / Razão social *</label>
+          <input class="form-input" id="fNome" placeholder="Ex: João Silva ou Empresa Ltda">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select class="form-select" id="fTipo">
+            <option value="PF">Pessoa Física (PF)</option>
+            <option value="PJ">Pessoa Jurídica (PJ)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CPF / CNPJ</label>
+          <input class="form-input" id="fDoc" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">WhatsApp *</label>
+          <input class="form-input" id="fTelefone" placeholder="(00) 00000-0000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input class="form-input" id="fEmail" type="email" placeholder="Opcional">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cidade</label>
+          <input class="form-input" id="fCidade" placeholder="Ex: São Paulo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado</label>
+          <input class="form-input" id="fEstado" placeholder="Ex: SP" maxlength="2">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Tags</label>
+        <div class="tags-grid" id="tagsGrid">
+          <button type="button" class="tag-btn" data-tag="VIP" onclick="toggleTag(this)">⭐ VIP</button>
+          <button type="button" class="tag-btn" data-tag="Atacado" onclick="toggleTag(this)">📦 Atacado</button>
+          <button type="button" class="tag-btn" data-tag="Varejo" onclick="toggleTag(this)">🛒 Varejo</button>
+          <button type="button" class="tag-btn" data-tag="Inadimplente" onclick="toggleTag(this)">⚠️ Inadimplente</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Observação inicial</label>
+        <textarea class="form-textarea" id="fObs" placeholder="Alguma informação importante sobre este cliente…"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALHE -->
+<div class="overlay" id="detalheOverlay">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="detNome">Cliente</div>
+        <div style="font-size:.75rem;color:var(--muted);margin-top:.1rem" id="detSub"></div>
+      </div>
+      <button class="modal-close" onclick="fecharDetalhe()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- INFO -->
+      <div class="detail-section">
+        <div class="detail-section-title">Informações</div>
+        <div class="detail-grid" id="detGrid"></div>
+      </div>
+
+      <!-- NOTAS -->
+      <div class="detail-section">
+        <div class="detail-section-title">Anotações</div>
+        <div class="notas-list" id="notasList"></div>
+        <div class="nota-input-row">
+          <input type="text" id="notaInput" placeholder="Nova anotação…" onkeydown="if(event.key==='Enter')adicionarNota()">
+          <button class="btn btn-primary btn-sm" onclick="adicionarNota()">+ Adicionar</button>
+        </div>
+      </div>
+
+      <!-- GARANTIAS -->
+      <div class="detail-section" id="garantiasSection">
+        <div class="detail-section-title">Garantias vinculadas</div>
+        <div id="garantiasList"><div style="color:var(--muted);font-size:.82rem">Nenhuma garantia encontrada.</div></div>
+      </div>
+
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharDetalhe()">Fechar</button>
+      <button class="btn btn-primary" onclick="editarClienteAtual()">✏️ Editar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
+  query, orderBy, serverTimestamp, Timestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── Auth guard ────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, u => { if(!u) window.location.href='../login.html'; });
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+let CLIENTES = [];
+let GARANTIAS = [];
+let clienteAtualId = null;
+
+// ── Carregar dados ────────────────────────────────────────────────────────────
+async function carregar() {
+  const [snapC, snapG] = await Promise.all([
+    getDocs(query(collection(db,'clientes'), orderBy('criado_em','desc'))),
+    getDocs(collection(db,'garantias'))
+  ]);
+  CLIENTES = snapC.docs.map(d => ({ id: d.id, ...d.data() }));
+  GARANTIAS = snapG.docs.map(d => ({ id: d.id, ...d.data() }));
+  atualizarStats();
+  renderGrid(CLIENTES);
+}
+
+function atualizarStats() {
+  const agora = new Date();
+  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+  document.getElementById('stTotal').textContent = CLIENTES.length;
+  document.getElementById('stPJ').textContent = CLIENTES.filter(c => c.tipo === 'PJ').length;
+  document.getElementById('stPF').textContent = CLIENTES.filter(c => c.tipo === 'PF').length;
+  document.getElementById('stNovos').textContent = CLIENTES.filter(c => {
+    if (!c.criado_em) return false;
+    const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
+    return d >= inicioMes;
+  }).length;
+}
+
+function renderGrid(lista) {
+  const grid = document.getElementById('clientesGrid');
+  if (!lista.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">👥</div>
+      <div class="empty-title">Nenhum cliente encontrado</div>
+      <div class="empty-sub">Clique em "+ Novo Cliente" para adicionar</div>
+    </div>`;
+    return;
+  }
+  grid.innerHTML = lista.map(c => {
+    const ini = (c.nome||'?')[0].toUpperCase();
+    const tags = (c.tags||[]).map(t => `<span class="badge badge-${t.toLowerCase()}">${t}</span>`).join('');
+    const tipoBadge = `<span class="badge badge-${c.tipo?.toLowerCase()||'pf'}">${c.tipo||'PF'}</span>`;
+    const gAberta = GARANTIAS.filter(g => normalizar(g.clienteNome) === normalizar(c.nome) && !['encerrado','reprovado'].includes(g.status));
+    const gBadge = gAberta.length ? `<div class="garantia-badge">🛡️ ${gAberta.length}</div>` : '';
+    const wpp = (c.telefone||'').replace(/\D/g,'');
+    return `
+    <div class="cliente-card" onclick="abrirDetalhe('${c.id}')">
+      ${gBadge}
+      <div class="card-header">
+        <div class="card-avatar">${ini}</div>
+        <div class="card-info">
+          <div class="card-nome">${c.nome}</div>
+          <div class="card-cidade">${[c.cidade, c.estado].filter(Boolean).join(' — ') || '—'}</div>
+        </div>
+      </div>
+      <div class="card-badges">${tipoBadge}${tags}</div>
+      <div class="card-contato">
+        ${c.telefone ? `<span>📱 ${c.telefone}</span>` : ''}
+        ${c.email ? `<span>✉️ ${c.email}</span>` : ''}
+      </div>
+      <div class="card-footer">
+        ${wpp ? `<button class="btn btn-sm btn-wpp" onclick="event.stopPropagation();window.open('https://wa.me/55${wpp}','_blank')">💬 WhatsApp</button>` : ''}
+        <button class="btn btn-sm btn-edit" onclick="event.stopPropagation();editarCliente('${c.id}')">✏️ Editar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Filtro ────────────────────────────────────────────────────────────────────
+window.filtrar = function() {
+  const q = normalizar(document.getElementById('searchInput').value);
+  const tipo = document.getElementById('filterTipo').value;
+  const tag  = document.getElementById('filterTag').value;
+  const lista = CLIENTES.filter(c => {
+    const match = !q || normalizar(c.nome).includes(q) || normalizar(c.telefone||'').includes(q) || normalizar(c.cidade||'').includes(q);
+    const matchTipo = !tipo || c.tipo === tipo;
+    const matchTag  = !tag  || (c.tags||[]).includes(tag);
+    return match && matchTipo && matchTag;
+  });
+  renderGrid(lista);
+};
+
+function normalizar(s) { return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+// ── Modal Criar/Editar ────────────────────────────────────────────────────────
+window.abrirModalNovo = function() {
+  document.getElementById('editId').value = '';
+  document.getElementById('modalTitle').textContent = 'Novo Cliente';
+  document.getElementById('fNome').value = '';
+  document.getElementById('fTipo').value = 'PF';
+  document.getElementById('fDoc').value = '';
+  document.getElementById('fTelefone').value = '';
+  document.getElementById('fEmail').value = '';
+  document.getElementById('fCidade').value = '';
+  document.getElementById('fEstado').value = '';
+  document.getElementById('fObs').value = '';
+  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.editarCliente = function(id) {
+  const c = CLIENTES.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('modalTitle').textContent = 'Editar Cliente';
+  document.getElementById('fNome').value = c.nome || '';
+  document.getElementById('fTipo').value = c.tipo || 'PF';
+  document.getElementById('fDoc').value = c.cpf_cnpj || '';
+  document.getElementById('fTelefone').value = c.telefone || '';
+  document.getElementById('fEmail').value = c.email || '';
+  document.getElementById('fCidade').value = c.cidade || '';
+  document.getElementById('fEstado').value = c.estado || '';
+  document.getElementById('fObs').value = '';
+  document.querySelectorAll('.tag-btn').forEach(b => {
+    b.classList.toggle('selected', (c.tags||[]).includes(b.dataset.tag));
+  });
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.fecharModal = function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+};
+
+window.toggleTag = function(btn) {
+  btn.classList.toggle('selected');
+};
+
+window.salvarCliente = async function() {
+  const nome = document.getElementById('fNome').value.trim();
+  const tel  = document.getElementById('fTelefone').value.trim();
+  if (!nome || !tel) { alert('Nome e WhatsApp são obrigatórios.'); return; }
+  const tags = [...document.querySelectorAll('.tag-btn.selected')].map(b => b.dataset.tag);
+  const obs  = document.getElementById('fObs').value.trim();
+  const id   = document.getElementById('editId').value;
+  const dados = {
+    nome,
+    tipo: document.getElementById('fTipo').value,
+    cpf_cnpj: document.getElementById('fDoc').value.trim(),
+    telefone: tel,
+    email: document.getElementById('fEmail').value.trim(),
+    cidade: document.getElementById('fCidade').value.trim(),
+    estado: document.getElementById('fEstado').value.trim().toUpperCase(),
+    tags,
+    atualizado_em: serverTimestamp(),
+  };
+  if (id) {
+    await updateDoc(doc(db,'clientes',id), dados);
+    if (obs) {
+      const c = CLIENTES.find(x => x.id === id);
+      const notas = c?.notas || [];
+      notas.unshift({ texto: obs, data: new Date().toISOString() });
+      await updateDoc(doc(db,'clientes',id), { notas });
+    }
+  } else {
+    const notas = obs ? [{ texto: obs, data: new Date().toISOString() }] : [];
+    await addDoc(collection(db,'clientes'), { ...dados, notas, criado_em: serverTimestamp() });
+  }
+  fecharModal();
+  await carregar();
+};
+
+// ── Modal Detalhe ─────────────────────────────────────────────────────────────
+window.abrirDetalhe = function(id) {
+  clienteAtualId = id;
+  const c = CLIENTES.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('detNome').textContent = c.nome;
+  const tags = (c.tags||[]).join(', ') || '—';
+  document.getElementById('detSub').textContent = `${c.tipo||'PF'} ${tags !== '—' ? '· '+tags : ''}`;
+  // Grid info
+  document.getElementById('detGrid').innerHTML = `
+    <div class="detail-item"><div class="detail-item-label">WhatsApp</div><div class="detail-item-value">${c.telefone||'—'}</div></div>
+    <div class="detail-item"><div class="detail-item-label">E-mail</div><div class="detail-item-value">${c.email||'—'}</div></div>
+    <div class="detail-item"><div class="detail-item-label">CPF / CNPJ</div><div class="detail-item-value">${c.cpf_cnpj||'—'}</div></div>
+    <div class="detail-item"><div class="detail-item-label">Cidade / Estado</div><div class="detail-item-value">${[c.cidade,c.estado].filter(Boolean).join(' — ')||'—'}</div></div>
+  `;
+  renderNotas(c);
+  // Garantias
+  const gList = GARANTIAS.filter(g => normalizar(g.clienteNome) === normalizar(c.nome));
+  const statusLabel = { recebido:'Recebido', em_teste:'Em Teste', aprovado:'Aprovado', substituido:'Substituído', ag_envio:'Ag. Envio', enviado:'Enviado', encerrado:'Encerrado', reprovado:'Reprovado' };
+  const statusColor = { recebido:'#6B7280', em_teste:'#F59E0B', aprovado:'#10B981', substituido:'#3B82F6', ag_envio:'#EF4444', enviado:'#8B5CF6', encerrado:'#6B7280', reprovado:'#6B7280' };
+  document.getElementById('garantiasList').innerHTML = gList.length
+    ? gList.map(g => `<div class="garantia-item">
+        <div><div class="garantia-item-nome">${g.produtoNome||'Produto'}</div><div style="font-size:.72rem;color:var(--muted)">${g.defeito||''}</div></div>
+        <span class="garantia-item-status" style="background:${statusColor[g.status]||'#6B7280'}22;color:${statusColor[g.status]||'#6B7280'}">${statusLabel[g.status]||g.status}</span>
+      </div>`).join('')
+    : '<div style="color:var(--muted);font-size:.82rem">Nenhuma garantia registrada.</div>';
+  document.getElementById('detalheOverlay').classList.add('open');
+};
+
+function renderNotas(c) {
+  const notas = c.notas || [];
+  document.getElementById('notasList').innerHTML = notas.length
+    ? notas.map((n,i) => `<div class="nota-item">
+        <div class="nota-data">${formatarData(n.data)}</div>
+        <div class="nota-texto">${n.texto}</div>
+        <button class="nota-del" onclick="deletarNota(${i})">✕</button>
+      </div>`).join('')
+    : '<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">Nenhuma anotação ainda.</div>';
+}
+
+window.adicionarNota = async function() {
+  const input = document.getElementById('notaInput');
+  const texto = input.value.trim();
+  if (!texto || !clienteAtualId) return;
+  const c = CLIENTES.find(x => x.id === clienteAtualId);
+  const notas = [{ texto, data: new Date().toISOString() }, ...(c.notas||[])];
+  await updateDoc(doc(db,'clientes',clienteAtualId), { notas });
+  c.notas = notas;
+  input.value = '';
+  renderNotas(c);
+};
+
+window.deletarNota = async function(idx) {
+  if (!confirm('Remover esta anotação?')) return;
+  const c = CLIENTES.find(x => x.id === clienteAtualId);
+  const notas = (c.notas||[]).filter((_,i) => i !== idx);
+  await updateDoc(doc(db,'clientes',clienteAtualId), { notas });
+  c.notas = notas;
+  renderNotas(c);
+};
+
+window.fecharDetalhe = function() {
+  document.getElementById('detalheOverlay').classList.remove('open');
+  clienteAtualId = null;
+};
+
+window.editarClienteAtual = function() {
+  fecharDetalhe();
+  setTimeout(() => editarCliente(clienteAtualId || ''), 100);
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatarData(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+
+// Fechar overlay clicando fora
+document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target === e.currentTarget) fecharModal(); });
+document.getElementById('detalheOverlay').addEventListener('click', e => { if(e.target === e.currentTarget) fecharDetalhe(); });
+
+// Iniciar
+carregar();
+</script>
+</body>
+</html>

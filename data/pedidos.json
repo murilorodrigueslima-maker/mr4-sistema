@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-04-17T14:35:49",
-  "total": 56,
+  "atualizado_em": "2026-04-17T17:07:03",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "364195481",
+      "numero": "15405",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 208,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364193295",
+      "numero": "15404",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364171514",
+      "numero": "15403",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 83.2,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364166726",
+      "numero": "15402",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 55.73,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364164292",
+      "numero": "15401",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 325.09,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364157328",
+      "numero": "15400",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 199,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364153271",
+      "numero": "15399",
+      "data": "2026-04-17",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 191.27,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364135072",
       "numero": "15398",
@@ -51,25 +135,13 @@
       "cidade": ""
     },
     {
-      "id": "364111410",
-      "numero": "15394",
-      "data": "2026-04-17",
-      "hora": "",
-      "cliente": "TK AUTOMOTIVO LTDA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 92,
-      "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
       "id": "364109179",
       "numero": "15393",
       "data": "2026-04-17",
       "hora": "",
       "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 551.79,
+      "valor": 525.68,
       "itens": 5,
       "status_gc": "",
       "cidade": ""
@@ -177,7 +249,7 @@
       "hora": "",
       "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 310.97,
+      "valor": 310,
       "itens": 3,
       "status_gc": "",
       "cidade": ""

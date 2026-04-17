@@ -9,183 +9,352 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --orange:#FF6B1A;--orange-dk:#e85d0f;--bg:#F3F4F6;--white:#FFFFFF;
-  --text:#1A1A2E;--muted:#6B7280;--border:#E5E7EB;
+  --orange:#FF6B1A;--orange-dk:#e85d0f;--orange-lt:rgba(255,107,26,.08);
+  --bg:#F7F7F5;--white:#FFFFFF;--text:#1A1A1A;--muted:#9CA3AF;
+  --border:#EBEBEB;--border-dk:#D1D5DB;
   --green:#10B981;--yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --sidebar-w:220px;--detail-w:380px;
 }
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
 
-/* HEADER */
-.hd{background:var(--white);border-bottom:1px solid var(--border);padding:.85rem 1.5rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:50}
-.hd-back{font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.4rem .75rem;border:1px solid var(--border);border-radius:8px;transition:all .15s}
-.hd-back:hover{color:var(--text);border-color:#ccc}
-.hd-title{font-size:1.1rem;font-weight:800;color:var(--text);flex:1}
-.hd-sub{font-size:.78rem;color:var(--muted)}
-
-/* MAIN */
-.main{max-width:1200px;margin:0 auto;padding:1.5rem}
-
-/* STATS */
-.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
-.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:1rem 1.25rem}
-.stat-label{font-size:.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.stat-value{font-size:1.6rem;font-weight:800;color:var(--text);margin-top:.2rem}
-.stat-card.blue .stat-value{color:var(--blue)}
-.stat-card.green .stat-value{color:var(--green)}
-.stat-card.orange .stat-value{color:var(--orange)}
-
-/* TOOLBAR */
-.toolbar{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
-.search-box{flex:1;min-width:220px;position:relative}
-.search-box input{width:100%;padding:.6rem .9rem .6rem 2.2rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.85rem;color:var(--text);background:var(--white);transition:border .15s;outline:none}
-.search-box input:focus{border-color:var(--orange)}
-.search-box::before{content:'🔍';position:absolute;left:.7rem;top:50%;transform:translateY(-50%);font-size:.85rem}
-.filter-select{padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Inter',sans-serif;font-size:.83rem;color:var(--text);background:var(--white);cursor:pointer;outline:none}
-.btn{padding:.6rem 1.2rem;border-radius:10px;font-family:'Inter',sans-serif;font-size:.83rem;font-weight:600;cursor:pointer;transition:all .15s;border:none}
+/* ── TOP BAR ── */
+.topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:1rem;flex-shrink:0;z-index:50}
+.topbar-back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.35rem .7rem;border:1px solid var(--border);border-radius:8px;transition:all .15s;white-space:nowrap}
+.topbar-back:hover{color:var(--text);border-color:var(--border-dk)}
+.topbar-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
+.topbar-spacer{flex:1}
+.btn{padding:.5rem 1rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;display:inline-flex;align-items:center;gap:.4rem}
 .btn-primary{background:var(--orange);color:#fff}
 .btn-primary:hover{background:var(--orange-dk)}
 .btn-ghost{background:none;border:1.5px solid var(--border);color:var(--muted)}
-.btn-ghost:hover{border-color:#ccc;color:var(--text)}
+.btn-ghost:hover{border-color:var(--border-dk);color:var(--text)}
 
-/* GRID */
-.clientes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+/* ── LAYOUT ── */
+.app{display:flex;flex:1;overflow:hidden}
 
-/* CARD */
-.cliente-card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:1.25rem;transition:all .2s;cursor:pointer;position:relative}
-.cliente-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.08);transform:translateY(-2px);border-color:rgba(255,107,26,.2)}
-.card-header{display:flex;align-items:flex-start;gap:.75rem;margin-bottom:.85rem}
-.card-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ff9a5c);color:#fff;font-weight:700;font-size:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.card-info{flex:1;min-width:0}
-.card-nome{font-size:.95rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-cidade{font-size:.75rem;color:var(--muted);margin-top:.1rem}
-.card-badges{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.75rem}
-.badge{font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
-.badge-pf{background:#EFF6FF;color:#1D4ED8}
-.badge-pj{background:#F0FDF4;color:#15803D}
-.badge-vip{background:#FFF7ED;color:#C2410C}
-.badge-atacado{background:#F5F3FF;color:#7C3AED}
-.badge-varejo{background:#F0F9FF;color:#0369A1}
-.badge-inadimplente{background:#FEF2F2;color:#B91C1C}
-.card-contato{display:flex;gap:.75rem;font-size:.78rem;color:var(--muted);margin-bottom:.85rem;flex-wrap:wrap}
-.card-contato span{display:flex;align-items:center;gap:.3rem}
-.card-footer{display:flex;gap:.5rem;justify-content:flex-end}
-.btn-sm{padding:.35rem .7rem;font-size:.72rem;border-radius:7px}
-.btn-wpp{background:#25D366;color:#fff;border:none}
-.btn-wpp:hover{background:#1da851}
-.btn-detail{background:var(--bg);color:var(--muted);border:1.5px solid var(--border)}
-.btn-detail:hover{color:var(--text)}
-.btn-edit{background:rgba(255,107,26,.08);color:var(--orange);border:1.5px solid rgba(255,107,26,.2)}
-.btn-edit:hover{background:rgba(255,107,26,.15)}
-.garantia-badge{position:absolute;top:.85rem;right:.85rem;background:var(--red);color:#fff;font-size:.65rem;font-weight:700;padding:.15rem .45rem;border-radius:20px}
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-search{padding:.85rem .85rem .5rem}
+.sidebar-search input{width:100%;padding:.55rem .8rem .55rem 2rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.8rem;color:var(--text);background:var(--bg);outline:none;transition:border .15s}
+.sidebar-search input:focus{border-color:var(--orange);background:var(--white)}
+.sidebar-search{position:relative}
+.sidebar-search::before{content:'';position:absolute;left:1.4rem;top:50%;transform:translateY(-10%);width:14px;height:14px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat}
+.sidebar-section{padding:.85rem .85rem .3rem;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.sidebar-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .85rem;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border-radius:8px;margin:0 .4rem;transition:all .12s}
+.sidebar-item:hover{background:var(--bg);color:var(--text)}
+.sidebar-item.active{background:var(--orange-lt);color:var(--orange);font-weight:600}
+.sidebar-item-count{font-size:.7rem;font-weight:600;background:var(--bg);padding:.1rem .45rem;border-radius:20px;color:var(--muted)}
+.sidebar-item.active .sidebar-item-count{background:rgba(255,107,26,.15);color:var(--orange)}
+.sidebar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.35rem}
+.sidebar-footer{margin-top:auto;padding:.85rem;border-top:1px solid var(--border)}
+
+/* ── MAIN LIST ── */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.list-header{padding:.85rem 1.25rem;display:flex;align-items:center;gap:.75rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.list-header-title{font-size:.88rem;font-weight:700;color:var(--text);flex:1}
+.list-filter{display:flex;gap:.5rem}
+select.filter-sel{padding:.4rem .7rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.75rem;color:var(--muted);background:var(--white);cursor:pointer;outline:none}
+select.filter-sel:focus{border-color:var(--orange)}
+
+.list-body{flex:1;overflow-y:auto;padding:.5rem}
+
+/* CONTACT ROW */
+.contact-row{display:flex;align-items:center;gap:.85rem;padding:.75rem 1rem;border-radius:10px;cursor:pointer;transition:all .12s;background:var(--white);margin-bottom:.35rem;border:1.5px solid transparent;position:relative}
+.contact-row:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.contact-row.selected{border-color:var(--orange);background:#FFFAF7}
+.contact-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ffb380);color:#fff;font-weight:700;font-size:.95rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.contact-avatar .unread-dot{position:absolute;top:-2px;right:-2px;width:12px;height:12px;background:var(--green);border-radius:50%;border:2px solid var(--white)}
+.contact-main{flex:1;min-width:0}
+.contact-nome{font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.contact-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem;display:flex;align-items:center;gap:.5rem}
+.contact-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem}
+.tag{font-size:.62rem;font-weight:600;padding:.15rem .5rem;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.tag-vip{background:#FFF3E0;color:#E65100}
+.tag-atacado{background:#F3E5F5;color:#6A1B9A}
+.tag-varejo{background:#E3F2FD;color:#1565C0}
+.tag-inadimplente{background:#FFEBEE;color:#B71C1C}
+.tag-pf{background:#E8F5E9;color:#1B5E20}
+.tag-pj{background:#E0F2F1;color:#004D40}
+.contact-meta{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0}
+.contact-city{font-size:.7rem;color:var(--muted)}
+.contact-actions{display:none;gap:.35rem}
+.contact-row:hover .contact-actions{display:flex}
+.action-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.75rem;transition:all .12s;color:var(--muted)}
+.action-btn:hover{border-color:var(--border-dk);color:var(--text)}
+.action-btn.wpp:hover{border-color:#25D366;color:#25D366}
+.action-btn.edit:hover{border-color:var(--orange);color:var(--orange)}
+.garantia-indicator{position:absolute;right:.85rem;top:.85rem;background:var(--red);color:#fff;font-size:.6rem;font-weight:700;padding:.1rem .4rem;border-radius:20px}
 
 /* EMPTY */
-.empty{text-align:center;padding:4rem 2rem;color:var(--muted)}
-.empty-icon{font-size:3rem;margin-bottom:.75rem}
-.empty-title{font-size:1rem;font-weight:600;color:var(--text);margin-bottom:.35rem}
-.empty-sub{font-size:.82rem}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:.75rem;color:var(--muted)}
+.empty-icon{font-size:2.5rem}
+.empty-title{font-size:.95rem;font-weight:600;color:var(--text)}
+.empty-sub{font-size:.8rem}
 
-/* MODAL OVERLAY */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem}
-.overlay.open{display:flex}
-.modal{background:var(--white);border-radius:18px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 64px rgba(0,0,0,.18)}
-.modal-header{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
-.modal-title{font-size:1rem;font-weight:800}
-.modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--muted);line-height:1;padding:.2rem}
-.modal-body{padding:1.5rem}
-.modal-footer{padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.75rem;justify-content:flex-end}
+/* ── DETAIL PANEL ── */
+.detail-panel{width:var(--detail-w);background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transform:translateX(100%);transition:transform .25s ease;position:absolute;right:0;top:52px;bottom:0;z-index:40}
+.detail-panel.open{transform:translateX(0);position:relative;top:auto;right:auto;bottom:auto}
+.detail-top{padding:1.25rem 1.25rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.detail-close{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;transition:all .12s}
+.detail-close:hover{background:var(--bg);color:var(--text)}
+.detail-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ffb380);color:#fff;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin-bottom:.75rem}
+.detail-nome{font-size:1.05rem;font-weight:800;color:var(--text)}
+.detail-sub{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+.detail-contact-row{display:flex;gap:.75rem;margin-top:.85rem;flex-wrap:wrap}
+.detail-contact-item{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--muted)}
+.detail-wpp-btn{margin-top:.85rem;width:100%;padding:.55rem;background:#25D36615;color:#128C7E;border:1.5px solid #25D36630;border-radius:9px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:.5rem}
+.detail-wpp-btn:hover{background:#25D36625;border-color:#25D36650}
 
-/* FORM */
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-.form-group{margin-bottom:1rem}
-.form-label{display:block;font-size:.78rem;font-weight:600;color:var(--text);margin-bottom:.4rem}
-.form-input,.form-select,.form-textarea{width:100%;padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.85rem;color:var(--text);background:var(--white);outline:none;transition:border .15s}
-.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
-.form-textarea{resize:vertical;min-height:80px}
-.form-hint{font-size:.72rem;color:var(--muted);margin-top:.3rem}
+/* TABS */
+.detail-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.detail-tab{flex:1;padding:.7rem;font-size:.75rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s}
+.detail-tab.active{color:var(--orange);border-bottom-color:var(--orange)}
+.detail-tab:hover:not(.active){color:var(--text)}
+.detail-content{flex:1;overflow-y:auto}
+.tab-pane{display:none;padding:1rem 1.25rem}
+.tab-pane.active{display:block}
 
-/* TAGS SELECTOR */
-.tags-grid{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.4rem}
-.tag-btn{padding:.3rem .7rem;border-radius:20px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--muted);transition:all .15s}
-.tag-btn.selected{border-color:var(--orange);background:rgba(255,107,26,.08);color:var(--orange)}
+/* INFO TAB */
+.info-field{margin-bottom:1rem}
+.info-label{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.25rem}
+.info-value{font-size:.85rem;color:var(--text);font-weight:500}
+.info-tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem}
+.tag-toggle{padding:.3rem .7rem;border-radius:20px;font-size:.7rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--muted);transition:all .12s}
+.tag-toggle.on{border-color:var(--orange);background:var(--orange-lt);color:var(--orange)}
 
-/* DETALHE MODAL */
-.detail-section{margin-bottom:1.5rem}
-.detail-section-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
-.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
-.detail-item{}
-.detail-item-label{font-size:.68rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
-.detail-item-value{font-size:.88rem;color:var(--text);font-weight:500;margin-top:.1rem}
-
-/* NOTAS */
-.notas-list{display:flex;flex-direction:column;gap:.75rem;max-height:220px;overflow-y:auto}
-.nota-item{background:var(--bg);border-radius:10px;padding:.75rem 1rem;position:relative}
-.nota-data{font-size:.68rem;color:var(--muted);margin-bottom:.3rem}
-.nota-texto{font-size:.83rem;color:var(--text);line-height:1.5}
-.nota-del{position:absolute;top:.5rem;right:.5rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.8rem;opacity:.5}
+/* NOTAS TAB */
+.nota-add{display:flex;gap:.5rem;margin-bottom:1rem}
+.nota-add input{flex:1;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;outline:none;transition:border .15s}
+.nota-add input:focus{border-color:var(--orange)}
+.nota-add button{padding:.5rem .85rem;background:var(--orange);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer}
+.nota-item{background:var(--bg);border-radius:10px;padding:.75rem;margin-bottom:.5rem;position:relative}
+.nota-data{font-size:.65rem;color:var(--muted);margin-bottom:.3rem}
+.nota-texto{font-size:.82rem;color:var(--text);line-height:1.55}
+.nota-del{position:absolute;top:.5rem;right:.5rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:.75rem;opacity:.5;transition:opacity .12s}
 .nota-del:hover{opacity:1;color:var(--red)}
-.nota-input-row{display:flex;gap:.5rem;margin-top:.75rem}
-.nota-input-row input{flex:1;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.82rem;outline:none}
-.nota-input-row input:focus{border-color:var(--orange)}
 
-/* GARANTIAS VINCULADAS */
-.garantia-item{background:var(--bg);border-radius:8px;padding:.6rem .9rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
-.garantia-item-nome{font-size:.82rem;font-weight:600;color:var(--text)}
-.garantia-item-status{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px}
+/* CHAT TAB */
+.chat-area{display:flex;flex-direction:column;height:calc(100vh - 280px)}
+.chat-msgs{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.5rem}
+.chat-msg{max-width:75%;padding:.6rem .85rem;border-radius:12px;font-size:.8rem;line-height:1.5}
+.chat-msg.recv{background:var(--bg);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px}
+.chat-msg.sent{background:var(--orange);color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.chat-msg-time{font-size:.6rem;opacity:.7;margin-top:.2rem;text-align:right}
+.chat-input-area{padding:.75rem;border-top:1px solid var(--border);display:flex;gap:.5rem}
+.chat-input-area input{flex:1;padding:.55rem .85rem;border:1.5px solid var(--border);border-radius:22px;font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:border .15s}
+.chat-input-area input:focus{border-color:var(--orange)}
+.chat-send{width:36px;height:36px;border-radius:50%;background:var(--orange);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:background .15s;flex-shrink:0}
+.chat-send:hover{background:var(--orange-dk)}
+.chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:.5rem;color:var(--muted);text-align:center;padding:1.5rem}
+.chat-empty-icon{font-size:2rem}
+.chat-empty-title{font-size:.85rem;font-weight:600;color:var(--text)}
+.chat-empty-sub{font-size:.75rem;line-height:1.5}
+.chat-config-btn{margin-top:.75rem;padding:.5rem 1rem;background:var(--orange);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer}
 
-/* LOADING */
-.loading{text-align:center;padding:3rem;color:var(--muted);font-size:.88rem}
+/* GARANTIAS TAB */
+.garantia-row{background:var(--bg);border-radius:9px;padding:.7rem .85rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center}
+.garantia-row-nome{font-size:.82rem;font-weight:600;color:var(--text)}
+.garantia-row-def{font-size:.7rem;color:var(--muted);margin-top:.1rem}
+.g-status{font-size:.65rem;font-weight:700;padding:.2rem .55rem;border-radius:20px}
 
-@media(max-width:600px){
-  .form-row{grid-template-columns:1fr}
-  .detail-grid{grid-template-columns:1fr}
-  .stats{grid-template-columns:repeat(2,1fr)}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:18px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.2)}
+.modal-header{padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-size:.95rem;font-weight:800}
+.modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);padding:.2rem;line-height:1}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-footer{padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.65rem;justify-content:flex-end}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+.form-group{margin-bottom:.85rem}
+.form-label{display:block;font-size:.73rem;font-weight:600;color:var(--text);margin-bottom:.35rem}
+.form-input,.form-select,.form-textarea{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.83rem;color:var(--text);background:var(--white);outline:none;transition:border .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
+.form-textarea{resize:vertical;min-height:70px}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:1.5rem;padding:.65rem 1.25rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.stat-pill{display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--muted)}
+.stat-pill strong{color:var(--text);font-weight:700}
+.stat-pill .dot{width:7px;height:7px;border-radius:50%}
+
+@media(max-width:768px){
+  .detail-panel{position:fixed;width:100%;right:0;top:52px;bottom:0;transform:translateX(100%)}
+  .detail-panel.open{transform:translateX(0)}
+  .sidebar{display:none}
 }
 </style>
 </head>
 <body>
 
-<div class="hd">
-  <a class="hd-back" href="../index.html">← Início</a>
-  <div>
-    <div class="hd-title">👥 CRM Clientes</div>
-    <div class="hd-sub">Histórico, contatos e anotações</div>
-  </div>
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="topbar-back" href="../index.html">← Início</a>
+  <div class="topbar-title">👥 CRM Clientes</div>
+  <div class="topbar-spacer"></div>
+  <select class="filter-sel" id="filterTipo" onchange="filtrar()" style="margin-right:.25rem">
+    <option value="">Todos os tipos</option>
+    <option value="PF">PF</option>
+    <option value="PJ">PJ</option>
+  </select>
+  <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Cliente</button>
 </div>
 
-<div class="main">
+<!-- APP -->
+<div class="app">
 
-  <!-- STATS -->
-  <div class="stats" id="statsRow">
-    <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="stTotal">—</div></div>
-    <div class="stat-card blue"><div class="stat-label">PJ</div><div class="stat-value" id="stPJ">—</div></div>
-    <div class="stat-card green"><div class="stat-label">PF</div><div class="stat-value" id="stPF">—</div></div>
-    <div class="stat-card orange"><div class="stat-label">Novos este mês</div><div class="stat-value" id="stNovos">—</div></div>
-  </div>
-
-  <!-- TOOLBAR -->
-  <div class="toolbar">
-    <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Buscar por nome, telefone ou cidade…" oninput="filtrar()">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-search">
+      <input type="text" id="searchInput" placeholder="Buscar cliente…" oninput="filtrar()">
     </div>
-    <select class="filter-select" id="filterTipo" onchange="filtrar()">
-      <option value="">Todos os tipos</option>
-      <option value="PF">PF</option>
-      <option value="PJ">PJ</option>
-    </select>
-    <select class="filter-select" id="filterTag" onchange="filtrar()">
-      <option value="">Todas as tags</option>
-      <option value="VIP">VIP</option>
-      <option value="Atacado">Atacado</option>
-      <option value="Varejo">Varejo</option>
-      <option value="Inadimplente">Inadimplente</option>
-    </select>
-    <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Cliente</button>
+
+    <div class="sidebar-section">Filtros</div>
+    <div class="sidebar-item active" id="filter-todos" onclick="setFilter('todos')">
+      <span>Todos</span>
+      <span class="sidebar-item-count" id="cnt-todos">0</span>
+    </div>
+    <div class="sidebar-item" id="filter-vip" onclick="setFilter('VIP')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#E65100"></span>VIP</span>
+      <span class="sidebar-item-count" id="cnt-vip">0</span>
+    </div>
+    <div class="sidebar-item" id="filter-atacado" onclick="setFilter('Atacado')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#6A1B9A"></span>Atacado</span>
+      <span class="sidebar-item-count" id="cnt-atacado">0</span>
+    </div>
+    <div class="sidebar-item" id="filter-varejo" onclick="setFilter('Varejo')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#1565C0"></span>Varejo</span>
+      <span class="sidebar-item-count" id="cnt-varejo">0</span>
+    </div>
+    <div class="sidebar-item" id="filter-inadimplente" onclick="setFilter('Inadimplente')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#B71C1C"></span>Inadimplente</span>
+      <span class="sidebar-item-count" id="cnt-inadimplente">0</span>
+    </div>
+
+    <div class="sidebar-section" style="margin-top:.5rem">Este mês</div>
+    <div class="sidebar-item" id="filter-novos" onclick="setFilter('novos')">
+      <span>Novos clientes</span>
+      <span class="sidebar-item-count" id="cnt-novos">0</span>
+    </div>
+    <div class="sidebar-item" id="filter-garantias" onclick="setFilter('garantias')">
+      <span>Com garantia aberta</span>
+      <span class="sidebar-item-count" id="cnt-garantias" style="background:#FFEBEE;color:#B71C1C">0</span>
+    </div>
+
+    <div class="sidebar-footer">
+      <div style="font-size:.68rem;color:var(--muted);text-align:center;line-height:1.5">
+        WhatsApp<br>
+        <strong style="color:var(--text)" id="wppStatus">Não configurado</strong>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <!-- Stats bar -->
+    <div class="stats-bar">
+      <div class="stat-pill"><span class="dot" style="background:var(--orange)"></span>Total: <strong id="stTotal">—</strong></div>
+      <div class="stat-pill"><span class="dot" style="background:var(--blue)"></span>PJ: <strong id="stPJ">—</strong></div>
+      <div class="stat-pill"><span class="dot" style="background:var(--green)"></span>PF: <strong id="stPF">—</strong></div>
+      <div class="stat-pill"><span class="dot" style="background:var(--purple)"></span>Novos mês: <strong id="stNovos">—</strong></div>
+    </div>
+
+    <!-- List header -->
+    <div class="list-header">
+      <div class="list-header-title" id="listTitle">Todos os clientes</div>
+    </div>
+
+    <!-- List body -->
+    <div class="list-body" id="listBody">
+      <div class="empty-state">
+        <div class="empty-icon">⏳</div>
+        <div class="empty-title">Carregando…</div>
+      </div>
+    </div>
   </div>
 
-  <!-- GRID -->
-  <div class="clientes-grid" id="clientesGrid">
-    <div class="loading">Carregando clientes…</div>
-  </div>
+  <!-- DETAIL PANEL -->
+  <aside class="detail-panel" id="detailPanel">
+    <div class="detail-top" style="position:relative">
+      <button class="detail-close" onclick="fecharDetalhe()">✕</button>
+      <div class="detail-avatar" id="detAvatar">?</div>
+      <div class="detail-nome" id="detNome">—</div>
+      <div class="detail-sub" id="detSub">—</div>
+      <div class="detail-contact-row" id="detContacts"></div>
+      <button class="detail-wpp-btn" id="detWppBtn" onclick="abrirWpp()" style="display:none">
+        💬 Abrir conversa no WhatsApp
+      </button>
+    </div>
+
+    <!-- TABS -->
+    <div class="detail-tabs">
+      <div class="detail-tab active" onclick="showTab('info')">Info</div>
+      <div class="detail-tab" onclick="showTab('notas')">📝 Notas</div>
+      <div class="detail-tab" onclick="showTab('chat')">💬 Chat</div>
+      <div class="detail-tab" onclick="showTab('garantias')">🛡️</div>
+    </div>
+
+    <div class="detail-content">
+      <!-- INFO -->
+      <div class="tab-pane active" id="tab-info">
+        <div class="info-field">
+          <div class="info-label">CPF / CNPJ</div>
+          <div class="info-value" id="iDoc">—</div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">Cidade / Estado</div>
+          <div class="info-value" id="iCidade">—</div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">E-mail</div>
+          <div class="info-value" id="iEmail">—</div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">Tags</div>
+          <div class="info-tags" id="iTags"></div>
+        </div>
+        <div style="display:flex;gap:.5rem;margin-top:1rem">
+          <button class="btn btn-ghost" style="flex:1" onclick="editarClienteAtual()">✏️ Editar</button>
+          <button class="btn" style="flex:1;background:#FEF2F2;color:#B91C1C;border:1.5px solid #FECACA" onclick="deletarClienteAtual()">🗑 Excluir</button>
+        </div>
+      </div>
+
+      <!-- NOTAS -->
+      <div class="tab-pane" id="tab-notas">
+        <div class="nota-add">
+          <input type="text" id="notaInput" placeholder="Nova anotação…" onkeydown="if(event.key==='Enter')adicionarNota()">
+          <button onclick="adicionarNota()">+</button>
+        </div>
+        <div id="notasList"></div>
+      </div>
+
+      <!-- CHAT -->
+      <div class="tab-pane" id="tab-chat" style="padding:0">
+        <div class="chat-area" id="chatArea">
+          <div class="chat-empty" id="chatEmpty">
+            <div class="chat-empty-icon">💬</div>
+            <div class="chat-empty-title">WhatsApp não configurado</div>
+            <div class="chat-empty-sub">Configure o Z-API para ver e enviar mensagens direto aqui.</div>
+            <button class="chat-config-btn" onclick="alert('Em breve: configure o Z-API nas configurações.')">Configurar agora</button>
+          </div>
+          <div class="chat-msgs" id="chatMsgs" style="display:none"></div>
+        </div>
+        <div class="chat-input-area" id="chatInputArea" style="display:none">
+          <input type="text" id="chatInput" placeholder="Digite uma mensagem…" onkeydown="if(event.key==='Enter')enviarMsg()">
+          <button class="chat-send" onclick="enviarMsg()">➤</button>
+        </div>
+      </div>
+
+      <!-- GARANTIAS -->
+      <div class="tab-pane" id="tab-garantias">
+        <div id="garantiasList">
+          <div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem 0">Nenhuma garantia.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 </div>
 
 <!-- MODAL CRIAR/EDITAR -->
@@ -197,7 +366,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     </div>
     <div class="modal-body">
       <input type="hidden" id="editId">
-
       <div class="form-row">
         <div class="form-group" style="grid-column:1/-1">
           <label class="form-label">Nome completo / Razão social *</label>
@@ -228,70 +396,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
         <div class="form-group">
           <label class="form-label">Estado</label>
-          <input class="form-input" id="fEstado" placeholder="Ex: SP" maxlength="2">
+          <input class="form-input" id="fEstado" placeholder="SP" maxlength="2">
         </div>
       </div>
-
       <div class="form-group">
         <label class="form-label">Tags</label>
-        <div class="tags-grid" id="tagsGrid">
-          <button type="button" class="tag-btn" data-tag="VIP" onclick="toggleTag(this)">⭐ VIP</button>
-          <button type="button" class="tag-btn" data-tag="Atacado" onclick="toggleTag(this)">📦 Atacado</button>
-          <button type="button" class="tag-btn" data-tag="Varejo" onclick="toggleTag(this)">🛒 Varejo</button>
-          <button type="button" class="tag-btn" data-tag="Inadimplente" onclick="toggleTag(this)">⚠️ Inadimplente</button>
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.35rem" id="tagsGrid">
+          <button type="button" class="tag-toggle" data-tag="VIP" onclick="toggleTag(this)">⭐ VIP</button>
+          <button type="button" class="tag-toggle" data-tag="Atacado" onclick="toggleTag(this)">📦 Atacado</button>
+          <button type="button" class="tag-toggle" data-tag="Varejo" onclick="toggleTag(this)">🛒 Varejo</button>
+          <button type="button" class="tag-toggle" data-tag="Inadimplente" onclick="toggleTag(this)">⚠️ Inadimplente</button>
         </div>
       </div>
-
       <div class="form-group">
         <label class="form-label">Observação inicial</label>
-        <textarea class="form-textarea" id="fObs" placeholder="Alguma informação importante sobre este cliente…"></textarea>
+        <textarea class="form-textarea" id="fObs" placeholder="Informações importantes sobre este cliente…"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarCliente()">Salvar Cliente</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL DETALHE -->
-<div class="overlay" id="detalheOverlay">
-  <div class="modal" style="max-width:600px">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" id="detNome">Cliente</div>
-        <div style="font-size:.75rem;color:var(--muted);margin-top:.1rem" id="detSub"></div>
-      </div>
-      <button class="modal-close" onclick="fecharDetalhe()">✕</button>
-    </div>
-    <div class="modal-body">
-
-      <!-- INFO -->
-      <div class="detail-section">
-        <div class="detail-section-title">Informações</div>
-        <div class="detail-grid" id="detGrid"></div>
-      </div>
-
-      <!-- NOTAS -->
-      <div class="detail-section">
-        <div class="detail-section-title">Anotações</div>
-        <div class="notas-list" id="notasList"></div>
-        <div class="nota-input-row">
-          <input type="text" id="notaInput" placeholder="Nova anotação…" onkeydown="if(event.key==='Enter')adicionarNota()">
-          <button class="btn btn-primary btn-sm" onclick="adicionarNota()">+ Adicionar</button>
-        </div>
-      </div>
-
-      <!-- GARANTIAS -->
-      <div class="detail-section" id="garantiasSection">
-        <div class="detail-section-title">Garantias vinculadas</div>
-        <div id="garantiasList"><div style="color:var(--muted);font-size:.82rem">Nenhuma garantia encontrada.</div></div>
-      </div>
-
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="fecharDetalhe()">Fechar</button>
-      <button class="btn btn-primary" onclick="editarClienteAtual()">✏️ Editar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
     </div>
   </div>
 </div>
@@ -302,7 +426,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp, Timestamp
+  query, orderBy, serverTimestamp, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -316,15 +440,16 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// ── Auth guard ────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, u => { if(!u) window.location.href='../login.html'; });
 
 // ── Estado ────────────────────────────────────────────────────────────────────
 let CLIENTES = [];
 let GARANTIAS = [];
 let clienteAtualId = null;
+let filtroAtivo = 'todos';
+let tabAtiva = 'info';
 
-// ── Carregar dados ────────────────────────────────────────────────────────────
+// ── Carregar ──────────────────────────────────────────────────────────────────
 async function carregar() {
   const [snapC, snapG] = await Promise.all([
     getDocs(query(collection(db,'clientes'), orderBy('criado_em','desc'))),
@@ -332,239 +457,292 @@ async function carregar() {
   ]);
   CLIENTES = snapC.docs.map(d => ({ id: d.id, ...d.data() }));
   GARANTIAS = snapG.docs.map(d => ({ id: d.id, ...d.data() }));
-  atualizarStats();
-  renderGrid(CLIENTES);
+  atualizarContadores();
+  filtrar();
 }
 
-function atualizarStats() {
+function atualizarContadores() {
   const agora = new Date();
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
-  document.getElementById('stTotal').textContent = CLIENTES.length;
-  document.getElementById('stPJ').textContent = CLIENTES.filter(c => c.tipo === 'PJ').length;
-  document.getElementById('stPF').textContent = CLIENTES.filter(c => c.tipo === 'PF').length;
-  document.getElementById('stNovos').textContent = CLIENTES.filter(c => {
-    if (!c.criado_em) return false;
+  const novos = CLIENTES.filter(c => {
+    if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
-  }).length;
+  });
+  const comGarantia = CLIENTES.filter(c =>
+    GARANTIAS.some(g => normalizar(g.clienteNome) === normalizar(c.nome) && !['encerrado','reprovado'].includes(g.status))
+  );
+  document.getElementById('stTotal').textContent = CLIENTES.length;
+  document.getElementById('stPJ').textContent = CLIENTES.filter(c=>c.tipo==='PJ').length;
+  document.getElementById('stPF').textContent = CLIENTES.filter(c=>c.tipo==='PF').length;
+  document.getElementById('stNovos').textContent = novos.length;
+  document.getElementById('cnt-todos').textContent = CLIENTES.length;
+  document.getElementById('cnt-vip').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('VIP')).length;
+  document.getElementById('cnt-atacado').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('Atacado')).length;
+  document.getElementById('cnt-varejo').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('Varejo')).length;
+  document.getElementById('cnt-inadimplente').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('Inadimplente')).length;
+  document.getElementById('cnt-novos').textContent = novos.length;
+  document.getElementById('cnt-garantias').textContent = comGarantia.length;
 }
 
-function renderGrid(lista) {
-  const grid = document.getElementById('clientesGrid');
-  if (!lista.length) {
-    grid.innerHTML = `<div class="empty" style="grid-column:1/-1">
-      <div class="empty-icon">👥</div>
-      <div class="empty-title">Nenhum cliente encontrado</div>
-      <div class="empty-sub">Clique em "+ Novo Cliente" para adicionar</div>
-    </div>`;
+window.setFilter = function(f) {
+  filtroAtivo = f;
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('filter-' + f);
+  if(el) el.classList.add('active');
+  filtrar();
+};
+
+window.filtrar = function() {
+  const q = normalizar(document.getElementById('searchInput').value);
+  const tipo = document.getElementById('filterTipo').value;
+  const agora = new Date();
+  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+
+  let lista = CLIENTES.filter(c => {
+    const matchQ = !q || normalizar(c.nome).includes(q) || normalizar(c.telefone||'').includes(q) || normalizar(c.cidade||'').includes(q);
+    const matchTipo = !tipo || c.tipo === tipo;
+    return matchQ && matchTipo;
+  });
+
+  if(filtroAtivo === 'VIP') lista = lista.filter(c=>(c.tags||[]).includes('VIP'));
+  else if(filtroAtivo === 'Atacado') lista = lista.filter(c=>(c.tags||[]).includes('Atacado'));
+  else if(filtroAtivo === 'Varejo') lista = lista.filter(c=>(c.tags||[]).includes('Varejo'));
+  else if(filtroAtivo === 'Inadimplente') lista = lista.filter(c=>(c.tags||[]).includes('Inadimplente'));
+  else if(filtroAtivo === 'novos') lista = lista.filter(c=>{
+    if(!c.criado_em) return false;
+    const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
+    return d >= inicioMes;
+  });
+  else if(filtroAtivo === 'garantias') lista = lista.filter(c=>
+    GARANTIAS.some(g => normalizar(g.clienteNome)===normalizar(c.nome) && !['encerrado','reprovado'].includes(g.status))
+  );
+
+  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta' };
+  document.getElementById('listTitle').textContent = (labels[filtroAtivo]||'Clientes') + ` (${lista.length})`;
+  renderLista(lista);
+};
+
+function renderLista(lista) {
+  const body = document.getElementById('listBody');
+  if(!lista.length){
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Nenhum cliente</div><div class="empty-sub">Tente outros filtros ou adicione um novo</div></div>`;
     return;
   }
-  grid.innerHTML = lista.map(c => {
+  const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente', PF:'tag-pf', PJ:'tag-pj' };
+  body.innerHTML = lista.map(c => {
     const ini = (c.nome||'?')[0].toUpperCase();
-    const tags = (c.tags||[]).map(t => `<span class="badge badge-${t.toLowerCase()}">${t}</span>`).join('');
-    const tipoBadge = `<span class="badge badge-${c.tipo?.toLowerCase()||'pf'}">${c.tipo||'PF'}</span>`;
-    const gAberta = GARANTIAS.filter(g => normalizar(g.clienteNome) === normalizar(c.nome) && !['encerrado','reprovado'].includes(g.status));
-    const gBadge = gAberta.length ? `<div class="garantia-badge">🛡️ ${gAberta.length}</div>` : '';
+    const tags = [(c.tipo||'PF'), ...(c.tags||[])].map(t=>`<span class="tag ${tagClasses[t]||''}">${t}</span>`).join('');
+    const gAberta = GARANTIAS.filter(g=>normalizar(g.clienteNome)===normalizar(c.nome)&&!['encerrado','reprovado'].includes(g.status));
     const wpp = (c.telefone||'').replace(/\D/g,'');
+    const unread = ''; // futuro: badge de msg não lida
     return `
-    <div class="cliente-card" onclick="abrirDetalhe('${c.id}')">
-      ${gBadge}
-      <div class="card-header">
-        <div class="card-avatar">${ini}</div>
-        <div class="card-info">
-          <div class="card-nome">${c.nome}</div>
-          <div class="card-cidade">${[c.cidade, c.estado].filter(Boolean).join(' — ') || '—'}</div>
+    <div class="contact-row${clienteAtualId===c.id?' selected':''}" onclick="abrirDetalhe('${c.id}')">
+      ${gAberta.length?`<div class="garantia-indicator">🛡️ ${gAberta.length}</div>`:''}
+      <div class="contact-avatar">${ini}${unread}</div>
+      <div class="contact-main">
+        <div class="contact-nome">${c.nome}</div>
+        <div class="contact-sub">${c.telefone||'—'}${c.email?` · ${c.email}`:''}</div>
+        <div class="contact-tags">${tags}</div>
+      </div>
+      <div class="contact-meta">
+        <div class="contact-city">${c.cidade||''}</div>
+        <div class="contact-actions">
+          ${wpp?`<button class="action-btn wpp" title="WhatsApp" onclick="event.stopPropagation();window.open('https://wa.me/55${wpp}','_blank')">💬</button>`:''}
+          <button class="action-btn edit" title="Editar" onclick="event.stopPropagation();editarCliente('${c.id}')">✏️</button>
         </div>
-      </div>
-      <div class="card-badges">${tipoBadge}${tags}</div>
-      <div class="card-contato">
-        ${c.telefone ? `<span>📱 ${c.telefone}</span>` : ''}
-        ${c.email ? `<span>✉️ ${c.email}</span>` : ''}
-      </div>
-      <div class="card-footer">
-        ${wpp ? `<button class="btn btn-sm btn-wpp" onclick="event.stopPropagation();window.open('https://wa.me/55${wpp}','_blank')">💬 WhatsApp</button>` : ''}
-        <button class="btn btn-sm btn-edit" onclick="event.stopPropagation();editarCliente('${c.id}')">✏️ Editar</button>
       </div>
     </div>`;
   }).join('');
 }
 
-// ── Filtro ────────────────────────────────────────────────────────────────────
-window.filtrar = function() {
-  const q = normalizar(document.getElementById('searchInput').value);
-  const tipo = document.getElementById('filterTipo').value;
-  const tag  = document.getElementById('filterTag').value;
-  const lista = CLIENTES.filter(c => {
-    const match = !q || normalizar(c.nome).includes(q) || normalizar(c.telefone||'').includes(q) || normalizar(c.cidade||'').includes(q);
-    const matchTipo = !tipo || c.tipo === tipo;
-    const matchTag  = !tag  || (c.tags||[]).includes(tag);
-    return match && matchTipo && matchTag;
-  });
-  renderGrid(lista);
-};
-
-function normalizar(s) { return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-
-// ── Modal Criar/Editar ────────────────────────────────────────────────────────
-window.abrirModalNovo = function() {
-  document.getElementById('editId').value = '';
-  document.getElementById('modalTitle').textContent = 'Novo Cliente';
-  document.getElementById('fNome').value = '';
-  document.getElementById('fTipo').value = 'PF';
-  document.getElementById('fDoc').value = '';
-  document.getElementById('fTelefone').value = '';
-  document.getElementById('fEmail').value = '';
-  document.getElementById('fCidade').value = '';
-  document.getElementById('fEstado').value = '';
-  document.getElementById('fObs').value = '';
-  document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('selected'));
-  document.getElementById('modalOverlay').classList.add('open');
-};
-
-window.editarCliente = function(id) {
-  const c = CLIENTES.find(x => x.id === id);
-  if (!c) return;
-  document.getElementById('editId').value = id;
-  document.getElementById('modalTitle').textContent = 'Editar Cliente';
-  document.getElementById('fNome').value = c.nome || '';
-  document.getElementById('fTipo').value = c.tipo || 'PF';
-  document.getElementById('fDoc').value = c.cpf_cnpj || '';
-  document.getElementById('fTelefone').value = c.telefone || '';
-  document.getElementById('fEmail').value = c.email || '';
-  document.getElementById('fCidade').value = c.cidade || '';
-  document.getElementById('fEstado').value = c.estado || '';
-  document.getElementById('fObs').value = '';
-  document.querySelectorAll('.tag-btn').forEach(b => {
-    b.classList.toggle('selected', (c.tags||[]).includes(b.dataset.tag));
-  });
-  document.getElementById('modalOverlay').classList.add('open');
-};
-
-window.fecharModal = function() {
-  document.getElementById('modalOverlay').classList.remove('open');
-};
-
-window.toggleTag = function(btn) {
-  btn.classList.toggle('selected');
-};
-
-window.salvarCliente = async function() {
-  const nome = document.getElementById('fNome').value.trim();
-  const tel  = document.getElementById('fTelefone').value.trim();
-  if (!nome || !tel) { alert('Nome e WhatsApp são obrigatórios.'); return; }
-  const tags = [...document.querySelectorAll('.tag-btn.selected')].map(b => b.dataset.tag);
-  const obs  = document.getElementById('fObs').value.trim();
-  const id   = document.getElementById('editId').value;
-  const dados = {
-    nome,
-    tipo: document.getElementById('fTipo').value,
-    cpf_cnpj: document.getElementById('fDoc').value.trim(),
-    telefone: tel,
-    email: document.getElementById('fEmail').value.trim(),
-    cidade: document.getElementById('fCidade').value.trim(),
-    estado: document.getElementById('fEstado').value.trim().toUpperCase(),
-    tags,
-    atualizado_em: serverTimestamp(),
-  };
-  if (id) {
-    await updateDoc(doc(db,'clientes',id), dados);
-    if (obs) {
-      const c = CLIENTES.find(x => x.id === id);
-      const notas = c?.notas || [];
-      notas.unshift({ texto: obs, data: new Date().toISOString() });
-      await updateDoc(doc(db,'clientes',id), { notas });
-    }
-  } else {
-    const notas = obs ? [{ texto: obs, data: new Date().toISOString() }] : [];
-    await addDoc(collection(db,'clientes'), { ...dados, notas, criado_em: serverTimestamp() });
-  }
-  fecharModal();
-  await carregar();
-};
-
-// ── Modal Detalhe ─────────────────────────────────────────────────────────────
+// ── Detail Panel ──────────────────────────────────────────────────────────────
 window.abrirDetalhe = function(id) {
   clienteAtualId = id;
-  const c = CLIENTES.find(x => x.id === id);
-  if (!c) return;
+  const c = CLIENTES.find(x=>x.id===id);
+  if(!c) return;
+
+  // Atualiza seleção na lista
+  document.querySelectorAll('.contact-row').forEach(r=>r.classList.remove('selected'));
+  const rows = document.querySelectorAll('.contact-row');
+  rows.forEach(r => { if(r.onclick?.toString().includes(id)) r.classList.add('selected'); });
+
+  document.getElementById('detAvatar').textContent = (c.nome||'?')[0].toUpperCase();
   document.getElementById('detNome').textContent = c.nome;
-  const tags = (c.tags||[]).join(', ') || '—';
-  document.getElementById('detSub').textContent = `${c.tipo||'PF'} ${tags !== '—' ? '· '+tags : ''}`;
-  // Grid info
-  document.getElementById('detGrid').innerHTML = `
-    <div class="detail-item"><div class="detail-item-label">WhatsApp</div><div class="detail-item-value">${c.telefone||'—'}</div></div>
-    <div class="detail-item"><div class="detail-item-label">E-mail</div><div class="detail-item-value">${c.email||'—'}</div></div>
-    <div class="detail-item"><div class="detail-item-label">CPF / CNPJ</div><div class="detail-item-value">${c.cpf_cnpj||'—'}</div></div>
-    <div class="detail-item"><div class="detail-item-label">Cidade / Estado</div><div class="detail-item-value">${[c.cidade,c.estado].filter(Boolean).join(' — ')||'—'}</div></div>
-  `;
+  document.getElementById('detSub').textContent = [c.tipo||'PF', c.cidade, c.estado].filter(Boolean).join(' · ');
+
+  const wpp = (c.telefone||'').replace(/\D/g,'');
+  document.getElementById('detContacts').innerHTML = [
+    c.telefone ? `<div class="detail-contact-item">📱 ${c.telefone}</div>` : '',
+    c.email    ? `<div class="detail-contact-item">✉️ ${c.email}</div>` : '',
+  ].join('');
+
+  const wppBtn = document.getElementById('detWppBtn');
+  if(wpp){ wppBtn.style.display='flex'; wppBtn.dataset.wpp = wpp; } else { wppBtn.style.display='none'; }
+
+  // Info tab
+  document.getElementById('iDoc').textContent = c.cpf_cnpj||'—';
+  document.getElementById('iCidade').textContent = [c.cidade,c.estado].filter(Boolean).join(' / ')||'—';
+  document.getElementById('iEmail').textContent = c.email||'—';
+  const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente' };
+  document.getElementById('iTags').innerHTML = (c.tags||[]).length
+    ? (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}">${t}</span>`).join('')
+    : '<span style="font-size:.8rem;color:var(--muted)">Sem tags</span>';
+
+  // Notas
   renderNotas(c);
+
   // Garantias
-  const gList = GARANTIAS.filter(g => normalizar(g.clienteNome) === normalizar(c.nome));
-  const statusLabel = { recebido:'Recebido', em_teste:'Em Teste', aprovado:'Aprovado', substituido:'Substituído', ag_envio:'Ag. Envio', enviado:'Enviado', encerrado:'Encerrado', reprovado:'Reprovado' };
-  const statusColor = { recebido:'#6B7280', em_teste:'#F59E0B', aprovado:'#10B981', substituido:'#3B82F6', ag_envio:'#EF4444', enviado:'#8B5CF6', encerrado:'#6B7280', reprovado:'#6B7280' };
+  const gList = GARANTIAS.filter(g=>normalizar(g.clienteNome)===normalizar(c.nome));
+  const sLabel={recebido:'Recebido',em_teste:'Em Teste',aprovado:'Aprovado',substituido:'Substituído',ag_envio:'Ag. Envio',enviado:'Enviado',encerrado:'Encerrado',reprovado:'Reprovado'};
+  const sColor={recebido:'#6B7280',em_teste:'#F59E0B',aprovado:'#10B981',substituido:'#3B82F6',ag_envio:'#EF4444',enviado:'#8B5CF6',encerrado:'#9CA3AF',reprovado:'#9CA3AF'};
   document.getElementById('garantiasList').innerHTML = gList.length
-    ? gList.map(g => `<div class="garantia-item">
-        <div><div class="garantia-item-nome">${g.produtoNome||'Produto'}</div><div style="font-size:.72rem;color:var(--muted)">${g.defeito||''}</div></div>
-        <span class="garantia-item-status" style="background:${statusColor[g.status]||'#6B7280'}22;color:${statusColor[g.status]||'#6B7280'}">${statusLabel[g.status]||g.status}</span>
+    ? gList.map(g=>`<div class="garantia-row">
+        <div><div class="garantia-row-nome">${g.produtoNome||'Produto'}</div><div class="garantia-row-def">${g.defeito||''}</div></div>
+        <span class="g-status" style="background:${sColor[g.status]||'#6B7280'}22;color:${sColor[g.status]||'#6B7280'}">${sLabel[g.status]||g.status}</span>
       </div>`).join('')
-    : '<div style="color:var(--muted);font-size:.82rem">Nenhuma garantia registrada.</div>';
-  document.getElementById('detalheOverlay').classList.add('open');
+    : '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem 0">Nenhuma garantia.</div>';
+
+  document.getElementById('detailPanel').classList.add('open');
+  showTab('info');
 };
 
+window.fecharDetalhe = function() {
+  document.getElementById('detailPanel').classList.remove('open');
+  clienteAtualId = null;
+  document.querySelectorAll('.contact-row').forEach(r=>r.classList.remove('selected'));
+};
+
+window.abrirWpp = function() {
+  const wpp = document.getElementById('detWppBtn').dataset.wpp;
+  if(wpp) window.open(`https://wa.me/55${wpp}`,'_blank');
+};
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+window.showTab = function(tab) {
+  tabAtiva = tab;
+  document.querySelectorAll('.detail-tab').forEach((t,i)=>{
+    const names=['info','notas','chat','garantias'];
+    t.classList.toggle('active', names[i]===tab);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab)?.classList.add('active');
+};
+
+// ── Notas ─────────────────────────────────────────────────────────────────────
 function renderNotas(c) {
-  const notas = c.notas || [];
+  const notas = c.notas||[];
   document.getElementById('notasList').innerHTML = notas.length
-    ? notas.map((n,i) => `<div class="nota-item">
+    ? notas.map((n,i)=>`<div class="nota-item">
         <div class="nota-data">${formatarData(n.data)}</div>
         <div class="nota-texto">${n.texto}</div>
         <button class="nota-del" onclick="deletarNota(${i})">✕</button>
       </div>`).join('')
-    : '<div style="color:var(--muted);font-size:.82rem;padding:.5rem 0">Nenhuma anotação ainda.</div>';
+    : '<div style="color:var(--muted);font-size:.8rem;padding:.5rem 0">Nenhuma anotação ainda.</div>';
 }
 
 window.adicionarNota = async function() {
   const input = document.getElementById('notaInput');
   const texto = input.value.trim();
-  if (!texto || !clienteAtualId) return;
-  const c = CLIENTES.find(x => x.id === clienteAtualId);
-  const notas = [{ texto, data: new Date().toISOString() }, ...(c.notas||[])];
-  await updateDoc(doc(db,'clientes',clienteAtualId), { notas });
+  if(!texto||!clienteAtualId) return;
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  const notas = [{ texto, data:new Date().toISOString() }, ...(c.notas||[])];
+  await updateDoc(doc(db,'clientes',clienteAtualId),{ notas });
   c.notas = notas;
   input.value = '';
   renderNotas(c);
 };
 
 window.deletarNota = async function(idx) {
-  if (!confirm('Remover esta anotação?')) return;
-  const c = CLIENTES.find(x => x.id === clienteAtualId);
-  const notas = (c.notas||[]).filter((_,i) => i !== idx);
-  await updateDoc(doc(db,'clientes',clienteAtualId), { notas });
+  if(!confirm('Remover esta anotação?')) return;
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  const notas = (c.notas||[]).filter((_,i)=>i!==idx);
+  await updateDoc(doc(db,'clientes',clienteAtualId),{ notas });
   c.notas = notas;
   renderNotas(c);
 };
 
-window.fecharDetalhe = function() {
-  document.getElementById('detalheOverlay').classList.remove('open');
-  clienteAtualId = null;
+// ── Chat (preparado para Z-API) ───────────────────────────────────────────────
+window.enviarMsg = function() {
+  alert('Configure o Z-API para enviar mensagens.');
 };
 
-window.editarClienteAtual = function() {
+// ── Modal Criar/Editar ────────────────────────────────────────────────────────
+window.abrirModalNovo = function() {
+  document.getElementById('editId').value='';
+  document.getElementById('modalTitle').textContent='Novo Cliente';
+  ['fNome','fDoc','fTelefone','fEmail','fCidade','fEstado','fObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fTipo').value='PF';
+  document.querySelectorAll('.tag-toggle').forEach(b=>b.classList.remove('on'));
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.editarCliente = function(id) {
+  const c = CLIENTES.find(x=>x.id===id);
+  if(!c) return;
+  document.getElementById('editId').value=id;
+  document.getElementById('modalTitle').textContent='Editar Cliente';
+  document.getElementById('fNome').value=c.nome||'';
+  document.getElementById('fTipo').value=c.tipo||'PF';
+  document.getElementById('fDoc').value=c.cpf_cnpj||'';
+  document.getElementById('fTelefone').value=c.telefone||'';
+  document.getElementById('fEmail').value=c.email||'';
+  document.getElementById('fCidade').value=c.cidade||'';
+  document.getElementById('fEstado').value=c.estado||'';
+  document.getElementById('fObs').value='';
+  document.querySelectorAll('.tag-toggle').forEach(b=>{
+    b.classList.toggle('on',(c.tags||[]).includes(b.dataset.tag));
+  });
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.editarClienteAtual = function() { if(clienteAtualId) editarCliente(clienteAtualId); };
+
+window.deletarClienteAtual = async function() {
+  if(!clienteAtualId) return;
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  if(!confirm(`Excluir "${c?.nome}"? Esta ação não pode ser desfeita.`)) return;
+  await deleteDoc(doc(db,'clientes',clienteAtualId));
   fecharDetalhe();
-  setTimeout(() => editarCliente(clienteAtualId || ''), 100);
+  await carregar();
+};
+
+window.fecharModal = function() { document.getElementById('modalOverlay').classList.remove('open'); };
+window.toggleTag = function(btn) { btn.classList.toggle('on'); };
+
+window.salvarCliente = async function() {
+  const nome = document.getElementById('fNome').value.trim();
+  const tel  = document.getElementById('fTelefone').value.trim();
+  if(!nome||!tel){ alert('Nome e WhatsApp são obrigatórios.'); return; }
+  const tags = [...document.querySelectorAll('.tag-toggle.on')].map(b=>b.dataset.tag);
+  const obs  = document.getElementById('fObs').value.trim();
+  const id   = document.getElementById('editId').value;
+  const dados = {
+    nome, tipo:document.getElementById('fTipo').value,
+    cpf_cnpj:document.getElementById('fDoc').value.trim(),
+    telefone:tel, email:document.getElementById('fEmail').value.trim(),
+    cidade:document.getElementById('fCidade').value.trim(),
+    estado:document.getElementById('fEstado').value.trim().toUpperCase(),
+    tags, atualizado_em:serverTimestamp(),
+  };
+  if(id){
+    await updateDoc(doc(db,'clientes',id), dados);
+    if(obs){ const c=CLIENTES.find(x=>x.id===id); const notas=[{texto:obs,data:new Date().toISOString()},...(c.notas||[])]; await updateDoc(doc(db,'clientes',id),{notas}); }
+  } else {
+    const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
+    await addDoc(collection(db,'clientes'),{...dados,notas,criado_em:serverTimestamp()});
+  }
+  fecharModal();
+  await carregar();
+  if(clienteAtualId) abrirDetalhe(clienteAtualId);
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function formatarData(iso) {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
-}
+function normalizar(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+function formatarData(iso){ if(!iso)return'—'; const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 
-// Fechar overlay clicando fora
-document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target === e.currentTarget) fecharModal(); });
-document.getElementById('detalheOverlay').addEventListener('click', e => { if(e.target === e.currentTarget) fecharDetalhe(); });
+document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)fecharModal(); });
 
-// Iniciar
 carregar();
 </script>
 </body>

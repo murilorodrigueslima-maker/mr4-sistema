@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-17T21:04:24",
+  "atualizado_em": "2026-04-18T02:53:57",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -273,39 +273,44 @@
       "vencimento": "2026-04-15",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-04-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 3000,
       "vencimento": "2026-04-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 638.3,
       "vencimento": "2026-04-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 298.22,
       "vencimento": "2026-04-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ESTOQUISTA",
       "valor": 200,
       "vencimento": "2026-04-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 3806.4,
@@ -365,11 +370,35 @@
       "valor": 1083.85,
       "vencimento": "2026-04-23",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 51.41,
+      "vencimento": "2026-04-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LAMPADAS/FIOS PARA ESCRITORIO",
+      "valor": 114.52,
+      "vencimento": "2026-04-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 897.75,
+      "vencimento": "2026-04-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 726.7,
+      "vencimento": "2026-04-25",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53409.22999999999,
+  "total_vencido": 61215.26999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 26291.190000000002
+  "total_a_pagar": 29960.710000000003
 }

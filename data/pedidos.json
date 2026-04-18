@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-18T07:26:12",
-  "total": 46,
+  "atualizado_em": "2026-04-18T08:57:48",
+  "total": 48,
   "pedidos": [
+    {
+      "id": "364289186",
+      "numero": "15407",
+      "data": "2026-04-18",
+      "hora": "",
+      "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2400,
+      "itens": 21,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364287974",
+      "numero": "15406",
+      "data": "2026-04-18",
+      "hora": "",
+      "cliente": "GDX DISTRIBUIDORA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 124.28,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364195481",
       "numero": "15405",

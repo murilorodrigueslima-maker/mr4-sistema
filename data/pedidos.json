@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-18T11:25:22",
-  "total": 60,
+  "atualizado_em": "2026-04-18T13:05:04",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "364367186",
+      "numero": "15421",
+      "data": "2026-04-18",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 240,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364359299",
+      "numero": "15420",
+      "data": "2026-04-18",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364349290",
       "numero": "15419",
@@ -141,8 +165,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1200,
-      "itens": 4,
+      "valor": 900,
+      "itens": 14,
       "status_gc": "",
       "cidade": ""
     },

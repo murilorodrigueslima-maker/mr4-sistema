@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-04-20T11:07:54",
-  "total": 21,
+  "atualizado_em": "2026-04-20T12:40:55",
+  "total": 24,
   "pedidos": [
+    {
+      "id": "364660894",
+      "numero": "15430",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 243.1,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364647715",
+      "numero": "15429",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 89,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364647423",
+      "numero": "15428",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 753.81,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364622191",
       "numero": "15427",

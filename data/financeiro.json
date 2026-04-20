@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-20T11:07:55",
+  "atualizado_em": "2026-04-20T12:40:57",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 2897.94,
+      "valor": 1782.34,
       "vencimento": "2026-04-05",
       "dias_atraso": 15,
       "tipo": "Pagar"
@@ -121,20 +121,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO MARÇO",
-      "valor": 603.1,
-      "vencimento": "2026-04-06",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PAGAMENTO SALARIO MARÇO",
-      "valor": 1136.97,
-      "vencimento": "2026-04-06",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 193.92,
       "vencimento": "2026-04-08",
@@ -146,27 +132,6 @@
       "valor": 1083.85,
       "vencimento": "2026-04-09",
       "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1745.3,
-      "vencimento": "2026-04-11",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1165.64,
-      "vencimento": "2026-04-12",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1559.52,
-      "vencimento": "2026-04-12",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -195,13 +160,6 @@
       "valor": 2225,
       "vencimento": "2026-04-13",
       "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 1521.73,
-      "vencimento": "2026-04-14",
-      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
@@ -275,15 +233,22 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO BRADESCO",
-      "valor": 3669.52,
-      "vencimento": "2026-04-17",
-      "dias_atraso": 3,
+      "nome": "CAGECE RUA CEARA 634",
+      "valor": 329.55,
+      "vencimento": "2026-04-16",
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 3000,
+      "nome": "CAGECE RUA CEARA 634",
+      "valor": 291.45,
+      "vencimento": "2026-04-16",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
       "vencimento": "2026-04-17",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -296,15 +261,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 298.22,
+      "nome": "4 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
+      "valor": 258.77,
       "vencimento": "2026-04-17",
       "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
-      "nome": "ESTOQUISTA",
-      "valor": 200,
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 1213,
       "vencimento": "2026-04-17",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -458,7 +423,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61215.26999999999,
+  "total_vencido": 50961.95999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 30063.870000000003
+  "total_a_pagar": 28956.640000000003
 }

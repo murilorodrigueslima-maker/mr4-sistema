@@ -1,185 +1,192 @@
 {
-  "atualizado_em": "2026-04-19T20:57:05",
+  "atualizado_em": "2026-04-19T23:13:28",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-03-02",
-      "dias_atraso": 48,
+      "dias_atraso": 49,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-03-17",
-      "dias_atraso": 33,
+      "dias_atraso": 34,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 1085,
       "vencimento": "2026-03-17",
-      "dias_atraso": 33,
+      "dias_atraso": 34,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 47.99,
       "vencimento": "2026-03-17",
-      "dias_atraso": 33,
+      "dias_atraso": 34,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1308.71,
       "vencimento": "2026-03-23",
-      "dias_atraso": 27,
+      "dias_atraso": 28,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-03-25",
-      "dias_atraso": 25,
+      "dias_atraso": 26,
       "tipo": "Pagar"
     },
     {
       "nome": "CHAT GPT",
       "valor": 95.99,
       "vencimento": "2026-03-25",
-      "dias_atraso": 25,
+      "dias_atraso": 26,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 4588.73,
       "vencimento": "2026-03-25",
-      "dias_atraso": 25,
+      "dias_atraso": 26,
       "tipo": "Pagar"
     },
     {
       "nome": "POPNOW",
       "valor": 9752.17,
       "vencimento": "2026-03-25",
-      "dias_atraso": 25,
+      "dias_atraso": 26,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-03-26",
-      "dias_atraso": 24,
+      "dias_atraso": 25,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-03-30",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-03-30",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 964.12,
       "vencimento": "2026-03-31",
-      "dias_atraso": 19,
+      "dias_atraso": 20,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 2897.94,
       "vencimento": "2026-04-05",
-      "dias_atraso": 14,
+      "dias_atraso": 15,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 135.67,
       "vencimento": "2026-04-06",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 251.05,
       "vencimento": "2026-04-06",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "PAGAMENTO REF MÊS MARÇO",
       "valor": 800,
       "vencimento": "2026-04-06",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "PAGAMENTO SALARIO MARÇO",
       "valor": 603.1,
       "vencimento": "2026-04-06",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "PAGAMENTO SALARIO MARÇO",
       "valor": 1136.97,
       "vencimento": "2026-04-06",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 193.92,
       "vencimento": "2026-04-08",
-      "dias_atraso": 11,
+      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-04-09",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1745.3,
       "vencimento": "2026-04-11",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1165.64,
       "vencimento": "2026-04-12",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1559.52,
       "vencimento": "2026-04-12",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-04-12",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 2660,
       "vencimento": "2026-04-12",
+      "dias_atraso": 8,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-04-13",
       "dias_atraso": 7,
       "tipo": "Pagar"
     },
@@ -187,126 +194,119 @@
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
       "vencimento": "2026-04-13",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-04-13",
-      "dias_atraso": 6,
+      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1521.73,
       "vencimento": "2026-04-14",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 964.12,
       "vencimento": "2026-04-14",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "sistema gestãoclick inter",
       "valor": 16,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "SERASA",
       "valor": 52.4,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "MONITOR COMPUTADOR",
       "valor": 200.7,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "CURSO PARA SWYANNE",
       "valor": 1482.9,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "3 VENTILADOR/1 BEBEDOURO",
       "valor": 207.04,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
       "valor": 218.82,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "SELOS DE GARANTIA MR4",
       "valor": 38.33,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "SISTEMA GESTÃOCLICK",
       "valor": 224.28,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "POPNOW",
       "valor": 3437.79,
       "vencimento": "2026-04-15",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-04-17",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 3000,
       "vencimento": "2026-04-17",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 638.3,
       "vencimento": "2026-04-17",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 298.22,
       "vencimento": "2026-04-17",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "ESTOQUISTA",
       "valor": 200,
       "vencimento": "2026-04-17",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     }
   ],

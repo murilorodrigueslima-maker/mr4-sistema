@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-20T12:40:57",
+  "atualizado_em": "2026-04-20T13:44:28",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 1782.34,
+      "valor": 1731.96,
       "vencimento": "2026-04-05",
       "dias_atraso": 15,
       "tipo": "Pagar"
@@ -242,6 +242,13 @@
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 291.45,
+      "vencimento": "2026-04-16",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 341.98,
       "vencimento": "2026-04-16",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -423,7 +430,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50961.95999999999,
+  "total_vencido": 51253.55999999999,
   "total_a_receber": 0,
   "total_a_pagar": 28956.640000000003
 }

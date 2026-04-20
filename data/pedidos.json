@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-20T17:27:37",
+  "atualizado_em": "2026-04-20T18:09:23",
   "total": 39,
   "pedidos": [
     {
@@ -93,8 +93,8 @@
       "hora": "",
       "cliente": "U. N. LIMA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1268.68,
-      "itens": 1,
+      "valor": 1590.72,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

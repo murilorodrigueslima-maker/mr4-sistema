@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-20T08:00:14",
+  "atualizado_em": "2026-04-20T09:07:19",
   "total": 16,
   "pedidos": [
     {
@@ -165,8 +165,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 900,
-      "itens": 14,
+      "valor": 1020,
+      "itens": 17,
       "status_gc": "",
       "cidade": ""
     },

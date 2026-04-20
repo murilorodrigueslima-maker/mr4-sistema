@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-20T13:44:27",
-  "total": 26,
+  "atualizado_em": "2026-04-20T14:41:21",
+  "total": 28,
   "pedidos": [
+    {
+      "id": "364702536",
+      "numero": "15434",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 180,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364687369",
+      "numero": "15433",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "ADEMIR LOPES FURTADO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364677393",
       "numero": "15432",

@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-20T14:41:21",
-  "total": 28,
+  "atualizado_em": "2026-04-20T15:41:15",
+  "total": 30,
   "pedidos": [
+    {
+      "id": "364725641",
+      "numero": "15436",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 29.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364716339",
+      "numero": "15435",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 250,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364702536",
       "numero": "15434",
@@ -10,7 +34,7 @@
       "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 180,
-      "itens": 4,
+      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

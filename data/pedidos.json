@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-04-20T16:43:41",
-  "total": 33,
+  "atualizado_em": "2026-04-20T17:27:37",
+  "total": 39,
   "pedidos": [
+    {
+      "id": "364776454",
+      "numero": "15445",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 180,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364775967",
+      "numero": "15444",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364774091",
+      "numero": "15443",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364765915",
+      "numero": "15442",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 56.06,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364763800",
+      "numero": "15441",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA 00418492301",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364762016",
+      "numero": "15440",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364746347",
       "numero": "15439",

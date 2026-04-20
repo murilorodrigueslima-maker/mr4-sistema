@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-04-20T15:41:15",
-  "total": 30,
+  "atualizado_em": "2026-04-20T16:43:41",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "364746347",
+      "numero": "15439",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364735832",
+      "numero": "15438",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1268.68,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364734673",
+      "numero": "15437",
+      "data": "2026-04-20",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364725641",
       "numero": "15436",

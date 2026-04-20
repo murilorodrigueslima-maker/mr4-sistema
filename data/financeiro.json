@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-20T02:22:14",
+  "atualizado_em": "2026-04-20T04:25:28",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -396,6 +396,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CAPITALIZAÇÃO",
+      "valor": 103.16,
+      "vencimento": "2026-04-25",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
       "vencimento": "2026-04-27",
@@ -454,5 +460,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 61215.26999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 29960.710000000003
+  "total_a_pagar": 30063.870000000003
 }

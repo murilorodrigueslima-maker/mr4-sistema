@@ -152,6 +152,19 @@ select.filter-sel:focus{border-color:var(--orange)}
 .chat-empty-sub{font-size:.75rem;line-height:1.5}
 .chat-config-btn{margin-top:.75rem;padding:.5rem 1rem;background:var(--orange);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer}
 
+/* CHAT TAB — layout flex para input fixo no rodapé */
+#tab-chat.active{display:flex!important;flex-direction:column;height:100%;padding:0;overflow:hidden}
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.chat-msgs{flex:1;overflow-y:auto;padding:.75rem;display:flex;flex-direction:column;gap:.4rem}
+.chat-header{display:flex;align-items:center;justify-content:space-between;padding:.55rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.chat-header-phone{font-size:.72rem;color:var(--muted);font-family:monospace}
+.chat-refresh-btn{font-size:.72rem;color:var(--muted);background:none;border:1.5px solid var(--border);cursor:pointer;padding:.25rem .6rem;border-radius:6px;transition:all .12s}
+.chat-refresh-btn:hover{border-color:var(--border-dk);color:var(--text)}
+.chat-msg-time{font-size:.6rem;opacity:.65;margin-top:.2rem;text-align:right;display:block}
+.chat-msg.sent .chat-msg-time{color:rgba(255,255,255,.8)}
+.chat-msg.recv .chat-msg-time{color:var(--muted)}
+.chat-sending{opacity:.6}
+
 /* GARANTIAS TAB */
 .garantia-row{background:var(--bg);border-radius:9px;padding:.7rem .85rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center}
 .garantia-row-nome{font-size:.82rem;font-weight:600;color:var(--text)}
@@ -332,18 +345,21 @@ select.filter-sel:focus{border-color:var(--orange)}
 
       <!-- CHAT -->
       <div class="tab-pane" id="tab-chat" style="padding:0">
+        <div class="chat-header">
+          <span class="chat-header-phone" id="chatPhone">—</span>
+          <button class="chat-refresh-btn" onclick="recarregarChat()" title="Atualizar conversa">↻ Atualizar</button>
+        </div>
         <div class="chat-area" id="chatArea">
           <div class="chat-empty" id="chatEmpty">
             <div class="chat-empty-icon">💬</div>
-            <div class="chat-empty-title">WhatsApp não configurado</div>
-            <div class="chat-empty-sub">Configure o Z-API para ver e enviar mensagens direto aqui.</div>
-            <button class="chat-config-btn" onclick="alert('Em breve: configure o Z-API nas configurações.')">Configurar agora</button>
+            <div class="chat-empty-title">Selecione um cliente</div>
+            <div class="chat-empty-sub">Abra um contato para ver a conversa.</div>
           </div>
           <div class="chat-msgs" id="chatMsgs" style="display:none"></div>
         </div>
-        <div class="chat-input-area" id="chatInputArea" style="display:none">
+        <div class="chat-input-area" id="chatInputArea">
           <input type="text" id="chatInput" placeholder="Digite uma mensagem…" onkeydown="if(event.key==='Enter')enviarMsg()">
-          <button class="chat-send" onclick="enviarMsg()">➤</button>
+          <button class="chat-send" id="chatSendBtn" onclick="enviarMsg()">➤</button>
         </div>
       </div>
 
@@ -627,6 +643,14 @@ window.showTab = function(tab) {
   });
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('tab-'+tab)?.classList.add('active');
+  // Chat: ajusta overflow e carrega mensagens
+  const dc = document.querySelector('.detail-content');
+  if(tab==='chat'){
+    dc.style.overflow='hidden';
+    if(clienteAtualId) carregarChat(clienteAtualId);
+  } else {
+    dc.style.overflow='';
+  }
 };
 
 // ── Notas ─────────────────────────────────────────────────────────────────────
@@ -662,9 +686,124 @@ window.deletarNota = async function(idx) {
   renderNotas(c);
 };
 
-// ── Chat (preparado para Z-API) ───────────────────────────────────────────────
-window.enviarMsg = function() {
-  alert('Configure o Z-API para enviar mensagens.');
+// ── Z-API ─────────────────────────────────────────────────────────────────────
+const ZAPI_BASE = 'https://api.z-api.io/instances/3F1FE7340C9E81202A93BE4FDF68D33E/token/9949A7D348292074E9FCCE9F';
+
+function formatarTelZapi(tel) {
+  const d = (tel||'').replace(/\D/g,'');
+  if(!d) return null;
+  if(d.startsWith('55') && d.length >= 12) return d;
+  return '55' + d;
+}
+
+function escapeHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+
+async function checkZapiStatus() {
+  try {
+    const r = await fetch(`${ZAPI_BASE}/status`);
+    const j = await r.json();
+    const ok = j.connected === true || j.status === 'connected';
+    const el = document.getElementById('wppStatus');
+    el.textContent = ok ? '● Conectado' : '● Desconectado';
+    el.style.color = ok ? 'var(--green)' : 'var(--red)';
+  } catch(e) {
+    const el = document.getElementById('wppStatus');
+    el.textContent = 'Erro de conexão';
+    el.style.color = 'var(--red)';
+  }
+}
+
+async function carregarChat(clienteId) {
+  const c = CLIENTES.find(x=>x.id===clienteId);
+  if(!c) return;
+  const phone = formatarTelZapi(c.telefone);
+  const empty = document.getElementById('chatEmpty');
+  const msgs  = document.getElementById('chatMsgs');
+  document.getElementById('chatPhone').textContent = phone ? `+${phone}` : 'Sem número';
+
+  if(!phone) {
+    empty.style.display='flex'; msgs.style.display='none';
+    empty.innerHTML=`<div class="chat-empty-icon">📵</div><div class="chat-empty-title">Sem número cadastrado</div><div class="chat-empty-sub">Edite o cliente e adicione o WhatsApp.</div>`;
+    return;
+  }
+
+  empty.style.display='flex'; msgs.style.display='none';
+  empty.innerHTML=`<div class="chat-empty-icon">⏳</div><div class="chat-empty-title">Carregando conversa…</div>`;
+
+  try {
+    const r = await fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`);
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const lista = await r.json();
+    const arr = Array.isArray(lista) ? lista : (lista.messages||lista.data||[]);
+
+    if(!arr.length) {
+      empty.style.display='flex'; msgs.style.display='none';
+      empty.innerHTML=`<div class="chat-empty-icon">💬</div><div class="chat-empty-title">Nenhuma mensagem ainda</div><div class="chat-empty-sub">Inicie a conversa abaixo.</div>`;
+      return;
+    }
+
+    empty.style.display='none'; msgs.style.display='flex';
+    msgs.innerHTML = arr.map(m => {
+      const fromMe = m.fromMe ?? m.isFromMe ?? false;
+      const texto  = m.text?.message || m.message || m.body || m.caption || '';
+      const ts     = m.momment || m.timestamp || m.messageTimestamp;
+      const hora   = ts ? new Date(ts*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="chat-msg ${fromMe?'sent':'recv'}">${escapeHtml(texto)}<span class="chat-msg-time">${hora}</span></div>`;
+    }).join('');
+    msgs.scrollTop = msgs.scrollHeight;
+
+  } catch(e) {
+    empty.style.display='flex'; msgs.style.display='none';
+    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub">${e.message}</div><button class="chat-config-btn" onclick="carregarChat('${clienteId}')">Tentar novamente</button>`;
+  }
+}
+
+window.recarregarChat = function() {
+  if(clienteAtualId) carregarChat(clienteAtualId);
+};
+
+window.enviarMsg = async function() {
+  if(!clienteAtualId) return;
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  if(!c) return;
+  const phone = formatarTelZapi(c.telefone);
+  const input = document.getElementById('chatInput');
+  const texto = input.value.trim();
+  if(!texto || !phone) return;
+
+  const btn = document.getElementById('chatSendBtn');
+  btn.disabled = true;
+  input.disabled = true;
+
+  // Adiciona balão imediatamente (otimista)
+  const msgs = document.getElementById('chatMsgs');
+  document.getElementById('chatEmpty').style.display='none';
+  msgs.style.display='flex';
+  const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const tmpId = 'tmp-'+Date.now();
+  msgs.innerHTML += `<div class="chat-msg sent chat-sending" id="${tmpId}">${escapeHtml(texto)}<span class="chat-msg-time">${hora} ⏳</span></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+  input.value = '';
+
+  try {
+    const r = await fetch(`${ZAPI_BASE}/send-text`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ phone, message: texto })
+    });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    // Confirma envio
+    const tmp = document.getElementById(tmpId);
+    if(tmp){ tmp.classList.remove('chat-sending'); tmp.querySelector('.chat-msg-time').textContent = hora+' ✓'; }
+  } catch(e) {
+    const tmp = document.getElementById(tmpId);
+    if(tmp){ tmp.style.background='#fee2e2'; tmp.querySelector('.chat-msg-time').textContent = '❌ Falha ao enviar'; }
+    alert('Erro ao enviar: '+e.message);
+  } finally {
+    btn.disabled = false;
+    input.disabled = false;
+    input.focus();
+  }
 };
 
 // ── Modal Criar/Editar ────────────────────────────────────────────────────────
@@ -744,6 +883,7 @@ function formatarData(iso){ if(!iso)return'—'; const d=new Date(iso); return d
 document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)fecharModal(); });
 
 carregar();
+checkZapiStatus();
 </script>
 </body>
 </html>

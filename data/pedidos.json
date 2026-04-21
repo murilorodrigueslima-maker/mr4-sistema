@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-21T11:23:13",
-  "total": 31,
+  "atualizado_em": "2026-04-21T12:47:45",
+  "total": 35,
   "pedidos": [
+    {
+      "id": "364869257",
+      "numero": "15455",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 268.27,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364866282",
+      "numero": "15454",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 130,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364862590",
+      "numero": "15453",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "F ALEX DE MENEZES FELINTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 66.63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364859191",
+      "numero": "15452",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 451.84,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364849408",
       "numero": "15451",

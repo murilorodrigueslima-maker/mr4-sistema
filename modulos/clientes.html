@@ -687,7 +687,9 @@ window.deletarNota = async function(idx) {
 };
 
 // ── Z-API ─────────────────────────────────────────────────────────────────────
-const ZAPI_BASE = 'https://api.z-api.io/instances/3F1FE7340C9E81202A93BE4FDF68D33E/token/9949A7D348292074E9FCCE9F';
+const ZAPI_BASE         = 'https://api.z-api.io/instances/3F1FE7340C9E81202A93BE4FDF68D33E/token/9949A7D348292074E9FCCE9F';
+const ZAPI_CLIENT_TOKEN = 'F41d9f72c5d6b4353912afcb17896b443S';
+const ZAPI_HEADERS      = { 'Content-Type': 'application/json', 'Client-Token': ZAPI_CLIENT_TOKEN };
 
 function formatarTelZapi(tel) {
   const d = (tel||'').replace(/\D/g,'');
@@ -700,7 +702,7 @@ function escapeHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;'
 
 async function checkZapiStatus() {
   try {
-    const r = await fetch(`${ZAPI_BASE}/status`);
+    const r = await fetch(`${ZAPI_BASE}/status`, { headers: ZAPI_HEADERS });
     const j = await r.json();
     const ok = j.connected === true || j.status === 'connected';
     const el = document.getElementById('wppStatus');
@@ -731,7 +733,7 @@ async function carregarChat(clienteId) {
   empty.innerHTML=`<div class="chat-empty-icon">⏳</div><div class="chat-empty-title">Carregando conversa…</div>`;
 
   try {
-    const r = await fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`);
+    const r = await fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`, { headers: ZAPI_HEADERS });
     if(!r.ok) throw new Error(`HTTP ${r.status}`);
     const lista = await r.json();
     const arr = Array.isArray(lista) ? lista : (lista.messages||lista.data||[]);
@@ -788,7 +790,7 @@ window.enviarMsg = async function() {
   try {
     const r = await fetch(`${ZAPI_BASE}/send-text`, {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers: ZAPI_HEADERS,
       body:JSON.stringify({ phone, message: texto })
     });
     if(!r.ok) throw new Error(`HTTP ${r.status}`);

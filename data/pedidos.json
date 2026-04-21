@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-04-21T13:42:59",
-  "total": 35,
+  "atualizado_em": "2026-04-21T14:41:39",
+  "total": 36,
   "pedidos": [
+    {
+      "id": "364878052",
+      "numero": "15456",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 292.7,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364869257",
       "numero": "15455",

@@ -766,10 +766,8 @@ async function carregarChat(clienteId) {
   empty.innerHTML=`<div class="chat-empty-icon">⏳</div><div class="chat-empty-title">Carregando conversa…</div>`;
 
   try {
-    const r = await fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`, { headers: ZAPI_HEADERS });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const lista = await r.json();
-    const arr = Array.isArray(lista) ? lista : (lista.messages||lista.data||[]);
+    const arr = await fetchMsgs(phone);
+    if(arr === null) throw new Error('Falha na requisição');
 
     if(!arr.length) {
       empty.style.display='flex'; msgs.style.display='none';
@@ -778,19 +776,43 @@ async function carregarChat(clienteId) {
     }
 
     empty.style.display='none'; msgs.style.display='flex';
-    msgs.innerHTML = arr.map(m => {
-      const fromMe = m.fromMe ?? m.isFromMe ?? false;
-      const texto  = m.text?.message || m.message || m.body || m.caption || '';
-      const ts     = m.momment || m.timestamp || m.messageTimestamp;
-      const hora   = ts ? new Date(ts*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
-      return `<div class="chat-msg ${fromMe?'sent':'recv'}">${escapeHtml(texto)}<span class="chat-msg-time">${hora}</span></div>`;
-    }).join('');
+    msgs.innerHTML = renderMsgs(arr);
     msgs.scrollTop = msgs.scrollHeight;
 
   } catch(e) {
     empty.style.display='flex'; msgs.style.display='none';
     empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub">${e.message}</div><button class="chat-config-btn" onclick="carregarChat('${clienteId}')">Tentar novamente</button>`;
   }
+}
+
+// Centraliza a lógica de busca e normalização de mensagens
+async function fetchMsgs(phone) {
+  // Z-API aceita: GET /chat-messages/{phone}?page=1&pageSize=50
+  // mas alguns planos/versões rejeitam params — tentamos com e sem
+  const urls = [
+    `${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`,
+    `${ZAPI_BASE}/chat-messages/${phone}`,
+  ];
+  for(const url of urls) {
+    try {
+      const r = await fetch(url, { headers: ZAPI_HEADERS });
+      if(!r.ok) continue;
+      const data = await r.json();
+      const arr = Array.isArray(data) ? data : (data.messages||data.data||data.chats||[]);
+      return arr;
+    } catch(e) { /* tenta próxima URL */ }
+  }
+  return [];
+}
+
+function renderMsgs(arr) {
+  return arr.map(m => {
+    const fromMe = m.fromMe ?? m.isFromMe ?? false;
+    const texto  = m.text?.message || m.message || m.body || m.caption || '';
+    const ts     = m.momment || m.timestamp || m.messageTimestamp;
+    const hora   = ts ? new Date(ts < 1e12 ? ts*1000 : ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="chat-msg ${fromMe?'sent':'recv'}">${escapeHtml(texto)}<span class="chat-msg-time">${hora}</span></div>`;
+  }).join('');
 }
 
 window.recarregarChat = function() {
@@ -995,10 +1017,7 @@ async function carregarChatByPhone(phone) {
   empty.innerHTML=`<div class="chat-empty-icon">⏳</div><div class="chat-empty-title">Carregando conversa…</div>`;
 
   try {
-    const r = await fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`, { headers: ZAPI_HEADERS });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const lista = await r.json();
-    const arr = Array.isArray(lista) ? lista : (lista.messages||lista.data||[]);
+    const arr = await fetchMsgs(phone);
 
     if(!arr.length){
       empty.style.display='flex'; msgs.style.display='none';
@@ -1007,13 +1026,7 @@ async function carregarChatByPhone(phone) {
     }
 
     empty.style.display='none'; msgs.style.display='flex';
-    msgs.innerHTML = arr.map(m => {
-      const fromMe = m.fromMe ?? m.isFromMe ?? false;
-      const texto  = m.text?.message || m.message || m.body || m.caption || '';
-      const ts     = m.momment || m.timestamp || m.messageTimestamp;
-      const hora   = ts ? new Date(ts*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
-      return `<div class="chat-msg ${fromMe?'sent':'recv'}">${escapeHtml(texto)}<span class="chat-msg-time">${hora}</span></div>`;
-    }).join('');
+    msgs.innerHTML = renderMsgs(arr);
     msgs.scrollTop = msgs.scrollHeight;
   } catch(e) {
     empty.style.display='flex'; msgs.style.display='none';

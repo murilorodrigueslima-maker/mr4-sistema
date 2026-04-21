@@ -468,7 +468,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   getFirestore, collection, doc, getDocs, addDoc, updateDoc, deleteDoc,
-  query, orderBy, serverTimestamp, onSnapshot
+  query, orderBy, where, limit, serverTimestamp, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -784,45 +784,29 @@ async function carregarChat(clienteId) {
 
 function msgVazioHtml() {
   return `<div class="chat-empty-icon">💬</div>
-    <div class="chat-empty-title">Mensagens em tempo real</div>
-    <div class="chat-empty-sub" style="max-width:260px;line-height:1.6">
-      O histórico de mensagens estará disponível após configurar o <strong>Webhook</strong> no painel Z-API.<br><br>
-      Você já pode <strong>enviar mensagens</strong> pelo campo abaixo. As respostas aparecerão aqui automaticamente após a configuração.
-    </div>
-    <a href="https://app.z-api.io" target="_blank" class="chat-config-btn" style="text-decoration:none;margin-top:.75rem">⚙️ Abrir painel Z-API</a>`;
+    <div class="chat-empty-title">Nenhuma mensagem ainda</div>
+    <div class="chat-empty-sub" style="max-width:270px;line-height:1.7;text-align:left">
+      As mensagens aparecem aqui após o <strong>Webhook</strong> ser configurado.<br>
+      Você já pode <strong>enviar</strong> pelo campo abaixo.
+    </div>`;
 }
 
-// Centraliza a lógica de busca de mensagens — testa múltiplos formatos Z-API
-// NOTA: Z-API não documenta endpoint de histórico de msgs; usamos Firestore
-// como armazenamento após receber via webhook, mas tentamos a API primeiro.
+// Busca mensagens no Firestore (subcoleção conversas/{phone}/msgs)
+// Populada pelo Cloudflare Worker que recebe webhooks do Z-API
 async function fetchMsgs(phone) {
-  // 1) Tenta ler do Firestore (mensagens armazenadas via webhook)
   try {
-    const { getDocs: gD, collection: col, query: q, where: w, orderBy: ob, limit: lim } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
-    const snap = await gD(q(col(db, 'mensagens'), w('phone', '==', phone), ob('timestamp', 'asc'), lim(50)));
-    if(!snap.empty) {
-      return snap.docs.map(d => d.data());
-    }
-  } catch(_) { /* Firestore sem msgs ainda é ok */ }
-
-  // 2) Tenta Z-API (GET e POST) — pode não funcionar dependendo do plano
-  const attempts = [
-    () => fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`, { headers: ZAPI_HEADERS }),
-    () => fetch(`${ZAPI_BASE}/chat-messages/${phone}`, { headers: ZAPI_HEADERS }),
-    () => fetch(`${ZAPI_BASE}/chat-messages`, { method:'POST', headers: ZAPI_HEADERS, body: JSON.stringify({phone, page:1, pageSize:50}) }),
-  ];
-  for(const attempt of attempts) {
-    try {
-      const r = await attempt();
-      if(!r.ok) continue;
-      const data = await r.json();
-      const arr = Array.isArray(data) ? data : (data.value||data.messages||data.data||data.items||[]);
-      if(arr.length) return arr;
-    } catch(_) {}
+    const snap = await getDocs(
+      query(
+        collection(db, `conversas/${phone}/msgs`),
+        orderBy('momment', 'asc'),
+        limit(50)
+      )
+    );
+    return snap.docs.map(d => d.data());
+  } catch(e) {
+    console.warn('fetchMsgs error:', e.message);
+    return [];
   }
-
-  // 3) Nenhuma fonte encontrou mensagens
-  return [];
 }
 
 function renderMsgs(arr) {

@@ -165,6 +165,28 @@ select.filter-sel:focus{border-color:var(--orange)}
 .chat-msg.recv .chat-msg-time{color:var(--muted)}
 .chat-sending{opacity:.6}
 
+/* INBOX WHATSAPP */
+.modo-toggle{display:flex;gap:.35rem;background:var(--bg);border-radius:10px;padding:.25rem}
+.modo-btn{padding:.35rem .85rem;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;background:none;color:var(--muted);transition:all .15s;display:flex;align-items:center;gap:.35rem}
+.modo-btn.active{background:var(--white);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.inbox-row{display:flex;align-items:center;gap:.85rem;padding:.75rem 1rem;border-radius:10px;cursor:pointer;transition:all .12s;background:var(--white);margin-bottom:.35rem;border:1.5px solid transparent;position:relative}
+.inbox-row:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.inbox-row.selected{border-color:var(--orange);background:#FFFAF7}
+.inbox-row.unread{border-left:3px solid var(--green)}
+.inbox-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;font-size:.95rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.inbox-avatar.unknown{background:linear-gradient(135deg,var(--muted),#6B7280)}
+.inbox-main{flex:1;min-width:0}
+.inbox-nome{font-size:.85rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inbox-nome.unknown{color:var(--muted);font-weight:500}
+.inbox-phone{font-size:.7rem;color:var(--muted);margin-top:.05rem;font-family:monospace}
+.inbox-meta{display:flex;flex-direction:column;align-items:flex-end;gap:.3rem;flex-shrink:0}
+.inbox-time{font-size:.68rem;color:var(--muted)}
+.inbox-unread-badge{background:var(--green);color:#fff;font-size:.62rem;font-weight:700;padding:.1rem .45rem;border-radius:20px;min-width:18px;text-align:center}
+.inbox-client-tag{font-size:.62rem;font-weight:600;padding:.1rem .4rem;border-radius:20px;background:var(--orange-lt);color:var(--orange)}
+.inbox-criar-btn{font-size:.68rem;padding:.2rem .55rem;border:1.5px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted);white-space:nowrap;transition:all .12s}
+.inbox-criar-btn:hover{border-color:var(--orange);color:var(--orange)}
+.inbox-loading{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;padding:2rem;color:var(--muted);font-size:.85rem}
+
 /* GARANTIAS TAB */
 .garantia-row{background:var(--bg);border-radius:9px;padding:.7rem .85rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center}
 .garantia-row-nome{font-size:.82rem;font-weight:600;color:var(--text)}
@@ -276,7 +298,11 @@ select.filter-sel:focus{border-color:var(--orange)}
 
     <!-- List header -->
     <div class="list-header">
-      <div class="list-header-title" id="listTitle">Todos os clientes</div>
+      <div class="modo-toggle">
+        <button class="modo-btn active" id="modoClientes" onclick="setModo('clientes')">👥 Clientes</button>
+        <button class="modo-btn" id="modoInbox" onclick="setModo('inbox')">💬 WhatsApp</button>
+      </div>
+      <div class="list-header-title" id="listTitle" style="margin-left:.5rem"></div>
     </div>
 
     <!-- List body -->
@@ -464,6 +490,9 @@ let GARANTIAS = [];
 let clienteAtualId = null;
 let filtroAtivo = 'todos';
 let tabAtiva = 'info';
+let modoAtivo = 'clientes'; // 'clientes' | 'inbox'
+let CHATS = [];
+let inboxPhoneAtual = null;
 
 // ── Carregar ──────────────────────────────────────────────────────────────────
 async function carregar() {
@@ -647,7 +676,11 @@ window.showTab = function(tab) {
   const dc = document.querySelector('.detail-content');
   if(tab==='chat'){
     dc.style.overflow='hidden';
-    if(clienteAtualId) carregarChat(clienteAtualId);
+    if(modoAtivo === 'inbox' && inboxPhoneAtual) {
+      carregarChatByPhone(inboxPhoneAtual);
+    } else if(clienteAtualId) {
+      carregarChat(clienteAtualId);
+    }
   } else {
     dc.style.overflow='';
   }
@@ -761,14 +794,22 @@ async function carregarChat(clienteId) {
 }
 
 window.recarregarChat = function() {
-  if(clienteAtualId) carregarChat(clienteAtualId);
+  if(modoAtivo === 'inbox' && inboxPhoneAtual) {
+    carregarChatByPhone(inboxPhoneAtual);
+  } else if(clienteAtualId) {
+    carregarChat(clienteAtualId);
+  }
 };
 
 window.enviarMsg = async function() {
-  if(!clienteAtualId) return;
-  const c = CLIENTES.find(x=>x.id===clienteAtualId);
-  if(!c) return;
-  const phone = formatarTelZapi(c.telefone);
+  let phone;
+  if(modoAtivo === 'inbox' && inboxPhoneAtual) {
+    phone = inboxPhoneAtual;
+  } else if(clienteAtualId) {
+    const c = CLIENTES.find(x=>x.id===clienteAtualId);
+    if(!c) return;
+    phone = formatarTelZapi(c.telefone);
+  } else { return; }
   const input = document.getElementById('chatInput');
   const texto = input.value.trim();
   if(!texto || !phone) return;
@@ -807,6 +848,178 @@ window.enviarMsg = async function() {
     input.focus();
   }
 };
+
+// ── INBOX WhatsApp ────────────────────────────────────────────────────────────
+
+window.setModo = function(modo) {
+  modoAtivo = modo;
+  document.getElementById('modoClientes').classList.toggle('active', modo === 'clientes');
+  document.getElementById('modoInbox').classList.toggle('active', modo === 'inbox');
+  fecharDetalhe();
+  if(modo === 'inbox') {
+    document.getElementById('listTitle').textContent = 'WhatsApp Inbox';
+    carregarInbox();
+  } else {
+    filtrar();
+  }
+};
+
+async function carregarInbox() {
+  const body = document.getElementById('listBody');
+  body.innerHTML = `<div class="inbox-loading"><div style="font-size:1.5rem">⏳</div>Carregando conversas…</div>`;
+  try {
+    const r = await fetch(`${ZAPI_BASE}/chats`, { headers: ZAPI_HEADERS });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const data = await r.json();
+    CHATS = Array.isArray(data) ? data : (data.chats || data.data || []);
+    CHATS = CHATS.filter(c => !c.isGroup);
+    CHATS.sort((a, b) => (Number(b.lastMessageTime)||0) - (Number(a.lastMessageTime)||0));
+    renderInbox(CHATS);
+  } catch(e) {
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Erro ao carregar inbox</div><div class="empty-sub">${e.message}</div><button class="btn btn-ghost" style="margin-top:.75rem" onclick="setModo('inbox')">Tentar novamente</button></div>`;
+  }
+}
+
+function matchClientePorPhone(phone) {
+  const phoneNorm = (phone||'').replace(/\D/g,'');
+  return CLIENTES.find(c => {
+    const t = (c.telefone||'').replace(/\D/g,'');
+    if(!t) return false;
+    const tWith55    = t.startsWith('55') ? t : '55'+t;
+    const pWith55    = phoneNorm.startsWith('55') ? phoneNorm : '55'+phoneNorm;
+    return tWith55 === pWith55;
+  }) || null;
+}
+
+function formatarHoraInbox(ms) {
+  if(!ms) return '';
+  const d = new Date(Number(ms));
+  const agora = new Date();
+  const mesmoDia = d.toDateString() === agora.toDateString();
+  if(mesmoDia) return d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+}
+
+function fmtPhone(phone) {
+  const d = (phone||'').replace(/^55/,'');
+  return d.replace(/^(\d{2})(\d{4,5})(\d{4})$/,'($1) $2-$3') || phone;
+}
+
+function renderInbox(chats) {
+  const body = document.getElementById('listBody');
+  document.getElementById('listTitle').textContent = `WhatsApp Inbox (${chats.length})`;
+  if(!chats.length){
+    body.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-title">Nenhuma conversa</div><div class="empty-sub">Nenhuma conversa encontrada no WhatsApp.</div></div>`;
+    return;
+  }
+  body.innerHTML = chats.map(chat => {
+    const phone   = chat.phone || '';
+    const unread  = Number(chat.messagesUnread || chat.unread || 0);
+    const cliente = matchClientePorPhone(phone);
+    const nome    = cliente ? cliente.nome : (chat.name && chat.name !== phone ? chat.name : fmtPhone(phone));
+    const ini     = (nome||'?')[0].toUpperCase();
+    const hora    = formatarHoraInbox(chat.lastMessageTime);
+    const sel     = inboxPhoneAtual === phone ? ' selected' : '';
+    const unreadCls = unread > 0 ? ' unread' : '';
+    const criarBtn  = cliente
+      ? `<div class="inbox-client-tag">CRM ✓</div>`
+      : `<button class="inbox-criar-btn" onclick="event.stopPropagation();criarClienteDoInbox('${phone}','${(chat.name||'').replace(/'/g,'\\\'')}')" title="Cadastrar no CRM">+ Criar</button>`;
+    return `
+    <div class="inbox-row${unreadCls}${sel}" onclick="abrirChatInbox('${phone}')">
+      <div class="inbox-avatar${cliente?'':' unknown'}">${ini}</div>
+      <div class="inbox-main">
+        <div class="inbox-nome${cliente?'':' unknown'}">${escapeHtml(nome)}</div>
+        <div class="inbox-phone">${fmtPhone(phone)}</div>
+      </div>
+      <div class="inbox-meta">
+        ${hora?`<div class="inbox-time">${hora}</div>`:''}
+        ${unread>0?`<div class="inbox-unread-badge">${unread}</div>`:''}
+        ${criarBtn}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.abrirChatInbox = function(phone) {
+  inboxPhoneAtual = phone;
+  // Atualiza seleção na lista
+  document.querySelectorAll('.inbox-row').forEach(r=>{
+    r.classList.remove('selected');
+    if(r.getAttribute('onclick')&&r.getAttribute('onclick').includes(`'${phone}'`)) r.classList.add('selected');
+  });
+
+  const chat    = CHATS.find(c=>c.phone===phone)||{};
+  const cliente = matchClientePorPhone(phone);
+  const nome    = cliente ? cliente.nome : (chat.name && chat.name !== phone ? chat.name : fmtPhone(phone));
+  const ini     = (nome||'?')[0].toUpperCase();
+
+  document.getElementById('detAvatar').textContent = ini;
+  document.getElementById('detNome').textContent = nome;
+  document.getElementById('detSub').textContent = cliente ? `Cliente CRM · ${fmtPhone(phone)}` : `Não cadastrado · ${fmtPhone(phone)}`;
+  document.getElementById('detContacts').innerHTML = `<div class="detail-contact-item">📱 ${fmtPhone(phone)}</div>`;
+  document.getElementById('detWppBtn').style.display = 'none';
+
+  // Preenche aba info com dados do CRM (se existir)
+  document.getElementById('iDoc').textContent     = cliente ? (cliente.cpf_cnpj||'—') : '—';
+  document.getElementById('iCidade').textContent  = cliente ? ([cliente.cidade,cliente.estado].filter(Boolean).join(' / ')||'—') : '—';
+  document.getElementById('iEmail').textContent   = cliente ? (cliente.email||'—') : '—';
+  const tagClasses2 = {VIP:'tag-vip',Atacado:'tag-atacado',Varejo:'tag-varejo',Inadimplente:'tag-inadimplente'};
+  document.getElementById('iTags').innerHTML = (cliente&&(cliente.tags||[]).length)
+    ? (cliente.tags||[]).map(t=>`<span class="tag ${tagClasses2[t]||''}">${t}</span>`).join('')
+    : '<span style="font-size:.8rem;color:var(--muted)">Sem tags</span>';
+
+  clienteAtualId = cliente ? cliente.id : null;
+  if(cliente) renderNotas(cliente);
+
+  document.getElementById('detailPanel').classList.add('open');
+  showTab('chat');
+};
+
+window.criarClienteDoInbox = function(phone, nome) {
+  document.getElementById('editId').value='';
+  document.getElementById('modalTitle').textContent='Novo Cliente';
+  ['fNome','fDoc','fEmail','fCidade','fEstado','fObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fTipo').value='PF';
+  document.querySelectorAll('.tag-toggle').forEach(b=>b.classList.remove('on'));
+  document.getElementById('fTelefone').value = fmtPhone(phone);
+  if(nome) document.getElementById('fNome').value = nome;
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+async function carregarChatByPhone(phone) {
+  const empty = document.getElementById('chatEmpty');
+  const msgs  = document.getElementById('chatMsgs');
+  document.getElementById('chatPhone').textContent = phone ? `+${phone}` : '—';
+
+  empty.style.display='flex'; msgs.style.display='none';
+  empty.innerHTML=`<div class="chat-empty-icon">⏳</div><div class="chat-empty-title">Carregando conversa…</div>`;
+
+  try {
+    const r = await fetch(`${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`, { headers: ZAPI_HEADERS });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const lista = await r.json();
+    const arr = Array.isArray(lista) ? lista : (lista.messages||lista.data||[]);
+
+    if(!arr.length){
+      empty.style.display='flex'; msgs.style.display='none';
+      empty.innerHTML=`<div class="chat-empty-icon">💬</div><div class="chat-empty-title">Nenhuma mensagem ainda</div><div class="chat-empty-sub">Inicie a conversa abaixo.</div>`;
+      return;
+    }
+
+    empty.style.display='none'; msgs.style.display='flex';
+    msgs.innerHTML = arr.map(m => {
+      const fromMe = m.fromMe ?? m.isFromMe ?? false;
+      const texto  = m.text?.message || m.message || m.body || m.caption || '';
+      const ts     = m.momment || m.timestamp || m.messageTimestamp;
+      const hora   = ts ? new Date(ts*1000).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div class="chat-msg ${fromMe?'sent':'recv'}">${escapeHtml(texto)}<span class="chat-msg-time">${hora}</span></div>`;
+    }).join('');
+    msgs.scrollTop = msgs.scrollHeight;
+  } catch(e) {
+    empty.style.display='flex'; msgs.style.display='none';
+    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub">${e.message}</div>`;
+  }
+}
 
 // ── Modal Criar/Editar ────────────────────────────────────────────────────────
 window.abrirModalNovo = function() {
@@ -875,7 +1088,11 @@ window.salvarCliente = async function() {
   }
   fecharModal();
   await carregar();
-  if(clienteAtualId) abrirDetalhe(clienteAtualId);
+  if(modoAtivo === 'inbox') {
+    renderInbox(CHATS); // atualiza tags CRM na inbox com novo cliente
+  } else if(clienteAtualId) {
+    abrirDetalhe(clienteAtualId);
+  }
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

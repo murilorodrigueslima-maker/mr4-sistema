@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-20T21:07:26",
+  "atualizado_em": "2026-04-21T00:42:10",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -280,27 +280,30 @@
       "vencimento": "2026-04-17",
       "dias_atraso": 4,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 3806.4,
       "vencimento": "2026-04-20",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1868,
       "vencimento": "2026-04-20",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "Compra de tapetes para uso interno da empresa",
       "valor": 63.96,
       "vencimento": "2026-04-20",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PRATELEIRAS 3 UN",
       "valor": 239.31,
@@ -426,11 +429,17 @@
       "valor": 156.8,
       "vencimento": "2026-04-27",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO PRONAMP",
+      "valor": 700.78,
+      "vencimento": "2026-04-28",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51253.55999999999,
+  "total_vencido": 56991.91999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 28956.640000000003
+  "total_a_pagar": 29778.410000000003
 }

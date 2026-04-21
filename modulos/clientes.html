@@ -767,13 +767,6 @@ async function carregarChat(clienteId) {
 
   try {
     const arr = await fetchMsgs(phone);
-    if(arr === null) throw new Error('Falha na requisição');
-
-    if(!arr.length) {
-      empty.style.display='flex'; msgs.style.display='none';
-      empty.innerHTML=`<div class="chat-empty-icon">💬</div><div class="chat-empty-title">Nenhuma mensagem ainda</div><div class="chat-empty-sub">Inicie a conversa abaixo.</div>`;
-      return;
-    }
 
     empty.style.display='none'; msgs.style.display='flex';
     msgs.innerHTML = renderMsgs(arr);
@@ -781,38 +774,48 @@ async function carregarChat(clienteId) {
 
   } catch(e) {
     empty.style.display='flex'; msgs.style.display='none';
-    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub">${e.message}</div><button class="chat-config-btn" onclick="carregarChat('${clienteId}')">Tentar novamente</button>`;
+    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub" style="font-size:.7rem;word-break:break-all;max-width:280px">${escapeHtml(e.message)}</div><button class="chat-config-btn" onclick="carregarChat('${clienteId}')">Tentar novamente</button>`;
   }
 }
 
-// Centraliza a lógica de busca e normalização de mensagens
+// Centraliza a lógica de busca de mensagens — testa múltiplos formatos Z-API
 async function fetchMsgs(phone) {
-  // Z-API aceita: GET /chat-messages/{phone}?page=1&pageSize=50
-  // mas alguns planos/versões rejeitam params — tentamos com e sem
-  const urls = [
+  const candidates = [
     `${ZAPI_BASE}/chat-messages/${phone}?page=1&pageSize=50`,
     `${ZAPI_BASE}/chat-messages/${phone}`,
+    `${ZAPI_BASE}/messages?phone=${phone}&page=1&pageSize=50`,
+    `${ZAPI_BASE}/chats/${phone}/messages?page=1&pageSize=50`,
   ];
-  for(const url of urls) {
+  const lastErr = { status: 0, body: '' };
+  for(const url of candidates) {
     try {
       const r = await fetch(url, { headers: ZAPI_HEADERS });
-      if(!r.ok) continue;
+      lastErr.status = r.status;
+      if(!r.ok) { lastErr.body = `HTTP ${r.status}`; continue; }
       const data = await r.json();
-      const arr = Array.isArray(data) ? data : (data.messages||data.data||data.chats||[]);
-      return arr;
-    } catch(e) { /* tenta próxima URL */ }
+      // Extrai array de qualquer estrutura que Z-API devolva
+      const arr = Array.isArray(data)
+        ? data
+        : (data.value||data.messages||data.data||data.items||data.chats||[]);
+      if(arr.length > 0) return arr;
+      // Se veio vazio e é a primeira URL, guarda para debug
+      if(!lastErr.body) lastErr.body = JSON.stringify(data).slice(0,120);
+    } catch(e) { lastErr.body = e.message; }
   }
-  return [];
+  // Nenhuma URL funcionou — levanta erro com info útil
+  throw new Error(`Sem mensagens. Última resposta: ${lastErr.body||'sem dados'}`);
 }
 
 function renderMsgs(arr) {
+  if(!arr.length) return `<div class="chat-empty" style="display:flex"><div class="chat-empty-icon">💬</div><div class="chat-empty-title">Nenhuma mensagem</div><div class="chat-empty-sub">Inicie a conversa abaixo.</div></div>`;
   return arr.map(m => {
     const fromMe = m.fromMe ?? m.isFromMe ?? false;
     const texto  = m.text?.message || m.message || m.body || m.caption || '';
+    if(!texto) return ''; // ignora mensagens sem texto (mídia, etc.)
     const ts     = m.momment || m.timestamp || m.messageTimestamp;
     const hora   = ts ? new Date(ts < 1e12 ? ts*1000 : ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}) : '';
     return `<div class="chat-msg ${fromMe?'sent':'recv'}">${escapeHtml(texto)}<span class="chat-msg-time">${hora}</span></div>`;
-  }).join('');
+  }).filter(Boolean).join('');
 }
 
 window.recarregarChat = function() {
@@ -890,11 +893,18 @@ async function carregarInbox() {
   const body = document.getElementById('listBody');
   body.innerHTML = `<div class="inbox-loading"><div style="font-size:1.5rem">⏳</div>Carregando conversas…</div>`;
   try {
-    const r = await fetch(`${ZAPI_BASE}/chats`, { headers: ZAPI_HEADERS });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const data = await r.json();
-    CHATS = Array.isArray(data) ? data : (data.chats || data.data || []);
-    CHATS = CHATS.filter(c => !c.isGroup);
+    // Busca todas as páginas (Z-API retorna 10 por padrão)
+    let todos = [];
+    const PAGE_SIZE = 50;
+    for(let page = 1; page <= 20; page++) {
+      const r = await fetch(`${ZAPI_BASE}/chats?page=${page}&pageSize=${PAGE_SIZE}`, { headers: ZAPI_HEADERS });
+      if(!r.ok) break;
+      const data = await r.json();
+      const pagina = Array.isArray(data) ? data : (data.chats || data.data || []);
+      todos = todos.concat(pagina);
+      if(pagina.length < PAGE_SIZE) break; // última página
+    }
+    CHATS = todos.filter(c => !c.isGroup);
     CHATS.sort((a, b) => (Number(b.lastMessageTime)||0) - (Number(a.lastMessageTime)||0));
     renderInbox(CHATS);
   } catch(e) {
@@ -1019,18 +1029,12 @@ async function carregarChatByPhone(phone) {
   try {
     const arr = await fetchMsgs(phone);
 
-    if(!arr.length){
-      empty.style.display='flex'; msgs.style.display='none';
-      empty.innerHTML=`<div class="chat-empty-icon">💬</div><div class="chat-empty-title">Nenhuma mensagem ainda</div><div class="chat-empty-sub">Inicie a conversa abaixo.</div>`;
-      return;
-    }
-
     empty.style.display='none'; msgs.style.display='flex';
     msgs.innerHTML = renderMsgs(arr);
     msgs.scrollTop = msgs.scrollHeight;
   } catch(e) {
     empty.style.display='flex'; msgs.style.display='none';
-    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub">${e.message}</div>`;
+    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro ao carregar</div><div class="chat-empty-sub" style="font-size:.7rem;word-break:break-all;max-width:280px">${escapeHtml(e.message)}</div>`;
   }
 }
 

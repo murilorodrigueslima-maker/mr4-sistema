@@ -235,12 +235,13 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
         <label class="fl">Cargo / Função</label>
         <input type="text" id="fCargo" placeholder="Vendedor, Operador, Gerente…">
       </div>
-      <div class="form-group">
-        <label class="fl">UID Firebase Auth</label>
-        <input type="text" id="fUid" placeholder="Cole o UID do usuário">
-        <div class="uid-hint">💡 O UID aparece no console do Firebase Authentication após o primeiro login do colaborador.</div>
+      <div class="form-group" id="senhaGroup">
+        <label class="fl">Senha de acesso</label>
+        <input type="password" id="fSenha" placeholder="Mínimo 6 caracteres">
+        <div class="uid-hint" id="senhaHint">🔑 Defina a senha inicial do colaborador.</div>
       </div>
     </div>
+    <input type="hidden" id="fUid">
 
     <!-- Admin toggle -->
     <div class="admin-toggle-row">
@@ -301,7 +302,7 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
 <!-- Firebase Auth + Firestore -->
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut }
+import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
@@ -316,6 +317,9 @@ const firebaseConfig = {
 };
 
 const app  = initializeApp(firebaseConfig);
+// App secundário — cria contas sem deslogar o admin
+const app2  = initializeApp(firebaseConfig, 'mr4-admin-secondary');
+const auth2 = getAuth(app2);
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
@@ -500,13 +504,14 @@ window.abrirModalNovo = function() {
   document.getElementById('editUid').value      = '';
   document.getElementById('fNome').value        = '';
   document.getElementById('fEmail').value       = '';
+  document.getElementById('fSenha').value       = '';
   document.getElementById('fCargo').value       = '';
-  document.getElementById('fUid').value         = '';
-  document.getElementById('fUid').disabled      = false;
   document.getElementById('fAdmin').checked     = false;
   document.getElementById('fBloqueado').checked = false;
-  document.getElementById('modalTitulo').textContent = 'Novo Usuário';
-  document.getElementById('modalSub').textContent    = 'Cadastre um novo colaborador e defina os módulos';
+  document.getElementById('senhaGroup').style.display = '';
+  document.getElementById('senhaHint').textContent    = '🔑 Defina a senha inicial do colaborador.';
+  document.getElementById('modalTitulo').textContent  = 'Novo Usuário';
+  document.getElementById('modalSub').textContent     = 'Cadastre um novo colaborador e defina os módulos';
   renderModulosForm(['catalogo'], false);
   document.getElementById('modalOverlay').classList.add('show');
 };
@@ -518,13 +523,15 @@ window.abrirModalEditar = function(uid) {
   document.getElementById('editUid').value      = uid;
   document.getElementById('fNome').value        = u.nome  || '';
   document.getElementById('fEmail').value       = u.email || '';
+  document.getElementById('fSenha').value       = '';
   document.getElementById('fCargo').value       = u.cargo || '';
-  document.getElementById('fUid').value         = uid;
-  document.getElementById('fUid').disabled      = true;  // UID não pode mudar na edição
   document.getElementById('fAdmin').checked     = !!u.admin;
   document.getElementById('fBloqueado').checked = !!u.bloqueado;
-  document.getElementById('modalTitulo').textContent = 'Editar Usuário';
-  document.getElementById('modalSub').textContent    = `Editando: ${u.nome || u.email || uid}`;
+  // Na edição, senha não é obrigatória
+  document.getElementById('senhaGroup').style.display = '';
+  document.getElementById('senhaHint').textContent    = '🔑 Deixe em branco para não alterar a senha.';
+  document.getElementById('modalTitulo').textContent  = 'Editar Usuário';
+  document.getElementById('modalSub').textContent     = `Editando: ${u.nome || u.email || uid}`;
   renderModulosForm(u.modulos||[], !!u.admin);
   document.getElementById('modalOverlay').classList.add('show');
 };
@@ -536,28 +543,40 @@ window.fecharModal = function() {
 // ── Salvar usuário (criar ou editar) ─────────────────────────────────────────
 window.salvarUsuario = async function() {
   const editUid = document.getElementById('editUid').value.trim();
-  const uid     = editUid || document.getElementById('fUid').value.trim();
   const nome    = document.getElementById('fNome').value.trim();
   const email   = document.getElementById('fEmail').value.trim();
+  const senha   = document.getElementById('fSenha').value.trim();
   const cargo   = document.getElementById('fCargo').value.trim();
   const isAdmin = document.getElementById('fAdmin').checked;
   const bloq    = document.getElementById('fBloqueado').checked;
   const modulos = isAdmin ? MODULOS_DEF.map(m => m.id) : getModsSelecionados();
 
-  if (!uid)   { toast('Informe o UID Firebase Auth do usuário!', true); return; }
   if (!nome)  { toast('Informe o nome completo!', true); return; }
   if (!cargo) { toast('Informe o cargo ou função!', true); return; }
+  if (!email) { toast('Informe o e-mail!', true); return; }
 
-  const dados = { nome, cargo, modulos, admin: isAdmin, bloqueado: bloq };
-  if (email) dados.email = email;
+  let uid = editUid;
 
   try {
+    // Novo usuário — cria conta Firebase Auth via app secundário
+    if (!editUid) {
+      if (!senha || senha.length < 6) { toast('A senha deve ter no mínimo 6 caracteres!', true); return; }
+      const cred = await createUserWithEmailAndPassword(auth2, email, senha);
+      uid = cred.user.uid;
+      await auth2.signOut(); // desconecta do app secundário, não afeta o admin
+    }
+
+    const dados = { nome, cargo, email, modulos, admin: isAdmin, bloqueado: bloq };
     await window._setDoc(window._doc('sistema_usuarios', uid), dados, { merge: true });
-    toast(editUid ? '✅ Usuário atualizado!' : '✅ Usuário cadastrado com sucesso!');
+    toast(editUid ? '✅ Usuário atualizado!' : `✅ Conta criada! Login: ${email}`);
     fecharModal();
     await carregarUsuarios();
   } catch(e) {
-    toast('Erro ao salvar: ' + e.message, true);
+    if (e.code === 'auth/email-already-in-use') {
+      toast('Este e-mail já tem uma conta. Peça o UID no Firebase Console.', true);
+    } else {
+      toast('Erro: ' + e.message, true);
+    }
   }
 };
 

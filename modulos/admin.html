@@ -331,7 +331,9 @@ window._getDoc    = (ref)       => getDoc(ref);
 window._getDocs   = (ref)       => getDocs(ref);
 window._setDoc    = (ref, d, o) => setDoc(ref, d, o||{});
 window._deleteDoc = (ref)       => deleteDoc(ref);
-window._signOut   = ()          => signOut(auth);
+window._signOut      = ()             => signOut(auth);
+window._createUser   = (email, senha) => createUserWithEmailAndPassword(auth2, email, senha);
+window._auth2SignOut = ()             => auth2.signOut();
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
@@ -561,9 +563,9 @@ window.salvarUsuario = async function() {
     // Novo usuário — cria conta Firebase Auth via app secundário
     if (!editUid) {
       if (!senha || senha.length < 6) { toast('A senha deve ter no mínimo 6 caracteres!', true); return; }
-      const cred = await createUserWithEmailAndPassword(auth2, email, senha);
+      const cred = await window._createUser(email, senha);
       uid = cred.user.uid;
-      await auth2.signOut(); // desconecta do app secundário, não afeta o admin
+      await window._auth2SignOut(); // desconecta do app secundário, não afeta o admin
     }
 
     const dados = { nome, cargo, email, modulos, admin: isAdmin, bloqueado: bloq };

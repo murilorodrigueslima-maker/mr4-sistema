@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-04-21T09:46:32",
-  "total": 26,
+  "atualizado_em": "2026-04-21T11:23:13",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "364849408",
+      "numero": "15451",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 322.04,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364846752",
+      "numero": "15450",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 687.03,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364840337",
+      "numero": "15449",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 613.46,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364839370",
+      "numero": "15448",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364839138",
+      "numero": "15447",
+      "data": "2026-04-21",
+      "hora": "",
+      "cliente": "52.436.002 TYAGO FELIX DE OLIVEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 478.05,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364836226",
       "numero": "15446",
@@ -105,8 +165,8 @@
       "hora": "",
       "cliente": "U. N. LIMA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1590.72,
-      "itens": 3,
+      "valor": 1268.68,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

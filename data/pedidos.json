@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-04-22T16:50:46",
-  "total": 57,
+  "atualizado_em": "2026-04-22T17:39:30",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "365141470",
+      "numero": "15478",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "FRANCISCA ANDRESSA ARAUJO GOMES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 255,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365125108",
       "numero": "15477",

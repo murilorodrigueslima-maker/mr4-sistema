@@ -1571,24 +1571,56 @@ function iniciarListenerGlobal() {
       if(!novas.length) return;
 
       // ── Atualiza CHATS: não lidas, preview e posição ──────────────────────
+      // Normaliza phone para comparação (lida com 9 dígito BR e prefixo 55)
+      function normPhone(p) {
+        const d = (p||'').replace(/\D/g,'');
+        // Remove prefixo 55 se existir, fica com DDD+número
+        const sem55 = d.startsWith('55') ? d.slice(2) : d;
+        // Remove 9 extra de celular (ex: 991360711 → 91360711)
+        const sem9  = sem55.length === 11 && sem55[2] === '9' ? sem55.slice(0,2)+sem55.slice(3) : sem55;
+        return { completo: d, sem55, sem9 };
+      }
+
+      function encontrarChat(phone) {
+        const { completo, sem55, sem9 } = normPhone(phone);
+        return CHATS.findIndex(ch => {
+          const { completo:c2, sem55:s2, sem9:s9 } = normPhone(ch.phone);
+          return c2===completo || s2===sem55 || s9===sem9 || c2===sem55 || s2===completo;
+        });
+      }
+
+      const agoraTs = Date.now();
       novas.forEach(c => {
         const d     = c.doc.data();
         const phone = d.phone || '';
         if(!phone) return;
 
         const ts  = typeof d.momment === 'number' ? d.momment : Number(d.momment);
-        const txt = d.message || d.text?.message || '';
+        // normaliza ts: se vier em segundos (10 dígitos), converte para ms
+        const tsMs = ts > 1e12 ? ts : ts * 1000;
+        const txt  = d.message || d.text?.message || '';
 
         // Incrementa não lidas
         CHATS_UNREAD[phone] = (CHATS_UNREAD[phone] || 0) + 1;
 
-        // Atualiza ou cria entrada no CHATS para mover pro topo
-        const idx = CHATS.findIndex(ch => ch.phone === phone);
+        // Atualiza ou CRIA entrada no CHATS
+        const idx = encontrarChat(phone);
         if(idx >= 0) {
-          CHATS[idx].lastMessageTime = ts;
+          CHATS[idx].lastMessageTime = tsMs;
           CHATS[idx].lastMessageBody = txt;
           CHATS[idx].lastFromMe      = false;
           CHATS[idx].messagesUnread  = CHATS_UNREAD[phone];
+        } else {
+          // Conversa nova — adiciona ao topo
+          CHATS.unshift({
+            phone,
+            name: d.senderName || phone,
+            lastMessageTime: tsMs,
+            lastMessageBody: txt,
+            lastFromMe: false,
+            messagesUnread: 1,
+          });
+          CHATS_UNREAD[phone] = 1;
         }
       });
 

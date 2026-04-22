@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-04-22T13:39:38",
-  "total": 48,
+  "atualizado_em": "2026-04-22T14:38:42",
+  "total": 51,
   "pedidos": [
+    {
+      "id": "365062840",
+      "numero": "15471",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "THAYNARA DA COSTA RODRIGUES LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 114.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365060522",
+      "numero": "15470",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "FRANCISCO ELIAS MORAIS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 355.54,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365051077",
+      "numero": "15469",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "STTOP FILM COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 36.96,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365046468",
       "numero": "15468",

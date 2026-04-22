@@ -174,9 +174,11 @@ select.filter-sel:focus{border-color:var(--orange)}
 .inbox-row.selected{border-color:var(--orange);background:#FFFAF7}
 .inbox-row.unread .inbox-nome{font-weight:800;color:var(--text)}
 .inbox-row.unread .inbox-preview{color:#374151;font-weight:500}
-.inbox-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.inbox-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#25D366,#128C7E);color:#fff;font-weight:700;font-size:1.1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden}
 .inbox-avatar.unknown{background:linear-gradient(135deg,#9CA3AF,#6B7280)}
-.inbox-avatar .unread-ring{position:absolute;inset:-2px;border-radius:50%;border:2px solid var(--green);pointer-events:none}
+.inbox-avatar .unread-ring{position:absolute;inset:-2px;border-radius:50%;border:2.5px solid var(--green);pointer-events:none;z-index:2}
+.inbox-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .2s}
+.inbox-avatar img.loaded{opacity:1}
 .inbox-main{flex:1;min-width:0}
 .inbox-header-row{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}
 .inbox-nome{font-size:.88rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
@@ -1106,13 +1108,14 @@ function renderInbox(chats) {
     const previewCls = lastFromMe ? ' fromme' : '';
 
     const unreadRing = unread > 0 ? '<div class="unread-ring"></div>' : '';
+    const avatarImg  = `<img alt="" data-phone="${phone}" onload="this.classList.add('loaded')" onerror="this.remove()">`;
     const criarBtn  = cliente
       ? `<div class="inbox-client-tag">CRM ✓</div>`
       : `<button class="inbox-criar-btn" onclick="event.stopPropagation();criarClienteDoInbox('${phone}','${(chat.name||'').replace(/'/g,'\\\'')}')" title="Cadastrar no CRM">+ Criar</button>`;
 
     return `
     <div class="inbox-row${unreadCls}${sel}" onclick="abrirChatInbox('${phone}')">
-      <div class="inbox-avatar${cliente?'':' unknown'}">${ini}${unreadRing}</div>
+      <div class="inbox-avatar${cliente?'':' unknown'}">${ini}${unreadRing}${avatarImg}</div>
       <div class="inbox-main">
         <div class="inbox-header-row">
           <div class="inbox-nome${cliente?'':' unknown'}">${escapeHtml(nome)}</div>
@@ -1125,6 +1128,39 @@ function renderInbox(chats) {
       </div>
     </div>`;
   }).join('');
+
+  // Lazy-load fotos de perfil via IntersectionObserver
+  iniciarLazyFotos();
+}
+
+// Cache de fotos por sessão
+const FOTO_CACHE = {};
+
+async function carregarFoto(img) {
+  const phone = img.dataset.phone;
+  if(!phone) return;
+  if(FOTO_CACHE[phone] === null) { img.remove(); return; } // já tentou, sem foto
+  if(FOTO_CACHE[phone]) { img.src = FOTO_CACHE[phone]; return; }
+  try {
+    const r = await fetch(`${ZAPI_BASE}/profile-picture?phone=55${phone}`, { headers: ZAPI_HEADERS });
+    if(!r.ok) { FOTO_CACHE[phone] = null; img.remove(); return; }
+    const j = await r.json();
+    const url = j.value || j.profilePictureUrl || j.url || '';
+    if(url) { FOTO_CACHE[phone] = url; img.src = url; }
+    else     { FOTO_CACHE[phone] = null; img.remove(); }
+  } catch { FOTO_CACHE[phone] = null; img.remove(); }
+}
+
+function iniciarLazyFotos() {
+  if(!('IntersectionObserver' in window)) return;
+  const obs = new IntersectionObserver((entries, o) => {
+    entries.forEach(e => {
+      if(!e.isIntersecting) return;
+      carregarFoto(e.target);
+      o.unobserve(e.target);
+    });
+  }, { rootMargin: '100px' });
+  document.querySelectorAll('.inbox-avatar img[data-phone]').forEach(img => obs.observe(img));
 }
 
 window.abrirChatInbox = function(phone) {

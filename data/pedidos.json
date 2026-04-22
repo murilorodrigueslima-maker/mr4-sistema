@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-22T12:37:13",
-  "total": 44,
+  "atualizado_em": "2026-04-22T13:39:38",
+  "total": 48,
   "pedidos": [
+    {
+      "id": "365046468",
+      "numero": "15468",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 996.58,
+      "itens": 24,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365037329",
+      "numero": "15467",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 169.96,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365034601",
+      "numero": "15466",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 68.43,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365030294",
+      "numero": "15465",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 270,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365024243",
       "numero": "15464",

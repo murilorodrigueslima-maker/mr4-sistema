@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Demandas Internas — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --orange:#FF6B1A;--orange-dk:#e85d0f;--orange-lt:rgba(255,107,26,.08);
+  --bg:#F7F7F5;--white:#FFFFFF;--text:#1A1A1A;--muted:#9CA3AF;
+  --border:#EBEBEB;--border-dk:#D1D5DB;
+  --green:#10B981;--yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --sidebar-w:210px;--detail-w:390px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:1rem;flex-shrink:0;z-index:50}
+.topbar-back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.35rem .7rem;border:1px solid var(--border);border-radius:8px;transition:all .15s}
+.topbar-back:hover{color:var(--text);border-color:var(--border-dk)}
+.topbar-title{font-size:.95rem;font-weight:700;color:var(--text)}
+.topbar-spacer{flex:1}
+.btn{padding:.5rem 1rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:600;cursor:pointer;transition:all .15s;border:none;display:inline-flex;align-items:center;gap:.4rem}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-primary:hover{background:var(--orange-dk)}
+.btn-ghost{background:none;border:1.5px solid var(--border);color:var(--muted)}
+.btn-ghost:hover{border-color:var(--border-dk);color:var(--text)}
+
+/* LAYOUT */
+.app{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.sidebar-section{padding:.85rem .85rem .3rem;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.sidebar-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .85rem;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border-radius:8px;margin:0 .4rem;transition:all .12s}
+.sidebar-item:hover{background:var(--bg);color:var(--text)}
+.sidebar-item.active{background:var(--orange-lt);color:var(--orange);font-weight:600}
+.sidebar-item-count{font-size:.7rem;font-weight:600;background:var(--bg);padding:.1rem .45rem;border-radius:20px;color:var(--muted)}
+.sidebar-item.active .sidebar-item-count{background:rgba(255,107,26,.15);color:var(--orange)}
+.sidebar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.35rem}
+
+/* MAIN */
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.list-header{padding:.85rem 1.25rem;display:flex;align-items:center;gap:.75rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.list-header-title{font-size:.88rem;font-weight:700;color:var(--text);flex:1}
+.list-body{flex:1;overflow-y:auto;padding:.75rem}
+
+/* DEMANDA CARD */
+.demanda-card{background:var(--white);border-radius:12px;border:1.5px solid transparent;padding:.9rem 1rem;margin-bottom:.5rem;cursor:pointer;transition:all .12s;position:relative}
+.demanda-card:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.demanda-card.selected{border-color:var(--orange);background:#FFFAF7}
+.demanda-card.concluida{opacity:.7}
+.card-top{display:flex;align-items:flex-start;gap:.65rem}
+.prio-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;margin-top:.3rem}
+.card-body{flex:1;min-width:0}
+.card-titulo{font-size:.87rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:.3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-desc{font-size:.75rem;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;align-items:center;gap:.6rem;margin-top:.55rem;flex-wrap:wrap}
+.card-badge{font-size:.62rem;font-weight:700;padding:.15rem .55rem;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.badge-pendente{background:#FEF3C7;color:#92400E}
+.badge-em_andamento{background:#DBEAFE;color:#1E40AF}
+.badge-concluida{background:#D1FAE5;color:#065F46}
+.card-pessoa{font-size:.72rem;color:var(--muted);display:flex;align-items:center;gap:.3rem}
+.card-pessoa strong{color:var(--text);font-weight:600}
+.card-date{font-size:.68rem;color:var(--muted);margin-left:auto}
+.prazo-badge{font-size:.62rem;font-weight:600;padding:.1rem .45rem;border-radius:20px}
+.prazo-ok{background:#E0F2FE;color:#0369A1}
+.prazo-vencendo{background:#FEF3C7;color:#92400E}
+.prazo-vencido{background:#FEE2E2;color:#B91C1C}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:.75rem;color:var(--muted)}
+.empty-icon{font-size:2.5rem}
+.empty-title{font-size:.95rem;font-weight:600;color:var(--text)}
+.empty-sub{font-size:.8rem}
+
+/* DETAIL PANEL */
+.detail-panel{width:var(--detail-w);background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transform:translateX(100%);transition:transform .25s ease;position:absolute;right:0;top:52px;bottom:0;z-index:40}
+.detail-panel.open{transform:translateX(0);position:relative;top:auto;right:auto;bottom:auto}
+.detail-top{padding:1.25rem 1.25rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
+.detail-close{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;transition:all .12s}
+.detail-close:hover{background:var(--bg);color:var(--text)}
+.detail-titulo{font-size:1rem;font-weight:800;color:var(--text);line-height:1.3;padding-right:2rem;margin-bottom:.65rem}
+.detail-meta{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}
+.detail-desc{font-size:.83rem;color:var(--text);line-height:1.65;background:var(--bg);border-radius:10px;padding:.75rem .9rem;margin-top:.1rem;white-space:pre-wrap}
+.detail-content{flex:1;overflow-y:auto;padding:1rem 1.25rem}
+.d-label{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.25rem}
+.d-value{font-size:.85rem;color:var(--text);font-weight:500;margin-bottom:.85rem}
+.pessoas-row{display:flex;gap:.75rem;margin-bottom:1rem}
+.pessoa-card{flex:1;background:var(--bg);border-radius:10px;padding:.65rem .85rem}
+.pessoa-label{font-size:.6rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.2rem}
+.pessoa-nome{font-size:.83rem;font-weight:700;color:var(--text)}
+
+/* STATUS ACTIONS */
+.status-actions{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.btn-status{padding:.5rem .9rem;border-radius:9px;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:none;transition:all .15s}
+.btn-iniciar{background:#DBEAFE;color:#1E40AF}
+.btn-iniciar:hover{background:#BFDBFE}
+.btn-concluir{background:#D1FAE5;color:#065F46}
+.btn-concluir:hover{background:#A7F3D0}
+.btn-reabrir{background:#FEF3C7;color:#92400E}
+.btn-reabrir:hover{background:#FDE68A}
+.btn-delete-dem{background:#FEE2E2;color:#B91C1C}
+.btn-delete-dem:hover{background:#FECACA}
+
+/* COMENTÁRIOS */
+.comments-section{margin-top:.5rem}
+.comment-item{background:var(--bg);border-radius:10px;padding:.65rem .8rem;margin-bottom:.45rem}
+.comment-autor{font-size:.68rem;font-weight:700;color:var(--text);margin-bottom:.2rem}
+.comment-data{font-size:.62rem;color:var(--muted)}
+.comment-texto{font-size:.8rem;color:var(--text);line-height:1.5;margin-top:.25rem}
+.comment-add{display:flex;gap:.5rem;margin-top:.65rem}
+.comment-add input{flex:1;padding:.5rem .75rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.8rem;outline:none;transition:border .15s}
+.comment-add input:focus{border-color:var(--orange)}
+.comment-add button{padding:.5rem .85rem;background:var(--orange);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:18px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.2)}
+.modal-header{padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white);z-index:1}
+.modal-title{font-size:.95rem;font-weight:800}
+.modal-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);padding:.2rem;line-height:1}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-footer{padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:.65rem;justify-content:flex-end}
+.form-group{margin-bottom:.9rem}
+.form-label{display:block;font-size:.73rem;font-weight:600;color:var(--text);margin-bottom:.35rem}
+.form-input,.form-select,.form-textarea{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.83rem;color:var(--text);background:var(--white);outline:none;transition:border .15s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
+.form-textarea{resize:vertical;min-height:90px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:.85rem}
+
+/* STATS */
+.stats-bar{display:flex;gap:1.5rem;padding:.65rem 1.25rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.stat-pill{display:flex;align-items:center;gap:.4rem;font-size:.75rem;color:var(--muted)}
+.stat-pill strong{color:var(--text);font-weight:700}
+.stat-pill .dot{width:7px;height:7px;border-radius:50%}
+
+@media(max-width:768px){
+  .detail-panel{position:fixed;width:100%;right:0;top:52px;bottom:0;transform:translateX(100%)}
+  .detail-panel.open{transform:translateX(0)}
+  .sidebar{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="topbar-back" href="../index.html">← Início</a>
+  <div class="topbar-title">📋 Demandas Internas</div>
+  <div class="topbar-spacer"></div>
+  <button class="btn btn-primary" onclick="abrirModalNova()">+ Nova Demanda</button>
+</div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Status</div>
+    <div class="sidebar-item active" id="f-todas"      onclick="setFiltro('todas')">
+      <span>Todas</span><span class="sidebar-item-count" id="cnt-todas">0</span>
+    </div>
+    <div class="sidebar-item" id="f-pendente"          onclick="setFiltro('pendente')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#F59E0B"></span>Pendentes</span>
+      <span class="sidebar-item-count" id="cnt-pendente">0</span>
+    </div>
+    <div class="sidebar-item" id="f-em_andamento"      onclick="setFiltro('em_andamento')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#3B82F6"></span>Em Andamento</span>
+      <span class="sidebar-item-count" id="cnt-em_andamento">0</span>
+    </div>
+    <div class="sidebar-item" id="f-concluida"         onclick="setFiltro('concluida')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#10B981"></span>Concluídas</span>
+      <span class="sidebar-item-count" id="cnt-concluida">0</span>
+    </div>
+
+    <div class="sidebar-section" style="margin-top:.5rem">Minha visão</div>
+    <div class="sidebar-item" id="f-minhas"   onclick="setFiltro('minhas')">
+      <span>Para mim</span><span class="sidebar-item-count" id="cnt-minhas">0</span>
+    </div>
+    <div class="sidebar-item" id="f-criei"    onclick="setFiltro('criei')">
+      <span>Criei</span><span class="sidebar-item-count" id="cnt-criei">0</span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <div class="stats-bar">
+      <div class="stat-pill"><span class="dot" style="background:var(--orange)"></span>Total: <strong id="st-total">—</strong></div>
+      <div class="stat-pill"><span class="dot" style="background:var(--yellow)"></span>Pendentes: <strong id="st-pend">—</strong></div>
+      <div class="stat-pill"><span class="dot" style="background:var(--blue)"></span>Andamento: <strong id="st-and">—</strong></div>
+      <div class="stat-pill"><span class="dot" style="background:var(--green)"></span>Concluídas: <strong id="st-conc">—</strong></div>
+    </div>
+    <div class="list-header">
+      <div class="list-header-title" id="listTitle">Todas as demandas</div>
+    </div>
+    <div class="list-body" id="listBody">
+      <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Carregando…</div></div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <aside class="detail-panel" id="detailPanel">
+    <div class="detail-top">
+      <button class="detail-close" onclick="fecharDetalhe()">✕</button>
+      <div class="detail-titulo" id="detTitulo">—</div>
+      <div class="detail-meta" id="detMeta"></div>
+      <div class="detail-desc" id="detDesc" style="display:none"></div>
+    </div>
+    <div class="detail-content">
+      <div class="pessoas-row">
+        <div class="pessoa-card">
+          <div class="pessoa-label">👤 Responsável</div>
+          <div class="pessoa-nome" id="detResponsavel">—</div>
+        </div>
+        <div class="pessoa-card">
+          <div class="pessoa-label">✏️ Criado por</div>
+          <div class="pessoa-nome" id="detCriador">—</div>
+        </div>
+      </div>
+
+      <div class="d-label">Prazo</div>
+      <div class="d-value" id="detPrazo">—</div>
+
+      <div class="d-label">Ação</div>
+      <div class="status-actions" id="statusActions"></div>
+
+      <div class="d-label" style="margin-top:.25rem">Comentários</div>
+      <div class="comments-section" id="commentsList"></div>
+      <div class="comment-add">
+        <input type="text" id="commentInput" placeholder="Adicionar comentário…" onkeydown="if(event.key==='Enter')addComentario()">
+        <button onclick="addComentario()">+</button>
+      </div>
+
+      <div style="display:flex;gap:.5rem;margin-top:1.25rem;padding-top:.85rem;border-top:1px solid var(--border)">
+        <button class="btn btn-ghost" style="flex:1" onclick="editarDemandaAtual()">✏️ Editar</button>
+        <button class="btn btn-delete-dem" style="flex:1;border:none" onclick="deletarDemandaAtual()">🗑 Excluir</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<!-- MODAL CRIAR/EDITAR -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Nova Demanda</div>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label class="form-label">Título da demanda *</label>
+        <input class="form-input" id="fTitulo" placeholder="Ex: Organizar prateleira de lâmpadas">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descrição</label>
+        <textarea class="form-textarea" id="fDesc" placeholder="Descreva o que precisa ser feito, detalhes importantes…"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Responsável *</label>
+          <select class="form-select" id="fResponsavel"></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prioridade</label>
+          <select class="form-select" id="fPrioridade">
+            <option value="baixa">🔵 Baixa</option>
+            <option value="normal" selected>🟡 Normal</option>
+            <option value="alta">🟠 Alta</option>
+            <option value="urgente">🔴 Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prazo (opcional)</label>
+        <input class="form-input" type="date" id="fPrazo">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarDemanda()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc,
+  deleteDoc, query, orderBy, onSnapshot, serverTimestamp
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app  = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── Estado ────────────────────────────────────────────────────────────────────
+let DEMANDAS     = [];
+let USUARIOS     = [];
+let CURRENT_USER = null; // { uid, nome, isAdmin }
+let demandaAtualId = null;
+let filtroAtivo    = 'todas';
+
+const PRIO_COLOR = { baixa:'#6B7280', normal:'#F59E0B', alta:'#F97316', urgente:'#EF4444' };
+const PRIO_LABEL = { baixa:'Baixa', normal:'Normal', alta:'Alta', urgente:'Urgente' };
+
+// ── Auth + Init ───────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async u => {
+  if(!u){ window.location.href='../login.html'; return; }
+
+  // Busca perfil
+  let nome = u.displayName || u.email.split('@')[0];
+  let isAdmin = false;
+  try {
+    const snap = await getDoc(doc(db,'sistema_usuarios',u.uid));
+    if(snap.exists()){
+      const d = snap.data();
+      nome    = d.nome || nome;
+      isAdmin = (d.role==='admin') || (d.modulos||[]).includes('admin');
+    }
+  } catch(_){}
+  CURRENT_USER = { uid: u.uid, nome, isAdmin };
+
+  await carregarUsuarios();
+  escutarDemandas();
+});
+
+// ── Usuários (para o select de responsável) ───────────────────────────────────
+async function carregarUsuarios() {
+  try {
+    const snap = await getDocs(collection(db,'sistema_usuarios'));
+    USUARIOS = snap.docs.map(d=>({ uid:d.id, ...d.data() }));
+  } catch(_){ USUARIOS = []; }
+  renderSelectUsuarios();
+}
+
+function renderSelectUsuarios() {
+  const sel = document.getElementById('fResponsavel');
+  sel.innerHTML = USUARIOS.map(u=>
+    `<option value="${u.uid}" data-nome="${u.nome||u.email}">${u.nome||u.email}</option>`
+  ).join('');
+}
+
+// ── Escuta Firestore (tempo real) ─────────────────────────────────────────────
+function escutarDemandas() {
+  onSnapshot(
+    query(collection(db,'demandas'), orderBy('criadoEm','desc')),
+    snap => {
+      DEMANDAS = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+      atualizarContadores();
+      renderLista();
+      // Atualiza painel aberto se ainda estiver aberto
+      if(demandaAtualId){
+        const d = DEMANDAS.find(x=>x.id===demandaAtualId);
+        if(d) renderDetalhe(d);
+      }
+    },
+    err => console.error('Firestore:', err)
+  );
+}
+
+// ── Contadores ────────────────────────────────────────────────────────────────
+function atualizarContadores() {
+  const pendentes    = DEMANDAS.filter(d=>d.status==='pendente');
+  const andamento    = DEMANDAS.filter(d=>d.status==='em_andamento');
+  const concluidas   = DEMANDAS.filter(d=>d.status==='concluida');
+  const minhas       = DEMANDAS.filter(d=>d.responsavelId===CURRENT_USER?.uid);
+  const criei        = DEMANDAS.filter(d=>d.criadoPorId===CURRENT_USER?.uid);
+
+  document.getElementById('cnt-todas').textContent       = DEMANDAS.length;
+  document.getElementById('cnt-pendente').textContent    = pendentes.length;
+  document.getElementById('cnt-em_andamento').textContent= andamento.length;
+  document.getElementById('cnt-concluida').textContent   = concluidas.length;
+  document.getElementById('cnt-minhas').textContent      = minhas.length;
+  document.getElementById('cnt-criei').textContent       = criei.length;
+
+  document.getElementById('st-total').textContent = DEMANDAS.length;
+  document.getElementById('st-pend').textContent  = pendentes.length;
+  document.getElementById('st-and').textContent   = andamento.length;
+  document.getElementById('st-conc').textContent  = concluidas.length;
+
+  // Badge urgente no sidebar
+  const urgentePend = DEMANDAS.filter(d=>d.prioridade==='urgente'&&d.status!=='concluida');
+  const cntPend = document.getElementById('cnt-pendente');
+  cntPend.style.background = urgentePend.length ? '#FEE2E2' : '';
+  cntPend.style.color      = urgentePend.length ? '#B91C1C' : '';
+}
+
+window.setFiltro = function(f) {
+  filtroAtivo = f;
+  document.querySelectorAll('.sidebar-item').forEach(el=>el.classList.remove('active'));
+  const el = document.getElementById('f-'+f);
+  if(el) el.classList.add('active');
+  renderLista();
+};
+
+function listaFiltrada() {
+  switch(filtroAtivo){
+    case 'pendente':    return DEMANDAS.filter(d=>d.status==='pendente');
+    case 'em_andamento':return DEMANDAS.filter(d=>d.status==='em_andamento');
+    case 'concluida':   return DEMANDAS.filter(d=>d.status==='concluida');
+    case 'minhas':      return DEMANDAS.filter(d=>d.responsavelId===CURRENT_USER?.uid);
+    case 'criei':       return DEMANDAS.filter(d=>d.criadoPorId===CURRENT_USER?.uid);
+    default:            return DEMANDAS;
+  }
+}
+
+// ── Render lista ──────────────────────────────────────────────────────────────
+function renderLista() {
+  const lista = listaFiltrada();
+  const labels = {
+    todas:'Todas as demandas', pendente:'Pendentes', em_andamento:'Em Andamento',
+    concluida:'Concluídas', minhas:'Para mim', criei:'Criadas por mim'
+  };
+  document.getElementById('listTitle').textContent = `${labels[filtroAtivo]||'Demandas'} (${lista.length})`;
+
+  const body = document.getElementById('listBody');
+  if(!lista.length){
+    body.innerHTML=`<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Nenhuma demanda</div><div class="empty-sub">Clique em "+ Nova Demanda" para criar</div></div>`;
+    return;
+  }
+
+  body.innerHTML = lista.map(d => {
+    const prioColor = PRIO_COLOR[d.prioridade]||'#9CA3AF';
+    const prazoHtml = d.prazo ? prazoTag(d.prazo, d.status) : '';
+    const sou = d.responsavelId === CURRENT_USER?.uid;
+    return `
+    <div class="demanda-card${d.status==='concluida'?' concluida':''}${demandaAtualId===d.id?' selected':''}" onclick="abrirDetalhe('${d.id}')">
+      <div class="card-top">
+        <div class="prio-dot" style="background:${prioColor}" title="Prioridade ${PRIO_LABEL[d.prioridade]}"></div>
+        <div class="card-body">
+          <div class="card-titulo">${escHtml(d.titulo||'—')}</div>
+          ${d.descricao?`<div class="card-desc">${escHtml(d.descricao)}</div>`:''}
+          <div class="card-footer">
+            <span class="card-badge badge-${d.status}">${statusLabel(d.status)}</span>
+            <span class="card-pessoa">Para: <strong>${escHtml(d.responsavelNome||'—')}</strong>${sou?' (você)':''}</span>
+            ${prazoHtml}
+            <span class="card-date">${formatData(d.criadoEm)}</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Detail Panel ──────────────────────────────────────────────────────────────
+window.abrirDetalhe = function(id) {
+  demandaAtualId = id;
+  document.querySelectorAll('.demanda-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.demanda-card').forEach(c=>{
+    if(c.getAttribute('onclick')&&c.getAttribute('onclick').includes(`'${id}'`)) c.classList.add('selected');
+  });
+  const d = DEMANDAS.find(x=>x.id===id);
+  if(d) renderDetalhe(d);
+  document.getElementById('detailPanel').classList.add('open');
+};
+
+function renderDetalhe(d) {
+  document.getElementById('detTitulo').textContent = d.titulo||'—';
+
+  // Meta badges
+  const prioColor = PRIO_COLOR[d.prioridade]||'#9CA3AF';
+  document.getElementById('detMeta').innerHTML = `
+    <span class="card-badge badge-${d.status}">${statusLabel(d.status)}</span>
+    <span class="card-badge" style="background:${prioColor}22;color:${prioColor}">${PRIO_LABEL[d.prioridade]||'Normal'}</span>
+    ${d.status==='concluida'&&d.concluidoEm?`<span class="card-badge" style="background:#D1FAE5;color:#065F46">✅ Concluída em ${formatData(d.concluidoEm)}</span>`:''}
+  `;
+
+  const descEl = document.getElementById('detDesc');
+  if(d.descricao){ descEl.textContent=d.descricao; descEl.style.display='block'; }
+  else { descEl.style.display='none'; }
+
+  document.getElementById('detResponsavel').textContent = d.responsavelNome||'—';
+  document.getElementById('detCriador').textContent     = d.criadoPorNome||'—';
+  document.getElementById('detPrazo').textContent       = d.prazo ? new Date(d.prazo+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}) : 'Sem prazo definido';
+
+  renderStatusActions(d);
+  renderComentarios(d);
+}
+
+function renderStatusActions(d) {
+  const el     = document.getElementById('statusActions');
+  const sou    = d.responsavelId === CURRENT_USER?.uid;
+  const isAdmin= CURRENT_USER?.isAdmin;
+  let html = '';
+
+  if(d.status === 'pendente' && (sou||isAdmin))
+    html += `<button class="btn-status btn-iniciar" onclick="mudarStatus('em_andamento')">▶ Iniciar</button>`;
+  if(d.status === 'em_andamento' && (sou||isAdmin))
+    html += `<button class="btn-status btn-concluir" onclick="mudarStatus('concluida')">✓ Marcar como Concluída</button>`;
+  if(d.status === 'concluida' && isAdmin)
+    html += `<button class="btn-status btn-reabrir" onclick="mudarStatus('pendente')">↺ Reabrir</button>`;
+  if(!html)
+    html = `<span style="font-size:.78rem;color:var(--muted)">Nenhuma ação disponível</span>`;
+
+  el.innerHTML = html;
+}
+
+window.mudarStatus = async function(novoStatus) {
+  if(!demandaAtualId) return;
+  const dados = { status: novoStatus, atualizadoEm: serverTimestamp() };
+  if(novoStatus==='concluida') dados.concluidoEm = serverTimestamp();
+  if(novoStatus==='pendente')  dados.concluidoEm = null;
+  await updateDoc(doc(db,'demandas',demandaAtualId), dados);
+  // onSnapshot atualiza automaticamente
+};
+
+function renderComentarios(d) {
+  const lista = d.comentarios||[];
+  document.getElementById('commentsList').innerHTML = lista.length
+    ? lista.map(c=>`<div class="comment-item">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <span class="comment-autor">${escHtml(c.autorNome)}</span>
+          <span class="comment-data">${formatData2(c.data)}</span>
+        </div>
+        <div class="comment-texto">${escHtml(c.texto)}</div>
+      </div>`).join('')
+    : `<div style="font-size:.78rem;color:var(--muted);padding:.25rem 0">Nenhum comentário ainda.</div>`;
+}
+
+window.addComentario = async function() {
+  const input = document.getElementById('commentInput');
+  const texto = input.value.trim();
+  if(!texto||!demandaAtualId) return;
+  const d = DEMANDAS.find(x=>x.id===demandaAtualId);
+  const comentarios = [
+    ...(d.comentarios||[]),
+    { texto, autorNome: CURRENT_USER?.nome||'?', data: new Date().toISOString() }
+  ];
+  await updateDoc(doc(db,'demandas',demandaAtualId),{ comentarios, atualizadoEm:serverTimestamp() });
+  input.value='';
+};
+
+window.fecharDetalhe = function() {
+  document.getElementById('detailPanel').classList.remove('open');
+  demandaAtualId = null;
+  document.querySelectorAll('.demanda-card').forEach(c=>c.classList.remove('selected'));
+};
+
+// ── Modal criar/editar ────────────────────────────────────────────────────────
+window.abrirModalNova = function() {
+  document.getElementById('editId').value='';
+  document.getElementById('modalTitle').textContent='Nova Demanda';
+  document.getElementById('fTitulo').value='';
+  document.getElementById('fDesc').value='';
+  document.getElementById('fPrioridade').value='normal';
+  document.getElementById('fPrazo').value='';
+  // Pré-seleciona primeiro usuário que não é o próprio (sugestão)
+  const outro = USUARIOS.find(u=>u.uid!==CURRENT_USER?.uid);
+  if(outro) document.getElementById('fResponsavel').value=outro.uid;
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.editarDemandaAtual = function() {
+  if(!demandaAtualId) return;
+  const d = DEMANDAS.find(x=>x.id===demandaAtualId);
+  if(!d) return;
+  document.getElementById('editId').value=d.id;
+  document.getElementById('modalTitle').textContent='Editar Demanda';
+  document.getElementById('fTitulo').value=d.titulo||'';
+  document.getElementById('fDesc').value=d.descricao||'';
+  document.getElementById('fPrioridade').value=d.prioridade||'normal';
+  document.getElementById('fPrazo').value=d.prazo||'';
+  document.getElementById('fResponsavel').value=d.responsavelId||'';
+  document.getElementById('modalOverlay').classList.add('open');
+};
+
+window.fecharModal = function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+};
+
+window.salvarDemanda = async function() {
+  const titulo    = document.getElementById('fTitulo').value.trim();
+  if(!titulo){ alert('Informe o título.'); return; }
+  const sel       = document.getElementById('fResponsavel');
+  const respOpt   = sel.options[sel.selectedIndex];
+  const respId    = sel.value;
+  const respNome  = respOpt?.getAttribute('data-nome') || respOpt?.text || '?';
+  const prioridade= document.getElementById('fPrioridade').value;
+  const prazo     = document.getElementById('fPrazo').value;
+  const descricao = document.getElementById('fDesc').value.trim();
+  const id        = document.getElementById('editId').value;
+
+  const dados = {
+    titulo, descricao, prioridade,
+    responsavelId:  respId,
+    responsavelNome:respNome,
+    prazo:          prazo||null,
+    atualizadoEm:   serverTimestamp(),
+  };
+
+  if(id){
+    await updateDoc(doc(db,'demandas',id), dados);
+  } else {
+    await addDoc(collection(db,'demandas'),{
+      ...dados,
+      criadoPorId:   CURRENT_USER?.uid||'',
+      criadoPorNome: CURRENT_USER?.nome||'?',
+      status:        'pendente',
+      comentarios:   [],
+      concluidoEm:   null,
+      criadoEm:      serverTimestamp(),
+    });
+  }
+  fecharModal();
+};
+
+window.deletarDemandaAtual = async function() {
+  if(!demandaAtualId) return;
+  const d = DEMANDAS.find(x=>x.id===demandaAtualId);
+  if(!confirm(`Excluir "${d?.titulo}"?`)) return;
+  await deleteDoc(doc(db,'demandas',demandaAtualId));
+  fecharDetalhe();
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function statusLabel(s){ return {pendente:'Pendente',em_andamento:'Em Andamento',concluida:'Concluída'}[s]||s; }
+
+function prazoTag(prazoStr, status) {
+  if(status==='concluida') return '';
+  const prazo = new Date(prazoStr+'T23:59:59');
+  const hoje  = new Date();
+  const diff  = Math.ceil((prazo-hoje)/(1000*60*60*24));
+  if(diff < 0)   return `<span class="prazo-badge prazo-vencido">Vencido há ${Math.abs(diff)}d</span>`;
+  if(diff <= 2)  return `<span class="prazo-badge prazo-vencendo">Vence em ${diff}d</span>`;
+  return `<span class="prazo-badge prazo-ok">Prazo: ${new Date(prazoStr+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span>`;
+}
+
+function formatData(ts){
+  if(!ts) return '—';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+}
+function formatData2(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
+function escHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) fecharModal(); });
+</script>
+</body>
+</html>

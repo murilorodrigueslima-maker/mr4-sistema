@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-22T14:38:43",
+  "atualizado_em": "2026-04-22T15:43:32",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -18,13 +18,6 @@
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 1085,
-      "vencimento": "2026-03-17",
-      "dias_atraso": 36,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 47.99,
       "vencimento": "2026-03-17",
       "dias_atraso": 36,
       "tipo": "Pagar"
@@ -65,13 +58,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 1083.85,
-      "vencimento": "2026-03-26",
-      "dias_atraso": 27,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-03-30",
@@ -87,14 +73,14 @@
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 964.12,
+      "valor": 95.46,
       "vencimento": "2026-03-31",
       "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
-      "valor": 1731.96,
+      "valor": 1499.53,
       "vencimento": "2026-04-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -146,20 +132,6 @@
       "valor": 2660,
       "vencimento": "2026-04-12",
       "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-04-13",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-04-13",
-      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
@@ -242,13 +214,6 @@
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 291.45,
-      "vencimento": "2026-04-16",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
-      "valor": 341.98,
       "vencimento": "2026-04-16",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -444,7 +409,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58791.719999999994,
+  "total_vencido": 51766.81,
   "total_a_receber": 0,
   "total_a_pagar": 29778.410000000003
 }

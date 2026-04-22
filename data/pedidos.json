@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-22T14:38:42",
-  "total": 51,
+  "atualizado_em": "2026-04-22T15:43:30",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "365081537",
+      "numero": "15473",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "WANDERSON DE LIMA DE MORAIS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 429.87,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365080100",
+      "numero": "15472",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 98.1,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365062840",
       "numero": "15471",

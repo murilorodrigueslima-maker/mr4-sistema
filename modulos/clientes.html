@@ -1025,6 +1025,20 @@ async function carregarInbox() {
     // Atualiza mapa de não lidas
     CHATS_UNREAD = {};
     CHATS.forEach(c => { CHATS_UNREAD[c.phone] = Number(c.messagesUnread||c.unread||0); });
+
+    // Busca resumos do Firestore para exibir prévia da última mensagem
+    try {
+      const snap = await getDocs(collection(db, 'conversas_resumo'));
+      snap.forEach(d => {
+        const r = d.data();
+        const chat = CHATS.find(c => c.phone === r.phone);
+        if(chat) {
+          chat.lastMessageBody = r.lastMessage || '';
+          chat.lastFromMe      = r.lastFromMe  ?? false;
+        }
+      });
+    } catch(_) {}
+
     renderInbox(CHATS);
   } catch(e) {
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Erro ao carregar inbox</div><div class="empty-sub">${e.message}</div><button class="btn btn-ghost" style="margin-top:.75rem" onclick="setModo('inbox')">Tentar novamente</button></div>`;
@@ -1080,10 +1094,12 @@ function renderInbox(chats) {
     const sel     = inboxPhoneAtual === phone ? ' selected' : '';
     const unreadCls = unread > 0 ? ' unread' : '';
 
-    // Prévia da última mensagem
-    const lastMsg = chat.lastMessage || chat.text || chat.body || {};
+    // Prévia da última mensagem (prioriza Firestore, depois Z-API)
     const lastFromMe = chat.lastFromMe === true || chat.fromMe === true;
-    const lastTxt = (typeof lastMsg === 'string' ? lastMsg : (lastMsg.body || lastMsg.message || lastMsg.caption || chat.lastMessageBody || '')) || '';
+    const lastMsg    = chat.lastMessage || chat.text || chat.body || {};
+    const lastTxt    = chat.lastMessageBody
+      || (typeof lastMsg === 'string' ? lastMsg : (lastMsg.body || lastMsg.message || lastMsg.caption || ''))
+      || '';
     const previewTxt = lastTxt
       ? escapeHtml(lastTxt.length > 50 ? lastTxt.slice(0,50)+'…' : lastTxt)
       : '<span style="font-style:italic;color:#D1D5DB">📷 Mídia</span>';

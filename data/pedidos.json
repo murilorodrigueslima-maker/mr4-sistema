@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-04-22T08:20:56",
-  "total": 36,
+  "atualizado_em": "2026-04-22T09:11:31",
+  "total": 37,
   "pedidos": [
+    {
+      "id": "364941576",
+      "numero": "15457",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "SPACE GARAGE LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 195,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364878052",
       "numero": "15456",

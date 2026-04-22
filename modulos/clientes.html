@@ -215,6 +215,29 @@ select.filter-sel:focus{border-color:var(--orange)}
 .stat-pill strong{color:var(--text);font-weight:700}
 .stat-pill .dot{width:7px;height:7px;border-radius:50%}
 
+/* ── UNREAD DOT no contact-row ── */
+.contact-unread-dot{position:absolute;top:10px;left:10px;width:10px;height:10px;background:var(--green);border-radius:50%;border:2px solid var(--white);z-index:2}
+.tag-esquecido{background:#FEF3C7;color:#92400E}
+
+/* ── PIPELINE KANBAN ── */
+.pipeline-board{display:flex;gap:.75rem;padding:.85rem;overflow-x:auto;height:100%;align-items:flex-start}
+.pipeline-board::-webkit-scrollbar{height:6px}
+.pipeline-board::-webkit-scrollbar-thumb{background:var(--border-dk);border-radius:3px}
+.pipeline-col{flex:0 0 200px;display:flex;flex-direction:column;gap:.4rem;max-height:100%}
+.pipeline-col-header{font-size:.73rem;font-weight:800;padding:.55rem .75rem;border-radius:9px;display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem;color:#fff}
+.pipeline-col-count{font-size:.63rem;font-weight:700;padding:.1rem .4rem;border-radius:20px;background:rgba(255,255,255,.3)}
+.pipeline-cards{display:flex;flex-direction:column;gap:.4rem;overflow-y:auto;padding-bottom:.5rem}
+.pipeline-card{background:var(--white);border-radius:10px;padding:.65rem .8rem;cursor:pointer;border:1.5px solid transparent;transition:all .12s;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.pipeline-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.12);transform:translateY(-1px)}
+.pipeline-card-nome{font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pipeline-card-tel{font-size:.68rem;color:var(--muted);font-family:monospace}
+.pipeline-card-tags{display:flex;gap:.25rem;margin-top:.35rem;flex-wrap:wrap}
+.pipeline-card-unread{display:inline-flex;align-items:center;gap:.2rem;font-size:.62rem;font-weight:700;color:var(--green);margin-top:.3rem}
+.pipeline-move{display:flex;gap:.25rem;margin-top:.45rem;flex-wrap:wrap}
+.pipeline-move-btn{font-size:.6rem;padding:.18rem .45rem;border:1px solid var(--border);border-radius:5px;background:none;cursor:pointer;color:var(--muted);transition:all .1s;white-space:nowrap}
+.pipeline-move-btn:hover{background:var(--orange-lt);border-color:var(--orange);color:var(--orange)}
+.pipeline-empty{font-size:.72rem;color:var(--muted);text-align:center;padding:.75rem;background:var(--bg);border-radius:8px;border:1.5px dashed var(--border)}
+
 @media(max-width:768px){
   .detail-panel{position:fixed;width:100%;right:0;top:52px;bottom:0;transform:translateX(100%)}
   .detail-panel.open{transform:translateX(0)}
@@ -277,6 +300,14 @@ select.filter-sel:focus{border-color:var(--orange)}
       <span>Com garantia aberta</span>
       <span class="sidebar-item-count" id="cnt-garantias" style="background:#FFEBEE;color:#B71C1C">0</span>
     </div>
+    <div class="sidebar-item" id="filter-esquecidos" onclick="setFilter('esquecidos')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#F59E0B"></span>Sem contato 30d+</span>
+      <span class="sidebar-item-count" id="cnt-esquecidos" style="background:#FEF3C7;color:#92400E">0</span>
+    </div>
+    <div class="sidebar-item" id="filter-naoLidas" onclick="setFilter('naoLidas')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:var(--green)"></span>Msg não lida</span>
+      <span class="sidebar-item-count" id="cnt-naoLidas" style="background:#D1FAE5;color:#065F46">0</span>
+    </div>
 
     <div class="sidebar-footer">
       <div style="font-size:.68rem;color:var(--muted);text-align:center;line-height:1.5">
@@ -299,10 +330,12 @@ select.filter-sel:focus{border-color:var(--orange)}
     <!-- List header -->
     <div class="list-header">
       <div class="modo-toggle">
-        <button class="modo-btn active" id="modoClientes" onclick="setModo('clientes')">👥 Clientes</button>
-        <button class="modo-btn" id="modoInbox" onclick="setModo('inbox')">💬 WhatsApp</button>
+        <button class="modo-btn active" id="modoClientes"  onclick="setModo('clientes')">👥 Clientes</button>
+        <button class="modo-btn"        id="modoInbox"     onclick="setModo('inbox')">💬 WhatsApp</button>
+        <button class="modo-btn"        id="modoPipeline"  onclick="setModo('pipeline')">🏷️ Pipeline</button>
       </div>
       <div class="list-header-title" id="listTitle" style="margin-left:.5rem"></div>
+      <button class="btn btn-ghost" id="btnImportarInbox" onclick="importarTodosDoInbox()" style="display:none;font-size:.73rem;padding:.35rem .75rem">📥 Importar novos</button>
     </div>
 
     <!-- List body -->
@@ -353,6 +386,16 @@ select.filter-sel:focus{border-color:var(--orange)}
         <div class="info-field">
           <div class="info-label">Tags</div>
           <div class="info-tags" id="iTags"></div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">Pipeline</div>
+          <select id="iPipeline" onchange="alterarPipeline(this.value)" style="font-size:.82rem;padding:.35rem .6rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;outline:none;background:var(--white);color:var(--text);cursor:pointer">
+            <option value="lead">👀 Lead</option>
+            <option value="contato">📞 Contato</option>
+            <option value="proposta">📄 Proposta</option>
+            <option value="ativo">✅ Cliente Ativo</option>
+            <option value="recorrente">🔄 Recorrente</option>
+          </select>
         </div>
         <div style="display:flex;gap:.5rem;margin-top:1rem">
           <button class="btn btn-ghost" style="flex:1" onclick="editarClienteAtual()">✏️ Editar</button>
@@ -490,9 +533,20 @@ let GARANTIAS = [];
 let clienteAtualId = null;
 let filtroAtivo = 'todos';
 let tabAtiva = 'info';
-let modoAtivo = 'clientes'; // 'clientes' | 'inbox'
+let modoAtivo = 'clientes'; // 'clientes' | 'inbox' | 'pipeline'
 let CHATS = [];
 let inboxPhoneAtual = null;
+let CHATS_UNREAD = {};   // phone -> unread count (para badges)
+let PREV_UNREAD  = {};   // phone -> unread count anterior (para som)
+let pollingTimer = null;
+
+const PIPELINE_STAGES = [
+  { id:'lead',       nome:'Lead',       color:'#6B7280', emoji:'👀' },
+  { id:'contato',    nome:'Contato',    color:'#3B82F6', emoji:'📞' },
+  { id:'proposta',   nome:'Proposta',   color:'#F59E0B', emoji:'📄' },
+  { id:'ativo',      nome:'Cliente',    color:'#10B981', emoji:'✅' },
+  { id:'recorrente', nome:'Recorrente', color:'#8B5CF6', emoji:'🔄' },
+];
 
 // ── Carregar ──────────────────────────────────────────────────────────────────
 async function carregar() {
@@ -521,6 +575,8 @@ function atualizarContadores() {
   document.getElementById('stPJ').textContent = CLIENTES.filter(c=>c.tipo==='PJ').length;
   document.getElementById('stPF').textContent = CLIENTES.filter(c=>c.tipo==='PF').length;
   document.getElementById('stNovos').textContent = novos.length;
+  const esquecidos = CLIENTES.filter(isEsquecido);
+  const naoLidas   = CLIENTES.filter(c => temMsgNaoLida(c));
   document.getElementById('cnt-todos').textContent = CLIENTES.length;
   document.getElementById('cnt-vip').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('VIP')).length;
   document.getElementById('cnt-atacado').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('Atacado')).length;
@@ -528,6 +584,8 @@ function atualizarContadores() {
   document.getElementById('cnt-inadimplente').textContent = CLIENTES.filter(c=>(c.tags||[]).includes('Inadimplente')).length;
   document.getElementById('cnt-novos').textContent = novos.length;
   document.getElementById('cnt-garantias').textContent = comGarantia.length;
+  document.getElementById('cnt-esquecidos').textContent = esquecidos.length;
+  document.getElementById('cnt-naoLidas').textContent   = naoLidas.length;
 }
 
 window.setFilter = function(f) {
@@ -562,8 +620,10 @@ window.filtrar = function() {
   else if(filtroAtivo === 'garantias') lista = lista.filter(c=>
     GARANTIAS.some(g => normalizar(g.clienteNome)===normalizar(c.nome) && !['encerrado','reprovado'].includes(g.status))
   );
+  else if(filtroAtivo === 'esquecidos') lista = lista.filter(isEsquecido);
+  else if(filtroAtivo === 'naoLidas')   lista = lista.filter(temMsgNaoLida);
 
-  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta' };
+  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta', esquecidos:'Sem contato há 30d+', naoLidas:'Mensagens não lidas' };
   document.getElementById('listTitle').textContent = (labels[filtroAtivo]||'Clientes') + ` (${lista.length})`;
   renderLista(lista);
 };
@@ -580,15 +640,17 @@ function renderLista(lista) {
     const tags = [(c.tipo||'PF'), ...(c.tags||[])].map(t=>`<span class="tag ${tagClasses[t]||''}">${t}</span>`).join('');
     const gAberta = GARANTIAS.filter(g=>normalizar(g.clienteNome)===normalizar(c.nome)&&!['encerrado','reprovado'].includes(g.status));
     const wpp = (c.telefone||'').replace(/\D/g,'');
-    const unread = ''; // futuro: badge de msg não lida
+    const unreadDot = temMsgNaoLida(c) ? `<div class="contact-unread-dot" title="Mensagem não lida"></div>` : '';
+    const esqTag = isEsquecido(c) ? `<span class="tag tag-esquecido">⏰ Esquecido</span>` : '';
     return `
     <div class="contact-row${clienteAtualId===c.id?' selected':''}" onclick="abrirDetalhe('${c.id}')">
       ${gAberta.length?`<div class="garantia-indicator">🛡️ ${gAberta.length}</div>`:''}
-      <div class="contact-avatar">${ini}${unread}</div>
+      ${unreadDot}
+      <div class="contact-avatar">${ini}</div>
       <div class="contact-main">
         <div class="contact-nome">${c.nome}</div>
         <div class="contact-sub">${c.telefone||'—'}${c.email?` · ${c.email}`:''}</div>
-        <div class="contact-tags">${tags}</div>
+        <div class="contact-tags">${tags}${esqTag}</div>
       </div>
       <div class="contact-meta">
         <div class="contact-city">${c.cidade||''}</div>
@@ -633,6 +695,10 @@ window.abrirDetalhe = function(id) {
   document.getElementById('iTags').innerHTML = (c.tags||[]).length
     ? (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}">${t}</span>`).join('')
     : '<span style="font-size:.8rem;color:var(--muted)">Sem tags</span>';
+
+  // Pipeline
+  const pip = document.getElementById('iPipeline');
+  if(pip) pip.value = c.pipeline||'lead';
 
   // Notas
   renderNotas(c);
@@ -704,7 +770,7 @@ window.adicionarNota = async function() {
   if(!texto||!clienteAtualId) return;
   const c = CLIENTES.find(x=>x.id===clienteAtualId);
   const notas = [{ texto, data:new Date().toISOString() }, ...(c.notas||[])];
-  await updateDoc(doc(db,'clientes',clienteAtualId),{ notas });
+  await updateDoc(doc(db,'clientes',clienteAtualId),{ notas, ultimoContato: serverTimestamp() });
   c.notas = notas;
   input.value = '';
   renderNotas(c);
@@ -866,6 +932,10 @@ window.enviarMsg = async function() {
     // Confirma envio
     const tmp = document.getElementById(tmpId);
     if(tmp){ tmp.classList.remove('chat-sending'); tmp.querySelector('.chat-msg-time').textContent = hora+' ✓'; }
+    // Registra último contato
+    if(clienteAtualId) {
+      updateDoc(doc(db,'clientes',clienteAtualId),{ ultimoContato: serverTimestamp() }).catch(()=>{});
+    }
   } catch(e) {
     const tmp = document.getElementById(tmpId);
     if(tmp){ tmp.style.background='#fee2e2'; tmp.querySelector('.chat-msg-time').textContent = '❌ Falha ao enviar'; }
@@ -883,10 +953,14 @@ window.setModo = function(modo) {
   modoAtivo = modo;
   document.getElementById('modoClientes').classList.toggle('active', modo === 'clientes');
   document.getElementById('modoInbox').classList.toggle('active', modo === 'inbox');
+  document.getElementById('modoPipeline').classList.toggle('active', modo === 'pipeline');
   fecharDetalhe();
   if(modo === 'inbox') {
     document.getElementById('listTitle').textContent = 'WhatsApp Inbox';
     carregarInbox();
+  } else if(modo === 'pipeline') {
+    document.getElementById('listTitle').textContent = 'Pipeline de Vendas';
+    renderPipeline();
   } else {
     filtrar();
   }
@@ -909,6 +983,9 @@ async function carregarInbox() {
     }
     CHATS = todos.filter(c => !c.isGroup);
     CHATS.sort((a, b) => (Number(b.lastMessageTime)||0) - (Number(a.lastMessageTime)||0));
+    // Atualiza mapa de não lidas
+    CHATS_UNREAD = {};
+    CHATS.forEach(c => { CHATS_UNREAD[c.phone] = Number(c.messagesUnread||c.unread||0); });
     renderInbox(CHATS);
   } catch(e) {
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Erro ao carregar inbox</div><div class="empty-sub">${e.message}</div><button class="btn btn-ghost" style="margin-top:.75rem" onclick="setModo('inbox')">Tentar novamente</button></div>`;
@@ -942,7 +1019,14 @@ function fmtPhone(phone) {
 
 function renderInbox(chats) {
   const body = document.getElementById('listBody');
+  const novos = chats.filter(c => !matchClientePorPhone(c.phone)).length;
   document.getElementById('listTitle').textContent = `WhatsApp Inbox (${chats.length})`;
+  // Botão importar no header
+  const importBtn = document.getElementById('btnImportarInbox');
+  if(importBtn && novos > 0) {
+    importBtn.textContent = `📥 Importar ${novos} novos`;
+    importBtn.style.display = 'inline-flex';
+  } else if(importBtn) { importBtn.style.display = 'none'; }
   if(!chats.length){
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-title">Nenhuma conversa</div><div class="empty-sub">Nenhuma conversa encontrada no WhatsApp.</div></div>`;
     return;
@@ -1045,6 +1129,150 @@ async function carregarChatByPhone(phone) {
   }
 }
 
+// ── Helpers de badge ─────────────────────────────────────────────────────────
+
+function temMsgNaoLida(c) {
+  const phone = formatarTelZapi(c.telefone||'');
+  return phone ? (CHATS_UNREAD[phone]||0) > 0 : false;
+}
+
+function isEsquecido(c) {
+  const DIAS = 30;
+  let ref;
+  if(c.ultimoContato) ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
+  else if(c.criado_em) ref = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
+  else return false;
+  return (Date.now() - ref.getTime()) / (1000*60*60*24) > DIAS;
+}
+
+// ── Pipeline Kanban ───────────────────────────────────────────────────────────
+
+function renderPipeline() {
+  const body = document.getElementById('listBody');
+  document.getElementById('listTitle').textContent = `Pipeline de Vendas (${CLIENTES.length} clientes)`;
+  const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente' };
+
+  body.style.padding = '0';
+  body.style.overflow = 'hidden';
+
+  const cols = PIPELINE_STAGES.map(stage => {
+    const grupo = CLIENTES.filter(c => (c.pipeline||'lead') === stage.id);
+    const cards = grupo.length
+      ? grupo.map(c => {
+          const tags = (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}" style="font-size:.58rem">${t}</span>`).join('');
+          const unread = temMsgNaoLida(c) ? `<div class="pipeline-card-unread">● msg não lida</div>` : '';
+          const outros = PIPELINE_STAGES.filter(s=>s.id!==stage.id);
+          const moveBtns = outros.map(s=>`<button class="pipeline-move-btn" onclick="event.stopPropagation();moverPipeline('${c.id}','${s.id}')">${s.emoji} ${s.nome}</button>`).join('');
+          return `
+          <div class="pipeline-card" onclick="abrirDetalhe('${c.id}')">
+            <div class="pipeline-card-nome">${c.nome||'—'}</div>
+            <div class="pipeline-card-tel">${c.telefone||'—'}</div>
+            ${tags?`<div class="pipeline-card-tags">${tags}</div>`:''}
+            ${unread}
+            <div class="pipeline-move">${moveBtns}</div>
+          </div>`;
+        }).join('')
+      : `<div class="pipeline-empty">Nenhum cliente</div>`;
+
+    return `
+    <div class="pipeline-col">
+      <div class="pipeline-col-header" style="background:${stage.color}">
+        <span>${stage.emoji} ${stage.nome}</span>
+        <span class="pipeline-col-count">${grupo.length}</span>
+      </div>
+      <div class="pipeline-cards">${cards}</div>
+    </div>`;
+  }).join('');
+
+  body.innerHTML = `<div class="pipeline-board">${cols}</div>`;
+}
+
+window.moverPipeline = async function(clienteId, novoStage) {
+  await updateDoc(doc(db,'clientes',clienteId),{ pipeline: novoStage });
+  const c = CLIENTES.find(x=>x.id===clienteId);
+  if(c) c.pipeline = novoStage;
+  renderPipeline();
+};
+
+// ── Importar inbox → CRM ──────────────────────────────────────────────────────
+
+window.importarTodosDoInbox = async function() {
+  const naoMapeados = CHATS.filter(c => !matchClientePorPhone(c.phone));
+  if(!naoMapeados.length){ alert('Todos os contatos já estão no CRM!'); return; }
+  if(!confirm(`Importar ${naoMapeados.length} contatos do WhatsApp para o CRM?\nEles entrarão como "Lead" no pipeline.`)) return;
+
+  const btn = document.getElementById('btnImportarInbox');
+  if(btn){ btn.textContent = '⏳ Importando…'; btn.disabled = true; }
+
+  let criados = 0;
+  for(const chat of naoMapeados) {
+    const phone = chat.phone||'';
+    const nome = (chat.name && chat.name !== phone && chat.name !== '0')
+      ? chat.name : fmtPhone(phone);
+    try {
+      await addDoc(collection(db,'clientes'),{
+        nome, tipo:'PF', telefone:fmtPhone(phone),
+        email:'', cidade:'', estado:'', cpf_cnpj:'',
+        tags:[], notas:[], pipeline:'lead',
+        criado_em:serverTimestamp(), atualizado_em:serverTimestamp(),
+      });
+      criados++;
+    } catch(_){}
+  }
+
+  if(btn){ btn.disabled = false; }
+  await carregar();
+  renderInbox(CHATS);
+  alert(`✅ ${criados} clientes importados como Lead no Pipeline!`);
+};
+
+// ── Som de notificação + Polling ──────────────────────────────────────────────
+
+function tocarNotificacao() {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [[0,.15],[0.18,.12]].forEach(([delay,dur])=>{
+      const osc = ctx.createOscillator();
+      const gain= ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 820; osc.type='sine';
+      gain.gain.setValueAtTime(0.25, ctx.currentTime+delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+delay+dur);
+      osc.start(ctx.currentTime+delay); osc.stop(ctx.currentTime+delay+dur+.05);
+    });
+  } catch(_){}
+}
+
+async function pollInbox() {
+  try {
+    const r = await fetch(`${ZAPI_BASE}/chats?page=1&pageSize=50`, { headers: ZAPI_HEADERS });
+    if(!r.ok) return;
+    const data = await r.json();
+    const chats = (Array.isArray(data) ? data : (data.chats||data.data||[])).filter(c=>!c.isGroup);
+
+    let temNova = false;
+    chats.forEach(c => {
+      const unread = Number(c.messagesUnread||c.unread||0);
+      if(unread > 0 && (PREV_UNREAD[c.phone]||0) === 0) temNova = true;
+      PREV_UNREAD[c.phone] = unread;
+      CHATS_UNREAD[c.phone] = unread;
+    });
+
+    if(temNova) {
+      tocarNotificacao();
+      // Atualiza badges sem re-renderizar tudo
+      atualizarContadores();
+      if(modoAtivo==='clientes') filtrar();
+      if(modoAtivo==='inbox') renderInbox(chats.length ? chats : CHATS);
+    }
+  } catch(_){}
+}
+
+function iniciarPolling() {
+  if(pollingTimer) clearInterval(pollingTimer);
+  pollingTimer = setInterval(pollInbox, 30000); // a cada 30 segundos
+}
+
 // ── Modal Criar/Editar ────────────────────────────────────────────────────────
 window.abrirModalNovo = function() {
   document.getElementById('editId').value='';
@@ -1075,6 +1303,13 @@ window.editarCliente = function(id) {
 };
 
 window.editarClienteAtual = function() { if(clienteAtualId) editarCliente(clienteAtualId); };
+
+window.alterarPipeline = async function(stage) {
+  if(!clienteAtualId) return;
+  await updateDoc(doc(db,'clientes',clienteAtualId),{ pipeline: stage });
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  if(c) c.pipeline = stage;
+};
 
 window.deletarClienteAtual = async function() {
   if(!clienteAtualId) return;
@@ -1108,7 +1343,7 @@ window.salvarCliente = async function() {
     if(obs){ const c=CLIENTES.find(x=>x.id===id); const notas=[{texto:obs,data:new Date().toISOString()},...(c.notas||[])]; await updateDoc(doc(db,'clientes',id),{notas}); }
   } else {
     const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
-    await addDoc(collection(db,'clientes'),{...dados,notas,criado_em:serverTimestamp()});
+    await addDoc(collection(db,'clientes'),{...dados,notas,pipeline:'lead',criado_em:serverTimestamp()});
   }
   fecharModal();
   await carregar();
@@ -1125,8 +1360,20 @@ function formatarData(iso){ if(!iso)return'—'; const d=new Date(iso); return d
 
 document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.target===e.currentTarget)fecharModal(); });
 
+// Restaura list-body padding quando muda de modo
+const origListBodyStyle = document.getElementById('listBody').style.cssText;
+const _setModoOrig = window.setModo;
+window.setModo = function(modo) {
+  if(modo !== 'pipeline') {
+    document.getElementById('listBody').style.padding = '';
+    document.getElementById('listBody').style.overflow = '';
+  }
+  _setModoOrig(modo);
+};
+
 carregar();
 checkZapiStatus();
+iniciarPolling();
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-21T23:45:18",
+  "atualizado_em": "2026-04-22T02:14:38",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -301,39 +301,44 @@
       "vencimento": "2026-04-20",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PRATELEIRAS 3 UN",
       "valor": 239.31,
       "vencimento": "2026-04-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
       "vencimento": "2026-04-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SALES COMERCIO DE PECAS E ACESSORIOS PARA VEICULOS LTDA.",
       "valor": 738.72,
       "vencimento": "2026-04-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CONSULTORIA DE IMPORTAÇÃO",
       "valor": 171.3,
       "vencimento": "2026-04-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MESA ESCRITORIO MURILO",
       "valor": 227.07,
       "vencimento": "2026-04-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1663.74,
@@ -439,7 +444,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56991.91999999999,
+  "total_vencido": 58791.719999999994,
   "total_a_receber": 0,
   "total_a_pagar": 29778.410000000003
 }

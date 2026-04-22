@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-04-22T09:11:31",
-  "total": 37,
+  "atualizado_em": "2026-04-22T11:07:20",
+  "total": 38,
   "pedidos": [
+    {
+      "id": "364957179",
+      "numero": "15458",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "NP COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 156.35,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364941576",
       "numero": "15457",

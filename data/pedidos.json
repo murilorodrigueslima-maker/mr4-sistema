@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-22T15:43:30",
-  "total": 53,
+  "atualizado_em": "2026-04-22T16:50:46",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "365125108",
+      "numero": "15477",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "JONATA ACESSORIOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 396.07,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365116168",
+      "numero": "15476",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 76.51,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365105939",
+      "numero": "15475",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1261.4,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365103262",
+      "numero": "15474",
+      "data": "2026-04-22",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1074,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365081537",
       "numero": "15473",

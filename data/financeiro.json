@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-22T15:43:32",
+  "atualizado_em": "2026-04-22T16:50:47",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -80,7 +80,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 1499.53,
+      "valor": 1037.05,
       "vencimento": "2026-04-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -409,7 +409,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51766.81,
+  "total_vencido": 51304.329999999994,
   "total_a_receber": 0,
   "total_a_pagar": 29778.410000000003
 }

@@ -1459,7 +1459,7 @@ carregar();
 checkZapiStatus();
 iniciarPolling();
 
-// ── Listener global: notifica qualquer mensagem nova recebida ─────────────────
+/// ── Listener global: notifica qualquer mensagem nova recebida ─────────────────
 function iniciarListenerGlobal() {
   const agoraMs = Date.now();
   let inicializado = false;
@@ -1474,23 +1474,51 @@ function iniciarListenerGlobal() {
         if(c.type !== 'added') return false;
         const d = c.doc.data();
         if(d.fromMe === true) return false;
-        // Só dispara para msgs chegadas depois que a página abriu
         const ts = typeof d.momment === 'number' ? d.momment : Number(d.momment);
         return !ts || ts > agoraMs - 10000; // 10s de tolerância
       });
 
       if(!novas.length) return;
 
-      tocarNotificacao();
+      // ── Atualiza CHATS: não lidas, preview e posição ──────────────────────
+      novas.forEach(c => {
+        const d     = c.doc.data();
+        const phone = d.phone || '';
+        if(!phone) return;
 
+        const ts  = typeof d.momment === 'number' ? d.momment : Number(d.momment);
+        const txt = d.message || d.text?.message || '';
+
+        // Incrementa não lidas
+        CHATS_UNREAD[phone] = (CHATS_UNREAD[phone] || 0) + 1;
+
+        // Atualiza ou cria entrada no CHATS para mover pro topo
+        const idx = CHATS.findIndex(ch => ch.phone === phone);
+        if(idx >= 0) {
+          CHATS[idx].lastMessageTime = ts;
+          CHATS[idx].lastMessageBody = txt;
+          CHATS[idx].lastFromMe      = false;
+          CHATS[idx].messagesUnread  = CHATS_UNREAD[phone];
+        }
+      });
+
+      // Reordena: conversa com msg mais recente sobe pro topo
+      CHATS.sort((a, b) => (Number(b.lastMessageTime)||0) - (Number(a.lastMessageTime)||0));
+
+      // Re-renderiza inbox ou atualiza badges nos clientes
+      if(modoAtivo === 'inbox') {
+        renderInbox(CHATS);
+      } else if(modoAtivo === 'clientes') {
+        filtrar();
+      }
+
+      // ── Som + notificação do browser ──────────────────────────────────────
+      tocarNotificacao();
       const ultima = novas[novas.length - 1].doc.data();
       const texto  = ultima.message || ultima.text?.message || '📩 Nova mensagem';
       const phone  = ultima.phone || '';
       const nome   = ultima.senderName || matchClientePorPhone(phone)?.nome || `+${phone}`;
       enviarNotificacaoBrowser(`💬 ${nome}`, texto);
-
-      // Atualiza badges na lista
-      if(modoAtivo === 'clientes') filtrar();
     },
     err => console.warn('Listener global msgs:', err.message)
   );

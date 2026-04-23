@@ -74,7 +74,10 @@
   .sidebar-logo {
     padding: 1.5rem 1.25rem 1rem;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
+    background: #1A1A2E;
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
   }
   .sidebar-logo img { height: 36px; object-fit: contain; }
 
@@ -571,9 +574,9 @@
 
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar" style="display:none">
-  <div class="sidebar-logo">
+  <a class="sidebar-logo" href="../index.html" title="Página inicial">
     <img src="../assets/logo.png" alt="MR4 Distribuidora">
-  </div>
+  </a>
 
   <div class="sidebar-user">
     <div class="user-avatar" id="userAvatar">?</div>

@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-23T11:39:02",
-  "total": 40,
+  "atualizado_em": "2026-04-23T13:19:51",
+  "total": 42,
   "pedidos": [
+    {
+      "id": "365299187",
+      "numero": "15487",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "RAFAEL NUNES CARNEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 258,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365290932",
+      "numero": "15486",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "DELIO FEITOSA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 840.36,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365265052",
       "numero": "15485",

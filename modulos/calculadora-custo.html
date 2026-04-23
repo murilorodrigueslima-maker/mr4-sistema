@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Custo — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:    #FF6B1A;
+    --orange-dk: #e85d0f;
+    --orange-lt: rgba(255,107,26,.08);
+    --bg:        #F3F4F6;
+    --white:     #FFFFFF;
+    --text:      #1A1A2E;
+    --muted:     #6B7280;
+    --border:    #E5E7EB;
+    --green:     #10B981;
+    --green-lt:  rgba(16,185,129,.1);
+    --yellow:    #F59E0B;
+    --yellow-lt: rgba(245,158,11,.1);
+    --red:       #EF4444;
+    --red-lt:    rgba(239,68,68,.1);
+    --blue:      #3B82F6;
+    --blue-lt:   rgba(59,130,246,.1);
+    --sidebar-w: 240px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    position: fixed; inset: 0;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #loadingScreen img { height: 48px; object-fit: contain; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
+    background: var(--white);
+  }
+  .sidebar-logo img { height: 36px; object-fit: contain; }
+
+  .sidebar-user {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-shrink: 0;
+  }
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name  { font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role  { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  .sidebar-nav { flex: 1; padding: .75rem 0; }
+  .nav-section {
+    font-size: .62rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: .75rem 1.25rem .3rem;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .6rem 1.25rem;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    margin: .1rem 0;
+  }
+  .nav-item:hover  { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--orange-lt); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .btn-sair {
+    width: 100%;
+    padding: .6rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-sair:hover { border-color: var(--red); color: var(--red); background: var(--red-lt); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 2rem;
+    min-height: 100vh;
+    max-width: calc(100vw - var(--sidebar-w));
+  }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.75rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .page-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -.3px;
+  }
+  .page-sub {
+    font-size: .85rem;
+    color: var(--muted);
+    margin-top: .25rem;
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.4rem;
+    margin-bottom: 1.25rem;
+    transition: box-shadow .2s;
+  }
+  .card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.06); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.2rem;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -.1px;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .card-title-icon { font-size: 1.1rem; }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: .75rem;
+    margin-top: 1.75rem;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  thead th {
+    padding: .6rem .75rem;
+    text-align: left;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  tbody td { padding: .75rem; color: var(--text); vertical-align: middle; }
+  .td-mono { font-family: 'JetBrains Mono', monospace; font-size: .82rem; font-weight: 600; }
+  .td-muted { color: var(--muted); font-size: .8rem; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .55rem 1.1rem;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: .84rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-primary   { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: var(--orange-dk); }
+  .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-sm { padding: .35rem .75rem; font-size: .78rem; border-radius: 6px; }
+  .btn-danger { background: var(--red-lt); color: var(--red); border: 1px solid transparent; }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .btn-success { background: var(--green); color: #fff; }
+  .btn-success:hover { background: #0da674; }
+  .btn-blue { background: var(--blue-lt); color: var(--blue); border: 1px solid transparent; }
+  .btn-blue:hover { background: var(--blue); color: #fff; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 1rem; }
+  .form-label {
+    display: block;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: .4rem;
+    letter-spacing: .1px;
+  }
+  .form-label small { font-weight: 400; color: var(--muted); font-size: .72rem; }
+  .form-input, .form-select {
+    width: 100%;
+    padding: .6rem .85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,107,26,.1);
+  }
+  .form-input.driving {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,107,26,.12);
+    background: #fffaf7;
+  }
+  .form-input[readonly] {
+    background: var(--bg);
+    color: var(--muted);
+    cursor: default;
+  }
+  .form-input.highlighted[readonly] {
+    background: var(--orange-lt);
+    color: var(--orange-dk);
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .95rem;
+    cursor: default;
+    border-color: rgba(255,107,26,.3);
+  }
+  .form-input.highlighted-green[readonly] {
+    background: var(--green-lt);
+    color: #065F46;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1rem;
+    cursor: default;
+    border-color: rgba(16,185,129,.3);
+  }
+  .form-row { display: grid; gap: 1rem; }
+  .form-row-2 { grid-template-columns: 1fr 1fr; }
+  .form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-row-4 { grid-template-columns: 2fr 1fr 1fr 1fr; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  /* ── INLINE FORM (add supplier) ── */
+  .inline-form {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+    margin-top: 1rem;
+  }
+  .inline-form .form-group { margin-bottom: .75rem; }
+  .inline-form .form-group:last-child { margin-bottom: 0; }
+
+  /* ── SUPPLIER TABLE EMPTY ── */
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+
+  /* ── SUMMARY BOX ── */
+  .summary-box {
+    background: var(--text);
+    border-radius: 12px;
+    padding: 1.2rem 1.4rem;
+    color: #fff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .82rem;
+    line-height: 1.9;
+    margin-bottom: 1.25rem;
+  }
+  .summary-box .sum-title {
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+    margin-bottom: .6rem;
+    font-family: 'Inter', sans-serif;
+  }
+  .summary-box .sum-row { display: flex; justify-content: space-between; align-items: center; }
+  .summary-box .sum-key { color: rgba(255,255,255,.6); font-size: .78rem; }
+  .summary-box .sum-val { color: #fff; font-weight: 600; }
+  .summary-box .sum-row.highlight .sum-val { color: var(--orange); font-size: .9rem; }
+  .summary-box .sum-row.highlight-green .sum-val { color: #34D399; font-size: .95rem; }
+  .sum-divider { border-color: rgba(255,255,255,.1); margin: .6rem 0; }
+
+  /* ── SEARCH RESULTS ── */
+  .search-results {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: .75rem;
+  }
+  .search-result-item {
+    padding: .85rem 1rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .12s;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+  }
+  .search-result-item:last-child { border-bottom: none; }
+  .search-result-item:hover { background: var(--orange-lt); }
+  .search-result-item.selected { background: var(--orange-lt); border-left: 3px solid var(--orange); }
+  .result-name { font-size: .88rem; font-weight: 600; color: var(--text); }
+  .result-code { font-size: .75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .result-price { font-size: .82rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; color: var(--muted); white-space: nowrap; }
+
+  /* ── SELECTED PRODUCT BOX ── */
+  .selected-product-box {
+    background: var(--orange-lt);
+    border: 1px solid rgba(255,107,26,.2);
+    border-radius: 10px;
+    padding: 1rem 1.2rem;
+    margin-top: .75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .selected-product-info { flex: 1; min-width: 0; }
+  .selected-product-name { font-weight: 700; font-size: .9rem; color: var(--text); }
+  .selected-product-meta { font-size: .8rem; color: var(--muted); margin-top: .2rem; font-family: 'JetBrains Mono', monospace; }
+  .price-update-info {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    font-size: .82rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .price-old { color: var(--muted); text-decoration: line-through; }
+  .price-arrow { color: var(--muted); }
+  .price-new { color: var(--orange); font-weight: 700; font-size: .9rem; }
+
+  /* ── TOASTS ── */
+  #toastContainer {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    pointer-events: none;
+  }
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .85rem 1.1rem;
+    border-radius: 10px;
+    font-size: .85rem;
+    font-weight: 500;
+    box-shadow: 0 4px 20px rgba(0,0,0,.18);
+    pointer-events: auto;
+    animation: toastIn .25s ease;
+    min-width: 260px;
+    max-width: 380px;
+  }
+  .toast-success { background: var(--green); color: #fff; }
+  .toast-error   { background: var(--red);   color: #fff; }
+  .toast-info    { background: var(--blue);  color: #fff; }
+  .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: .18rem .55rem;
+    border-radius: 99px;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .3px;
+    white-space: nowrap;
+  }
+  .badge-orange { background: #FEF0E7; color: var(--orange-dk); }
+  .badge-green  { background: var(--green-lt); color: #065F46; }
+  .badge-muted  { background: var(--bg); color: var(--muted); }
+
+  /* ── COLLAPSIBLE ── */
+  .collapsible-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+  }
+  .collapsible-header .chevron {
+    font-size: .85rem;
+    color: var(--muted);
+    transition: transform .2s;
+    flex-shrink: 0;
+  }
+  .collapsible-header.open .chevron { transform: rotate(180deg); }
+  .collapsible-body { overflow: hidden; transition: max-height .3s ease; }
+
+  /* ── ACTION BUTTONS ── */
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+  }
+
+  /* ── SEARCH ROW ── */
+  .search-row {
+    display: flex;
+    gap: .75rem;
+    align-items: flex-start;
+  }
+  .search-row .form-input { flex: 1; }
+
+  /* ── LOADING INDICATOR ── */
+  .inline-spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .6s linear infinite;
+    vertical-align: middle;
+  }
+
+  /* ── PDF UPLOAD ── */
+  .pdf-upload-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: .5rem;
+  }
+  .pdf-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    position: relative;
+  }
+  .pdf-zone:hover, .pdf-zone.drag-over {
+    border-color: var(--orange);
+    background: var(--orange-lt);
+  }
+  .pdf-zone.has-file {
+    border-color: var(--green);
+    background: var(--green-lt);
+  }
+  .pdf-zone.processing {
+    border-color: var(--blue);
+    background: var(--blue-lt);
+  }
+  .pdf-zone input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .pdf-zone-icon { font-size: 2rem; margin-bottom: .5rem; }
+  .pdf-zone-label { font-size: .85rem; font-weight: 600; color: var(--text); margin-bottom: .25rem; }
+  .pdf-zone-sub   { font-size: .75rem; color: var(--muted); }
+  .pdf-zone-status { font-size: .78rem; font-weight: 600; margin-top: .5rem; }
+  .pdf-zone.has-file .pdf-zone-status { color: var(--green); }
+  .pdf-zone.processing .pdf-zone-status { color: var(--blue); }
+
+  .pdf-result-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: .75rem;
+    display: none;
+  }
+  .pdf-result-box.show { display: block; }
+  .pdf-result-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: .75rem; }
+  .pdf-values-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .75rem; }
+  .pdf-val-chip {
+    padding: .3rem .75rem; border-radius: 99px;
+    border: 1.5px solid var(--border); background: var(--white);
+    font-family: var(--mono, 'JetBrains Mono', monospace); font-size: .82rem; font-weight: 600;
+    cursor: pointer; transition: all .14s; color: var(--text);
+  }
+  .pdf-val-chip:hover { border-color: var(--orange); color: var(--orange); background: var(--orange-lt); }
+  .pdf-val-chip.selected { border-color: var(--orange); color: var(--white); background: var(--orange); }
+  .pdf-val-chip.auto-detected { border-color: var(--green); color: var(--green); }
+  .pdf-val-chip.auto-detected.selected { background: var(--green); color: #fff; }
+  .pdf-apply-row { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .form-row-3 { grid-template-columns: 1fr 1fr; }
+    .form-row-4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .main { padding: 1rem; }
+    .form-row-2, .form-row-3, .form-row-4 { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .main { margin-left: 0; max-width: 100vw; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading Screen -->
+<div id="loadingScreen">
+  <img src="../assets/logo.png" alt="MR4">
+  <div class="spinner"></div>
+</div>
+
+<!-- Toast Container -->
+<div id="toastContainer"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <a class="sidebar-logo" href="../index.html" title="Página inicial">
+    <img src="../assets/logo.png" alt="MR4 Distribuidora">
+  </a>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="userName">Carregando...</div>
+      <div class="user-role" id="userRole">—</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Navegação</div>
+    <a href="../index.html" class="nav-item"><span class="nav-icon">←</span> Sistema</a>
+    <a href="calculadora-custo.html" class="nav-item active"><span class="nav-icon">🧮</span> Calculadora de Custo</a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-sair" onclick="sair()">↩ Sair do sistema</button>
+  </div>
+</aside>
+
+<!-- Main Content -->
+<main class="main" id="mainContent" style="display:none">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🧮 Calculadora de Custo</h1>
+      <p class="page-sub">Calcule o custo real de produtos com mix de NF e sem-nota</p>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 1 — Fornecedores ══ -->
+  <div class="card">
+    <div class="collapsible-header open" id="fornecedoresToggle" onclick="toggleFornecedores()">
+      <div class="card-title">
+        <span class="card-title-icon">🏭</span>
+        Fornecedores
+        <span class="badge badge-muted" id="fornecedoresCount">0</span>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+
+    <div class="collapsible-body" id="fornecedoresBody" style="max-height:1000px">
+      <div style="margin-top:1rem">
+        <div class="table-wrap">
+          <table id="fornecedoresTable">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>% Nota</th>
+                <th>Margem Padrão</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="fornecedoresTbody">
+              <tr><td colspan="4" class="empty-state">Nenhum fornecedor cadastrado</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div style="margin-top:1rem; display:flex; align-items:center; gap:.75rem; flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="toggleFornecedorForm()">+ Novo Fornecedor</button>
+          <span id="fornecedorFormToggleHint" style="font-size:.78rem;color:var(--muted)"></span>
+        </div>
+
+        <!-- Inline form -->
+        <div class="inline-form" id="fornecedorForm" style="display:none">
+          <div class="form-row form-row-3">
+            <div class="form-group">
+              <label class="form-label">Nome do Fornecedor</label>
+              <input type="text" class="form-input" id="fNome" placeholder="Ex: Fornecedor ABC">
+            </div>
+            <div class="form-group">
+              <label class="form-label">% Nota Fiscal <small>(0–100)</small></label>
+              <input type="number" class="form-input" id="fPctNota" min="0" max="100" step="0.1" placeholder="Ex: 60">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Margem Padrão % <small>(0–100)</small></label>
+              <input type="number" class="form-input" id="fMargem" min="0" max="999" step="0.1" placeholder="Ex: 30">
+            </div>
+          </div>
+          <div class="action-row">
+            <button class="btn btn-primary btn-sm" onclick="salvarFornecedor()">💾 Salvar Fornecedor</button>
+            <button class="btn btn-secondary btn-sm" onclick="cancelarFornecedor()">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 1.5 — Leitura de PDF ══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-title-icon">📄</span> Ler Documentos (PDF)</div>
+      <span style="font-size:.75rem;color:var(--muted)">Envie a NF e o documento sem nota — os valores são preenchidos automaticamente</span>
+    </div>
+
+    <div class="pdf-upload-grid">
+      <!-- NF -->
+      <div>
+        <div class="pdf-zone" id="zoneNF" ondragover="onDragOver(event,'zoneNF')" ondragleave="onDragLeave('zoneNF')" ondrop="onDrop(event,'nf')">
+          <input type="file" accept="application/pdf" id="fileNF" onchange="onFileChange(event,'nf')">
+          <div class="pdf-zone-icon">🧾</div>
+          <div class="pdf-zone-label">Nota Fiscal (NF)</div>
+          <div class="pdf-zone-sub">Clique ou arraste o PDF da NF</div>
+          <div class="pdf-zone-status" id="statusNF"></div>
+        </div>
+        <div class="pdf-result-box" id="resultNF">
+          <div class="pdf-result-title">Valores encontrados na NF</div>
+          <div class="pdf-values-list" id="chipsNF"></div>
+          <div class="pdf-apply-row">
+            <button class="btn btn-primary btn-sm" onclick="aplicarPDF('nf')">✓ Preencher campo NF</button>
+            <span id="aplicadoNF" style="font-size:.78rem;color:var(--green);display:none">✅ Aplicado!</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sem Nota -->
+      <div>
+        <div class="pdf-zone" id="zoneSN" ondragover="onDragOver(event,'zoneSN')" ondragleave="onDragLeave('zoneSN')" ondrop="onDrop(event,'sn')">
+          <input type="file" accept="application/pdf" id="fileSN" onchange="onFileChange(event,'sn')">
+          <div class="pdf-zone-icon">📋</div>
+          <div class="pdf-zone-label">Documento Sem Nota</div>
+          <div class="pdf-zone-sub">Clique ou arraste o PDF do documento</div>
+          <div class="pdf-zone-status" id="statusSN"></div>
+        </div>
+        <div class="pdf-result-box" id="resultSN">
+          <div class="pdf-result-title">Valores encontrados no documento</div>
+          <div class="pdf-values-list" id="chipsSN"></div>
+          <div class="pdf-apply-row">
+            <button class="btn btn-primary btn-sm" onclick="aplicarPDF('sn')">✓ Preencher campo Sem Nota</button>
+            <span id="aplicadoSN" style="font-size:.78rem;color:var(--green);display:none">✅ Aplicado!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SECTION 2 — Calculadora ══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-title-icon">💰</span> Calculadora de Custo</div>
+    </div>
+
+    <!-- Fornecedor selector -->
+    <div class="form-row form-row-2" style="margin-bottom:1rem">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Fornecedor</label>
+        <select class="form-select" id="calcFornecedor" onchange="onFornecedorChange()">
+          <option value="">Sem fornecedor (manual)</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">% de Nota Fiscal <small>(0 = tudo sem nota)</small></label>
+        <input type="number" class="form-input" id="calcPctNota" min="0" max="100" step="0.1" placeholder="Ex: 60" oninput="scheduleCalc('pct')">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Three cost fields -->
+    <div class="form-row form-row-3" style="margin-bottom:1rem">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Valor da NF (R$)</label>
+        <input type="text" class="form-input" id="calcNF" placeholder="0,00" oninput="scheduleCalc('nf')">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Valor Sem Nota (R$)</label>
+        <input type="text" class="form-input" id="calcSemNota" placeholder="0,00" oninput="scheduleCalc('semnota')">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Custo Total (R$)</label>
+        <input type="text" class="form-input" id="calcTotal" placeholder="0,00" oninput="scheduleCalc('total')">
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Quantity + Unit cost -->
+    <div class="form-row form-row-2" style="margin-bottom:1rem">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Quantidade</label>
+        <input type="number" class="form-input" id="calcQtd" min="0.001" step="1" value="1" oninput="scheduleCalc('qtd')">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Custo Unitário (R$)</label>
+        <input type="text" class="form-input highlighted" id="calcUnitario" placeholder="—" readonly>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Margin + Sale price -->
+    <div class="form-row form-row-2">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Margem de Lucro (%)</label>
+        <input type="number" class="form-input" id="calcMargem" min="0" step="0.1" placeholder="Ex: 30" oninput="scheduleCalc('margem')">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="form-label">Preço de Venda Sugerido (R$)</label>
+        <input type="text" class="form-input highlighted-green" id="calcVenda" placeholder="—" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SUMMARY BOX ══ -->
+  <div class="summary-box" id="summaryBox">
+    <div class="sum-title">📋 Resumo</div>
+    <div class="sum-row"><span class="sum-key">NF:</span><span class="sum-val" id="sumNF">R$ —</span></div>
+    <div class="sum-row"><span class="sum-key">Sem Nota:</span><span class="sum-val" id="sumSemNota">R$ —</span></div>
+    <hr class="sum-divider divider">
+    <div class="sum-row"><span class="sum-key">Total:</span><span class="sum-val" id="sumTotal">R$ —</span></div>
+    <div class="sum-row"><span class="sum-key">Unitário:</span><span class="sum-val" id="sumUnitario">R$ —</span></div>
+    <hr class="sum-divider divider">
+    <div class="sum-row highlight"><span class="sum-key">Venda Sugerida:</span><span class="sum-val" id="sumVenda">R$ —</span></div>
+  </div>
+
+  <!-- ══ SECTION 3 — GestãoClick ══ -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="card-title-icon">🔄</span> Importar para GestãoClick</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Buscar produto no GestãoClick</label>
+      <div class="search-row">
+        <input type="text" class="form-input" id="gcSearch" placeholder="Nome ou código do produto..." onkeydown="if(event.key==='Enter') buscarProduto()">
+        <button class="btn btn-secondary" id="gcSearchBtn" onclick="buscarProduto()">🔍 Buscar</button>
+      </div>
+    </div>
+
+    <div id="gcResultsWrap" style="display:none">
+      <div class="search-results" id="gcResultsList"></div>
+    </div>
+
+    <div id="gcSelectedWrap" style="display:none">
+      <div class="selected-product-box">
+        <div class="selected-product-info">
+          <div class="selected-product-name" id="gcSelectedName">—</div>
+          <div class="selected-product-meta" id="gcSelectedMeta">Código: — | Custo atual: R$ —</div>
+        </div>
+        <div class="price-update-info">
+          <span class="price-old" id="gcOldPrice">R$ —</span>
+          <span class="price-arrow">→</span>
+          <span class="price-new" id="gcNewPrice">R$ —</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:1rem">
+      <button class="btn btn-success" id="gcUpdateBtn" onclick="atualizarCustoGC()" disabled>
+        ✅ Atualizar Custo no GestãoClick
+      </button>
+      <span id="gcUpdateHint" style="font-size:.78rem;color:var(--muted);margin-left:.75rem"></span>
+    </div>
+  </div>
+
+</main>
+
+<!-- Firebase + App Logic -->
+<script type="module">
+  import { initializeApp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut }
+                                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, getDoc }
+                                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  /* ── Firebase ── */
+  const app  = initializeApp({
+    apiKey:            "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain:        "mr4-ponto.firebaseapp.com",
+    projectId:         "mr4-ponto",
+    storageBucket:     "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId:             "1:848211361584:web:2732e1893122f4a23452f5"
+  });
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  const WORKER_URL = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+
+  /* ── State ── */
+  let fornecedores = [];       // { id, nome, pct_nota, margem_padrao }
+  let editingFornId = null;    // id when editing
+  let calcTimer = null;        // debounce
+  let drivingField = 'nf';    // which cost field is driving calcs
+  let gcProducts = [];         // search results
+  let gcSelected = null;       // selected product object
+
+  /* ── Helpers ── */
+  const brl = v => {
+    if (v == null || isNaN(v) || v === '') return 'R$ —';
+    return Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const parseBr = s => {
+    if (s == null) return NaN;
+    return parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
+  };
+
+  const numInput = el => parseBr(el.value);
+
+  const fmt2 = v => isNaN(v) ? '' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const pct2 = (num, den) => {
+    if (!den || isNaN(den) || den === 0) return '';
+    return ' (' + ((num / den) * 100).toFixed(1).replace('.', ',') + '%)';
+  };
+
+  /* ── Toast ── */
+  function toast(msg, type = 'info') {
+    const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+    const el = document.createElement('div');
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span>${msg}</span>`;
+    document.getElementById('toastContainer').appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+
+  /* expose to global for onclick handlers */
+  window.toast = toast;
+
+  /* ── Auth guard ── */
+  onAuthStateChanged(auth, async user => {
+    if (!user) { window.location.href = '../index.html'; return; }
+
+    /* check access */
+    let allowed = false;
+    try {
+      const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.admin === true) { allowed = true; }
+        else if (Array.isArray(d.modulos) && d.modulos.includes('calculadora')) { allowed = true; }
+        /* populate user info */
+        document.getElementById('userName').textContent   = d.nome  || user.email.split('@')[0];
+        document.getElementById('userRole').textContent   = d.cargo || 'Usuário';
+        document.getElementById('userAvatar').textContent = (d.nome || user.email)[0].toUpperCase();
+      } else {
+        document.getElementById('userName').textContent   = user.displayName || user.email.split('@')[0];
+        document.getElementById('userRole').textContent   = 'Usuário';
+        document.getElementById('userAvatar').textContent = (user.displayName || user.email)[0].toUpperCase();
+      }
+    } catch (e) {
+      console.error('auth check error', e);
+      allowed = false;
+    }
+
+    if (!allowed) { window.location.href = '../index.html'; return; }
+
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display       = '';
+    document.getElementById('mainContent').style.display   = '';
+
+    await loadFornecedores();
+    /* focus NF field */
+    document.getElementById('calcNF').focus();
+  });
+
+  /* ── Sign out ── */
+  window.sair = async () => {
+    await signOut(auth);
+    window.location.href = '../index.html';
+  };
+
+  /* ══════════════════════════════════════════
+     SECTION 1 — FORNECEDORES
+  ══════════════════════════════════════════ */
+
+  async function loadFornecedores() {
+    try {
+      const snap = await getDocs(collection(db, 'fornecedores_custo'));
+      fornecedores = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      fornecedores.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+      renderFornecedores();
+      renderFornecedorSelect();
+    } catch (e) {
+      toast('Erro ao carregar fornecedores: ' + e.message, 'error');
+    }
+  }
+
+  function renderFornecedores() {
+    const tbody = document.getElementById('fornecedoresTbody');
+    document.getElementById('fornecedoresCount').textContent = fornecedores.length;
+
+    if (!fornecedores.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhum fornecedor cadastrado</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = fornecedores.map(f => `
+      <tr>
+        <td><strong>${esc(f.nome)}</strong></td>
+        <td class="td-mono">${Number(f.pct_nota).toFixed(1).replace('.', ',')}%</td>
+        <td class="td-mono">${Number(f.margem_padrao).toFixed(1).replace('.', ',')}%</td>
+        <td>
+          <div class="action-row">
+            <button class="btn btn-secondary btn-sm" onclick="editarFornecedor('${f.id}')">✏️ Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="deletarFornecedor('${f.id}', '${esc(f.nome)}')">🗑️</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function renderFornecedorSelect() {
+    const sel = document.getElementById('calcFornecedor');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Sem fornecedor (manual)</option>';
+    fornecedores.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = `${f.nome} (${Number(f.pct_nota).toFixed(1).replace('.', ',')}% NF)`;
+      sel.appendChild(opt);
+    });
+    sel.value = cur;
+  }
+
+  window.toggleFornecedores = function() {
+    const body   = document.getElementById('fornecedoresBody');
+    const toggle = document.getElementById('fornecedoresToggle');
+    const isOpen = toggle.classList.contains('open');
+    toggle.classList.toggle('open', !isOpen);
+    body.style.maxHeight = isOpen ? '0' : '1000px';
+  };
+
+  window.toggleFornecedorForm = function() {
+    const form = document.getElementById('fornecedorForm');
+    const visible = form.style.display !== 'none';
+    if (visible) {
+      cancelarFornecedor();
+    } else {
+      editingFornId = null;
+      document.getElementById('fNome').value    = '';
+      document.getElementById('fPctNota').value = '';
+      document.getElementById('fMargem').value  = '';
+      form.style.display = '';
+      document.getElementById('fNome').focus();
+      document.getElementById('fornecedorFormToggleHint').textContent = '';
+    }
+  };
+
+  window.cancelarFornecedor = function() {
+    document.getElementById('fornecedorForm').style.display = 'none';
+    document.getElementById('fornecedorFormToggleHint').textContent = '';
+    editingFornId = null;
+  };
+
+  window.editarFornecedor = function(id) {
+    const f = fornecedores.find(x => x.id === id);
+    if (!f) return;
+    editingFornId = id;
+    document.getElementById('fNome').value    = f.nome;
+    document.getElementById('fPctNota').value = f.pct_nota;
+    document.getElementById('fMargem').value  = f.margem_padrao;
+    document.getElementById('fornecedorForm').style.display = '';
+    document.getElementById('fornecedorFormToggleHint').textContent = `Editando: ${f.nome}`;
+    document.getElementById('fNome').focus();
+    /* ensure collapsible is open */
+    const toggle = document.getElementById('fornecedoresToggle');
+    const body   = document.getElementById('fornecedoresBody');
+    toggle.classList.add('open');
+    body.style.maxHeight = '1000px';
+  };
+
+  window.salvarFornecedor = async function() {
+    const nome      = document.getElementById('fNome').value.trim();
+    const pct_nota  = parseFloat(document.getElementById('fPctNota').value);
+    const margem    = parseFloat(document.getElementById('fMargem').value);
+
+    if (!nome)                   { toast('Informe o nome do fornecedor.', 'error'); return; }
+    if (isNaN(pct_nota) || pct_nota < 0 || pct_nota > 100) { toast('% Nota deve ser entre 0 e 100.', 'error'); return; }
+    if (isNaN(margem)   || margem < 0)                     { toast('Margem padrão inválida.', 'error'); return; }
+
+    const id = editingFornId || (Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+    try {
+      await setDoc(doc(db, 'fornecedores_custo', id), { nome, pct_nota, margem_padrao: margem });
+      toast(editingFornId ? 'Fornecedor atualizado!' : 'Fornecedor salvo!', 'success');
+      cancelarFornecedor();
+      await loadFornecedores();
+    } catch (e) {
+      toast('Erro ao salvar: ' + e.message, 'error');
+    }
+  };
+
+  window.deletarFornecedor = async function(id, nome) {
+    if (!confirm(`Excluir fornecedor "${nome}"?`)) return;
+    try {
+      await deleteDoc(doc(db, 'fornecedores_custo', id));
+      toast('Fornecedor excluído.', 'info');
+      await loadFornecedores();
+    } catch (e) {
+      toast('Erro ao excluir: ' + e.message, 'error');
+    }
+  };
+
+  /* ══════════════════════════════════════════
+     SECTION 2 — CALCULADORA
+  ══════════════════════════════════════════ */
+
+  window.onFornecedorChange = function() {
+    const sel = document.getElementById('calcFornecedor');
+    const id  = sel.value;
+    if (!id) {
+      /* clear auto-filled fields only if they were auto-filled */
+      document.getElementById('calcPctNota').value = '';
+      document.getElementById('calcMargem').value  = '';
+    } else {
+      const f = fornecedores.find(x => x.id === id);
+      if (f) {
+        document.getElementById('calcPctNota').value = Number(f.pct_nota).toFixed(1).replace('.', ',');
+        document.getElementById('calcMargem').value  = Number(f.margem_padrao).toFixed(1).replace('.', ',');
+      }
+    }
+    scheduleCalc(drivingField || 'nf');
+  };
+
+  window.scheduleCalc = function(source) {
+    drivingField = source;
+    clearTimeout(calcTimer);
+    calcTimer = setTimeout(() => recalc(source), 100);
+
+    /* highlight driving field */
+    ['calcNF','calcSemNota','calcTotal'].forEach(id => {
+      document.getElementById(id).classList.remove('driving');
+    });
+    if (source === 'nf')      document.getElementById('calcNF').classList.add('driving');
+    if (source === 'semnota') document.getElementById('calcSemNota').classList.add('driving');
+    if (source === 'total')   document.getElementById('calcTotal').classList.add('driving');
+  };
+
+  function recalc(source) {
+    const pctRaw = parseBr(document.getElementById('calcPctNota').value);
+    const p      = isNaN(pctRaw) ? null : pctRaw / 100;  // 0–1
+    const qtd    = parseFloat(document.getElementById('calcQtd').value) || 1;
+    const margem = parseBr(document.getElementById('calcMargem').value);
+
+    /* ── edge cases ── */
+    // If p is null/NaN — treat as 0 (all sem-nota)
+    const pEffective = (p == null || isNaN(p)) ? 0 : Math.max(0, Math.min(1, p));
+
+    let nf = NaN, semNota = NaN, total = NaN;
+
+    if (source === 'nf') {
+      nf = parseBr(document.getElementById('calcNF').value);
+      if (!isNaN(nf)) {
+        if (pEffective === 0) {
+          semNota = nf; nf = 0; total = semNota;
+        } else if (pEffective >= 1) {
+          semNota = 0; total = nf;
+        } else {
+          total   = nf / pEffective;
+          semNota = total - nf;
+        }
+      }
+    } else if (source === 'semnota') {
+      semNota = parseBr(document.getElementById('calcSemNota').value);
+      if (!isNaN(semNota)) {
+        if (pEffective >= 1) {
+          nf = semNota; semNota = 0; total = nf;
+        } else if (pEffective === 0) {
+          nf = 0; total = semNota;
+        } else {
+          total = semNota / (1 - pEffective);
+          nf    = total - semNota;
+        }
+      }
+    } else if (source === 'total') {
+      total = parseBr(document.getElementById('calcTotal').value);
+      if (!isNaN(total)) {
+        if (pEffective === 0) {
+          nf = 0; semNota = total;
+        } else if (pEffective >= 1) {
+          nf = total; semNota = 0;
+        } else {
+          nf      = total * pEffective;
+          semNota = total * (1 - pEffective);
+        }
+      }
+    } else if (source === 'pct') {
+      /* pct changed — re-drive from the last cost field that has a value */
+      const nfVal   = parseBr(document.getElementById('calcNF').value);
+      const snVal   = parseBr(document.getElementById('calcSemNota').value);
+      const totVal  = parseBr(document.getElementById('calcTotal').value);
+      if (!isNaN(totVal)) {
+        source = 'total';
+        total  = totVal;
+        if (pEffective === 0) { nf = 0; semNota = total; }
+        else if (pEffective >= 1) { nf = total; semNota = 0; }
+        else { nf = total * pEffective; semNota = total - nf; }
+      } else if (!isNaN(nfVal)) {
+        source = 'nf'; nf = nfVal;
+        if (pEffective === 0) { semNota = nf; nf = 0; total = semNota; }
+        else if (pEffective >= 1) { semNota = 0; total = nf; }
+        else { total = nf / pEffective; semNota = total - nf; }
+      } else if (!isNaN(snVal)) {
+        source = 'semnota'; semNota = snVal;
+        if (pEffective >= 1) { nf = semNota; semNota = 0; total = nf; }
+        else if (pEffective === 0) { nf = 0; total = semNota; }
+        else { total = semNota / (1 - pEffective); nf = total - semNota; }
+      }
+    } else if (source === 'qtd' || source === 'margem') {
+      /* just recalc derived fields, don't touch cost inputs */
+      nf      = parseBr(document.getElementById('calcNF').value);
+      semNota = parseBr(document.getElementById('calcSemNota').value);
+      total   = parseBr(document.getElementById('calcTotal').value);
+    }
+
+    /* ── write back to inputs (non-driving) ── */
+    const safeFmt = v => isNaN(v) ? '' : fmt2(v);
+
+    if (source !== 'nf')      { const el = document.getElementById('calcNF');      el.value = isNaN(nf)      ? '' : fmt2(nf); }
+    if (source !== 'semnota') { const el = document.getElementById('calcSemNota'); el.value = isNaN(semNota) ? '' : fmt2(semNota); }
+    if (source !== 'total')   { const el = document.getElementById('calcTotal');   el.value = isNaN(total)   ? '' : fmt2(total); }
+
+    /* ── derived ── */
+    const unitario = (!isNaN(total) && qtd > 0) ? total / qtd : NaN;
+    const venda    = (!isNaN(unitario) && !isNaN(margem)) ? unitario * (1 + margem / 100) : NaN;
+
+    document.getElementById('calcUnitario').value = isNaN(unitario) ? '' : fmt2(unitario);
+    document.getElementById('calcVenda').value     = isNaN(venda)   ? '' : fmt2(venda);
+
+    /* ── update GC new price display ── */
+    if (gcSelected) {
+      document.getElementById('gcNewPrice').textContent    = isNaN(unitario) ? 'R$ —' : brl(unitario);
+      const vStr = isNaN(venda) ? '' : ` | Venda: ${brl(venda)}`;
+      document.getElementById('gcSelectedMeta').textContent =
+        `Código: ${gcSelected.codigo || '—'} | Custo atual: ${brl(gcSelected.preco_custo)}${vStr}`;
+    }
+
+    /* ── summary ── */
+    const pctNF  = (!isNaN(nf) && !isNaN(total) && total > 0) ? (nf / total * 100).toFixed(1).replace('.', ',') + '%' : '';
+    const pctSN  = (!isNaN(semNota) && !isNaN(total) && total > 0) ? (semNota / total * 100).toFixed(1).replace('.', ',') + '%' : '';
+    const marStr = !isNaN(margem) ? ` (margem ${margem.toFixed(1).replace('.', ',')}%)` : '';
+
+    document.getElementById('sumNF').textContent       = isNaN(nf)       ? 'R$ —' : `${brl(nf)}${pctNF ? ' ('+pctNF+')' : ''}`;
+    document.getElementById('sumSemNota').textContent  = isNaN(semNota)  ? 'R$ —' : `${brl(semNota)}${pctSN ? ' ('+pctSN+')' : ''}`;
+    document.getElementById('sumTotal').textContent    = isNaN(total)    ? 'R$ —' : brl(total);
+    document.getElementById('sumUnitario').textContent = isNaN(unitario) ? 'R$ —' : brl(unitario);
+    document.getElementById('sumVenda').textContent    = isNaN(venda)    ? 'R$ —' : `${brl(venda)}${marStr}`;
+  }
+
+  /* ══════════════════════════════════════════
+     SECTION 3 — GESTÃOCLICK
+  ══════════════════════════════════════════ */
+
+  window.buscarProduto = async function() {
+    const term = document.getElementById('gcSearch').value.trim();
+    if (!term) { toast('Digite um termo para buscar.', 'info'); return; }
+
+    const btn = document.getElementById('gcSearchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-spinner"></span> Buscando...';
+
+    gcSelected = null;
+    document.getElementById('gcSelectedWrap').style.display = 'none';
+    document.getElementById('gcUpdateBtn').disabled = true;
+    document.getElementById('gcUpdateHint').textContent = '';
+
+    try {
+      const params = encodeURIComponent('nome=' + term + '&limite=15');
+      const url    = `${WORKER_URL}?endpoint=/produtos&params=${params}`;
+      const res    = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data   = await res.json();
+
+      /* GestãoClick returns data.data or data.registros or array */
+      let items = [];
+      if (Array.isArray(data))            items = data;
+      else if (Array.isArray(data.data))  items = data.data;
+      else if (Array.isArray(data.registros)) items = data.registros;
+      else if (data.objeto && Array.isArray(data.objeto)) items = data.objeto;
+
+      gcProducts = items;
+
+      if (!items.length) {
+        document.getElementById('gcResultsWrap').style.display = 'none';
+        toast('Nenhum produto encontrado.', 'info');
+        return;
+      }
+
+      const list = document.getElementById('gcResultsList');
+      list.innerHTML = items.map((p, i) => {
+        const nome   = p.nome || p.descricao || p.description || '(sem nome)';
+        const codigo = p.codigo || p.code || p.sku || '—';
+        const custo  = p.preco_custo || p.custo || p.cost || 0;
+        return `
+          <div class="search-result-item" onclick="selecionarProduto(${i})">
+            <div>
+              <div class="result-name">${esc(nome)}</div>
+              <div class="result-code">Código: ${esc(String(codigo))}</div>
+            </div>
+            <div class="result-price">${brl(custo)}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('gcResultsWrap').style.display = '';
+    } catch (e) {
+      toast('Erro na busca: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🔍 Buscar';
+    }
+  };
+
+  window.selecionarProduto = function(idx) {
+    const p = gcProducts[idx];
+    if (!p) return;
+    gcSelected = p;
+
+    /* highlight selected */
+    document.querySelectorAll('#gcResultsList .search-result-item').forEach((el, i) => {
+      el.classList.toggle('selected', i === idx);
+    });
+
+    /* read current calc values */
+    const unitario = parseBr(document.getElementById('calcUnitario').value);
+    const venda    = parseBr(document.getElementById('calcVenda').value);
+
+    const nome   = p.nome || p.descricao || p.description || '(sem nome)';
+    const codigo = p.codigo || p.code || p.sku || '—';
+    const custo  = p.preco_custo || p.custo || p.cost || 0;
+
+    document.getElementById('gcSelectedName').textContent  = nome;
+    document.getElementById('gcSelectedMeta').textContent  =
+      `Código: ${codigo} | Custo atual: ${brl(custo)}${!isNaN(venda) ? ' | Venda: ' + brl(venda) : ''}`;
+    document.getElementById('gcOldPrice').textContent      = brl(custo);
+    document.getElementById('gcNewPrice').textContent      = isNaN(unitario) ? 'R$ —' : brl(unitario);
+
+    document.getElementById('gcSelectedWrap').style.display = '';
+
+    if (isNaN(unitario)) {
+      document.getElementById('gcUpdateBtn').disabled = true;
+      document.getElementById('gcUpdateHint').textContent = 'Calcule o custo unitário primeiro.';
+    } else {
+      document.getElementById('gcUpdateBtn').disabled = false;
+      document.getElementById('gcUpdateHint').textContent = '';
+    }
+  };
+
+  window.atualizarCustoGC = async function() {
+    if (!gcSelected) { toast('Nenhum produto selecionado.', 'error'); return; }
+
+    const unitario = parseBr(document.getElementById('calcUnitario').value);
+    const venda    = parseBr(document.getElementById('calcVenda').value);
+
+    if (isNaN(unitario)) { toast('Custo unitário inválido. Verifique a calculadora.', 'error'); return; }
+
+    const prodId   = gcSelected.id || gcSelected.codigo || gcSelected.code;
+    if (!prodId)   { toast('Produto sem ID identificável.', 'error'); return; }
+
+    const btn = document.getElementById('gcUpdateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="inline-spinner"></span> Atualizando...';
+
+    const payload = { preco_custo: parseFloat(unitario.toFixed(2)) };
+    if (!isNaN(venda)) payload.preco_venda = parseFloat(venda.toFixed(2));
+
+    try {
+      const res = await fetch(`${WORKER_URL}?endpoint=/produtos/${prodId}&method=PUT`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`HTTP ${res.status}: ${body.slice(0, 120)}`);
+      }
+
+      toast('Custo atualizado com sucesso no GestãoClick!', 'success');
+      /* refresh displayed old price */
+      document.getElementById('gcOldPrice').textContent = brl(unitario);
+      gcSelected.preco_custo = unitario;
+    } catch (e) {
+      toast('Erro ao atualizar: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '✅ Atualizar Custo no GestãoClick';
+      const unit2 = parseBr(document.getElementById('calcUnitario').value);
+      if (!isNaN(unit2)) btn.disabled = false;
+    }
+  };
+
+  /* ── XSS helper ── */
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* expose helpers needed by inline onclick */
+  window.salvarFornecedor  = window.salvarFornecedor  || (async () => {});
+  window.deletarFornecedor = window.deletarFornecedor || (() => {});
+  window.editarFornecedor  = window.editarFornecedor  || (() => {});
+  window.cancelarFornecedor= window.cancelarFornecedor|| (() => {});
+  window.toggleFornecedorForm = window.toggleFornecedorForm || (() => {});
+
+  /* ══════════════════════════════════════════
+     PDF READING — PDF.js
+  ══════════════════════════════════════════ */
+
+  // Estado dos PDFs
+  const pdfState = {
+    nf: { selectedValue: null },
+    sn: { selectedValue: null },
+  };
+
+  // Configura o worker do PDF.js
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  }
+
+  /* Extrai todo o texto de um PDF (File) */
+  async function lerPDF(file) {
+    const buffer = await file.arrayBuffer();
+    const pdf    = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let texto    = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page    = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      texto += content.items.map(it => it.str).join(' ') + '\n';
+    }
+    return texto;
+  }
+
+  /* Tenta detectar o VALOR TOTAL da NF procurando palavras-chave */
+  function detectarTotalNF(texto) {
+    const up = texto.toUpperCase();
+    const keywords = [
+      'VALOR TOTAL DA NOTA', 'TOTAL DA NOTA', 'VALOR TOTAL',
+      'TOTAL GERAL', 'TOTAL DOS PRODUTOS', 'TOTAL A PAGAR',
+    ];
+    for (const kw of keywords) {
+      const idx = up.indexOf(kw);
+      if (idx < 0) continue;
+      // Pega os 300 chars após a keyword e busca o próximo valor monetário
+      const trecho = texto.slice(idx, idx + 300);
+      const m = trecho.match(/R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})/);
+      if (m) return parseBr(m[0]);
+    }
+    return null;
+  }
+
+  /* Extrai todos os valores monetários relevantes do texto */
+  function extrairValores(texto) {
+    // Padrão: 1.234,56 ou 1234,56 (com ou sem R$)
+    const re = /R?\$?\s*(\d{1,3}(?:\.\d{3})*,\d{2})/g;
+    const vistos = new Set();
+    const vals   = [];
+    let m;
+    while ((m = re.exec(texto)) !== null) {
+      const v = parseBr(m[0]);
+      // Filtra valores absurdos ou já vistos
+      if (isNaN(v) || v <= 0 || v > 50000000) continue;
+      const key = v.toFixed(2);
+      if (vistos.has(key)) continue;
+      vistos.add(key);
+      vals.push(v);
+    }
+    // Ordena do maior para o menor (total tende a ser o maior)
+    vals.sort((a, b) => b - a);
+    return vals.slice(0, 12); // máximo 12 chips
+  }
+
+  /* Renderiza os chips de valores encontrados */
+  function renderChips(containerId, valores, autoDetected, tipo) {
+    const el = document.getElementById(containerId);
+    if (!valores.length) {
+      el.innerHTML = '<span style="color:var(--muted);font-size:.8rem">Nenhum valor encontrado no documento.</span>';
+      return;
+    }
+    el.innerHTML = valores.map(v => {
+      const isAuto = autoDetected !== null && Math.abs(v - autoDetected) < 0.01;
+      const label  = isAuto ? `${fmt2(v)} ⭐` : fmt2(v);
+      const cls    = isAuto ? 'pdf-val-chip auto-detected' : 'pdf-val-chip';
+      return `<span class="${cls}" data-val="${v}" onclick="selecionarChip(this,'${tipo}')">${label}</span>`;
+    }).join('');
+    // Auto-seleciona o detectado
+    if (autoDetected !== null) {
+      const auto = el.querySelector('.auto-detected');
+      if (auto) selecionarChip(auto, tipo);
+    } else {
+      // Sem detecção automática: seleciona o maior (primeiro)
+      const primeiro = el.querySelector('.pdf-val-chip');
+      if (primeiro) selecionarChip(primeiro, tipo);
+    }
+  }
+
+  window.selecionarChip = function(el, tipo) {
+    const container = tipo === 'nf' ? 'chipsNF' : 'chipsSN';
+    document.querySelectorAll(`#${container} .pdf-val-chip`).forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    pdfState[tipo].selectedValue = parseFloat(el.dataset.val);
+  };
+
+  /* Aplica o valor selecionado no campo da calculadora */
+  window.aplicarPDF = function(tipo) {
+    const val = pdfState[tipo].selectedValue;
+    if (val == null || isNaN(val)) { toast('Selecione um valor antes de aplicar.', 'error'); return; }
+    if (tipo === 'nf') {
+      document.getElementById('calcNF').value = fmt2(val);
+      scheduleCalc('nf');
+    } else {
+      document.getElementById('calcSemNota').value = fmt2(val);
+      scheduleCalc('semnota');
+    }
+    const indicador = document.getElementById(tipo === 'nf' ? 'aplicadoNF' : 'aplicadoSN');
+    indicador.style.display = 'inline';
+    setTimeout(() => { indicador.style.display = 'none'; }, 2500);
+  };
+
+  /* Processa um arquivo PDF recebido */
+  async function processarPDF(file, tipo) {
+    if (!window.pdfjsLib) { toast('PDF.js não carregado. Recarregue a página.', 'error'); return; }
+    const zoneId   = tipo === 'nf' ? 'zoneNF' : 'zoneSN';
+    const statusId = tipo === 'nf' ? 'statusNF' : 'statusSN';
+    const resultId = tipo === 'nf' ? 'resultNF' : 'resultSN';
+    const chipsId  = tipo === 'nf' ? 'chipsNF' : 'chipsSN';
+    const zone     = document.getElementById(zoneId);
+
+    zone.classList.remove('has-file');
+    zone.classList.add('processing');
+    document.getElementById(statusId).textContent = '⏳ Lendo PDF...';
+    document.getElementById(resultId).classList.remove('show');
+
+    try {
+      const texto     = await lerPDF(file);
+      const valores   = extrairValores(texto);
+      const autoTotal = tipo === 'nf' ? detectarTotalNF(texto) : null;
+
+      zone.classList.remove('processing');
+      zone.classList.add('has-file');
+      document.getElementById(statusId).textContent = `✅ ${file.name}`;
+
+      renderChips(chipsId, valores, autoTotal, tipo);
+      document.getElementById(resultId).classList.add('show');
+
+      if (!valores.length) {
+        toast('Nenhum valor monetário encontrado no PDF. Verifique o documento.', 'error');
+      } else if (autoTotal && tipo === 'nf') {
+        toast(`Total da NF detectado: ${brl(autoTotal)} ⭐`, 'success');
+      } else {
+        toast(`${valores.length} valores encontrados. Selecione o correto.`, 'info');
+      }
+    } catch (e) {
+      zone.classList.remove('processing');
+      document.getElementById(statusId).textContent = '❌ Erro ao ler PDF';
+      toast('Erro ao processar PDF: ' + e.message, 'error');
+      console.error(e);
+    }
+  }
+
+  /* Handlers de input e drag-and-drop */
+  window.onFileChange = function(event, tipo) {
+    const file = event.target.files[0];
+    if (file) processarPDF(file, tipo);
+  };
+
+  window.onDragOver = function(event, zoneId) {
+    event.preventDefault();
+    document.getElementById(zoneId).classList.add('drag-over');
+  };
+
+  window.onDragLeave = function(zoneId) {
+    document.getElementById(zoneId).classList.remove('drag-over');
+  };
+
+  window.onDrop = function(event, tipo) {
+    event.preventDefault();
+    const zoneId = tipo === 'nf' ? 'zoneNF' : 'zoneSN';
+    document.getElementById(zoneId).classList.remove('drag-over');
+    const file = event.dataTransfer.files[0];
+    if (file && file.type === 'application/pdf') {
+      processarPDF(file, tipo);
+    } else {
+      toast('Envie apenas arquivos PDF.', 'error');
+    }
+  };
+</script>
+</body>
+</html>

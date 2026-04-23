@@ -375,11 +375,14 @@
     document.getElementById('userAvatar').textContent  = primeiroNome[0].toUpperCase();
     document.getElementById('bemVindo').textContent    = `Olá, ${primeiroNome}! 👋`;
 
-    // Sidebar nav
+    const isAdmin = perfil.modulos.length === MODULOS.length; // admin vê tudo
+
+    // Sidebar nav — admin vê todos (bloqueados com cadeado), funcionário só os seus
     const nav = document.getElementById('sidebarNav');
     nav.innerHTML = '<div class="nav-section">Módulos</div>';
     MODULOS.forEach(m => {
       const temAcesso = perfil.modulos.includes(m.id);
+      if(!temAcesso && !isAdmin) return; // esconde da sidebar se não tem acesso
       const a = document.createElement('a');
       a.className = 'nav-item' + (temAcesso ? '' : ' locked');
       a.href = temAcesso ? m.url : '#';
@@ -388,11 +391,12 @@
       nav.appendChild(a);
     });
 
-    // Cards de módulos
+    // Cards de módulos — admin vê todos, funcionário só os que tem acesso
     const grid = document.getElementById('modulosGrid');
     grid.innerHTML = '';
     MODULOS.forEach(m => {
       const temAcesso = perfil.modulos.includes(m.id);
+      if(!temAcesso && !isAdmin) return; // esconde do grid se não tem acesso
       const card = document.createElement('a');
       card.className = 'modulo-card' + (temAcesso ? '' : ' locked');
       card.href = temAcesso ? m.url : '#';

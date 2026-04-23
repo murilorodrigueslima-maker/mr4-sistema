@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-23T14:49:58",
-  "total": 46,
+  "atualizado_em": "2026-04-23T15:47:36",
+  "total": 48,
   "pedidos": [
+    {
+      "id": "365344420",
+      "numero": "15493",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "DELIO FEITOSA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 243.5,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365338520",
+      "numero": "15492",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "WESLEY COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 77,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365335809",
       "numero": "15491",

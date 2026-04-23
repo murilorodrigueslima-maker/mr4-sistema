@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-04-23T14:50:04",
-  "hoje": 6397.25,
-  "semana": 23995.460000000003,
-  "mes": 121215.67000000003,
+  "atualizado_em": "2026-04-23T15:47:41",
+  "hoje": 6717.75,
+  "semana": 24315.96,
+  "mes": 121536.17000000003,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -15,9 +15,9 @@
     },
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 45818.3,
-      "pedidos": 131,
-      "ticket_medio": 349.7580152671756
+      "faturamento": 46138.8,
+      "pedidos": 133,
+      "ticket_medio": 346.90827067669176
     },
     {
       "nome": "Swyanne Kethlyn",
@@ -60,7 +60,7 @@
     {
       "data": "2026-04-23",
       "label": "qui., 23/04",
-      "valor": 6397.25
+      "valor": 6717.75
     }
   ]
 }

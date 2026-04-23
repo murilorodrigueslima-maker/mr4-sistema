@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-04-23T09:44:45",
-  "total": 37,
+  "atualizado_em": "2026-04-23T11:39:02",
+  "total": 40,
   "pedidos": [
+    {
+      "id": "365265052",
+      "numero": "15485",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 24,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365260684",
+      "numero": "15484",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1527.84,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365233832",
+      "numero": "15483",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365221801",
       "numero": "15482",

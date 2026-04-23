@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-23T09:44:46",
+  "atualizado_em": "2026-04-23T11:39:03",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -44,15 +44,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 4588.73,
+      "nome": "POPNOW",
+      "valor": 9752.17,
       "vencimento": "2026-03-25",
       "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
-      "nome": "POPNOW",
-      "valor": 9752.17,
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 2388.73,
       "vencimento": "2026-03-25",
       "dias_atraso": 29,
       "tipo": "Pagar"
@@ -80,23 +80,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 1037.05,
+      "valor": 1031.05,
       "vencimento": "2026-04-05",
       "dias_atraso": 18,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 135.67,
-      "vencimento": "2026-04-06",
-      "dias_atraso": 17,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 251.05,
-      "vencimento": "2026-04-06",
-      "dias_atraso": 17,
       "tipo": "Pagar"
     },
     {
@@ -433,7 +419,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51304.329999999994,
+  "total_vencido": 48711.61,
   "total_a_receber": 0,
   "total_a_pagar": 29778.410000000003
 }

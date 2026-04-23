@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-04-23T15:47:36",
-  "total": 48,
+  "atualizado_em": "2026-04-23T16:56:30",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "365387143",
+      "numero": "15498",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 23.4,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365386829",
+      "numero": "15497",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 461.03,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365378673",
+      "numero": "15496",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "E. R. MARQUES CIDADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1056.9,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365369179",
+      "numero": "15495",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 46.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365364774",
+      "numero": "15494",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 748.13,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365344420",
       "numero": "15493",

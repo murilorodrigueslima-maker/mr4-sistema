@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-23T15:47:37",
+  "atualizado_em": "2026-04-23T16:56:31",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -83,13 +83,6 @@
       "valor": 1031.05,
       "vencimento": "2026-04-05",
       "dias_atraso": 18,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PAGAMENTO REF MÊS MARÇO",
-      "valor": 800,
-      "vencimento": "2026-04-06",
-      "dias_atraso": 17,
       "tipo": "Pagar"
     },
     {
@@ -419,7 +412,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 48711.61,
+  "total_vencido": 47911.61,
   "total_a_receber": 0,
   "total_a_pagar": 29778.410000000003
 }

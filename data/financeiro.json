@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-22T23:51:04",
+  "atualizado_em": "2026-04-23T02:18:41",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -404,6 +404,30 @@
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-04-28",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO ESTER",
+      "valor": 2019.94,
+      "vencimento": "2026-04-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PARCELAMENTO IMPOSTOS",
+      "valor": 517.47,
+      "vencimento": "2026-04-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
+      "valor": 352.35,
+      "vencimento": "2026-04-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2304,
+      "vencimento": "2026-04-30",
       "tipo": "Pagar"
     }
   ],

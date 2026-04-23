@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-23T13:19:51",
-  "total": 42,
+  "atualizado_em": "2026-04-23T14:49:58",
+  "total": 46,
   "pedidos": [
+    {
+      "id": "365335809",
+      "numero": "15491",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "WESLEY COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1200,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365328765",
+      "numero": "15490",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 912,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365311516",
+      "numero": "15489",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "HENRIQUE JORGE CAMARA NUNES 28513029300",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 364.37,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365309729",
+      "numero": "15488",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 109,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365299187",
       "numero": "15487",
@@ -22,7 +70,7 @@
       "cliente": "DELIO FEITOSA FILHO",
       "vendedor": "fabiana andrade da silva",
       "valor": 840.36,
-      "itens": 7,
+      "itens": 8,
       "status_gc": "",
       "cidade": ""
     },

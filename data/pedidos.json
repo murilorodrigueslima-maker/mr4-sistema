@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-23T08:43:35",
-  "total": 33,
+  "atualizado_em": "2026-04-23T09:44:45",
+  "total": 37,
   "pedidos": [
+    {
+      "id": "365221801",
+      "numero": "15482",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "COMERCIAL DE PECAS E ACESSORIOS PARA VEICULOS BV LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 255,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365219572",
+      "numero": "15481",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 507.63,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365217286",
+      "numero": "15480",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 178.45,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365211339",
+      "numero": "15479",
+      "data": "2026-04-23",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA 00418492301",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365141470",
       "numero": "15478",

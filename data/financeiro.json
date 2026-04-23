@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-23T19:10:59",
+  "atualizado_em": "2026-04-23T20:05:14",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -52,7 +52,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 2388.73,
+      "valor": 1388.73,
       "vencimento": "2026-03-25",
       "dias_atraso": 29,
       "tipo": "Pagar"
@@ -80,7 +80,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 1031.05,
+      "valor": 873.15,
       "vencimento": "2026-04-05",
       "dias_atraso": 18,
       "tipo": "Pagar"
@@ -285,12 +285,6 @@
   "contas_vencendo": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 1663.74,
-      "vencimento": "2026-04-23",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-04-23",
       "tipo": "Pagar"
@@ -398,12 +392,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
-      "valor": 352.35,
-      "vencimento": "2026-04-30",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2304,
       "vencimento": "2026-04-30",
@@ -412,7 +400,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47911.61,
+  "total_vencido": 46753.71,
   "total_a_receber": 0,
-  "total_a_pagar": 29778.410000000003
+  "total_a_pagar": 29426.060000000005
 }

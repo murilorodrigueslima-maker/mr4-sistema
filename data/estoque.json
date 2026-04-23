@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-04-23T06:02:49",
-  "total_produtos": 906,
-  "valor_total_estoque": 401330.11000000103,
+  "atualizado_em": "2026-04-23T07:40:52",
+  "total_produtos": 899,
+  "valor_total_estoque": 404991.130000001,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -328,13 +328,6 @@
       "custo": 175.87
     },
     {
-      "ref": "ET-SEN 01 PRE",
-      "nome": "SENSOR ESTAC. 4 PONTOS PRETO",
-      "margem": "13.8",
-      "preco": 65,
-      "custo": 56
-    },
-    {
       "ref": "2107-0",
       "nome": "ULTRA LED CSP H27 70W 10.000 LUMENS BIVOLT - ASX1027",
       "margem": "14.1",
@@ -354,6 +347,13 @@
       "margem": "16.7",
       "preco": 90.34,
       "custo": 75.28
+    },
+    {
+      "ref": "AF10000118",
+      "nome": "AF QUADRIAXIAL AZUL 6X9“",
+      "margem": "16.7",
+      "preco": 128.35,
+      "custo": 106.96
     }
   ]
 }

@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-04-24T08:45:14",
-  "total": 42,
+  "atualizado_em": "2026-04-24T09:45:21",
+  "total": 45,
   "pedidos": [
+    {
+      "id": "365473475",
+      "numero": "15501",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 311.53,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365468830",
+      "numero": "15500",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 335,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365456250",
+      "numero": "15499",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "JULIANO ALBUQUERQUE DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 140,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365387143",
       "numero": "15498",

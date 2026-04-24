@@ -396,7 +396,7 @@ body{
 
 <!-- Footer -->
 <footer class="footer" id="mainFooter" style="display:none">
-  <div class="refresh-info">
+  <div class="refresh-info" onclick="forcarAtualizacao()" title="Clique para atualizar agora" style="cursor:pointer">
     <span class="refresh-dot"></span>
     <span id="refreshTxt">Atualizando em 5:00</span>
   </div>
@@ -879,6 +879,13 @@ window.toggleFS = function() {
 document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();toggleFS();} });
 
 /* ── INIT ── */
+window.forcarAtualizacao = async function() {
+  const el = document.getElementById('refreshTxt');
+  if(el) el.textContent = '↻ Atualizando...';
+  await buscarDados();
+  iniciarCountdown();
+};
+
 async function mostrarPainel() {
   ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>document.getElementById(id).style.display='');
   await buscarDados();

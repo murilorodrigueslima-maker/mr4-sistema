@@ -456,20 +456,11 @@ async function fetchPedidos(){
 
     for(const p of pedidosRaw){
       const num = String(p.numero||p.id||'');
-      if(!num) continue;
+      if(!num || nums.has(num)) continue;
 
-      // Se já está ATIVO no painel (ag/se/pr), não duplicar
-      if(nums.has(num) && ['ag','se','pr'].includes(S.pedidos[num]?.coluna)) continue;
-
-      // Verifica no Firestore
+      // Verifica no Firestore — se já existe com QUALQUER status, não recria
       const jaExiste = await window._fsGetOne('expedicao_pedidos', num);
-      if(jaExiste){
-        const col = jaExiste.coluna;
-        // Está ativo (ag/se/pr) — mantém como está
-        if(['ag','se','pr'].includes(col)){ S.pedidos[num]=jaExiste; continue; }
-        // Foi despachado (de) ou cancelado — permite voltar como novo pedido ag
-        // (cai abaixo e recria)
-      }
+      if(jaExiste){ S.pedidos[num] = jaExiste; continue; }
 
       const now = Date.now();
       const novo = {

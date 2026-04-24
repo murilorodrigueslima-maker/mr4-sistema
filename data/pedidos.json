@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-04-24T13:37:54",
-  "total": 54,
+  "atualizado_em": "2026-04-24T14:33:31",
+  "total": 61,
   "pedidos": [
+    {
+      "id": "365584909",
+      "numero": "15517",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 625,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365583011",
+      "numero": "15516",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 492.69,
+      "itens": 24,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365578698",
+      "numero": "15515",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE 07165443347",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 520,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365577868",
+      "numero": "15514",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 72.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365574277",
+      "numero": "15513",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365572073",
+      "numero": "15512",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "JOSE BARROSO DOS SANTOS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 331.54,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365567132",
+      "numero": "15511",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "RAUL BELCHIOR BEZERRA FERNANDES 60917564359",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170.24,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365555177",
       "numero": "15510",

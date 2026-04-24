@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-24T14:33:32",
+  "atualizado_em": "2026-04-24T15:08:40",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -226,13 +226,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
-      "valor": 1868,
-      "vencimento": "2026-04-20",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Compra de tapetes para uso interno da empresa",
       "valor": 63.96,
       "vencimento": "2026-04-20",
@@ -400,7 +393,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45653.44,
+  "total_vencido": 43785.44,
   "total_a_receber": 0,
   "total_a_pagar": 29426.060000000005
 }

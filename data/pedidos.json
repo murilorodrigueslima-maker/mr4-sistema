@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-24T14:33:31",
-  "total": 61,
+  "atualizado_em": "2026-04-24T15:08:40",
+  "total": 63,
   "pedidos": [
+    {
+      "id": "365598866",
+      "numero": "15519",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "EVANDRO CABRAL RODRIGUES JUNIOR 04387665394",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 225,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365587199",
+      "numero": "15518",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 285,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365584909",
       "numero": "15517",

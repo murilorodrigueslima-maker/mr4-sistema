@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-24T15:08:40",
-  "total": 63,
+  "atualizado_em": "2026-04-24T16:10:44",
+  "total": 65,
   "pedidos": [
+    {
+      "id": "365610019",
+      "numero": "15521",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "FRANCISCO ELIAS MORAIS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 108.77,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365601881",
+      "numero": "15520",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 153.03,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365598866",
       "numero": "15519",

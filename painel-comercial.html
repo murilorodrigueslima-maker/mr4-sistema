@@ -669,7 +669,7 @@ function verificarPinPage() {
 async function fetchVendas(dataInicio, dataFim) {
   let todos=[], pagina=1;
   while(true) {
-    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}&situacao=Concretizado`;
+    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}`;
     const url = `${WORKER}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
     const r = await fetch(url);
     const json = await r.json();
@@ -699,9 +699,15 @@ async function buscarDados() {
     // Busca vendas do mês inteiro
     const todasMes  = await fetchVendas(inicioMes, hojeStr);
 
+    // Filtra apenas pedidos concretizados
+    const concretizados = todasMes.filter(p => {
+      const sit = (p.situacao || p.status || p.situacao_nome || '').toLowerCase();
+      return sit.includes('concret') || sit.includes('finaliz') || sit === '';
+    });
+
     // Para cada vendedor calcula métricas
     dados = CFG.vendedores.map(v => {
-      const vendasV = todasMes.filter(p =>
+      const vendasV = concretizados.filter(p =>
         nomeMatch(p.nome_vendedor||p.vendedor||p.nome_usuario||'', v.nome)
       );
       const vendasHoje = vendasV.filter(p => {

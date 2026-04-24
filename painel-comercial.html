@@ -697,12 +697,21 @@ async function buscarDados() {
     const inicioMes = mesStr+'-01';
 
     // Busca vendas do mês inteiro
-    const todasMes  = await fetchVendas(inicioMes, hojeStr);
+    const todasMes = await fetchVendas(inicioMes, hojeStr);
 
-    // Filtra apenas pedidos concretizados
+    // DEBUG: mostra campos de situação do primeiro pedido no footer
+    if(todasMes.length > 0) {
+      const p0 = todasMes[0];
+      const sitDebug = `sit:${p0.situacao||'-'} / status:${p0.status||'-'} / sit_nome:${p0.situacao_nome||'-'} / sit_id:${p0.situacao_id||'-'}`;
+      const dbEl = document.getElementById('lastUpdate');
+      if(dbEl) dbEl.title = sitDebug;
+      console.log('GC campos situação:', sitDebug, p0);
+    }
+
+    // Filtra: exclui apenas cancelados (inclui tudo mais por segurança)
     const concretizados = todasMes.filter(p => {
-      const sit = (p.situacao || p.status || p.situacao_nome || '').toLowerCase();
-      return sit.includes('concret') || sit.includes('finaliz') || sit === '';
+      const sit = String(p.situacao || p.status || p.situacao_nome || '').toLowerCase();
+      return !sit.includes('cancel');
     });
 
     // Para cada vendedor calcula métricas

@@ -206,6 +206,30 @@ body{
 }
 .btn-fs:hover{border-color:var(--orange);color:var(--orange)}
 
+/* ── MODAL PIN ── */
+.pin-modal{max-width:360px;text-align:center}
+.pin-title{font-size:1rem;font-weight:800;color:var(--text);margin-bottom:.35rem}
+.pin-sub{font-size:.75rem;color:var(--sub);margin-bottom:1.5rem}
+.pin-dots{display:flex;justify-content:center;gap:.6rem;margin-bottom:1.5rem}
+.pin-dot{
+  width:14px;height:14px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:2px solid #334155;
+  transition:all .15s;
+}
+.pin-dot.filled{background:var(--orange);border-color:var(--orange)}
+.pin-dot.error{background:var(--red);border-color:var(--red)}
+.pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem}
+.pin-key{
+  padding:.85rem;border:1.5px solid #334155;border-radius:12px;
+  background:rgba(255,255,255,.03);color:var(--text);
+  font-size:1.2rem;font-weight:700;cursor:pointer;
+  transition:all .14s;font-family:var(--mono);
+}
+.pin-key:hover{border-color:var(--orange);background:rgba(255,107,26,.1);color:var(--orange)}
+.pin-key:active{transform:scale(.93)}
+.pin-key.del{font-size:.9rem;color:var(--sub)}
+.pin-error{color:var(--red);font-size:.78rem;font-weight:600;min-height:1.2rem;margin-bottom:.5rem}
+
 /* ── MODAL CONFIG ── */
 .modal-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.75);
@@ -338,6 +362,37 @@ body{
   <button class="btn-fs" onclick="toggleFS()">⛶ Tela cheia</button>
 </footer>
 
+<!-- Modal PIN -->
+<div class="modal-overlay" id="pinOverlay">
+  <div class="modal pin-modal">
+    <div class="pin-title">🔒 Configurações</div>
+    <div class="pin-sub">Digite o PIN para continuar</div>
+    <div class="pin-dots" id="pinDots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+      <div class="pin-dot" id="pd4"></div>
+      <div class="pin-dot" id="pd5"></div>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-grid">
+      <button class="pin-key" onclick="pinDigit('1')">1</button>
+      <button class="pin-key" onclick="pinDigit('2')">2</button>
+      <button class="pin-key" onclick="pinDigit('3')">3</button>
+      <button class="pin-key" onclick="pinDigit('4')">4</button>
+      <button class="pin-key" onclick="pinDigit('5')">5</button>
+      <button class="pin-key" onclick="pinDigit('6')">6</button>
+      <button class="pin-key" onclick="pinDigit('7')">7</button>
+      <button class="pin-key" onclick="pinDigit('8')">8</button>
+      <button class="pin-key" onclick="pinDigit('9')">9</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+      <button class="pin-key" onclick="pinDigit('0')">0</button>
+      <button class="pin-key del" onclick="fecharPin()">✕</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Config -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -386,19 +441,7 @@ body{
 
 <!-- Firebase + App -->
 <script type="module">
-import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc }
-                             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-const app = initializeApp({
-  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
-  authDomain:"mr4-ponto.firebaseapp.com",
-  projectId:"mr4-ponto",
-  storageBucket:"mr4-ponto.firebasestorage.app",
-  messagingSenderId:"848211361584",
-  appId:"1:848211361584:web:2732e1893122f4a23452f5"
-});
-const db = getFirestore(app);
+// Sem dependência de Firestore — config salva em localStorage
 
 const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
 const REFRESH_SECS = 300; // 5 minutos
@@ -469,17 +512,20 @@ function iniciarCountdown() {
   }, 1000);
 }
 
-/* ── FIRESTORE CONFIG ── */
-async function carregarConfig() {
+/* ── CONFIG — localStorage ── */
+const LS_CFG = 'mr4_painel_cfg';
+const LS_PIN = 'mr4_painel_pin_ts';
+const PIN_CORRETO = '887490';
+const PIN_DIAS = 30; // lembra por 30 dias
+
+function carregarConfig() {
   try {
-    const snap = await getDoc(doc(db,'painel_config','main'));
-    if(snap.exists()) CFG = snap.data();
-  } catch(e) {
-    console.warn('Config painel:', e.message);
-  }
+    const raw = localStorage.getItem(LS_CFG);
+    if(raw) CFG = JSON.parse(raw);
+  } catch(e) { console.warn('Config:', e); }
 }
 
-window.salvarConfig = async function() {
+window.salvarConfig = function() {
   const v0 = document.getElementById('cfgN0').value.trim();
   const v1 = document.getElementById('cfgN1').value.trim();
   const m0 = parseFloat(document.getElementById('cfgM0').value)||0;
@@ -487,15 +533,59 @@ window.salvarConfig = async function() {
   const me = parseFloat(document.getElementById('cfgMequipe').value)||0;
   if(!v0||!v1){ toast('Preencha os nomes dos vendedores.','err'); return; }
   CFG = { vendedores:[{nome:v0,meta:m0},{nome:v1,meta:m1}], meta_equipe:me };
-  try {
-    await setDoc(doc(db,'painel_config','main'), CFG);
-    toast('Configuração salva!','ok');
-    fecharConfig();
-    await buscarDados();
-    renderPainel();
-  } catch(e) {
-    toast('Erro ao salvar: '+e.message,'err');
+  localStorage.setItem(LS_CFG, JSON.stringify(CFG));
+  toast('Configuração salva!','ok');
+  fecharConfig();
+  buscarDados();
+};
+
+/* ── PIN ── */
+let pinBuffer = '';
+
+function pinDesbloqueado() {
+  const ts = parseInt(localStorage.getItem(LS_PIN)||'0');
+  return Date.now() - ts < PIN_DIAS * 86400000;
+}
+
+function atualizarDots(erro) {
+  for(let i=0;i<6;i++){
+    const d = document.getElementById('pd'+i);
+    d.classList.toggle('filled', i < pinBuffer.length && !erro);
+    d.classList.toggle('error', erro);
   }
+}
+
+window.pinDigit = function(n) {
+  if(pinBuffer.length >= 6) return;
+  pinBuffer += n;
+  atualizarDots(false);
+  document.getElementById('pinError').textContent = '';
+  if(pinBuffer.length === 6) verificarPin();
+};
+
+window.pinDel = function() {
+  pinBuffer = pinBuffer.slice(0,-1);
+  atualizarDots(false);
+  document.getElementById('pinError').textContent = '';
+};
+
+function verificarPin() {
+  if(pinBuffer === PIN_CORRETO) {
+    localStorage.setItem(LS_PIN, Date.now());
+    fecharPin();
+    abrirConfigDireto();
+  } else {
+    atualizarDots(true);
+    document.getElementById('pinError').textContent = 'PIN incorreto. Tente novamente.';
+    setTimeout(()=>{ pinBuffer=''; atualizarDots(false); document.getElementById('pinError').textContent=''; }, 1200);
+  }
+}
+
+window.fecharPin = function() {
+  document.getElementById('pinOverlay').classList.remove('open');
+  pinBuffer = '';
+  atualizarDots(false);
+  document.getElementById('pinError').textContent = '';
 };
 
 /* ── FETCH GestãoClick ── */
@@ -676,6 +766,14 @@ function renderPainel() {
 
 /* ── CONFIG MODAL ── */
 window.abrirConfig = function() {
+  if(pinDesbloqueado()) { abrirConfigDireto(); return; }
+  pinBuffer = '';
+  atualizarDots(false);
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinOverlay').classList.add('open');
+};
+
+function abrirConfigDireto() {
   document.getElementById('cfgN0').value = CFG.vendedores[0]?.nome||'';
   document.getElementById('cfgM0').value = CFG.vendedores[0]?.meta||'';
   document.getElementById('cfgN1').value = CFG.vendedores[1]?.nome||'';
@@ -699,7 +797,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();to
 
 /* ── INIT ── */
 async function init() {
-  await carregarConfig();
+  carregarConfig();
   document.getElementById('splash').style.display = 'none';
   ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>document.getElementById(id).style.display='');
   await buscarDados();

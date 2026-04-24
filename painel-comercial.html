@@ -262,7 +262,7 @@ body{
 .btn-cfg-save{padding:.6rem 1.6rem;border:none;border-radius:9px;background:var(--orange);color:#fff;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .12s}
 .btn-cfg-save:hover{background:var(--orange-dk)}
 
-/* ── LOADING ── */
+/* ── LOADING / PIN PAGE ── */
 #splash{
   position:fixed;inset:0;background:var(--bg);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;z-index:999;
@@ -270,6 +270,19 @@ body{
 #splash img{height:52px;filter:brightness(1.1)}
 .spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* PIN de página inteira */
+#pinPage{
+  position:fixed;inset:0;background:var(--bg);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:.5rem;z-index:998;
+}
+#pinPage img{height:48px;margin-bottom:1rem;filter:brightness(1.1)}
+#pinPage .pin-page-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:.2rem}
+#pinPage .pin-page-sub{font-size:.78rem;color:var(--sub);margin-bottom:1.2rem}
+#pinPage .pin-dots{margin-bottom:.5rem}
+#pinPage .pin-error{margin-bottom:.75rem}
+#pinPage .pin-grid{width:280px}
 
 /* ── TOAST ── */
 .toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.4rem}
@@ -292,6 +305,36 @@ body{
 </style>
 </head>
 <body>
+
+<!-- PIN página inteira -->
+<div id="pinPage">
+  <img src="./assets/logo.png" alt="MR4">
+  <div class="pin-page-title">🔒 Painel Comercial</div>
+  <div class="pin-page-sub">Digite o PIN para acessar</div>
+  <div class="pin-dots" id="pinDotsPage">
+    <div class="pin-dot" id="pp0"></div>
+    <div class="pin-dot" id="pp1"></div>
+    <div class="pin-dot" id="pp2"></div>
+    <div class="pin-dot" id="pp3"></div>
+    <div class="pin-dot" id="pp4"></div>
+    <div class="pin-dot" id="pp5"></div>
+  </div>
+  <div class="pin-error" id="pinErrorPage"></div>
+  <div class="pin-grid">
+    <button class="pin-key" onclick="pinDigitPage('1')">1</button>
+    <button class="pin-key" onclick="pinDigitPage('2')">2</button>
+    <button class="pin-key" onclick="pinDigitPage('3')">3</button>
+    <button class="pin-key" onclick="pinDigitPage('4')">4</button>
+    <button class="pin-key" onclick="pinDigitPage('5')">5</button>
+    <button class="pin-key" onclick="pinDigitPage('6')">6</button>
+    <button class="pin-key" onclick="pinDigitPage('7')">7</button>
+    <button class="pin-key" onclick="pinDigitPage('8')">8</button>
+    <button class="pin-key" onclick="pinDigitPage('9')">9</button>
+    <button class="pin-key del" onclick="pinDelPage()">⌫</button>
+    <button class="pin-key" onclick="pinDigitPage('0')">0</button>
+    <button class="pin-key del" style="opacity:.2;cursor:default"></button>
+  </div>
+</div>
 
 <div id="splash">
   <img src="./assets/logo.png" alt="MR4">
@@ -540,53 +583,87 @@ window.salvarConfig = function() {
 };
 
 /* ── PIN ── */
-let pinBuffer = '';
+let pinBuffer  = '';  // config modal
+let pinBufPage = '';  // página inteira
 
 function pinDesbloqueado() {
   const ts = parseInt(localStorage.getItem(LS_PIN)||'0');
   return Date.now() - ts < PIN_DIAS * 86400000;
 }
 
+function salvarPinTs() { localStorage.setItem(LS_PIN, Date.now()); }
+
+/* — dots do modal de config — */
 function atualizarDots(erro) {
   for(let i=0;i<6;i++){
     const d = document.getElementById('pd'+i);
+    if(!d) return;
     d.classList.toggle('filled', i < pinBuffer.length && !erro);
     d.classList.toggle('error', erro);
   }
 }
-
 window.pinDigit = function(n) {
   if(pinBuffer.length >= 6) return;
   pinBuffer += n;
   atualizarDots(false);
   document.getElementById('pinError').textContent = '';
-  if(pinBuffer.length === 6) verificarPin();
+  if(pinBuffer.length === 6) verificarPinConfig();
 };
-
 window.pinDel = function() {
   pinBuffer = pinBuffer.slice(0,-1);
   atualizarDots(false);
   document.getElementById('pinError').textContent = '';
 };
-
-function verificarPin() {
+function verificarPinConfig() {
   if(pinBuffer === PIN_CORRETO) {
-    localStorage.setItem(LS_PIN, Date.now());
+    salvarPinTs();
     fecharPin();
     abrirConfigDireto();
   } else {
     atualizarDots(true);
-    document.getElementById('pinError').textContent = 'PIN incorreto. Tente novamente.';
+    document.getElementById('pinError').textContent = 'PIN incorreto.';
     setTimeout(()=>{ pinBuffer=''; atualizarDots(false); document.getElementById('pinError').textContent=''; }, 1200);
   }
 }
-
 window.fecharPin = function() {
   document.getElementById('pinOverlay').classList.remove('open');
   pinBuffer = '';
   atualizarDots(false);
   document.getElementById('pinError').textContent = '';
 };
+
+/* — dots da página inteira — */
+function atualizarDotsPage(erro) {
+  for(let i=0;i<6;i++){
+    const d = document.getElementById('pp'+i);
+    if(!d) return;
+    d.classList.toggle('filled', i < pinBufPage.length && !erro);
+    d.classList.toggle('error', erro);
+  }
+}
+window.pinDigitPage = function(n) {
+  if(pinBufPage.length >= 6) return;
+  pinBufPage += n;
+  atualizarDotsPage(false);
+  document.getElementById('pinErrorPage').textContent = '';
+  if(pinBufPage.length === 6) verificarPinPage();
+};
+window.pinDelPage = function() {
+  pinBufPage = pinBufPage.slice(0,-1);
+  atualizarDotsPage(false);
+  document.getElementById('pinErrorPage').textContent = '';
+};
+function verificarPinPage() {
+  if(pinBufPage === PIN_CORRETO) {
+    salvarPinTs();
+    document.getElementById('pinPage').style.display = 'none';
+    mostrarPainel();
+  } else {
+    atualizarDotsPage(true);
+    document.getElementById('pinErrorPage').textContent = 'PIN incorreto. Tente novamente.';
+    setTimeout(()=>{ pinBufPage=''; atualizarDotsPage(false); document.getElementById('pinErrorPage').textContent=''; }, 1200);
+  }
+}
 
 /* ── FETCH GestãoClick ── */
 async function fetchVendas(dataInicio, dataFim) {
@@ -796,12 +873,20 @@ window.toggleFS = function() {
 document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();toggleFS();} });
 
 /* ── INIT ── */
-async function init() {
-  carregarConfig();
-  document.getElementById('splash').style.display = 'none';
+async function mostrarPainel() {
   ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>document.getElementById(id).style.display='');
   await buscarDados();
   iniciarCountdown();
+}
+
+async function init() {
+  carregarConfig();
+  document.getElementById('splash').style.display = 'none';
+  if(pinDesbloqueado()) {
+    await mostrarPainel();
+  } else {
+    document.getElementById('pinPage').style.display = 'flex';
+  }
 }
 
 init();

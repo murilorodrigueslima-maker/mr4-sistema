@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-04-24T16:10:44",
-  "total": 65,
+  "atualizado_em": "2026-04-24T16:59:06",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "365633207",
+      "numero": "15522",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 70,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365610019",
       "numero": "15521",

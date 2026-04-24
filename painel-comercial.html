@@ -592,7 +592,7 @@ window.fecharPin = function() {
 async function fetchVendas(dataInicio, dataFim) {
   let todos=[], pagina=1;
   while(true) {
-    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}&situacao=Concretizado`;
     const url = `${WORKER}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
     const r = await fetch(url);
     const json = await r.json();

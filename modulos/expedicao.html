@@ -154,6 +154,13 @@ header{
   cursor:pointer;transition:all .14s;font-family:inherit;white-space:nowrap;flex-shrink:0;
 }
 .btn-cancel-card:hover{background:var(--alert-bg);border-color:var(--alert)}
+/* Botão reabrir no card despachado */
+.btn-reabrir-card{
+  padding:.55rem .85rem;border:1px solid rgba(245,158,11,.35);border-radius:9px;
+  background:none;color:var(--ag);font-size:.78rem;font-weight:700;
+  cursor:pointer;transition:all .14s;font-family:inherit;white-space:nowrap;
+}
+.btn-reabrir-card:hover{background:rgba(245,158,11,.1);border-color:var(--ag)}
 .col-empty{text-align:center;padding:3rem 1rem;color:var(--dim);font-size:.82rem;opacity:.45}
 
 /* Modal */
@@ -272,6 +279,19 @@ header{
     <div class="modal-foot">
       <button class="btn-cancel" onclick="fecharCancelModal()">Não, manter</button>
       <button class="btn-confirm-red" onclick="confirmarCancel()">Sim, cancelar pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: reabrir pedido -->
+<div class="modal-overlay" id="reabrirOverlay">
+  <div class="modal">
+    <div class="modal-title">↩ Reabrir Pedido</div>
+    <div class="modal-info" id="reabrirInfo"></div>
+    <div style="font-size:.82rem;color:var(--sub);margin-bottom:1.3rem;">O pedido voltará para <strong style="color:var(--ag)">Aguardando Separação</strong> e poderá ser processado novamente.</div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="fecharReabrirModal()">Cancelar</button>
+      <button class="btn-confirm" onclick="confirmarReabrir()" style="background:var(--ag)">↩ Sim, reabrir</button>
     </div>
   </div>
 </div>
@@ -618,6 +638,32 @@ window.confirmarCancel=async function(){
 
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))fecharModal();});
 document.getElementById('cancelOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('cancelOverlay'))fecharCancelModal();});
+document.getElementById('reabrirOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('reabrirOverlay'))fecharReabrirModal();});
+
+// ── REABRIR PEDIDO ────────────────────────────────────────────────────────────
+window.abrirReabrirModal=function(numero){
+  S.cancelNum=numero; // reutiliza o campo de referência
+  const p=S.pedidos[numero];
+  document.getElementById('reabrirInfo').innerHTML=
+    `<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}<br>
+     <span style="opacity:.7;font-size:.72rem">Despachado em: ${p.saidaEm?new Date(p.saidaEm).toLocaleString('pt-BR'):'—'} · Envio: ${ENVIO[p.envio]?.label||p.envio||'—'}</span>`;
+  document.getElementById('reabrirOverlay').classList.add('open');
+};
+window.fecharReabrirModal=function(){
+  document.getElementById('reabrirOverlay').classList.remove('open');
+  S.cancelNum=null;
+};
+window.confirmarReabrir=async function(){
+  if(!S.cancelNum)return;
+  const p=S.pedidos[S.cancelNum];
+  const now=Date.now();
+  // Reseta para aguardando separação
+  p.coluna='ag'; p.saidaEm=null; p.envio=null; p.ingresadoEm=now; p.movidoEm=now;
+  await fsAtualizar(p.numero,{coluna:'ag',saidaEm:null,envio:null,ingresadoEm:now,movidoEm:now});
+  fecharReabrirModal();
+  toast(`↩ Pedido #${p.numero} reaberto — ${limparNome(p.cliente)}`,'t-warn');
+  render();
+};
 
 // ── MOVER ─────────────────────────────────────────────────────────────────────
 async function mover(numero,de,para){
@@ -693,6 +739,7 @@ function renderCard(p){
     cancelBtn=`<button class="btn-cancel-card" onclick="abrirCancelModal('${p.numero}')">✕</button>`;
   }else if(p.coluna==='de'){
     botao=`<span class="dispatch-time">🕐 Saiu ${horaFmt(p.saidaEm)}</span>`;
+    cancelBtn=`<button class="btn-reabrir-card" onclick="abrirReabrirModal('${p.numero}')">↩ Reabrir</button>`;
   }
 
   return`<div class="card${al?' alerta':''}" id="card-${p.numero}">

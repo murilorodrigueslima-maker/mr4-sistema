@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-24T11:20:20",
+  "atualizado_em": "2026-04-24T12:41:21",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -80,7 +80,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 873.15,
+      "valor": 689.03,
       "vencimento": "2026-04-05",
       "dias_atraso": 19,
       "tipo": "Pagar"
@@ -94,7 +94,7 @@
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 1083.85,
+      "valor": 47.97,
       "vencimento": "2026-04-09",
       "dias_atraso": 15,
       "tipo": "Pagar"
@@ -111,13 +111,6 @@
       "valor": 2660,
       "vencimento": "2026-04-12",
       "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 964.12,
-      "vencimento": "2026-04-14",
-      "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
@@ -407,7 +400,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47837.56,
+  "total_vencido": 45653.44,
   "total_a_receber": 0,
   "total_a_pagar": 29426.060000000005
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-23T23:24:22",
+  "atualizado_em": "2026-04-24T02:19:03",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -280,15 +280,16 @@
       "vencimento": "2026-04-21",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-04-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.41,
@@ -396,11 +397,17 @@
       "valor": 2304,
       "vencimento": "2026-04-30",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 168.66,
+      "vencimento": "2026-05-01",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46753.71,
+  "total_vencido": 47837.56,
   "total_a_receber": 0,
   "total_a_pagar": 29426.060000000005
 }

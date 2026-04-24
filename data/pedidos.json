@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-24T16:59:06",
-  "total": 66,
+  "atualizado_em": "2026-04-24T17:51:40",
+  "total": 70,
   "pedidos": [
+    {
+      "id": "365664744",
+      "numero": "15526",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 335,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365660116",
+      "numero": "15525",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 250,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365658701",
+      "numero": "15524",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 99.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365656872",
+      "numero": "15523",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "ZANGADO AUTO PECAS ACESSORIOS E MECANICA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1692,
+      "itens": 30,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365633207",
       "numero": "15522",

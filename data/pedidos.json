@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-24T12:41:20",
-  "total": 52,
+  "atualizado_em": "2026-04-24T13:37:54",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "365555177",
+      "numero": "15510",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 272,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365553122",
+      "numero": "15509",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "STTOP FILM COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 600.49,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365538147",
       "numero": "15508",

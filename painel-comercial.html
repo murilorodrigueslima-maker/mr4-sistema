@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Comercial — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="./assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:       #080C18;
+  --surface:  #0F1629;
+  --card:     #131C35;
+  --card2:    #192240;
+  --border:   #1E2D50;
+  --orange:   #FF6B1A;
+  --orange-dk:#e85d0f;
+  --orange-lt:rgba(255,107,26,.12);
+  --green:    #10B981;
+  --green-lt: rgba(16,185,129,.12);
+  --yellow:   #F59E0B;
+  --yellow-lt:rgba(245,158,11,.12);
+  --red:      #EF4444;
+  --red-lt:   rgba(239,68,68,.12);
+  --blue:     #3B82F6;
+  --text:     #F1F5F9;
+  --sub:      #94A3B8;
+  --dim:      #475569;
+  --mono:     'JetBrains Mono', monospace;
+}
+
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+  user-select:none;
+}
+
+/* ── HEADER ── */
+.header{
+  display:flex;align-items:center;gap:1.25rem;
+  padding:.65rem 1.5rem;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.hd-logo img{height:32px;object-fit:contain;filter:brightness(1.1)}
+.hd-div{width:1px;height:22px;background:var(--border)}
+.hd-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--sub)}
+.hd-sep{flex:1}
+.live-dot{
+  display:flex;align-items:center;gap:.45rem;
+  padding:.2rem .75rem;border-radius:99px;
+  background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);
+  font-size:.68rem;font-weight:700;color:var(--green);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.65)}}
+.hd-clock{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--text);letter-spacing:1px}
+.hd-date{font-size:.72rem;color:var(--sub);text-align:right;line-height:1.3}
+.btn-icon{
+  background:none;border:1px solid var(--border);border-radius:8px;
+  color:var(--sub);cursor:pointer;padding:.35rem .6rem;font-size:.8rem;
+  transition:all .15s;font-family:inherit;
+}
+.btn-icon:hover{border-color:var(--orange);color:var(--orange)}
+
+/* ── TEAM BAR ── */
+.team-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:.7rem 1.5rem;flex-shrink:0;
+  display:flex;align-items:center;gap:2rem;flex-wrap:wrap;
+}
+.tb-label{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim);margin-bottom:.18rem}
+.tb-val{font-family:var(--mono);font-size:1.3rem;font-weight:700;color:var(--text);line-height:1}
+.tb-val.orange{color:var(--orange)}
+.tb-val.green {color:var(--green)}
+.tb-div{width:1px;height:36px;background:var(--border)}
+.tb-sep{flex:1}
+
+/* Meta progress na barra do time */
+.meta-wrap{display:flex;align-items:center;gap:1rem;min-width:280px}
+.meta-info{flex:1}
+.meta-pct{font-family:var(--mono);font-size:1.1rem;font-weight:700}
+.meta-pct.green {color:var(--green)}
+.meta-pct.yellow{color:var(--yellow)}
+.meta-pct.red   {color:var(--red)}
+.meta-bar-bg{height:8px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:.35rem}
+.meta-bar-fill{height:100%;border-radius:99px;transition:width 1.2s ease;background:var(--orange)}
+.meta-bar-fill.green {background:var(--green)}
+.meta-bar-fill.yellow{background:var(--yellow)}
+.meta-bar-fill.red   {background:var(--red)}
+
+/* ── MAIN ── */
+.main{
+  flex:1;display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:1rem;padding:1rem 1.5rem;
+  overflow:hidden;
+  min-height:0;
+}
+
+/* ── SELLER CARD ── */
+.seller-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  display:flex;flex-direction:column;
+  padding:1.5rem;
+  position:relative;
+  overflow:hidden;
+  transition:border-color .3s;
+  min-height:0;
+}
+.seller-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:var(--orange);border-radius:18px 18px 0 0;
+}
+.seller-card.rank-1::before{background:linear-gradient(90deg,#FFD700,#FFA500)}
+.seller-card.rank-2::before{background:linear-gradient(90deg,#B0C4DE,#708090)}
+.seller-card.meta-ok{border-color:rgba(16,185,129,.3)}
+.seller-card.meta-ok::before{background:var(--green)}
+
+/* Rank badge */
+.rank-badge{
+  position:absolute;top:1.2rem;right:1.2rem;
+  font-size:2rem;line-height:1;
+}
+
+/* Seller name + avatar */
+.seller-top{display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem}
+.seller-avatar{
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,var(--orange),var(--orange-dk));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;font-weight:900;color:#fff;flex-shrink:0;
+}
+.seller-avatar.rank-2{background:linear-gradient(135deg,#5B8BDF,#3B5BA3)}
+.seller-name{font-size:1.3rem;font-weight:800;letter-spacing:-.3px;line-height:1.2}
+.seller-role{font-size:.7rem;color:var(--sub);font-weight:500;margin-top:.15rem}
+
+/* Today highlight */
+.today-block{
+  background:var(--card2);border-radius:12px;padding:1rem 1.25rem;
+  margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;
+}
+.today-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin-bottom:.2rem}
+.today-val{font-family:var(--mono);font-size:1.9rem;font-weight:700;color:var(--orange);line-height:1}
+.today-orders{font-size:.72rem;color:var(--sub);margin-top:.2rem}
+.today-ticket{text-align:right}
+.today-ticket .today-label{text-align:right}
+.today-ticket .today-val{font-size:1.1rem;color:var(--text)}
+
+/* Month block */
+.month-block{margin-bottom:1rem}
+.month-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem}
+.month-label{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim)}
+.month-val{font-family:var(--mono);font-size:1.1rem;font-weight:700;color:var(--text)}
+.month-goal{font-family:var(--mono);font-size:.78rem;color:var(--sub)}
+.progress-bg{height:14px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;position:relative}
+.progress-fill{height:100%;border-radius:99px;transition:width 1.5s cubic-bezier(.4,0,.2,1);position:relative}
+.progress-fill.orange{background:linear-gradient(90deg,#FF6B1A,#FF8C4A)}
+.progress-fill.yellow{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.progress-fill.green {background:linear-gradient(90deg,#059669,#10B981)}
+.progress-fill.red   {background:linear-gradient(90deg,#DC2626,#EF4444)}
+.progress-fill::after{
+  content:'';position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,rgba(255,255,255,.15),transparent);
+  border-radius:99px;
+}
+.progress-pct{
+  display:flex;justify-content:space-between;align-items:center;margin-top:.4rem;
+}
+.pct-num{font-family:var(--mono);font-size:.88rem;font-weight:700}
+.pct-num.orange{color:var(--orange)}
+.pct-num.yellow{color:var(--yellow)}
+.pct-num.green {color:var(--green)}
+.pct-num.red   {color:var(--red)}
+.pct-rest{font-size:.7rem;color:var(--dim)}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-top:auto}
+.stat-box{background:var(--card2);border-radius:10px;padding:.65rem .75rem;text-align:center}
+.stat-label{font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--dim);margin-bottom:.2rem}
+.stat-val{font-family:var(--mono);font-size:.95rem;font-weight:700;color:var(--text)}
+
+/* ── FOOTER ── */
+.footer{
+  display:flex;align-items:center;gap:1rem;padding:.5rem 1.5rem;
+  background:var(--surface);border-top:1px solid var(--border);
+  flex-shrink:0;font-size:.7rem;color:var(--dim);
+}
+.footer-sep{flex:1}
+.refresh-info{display:flex;align-items:center;gap:.4rem}
+.refresh-dot{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:pulse 2s ease-in-out infinite}
+.btn-fs{
+  background:none;border:1px solid var(--border);border-radius:7px;
+  color:var(--sub);cursor:pointer;padding:.28rem .65rem;font-size:.7rem;
+  transition:all .15s;font-family:inherit;
+}
+.btn-fs:hover{border-color:var(--orange);color:var(--orange)}
+
+/* ── MODAL CONFIG ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);z-index:500;
+  display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#1E293B;border:1px solid #334155;border-radius:20px;
+  padding:2rem;width:100%;max-width:520px;
+  box-shadow:0 30px 80px rgba(0,0,0,.7);
+  animation:mIn .2s ease;
+}
+@keyframes mIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem}
+.cfg-section{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim);margin:.85rem 0 .5rem}
+.cfg-row{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.65rem}
+.cfg-label{font-size:.72rem;font-weight:600;color:var(--sub);margin-bottom:.3rem}
+.cfg-input{
+  width:100%;padding:.6rem .85rem;
+  background:rgba(255,255,255,.05);border:1.5px solid #334155;border-radius:9px;
+  color:var(--text);font-family:'Inter',sans-serif;font-size:.85rem;outline:none;
+  transition:border-color .2s;
+}
+.cfg-input:focus{border-color:var(--orange)}
+.cfg-full{grid-column:1/-1}
+.modal-foot{display:flex;gap:.65rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid #334155}
+.btn-cfg-cancel{padding:.6rem 1.2rem;border:1.5px solid #334155;border-radius:9px;background:none;color:var(--sub);font-size:.83rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-cfg-cancel:hover{border-color:var(--red);color:var(--red)}
+.btn-cfg-save{padding:.6rem 1.6rem;border:none;border-radius:9px;background:var(--orange);color:#fff;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .12s}
+.btn-cfg-save:hover{background:var(--orange-dk)}
+
+/* ── LOADING ── */
+#splash{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;z-index:999;
+}
+#splash img{height:52px;filter:brightness(1.1)}
+.spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.4rem}
+.toast{
+  background:#1E293B;border:1px solid #334155;border-radius:10px;
+  padding:.7rem 1rem;font-size:.8rem;color:var(--text);
+  display:flex;align-items:center;gap:.5rem;min-width:200px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);animation:tIn .25s ease;
+}
+.toast.ok {border-left:3px solid var(--green)}
+.toast.err{border-left:3px solid var(--red)}
+.toast.out{animation:tOut .25s ease forwards}
+@keyframes tIn {from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tOut{from{opacity:1}to{opacity:0;transform:translateX(10px)}}
+
+/* No data */
+.no-data{text-align:center;opacity:.3;font-size:.85rem;padding:2rem 0}
+
+@media(max-width:900px){.main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div id="splash">
+  <img src="./assets/logo.png" alt="MR4">
+  <div class="spin"></div>
+</div>
+
+<!-- Header -->
+<header class="header" id="mainHeader" style="display:none">
+  <a href="./index.html" class="hd-logo" title="Sistema"><img src="./assets/logo.png" alt="MR4 Distribuidora"></a>
+  <div class="hd-div"></div>
+  <span class="hd-title">📊 Painel Comercial</span>
+  <div class="hd-sep"></div>
+  <div class="live-dot"><span class="dot"></span>Ao vivo</div>
+  <div>
+    <div class="hd-clock" id="clock">--:--:--</div>
+    <div class="hd-date" id="dateStr">—</div>
+  </div>
+  <button class="btn-icon" onclick="abrirConfig()" title="Configurações">⚙️ Config</button>
+</header>
+
+<!-- Team bar -->
+<div class="team-bar" id="teamBar" style="display:none">
+  <div>
+    <div class="tb-label">Equipe hoje</div>
+    <div class="tb-val orange" id="tbHoje">R$ —</div>
+  </div>
+  <div class="tb-div"></div>
+  <div>
+    <div class="tb-label">Faturado no mês</div>
+    <div class="tb-val" id="tbMes">R$ —</div>
+  </div>
+  <div class="tb-div"></div>
+  <div>
+    <div class="tb-label">Pedidos hoje</div>
+    <div class="tb-val" id="tbPedidos">—</div>
+  </div>
+  <div class="tb-div"></div>
+  <div class="tb-sep"></div>
+  <div class="meta-wrap">
+    <div class="meta-info">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.3rem">
+        <span style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--dim)">Meta do mês</span>
+        <span style="font-family:var(--mono);font-size:.78rem;color:var(--sub)" id="tbMetaVal">R$ —</span>
+      </div>
+      <div class="meta-bar-bg"><div class="meta-bar-fill" id="tbMetaBar" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:.25rem">
+        <span class="meta-pct" id="tbMetaPct">—%</span>
+        <span style="font-size:.65rem;color:var(--dim)" id="tbMetaRest"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Seller cards -->
+<div class="main" id="mainGrid" style="display:none">
+  <div class="seller-card" id="card0"></div>
+  <div class="seller-card" id="card1"></div>
+</div>
+
+<!-- Footer -->
+<footer class="footer" id="mainFooter" style="display:none">
+  <div class="refresh-info">
+    <span class="refresh-dot"></span>
+    <span id="refreshTxt">Atualizando em 5:00</span>
+  </div>
+  <div class="footer-sep"></div>
+  <span id="lastUpdate" style="color:var(--dim)"></span>
+  <button class="btn-fs" onclick="toggleFS()">⛶ Tela cheia</button>
+</footer>
+
+<!-- Modal Config -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">⚙️ Configurar Painel</div>
+
+    <div class="cfg-section">Vendedor 1</div>
+    <div class="cfg-row">
+      <div>
+        <div class="cfg-label">Nome</div>
+        <input class="cfg-input" id="cfgN0" placeholder="Nome do vendedor">
+      </div>
+      <div>
+        <div class="cfg-label">Meta mensal (R$)</div>
+        <input class="cfg-input" id="cfgM0" type="number" placeholder="Ex: 50000">
+      </div>
+    </div>
+
+    <div class="cfg-section">Vendedor 2</div>
+    <div class="cfg-row">
+      <div>
+        <div class="cfg-label">Nome</div>
+        <input class="cfg-input" id="cfgN1" placeholder="Nome do vendedor">
+      </div>
+      <div>
+        <div class="cfg-label">Meta mensal (R$)</div>
+        <input class="cfg-input" id="cfgM1" type="number" placeholder="Ex: 50000">
+      </div>
+    </div>
+
+    <div class="cfg-section">Equipe</div>
+    <div class="cfg-row">
+      <div class="cfg-full">
+        <div class="cfg-label">Meta mensal da equipe (R$) — deixe em branco para somar as metas individuais</div>
+        <input class="cfg-input" id="cfgMequipe" type="number" placeholder="Ex: 100000">
+      </div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn-cfg-cancel" onclick="fecharConfig()">Cancelar</button>
+      <button class="btn-cfg-save" onclick="salvarConfig()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<!-- Firebase + App -->
+<script type="module">
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc }
+                             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const db = getFirestore(app);
+
+const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+const REFRESH_SECS = 300; // 5 minutos
+
+/* ── ESTADO ── */
+let CFG = {
+  vendedores: [
+    { nome: 'Vendedor 1', meta: 50000 },
+    { nome: 'Vendedor 2', meta: 50000 },
+  ],
+  meta_equipe: 0,
+};
+let dados = [ null, null ]; // dados de cada vendedor
+let countdownSecs = REFRESH_SECS;
+let countdownTimer = null;
+
+/* ── UTILS ── */
+const brl = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fmt2 = v => Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function mesAtual() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function hoje() { return new Date().toISOString().slice(0,10); }
+
+function corMeta(pct) {
+  if(pct >= 100) return 'green';
+  if(pct >= 70)  return 'yellow';
+  if(pct >= 40)  return 'orange';
+  return 'red';
+}
+
+function toast(msg, tipo='ok') {
+  const el = document.createElement('div');
+  el.className = `toast ${tipo}`;
+  el.innerHTML = `<span>${tipo==='ok'?'✅':'❌'}</span><span>${msg}</span>`;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+/* ── RELÓGIO ── */
+function tickClock() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dateStr').textContent =
+    n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ── COUNTDOWN ── */
+function iniciarCountdown() {
+  clearInterval(countdownTimer);
+  countdownSecs = REFRESH_SECS;
+  countdownTimer = setInterval(async () => {
+    countdownSecs--;
+    const m = Math.floor(countdownSecs/60);
+    const s = countdownSecs % 60;
+    const el = document.getElementById('refreshTxt');
+    if(el) el.textContent = `Atualizando em ${m}:${String(s).padStart(2,'0')}`;
+    if(countdownSecs <= 0) {
+      if(el) el.textContent = '↻ Atualizando...';
+      await buscarDados();
+      iniciarCountdown();
+    }
+  }, 1000);
+}
+
+/* ── FIRESTORE CONFIG ── */
+async function carregarConfig() {
+  try {
+    const snap = await getDoc(doc(db,'painel_config','main'));
+    if(snap.exists()) CFG = snap.data();
+  } catch(e) {
+    console.warn('Config painel:', e.message);
+  }
+}
+
+window.salvarConfig = async function() {
+  const v0 = document.getElementById('cfgN0').value.trim();
+  const v1 = document.getElementById('cfgN1').value.trim();
+  const m0 = parseFloat(document.getElementById('cfgM0').value)||0;
+  const m1 = parseFloat(document.getElementById('cfgM1').value)||0;
+  const me = parseFloat(document.getElementById('cfgMequipe').value)||0;
+  if(!v0||!v1){ toast('Preencha os nomes dos vendedores.','err'); return; }
+  CFG = { vendedores:[{nome:v0,meta:m0},{nome:v1,meta:m1}], meta_equipe:me };
+  try {
+    await setDoc(doc(db,'painel_config','main'), CFG);
+    toast('Configuração salva!','ok');
+    fecharConfig();
+    await buscarDados();
+    renderPainel();
+  } catch(e) {
+    toast('Erro ao salvar: '+e.message,'err');
+  }
+};
+
+/* ── FETCH GestãoClick ── */
+async function fetchVendas(dataInicio, dataFim) {
+  let todos=[], pagina=1;
+  while(true) {
+    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+    const url = `${WORKER}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
+    const r = await fetch(url);
+    const json = await r.json();
+    const data = json.data || [];
+    todos = todos.concat(data);
+    const meta = json.meta || {};
+    if(pagina >= (Number(meta.total_paginas)||1)) break;
+    pagina++;
+  }
+  return todos;
+}
+
+function nomeMatch(nomeGC, nomeConfig) {
+  const a = (nomeGC||'').toLowerCase().trim();
+  const b = (nomeConfig||'').toLowerCase().trim();
+  if(!a||!b) return false;
+  // match exato ou match de primeira palavra ou contém
+  return a===b || a.startsWith(b.split(' ')[0]) || b.startsWith(a.split(' ')[0]) || a.includes(b.split(' ')[0]);
+}
+
+async function buscarDados() {
+  try {
+    const hojeStr = hoje();
+    const mesStr  = mesAtual();
+    const inicioMes = mesStr+'-01';
+
+    // Busca vendas do mês inteiro
+    const todasMes  = await fetchVendas(inicioMes, hojeStr);
+
+    // Para cada vendedor calcula métricas
+    dados = CFG.vendedores.map(v => {
+      const vendasV = todasMes.filter(p =>
+        nomeMatch(p.nome_vendedor||p.vendedor||p.nome_usuario||'', v.nome)
+      );
+      const vendasHoje = vendasV.filter(p => {
+        const d = (p.data||p.data_venda||p.data_pedido||'').slice(0,10);
+        return d === hojeStr;
+      });
+
+      const totalMes  = vendasV.reduce((s,p)=>s+Number(p.valor_total||p.total||p.valor||0),0);
+      const totalHoje = vendasHoje.reduce((s,p)=>s+Number(p.valor_total||p.total||p.valor||0),0);
+      const pedidosMes  = vendasV.length;
+      const pedidosHoje = vendasHoje.length;
+      const ticketMes   = pedidosMes  ? totalMes/pedidosMes   : 0;
+      const ticketHoje  = pedidosHoje ? totalHoje/pedidosHoje : 0;
+
+      return { nome:v.nome, meta:v.meta, totalMes, totalHoje, pedidosMes, pedidosHoje, ticketMes, ticketHoje };
+    });
+
+    const agora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    const el = document.getElementById('lastUpdate');
+    if(el) el.textContent = `Atualizado às ${agora}`;
+
+    renderPainel();
+  } catch(e) {
+    console.error('buscarDados:', e);
+    renderDemoData();
+  }
+}
+
+/* ── RENDER DEMO (sem API) ── */
+function renderDemoData() {
+  dados = CFG.vendedores.map((v,i) => ({
+    nome:v.nome, meta:v.meta,
+    totalMes:  i===0 ? 38450 : 24800,
+    totalHoje: i===0 ? 4200  : 1850,
+    pedidosMes:  i===0 ? 47 : 32,
+    pedidosHoje: i===0 ? 6  : 3,
+    ticketMes:   i===0 ? 818 : 775,
+    ticketHoje:  i===0 ? 700 : 617,
+  }));
+  renderPainel();
+}
+
+/* ── RENDER PAINEL ── */
+function renderPainel() {
+  if(!dados[0]||!dados[1]) return;
+
+  // Ranking (quem faturou mais no mês)
+  const ranked = [...dados].map((d,i)=>({...d,idx:i})).sort((a,b)=>b.totalMes-a.totalMes);
+
+  // Team totals
+  const teamHoje = dados.reduce((s,d)=>s+(d.totalHoje||0),0);
+  const teamMes  = dados.reduce((s,d)=>s+(d.totalMes||0),0);
+  const teamPeds = dados.reduce((s,d)=>s+(d.pedidosHoje||0),0);
+  const metaEq   = CFG.meta_equipe || dados.reduce((s,d)=>s+(d.meta||0),0);
+  const pctEq    = metaEq ? Math.min((teamMes/metaEq)*100,100) : 0;
+  const corEq    = corMeta(pctEq);
+  const restEq   = Math.max(metaEq - teamMes, 0);
+
+  document.getElementById('tbHoje').textContent   = brl(teamHoje);
+  document.getElementById('tbMes').textContent    = brl(teamMes);
+  document.getElementById('tbPedidos').textContent= teamPeds;
+  document.getElementById('tbMetaVal').textContent= brl(metaEq);
+  document.getElementById('tbMetaPct').textContent= pctEq.toFixed(1).replace('.',',')+' %';
+  document.getElementById('tbMetaPct').className  = `meta-pct ${corEq}`;
+  document.getElementById('tbMetaBar').style.width= pctEq+'%';
+  document.getElementById('tbMetaBar').className  = `meta-bar-fill ${corEq}`;
+  document.getElementById('tbMetaRest').textContent= restEq>0?`Faltam ${brl(restEq)}`:'✅ Meta batida!';
+
+  // Render cada card
+  ranked.forEach((d, rankIdx) => {
+    const rank  = rankIdx+1;
+    const pct   = d.meta ? Math.min((d.totalMes/d.meta)*100,100) : 0;
+    const cor   = corMeta(pct);
+    const rest  = Math.max(d.meta-d.totalMes,0);
+    const badge = rank===1?'🥇':'🥈';
+    const inicial = (d.nome||'?')[0].toUpperCase();
+
+    const html = `
+      <div class="rank-badge">${badge}</div>
+      <div class="seller-top">
+        <div class="seller-avatar ${rank===2?'rank-2':''}">${inicial}</div>
+        <div>
+          <div class="seller-name">${d.nome}</div>
+          <div class="seller-role">Vendedor${rank===1?' · 🏆 Liderando':''}</div>
+        </div>
+      </div>
+
+      <div class="today-block">
+        <div>
+          <div class="today-label">Faturado hoje</div>
+          <div class="today-val">${brl(d.totalHoje)}</div>
+          <div class="today-orders">${d.pedidosHoje} pedido${d.pedidosHoje!==1?'s':''} hoje</div>
+        </div>
+        <div class="today-ticket">
+          <div class="today-label">Ticket médio hoje</div>
+          <div class="today-val">${brl(d.ticketHoje)}</div>
+        </div>
+      </div>
+
+      <div class="month-block">
+        <div class="month-row">
+          <span class="month-label">Mês atual</span>
+          <span class="month-val">${brl(d.totalMes)}</span>
+        </div>
+        <div class="month-row" style="margin-top:-.2rem;margin-bottom:.55rem">
+          <span class="month-goal">Meta: ${brl(d.meta)}</span>
+          <span class="month-goal">${rest>0?`Faltam ${brl(rest)}`:'✅ Meta batida!'}</span>
+        </div>
+        <div class="progress-bg">
+          <div class="progress-fill ${cor}" style="width:${pct}%"></div>
+        </div>
+        <div class="progress-pct">
+          <span class="pct-num ${cor}">${pct.toFixed(1).replace('.',',')} %</span>
+          <span class="pct-rest">${d.pedidosMes} pedidos no mês</span>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box">
+          <div class="stat-label">Pedidos mês</div>
+          <div class="stat-val">${d.pedidosMes}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Ticket mês</div>
+          <div class="stat-val" style="font-size:.82rem">${brl(d.ticketMes)}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">% Meta</div>
+          <div class="stat-val" style="color:var(--${cor})">${pct.toFixed(0)}%</div>
+        </div>
+      </div>
+    `;
+
+    const card = document.getElementById('card'+d.idx);
+    card.innerHTML = html;
+    card.className = `seller-card rank-${rank}${pct>=100?' meta-ok':''}`;
+  });
+}
+
+/* ── CONFIG MODAL ── */
+window.abrirConfig = function() {
+  document.getElementById('cfgN0').value = CFG.vendedores[0]?.nome||'';
+  document.getElementById('cfgM0').value = CFG.vendedores[0]?.meta||'';
+  document.getElementById('cfgN1').value = CFG.vendedores[1]?.nome||'';
+  document.getElementById('cfgM1').value = CFG.vendedores[1]?.meta||'';
+  document.getElementById('cfgMequipe').value = CFG.meta_equipe||'';
+  document.getElementById('modalOverlay').classList.add('open');
+};
+window.fecharConfig = function() {
+  document.getElementById('modalOverlay').classList.remove('open');
+};
+document.getElementById('modalOverlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modalOverlay')) fecharConfig();
+});
+
+/* ── FULLSCREEN ── */
+window.toggleFS = function() {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
+};
+document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();toggleFS();} });
+
+/* ── INIT ── */
+async function init() {
+  await carregarConfig();
+  document.getElementById('splash').style.display = 'none';
+  ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>document.getElementById(id).style.display='');
+  await buscarDados();
+  iniciarCountdown();
+}
+
+init();
+</script>
+</body>
+</html>

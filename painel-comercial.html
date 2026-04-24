@@ -699,14 +699,18 @@ async function buscarDados() {
     // Busca vendas do mês inteiro
     const todasMes = await fetchVendas(inicioMes, hojeStr);
 
-    // DEBUG: mostra campos de situação do primeiro pedido no footer
-    if(todasMes.length > 0) {
-      const p0 = todasMes[0];
-      const sitDebug = `sit:${p0.situacao||'-'} / status:${p0.status||'-'} / sit_nome:${p0.situacao_nome||'-'} / sit_id:${p0.situacao_id||'-'}`;
-      const dbEl = document.getElementById('lastUpdate');
-      if(dbEl) dbEl.title = sitDebug;
-      console.log('GC campos situação:', sitDebug, p0);
-    }
+    // DEBUG: agrupa por situacao_id para identificar qual é Concretizado
+    const grupos = {};
+    todasMes.forEach(p => {
+      const id = p.situacao_id || p.situacao || p.status || 'sem_sit';
+      if(!grupos[id]) grupos[id] = { total: 0, qtd: 0 };
+      grupos[id].total += Number(p.valor_total||p.total||p.valor||0);
+      grupos[id].qtd++;
+    });
+    console.log('GC situacao_ids encontrados (id → qtd / total):');
+    Object.entries(grupos).forEach(([id, v]) =>
+      console.log(`  ID ${id}: ${v.qtd} pedidos → R$ ${v.total.toFixed(2)}`)
+    );
 
     // Filtra: exclui apenas cancelados (inclui tudo mais por segurança)
     const concretizados = todasMes.filter(p => {

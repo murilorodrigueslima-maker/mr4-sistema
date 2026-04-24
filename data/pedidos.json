@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-04-24T09:45:21",
-  "total": 45,
+  "atualizado_em": "2026-04-24T11:20:19",
+  "total": 50,
   "pedidos": [
+    {
+      "id": "365511513",
+      "numero": "15506",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "DELIO FEITOSA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 288,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365503285",
+      "numero": "15505",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "ANDERSON MOREIRA PEREIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 126,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365501839",
+      "numero": "15504",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "53.807.794 FRANCISCO FABIO OLIVEIRA RODRIGUES",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 268.18,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365485668",
+      "numero": "15503",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 616.31,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365484864",
+      "numero": "15502",
+      "data": "2026-04-24",
+      "hora": "",
+      "cliente": "ADLER DE MELO SILVA 04123071384",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 265,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365473475",
       "numero": "15501",
@@ -57,8 +117,8 @@
       "hora": "",
       "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 461.03,
-      "itens": 12,
+      "valor": 510.83,
+      "itens": 13,
       "status_gc": "",
       "cidade": ""
     },

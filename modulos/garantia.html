@@ -701,21 +701,31 @@ const GC_URL = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
 function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+function gcExtrairLista(d){
+  if(Array.isArray(d))              return d;
+  if(Array.isArray(d.data))         return d.data;
+  if(Array.isArray(d.registros))    return d.registros;
+  if(Array.isArray(d.objeto))       return d.objeto;
+  if(Array.isArray(d.clientes))     return d.clientes;
+  if(Array.isArray(d.produtos))     return d.produtos;
+  return [];
+}
+
 async function gcGetClientes(q){
   try{
-    const r = await fetch(`${GC_URL}/clientes?nome=${encodeURIComponent(q)}&pagina=1&limite=15`);
+    const params = encodeURIComponent('nome='+q+'&limite=15');
+    const r = await fetch(`${GC_URL}?endpoint=/clientes&params=${params}`);
     if(!r.ok) return [];
-    const d = await r.json();
-    return d.clientes || d.data || [];
+    return gcExtrairLista(await r.json());
   }catch{ return []; }
 }
 
 async function gcGetProdutos(q){
   try{
-    const r = await fetch(`${GC_URL}/produtos?nome=${encodeURIComponent(q)}&pagina=1&limite=15`);
+    const params = encodeURIComponent('nome='+q+'&limite=15');
+    const r = await fetch(`${GC_URL}?endpoint=/produtos&params=${params}`);
     if(!r.ok) return [];
-    const d = await r.json();
-    return d.produtos || d.data || [];
+    return gcExtrairLista(await r.json());
   }catch{ return []; }
 }
 
@@ -754,8 +764,8 @@ function initAcCliente(){
     list.classList.add('show');
     const raw = await gcGetClientes(q);
     const items = raw.map(c=>({
-      _nome: c.nome || c.razao_social || '',
-      _sub : [c.cnpj_cpf||c.cpf_cnpj||'', c.fantasia||''].filter(Boolean).join(' · '),
+      _nome: c.nome || c.razao_social || c.fantasia || '',
+      _sub : c.cnpj_cpf || c.cpf_cnpj || c.documento || '',
       _raw : c
     }));
     renderAcList(list, items, c=>{
@@ -782,15 +792,15 @@ function initAcProduto(inputId, codId, listId, fillValor){
     list.classList.add('show');
     const raw = await gcGetProdutos(q);
     const items = raw.map(p=>({
-      _nome: p.nome || '',
-      _sub : p.codigo || p.cod || '',
+      _nome: p.nome || p.descricao || p.description || '',
+      _sub : p.codigo || p.code || p.sku || '',
       _raw : p
     }));
     renderAcList(list, items, p=>{
-      inp.value = p.nome || '';
-      if(codId) document.getElementById(codId).value = p.codigo || p.cod || '';
-      if(fillValor && p.preco_venda){
-        document.getElementById('g-valor').value = Number(p.preco_venda||0).toFixed(2);
+      inp.value = p.nome || p.descricao || p.description || '';
+      if(codId) document.getElementById(codId).value = p.codigo || p.code || p.sku || '';
+      if(fillValor && (p.preco_venda || p.preco)){
+        document.getElementById('g-valor').value = Number(p.preco_venda || p.preco || 0).toFixed(2);
       }
     });
   }, 380));

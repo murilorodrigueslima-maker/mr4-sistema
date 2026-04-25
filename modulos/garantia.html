@@ -153,6 +153,17 @@ tr:hover td{background:#FAFAFA}
 .toast.err{border-left-color:var(--red)}
 @keyframes tUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
+/* AUTOCOMPLETE */
+.ac-wrap{position:relative}
+.ac-list{position:absolute;top:calc(100% + 3px);left:0;right:0;background:var(--white);border:1.5px solid var(--border-dk);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.13);z-index:600;max-height:240px;overflow-y:auto;display:none}
+.ac-list.show{display:block}
+.ac-item{padding:.65rem .85rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item.hov{background:#f0f9ff}
+.ac-item-nome{font-size:.84rem;font-weight:600;color:var(--text)}
+.ac-item-sub{font-size:.71rem;color:var(--muted);margin-top:.1rem}
+.ac-spin{text-align:center;padding:.75rem;font-size:.75rem;color:var(--muted)}
+
 @media(max-width:900px){.kanban{grid-template-columns:repeat(4,minmax(150px,1fr))}}
 @media(max-width:640px){.secao{padding:1rem}.kanban{grid-template-columns:repeat(3,minmax(140px,1fr))}.form-row{grid-template-columns:1fr}.stats-row{flex-wrap:wrap}}
 </style>
@@ -254,13 +265,13 @@ tr:hover td{background:#FAFAFA}
 
     <div class="modal-section">👤 Cliente</div>
     <div class="form-row">
-      <div class="form-group"><label>Nome</label><input type="text" id="g-cliNome" placeholder="Nome do cliente"></div>
+      <div class="form-group"><label>Nome</label><div class="ac-wrap"><input type="text" id="g-cliNome" placeholder="Digite para buscar..." autocomplete="off"><div class="ac-list" id="ac-cli"></div></div></div>
       <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" id="g-cliTel" placeholder="(85) 9 0000-0000"></div>
     </div>
 
     <div class="modal-section">📦 Produto com defeito</div>
     <div class="form-row">
-      <div class="form-group"><label>Nome do produto</label><input type="text" id="g-prodNome" placeholder="Ex: Capacitor 100µF"></div>
+      <div class="form-group"><label>Nome do produto</label><div class="ac-wrap"><input type="text" id="g-prodNome" placeholder="Digite para buscar..." autocomplete="off"><div class="ac-list" id="ac-prod"></div></div></div>
       <div class="form-group"><label>Código GestãoClick</label><input type="text" id="g-prodCod" placeholder="Ex: 1234"></div>
     </div>
     <div class="form-row">
@@ -286,7 +297,7 @@ tr:hover td{background:#FAFAFA}
 
     <div class="modal-section">🔄 Substituição (preencher quando aplicável)</div>
     <div class="form-row">
-      <div class="form-group"><label>Produto dado ao cliente</label><input type="text" id="g-substNome" placeholder="Nome do produto substituto"></div>
+      <div class="form-group"><label>Produto dado ao cliente</label><div class="ac-wrap"><input type="text" id="g-substNome" placeholder="Digite para buscar..." autocomplete="off"><div class="ac-list" id="ac-subst"></div></div></div>
       <div class="form-group"><label>Código GC do substituto</label><input type="text" id="g-substCod" placeholder="Código para ajuste de estoque"></div>
     </div>
 
@@ -684,8 +695,119 @@ window.fecharModal=function(id){document.getElementById(id).classList.remove('sh
   document.getElementById(id).addEventListener('click',e=>{if(e.target===e.currentTarget)fecharModal(id);});
 });
 
+// ── AUTOCOMPLETE GESTÃOCLICK ─────────────────────────────────────────────────
+const GC_URL = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+
+function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function gcGetClientes(q){
+  try{
+    const r = await fetch(`${GC_URL}/clientes?nome=${encodeURIComponent(q)}&pagina=1&limite=15`);
+    if(!r.ok) return [];
+    const d = await r.json();
+    return d.clientes || d.data || [];
+  }catch{ return []; }
+}
+
+async function gcGetProdutos(q){
+  try{
+    const r = await fetch(`${GC_URL}/produtos?nome=${encodeURIComponent(q)}&pagina=1&limite=15`);
+    if(!r.ok) return [];
+    const d = await r.json();
+    return d.produtos || d.data || [];
+  }catch{ return []; }
+}
+
+function renderAcList(listEl, items, onSelect){
+  if(!items.length){ listEl.classList.remove('show'); return; }
+  listEl.innerHTML = items.map((it,i)=>`
+    <div class="ac-item" data-i="${i}">
+      <div class="ac-item-nome">${escHtml(it._nome)}</div>
+      ${it._sub ? `<div class="ac-item-sub">${escHtml(it._sub)}</div>` : ''}
+    </div>`).join('');
+  listEl.querySelectorAll('.ac-item').forEach(el=>{
+    el.addEventListener('mousedown', ev=>{
+      ev.preventDefault();
+      onSelect(items[+el.dataset.i]._raw);
+      listEl.classList.remove('show');
+    });
+  });
+  listEl.classList.add('show');
+}
+
+function fecharTodasAcLists(exceto){
+  ['ac-cli','ac-prod','ac-subst'].forEach(id=>{
+    if(id!==exceto) document.getElementById(id).classList.remove('show');
+  });
+}
+
+function initAcCliente(){
+  const inp  = document.getElementById('g-cliNome');
+  const list = document.getElementById('ac-cli');
+
+  inp.addEventListener('focus', ()=>fecharTodasAcLists('ac-cli'));
+  inp.addEventListener('input', debounce(async()=>{
+    const q = inp.value.trim();
+    if(q.length < 2){ list.classList.remove('show'); return; }
+    list.innerHTML = '<div class="ac-spin">🔍 Buscando...</div>';
+    list.classList.add('show');
+    const raw = await gcGetClientes(q);
+    const items = raw.map(c=>({
+      _nome: c.nome || c.razao_social || '',
+      _sub : [c.cnpj_cpf||c.cpf_cnpj||'', c.fantasia||''].filter(Boolean).join(' · '),
+      _raw : c
+    }));
+    renderAcList(list, items, c=>{
+      inp.value = c.nome || c.razao_social || '';
+      const tel = c.telefone || c.celular || c.fone || '';
+      if(tel) document.getElementById('g-cliTel').value = tel;
+    });
+  }, 380));
+
+  document.addEventListener('click', e=>{
+    if(!inp.closest('.ac-wrap').contains(e.target)) list.classList.remove('show');
+  });
+}
+
+function initAcProduto(inputId, codId, listId, fillValor){
+  const inp  = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+
+  inp.addEventListener('focus', ()=>fecharTodasAcLists(listId));
+  inp.addEventListener('input', debounce(async()=>{
+    const q = inp.value.trim();
+    if(q.length < 2){ list.classList.remove('show'); return; }
+    list.innerHTML = '<div class="ac-spin">🔍 Buscando...</div>';
+    list.classList.add('show');
+    const raw = await gcGetProdutos(q);
+    const items = raw.map(p=>({
+      _nome: p.nome || '',
+      _sub : p.codigo || p.cod || '',
+      _raw : p
+    }));
+    renderAcList(list, items, p=>{
+      inp.value = p.nome || '';
+      if(codId) document.getElementById(codId).value = p.codigo || p.cod || '';
+      if(fillValor && p.preco_venda){
+        document.getElementById('g-valor').value = Number(p.preco_venda||0).toFixed(2);
+      }
+    });
+  }, 380));
+
+  document.addEventListener('click', e=>{
+    if(!inp.closest('.ac-wrap').contains(e.target)) list.classList.remove('show');
+  });
+}
+
+function initAutocompletes(){
+  initAcCliente();
+  initAcProduto('g-prodNome',  'g-prodCod',  'ac-prod',  true);
+  initAcProduto('g-substNome', 'g-substCod', 'ac-subst', false);
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
-window.addEventListener('firebaseReady', carregar);
+window.addEventListener('firebaseReady', ()=>{ carregar(); initAutocompletes(); });
 </script>
 
 </body>

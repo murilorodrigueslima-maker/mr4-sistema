@@ -798,8 +798,8 @@ function initAcProduto(inputId, codId, listId, fillValor){
     }));
     renderAcList(list, items, p=>{
       inp.value = p.nome || p.descricao || p.description || '';
-      // Código: tenta vários campos, último recurso usa id numérico
-      const cod = p.codigo || p.referencia || p.code || p.sku || String(p.id||'');
+      // Código: apenas códigos reais do produto, nunca o ID interno
+      const cod = p.codigo || p.referencia || p.code || p.sku || '';
       if(codId) document.getElementById(codId).value = cod;
       if(fillValor){
         // Valor

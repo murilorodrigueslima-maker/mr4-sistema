@@ -780,9 +780,23 @@ function initAcCliente(){
   });
 }
 
+async function gcGetProdutoDetalhe(id){
+  try{
+    const r = await fetch(`${GC_URL}?endpoint=/produtos/${id}`);
+    if(!r.ok) return null;
+    const d = await r.json();
+    // resposta pode ser objeto direto, ou embrulhado
+    if(d && typeof d === 'object' && !Array.isArray(d)){
+      return d.produto || d.data || d.objeto || (d.id ? d : null);
+    }
+    return null;
+  }catch{ return null; }
+}
+
 function initAcProduto(inputId, codId, listId, fillValor){
   const inp  = document.getElementById(inputId);
   const list = document.getElementById(listId);
+  let _rawItems = [];
 
   inp.addEventListener('focus', ()=>fecharTodasAcLists(listId));
   inp.addEventListener('input', debounce(async()=>{
@@ -791,27 +805,39 @@ function initAcProduto(inputId, codId, listId, fillValor){
     list.innerHTML = '<div class="ac-spin">🔍 Buscando...</div>';
     list.classList.add('show');
     const raw = await gcGetProdutos(q);
-    const items = raw.map(p=>({
-      _nome: p.nome || p.descricao || p.description || '',
-      _sub : p.codigo || p.code || p.sku || '',
-      _raw : p
-    }));
-    renderAcList(list, items, p=>{
-      inp.value = p.nome || p.descricao || p.description || '';
-      // Código: apenas códigos reais do produto, nunca o ID interno
-      const cod = p.codigo || p.referencia || p.code || p.sku || '';
-      if(codId) document.getElementById(codId).value = cod;
-      if(fillValor){
-        // Valor
-        const preco = p.preco_venda || p.preco || p.valor || 0;
-        if(preco) document.getElementById('g-valor').value = Number(preco).toFixed(2);
-        // Fornecedor — pode ser string ou objeto {nome:...}
-        const forn = typeof p.fornecedor === 'object'
-          ? (p.fornecedor?.nome || p.fornecedor?.razao_social || '')
-          : (p.fornecedor || p.marca || p.fabricante || p.manufacturer || '');
-        if(forn) document.getElementById('g-fornec').value = forn;
-      }
+    _rawItems = raw;
+    if(!raw.length){ list.classList.remove('show'); return; }
+    // Renderiza dropdown manualmente para ter acesso ao índice no mousedown async
+    list.innerHTML = raw.map((p,i)=>`
+      <div class="ac-item" data-i="${i}">
+        <div class="ac-item-nome">${escHtml(p.nome||p.descricao||p.description||'')}</div>
+        ${(p.codigo||p.referencia||p.code||p.sku)?`<div class="ac-item-sub">${escHtml(p.codigo||p.referencia||p.code||p.sku)}</div>`:''}
+      </div>`).join('');
+    list.querySelectorAll('.ac-item').forEach(el=>{
+      el.addEventListener('mousedown', async ev=>{
+        ev.preventDefault();
+        const p = _rawItems[+el.dataset.i];
+        if(!p) return;
+        list.classList.remove('show');
+        inp.value = p.nome || p.descricao || p.description || '';
+        // Busca detalhe completo para pegar código, fornecedor e preço
+        const detalhe = p.id ? await gcGetProdutoDetalhe(p.id) : null;
+        const prod = detalhe || p;
+        const cod = prod.codigo || prod.referencia || prod.code || prod.sku
+                 || p.codigo   || p.referencia   || p.code   || p.sku || '';
+        if(codId) document.getElementById(codId).value = cod;
+        if(fillValor){
+          const preco = prod.preco_venda || prod.preco || p.preco_venda || p.preco || 0;
+          if(preco) document.getElementById('g-valor').value = Number(preco).toFixed(2);
+          const forn = typeof prod.fornecedor === 'object'
+            ? (prod.fornecedor?.nome || prod.fornecedor?.razao_social || '')
+            : (prod.fornecedor || prod.marca || prod.fabricante
+            || p.fornecedor   || p.marca   || p.fabricante || '');
+          if(forn) document.getElementById('g-fornec').value = forn;
+        }
+      });
     });
+    list.classList.add('show');
   }, 380));
 
   document.addEventListener('click', e=>{

@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-04-25T11:09:06",
-  "total": 59,
+  "atualizado_em": "2026-04-25T11:58:01",
+  "total": 61,
   "pedidos": [
+    {
+      "id": "365787773",
+      "numero": "15538",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 500,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365772079",
       "numero": "15537",
@@ -131,6 +143,18 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 243.77,
       "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "364840337",
+      "numero": "15449",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 620,
+      "itens": 7,
       "status_gc": "",
       "cidade": ""
     },

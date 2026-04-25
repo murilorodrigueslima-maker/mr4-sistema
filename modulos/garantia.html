@@ -782,15 +782,21 @@ function initAcCliente(){
 
 async function gcGetProdutoDetalhe(id){
   try{
-    const r = await fetch(`${GC_URL}?endpoint=/produtos/${id}`);
+    const url = `${GC_URL}?endpoint=/produtos/${id}`;
+    const r = await fetch(url);
+    const txt = await r.text();
+    console.log('[GC DETALHE] status:', r.status, 'url:', url);
+    console.log('[GC DETALHE] resposta raw:', txt);
     if(!r.ok) return null;
-    const d = await r.json();
-    // resposta pode ser objeto direto, ou embrulhado
+    const d = JSON.parse(txt);
+    console.log('[GC DETALHE] objeto parsed:', d);
     if(d && typeof d === 'object' && !Array.isArray(d)){
-      return d.produto || d.data || d.objeto || (d.id ? d : null);
+      const prod = d.produto || d.data || d.objeto || (d.id ? d : null);
+      console.log('[GC DETALHE] produto extraído:', prod);
+      return prod;
     }
     return null;
-  }catch{ return null; }
+  }catch(e){ console.error('[GC DETALHE] erro:', e); return null; }
 }
 
 function initAcProduto(inputId, codId, listId, fillValor){

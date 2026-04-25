@@ -798,9 +798,18 @@ function initAcProduto(inputId, codId, listId, fillValor){
     }));
     renderAcList(list, items, p=>{
       inp.value = p.nome || p.descricao || p.description || '';
-      if(codId) document.getElementById(codId).value = p.codigo || p.code || p.sku || '';
-      if(fillValor && (p.preco_venda || p.preco)){
-        document.getElementById('g-valor').value = Number(p.preco_venda || p.preco || 0).toFixed(2);
+      // Código: tenta vários campos, último recurso usa id numérico
+      const cod = p.codigo || p.referencia || p.code || p.sku || String(p.id||'');
+      if(codId) document.getElementById(codId).value = cod;
+      if(fillValor){
+        // Valor
+        const preco = p.preco_venda || p.preco || p.valor || 0;
+        if(preco) document.getElementById('g-valor').value = Number(preco).toFixed(2);
+        // Fornecedor — pode ser string ou objeto {nome:...}
+        const forn = typeof p.fornecedor === 'object'
+          ? (p.fornecedor?.nome || p.fornecedor?.razao_social || '')
+          : (p.fornecedor || p.marca || p.fabricante || p.manufacturer || '');
+        if(forn) document.getElementById('g-fornec').value = forn;
       }
     });
   }, 380));

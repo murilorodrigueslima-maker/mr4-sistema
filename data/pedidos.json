@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-25T10:16:50",
-  "total": 55,
+  "atualizado_em": "2026-04-25T11:09:06",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "365772079",
+      "numero": "15537",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 820,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365771061",
+      "numero": "15536",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 166.89,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365765461",
+      "numero": "15535",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365762718",
+      "numero": "15534",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 270,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365752187",
       "numero": "15533",
@@ -130,7 +178,7 @@
       "cliente": "ZANGADO AUTO PECAS ACESSORIOS E MECANICA LTDA",
       "vendedor": "fabiana andrade da silva",
       "valor": 1692,
-      "itens": 30,
+      "itens": 29,
       "status_gc": "",
       "cidade": ""
     },

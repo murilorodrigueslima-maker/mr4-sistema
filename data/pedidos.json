@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-04-25T09:00:34",
-  "total": 48,
+  "atualizado_em": "2026-04-25T10:16:50",
+  "total": 55,
   "pedidos": [
+    {
+      "id": "365752187",
+      "numero": "15533",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 147.08,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365751710",
+      "numero": "15532",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 132.8,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365746974",
+      "numero": "15531",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "HENRIQUE JORGE CAMARA NUNES 28513029300",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 119.7,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365736323",
+      "numero": "15530",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "50.782.160 SAMARA REBECA MELO VIANA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 151.7,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365735250",
+      "numero": "15529",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 120,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365734855",
+      "numero": "15528",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 125.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "365734502",
+      "numero": "15527",
+      "data": "2026-04-25",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 243.77,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365664744",
       "numero": "15526",

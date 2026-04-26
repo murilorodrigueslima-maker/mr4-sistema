@@ -782,21 +782,14 @@ function initAcCliente(){
 
 async function gcGetProdutoDetalhe(id){
   try{
-    const url = `${GC_URL}?endpoint=/produtos/${id}`;
-    const r = await fetch(url);
-    const txt = await r.text();
-    console.log('[GC DETALHE] status:', r.status, 'url:', url);
-    console.log('[GC DETALHE] resposta raw:', txt);
+    const r = await fetch(`${GC_URL}?endpoint=/produtos/${id}`);
     if(!r.ok) return null;
-    const d = JSON.parse(txt);
-    console.log('[GC DETALHE] objeto parsed:', d);
+    const d = await r.json();
     if(d && typeof d === 'object' && !Array.isArray(d)){
-      const prod = d.produto || d.data || d.objeto || (d.id ? d : null);
-      console.log('[GC DETALHE] produto extraído:', prod);
-      return prod;
+      return d.produto || d.data || d.objeto || (d.id ? d : null);
     }
     return null;
-  }catch(e){ console.error('[GC DETALHE] erro:', e); return null; }
+  }catch{ return null; }
 }
 
 function initAcProduto(inputId, codId, listId, fillValor){
@@ -817,7 +810,7 @@ function initAcProduto(inputId, codId, listId, fillValor){
     list.innerHTML = raw.map((p,i)=>`
       <div class="ac-item" data-i="${i}">
         <div class="ac-item-nome">${escHtml(p.nome||p.descricao||p.description||'')}</div>
-        ${(p.codigo||p.referencia||p.code||p.sku)?`<div class="ac-item-sub">${escHtml(p.codigo||p.referencia||p.code||p.sku)}</div>`:''}
+        ${(p.codigo_interno||p.codigo_barra)?`<div class="ac-item-sub">${escHtml(p.codigo_interno||p.codigo_barra)}</div>`:''}
       </div>`).join('');
     list.querySelectorAll('.ac-item').forEach(el=>{
       el.addEventListener('mousedown', async ev=>{
@@ -825,32 +818,29 @@ function initAcProduto(inputId, codId, listId, fillValor){
         const p = _rawItems[+el.dataset.i];
         if(!p) return;
         list.classList.remove('show');
-        inp.value = p.nome || p.descricao || p.description || '';
+        inp.value = p.nome || p.descricao || '';
 
-        // DEBUG: mostra campos da lista na tela
-        toast('🔍 LISTA campos: ' + Object.keys(p).join(', '), false);
-        toast('🔍 codigo="'+(p.codigo||'vazio')+'" referencia="'+(p.referencia||'vazio')+'" id="'+(p.id||'vazio')+'"', false);
-
-        // Busca detalhe completo
+        // Busca detalhe para pegar atributos (fornecedor)
         const detalhe = p.id ? await gcGetProdutoDetalhe(p.id) : null;
-        if(detalhe){
-          toast('✅ DETALHE campos: ' + Object.keys(detalhe).join(', '), false);
-          toast('✅ codigo="'+(detalhe.codigo||'vazio')+'" forn="'+(detalhe.fornecedor||'vazio')+'"', false);
-        } else {
-          toast('❌ DETALHE: null (falhou ou proxy não suporta)', true);
-        }
-
         const prod = detalhe || p;
-        const cod = prod.codigo || prod.referencia || prod.code || prod.sku
-                 || p.codigo   || p.referencia   || p.code   || p.sku || '';
+
+        // Código: GestãoClick usa codigo_interno ou codigo_barra
+        const cod = prod.codigo_interno || prod.codigo_barra
+                 || p.codigo_interno    || p.codigo_barra || '';
         if(codId) document.getElementById(codId).value = cod;
+
         if(fillValor){
-          const preco = prod.preco_venda || prod.preco || p.preco_venda || p.preco || 0;
+          // Preço: GestãoClick usa valor_venda
+          const preco = prod.valor_venda || prod.valor_custo || p.valor_venda || p.valor_custo || 0;
           if(preco) document.getElementById('g-valor').value = Number(preco).toFixed(2);
-          const forn = typeof prod.fornecedor === 'object'
-            ? (prod.fornecedor?.nome || prod.fornecedor?.razao_social || '')
-            : (prod.fornecedor || prod.marca || prod.fabricante
-            || p.fornecedor   || p.marca   || p.fabricante || '');
+
+          // Fornecedor: tenta campo direto ou dentro de atributos[]
+          let forn = prod.fornecedor || prod.marca || prod.fabricante || '';
+          if(!forn && Array.isArray(prod.atributos)){
+            const af = prod.atributos.find(a=>
+              /fornec|supplier|fabri|marca/i.test(a.nome||a.name||a.chave||''));
+            if(af) forn = af.valor || af.value || '';
+          }
           if(forn) document.getElementById('g-fornec').value = forn;
         }
       });

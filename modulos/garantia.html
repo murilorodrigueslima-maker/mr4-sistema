@@ -405,11 +405,11 @@ function diasDesde(ts){return Math.floor((Date.now()-ts)/86400000);}
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtData(ts){if(!ts)return'—';return new Date(ts).toLocaleDateString('pt-BR');}
 
-function toast(msg,err=false){
+function toast(msg,err=false,dur=4000){
   const el=document.createElement('div');
   el.className='toast'+(err?' err':'');el.textContent=msg;
   document.getElementById('toastWrap').appendChild(el);
-  setTimeout(()=>el.remove(),3500);
+  setTimeout(()=>el.remove(),dur);
 }
 
 // ── TABS ─────────────────────────────────────────────────────────────────────
@@ -826,8 +826,20 @@ function initAcProduto(inputId, codId, listId, fillValor){
         if(!p) return;
         list.classList.remove('show');
         inp.value = p.nome || p.descricao || p.description || '';
-        // Busca detalhe completo para pegar código, fornecedor e preço
+
+        // DEBUG: mostra campos da lista na tela
+        toast('🔍 LISTA campos: ' + Object.keys(p).join(', '), false);
+        toast('🔍 codigo="'+(p.codigo||'vazio')+'" referencia="'+(p.referencia||'vazio')+'" id="'+(p.id||'vazio')+'"', false);
+
+        // Busca detalhe completo
         const detalhe = p.id ? await gcGetProdutoDetalhe(p.id) : null;
+        if(detalhe){
+          toast('✅ DETALHE campos: ' + Object.keys(detalhe).join(', '), false);
+          toast('✅ codigo="'+(detalhe.codigo||'vazio')+'" forn="'+(detalhe.fornecedor||'vazio')+'"', false);
+        } else {
+          toast('❌ DETALHE: null (falhou ou proxy não suporta)', true);
+        }
+
         const prod = detalhe || p;
         const cod = prod.codigo || prod.referencia || prod.code || prod.sku
                  || p.codigo   || p.referencia   || p.code   || p.sku || '';

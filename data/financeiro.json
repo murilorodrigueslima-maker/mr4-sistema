@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-26T16:53:06",
+  "atualizado_em": "2026-04-26T17:24:35",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -80,7 +80,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 689.03,
+      "valor": 229.43,
       "vencimento": "2026-04-05",
       "dias_atraso": 21,
       "tipo": "Pagar"
@@ -275,6 +275,13 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
+      "valor": 327.38,
+      "vencimento": "2026-04-24",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "MERCADO LIVRE",
       "valor": 51.41,
       "vencimento": "2026-04-25",
@@ -398,7 +405,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45678.98,
+  "total_vencido": 45546.76,
   "total_a_receber": 0,
-  "total_a_pagar": 29426.060000000005
+  "total_a_pagar": 29753.440000000002
 }

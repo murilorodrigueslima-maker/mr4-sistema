@@ -275,7 +275,7 @@ tr:hover td{background:#FAFAFA}
       <div class="form-group"><label>Código GestãoClick</label><input type="text" id="g-prodCod" placeholder="Ex: 1234"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Fornecedor</label><input type="text" id="g-fornec" placeholder="Ex: Distribuidora ABC"></div>
+      <div class="form-group"><label>Fornecedor</label><input type="text" id="g-fornec" placeholder="Selecione ou digite..." list="fornec-datalist" autocomplete="off"><datalist id="fornec-datalist"></datalist></div>
       <div class="form-group"><label>Prazo garantia fornecedor</label><input type="text" id="g-prazo" placeholder="Ex: 6 meses, 1 ano"></div>
     </div>
     <div class="form-group"><label>Descrição do defeito</label><textarea id="g-defeito" placeholder="Descreva o defeito relatado pelo cliente..."></textarea></div>
@@ -859,8 +859,18 @@ function initAutocompletes(){
   initAcProduto('g-substNome', 'g-substCod', 'ac-subst', false);
 }
 
+// ── FORNECEDORES DATALIST ─────────────────────────────────────────────────────
+async function carregarFornecedores(){
+  try{
+    const snap = await window._getDocs(window._col('fornecedores_custo'));
+    const lista = snap.docs.map(d=>d.data().nome).filter(Boolean).sort();
+    const dl = document.getElementById('fornec-datalist');
+    dl.innerHTML = lista.map(n=>`<option value="${n}">`).join('');
+  }catch(e){ console.warn('fornecedores:', e); }
+}
+
 // ── INIT ─────────────────────────────────────────────────────────────────────
-window.addEventListener('firebaseReady', ()=>{ carregar(); initAutocompletes(); });
+window.addEventListener('firebaseReady', ()=>{ carregar(); initAutocompletes(); carregarFornecedores(); });
 </script>
 
 </body>

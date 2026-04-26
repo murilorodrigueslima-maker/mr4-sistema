@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-25T21:08:23",
+  "atualizado_em": "2026-04-26T00:53:05",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -273,39 +273,44 @@
       "vencimento": "2026-04-23",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.41,
       "vencimento": "2026-04-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LAMPADAS/FIOS PARA ESCRITORIO",
       "valor": 114.52,
       "vencimento": "2026-04-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 897.75,
       "vencimento": "2026-04-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 726.7,
       "vencimento": "2026-04-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-04-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
@@ -393,7 +398,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 43785.44,
+  "total_vencido": 45678.98,
   "total_a_receber": 0,
   "total_a_pagar": 29426.060000000005
 }

@@ -485,7 +485,7 @@ body{
 <!-- Firebase + App -->
 <script type="module">
 import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc }
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const _app = initializeApp({
@@ -927,6 +927,21 @@ async function init() {
 }
 
 init();
+
+/* ── LISTENER TEMPO REAL — atualiza metas sem recarregar ── */
+let _primeiraLeitura = true;
+onSnapshot(CFG_DOC, snap => {
+  if(!snap.exists()) return;
+  if(_primeiraLeitura){ _primeiraLeitura = false; return; } // ignora leitura inicial (já carregada no init)
+  const nova = snap.data();
+  const mudou = JSON.stringify(nova) !== JSON.stringify(CFG);
+  if(!mudou) return;
+  CFG = nova;
+  localStorage.setItem(LS_CFG, JSON.stringify(CFG));
+  // Se o painel já está visível, re-renderiza com as novas metas
+  if(dados[0] && dados[1]) renderPainel();
+  toast('🔄 Metas atualizadas!', 'ok');
+}, err => console.warn('onSnapshot:', err));
 </script>
 </body>
 </html>

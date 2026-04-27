@@ -484,7 +484,17 @@ body{
 
 <!-- Firebase + App -->
 <script type="module">
-// Sem dependência de Firestore — config salva em localStorage
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const _app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const _db = getFirestore(_app);
+const CFG_DOC = doc(_db, 'painel_config', 'default');
 
 const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
 const REFRESH_SECS = 300; // 5 minutos
@@ -555,20 +565,29 @@ function iniciarCountdown() {
   }, 1000);
 }
 
-/* ── CONFIG — localStorage ── */
+/* ── CONFIG — Firestore + localStorage fallback ── */
 const LS_CFG = 'mr4_painel_cfg';
 const LS_PIN = 'mr4_painel_pin_ts';
 const PIN_CORRETO = '887490';
 const PIN_DIAS = 30; // lembra por 30 dias
 
-function carregarConfig() {
+async function carregarConfig() {
+  try {
+    const snap = await getDoc(CFG_DOC);
+    if(snap.exists()) {
+      CFG = snap.data();
+      localStorage.setItem(LS_CFG, JSON.stringify(CFG)); // atualiza cache local
+      return;
+    }
+  } catch(e) { console.warn('Firestore config:', e); }
+  // fallback localStorage
   try {
     const raw = localStorage.getItem(LS_CFG);
     if(raw) CFG = JSON.parse(raw);
-  } catch(e) { console.warn('Config:', e); }
+  } catch(e) {}
 }
 
-window.salvarConfig = function() {
+window.salvarConfig = async function() {
   const v0 = document.getElementById('cfgN0').value.trim();
   const v1 = document.getElementById('cfgN1').value.trim();
   const m0 = parseFloat(document.getElementById('cfgM0').value)||0;
@@ -576,8 +595,16 @@ window.salvarConfig = function() {
   const me = parseFloat(document.getElementById('cfgMequipe').value)||0;
   if(!v0||!v1){ toast('Preencha os nomes dos vendedores.','err'); return; }
   CFG = { vendedores:[{nome:v0,meta:m0},{nome:v1,meta:m1}], meta_equipe:me };
-  localStorage.setItem(LS_CFG, JSON.stringify(CFG));
-  toast('Configuração salva!','ok');
+  // Salva no Firestore (sincroniza com todos os dispositivos)
+  try {
+    await setDoc(CFG_DOC, CFG);
+    localStorage.setItem(LS_CFG, JSON.stringify(CFG));
+    toast('Configuração salva!','ok');
+  } catch(e) {
+    // Se Firestore falhar, salva só local
+    localStorage.setItem(LS_CFG, JSON.stringify(CFG));
+    toast('Salvo localmente (Firestore indisponível)','ok');
+  }
   fecharConfig();
   buscarDados();
 };
@@ -890,7 +917,7 @@ async function mostrarPainel() {
 }
 
 async function init() {
-  carregarConfig();
+  await carregarConfig();
   document.getElementById('splash').style.display = 'none';
   if(pinDesbloqueado()) {
     await mostrarPainel();

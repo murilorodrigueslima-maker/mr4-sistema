@@ -599,15 +599,15 @@ window.salvarConfig = async function() {
   try {
     await setDoc(CFG_DOC, CFG);
     localStorage.setItem(LS_CFG, JSON.stringify(CFG));
-    toast('✅ Salvo no Firestore — TV vai atualizar!','ok');
+    toast('Configuração salva!','ok');
     fecharConfig();
     buscarDados();
   } catch(e) {
-    // Mostra o erro real para diagnóstico
-    toast('❌ Firestore: ' + (e.code || e.message || 'erro'), 'err');
     console.error('salvarConfig Firestore:', e);
-    // Salva local mesmo assim
     localStorage.setItem(LS_CFG, JSON.stringify(CFG));
+    toast('Salvo localmente (Firestore indisponível)','ok');
+    fecharConfig();
+    buscarDados();
   }
 };
 
@@ -943,10 +943,7 @@ onSnapshot(CFG_DOC, snap => {
   // Se o painel já está visível, re-renderiza com as novas metas
   if(dados[0] && dados[1]) renderPainel();
   toast('🔄 Metas atualizadas!', 'ok');
-}, err => {
-  console.error('onSnapshot erro:', err);
-  toast('⚠️ Listener: ' + (err.code || err.message), 'err');
-});
+}, err => console.warn('onSnapshot:', err));
 </script>
 </body>
 </html>

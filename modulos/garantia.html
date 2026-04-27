@@ -194,7 +194,8 @@ tr:hover td{background:#FAFAFA}
 
 <div class="tabs">
   <div class="tab ativo" onclick="mudarTab('visao',this)">📊 Visão Geral</div>
-  <div class="tab" onclick="mudarTab('pipeline',this)">🔄 Pipeline</div>
+  <div class="tab" onclick="mudarTab('fase1',this)">👤 Fase 1 — Cliente</div>
+  <div class="tab" onclick="mudarTab('fase2',this)">🏭 Fase 2 — Fornecedor <span id="badgeFase2" style="display:none;background:var(--red);color:#fff;font-size:.6rem;padding:.1rem .4rem;border-radius:99px;margin-left:.3rem">0</span></div>
   <div class="tab" onclick="mudarTab('historico',this)">📋 Histórico</div>
 </div>
 
@@ -242,13 +243,32 @@ tr:hover td{background:#FAFAFA}
   <div id="lista-recentes"></div>
 </div>
 
-<!-- ── PIPELINE ── -->
-<div class="secao" id="sec-pipeline">
+<!-- ── FASE 1 ── -->
+<div class="secao" id="sec-fase1">
   <div class="pipeline-header">
-    <div style="font-size:1rem;font-weight:800">Pipeline de Garantias</div>
+    <div>
+      <div style="font-size:1rem;font-weight:800">👤 Fase 1 — Atendimento ao Cliente</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">Receba, teste e substitua o produto para o cliente.</div>
+    </div>
     <button class="btn-primary" onclick="abrirModalNova()">+ Nova garantia</button>
   </div>
-  <div id="kanban" style="display:grid;grid-template-columns:1fr;gap:.5rem"></div>
+  <div id="kanban-f1" style="display:grid;gap:.75rem;grid-template-columns:repeat(6,1fr);align-items:start;overflow-x:auto;padding-bottom:.5rem"></div>
+</div>
+
+<!-- ── FASE 2 ── -->
+<div class="secao" id="sec-fase2">
+  <div class="pipeline-header">
+    <div>
+      <div style="font-size:1rem;font-weight:800">🏭 Fase 2 — Devolução ao Fornecedor</div>
+      <div style="font-size:.78rem;color:var(--muted);margin-top:.2rem">Envie o produto defeituoso ao fornecedor após concluir com o cliente.</div>
+    </div>
+  </div>
+  <!-- Prontas para iniciar fase 2 -->
+  <div id="prontas-f2-wrap" style="display:none;margin-bottom:1.25rem">
+    <div style="font-size:.78rem;font-weight:700;color:var(--orange);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem">⚡ Prontas para iniciar Fase 2 <span id="prontas-f2-cnt" style="background:var(--orange);color:#fff;font-size:.65rem;padding:.1rem .45rem;border-radius:99px"></span></div>
+    <div id="prontas-f2-lista" style="display:flex;flex-direction:column;gap:.4rem"></div>
+  </div>
+  <div id="kanban-f2" style="display:grid;gap:.75rem;grid-template-columns:repeat(3,1fr);align-items:start;overflow-x:auto;padding-bottom:.5rem"></div>
 </div>
 
 <!-- ── HISTÓRICO ── -->
@@ -443,7 +463,8 @@ window.mudarTab=function(id,el){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('ativo'));
   document.getElementById('sec-'+id).classList.add('ativa');
   el.classList.add('ativo');
-  if(id==='pipeline') renderKanban();
+  if(id==='fase1')    renderKanbanF1();
+  if(id==='fase2')    renderKanbanF2();
   if(id==='historico') renderHistorico();
 };
 
@@ -467,6 +488,12 @@ function renderVisaoGeral(){
   document.getElementById('stValor').textContent   = brl(valorRisco);
   document.getElementById('stMes').textContent     = encMes.length;
   document.getElementById('stSemGC').textContent   = semGC.length;
+
+  // Badge na aba Fase 2
+  const emFase2 = garantias.filter(g=>(ETAPA_MAP[g.etapa]?.fase||1)===2||(g.etapa==='cli_ok'));
+  const badge = document.getElementById('badgeFase2');
+  if(emFase2.length){ badge.style.display=''; badge.textContent=emFase2.length; }
+  else { badge.style.display='none'; }
 
   // Alerta crítico
   const alertEl=document.getElementById('alertaCritico');
@@ -553,12 +580,32 @@ function renderKoluna(e){
   </div>`;
 }
 
-function renderKanban(){
-  document.getElementById('kanban').innerHTML=`
-    <div class="fase-header fase1" style="grid-column:1/-1">👤 Fase 1 — Atendimento ao Cliente</div>
-    <div class="kanban-fase f1" style="grid-column:1/-1">${FASE1.map(renderKoluna).join('')}</div>
-    <div class="fase-header fase2" style="grid-column:1/-1">🏭 Fase 2 — Devolução ao Fornecedor <span style="font-size:.7rem;opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(inicia após Concluído c/ Cliente)</span></div>
-    <div class="kanban-fase f2" style="grid-column:1/-1">${FASE2.map(renderKoluna).join('')}</div>`;
+function renderKanbanF1(){
+  document.getElementById('kanban-f1').innerHTML = FASE1.map(renderKoluna).join('');
+}
+
+function renderKanbanF2(){
+  // Colunas fase 2
+  document.getElementById('kanban-f2').innerHTML = FASE2.map(renderKoluna).join('');
+
+  // Prontas para iniciar (cli_ok ainda não movidas para fase 2)
+  const prontas = garantias.filter(g=>g.etapa==='cli_ok');
+  const wrap = document.getElementById('prontas-f2-wrap');
+  const lista = document.getElementById('prontas-f2-lista');
+  if(prontas.length){
+    wrap.style.display='';
+    document.getElementById('prontas-f2-cnt').textContent = prontas.length;
+    lista.innerHTML = prontas.map(g=>`
+      <div style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:9px;padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div style="font-size:.84rem;font-weight:700">${g.prodNome||'—'} · <span style="font-weight:400">${g.cliNome||'—'}</span></div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Fornecedor: ${g.fornec||'não informado'} · Recebido: ${g.recebidoEm||'—'}</div>
+        </div>
+        <button class="btn-primary" style="padding:.35rem .85rem;font-size:.75rem" onclick="mudarEtapaRapido('${g.id}','ag_envio')">🚚 Iniciar envio</button>
+      </div>`).join('');
+  } else {
+    wrap.style.display='none';
+  }
 }
 
 // ── HISTÓRICO ─────────────────────────────────────────────────────────────────

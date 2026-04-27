@@ -176,6 +176,35 @@ tr:hover td{background:#FAFAFA}
 
 @media(max-width:900px){.kanban{grid-template-columns:repeat(4,minmax(150px,1fr))}}
 @media(max-width:640px){.secao{padding:1rem}.kanban{grid-template-columns:repeat(3,minmax(140px,1fr))}.form-row{grid-template-columns:1fr}.stats-row{flex-wrap:wrap}}
+
+/* ── RECIBO ── */
+.recibo{font-family:'Inter',sans-serif;color:#111;background:#fff;max-width:620px;margin:0 auto}
+.recibo-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:1.25rem;border-bottom:2px solid #FF6B1A;margin-bottom:1.5rem}
+.recibo-marca{font-size:1.5rem;font-weight:900;color:#FF6B1A;letter-spacing:-1px}
+.recibo-marca span{color:#111}
+.recibo-titulo{text-align:right}
+.recibo-titulo h2{font-size:1rem;font-weight:800;color:#111;margin-bottom:.15rem}
+.recibo-titulo .proto{font-size:.75rem;color:#666;font-family:monospace}
+.recibo-bloco{margin-bottom:1.25rem}
+.recibo-bloco-titulo{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:#FF6B1A;border-bottom:1px solid #FFE4D5;padding-bottom:.3rem;margin-bottom:.65rem}
+.recibo-linha{display:flex;gap:.5rem;margin-bottom:.3rem;font-size:.82rem}
+.recibo-linha label{min-width:140px;font-weight:700;color:#444;flex-shrink:0}
+.recibo-linha span{color:#111}
+.recibo-defeito{background:#f9f9f9;border-left:3px solid #FF6B1A;padding:.6rem .85rem;border-radius:4px;font-size:.82rem;line-height:1.6;color:#333}
+.recibo-etapa{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .7rem;border-radius:99px;font-size:.75rem;font-weight:700;background:#fff8f5;color:#FF6B1A;border:1.5px solid #FFD4B8}
+.recibo-termos{background:#f5f5f5;border-radius:6px;padding:.85rem 1rem;font-size:.72rem;color:#555;line-height:1.8}
+.recibo-assinaturas{display:grid;grid-template-columns:1fr 1fr;gap:2rem;margin-top:2rem;padding-top:1.5rem;border-top:1px solid #ddd}
+.recibo-assin-box{text-align:center}
+.recibo-assin-linha{border-bottom:1.5px solid #333;margin-bottom:.4rem;height:36px}
+.recibo-assin-label{font-size:.7rem;color:#555;font-weight:600}
+.recibo-rodape{text-align:center;margin-top:1.5rem;padding-top:1rem;border-top:1px solid #eee;font-size:.65rem;color:#999}
+
+@media print{
+  body > *:not(#printArea){ display:none !important }
+  #printArea{ display:block !important }
+  .no-print{ display:none !important }
+  @page{ margin:15mm; size:A4 }
+}
 </style>
 </head>
 <body>
@@ -387,6 +416,25 @@ tr:hover td{background:#FAFAFA}
   </div>
 </div>
 
+<!-- MODAL RECIBO -->
+<div class="overlay" id="modalRecibo">
+  <div class="modal" style="max-width:680px;padding:0;overflow:hidden">
+    <!-- Barra superior do modal (não imprime) -->
+    <div class="recibo-toolbar no-print" style="display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;border-bottom:1px solid var(--border);background:#fafafa">
+      <span style="font-size:.9rem;font-weight:700">🖨️ Recibo de Garantia</span>
+      <div style="display:flex;gap:.6rem">
+        <button class="btn-sec" onclick="imprimirRecibo()">🖨️ Imprimir / Salvar PDF</button>
+        <button class="btn-sec" onclick="fecharModal('modalRecibo')">Fechar</button>
+      </div>
+    </div>
+    <!-- Conteúdo do recibo (isso é o que imprime) -->
+    <div id="recibo-conteudo" style="padding:2rem;max-height:75vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- Área de impressão (oculta, aparece só ao imprimir) -->
+<div id="printArea" style="display:none"></div>
+
 <!-- Toasts -->
 <div class="toast-wrap" id="toastWrap"></div>
 
@@ -541,6 +589,7 @@ function linhaTabela(g){
     <td><span style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</span></td>
     <td>${gcBadge}</td>
     <td><div style="display:flex;gap:.3rem">
+      <button class="btn-xs" title="Recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
       <button class="btn-xs" title="Editar" onclick="editarGarantia('${g.id}')">✏️</button>
       <button class="btn-xs" title="Avançar etapa" onclick="abrirModalEtapa('${g.id}')">→</button>
     </div></td>
@@ -571,7 +620,8 @@ function renderKoluna(e){
             <span class="card-dias${dias>7?' urgente':''}">${dias}d</span>
             <div class="card-acoes" onclick="event.stopPropagation()">
               ${gcTag}
-              <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
+              <button class="btn-xs" title="Recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
+              <button class="btn-xs" title="Editar" onclick="editarGarantia('${g.id}')">✏️</button>
             </div>
           </div>
         </div>`;
@@ -642,6 +692,7 @@ function renderHistorico(){
       <td>${gcBadge}</td>
       <td style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</td>
       <td><div style="display:flex;gap:.3rem">
+        <button class="btn-xs" title="Recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
         <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
         <button class="btn-xs del" onclick="excluirGarantia('${g.id}')">🗑</button>
       </div></td>
@@ -985,6 +1036,115 @@ async function carregarFornecedores(){
     dl.innerHTML = lista.map(n=>`<option value="${n}">`).join('');
   }catch(e){ console.warn('fornecedores:', e); }
 }
+
+// ── RECIBO ───────────────────────────────────────────────────────────────────
+function gerarProtocolo(g){
+  const d=new Date(g.criadoEm||Date.now());
+  const ano=d.getFullYear();
+  const mes=String(d.getMonth()+1).padStart(2,'0');
+  const short=(g.id||'').slice(-5).toUpperCase();
+  return`MR4-${ano}${mes}-${short}`;
+}
+
+function gerarHtmlRecibo(g){
+  const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
+  const proto=gerarProtocolo(g);
+  const dataRec=g.recebidoEm||hoje();
+  const [ay,am,ad]=dataRec.split('-');
+  const dataFmt=`${ad}/${am}/${ay}`;
+  const dataEmissao=new Date().toLocaleDateString('pt-BR');
+  const valorFmt=g.valor?`R$ ${brl(g.valor)}`:'Não informado';
+
+  return`<div class="recibo">
+    <div class="recibo-header">
+      <div>
+        <div class="recibo-marca">MR4 <span>Distribuidora</span></div>
+        <div style="font-size:.7rem;color:#666;margin-top:.15rem">Peças e Acessórios Automotivos</div>
+      </div>
+      <div class="recibo-titulo">
+        <h2>Recibo de Garantia</h2>
+        <div class="proto">Protocolo: #${proto}</div>
+        <div class="proto" style="margin-top:.1rem">Emitido em: ${dataEmissao}</div>
+      </div>
+    </div>
+
+    <div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">👤 Dados do Cliente</div>
+      <div class="recibo-linha"><label>Nome:</label><span>${g.cliNome||'—'}</span></div>
+      <div class="recibo-linha"><label>Telefone / WhatsApp:</label><span>${g.cliTel||'—'}</span></div>
+    </div>
+
+    <div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">📦 Produto em Garantia</div>
+      <div class="recibo-linha"><label>Produto:</label><span>${g.prodNome||'—'}</span></div>
+      ${g.prodCod?`<div class="recibo-linha"><label>Código:</label><span>${g.prodCod}</span></div>`:''}
+      <div class="recibo-linha"><label>Fornecedor:</label><span>${g.fornec||'—'}</span></div>
+      <div class="recibo-linha"><label>Prazo de Garantia:</label><span>${g.prazo||'A verificar'}</span></div>
+      <div class="recibo-linha"><label>Valor do Produto:</label><span>${valorFmt}</span></div>
+      <div class="recibo-linha"><label>Data de Recebimento:</label><span>${dataFmt}</span></div>
+    </div>
+
+    <div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">🔧 Defeito Relatado</div>
+      <div class="recibo-defeito">${g.defeito||'Não informado'}</div>
+    </div>
+
+    <div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">📋 Situação Atual</div>
+      <span class="recibo-etapa">${et.icon} ${et.nome}</span>
+    </div>
+
+    ${g.substNome?`<div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">🔄 Produto Entregue ao Cliente</div>
+      <div class="recibo-linha"><label>Produto substituto:</label><span>${g.substNome}</span></div>
+      ${g.substCod?`<div class="recibo-linha"><label>Código:</label><span>${g.substCod}</span></div>`:''}
+    </div>`:''}
+
+    ${g.obs?`<div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">📝 Observações</div>
+      <div class="recibo-defeito">${g.obs}</div>
+    </div>`:''}
+
+    <div class="recibo-bloco">
+      <div class="recibo-bloco-titulo">📜 Termos e Condições</div>
+      <div class="recibo-termos">
+        A MR4 Distribuidora recebeu o produto acima identificado para análise e processamento de garantia junto ao fornecedor.<br>
+        • O prazo de análise pode variar conforme disponibilidade do fornecedor.<br>
+        • A garantia cobre defeitos de fabricação e não inclui danos por mau uso, quedas ou modificações.<br>
+        • O cliente será contactado pelo número informado quando houver atualização no processo.<br>
+        • Este recibo é o comprovante de entrega do produto para análise. Guarde-o com cuidado.
+      </div>
+    </div>
+
+    <div class="recibo-assinaturas">
+      <div class="recibo-assin-box">
+        <div class="recibo-assin-linha"></div>
+        <div class="recibo-assin-label">Assinatura do Cliente<br>${g.cliNome||''}</div>
+      </div>
+      <div class="recibo-assin-box">
+        <div class="recibo-assin-linha"></div>
+        <div class="recibo-assin-label">Responsável MR4 Distribuidora</div>
+      </div>
+    </div>
+
+    <div class="recibo-rodape">
+      MR4 Distribuidora · Protocolo #${proto} · Emitido em ${dataEmissao}
+    </div>
+  </div>`;
+}
+
+window.abrirRecibo=function(id){
+  const g=garantias.find(x=>x.id===id);if(!g)return;
+  document.getElementById('recibo-conteudo').innerHTML=gerarHtmlRecibo(g);
+  document.getElementById('modalRecibo').classList.add('show');
+};
+
+window.imprimirRecibo=function(){
+  const html=document.getElementById('recibo-conteudo').innerHTML;
+  document.getElementById('printArea').innerHTML=html;
+  window.print();
+  setTimeout(()=>{ document.getElementById('printArea').innerHTML=''; },1000);
+};
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('firebaseReady', ()=>{ carregar(); initAutocompletes(); carregarFornecedores(); });

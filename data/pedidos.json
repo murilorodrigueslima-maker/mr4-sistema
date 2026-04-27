@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-27T14:56:04",
-  "total": 32,
+  "atualizado_em": "2026-04-27T16:06:54",
+  "total": 35,
   "pedidos": [
+    {
+      "id": "366162538",
+      "numero": "15561",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 44,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366156084",
+      "numero": "15559",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 207.4,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366112333",
       "numero": "15557",
@@ -22,6 +46,18 @@
       "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 160,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366159109",
+      "numero": "155555",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 110,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

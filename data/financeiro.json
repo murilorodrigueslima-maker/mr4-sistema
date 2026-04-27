@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-26T22:16:59",
+  "atualizado_em": "2026-04-27T01:42:28",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -400,6 +400,24 @@
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 168.66,
       "vencimento": "2026-05-01",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 954.27,
+      "vencimento": "2026-05-04",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 313.67,
+      "vencimento": "2026-05-04",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 356.85,
+      "vencimento": "2026-05-04",
       "tipo": "Pagar"
     }
   ],

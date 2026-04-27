@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-04-27T12:03:49",
-  "total": 24,
+  "atualizado_em": "2026-04-27T13:49:20",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "366112333",
+      "numero": "15557",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "51.911.540 FRANCISCO EDSON DE FREITAS SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366110695",
+      "numero": "15555",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "56.119.790 DANIELTON VIEIRA DOS SANTOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366102397",
+      "numero": "15554",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 243,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366096098",
+      "numero": "15553",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "CHAVEIRO&ACESSÓRIOS PEQUENO MATIAS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 126,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366092616",
+      "numero": "15552",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "WENDEL CAR SERVICE LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 365,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366086926",
+      "numero": "15551",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "STTOP FILM COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 180,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366085601",
+      "numero": "15550",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 148.93,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366079646",
       "numero": "15549",

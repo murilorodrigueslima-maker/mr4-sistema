@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-27T12:03:50",
+  "atualizado_em": "2026-04-27T13:49:21",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -79,13 +79,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 229.43,
-      "vencimento": "2026-04-05",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 193.92,
       "vencimento": "2026-04-08",
@@ -97,13 +90,6 @@
       "valor": 47.97,
       "vencimento": "2026-04-09",
       "dias_atraso": 18,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1927.2,
-      "vencimento": "2026-04-12",
-      "dias_atraso": 15,
       "tipo": "Pagar"
     },
     {
@@ -423,7 +409,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45546.76,
+  "total_vencido": 43390.130000000005,
   "total_a_receber": 0,
   "total_a_pagar": 29753.440000000002
 }

@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-04-27T13:49:20",
-  "total": 31,
+  "atualizado_em": "2026-04-27T14:56:04",
+  "total": 32,
   "pedidos": [
     {
       "id": "366112333",
@@ -11,6 +11,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 135,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366141261",
+      "numero": "155559",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

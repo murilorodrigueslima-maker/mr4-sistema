@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-27T08:23:39",
-  "total": 13,
+  "atualizado_em": "2026-04-27T09:56:55",
+  "total": 15,
   "pedidos": [
+    {
+      "id": "366022725",
+      "numero": "15540",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE 07165443347",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366004916",
+      "numero": "15539",
+      "data": "2026-04-27",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE 07165443347",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "365787773",
       "numero": "15538",

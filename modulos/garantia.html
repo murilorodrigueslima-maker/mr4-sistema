@@ -77,14 +77,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .kol-empty{text-align:center;padding:1.25rem .5rem;font-size:.72rem;color:var(--muted);opacity:.4}
 
 /* ETAPA CORES */
-.et-recebido {--c:#6B7280}
-.et-em_teste {--c:#3B82F6}
-.et-aprovado {--c:#10B981}
+.et-recebido  {--c:#6B7280}
+.et-em_teste  {--c:#3B82F6}
+.et-aprovado  {--c:#10B981}
 .et-substituido{--c:#8B5CF6}
+.et-cli_ok    {--c:#10B981}
+.et-reprovado {--c:#9CA3AF}
 .et-ag_envio  {--c:#EF4444}
 .et-enviado   {--c:#F59E0B}
 .et-encerrado {--c:#10B981}
-.et-reprovado {--c:#9CA3AF}
+
+/* FASES KANBAN */
+.fase-header{display:flex;align-items:center;gap:.75rem;margin:1.25rem 0 .75rem;padding:.6rem 1rem;border-radius:10px;font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.fase-header.fase1{background:rgba(59,130,246,.08);color:#3B82F6;border:1px solid rgba(59,130,246,.2)}
+.fase-header.fase2{background:rgba(239,68,68,.08);color:#EF4444;border:1px solid rgba(239,68,68,.2)}
+.fase-header .fase-pill{font-size:.65rem;padding:.15rem .5rem;border-radius:99px;background:currentColor;opacity:.15}
+.kanban-fase{display:grid;gap:.75rem;align-items:start;overflow-x:auto;padding-bottom:.5rem}
+.kanban-fase.f1{grid-template-columns:repeat(6,1fr)}
+.kanban-fase.f2{grid-template-columns:repeat(3,1fr)}
 
 /* CARD */
 .card{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:.8rem;cursor:pointer;transition:all .14s;border-left:3px solid var(--c,var(--border))}
@@ -238,7 +248,7 @@ tr:hover td{background:#FAFAFA}
     <div style="font-size:1rem;font-weight:800">Pipeline de Garantias</div>
     <button class="btn-primary" onclick="abrirModalNova()">+ Nova garantia</button>
   </div>
-  <div class="kanban" id="kanban"></div>
+  <div id="kanban" style="display:grid;grid-template-columns:1fr;gap:.5rem"></div>
 </div>
 
 <!-- ── HISTÓRICO ── -->
@@ -248,7 +258,7 @@ tr:hover td{background:#FAFAFA}
     <table>
       <thead><tr>
         <th>Cliente</th><th>Produto</th><th>Fornecedor</th>
-        <th>Etapa</th><th>GC</th><th>Dias</th><th>Ações</th>
+        <th>Fase / Etapa</th><th>Recebido</th><th>GC</th><th>Dias</th><th>Ações</th>
       </tr></thead>
       <tbody id="hist-tbody"></tbody>
     </table>
@@ -269,6 +279,28 @@ tr:hover td{background:#FAFAFA}
       <div class="form-group"><label>Telefone / WhatsApp</label><input type="text" id="g-cliTel" placeholder="(85) 9 0000-0000"></div>
     </div>
 
+    <div class="modal-section">📅 Recebimento</div>
+    <div class="form-row">
+      <div class="form-group"><label>Data de recebimento do produto</label><input type="date" id="g-recebimento"></div>
+      <div class="form-group"><label>Etapa atual</label>
+        <select id="g-etapa">
+          <optgroup label="— Fase 1: Atendimento ao Cliente —">
+            <option value="recebido">📋 Recebido</option>
+            <option value="em_teste">🔍 Em Teste</option>
+            <option value="aprovado">✅ Defeito Confirmado</option>
+            <option value="substituido">📦 Substituído</option>
+            <option value="cli_ok">🤝 Concluído c/ Cliente</option>
+            <option value="reprovado">❌ Sem Defeito</option>
+          </optgroup>
+          <optgroup label="— Fase 2: Devolução ao Fornecedor —">
+            <option value="ag_envio">🚚 Ag. Envio Fornecedor</option>
+            <option value="enviado">✈️ Enviado Fornecedor</option>
+            <option value="encerrado">🏁 Encerrado</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+
     <div class="modal-section">📦 Produto com defeito</div>
     <div class="form-row">
       <div class="form-group"><label>Nome do produto</label><div class="ac-wrap"><input type="text" id="g-prodNome" placeholder="Digite para buscar..." autocomplete="off"><div class="ac-list" id="ac-prod"></div></div></div>
@@ -279,21 +311,7 @@ tr:hover td{background:#FAFAFA}
       <div class="form-group"><label>Prazo garantia fornecedor</label><input type="text" id="g-prazo" placeholder="Ex: 6 meses, 1 ano"></div>
     </div>
     <div class="form-group"><label>Descrição do defeito</label><textarea id="g-defeito" placeholder="Descreva o defeito relatado pelo cliente..."></textarea></div>
-    <div class="form-row">
-      <div class="form-group"><label>Valor do produto (R$)</label><input type="number" id="g-valor" placeholder="0,00" step="0.01" min="0"></div>
-      <div class="form-group"><label>Etapa atual</label>
-        <select id="g-etapa">
-          <option value="recebido">📋 Recebido</option>
-          <option value="em_teste">🔍 Em Teste</option>
-          <option value="aprovado">✅ Defeito confirmado</option>
-          <option value="substituido">📦 Substituído</option>
-          <option value="ag_envio">🚚 Ag. Envio Fornecedor</option>
-          <option value="enviado">✈️ Enviado ao Fornecedor</option>
-          <option value="encerrado">🏁 Encerrado</option>
-          <option value="reprovado">❌ Reprovado (produto ok)</option>
-        </select>
-      </div>
-    </div>
+    <div class="form-group"><label>Valor do produto (R$)</label><input type="number" id="g-valor" placeholder="0,00" step="0.01" min="0"></div>
 
     <div class="modal-section">🔄 Substituição (preencher quando aplicável)</div>
     <div class="form-row">
@@ -382,18 +400,25 @@ onAuthStateChanged(auth, user=>{
 
 <script>
 // ── ETAPAS ────────────────────────────────────────────────────────────────────
-const ETAPAS=[
-  {id:'recebido',   icon:'📋', nome:'Recebido',            cls:'et-recebido' },
-  {id:'em_teste',   icon:'🔍', nome:'Em Teste',            cls:'et-em_teste' },
-  {id:'aprovado',   icon:'✅', nome:'Defeito Confirmado',  cls:'et-aprovado' },
-  {id:'substituido',icon:'📦', nome:'Substituído',         cls:'et-substituido'},
-  {id:'ag_envio',   icon:'🚚', nome:'Ag. Envio Fornecedor',cls:'et-ag_envio' },
-  {id:'enviado',    icon:'✈️', nome:'Enviado Fornecedor',  cls:'et-enviado'  },
-  {id:'encerrado',  icon:'🏁', nome:'Encerrado',           cls:'et-encerrado'},
-  {id:'reprovado',  icon:'❌', nome:'Reprovado',           cls:'et-reprovado'},
+const FASE1 = [
+  {id:'recebido',   icon:'📋', nome:'Recebido',             cls:'et-recebido',   fase:1},
+  {id:'em_teste',   icon:'🔍', nome:'Em Teste',             cls:'et-em_teste',   fase:1},
+  {id:'aprovado',   icon:'✅', nome:'Defeito Confirmado',   cls:'et-aprovado',   fase:1},
+  {id:'substituido',icon:'📦', nome:'Substituído',          cls:'et-substituido',fase:1},
+  {id:'cli_ok',     icon:'🤝', nome:'Concluído c/ Cliente', cls:'et-cli_ok',     fase:1},
+  {id:'reprovado',  icon:'❌', nome:'Sem Defeito',          cls:'et-reprovado',  fase:1},
 ];
-const ETAPA_MAP = Object.fromEntries(ETAPAS.map(e=>[e.id,e]));
-const ABERTAS   = ['recebido','em_teste','aprovado','substituido','ag_envio','enviado'];
+const FASE2 = [
+  {id:'ag_envio',   icon:'🚚', nome:'Ag. Envio Fornecedor', cls:'et-ag_envio',   fase:2},
+  {id:'enviado',    icon:'✈️', nome:'Enviado Fornecedor',   cls:'et-enviado',    fase:2},
+  {id:'encerrado',  icon:'🏁', nome:'Encerrado',            cls:'et-encerrado',  fase:2},
+];
+const ETAPAS   = [...FASE1, ...FASE2];
+const ETAPA_MAP= Object.fromEntries(ETAPAS.map(e=>[e.id,e]));
+// Abertas = tudo exceto encerrado/reprovado
+const ABERTAS  = ['recebido','em_teste','aprovado','substituido','cli_ok','ag_envio','enviado'];
+// Fase 1 concluída = cli_ok ou reprovado
+const FASE1_FIM= ['cli_ok','reprovado'];
 
 let garantias=[], gcAtualId=null;
 
@@ -470,19 +495,22 @@ function renderVisaoGeral(){
   const listEl=document.getElementById('lista-recentes');
   if(!recentes.length){listEl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.85rem">Nenhuma garantia em andamento. Tudo certo! ✅</div>';return;}
   listEl.innerHTML=`<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-    <table><thead><tr><th>Cliente</th><th>Produto</th><th>Fornecedor</th><th>Etapa</th><th>Dias</th><th>GC</th><th></th></tr></thead>
+    <table><thead><tr><th>Cliente</th><th>Produto</th><th>Fornecedor</th><th>Etapa</th><th>Recebido</th><th>Dias</th><th>GC</th><th></th></tr></thead>
     <tbody>${recentes.map(g=>linhaTabela(g)).join('')}</tbody></table></div>`;
 }
 
 function linhaTabela(g){
   const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
-  const dias=diasDesde(g.criadoEm);
+  const base=g.recebidoEm?new Date(g.recebidoEm).getTime():g.criadoEm;
+  const dias=Math.floor((Date.now()-base)/86400000);
   const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+g.id+'\')">⚠️ GC</button>'):'—';
+  const faseTag=et.fase===2?'<span style="font-size:.6rem;background:#fee2e2;color:#ef4444;border-radius:4px;padding:.1rem .35rem;font-weight:700">F2</span>':'<span style="font-size:.6rem;background:#dbeafe;color:#3b82f6;border-radius:4px;padding:.1rem .35rem;font-weight:700">F1</span>';
   return`<tr>
     <td><div style="font-weight:600">${g.cliNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.cliTel||''}</div></td>
     <td><div style="font-weight:600">${g.prodNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.prodCod?'#'+g.prodCod:''}</div></td>
     <td style="font-size:.82rem">${g.fornec||'—'}</td>
-    <td><span class="etapa-badge" style="color:var(--c,#888);border-color:var(--c,#888);background:rgba(0,0,0,.03)" class="${et.cls}">${et.icon} ${et.nome}</span></td>
+    <td><div style="display:flex;align-items:center;gap:.35rem">${faseTag}<span class="etapa-badge ${et.cls}" style="color:var(--c,#888);border-color:var(--c,#888);background:rgba(0,0,0,.03)">${et.icon} ${et.nome}</span></div></td>
+    <td style="font-size:.78rem;color:var(--muted)">${g.recebidoEm||'—'}</td>
     <td><span style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</span></td>
     <td>${gcBadge}</td>
     <td><div style="display:flex;gap:.3rem">
@@ -493,57 +521,77 @@ function linhaTabela(g){
 }
 
 // ── KANBAN ────────────────────────────────────────────────────────────────────
-function renderKanban(){
-  document.getElementById('kanban').innerHTML=ETAPAS.map(e=>{
-    const lista=garantias.filter(g=>g.etapa===e.id);
-    return`<div class="kol ${e.cls}">
-      <div class="kol-head">
-        <div class="kol-bar" style="background:var(--c)"></div>
-        <div class="kol-nome">${e.icon} ${e.nome}</div>
-        <div class="kol-cnt" style="color:var(--c);border-color:var(--c);background:rgba(0,0,0,.03)">${lista.length}</div>
-      </div>
-      <div class="kol-body">
-        ${lista.length?lista.map(g=>{
-          const dias=diasDesde(g.criadoEm);
-          const gcTag=g.substCod&&!g.lancadoGC?'<span style="font-size:.6rem;color:var(--yellow)">⚠️ sem GC</span>':'';
-          return`<div class="card ${e.cls}" onclick="abrirModalEtapa('${g.id}')">
-            <div class="card-titulo">${g.prodNome||'Sem nome'}</div>
-            <div class="card-sub">${g.cliNome||'—'}${g.fornec?' · '+g.fornec:''}</div>
-            <div class="card-foot">
-              <span class="card-dias${dias>7?' urgente':''}">${dias}d</span>
-              <div class="card-acoes" onclick="event.stopPropagation()">
-                ${gcTag}
-                <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
-              </div>
+function renderKoluna(e){
+  const lista=garantias.filter(g=>g.etapa===e.id);
+  const diasCard=(g)=>{
+    const base=g.recebidoEm?new Date(g.recebidoEm).getTime():g.criadoEm;
+    return Math.floor((Date.now()-base)/86400000);
+  };
+  return`<div class="kol ${e.cls}">
+    <div class="kol-head">
+      <div class="kol-bar" style="background:var(--c)"></div>
+      <div class="kol-nome">${e.icon} ${e.nome}</div>
+      <div class="kol-cnt" style="color:var(--c);border-color:var(--c);background:rgba(0,0,0,.03)">${lista.length}</div>
+    </div>
+    <div class="kol-body">
+      ${lista.length?lista.map(g=>{
+        const dias=diasCard(g);
+        const gcTag=g.substCod&&!g.lancadoGC?'<span style="font-size:.6rem;color:var(--yellow)">⚠️ sem GC</span>':'';
+        return`<div class="card ${e.cls}" onclick="abrirModalEtapa('${g.id}')">
+          <div class="card-titulo">${g.prodNome||'Sem nome'}</div>
+          <div class="card-sub">${g.cliNome||'—'}${g.fornec?' · '+g.fornec:''}</div>
+          <div class="card-foot">
+            <span class="card-dias${dias>7?' urgente':''}">${dias}d</span>
+            <div class="card-acoes" onclick="event.stopPropagation()">
+              ${gcTag}
+              <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
             </div>
-          </div>`;
-        }).join(''):`<div class="kol-empty">Nenhuma</div>`}
-      </div>
-    </div>`;
-  }).join('');
+          </div>
+        </div>`;
+      }).join(''):`<div class="kol-empty">Nenhuma</div>`}
+    </div>
+  </div>`;
+}
+
+function renderKanban(){
+  document.getElementById('kanban').innerHTML=`
+    <div class="fase-header fase1" style="grid-column:1/-1">👤 Fase 1 — Atendimento ao Cliente</div>
+    <div class="kanban-fase f1" style="grid-column:1/-1">${FASE1.map(renderKoluna).join('')}</div>
+    <div class="fase-header fase2" style="grid-column:1/-1">🏭 Fase 2 — Devolução ao Fornecedor <span style="font-size:.7rem;opacity:.6;font-weight:500;text-transform:none;letter-spacing:0">(inicia após Concluído c/ Cliente)</span></div>
+    <div class="kanban-fase f2" style="grid-column:1/-1">${FASE2.map(renderKoluna).join('')}</div>`;
 }
 
 // ── HISTÓRICO ─────────────────────────────────────────────────────────────────
 let histFiltro='todas';
 function renderHistorico(){
-  const filtros=['todas','encerrado','reprovado','ag_envio','enviado'];
+  const filtros=['todas','fase1','fase2','encerrado','reprovado'];
+  const lblFiltro=(f)=>{
+    if(f==='todas') return 'Todas';
+    if(f==='fase1') return '👤 Fase 1';
+    if(f==='fase2') return '🏭 Fase 2';
+    return ETAPA_MAP[f]?ETAPA_MAP[f].icon+' '+ETAPA_MAP[f].nome:f;
+  };
   document.getElementById('hist-filtros').innerHTML=filtros.map(f=>`
-    <button class="filtro-btn${histFiltro===f?' ativo':''}" onclick="setHistFiltro('${f}')">${
-      f==='todas'?'Todas':ETAPA_MAP[f]?ETAPA_MAP[f].icon+' '+ETAPA_MAP[f].nome:f
-    }</button>`).join('');
+    <button class="filtro-btn${histFiltro===f?' ativo':''}" onclick="setHistFiltro('${f}')">${lblFiltro(f)}</button>`).join('');
 
-  const lista=histFiltro==='todas'?garantias:garantias.filter(g=>g.etapa===histFiltro);
+  const lista=histFiltro==='todas'?garantias
+    :histFiltro==='fase1'?garantias.filter(g=>(ETAPA_MAP[g.etapa]?.fase||1)===1)
+    :histFiltro==='fase2'?garantias.filter(g=>(ETAPA_MAP[g.etapa]?.fase||1)===2)
+    :garantias.filter(g=>g.etapa===histFiltro);
   const tbody=document.getElementById('hist-tbody');
-  if(!lista.length){tbody.innerHTML='<tr class="empty-row"><td colspan="7">Nenhum registro.</td></tr>';return;}
+  if(!lista.length){tbody.innerHTML='<tr class="empty-row"><td colspan="8">Nenhum registro.</td></tr>';return;}
   tbody.innerHTML=lista.map(g=>{
     const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
-    const dias=diasDesde(g.criadoEm);
+    const base=g.recebidoEm?new Date(g.recebidoEm).getTime():g.criadoEm;
+    const dias=Math.floor((Date.now()-base)/86400000);
     const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+g.id+'\')">⚠️ Lançar</button>'):'—';
+    const faseTag=et.fase===2?'<span style="font-size:.6rem;background:#fee2e2;color:#ef4444;border-radius:4px;padding:.1rem .35rem;font-weight:700">F2</span>':'<span style="font-size:.6rem;background:#dbeafe;color:#3b82f6;border-radius:4px;padding:.1rem .35rem;font-weight:700">F1</span>';
     return`<tr>
       <td><div style="font-weight:600">${g.cliNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.cliTel||''}</div></td>
       <td><div style="font-weight:600">${g.prodNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.prodCod?'#'+g.prodCod:''}</div></td>
       <td style="font-size:.82rem">${g.fornec||'—'}</td>
-      <td><span class="etapa-badge" style="color:var(--c,#888);border-color:rgba(0,0,0,.1)">${et.icon} ${et.nome}</span></td>
+      <td><div style="display:flex;align-items:center;gap:.3rem">${faseTag}<span class="etapa-badge ${et.cls}" style="color:var(--c,#888);border-color:rgba(0,0,0,.1)">${et.icon} ${et.nome}</span></div></td>
+      <td style="font-size:.78rem;color:var(--muted)">${g.recebidoEm||'—'}</td>
       <td>${gcBadge}</td>
       <td style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</td>
       <td><div style="display:flex;gap:.3rem">
@@ -562,6 +610,7 @@ window.abrirModalNova=function(){
   ['g-cliNome','g-cliTel','g-prodNome','g-prodCod','g-fornec','g-prazo','g-defeito','g-substNome','g-substCod','g-obs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('g-valor').value='';
   document.getElementById('g-etapa').value='recebido';
+  document.getElementById('g-recebimento').value=hoje();
   document.getElementById('modalGarantiaTit').textContent='Nova Garantia';
   document.getElementById('modalGarantia').classList.add('show');
 };
@@ -581,6 +630,7 @@ window.editarGarantia=function(id){
   document.getElementById('g-substNome').value=g.substNome||'';
   document.getElementById('g-substCod').value=g.substCod||'';
   document.getElementById('g-obs').value=g.obs||'';
+  document.getElementById('g-recebimento').value=g.recebidoEm||hoje();
   document.getElementById('modalGarantiaTit').textContent='Editar Garantia';
   document.getElementById('modalGarantia').classList.add('show');
 };
@@ -606,6 +656,7 @@ window.salvarGarantia=async function(){
     substNome:document.getElementById('g-substNome').value.trim(),
     substCod: document.getElementById('g-substCod').value.trim(),
     obs:      document.getElementById('g-obs').value.trim(),
+    recebidoEm: document.getElementById('g-recebimento').value||hoje(),
     lancadoGC:existing.lancadoGC||false,
     criadoEm: existing.criadoEm||Date.now(),
     atualizadoEm:Date.now(),
@@ -639,13 +690,32 @@ window.excluirGarantia=async function(id){
 window.abrirModalEtapa=function(id){
   const g=garantias.find(x=>x.id===id);if(!g)return;
   const et=ETAPA_MAP[g.etapa];
+  const etAtualFase=(et?.fase)||1;
+  // Fase 2 só disponível se fase 1 foi concluída (cli_ok ou reprovado)
+  const fase1Ok=FASE1_FIM.includes(g.etapa)||etAtualFase===2;
   document.getElementById('modalEtapaTit').textContent=`${g.prodNome||'Produto'} — ${g.cliNome||'Cliente'}`;
   document.getElementById('modalEtapaSub').textContent=`Etapa atual: ${et?et.icon+' '+et.nome:'—'}`;
-  document.getElementById('etapaOpts').innerHTML=ETAPAS.map(e=>`
+
+  let html='';
+  // Fase 1
+  html+=`<div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#3B82F6;margin:.5rem 0 .35rem">👤 Fase 1 — Cliente</div>`;
+  html+=FASE1.map(e=>`
     <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${id}','${e.id}')">
       <span style="font-size:1.1rem">${e.icon}</span> ${e.nome}
       ${g.etapa===e.id?'<span style="margin-left:auto;font-size:.72rem;color:var(--orange)">Atual</span>':''}
     </div>`).join('');
+  // Fase 2 — só mostra se fase 1 concluída
+  if(fase1Ok){
+    html+=`<div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#EF4444;margin:.85rem 0 .35rem">🏭 Fase 2 — Fornecedor</div>`;
+    html+=FASE2.map(e=>`
+      <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${id}','${e.id}')">
+        <span style="font-size:1.1rem">${e.icon}</span> ${e.nome}
+        ${g.etapa===e.id?'<span style="margin-left:auto;font-size:.72rem;color:var(--orange)">Atual</span>':''}
+      </div>`).join('');
+  } else {
+    html+=`<div style="margin-top:.75rem;padding:.65rem .85rem;background:#f8f9fa;border-radius:8px;font-size:.78rem;color:var(--muted)">🔒 Fase 2 disponível após <strong>Concluído c/ Cliente</strong></div>`;
+  }
+  document.getElementById('etapaOpts').innerHTML=html;
   document.getElementById('modalEtapa').classList.add('show');
 };
 

@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-04-28T13:28:23",
-  "total": 32,
+  "atualizado_em": "2026-04-28T15:04:27",
+  "total": 37,
   "pedidos": [
+    {
+      "id": "366407781",
+      "numero": "15579",
+      "data": "2026-04-28",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 24,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366406099",
+      "numero": "15578",
+      "data": "2026-04-28",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE 07165443347",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 110,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366396953",
+      "numero": "15577",
+      "data": "2026-04-28",
+      "hora": "",
+      "cliente": "41.924.486 LEONARDO ALMEIDA DE MORAIS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 373.4,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366381774",
+      "numero": "15576",
+      "data": "2026-04-28",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 380,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366374754",
+      "numero": "15575",
+      "data": "2026-04-28",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 125.38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366364735",
       "numero": "15574",
@@ -9,8 +69,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1154,
-      "itens": 10,
+      "valor": 2224,
+      "itens": 15,
       "status_gc": "",
       "cidade": ""
     },

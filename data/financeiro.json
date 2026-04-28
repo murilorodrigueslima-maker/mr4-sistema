@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-28T07:35:41",
+  "atualizado_em": "2026-04-28T09:14:08",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -416,6 +416,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "ALUGUEL GALPÃO REF ABRIL",
+      "valor": 4830.16,
+      "vencimento": "2026-05-04",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "Salário Murilo",
       "valor": 15000,
       "vencimento": "2026-05-05",
@@ -426,5 +432,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 58740.009999999995,
   "total_a_receber": 0,
-  "total_a_pagar": 30454.22
+  "total_a_pagar": 35284.380000000005
 }

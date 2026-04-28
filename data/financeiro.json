@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-28T09:14:08",
+  "atualizado_em": "2026-04-28T13:28:24",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -93,13 +93,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 2660,
-      "vencimento": "2026-04-12",
-      "dias_atraso": 16,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "sistema gestãoclick inter",
       "valor": 16,
       "vencimento": "2026-04-15",
@@ -179,13 +172,6 @@
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
-      "vencimento": "2026-04-17",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 638.3,
       "vencimento": "2026-04-17",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -430,7 +416,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58740.009999999995,
+  "total_vencido": 55441.70999999999,
   "total_a_receber": 0,
   "total_a_pagar": 35284.380000000005
 }

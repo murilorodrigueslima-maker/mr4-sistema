@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-28T15:04:28",
+  "atualizado_em": "2026-04-28T17:59:26",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -191,13 +191,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 3806.4,
-      "vencimento": "2026-04-20",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Compra de tapetes para uso interno da empresa",
       "valor": 63.96,
       "vencimento": "2026-04-20",
@@ -263,20 +256,6 @@
     {
       "nome": "LAMPADAS/FIOS PARA ESCRITORIO",
       "valor": 114.52,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 897.75,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
-      "valor": 726.7,
       "vencimento": "2026-04-25",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -416,7 +395,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55441.70999999999,
+  "total_vencido": 50010.86,
   "total_a_receber": 0,
   "total_a_pagar": 35284.380000000005
 }

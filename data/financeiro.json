@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-27T21:03:31",
+  "atualizado_em": "2026-04-28T00:58:32",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -301,63 +301,72 @@
       "vencimento": "2026-04-25",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1503.52,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1165.64,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1559.52,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 2660,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 156.8,
       "vencimento": "2026-04-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
@@ -405,11 +414,17 @@
       "valor": 356.85,
       "vencimento": "2026-05-04",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "Salário Murilo",
+      "valor": 15000,
+      "vencimento": "2026-05-05",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 43390.130000000005,
+  "total_vencido": 58740.009999999995,
   "total_a_receber": 0,
-  "total_a_pagar": 29753.440000000002
+  "total_a_pagar": 30454.22
 }

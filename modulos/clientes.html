@@ -251,6 +251,43 @@ select.filter-sel:focus{border-color:var(--orange)}
   .detail-panel.open{transform:translateX(0)}
   .sidebar{display:none}
 }
+
+/* ── CRM PAINEL ── */
+.painel-area{padding:1rem 1.25rem;overflow-y:auto;height:100%}
+.painel-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.25rem}
+.painel-stat-card{background:var(--white);border-radius:12px;padding:1rem 1.25rem;border:1.5px solid var(--border);cursor:pointer;transition:all .12s}
+.painel-stat-card:hover{border-color:var(--border-dk);box-shadow:0 2px 8px rgba(0,0,0,.07);transform:translateY(-1px)}
+.painel-stat-num{font-size:1.8rem;font-weight:800;line-height:1}
+.painel-stat-label{font-size:.7rem;color:var(--muted);margin-top:.4rem;font-weight:500}
+.painel-cols{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
+.painel-block{background:var(--white);border-radius:12px;padding:1rem 1.1rem;border:1.5px solid var(--border)}
+.painel-section-title{font-size:.78rem;font-weight:800;color:var(--text);margin-bottom:.72rem;display:flex;align-items:center;justify-content:space-between}
+.painel-section-badge{font-size:.67rem;font-weight:700;padding:.12rem .45rem;border-radius:20px;background:var(--bg);color:var(--muted)}
+.painel-item{display:flex;align-items:center;gap:.6rem;padding:.5rem 0;border-bottom:1px solid var(--border);cursor:pointer}
+.painel-item:last-child{border-bottom:none}
+.painel-item:hover .painel-item-nome{color:var(--orange)}
+.painel-item-av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ffb380);color:#fff;font-weight:700;font-size:.75rem;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.painel-item-nome{font-size:.8rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .12s}
+.painel-item-sub{font-size:.65rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.painel-item-badge{font-size:.62rem;font-weight:700;padding:.12rem .4rem;border-radius:20px;flex-shrink:0;white-space:nowrap}
+.painel-rank{font-size:.68rem;font-weight:800;color:var(--muted);width:16px;text-align:right;flex-shrink:0}
+.painel-empty{font-size:.75rem;color:var(--muted);text-align:center;padding:.85rem 0;line-height:1.6}
+.painel-bar-row{display:flex;align-items:center;gap:.6rem;margin-bottom:.45rem}
+.painel-bar-label{font-size:.72rem;width:90px;flex-shrink:0;color:var(--text)}
+.painel-bar-track{flex:1;background:var(--bg);border-radius:20px;height:7px;overflow:hidden}
+.painel-bar-fill{height:100%;border-radius:20px;transition:width .4s}
+.painel-bar-count{font-size:.7rem;font-weight:700;color:var(--muted);min-width:22px;text-align:right}
+/* WhatsApp reconnect */
+.wpp-reconnect-btn{width:100%;margin-top:.45rem;padding:.38rem .65rem;background:#FEF2F2;color:#B91C1C;border:1.5px solid #FECACA;border-radius:8px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;display:none;transition:all .15s}
+.wpp-reconnect-btn:hover{background:#FEE2E2;border-color:#FCA5A5}
+/* QR Code modal */
+.qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
+.qr-overlay.open{display:flex}
+.qr-box{background:#fff;border-radius:18px;padding:1.75rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.25)}
+.qr-box-title{font-size:.95rem;font-weight:800;margin-bottom:.4rem}
+.qr-box-sub{font-size:.76rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.65}
+#qrImg{max-width:200px;width:100%;border-radius:10px;border:3px solid var(--border);margin-bottom:.85rem;display:none}
+.qr-status-txt{font-size:.78rem;font-weight:600;padding:.45rem .75rem;border-radius:8px;display:inline-block}
 </style>
 </head>
 <body>
@@ -316,12 +353,19 @@ select.filter-sel:focus{border-color:var(--orange)}
       <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:var(--green)"></span>Msg não lida</span>
       <span class="sidebar-item-count" id="cnt-naoLidas" style="background:#D1FAE5;color:#065F46">0</span>
     </div>
+    <div class="sidebar-item" id="filter-semContato3d" onclick="setFilter('semContato3d')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#EF4444"></span>Sem contato 3d+</span>
+      <span class="sidebar-item-count" id="cnt-semContato3d" style="background:#FEE2E2;color:#B91C1C">0</span>
+    </div>
 
     <div class="sidebar-footer">
       <div style="font-size:.68rem;color:var(--muted);text-align:center;line-height:1.5">
         WhatsApp<br>
         <strong style="color:var(--text)" id="wppStatus">Não configurado</strong>
       </div>
+      <button class="wpp-reconnect-btn" id="wppReconnectBtn" onclick="abrirReconectarWpp()">
+        🔄 Reconectar WhatsApp
+      </button>
     </div>
   </aside>
 
@@ -341,6 +385,7 @@ select.filter-sel:focus{border-color:var(--orange)}
         <button class="modo-btn active" id="modoClientes"  onclick="setModo('clientes')">👥 Clientes</button>
         <button class="modo-btn"        id="modoInbox"     onclick="setModo('inbox')">💬 WhatsApp</button>
         <button class="modo-btn"        id="modoPipeline"  onclick="setModo('pipeline')">🏷️ Pipeline</button>
+        <button class="modo-btn"        id="modoPainel"    onclick="setModo('painel')">📊 Painel</button>
       </div>
       <div class="list-header-title" id="listTitle" style="margin-left:.5rem"></div>
       <button class="btn btn-ghost" id="btnImportarInbox" onclick="importarTodosDoInbox()" style="display:none;font-size:.73rem;padding:.35rem .75rem">📥 Importar novos</button>
@@ -535,6 +580,17 @@ select.filter-sel:focus{border-color:var(--orange)}
   </div>
 </div>
 
+<!-- QR CODE RECONECTAR WHATSAPP -->
+<div class="qr-overlay" id="qrOverlay">
+  <div class="qr-box">
+    <div class="qr-box-title">📱 Reconectar WhatsApp</div>
+    <div class="qr-box-sub">Abra o WhatsApp no celular → <strong>⋮ Dispositivos conectados → Conectar dispositivo</strong> → escaneie o QR code abaixo.</div>
+    <img id="qrImg" alt="QR Code">
+    <div><span class="qr-status-txt" id="qrStatusTxt" style="background:#F3F4F6;color:#6B7280">⏳ Gerando QR code…</span></div>
+    <button onclick="fecharReconectarWpp()" style="margin-top:1rem;width:100%;padding:.5rem;border:1.5px solid var(--border);border-radius:9px;background:none;cursor:pointer;font-size:.8rem;font-family:'Inter',sans-serif;color:var(--muted)">Fechar</button>
+  </div>
+</div>
+
 <!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -617,6 +673,7 @@ function atualizarContadores() {
   document.getElementById('cnt-garantias').textContent = comGarantia.length;
   document.getElementById('cnt-esquecidos').textContent = esquecidos.length;
   document.getElementById('cnt-naoLidas').textContent   = naoLidas.length;
+  document.getElementById('cnt-semContato3d').textContent = CLIENTES.filter(isSemContato3).length;
 }
 
 window.setFilter = function(f) {
@@ -652,9 +709,10 @@ window.filtrar = function() {
     GARANTIAS.some(g => normalizar(g.clienteNome)===normalizar(c.nome) && !['encerrado','reprovado'].includes(g.status))
   );
   else if(filtroAtivo === 'esquecidos') lista = lista.filter(isEsquecido);
-  else if(filtroAtivo === 'naoLidas')   lista = lista.filter(temMsgNaoLida);
+  else if(filtroAtivo === 'naoLidas')    lista = lista.filter(temMsgNaoLida);
+  else if(filtroAtivo === 'semContato3d') lista = lista.filter(isSemContato3);
 
-  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta', esquecidos:'Sem contato há 30d+', naoLidas:'Mensagens não lidas' };
+  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta', esquecidos:'Sem contato há 30d+', naoLidas:'Mensagens não lidas', semContato3d:'Sem contato 3d+' };
   document.getElementById('listTitle').textContent = (labels[filtroAtivo]||'Clientes') + ` (${lista.length})`;
   renderLista(lista);
 };
@@ -839,12 +897,70 @@ async function checkZapiStatus() {
     const el = document.getElementById('wppStatus');
     el.textContent = ok ? '● Conectado' : '● Desconectado';
     el.style.color = ok ? 'var(--green)' : 'var(--red)';
+    const btn = document.getElementById('wppReconnectBtn');
+    if(btn) btn.style.display = ok ? 'none' : 'block';
   } catch(e) {
     const el = document.getElementById('wppStatus');
-    el.textContent = 'Erro de conexão';
+    el.textContent = '● Desconectado';
     el.style.color = 'var(--red)';
+    const btn = document.getElementById('wppReconnectBtn');
+    if(btn) btn.style.display = 'block';
   }
 }
+
+// ── Reconectar WhatsApp via QR Code ───────────────────────────────────────────
+window.abrirReconectarWpp = async function() {
+  const overlay = document.getElementById('qrOverlay');
+  const img     = document.getElementById('qrImg');
+  const status  = document.getElementById('qrStatusTxt');
+  overlay.classList.add('open');
+  img.style.display = 'none';
+  status.textContent = '⏳ Gerando QR code…';
+  status.style.background = '#F3F4F6'; status.style.color = '#6B7280';
+
+  try {
+    const r = await fetch(`${ZAPI_BASE}/qr-code`, { headers: ZAPI_HEADERS });
+    if(!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    const src = j.value || j.base64 || j.qrcode || '';
+    if(!src) throw new Error('QR code não disponível — verifique se a instância está ativa.');
+    img.src = src.startsWith('data:') ? src : 'data:image/png;base64,' + src;
+    img.style.display = 'block';
+    status.textContent = '📱 Escaneie com o WhatsApp';
+    status.style.background = '#D1FAE5'; status.style.color = '#065F46';
+
+    // Verifica conexão a cada 3s por até 90s
+    let tentativas = 0;
+    const pollId = setInterval(async () => {
+      tentativas++;
+      if(tentativas > 30 || !overlay.classList.contains('open')) { clearInterval(pollId); return; }
+      try {
+        const r2 = await fetch(`${ZAPI_BASE}/status`, { headers: ZAPI_HEADERS });
+        const j2 = await r2.json();
+        const ok2 = j2.connected === true || j2.status === 'connected';
+        if(ok2) {
+          clearInterval(pollId);
+          img.style.display = 'none';
+          status.textContent = '✅ WhatsApp conectado com sucesso!';
+          status.style.background = '#D1FAE5'; status.style.color = '#065F46';
+          document.getElementById('wppStatus').textContent = '● Conectado';
+          document.getElementById('wppStatus').style.color = 'var(--green)';
+          document.getElementById('wppReconnectBtn').style.display = 'none';
+          setTimeout(() => fecharReconectarWpp(), 2000);
+        }
+      } catch(_) {}
+    }, 3000);
+
+  } catch(e) {
+    img.style.display = 'none';
+    status.textContent = `❌ ${e.message}`;
+    status.style.background = '#FEE2E2'; status.style.color = '#B91C1C';
+  }
+};
+
+window.fecharReconectarWpp = function() {
+  document.getElementById('qrOverlay').classList.remove('open');
+};
 
 function carregarChat(clienteId) {
   const c = CLIENTES.find(x=>x.id===clienteId);
@@ -1085,6 +1201,7 @@ window.setModo = function(modo) {
   document.getElementById('modoClientes').classList.toggle('active', modo === 'clientes');
   document.getElementById('modoInbox').classList.toggle('active', modo === 'inbox');
   document.getElementById('modoPipeline').classList.toggle('active', modo === 'pipeline');
+  document.getElementById('modoPainel')?.classList.toggle('active', modo === 'painel');
   fecharDetalhe();
   if(modo === 'inbox') {
     document.getElementById('listTitle').textContent = 'WhatsApp Inbox';
@@ -1092,6 +1209,8 @@ window.setModo = function(modo) {
   } else if(modo === 'pipeline') {
     document.getElementById('listTitle').textContent = 'Pipeline de Vendas';
     renderPipeline();
+  } else if(modo === 'painel') {
+    renderPainelCRM();
   } else {
     filtrar();
   }
@@ -1319,6 +1438,22 @@ function isEsquecido(c) {
   return (Date.now() - ref.getTime()) / (1000*60*60*24) > DIAS;
 }
 
+function isSemContato3(c) {
+  let ref;
+  if(c.ultimoContato) ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
+  else if(c.criado_em) ref = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
+  else return false;
+  return (Date.now() - ref.getTime()) / (1000*60*60*24) > 3;
+}
+
+function diasSemContato(c) {
+  let ref;
+  if(c.ultimoContato) ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
+  else if(c.criado_em) ref = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
+  else return 0;
+  return Math.floor((Date.now() - ref.getTime()) / (1000*60*60*24));
+}
+
 // ── Pipeline Kanban ───────────────────────────────────────────────────────────
 
 function renderPipeline() {
@@ -1367,6 +1502,261 @@ window.moverPipeline = async function(clienteId, novoStage) {
   if(c) c.pipeline = novoStage;
   renderPipeline();
 };
+
+// ── Carregar CHATS silenciosamente (para o Painel) ─────────────────────────────
+async function carregarChats() {
+  try {
+    const r = await fetch(`${ZAPI_BASE}/chats?page=1&pageSize=100`, { headers: ZAPI_HEADERS });
+    if(!r.ok) return;
+    const data = await r.json();
+    const pagina = (Array.isArray(data) ? data : (data.chats||data.data||[])).filter(c=>!c.isGroup);
+    CHATS = pagina.sort((a,b)=>(Number(b.lastMessageTime)||0)-(Number(a.lastMessageTime)||0));
+    CHATS_UNREAD = {};
+    CHATS.forEach(c=>{ CHATS_UNREAD[c.phone]=Number(c.messagesUnread||c.unread||0); });
+  } catch(_) {}
+}
+
+window.carregarChatsParaPainel = async function() {
+  const btn = document.getElementById('btnCarregarChats');
+  if(btn){ btn.textContent='⏳ Carregando…'; btn.disabled=true; }
+  await carregarChats();
+  if(modoAtivo==='painel') renderPainelCRM();
+};
+
+// ── Painel CRM ─────────────────────────────────────────────────────────────────
+function renderPainelCRM() {
+  const body = document.getElementById('listBody');
+  document.getElementById('listTitle').textContent = 'Painel CRM';
+  body.style.padding = '0';
+  body.style.overflow = 'auto';
+
+  const agora = new Date();
+  const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+
+  // ── Métricas ──
+  const novosCount = CLIENTES.filter(c => {
+    if(!c.criado_em) return false;
+    const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
+    return d >= inicioMes;
+  }).length;
+
+  const semContato3dList = CLIENTES.filter(isSemContato3)
+    .sort((a,b) => diasSemContato(b) - diasSemContato(a));
+
+  const naoLidasCount = CLIENTES.filter(temMsgNaoLida).length;
+
+  // ── Dados de WhatsApp (dependem de CHATS carregado) ──
+  const chatsLoaded = CHATS.length > 0;
+
+  const pendentesComCRM = CHATS.filter(c => {
+    if(c.lastFromMe !== false) return false;
+    return !!matchClientePorPhone(c.phone);
+  });
+
+  const numerosNovos = CHATS.filter(c => !matchClientePorPhone(c.phone));
+
+  const ativosDoMes = CHATS
+    .filter(c => {
+      const t = Number(c.lastMessageTime||0);
+      const tsMs = t < 1e12 ? t*1000 : t;
+      return tsMs >= inicioMes.getTime() && matchClientePorPhone(c.phone);
+    })
+    .sort((a,b) => Number(b.lastMessageTime||0) - Number(a.lastMessageTime||0))
+    .slice(0, 10);
+
+  // ── Anotações recentes (todos os clientes) ──
+  const notasRecentes = [];
+  CLIENTES.forEach(c => {
+    (c.notas||[]).forEach(n => {
+      notasRecentes.push({ cliente: c, nota: n, ts: new Date(n.data||0).getTime() });
+    });
+  });
+  notasRecentes.sort((a,b) => b.ts - a.ts);
+  const topNotas = notasRecentes.slice(0, 6);
+
+  // ── HTML bloco "precisa do WhatsApp" ──
+  const semChatsHtml = `<div class="painel-empty">
+    Dados de conversas ainda não carregados.<br>
+    <button id="btnCarregarChats" onclick="carregarChatsParaPainel()"
+      style="margin-top:.5rem;padding:.35rem .85rem;background:var(--orange);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.73rem;font-family:'Inter',sans-serif;font-weight:700">
+      Carregar WhatsApp
+    </button>
+  </div>`;
+
+  body.innerHTML = `
+<div class="painel-area">
+
+  <!-- ── Stats ── -->
+  <div class="painel-stats">
+    <div class="painel-stat-card" onclick="setModo('clientes');setFilter('todos')">
+      <div class="painel-stat-num" style="color:var(--orange)">${CLIENTES.length}</div>
+      <div class="painel-stat-label">👥 Total de Clientes</div>
+    </div>
+    <div class="painel-stat-card" onclick="setModo('clientes');setFilter('novos')">
+      <div class="painel-stat-num" style="color:var(--green)">${novosCount}</div>
+      <div class="painel-stat-label">🆕 Novos este mês</div>
+    </div>
+    <div class="painel-stat-card" onclick="setModo('clientes');setFilter('semContato3d')">
+      <div class="painel-stat-num" style="color:var(--yellow)">${semContato3dList.length}</div>
+      <div class="painel-stat-label">⏰ Sem contato 3d+</div>
+    </div>
+    <div class="painel-stat-card" onclick="setModo('clientes');setFilter('naoLidas')">
+      <div class="painel-stat-num" style="color:var(--blue)">${naoLidasCount}</div>
+      <div class="painel-stat-label">💬 Msgs não lidas</div>
+    </div>
+  </div>
+
+  <!-- ── Linha 1: Conversas Pendentes + Sem Contato 3d ── -->
+  <div class="painel-cols">
+
+    <div class="painel-block">
+      <div class="painel-section-title">
+        ⏳ Conversas Pendentes
+        <span class="painel-section-badge">${chatsLoaded ? pendentesComCRM.length : '?'}</span>
+      </div>
+      ${!chatsLoaded ? semChatsHtml :
+        pendentesComCRM.length
+          ? pendentesComCRM.slice(0,7).map(chat => {
+              const cl = matchClientePorPhone(chat.phone);
+              const lastTxt = chat.lastMessageBody || '';
+              const hora = formatarHoraInbox(chat.lastMessageTime);
+              return `<div class="painel-item" onclick="setModo('inbox');setTimeout(()=>abrirChatInbox('${chat.phone}'),120)">
+                <div class="painel-item-av">${(cl?.nome||'?')[0].toUpperCase()}</div>
+                <div style="flex:1;min-width:0">
+                  <div class="painel-item-nome">${escapeHtml(cl?.nome||fmtPhone(chat.phone))}</div>
+                  <div class="painel-item-sub">${escapeHtml((lastTxt||'Mensagem recebida').slice(0,38))}</div>
+                </div>
+                <span class="painel-item-badge" style="background:#FEF3C7;color:#92400E">${hora}</span>
+              </div>`;
+            }).join('')
+          : '<div class="painel-empty">✅ Nenhuma conversa pendente!</div>'
+      }
+    </div>
+
+    <div class="painel-block">
+      <div class="painel-section-title">
+        ⏰ Sem Contato +3 Dias
+        <span class="painel-section-badge">${semContato3dList.length}</span>
+      </div>
+      ${semContato3dList.length
+        ? semContato3dList.slice(0,7).map(c => `
+          <div class="painel-item" onclick="abrirDetalhe('${c.id}')">
+            <div class="painel-item-av">${(c.nome||'?')[0].toUpperCase()}</div>
+            <div style="flex:1;min-width:0">
+              <div class="painel-item-nome">${escapeHtml(c.nome)}</div>
+              <div class="painel-item-sub">${c.telefone||'—'}</div>
+            </div>
+            <span class="painel-item-badge" style="background:#FEF3C7;color:#92400E">${diasSemContato(c)}d</span>
+          </div>`).join('')
+        : '<div class="painel-empty">✅ Todos contactados recentemente!</div>'}
+    </div>
+  </div>
+
+  <!-- ── Linha 2: Top 10 + Números Novos ── -->
+  <div class="painel-cols">
+
+    <div class="painel-block">
+      <div class="painel-section-title">
+        🏆 Top 10 Clientes no Mês
+        <span class="painel-section-badge">${chatsLoaded ? ativosDoMes.length : '?'}</span>
+      </div>
+      ${!chatsLoaded ? semChatsHtml :
+        ativosDoMes.length
+          ? ativosDoMes.map((chat, i) => {
+              const cl = matchClientePorPhone(chat.phone);
+              const hora = formatarHoraInbox(chat.lastMessageTime);
+              const unread = Number(chat.messagesUnread||chat.unread||0);
+              const goldStyle = i < 3 ? 'background:linear-gradient(135deg,#F59E0B,#D97706)' : '';
+              return `<div class="painel-item" onclick="setModo('inbox');setTimeout(()=>abrirChatInbox('${chat.phone}'),120)">
+                <span class="painel-rank" style="${i<3?'color:var(--yellow);font-weight:900':''}">${i+1}</span>
+                <div class="painel-item-av" style="${goldStyle}">${(cl?.nome||'?')[0].toUpperCase()}</div>
+                <div style="flex:1;min-width:0">
+                  <div class="painel-item-nome">${escapeHtml(cl?.nome||fmtPhone(chat.phone))}</div>
+                  <div class="painel-item-sub">Última msg: ${hora}</div>
+                </div>
+                ${unread>0?`<span class="painel-item-badge" style="background:#D1FAE5;color:#065F46">${unread} nova</span>`:''}
+              </div>`;
+            }).join('')
+          : '<div class="painel-empty">Nenhuma conversa este mês ainda.</div>'
+      }
+    </div>
+
+    <div class="painel-block">
+      <div class="painel-section-title">
+        📱 Números Novos no WhatsApp
+        <span class="painel-section-badge">${chatsLoaded ? numerosNovos.length : '?'}</span>
+      </div>
+      ${!chatsLoaded ? semChatsHtml :
+        numerosNovos.length
+          ? [
+              ...numerosNovos.slice(0,6).map(chat => {
+                const nome = (chat.name && chat.name !== chat.phone && chat.name !== '0')
+                  ? chat.name : fmtPhone(chat.phone);
+                const hora = formatarHoraInbox(chat.lastMessageTime);
+                return `<div class="painel-item">
+                  <div class="painel-item-av" style="background:linear-gradient(135deg,#9CA3AF,#6B7280)">${(nome||'?')[0].toUpperCase()}</div>
+                  <div style="flex:1;min-width:0">
+                    <div class="painel-item-nome">${escapeHtml(nome)}</div>
+                    <div class="painel-item-sub">${fmtPhone(chat.phone)} · ${hora}</div>
+                  </div>
+                  <button onclick="event.stopPropagation();criarClienteDoInbox('${chat.phone}','${(chat.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}');setModo('clientes')"
+                    style="font-size:.62rem;padding:.18rem .48rem;border:1.5px solid var(--orange);border-radius:6px;background:none;cursor:pointer;color:var(--orange);font-family:'Inter',sans-serif;font-weight:600;flex-shrink:0">+ CRM</button>
+                </div>`;
+              }),
+              numerosNovos.length > 6
+                ? `<div style="text-align:center;margin-top:.5rem">
+                    <button onclick="setModo('inbox')" style="font-size:.72rem;padding:.35rem .75rem;border:1.5px solid var(--border);border-radius:7px;background:none;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif">
+                      Ver todos (${numerosNovos.length}) →
+                    </button>
+                  </div>`
+                : ''
+            ].join('')
+          : '<div class="painel-empty">Nenhum número novo no WhatsApp.</div>'
+      }
+    </div>
+  </div>
+
+  <!-- ── Linha 3: Anotações + Distribuição Pipeline ── -->
+  <div class="painel-cols">
+
+    <div class="painel-block">
+      <div class="painel-section-title">
+        📝 Anotações Recentes
+        <span class="painel-section-badge">${topNotas.length}</span>
+      </div>
+      ${topNotas.length
+        ? topNotas.map(({cliente:cl, nota:n}) => `
+          <div class="painel-item" onclick="abrirDetalhe('${cl.id}');setTimeout(()=>showTab('notas'),150)">
+            <div class="painel-item-av">${(cl.nome||'?')[0].toUpperCase()}</div>
+            <div style="flex:1;min-width:0">
+              <div class="painel-item-nome">${escapeHtml(cl.nome)}</div>
+              <div class="painel-item-sub">${escapeHtml((n.texto||'').slice(0,42))}</div>
+            </div>
+            <span class="painel-item-badge" style="background:var(--bg);color:var(--muted)">${formatarData(n.data).split(' ')[0]}</span>
+          </div>`).join('')
+        : '<div class="painel-empty">Nenhuma anotação ainda.</div>'}
+    </div>
+
+    <div class="painel-block">
+      <div class="painel-section-title">📊 Pipeline de Clientes</div>
+      <div style="padding:.25rem 0">
+        ${PIPELINE_STAGES.map(s => {
+          const count = CLIENTES.filter(c=>(c.pipeline||'lead')===s.id).length;
+          const pct = CLIENTES.length ? Math.round(count/CLIENTES.length*100) : 0;
+          return `<div class="painel-bar-row">
+            <span class="painel-bar-label">${s.emoji} ${s.nome}</span>
+            <div class="painel-bar-track">
+              <div class="painel-bar-fill" style="background:${s.color};width:${pct}%"></div>
+            </div>
+            <span class="painel-bar-count">${count}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  </div>
+
+</div>`; // fim .painel-area
+}
 
 // ── Importar inbox → CRM ──────────────────────────────────────────────────────
 
@@ -1538,7 +1928,7 @@ document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.targe
 const origListBodyStyle = document.getElementById('listBody').style.cssText;
 const _setModoOrig = window.setModo;
 window.setModo = function(modo) {
-  if(modo !== 'pipeline') {
+  if(modo !== 'pipeline' && modo !== 'painel') {
     document.getElementById('listBody').style.padding = '';
     document.getElementById('listBody').style.overflow = '';
   }

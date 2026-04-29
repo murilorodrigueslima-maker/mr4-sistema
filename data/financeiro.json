@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-29T06:57:45",
+  "atualizado_em": "2026-04-29T08:27:11",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -52,7 +52,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 1388.73,
+      "valor": 38.73,
       "vencimento": "2026-03-25",
       "dias_atraso": 35,
       "tipo": "Pagar"
@@ -156,6 +156,41 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "JUROS CARTAO ELO",
+      "valor": 1335.84,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 14,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO ELO",
+      "valor": 5.51,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 14,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 251.69,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 14,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ANUIDADADE DE CARTÃO ELO EMPRESARIAL",
+      "valor": 92,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 14,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 3711.03,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 14,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 329.55,
       "vencimento": "2026-04-16",
@@ -233,6 +268,13 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "EMPRESTIMO ELO LEROY",
+      "valor": 135.04,
+      "vencimento": "2026-04-21",
+      "dias_atraso": 8,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-04-23",
@@ -268,10 +310,45 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 2,
+      "nome": "UBER FLASH",
+      "valor": 420.7,
+      "vencimento": "2026-04-25",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER",
+      "valor": 2399.74,
+      "vencimento": "2026-04-25",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LICENÇA CANVAS",
+      "valor": 24.16,
+      "vencimento": "2026-04-25",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CHAT GPT",
+      "valor": 95.99,
+      "vencimento": "2026-04-25",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER",
+      "valor": 1355.82,
+      "vencimento": "2026-04-25",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 81.19,
+      "vencimento": "2026-04-25",
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
@@ -282,8 +359,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 1503.52,
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
       "vencimento": "2026-04-27",
       "dias_atraso": 2,
       "tipo": "Pagar"
@@ -324,13 +401,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 156.8,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-04-28",
@@ -339,12 +409,6 @@
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "EMPRESTIMO ESTER",
-      "valor": 2019.94,
-      "vencimento": "2026-04-30",
-      "tipo": "Pagar"
-    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
@@ -408,7 +472,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50711.64,
+  "total_vencido": 57610.029999999984,
   "total_a_receber": 0,
-  "total_a_pagar": 35284.380000000005
+  "total_a_pagar": 43173.15000000001
 }

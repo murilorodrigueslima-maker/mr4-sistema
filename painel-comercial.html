@@ -497,7 +497,7 @@ const _db = getFirestore(_app);
 const CFG_DOC = doc(_db, 'painel_config', 'default');
 
 const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
-const REFRESH_SECS = 300; // 5 minutos
+const REFRESH_SECS = 7200; // 2 horas
 
 /* ── ESTADO ── */
 let CFG = {

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-29T16:09:36",
-  "total": 77,
+  "atualizado_em": "2026-04-29T17:53:22",
+  "total": 81,
   "pedidos": [
+    {
+      "id": "366735528",
+      "numero": "15623",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "JOSE BARROSO DOS SANTOS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 355,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366723263",
+      "numero": "15622",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 256,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366714060",
+      "numero": "15621",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 191.4,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366709630",
+      "numero": "15620",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "Rodrigo severo Diniz",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 482.69,
+      "itens": 18,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366693111",
       "numero": "15619",
@@ -20,8 +68,8 @@
       "data": "2026-04-29",
       "hora": "",
       "cliente": "Edilberto",
-      "vendedor": "Swyanne Kethlyn",
-      "valor": 1004,
+      "vendedor": "fabiana andrade da silva",
+      "valor": 984,
       "itens": 6,
       "status_gc": "",
       "cidade": ""
@@ -129,8 +177,8 @@
       "hora": "",
       "cliente": "JOAO JORDAN TELES MOREIRA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 555,
-      "itens": 1,
+      "valor": 605,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

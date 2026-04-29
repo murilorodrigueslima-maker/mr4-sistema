@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-28T23:02:57",
+  "atualizado_em": "2026-04-29T03:17:37",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -329,15 +329,16 @@
       "vencimento": "2026-04-27",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-04-28",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO ESTER",
       "valor": 2019.94,
@@ -391,11 +392,23 @@
       "valor": 15000,
       "vencimento": "2026-05-05",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 259.26,
+      "vencimento": "2026-05-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 218.42,
+      "vencimento": "2026-05-06",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50010.86,
+  "total_vencido": 50711.64,
   "total_a_receber": 0,
   "total_a_pagar": 35284.380000000005
 }

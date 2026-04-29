@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-04-29T14:18:17",
-  "total": 73,
+  "atualizado_em": "2026-04-29T16:09:36",
+  "total": 77,
   "pedidos": [
+    {
+      "id": "366693111",
+      "numero": "15619",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 222.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366684474",
+      "numero": "15618",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "Edilberto",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 1004,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366680529",
+      "numero": "15617",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 800,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366654620",
+      "numero": "15616",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "NP COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1329.32,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366648274",
       "numero": "15615",
@@ -285,8 +333,8 @@
       "hora": "",
       "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 2442.95,
-      "itens": 7,
+      "valor": 2677.95,
+      "itens": 10,
       "status_gc": "",
       "cidade": ""
     },

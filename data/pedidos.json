@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-04-29T08:27:10",
-  "total": 51,
+  "atualizado_em": "2026-04-29T10:23:56",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "366562128",
+      "numero": "15600",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "ALARCON ROZENDO PINTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 691.51,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366559269",
+      "numero": "15599",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 70.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366544932",
+      "numero": "15598",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 505.08,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366534225",
+      "numero": "15597",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "ADEMIR LOPES FURTADO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 120,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366532726",
+      "numero": "15596",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 296.7,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366529806",
+      "numero": "15595",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "FRANCISCO CRISTIANO ESTEVAM GALDINO 00349588350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 306.36,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366529308",
+      "numero": "15594",
+      "data": "2026-04-29",
+      "hora": "",
+      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2061.63,
+      "itens": 23,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366467231",
       "numero": "15593",

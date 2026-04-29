@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-29T10:23:57",
+  "atualizado_em": "2026-04-29T12:52:14",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -359,13 +359,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1165.64,
       "vencimento": "2026-04-27",
@@ -452,6 +445,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 10274.74,
+      "vencimento": "2026-05-04",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "Salário Murilo",
       "valor": 15000,
       "vencimento": "2026-05-05",
@@ -472,7 +471,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57610.029999999984,
+  "total_vencido": 55385.029999999984,
   "total_a_receber": 0,
   "total_a_pagar": 43173.15000000001
 }

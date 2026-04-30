@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-04-30T17:50:51",
-  "total": 85,
+  "atualizado_em": "2026-04-30T19:42:12",
+  "total": 87,
   "pedidos": [
+    {
+      "id": "367049304",
+      "numero": "15650",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 28,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367048442",
+      "numero": "15649",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "56.119.790 DANIELTON VIEIRA DOS SANTOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 98.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367038181",
       "numero": "15648",
@@ -237,7 +261,7 @@
       "hora": "",
       "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 99.9,
+      "valor": 99,
       "itens": 3,
       "status_gc": "",
       "cidade": ""
@@ -381,7 +405,7 @@
       "hora": "",
       "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 222.8,
+      "valor": 222,
       "itens": 2,
       "status_gc": "",
       "cidade": ""
@@ -825,7 +849,7 @@
       "hora": "",
       "cliente": "GERSON BANDEIRA DE OLIVEIRA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 198,
+      "valor": 197,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

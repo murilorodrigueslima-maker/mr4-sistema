@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-30T12:44:12",
+  "atualizado_em": "2026-04-30T14:09:28",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -45,14 +45,7 @@
     },
     {
       "nome": "POPNOW",
-      "valor": 9752.17,
-      "vencimento": "2026-03-25",
-      "dias_atraso": 36,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 38.73,
+      "valor": 9440.9,
       "vencimento": "2026-03-25",
       "dias_atraso": 36,
       "tipo": "Pagar"
@@ -72,24 +65,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 95.46,
-      "vencimento": "2026-03-31",
-      "dias_atraso": 30,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 193.92,
       "vencimento": "2026-04-08",
       "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 47.97,
-      "vencimento": "2026-04-09",
-      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
@@ -275,13 +254,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 1083.85,
-      "vencimento": "2026-04-23",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
       "valor": 327.38,
       "vencimento": "2026-04-24",
@@ -352,27 +324,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1165.64,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1559.52,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-04-27",
@@ -382,13 +333,6 @@
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 2660,
-      "vencimento": "2026-04-27",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1927.2,
       "vencimento": "2026-04-27",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -501,7 +445,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55385.029999999984,
+  "total_vencido": 46930.38999999999,
   "total_a_receber": 0,
   "total_a_pagar": 45710.56000000001
 }

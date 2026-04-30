@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-04-30T10:21:18",
-  "total": 63,
+  "atualizado_em": "2026-04-30T12:44:11",
+  "total": 68,
   "pedidos": [
+    {
+      "id": "366894735",
+      "numero": "15631",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 440,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366890506",
+      "numero": "15630",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 897.98,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366868763",
+      "numero": "15629",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 99.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366856359",
+      "numero": "15628",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "53.343.706 JUSSIE SOARES DE SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 145,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366848419",
+      "numero": "15627",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "RAUL ALMEIDA TEOFILO 02180916302",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1968.95,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366820215",
       "numero": "15626",
@@ -9,7 +69,7 @@
       "hora": "",
       "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 289.8,
+      "valor": 74.8,
       "itens": 2,
       "status_gc": "",
       "cidade": ""
@@ -35,6 +95,18 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 475.42,
       "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366449990",
+      "numero": "15590",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 587,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },
@@ -431,18 +503,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 160,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "366449990",
-      "numero": "15590",
-      "data": "2026-04-28",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 587.84,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

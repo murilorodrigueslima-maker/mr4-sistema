@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-04-30T14:09:28",
-  "total": 73,
+  "atualizado_em": "2026-04-30T16:06:19",
+  "total": 79,
   "pedidos": [
+    {
+      "id": "366984352",
+      "numero": "15642",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366981427",
+      "numero": "15641",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "DAVID ANDERSON BARROSO CORDEIRO 01156737338",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 66.25,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366977374",
+      "numero": "15640",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366968182",
+      "numero": "15639",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 584.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366947363",
+      "numero": "15638",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "CRISTIANO CESAR TAVARES CAVALCANTE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 388.62,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "366937280",
+      "numero": "15637",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 345.65,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366927436",
       "numero": "15636",

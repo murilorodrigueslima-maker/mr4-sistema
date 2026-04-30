@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-04-30T16:06:19",
-  "total": 79,
+  "atualizado_em": "2026-04-30T17:50:51",
+  "total": 85,
   "pedidos": [
+    {
+      "id": "367038181",
+      "numero": "15648",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1931.7,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367032265",
+      "numero": "15647",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "53.215.493 THIAGO SALVADOR LOPES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367028745",
+      "numero": "15646",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "J. A. DE CARVALHO PECAS E ACESSORIOS AUTOMOTORES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1010,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367011882",
+      "numero": "15645",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367004987",
+      "numero": "15644",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "MARDSON L. F. DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 717.82,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367002954",
+      "numero": "15643",
+      "data": "2026-04-30",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 161,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "366984352",
       "numero": "15642",

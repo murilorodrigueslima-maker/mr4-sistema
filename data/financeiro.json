@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-29T23:02:25",
+  "atualizado_em": "2026-04-30T03:22:10",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -467,11 +467,41 @@
       "valor": 218.42,
       "vencimento": "2026-05-06",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
+      "valor": 1663.74,
+      "vencimento": "2026-05-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
+      "valor": 1083.85,
+      "vencimento": "2026-05-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 1219.52,
+      "vencimento": "2026-05-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
+      "valor": 268.63,
+      "vencimento": "2026-05-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 395.94,
+      "vencimento": "2026-05-07",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
   "total_vencido": 55385.029999999984,
   "total_a_receber": 0,
-  "total_a_pagar": 43173.15000000001
+  "total_a_pagar": 45710.56000000001
 }

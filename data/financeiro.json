@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-04-30T23:05:49",
+  "atualizado_em": "2026-05-01T03:31:38",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -343,21 +343,23 @@
       "vencimento": "2026-04-28",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-04-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2304,
       "vencimento": "2026-04-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 168.66,
@@ -441,11 +443,17 @@
       "valor": 395.94,
       "vencimento": "2026-05-07",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 158.01,
+      "vencimento": "2026-05-08",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46930.38999999999,
+  "total_vencido": 49751.85999999999,
   "total_a_receber": 0,
   "total_a_pagar": 45710.56000000001
 }

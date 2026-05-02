@@ -817,10 +817,18 @@
 
     _eqAcTmr = setTimeout(async () => {
       try {
-        const params = encodeURIComponent('nome=' + q + '&limite=15');
-        const r    = await fetch(`${GC_PROXY}?endpoint=/produtos&params=${params}`);
-        const json = await r.json();
-        const lista = json.data || json.registros || json.objeto || (Array.isArray(json) ? json : []);
+        // Busca simultânea por nome E por código interno
+        const p1 = encodeURIComponent('nome=' + q + '&limite=10');
+        const p2 = encodeURIComponent('codigo_interno=' + q + '&limite=10');
+        const [r1, r2] = await Promise.allSettled([
+          fetch(`${GC_PROXY}?endpoint=/produtos&params=${p1}`).then(r=>r.json()),
+          fetch(`${GC_PROXY}?endpoint=/produtos&params=${p2}`).then(r=>r.json()),
+        ]);
+        const l1 = r1.status==='fulfilled' ? (r1.value.data||r1.value.registros||r1.value.objeto||(Array.isArray(r1.value)?r1.value:[])) : [];
+        const l2 = r2.status==='fulfilled' ? (r2.value.data||r2.value.registros||r2.value.objeto||(Array.isArray(r2.value)?r2.value:[])) : [];
+        // Deduplica por id
+        const seen = new Set();
+        const lista = [...l1, ...l2].filter(p => { if(seen.has(p.id)) return false; seen.add(p.id); return true; });
         _eqAcRes[rowId] = lista;
 
         if (!lista.length) {

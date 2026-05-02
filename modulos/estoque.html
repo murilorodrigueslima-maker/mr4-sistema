@@ -799,7 +799,20 @@
   let _eqDelId   = null;
   let _eqRowSeq  = 0;
 
-  const GC_PROXY = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+  // ── Catálogo local de produtos (carregado do data/produtos.json) ─────────
+  let _eqCatalogo = null;
+
+  async function eqCarregarCatalogo() {
+    if (_eqCatalogo) return _eqCatalogo;
+    try {
+      const r = await fetch('../data/produtos.json');
+      _eqCatalogo = await r.json();
+    } catch(e) {
+      _eqCatalogo = [];
+      console.warn('Catálogo produtos.json não disponível:', e);
+    }
+    return _eqCatalogo;
+  }
 
   // ── Autocomplete de produtos (equivalentes) ───────────────────────────────
   const _eqAcRes = {}; // rowId → lista de produtos
@@ -817,11 +830,15 @@
 
     _eqAcTmr = setTimeout(async () => {
       try {
-        // GestãoClick só suporta busca por nome — codigo_interno= não funciona como filtro
-        const params = encodeURIComponent('nome=' + q + '&limite=15');
-        const r    = await fetch(`${GC_PROXY}?endpoint=/produtos&params=${params}`);
-        const json = await r.json();
-        const lista = json.data || json.registros || json.objeto || (Array.isArray(json) ? json : []);
+        const catalogo = await eqCarregarCatalogo();
+        const qLow = q.toLowerCase();
+
+        // Busca por código (começa com) OU nome (contém)
+        const lista = catalogo.filter(p =>
+          (p.codigo || '').toLowerCase().startsWith(qLow) ||
+          (p.nome   || '').toLowerCase().includes(qLow)
+        ).slice(0, 15);
+
         _eqAcRes[rowId] = lista;
 
         if (!lista.length) {
@@ -831,12 +848,12 @@
         listEl.innerHTML = lista.map((p, i) => `
           <div class="eq-ac-item" onmousedown="eqAcSelecionar('${rowId}',${i})">
             <div class="eq-ac-nome">${eqEsc(p.nome||'')}</div>
-            <div class="eq-ac-cod">${eqEsc(p.codigo_interno||p.codigo||'—')}</div>
+            <div class="eq-ac-cod">${eqEsc(p.codigo||'—')}</div>
           </div>`).join('');
       } catch(e) {
         listEl.innerHTML = `<div style="padding:.5rem .75rem;font-size:.75rem;color:var(--red)">Erro ao buscar</div>`;
       }
-    }, 350);
+    }, 200);
   };
 
   window.eqAcFechar = function(rowId) {
@@ -849,9 +866,9 @@
     if (!prod) return;
     const row = document.getElementById(rowId);
     if (!row) return;
-    row.querySelector('[data-f="codigo"]').value    = prod.codigo_interno || prod.codigo || '';
-    row.querySelector('[data-f="nome"]').value      = prod.nome || '';
-    row.querySelector('[data-f="fabricante"]').value = prod.marca || prod.fabricante || '';
+    row.querySelector('[data-f="codigo"]').value     = prod.codigo || '';
+    row.querySelector('[data-f="nome"]').value       = prod.nome || '';
+    row.querySelector('[data-f="fabricante"]').value = prod.fabricante || '';
     eqAcFechar(rowId);
   };
 
@@ -1005,7 +1022,7 @@
     div.className = 'eq-prod-row'; div.id = id;
     div.innerHTML = `
       <div class="eq-ac-wrap">
-        <input class="eq-form-inp cod" placeholder="Buscar pelo nome…" data-f="codigo"
+        <input class="eq-form-inp cod" placeholder="Código ou nome…" data-f="codigo"
           value="${eqEsc(p.codigo||'')}"
           oninput="eqAcBuscar('${id}', this.value)"
           onblur="setTimeout(()=>eqAcFechar('${id}'),160)"

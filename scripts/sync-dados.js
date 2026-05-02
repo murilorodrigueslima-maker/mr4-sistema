@@ -344,6 +344,36 @@ async function syncPedidos() {
   console.log(`✅ Pedidos: ${pedidos.length} registros salvos`);
 }
 
+// ── CATÁLOGO DE PRODUTOS (para busca local por nome e código) ─────────────────
+async function syncCatalogoProdutos() {
+  console.log('📦 Sincronizando catálogo de produtos...');
+  let produtos = [];
+  try {
+    let pagina = 1;
+    while (true) {
+      const r = await fetchGC(`/produtos?pagina=${pagina}&limite=100&ativo=1`);
+      const data = r.data || [];
+      produtos = produtos.concat(data);
+      const meta = r.meta || {};
+      if (pagina >= (Number(meta.total_paginas) || 1)) break;
+      pagina++;
+    }
+  } catch(e) {
+    console.log('⚠️ Erro ao buscar catálogo:', e.message);
+  }
+
+  // Salva apenas os campos necessários para busca (arquivo leve)
+  const catalogo = produtos.map(p => ({
+    id:        p.id,
+    codigo:    p.codigo_interno || p.codigo || '',
+    nome:      p.nome || '',
+    fabricante: p.marca || p.fabricante || '',
+  })).filter(p => p.codigo || p.nome);
+
+  fs.writeFileSync(path.join(DATA_DIR, 'produtos.json'), JSON.stringify(catalogo, null, 0));
+  console.log(`✅ Catálogo: ${catalogo.length} produtos salvos`);
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 (async () => {
   console.log(`🔄 Iniciando sync — ${agora()}`);
@@ -352,6 +382,7 @@ async function syncPedidos() {
     syncEstoque(),
     syncFinanceiro(),
     syncPedidos(),
+    syncCatalogoProdutos(),
   ]);
   console.log('🏁 Sync concluído!');
 })();

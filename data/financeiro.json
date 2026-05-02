@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-05-01T22:52:55",
+  "atualizado_em": "2026-05-02T01:53:11",
   "contas_vencidas": [
-    {
-      "nome": "PARCELAMENTO IMPOSTOS",
-      "valor": 517.47,
-      "vencimento": "2026-03-02",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -357,15 +350,16 @@
       "vencimento": "2026-04-30",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 168.66,
       "vencimento": "2026-05-01",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 954.27,
@@ -453,7 +447,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49751.85999999999,
+  "total_vencido": 49403.05,
   "total_a_receber": 0,
-  "total_a_pagar": 45710.56000000001
+  "total_a_pagar": 45193.09000000002
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-02T17:32:20",
+  "atualizado_em": "2026-05-02T19:31:03",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -38,7 +38,7 @@
     },
     {
       "nome": "POPNOW",
-      "valor": 9440.9,
+      "valor": 4090.9,
       "vencimento": "2026-03-25",
       "dias_atraso": 38,
       "tipo": "Pagar"
@@ -447,7 +447,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49403.05,
+  "total_vencido": 44053.05000000001,
   "total_a_receber": 0,
   "total_a_pagar": 45193.09000000002
 }

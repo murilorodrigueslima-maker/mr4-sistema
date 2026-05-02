@@ -786,6 +786,48 @@
   let _eqDelId   = null;
   let _eqRowSeq  = 0;
 
+  const GC_PROXY = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+
+  // ── Busca produto no GestãoClick pelo código interno ─────────────────────
+  window.eqBuscarPorCodigo = async function(inputEl) {
+    const codigo = inputEl.value.trim();
+    if (!codigo) return;
+
+    const row = inputEl.closest('.eq-prod-row');
+    if (!row) return;
+
+    const nomeInp = row.querySelector('[data-f="nome"]');
+    const fabInp  = row.querySelector('[data-f="fabricante"]');
+
+    // Se nome já preenchido, não sobrescreve
+    if (nomeInp && nomeInp.value.trim()) return;
+
+    inputEl.style.opacity = '0.5';
+    try {
+      const params = encodeURIComponent('codigo_interno=' + codigo + '&limite=5');
+      const r = await fetch(`${GC_PROXY}?endpoint=/produtos&params=${params}`);
+      const json = await r.json();
+      const lista = json.data || json.registros || json.objeto || (Array.isArray(json) ? json : []);
+      const prod  = lista.find(p =>
+        (p.codigo_interno||'').toLowerCase() === codigo.toLowerCase()
+      ) || lista[0];
+
+      if (prod) {
+        if (nomeInp) nomeInp.value = prod.nome || '';
+        if (fabInp)  fabInp.value  = prod.marca || prod.fabricante || prod.fornecedor || '';
+        inputEl.style.background = '#D1FAE5'; // verde leve = achou
+        setTimeout(() => inputEl.style.background = '', 1500);
+      } else {
+        inputEl.style.background = '#FEE2E2'; // vermelho leve = não achou
+        setTimeout(() => inputEl.style.background = '', 1500);
+      }
+    } catch(e) {
+      console.warn('Erro ao buscar produto:', e);
+    } finally {
+      inputEl.style.opacity = '1';
+    }
+  };
+
   // ── Firestore helper ──────────────────────────────────────────────────────
   async function fsEq(fn) {
     const m = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
@@ -935,7 +977,7 @@
     const div = document.createElement('div');
     div.className = 'eq-prod-row'; div.id = id;
     div.innerHTML = `
-      <input class="eq-form-inp cod" placeholder="Ex: MD09-0102"  data-f="codigo"     value="${eqEsc(p.codigo||'')}">
+      <input class="eq-form-inp cod" placeholder="Ex: MD09-0102"  data-f="codigo"     value="${eqEsc(p.codigo||'')}" onblur="eqBuscarPorCodigo(this)" title="Digite o código e saia do campo para puxar o produto automaticamente">
       <input class="eq-form-inp"     placeholder="Nome do produto" data-f="nome"       value="${eqEsc(p.nome||'')}">
       <input class="eq-form-inp"     placeholder="Fabricante"      data-f="fabricante" value="${eqEsc(p.fabricante||'')}">
       <button class="btn-eq-rm" onclick="eqRmLinha('${id}')" title="Remover">✕</button>`;

@@ -804,21 +804,25 @@
 
     inputEl.style.opacity = '0.5';
     try {
-      const params = encodeURIComponent('codigo_interno=' + codigo + '&limite=5');
+      // Busca pelo código como termo de pesquisa (parâmetro que o GC suporta)
+      const params = encodeURIComponent('nome=' + codigo + '&limite=20');
       const r = await fetch(`${GC_PROXY}?endpoint=/produtos&params=${params}`);
       const json = await r.json();
       const lista = json.data || json.registros || json.objeto || (Array.isArray(json) ? json : []);
-      const prod  = lista.find(p =>
-        (p.codigo_interno||'').toLowerCase() === codigo.toLowerCase()
-      ) || lista[0];
+
+      // Só aceita correspondência EXATA no codigo_interno (sem fallback)
+      const prod = lista.find(p =>
+        (p.codigo_interno || '').trim().toLowerCase() === codigo.trim().toLowerCase()
+      );
 
       if (prod) {
         if (nomeInp) nomeInp.value = prod.nome || '';
         if (fabInp)  fabInp.value  = prod.marca || prod.fabricante || prod.fornecedor || '';
-        inputEl.style.background = '#D1FAE5'; // verde leve = achou
+        inputEl.style.background = '#D1FAE5'; // verde = achou
         setTimeout(() => inputEl.style.background = '', 1500);
       } else {
-        inputEl.style.background = '#FEE2E2'; // vermelho leve = não achou
+        // Não achou correspondência exata — não preenche nada
+        inputEl.style.background = '#FEE2E2'; // vermelho = não achou
         setTimeout(() => inputEl.style.background = '', 1500);
       }
     } catch(e) {

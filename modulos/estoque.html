@@ -210,16 +210,29 @@
   .eq-prod-lbl { font-size: .67rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
   .btn-eq-add { padding: .26rem .8rem; background: rgba(16,185,129,.1); color: var(--green); border: 1px solid rgba(16,185,129,.3); border-radius: 6px; font-size: .73rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .12s; }
   .btn-eq-add:hover { background: var(--green); color: #fff; border-color: var(--green); }
-  .eq-col-hd { display: grid; grid-template-columns: 120px 1fr 135px 32px; gap: .4rem; padding: 0 0 .3rem; border-bottom: 1px solid var(--border); margin-bottom: .4rem; }
+  .eq-col-hd { display: grid; grid-template-columns: 160px 1fr 135px 32px; gap: .4rem; padding: 0 0 .3rem; border-bottom: 1px solid var(--border); margin-bottom: .4rem; }
   .eq-col-hd span { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); padding: 0 .4rem; }
   .eq-prod-rows { display: flex; flex-direction: column; gap: .4rem; max-height: 300px; overflow-y: auto; padding-right: .2rem; }
   .eq-prod-rows::-webkit-scrollbar { width: 4px; }
   .eq-prod-rows::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-  .eq-prod-row { display: grid; grid-template-columns: 120px 1fr 135px 32px; gap: .4rem; align-items: center; }
+  .eq-prod-row { display: grid; grid-template-columns: 160px 1fr 135px 32px; gap: .4rem; align-items: start; }
   .eq-prod-row .eq-form-inp { font-size: .78rem; padding: .4rem .6rem; }
   .eq-prod-row .eq-form-inp.cod { font-family: var(--mono); }
-  .btn-eq-rm { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: none; cursor: pointer; font-size: .85rem; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: all .12s; flex-shrink: 0; }
+  .btn-eq-rm { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border); background: none; cursor: pointer; font-size: .85rem; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: all .12s; flex-shrink: 0; margin-top: .25rem; }
   .btn-eq-rm:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.07); }
+  /* Autocomplete equivalentes */
+  .eq-ac-wrap { position: relative; }
+  .eq-ac-list { position: absolute; top: calc(100% + 3px); left: 0; min-width: 320px; z-index: 300;
+    background: #fff; border: 1.5px solid var(--border); border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.13); max-height: 220px; overflow-y: auto; display: none; }
+  .eq-ac-list.open { display: block; }
+  .eq-ac-item { padding: .5rem .75rem; cursor: pointer; border-bottom: 1px solid var(--border); }
+  .eq-ac-item:last-child { border-bottom: none; }
+  .eq-ac-item:hover, .eq-ac-item:focus { background: #F3F4F6; }
+  .eq-ac-nome { font-size: .82rem; font-weight: 600; color: var(--text); }
+  .eq-ac-cod  { font-size: .7rem; color: var(--orange); font-family: var(--mono); margin-top: .1rem; }
+  .eq-ac-spin { display: inline-block; width: 12px; height: 12px; border: 2px solid var(--border);
+    border-top-color: var(--orange); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: .4rem; }
   .eq-prod-hint { font-size: .7rem; color: var(--muted); margin-top: .45rem; opacity: .7; }
 
   .eq-modal-foot { display: flex; gap: .6rem; justify-content: flex-end; margin-top: 1.3rem; padding-top: 1rem; border-top: 1px solid var(--border); }
@@ -788,48 +801,57 @@
 
   const GC_PROXY = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
 
-  // ── Busca produto no GestãoClick pelo código interno ─────────────────────
-  window.eqBuscarPorCodigo = async function(inputEl) {
-    const codigo = inputEl.value.trim();
-    if (!codigo) return;
+  // ── Autocomplete de produtos (equivalentes) ───────────────────────────────
+  const _eqAcRes = {}; // rowId → lista de produtos
+  let   _eqAcTmr = null;
 
-    const row = inputEl.closest('.eq-prod-row');
-    if (!row) return;
+  window.eqAcBuscar = function(rowId, q) {
+    const listEl = document.getElementById('eq-ac-' + rowId);
+    if (!listEl) return;
+    q = q.trim();
+    if (q.length < 2) { eqAcFechar(rowId); return; }
 
-    const nomeInp = row.querySelector('[data-f="nome"]');
-    const fabInp  = row.querySelector('[data-f="fabricante"]');
+    clearTimeout(_eqAcTmr);
+    listEl.innerHTML = `<div style="padding:.5rem .75rem;font-size:.75rem;color:var(--muted)"><span class="eq-ac-spin"></span> Buscando…</div>`;
+    listEl.classList.add('open');
 
-    // Se nome já preenchido, não sobrescreve
-    if (nomeInp && nomeInp.value.trim()) return;
+    _eqAcTmr = setTimeout(async () => {
+      try {
+        const params = encodeURIComponent('nome=' + q + '&limite=15');
+        const r    = await fetch(`${GC_PROXY}?endpoint=/produtos&params=${params}`);
+        const json = await r.json();
+        const lista = json.data || json.registros || json.objeto || (Array.isArray(json) ? json : []);
+        _eqAcRes[rowId] = lista;
 
-    inputEl.style.opacity = '0.5';
-    try {
-      // Busca pelo código como termo de pesquisa (parâmetro que o GC suporta)
-      const params = encodeURIComponent('nome=' + codigo + '&limite=20');
-      const r = await fetch(`${GC_PROXY}?endpoint=/produtos&params=${params}`);
-      const json = await r.json();
-      const lista = json.data || json.registros || json.objeto || (Array.isArray(json) ? json : []);
-
-      // Só aceita correspondência EXATA no codigo_interno (sem fallback)
-      const prod = lista.find(p =>
-        (p.codigo_interno || '').trim().toLowerCase() === codigo.trim().toLowerCase()
-      );
-
-      if (prod) {
-        if (nomeInp) nomeInp.value = prod.nome || '';
-        if (fabInp)  fabInp.value  = prod.marca || prod.fabricante || prod.fornecedor || '';
-        inputEl.style.background = '#D1FAE5'; // verde = achou
-        setTimeout(() => inputEl.style.background = '', 1500);
-      } else {
-        // Não achou correspondência exata — não preenche nada
-        inputEl.style.background = '#FEE2E2'; // vermelho = não achou
-        setTimeout(() => inputEl.style.background = '', 1500);
+        if (!lista.length) {
+          listEl.innerHTML = `<div style="padding:.5rem .75rem;font-size:.75rem;color:var(--muted)">Nenhum produto encontrado</div>`;
+          return;
+        }
+        listEl.innerHTML = lista.map((p, i) => `
+          <div class="eq-ac-item" onmousedown="eqAcSelecionar('${rowId}',${i})">
+            <div class="eq-ac-nome">${eqEsc(p.nome||'')}</div>
+            <div class="eq-ac-cod">${eqEsc(p.codigo_interno||p.codigo||'—')}</div>
+          </div>`).join('');
+      } catch(e) {
+        listEl.innerHTML = `<div style="padding:.5rem .75rem;font-size:.75rem;color:var(--red)">Erro ao buscar</div>`;
       }
-    } catch(e) {
-      console.warn('Erro ao buscar produto:', e);
-    } finally {
-      inputEl.style.opacity = '1';
-    }
+    }, 350);
+  };
+
+  window.eqAcFechar = function(rowId) {
+    const el = document.getElementById('eq-ac-' + rowId);
+    if (el) el.classList.remove('open');
+  };
+
+  window.eqAcSelecionar = function(rowId, idx) {
+    const prod = (_eqAcRes[rowId] || [])[idx];
+    if (!prod) return;
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    row.querySelector('[data-f="codigo"]').value    = prod.codigo_interno || prod.codigo || '';
+    row.querySelector('[data-f="nome"]').value      = prod.nome || '';
+    row.querySelector('[data-f="fabricante"]').value = prod.marca || prod.fabricante || '';
+    eqAcFechar(rowId);
   };
 
   // ── Firestore helper ──────────────────────────────────────────────────────
@@ -981,9 +1003,16 @@
     const div = document.createElement('div');
     div.className = 'eq-prod-row'; div.id = id;
     div.innerHTML = `
-      <input class="eq-form-inp cod" placeholder="Ex: MD09-0102"  data-f="codigo"     value="${eqEsc(p.codigo||'')}" onblur="eqBuscarPorCodigo(this)" title="Digite o código e saia do campo para puxar o produto automaticamente">
-      <input class="eq-form-inp"     placeholder="Nome do produto" data-f="nome"       value="${eqEsc(p.nome||'')}">
-      <input class="eq-form-inp"     placeholder="Fabricante"      data-f="fabricante" value="${eqEsc(p.fabricante||'')}">
+      <div class="eq-ac-wrap">
+        <input class="eq-form-inp cod" placeholder="Código ou nome…" data-f="codigo"
+          value="${eqEsc(p.codigo||'')}"
+          oninput="eqAcBuscar('${id}', this.value)"
+          onblur="setTimeout(()=>eqAcFechar('${id}'),160)"
+          autocomplete="off">
+        <div class="eq-ac-list" id="eq-ac-${id}"></div>
+      </div>
+      <input class="eq-form-inp" placeholder="Nome do produto" data-f="nome"       value="${eqEsc(p.nome||'')}">
+      <input class="eq-form-inp" placeholder="Fabricante"      data-f="fabricante" value="${eqEsc(p.fabricante||'')}">
       <button class="btn-eq-rm" onclick="eqRmLinha('${id}')" title="Remover">✕</button>`;
     document.getElementById('eqProdRows').appendChild(div);
   };

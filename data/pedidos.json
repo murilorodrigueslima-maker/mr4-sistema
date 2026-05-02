@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-02T09:47:08",
-  "total": 32,
+  "atualizado_em": "2026-05-02T11:40:53",
+  "total": 39,
   "pedidos": [
+    {
+      "id": "367261036",
+      "numero": "15660",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 255,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367243378",
+      "numero": "15659",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 366.49,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367240364",
+      "numero": "15658",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE 07165443347",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 255,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367232564",
+      "numero": "15657",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "CLIENTE FINAL",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 14,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367231427",
+      "numero": "15656",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 224.87,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367228589",
+      "numero": "15655",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1145.78,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367226289",
+      "numero": "15654",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367219830",
       "numero": "15653",

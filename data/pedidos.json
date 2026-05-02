@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-02T07:42:06",
-  "total": 29,
+  "atualizado_em": "2026-05-02T09:47:08",
+  "total": 32,
   "pedidos": [
+    {
+      "id": "367219830",
+      "numero": "15653",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367219481",
+      "numero": "15652",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 586.89,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367207629",
+      "numero": "15651",
+      "data": "2026-05-02",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 68.7,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367049304",
       "numero": "15650",

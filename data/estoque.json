@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-05-04T16:14:59",
-  "total_produtos": 882,
-  "valor_total_estoque": 398801.5300000006,
+  "atualizado_em": "2026-05-04T17:58:49",
+  "total_produtos": 883,
+  "valor_total_estoque": 412971.9400000008,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -321,13 +321,6 @@
       "custo": 150
     },
     {
-      "ref": "30801580",
-      "nome": "Módulo De Vidro Multimarcas Mlv608 Plus Fks Antiesmagamento",
-      "margem": "12.5",
-      "preco": 201.08,
-      "custo": 175.87
-    },
-    {
       "ref": "2107-0",
       "nome": "ULTRA LED CSP H27 70W 10.000 LUMENS BIVOLT - ASX1027",
       "margem": "14.1",
@@ -354,6 +347,13 @@
       "margem": "16.7",
       "preco": 128.35,
       "custo": 106.96
+    },
+    {
+      "ref": "VA10000078",
+      "nome": "KIT PRATICO 1 PAR TRIAK 6“ + 1 PAR AF 6X9",
+      "margem": "16.7",
+      "preco": 196.54,
+      "custo": 163.78
     }
   ]
 }

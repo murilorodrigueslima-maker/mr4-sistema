@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-04T16:14:53",
-  "total": 29,
+  "atualizado_em": "2026-05-04T17:58:45",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "367715859",
+      "numero": "15683",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "WESLEY COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 367.24,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367711097",
+      "numero": "15682",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 147.45,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367697779",
+      "numero": "15681",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 676.94,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367690507",
+      "numero": "15680",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 584.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367675879",
       "numero": "15679",
@@ -225,8 +273,8 @@
       "hora": "",
       "cliente": "U. N. LIMA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 802.98,
-      "itens": 5,
+      "valor": 896.78,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },
@@ -259,7 +307,7 @@
       "numero": "15658",
       "data": "2026-05-02",
       "hora": "",
-      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE 07165443347",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 255,
       "itens": 4,

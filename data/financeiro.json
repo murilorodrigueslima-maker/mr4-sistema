@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-04T16:14:54",
+  "atualizado_em": "2026-05-04T17:58:46",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -381,6 +381,12 @@
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 10274.74,
+      "vencimento": "2026-05-04",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 957.23,
       "vencimento": "2026-05-04",
       "tipo": "Pagar"
     },

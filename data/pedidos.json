@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-04T08:42:54",
-  "total": 10,
+  "atualizado_em": "2026-05-04T10:22:27",
+  "total": 16,
   "pedidos": [
+    {
+      "id": "367510568",
+      "numero": "15666",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "KELIANE DA SILVA LIMA 06504549362",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 476.58,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367503027",
+      "numero": "15665",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 456,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367502790",
+      "numero": "15664",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 159.69,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367501314",
+      "numero": "15663",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "51.403.037 ERICK ARAUJO COSTA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 257.59,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367488975",
+      "numero": "15662",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "JOSE ANESIO DE OLIVEIRA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 373.92,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367484429",
+      "numero": "15661",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 802.98,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367261036",
       "numero": "15660",

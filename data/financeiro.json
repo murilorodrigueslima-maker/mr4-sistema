@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-04T08:42:56",
+  "atualizado_em": "2026-05-04T10:22:29",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -369,12 +369,6 @@
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 313.67,
-      "vencimento": "2026-05-04",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 356.85,
       "vencimento": "2026-05-04",
       "tipo": "Pagar"
     },

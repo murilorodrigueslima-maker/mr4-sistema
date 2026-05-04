@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-04T17:58:46",
+  "atualizado_em": "2026-05-04T19:48:46",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -361,38 +361,14 @@
   ],
   "contas_vencendo": [
     {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 954.27,
-      "vencimento": "2026-05-04",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 313.67,
-      "vencimento": "2026-05-04",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ALUGUEL GALPÃO REF ABRIL",
-      "valor": 4830.16,
-      "vencimento": "2026-05-04",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 10274.74,
       "vencimento": "2026-05-04",
       "tipo": "Pagar"
     },
     {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 957.23,
-      "vencimento": "2026-05-04",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
-      "valor": 15000,
+      "valor": 10943.3,
       "vencimento": "2026-05-05",
       "tipo": "Pagar"
     },
@@ -485,5 +461,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 44053.05000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 45193.09000000002
+  "total_a_pagar": 40362.93000000002
 }

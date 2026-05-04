@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-04T14:22:39",
-  "total": 23,
+  "atualizado_em": "2026-05-04T16:14:53",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "367675879",
+      "numero": "15679",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 68,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367646795",
+      "numero": "15678",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 655.86,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367646612",
+      "numero": "15677",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 573.17,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367645180",
+      "numero": "15676",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "HELENO JOSE GOMES DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367636853",
+      "numero": "15675",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 225,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367624020",
+      "numero": "15674",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 11.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367623219",
       "numero": "15673",

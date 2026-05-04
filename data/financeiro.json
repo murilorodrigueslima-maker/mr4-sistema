@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-03T22:57:48",
+  "atualizado_em": "2026-05-04T02:33:14",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -454,6 +454,30 @@
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-05-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1744.75,
+      "vencimento": "2026-05-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1744.93,
+      "vencimento": "2026-05-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2350.82,
+      "vencimento": "2026-05-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537.55,
+      "vencimento": "2026-05-11",
       "tipo": "Pagar"
     }
   ],

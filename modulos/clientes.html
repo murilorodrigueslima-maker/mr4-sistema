@@ -625,6 +625,8 @@ let inboxPhoneAtual = null;
 let CHATS_UNREAD    = {};   // phone -> unread count (para badges)
 let PREV_UNREAD     = {};   // phone -> unread count anterior (para som)
 let pollingTimer    = null;
+let chatPollTimer   = null;  // polling de mensagens do chat aberto
+let chatPollTs      = 0;     // timestamp da última mensagem conhecida
 let unsubscribeMsgs = null; // listener Firestore de mensagens
 
 const PIPELINE_STAGES = [
@@ -810,8 +812,10 @@ window.abrirDetalhe = function(id) {
 window.fecharDetalhe = function() {
   document.getElementById('detailPanel').classList.remove('open');
   clienteAtualId = null;
+  inboxPhoneAtual = null;
   document.querySelectorAll('.contact-row').forEach(r=>r.classList.remove('selected'));
   if(unsubscribeMsgs){ unsubscribeMsgs(); unsubscribeMsgs = null; }
+  pararPollChat();
 };
 
 window.abrirWpp = function() {
@@ -989,8 +993,10 @@ function msgVazioHtml() {
 
 // Subscreve em tempo real às mensagens de um telefone via Firestore onSnapshot
 function subscribeToMsgs(phone) {
-  // Cancela listener anterior
+  // Cancela listener anterior e polling anterior
   if(unsubscribeMsgs){ unsubscribeMsgs(); unsubscribeMsgs = null; }
+  pararPollChat();
+  if(phone) iniciarPollChat(phone);
 
   const empty = document.getElementById('chatEmpty');
   const msgs  = document.getElementById('chatMsgs');
@@ -1834,7 +1840,67 @@ async function pollInbox() {
 
 function iniciarPolling() {
   if(pollingTimer) clearInterval(pollingTimer);
-  pollingTimer = setInterval(pollInbox, 30000); // a cada 30 segundos
+  pollingTimer = setInterval(pollInbox, 10000); // a cada 10 segundos
+}
+
+// ── Polling de mensagens do chat aberto ──────────────────────────────────────
+function iniciarPollChat(phone) {
+  pararPollChat();
+  chatPollTs = 0;
+  // Busca imediata + a cada 8 segundos
+  pollMensagensChat(phone);
+  chatPollTimer = setInterval(() => pollMensagensChat(phone), 8000);
+}
+
+function pararPollChat() {
+  if(chatPollTimer) { clearInterval(chatPollTimer); chatPollTimer = null; }
+  chatPollTs = 0;
+}
+
+async function pollMensagensChat(phone) {
+  if(!phone) return;
+  try {
+    // Tenta endpoint de mensagens do Z-API
+    const r = await fetch(`${ZAPI_BASE}/messages?phone=${phone}&page=1&pageSize=30`, { headers: ZAPI_HEADERS });
+    if(!r.ok) return;
+    const json = await r.json();
+    const lista = Array.isArray(json) ? json : (json.messages || json.data || json.chats || []);
+    if(!lista.length) return;
+
+    // Filtra apenas mensagens mais novas que o último timestamp conhecido
+    const novas = lista.filter(m => {
+      const ts = Number(m.momment || m.timestamp || m.messageTimestamp || 0);
+      const tsMs = ts < 1e12 ? ts * 1000 : ts;
+      return tsMs > chatPollTs;
+    });
+    if(!novas.length) return;
+
+    // Atualiza timestamp máximo
+    chatPollTs = Math.max(...novas.map(m => {
+      const ts = Number(m.momment || m.timestamp || m.messageTimestamp || 0);
+      return ts < 1e12 ? ts * 1000 : ts;
+    }));
+
+    // Salva no Firestore — onSnapshot atualiza o UI automaticamente
+    const colRef = collection(db, `conversas/${phone}/msgs`);
+    for(const msg of novas) {
+      const ts = Number(msg.momment || msg.timestamp || msg.messageTimestamp || 0);
+      const tsMs = ts < 1e12 ? ts * 1000 : ts;
+      try {
+        await addDoc(colRef, {
+          phone,
+          fromMe:      msg.fromMe ?? msg.isFromMe ?? false,
+          message:     msg.text?.message || msg.message || msg.body || msg.caption || '',
+          momment:     tsMs,
+          senderName:  msg.senderName || msg.pushName || '',
+          msgId:       msg.messageId || msg.id || `poll-${phone}-${tsMs}`,
+          criadoEm:    new Date().toISOString(),
+        });
+      } catch(_) {}
+    }
+  } catch(e) {
+    // Silencioso — endpoint pode não existir na versão do Z-API
+  }
 }
 
 // ── Modal Criar/Editar ────────────────────────────────────────────────────────

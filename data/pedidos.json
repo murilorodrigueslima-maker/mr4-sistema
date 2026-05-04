@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-04T12:55:05",
-  "total": 18,
+  "atualizado_em": "2026-05-04T14:22:39",
+  "total": 23,
   "pedidos": [
+    {
+      "id": "367623219",
+      "numero": "15673",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 159,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367599262",
+      "numero": "15672",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "JOSE BARROSO DOS SANTOS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 350,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367594755",
+      "numero": "15671",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 140,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367594132",
+      "numero": "15670",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "41.924.486 LEONARDO ALMEIDA DE MORAIS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 274.5,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367591664",
+      "numero": "15669",
+      "data": "2026-05-04",
+      "hora": "",
+      "cliente": "EMANUEL ARAUJO DE MORAES 62483939317",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 99.07,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367582082",
       "numero": "15668",

@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-05T08:11:08",
-  "total": 23,
+  "atualizado_em": "2026-05-05T10:14:35",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "367806846",
+      "numero": "15689",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "CLEITON SANTOS MEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130.59,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367799250",
+      "numero": "15688",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 56,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367795638",
+      "numero": "15687",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 157.69,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367785728",
+      "numero": "15686",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 309.28,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367785456",
+      "numero": "15685",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 163.23,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367784174",
+      "numero": "15684",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "G3 EMPREENDIMENTOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 788,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367715859",
       "numero": "15683",

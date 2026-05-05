@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-04T22:57:44",
+  "atualizado_em": "2026-05-05T02:13:44",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -357,15 +357,16 @@
       "vencimento": "2026-05-01",
       "dias_atraso": 4,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 10274.74,
       "vencimento": "2026-05-04",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "Salário Murilo",
       "valor": 10943.3,
@@ -455,11 +456,47 @@
       "valor": 1537.55,
       "vencimento": "2026-05-11",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-05-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-05-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 552.8,
+      "vencimento": "2026-05-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 552.8,
+      "vencimento": "2026-05-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1165.64,
+      "vencimento": "2026-05-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1927.2,
+      "vencimento": "2026-05-12",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 44053.05000000001,
+  "total_vencido": 54327.79000000001,
   "total_a_receber": 0,
   "total_a_pagar": 40362.93000000002
 }

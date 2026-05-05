@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-05T14:14:34",
-  "total": 42,
+  "atualizado_em": "2026-05-05T16:05:45",
+  "total": 44,
   "pedidos": [
+    {
+      "id": "367940532",
+      "numero": "15703",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "Rodrigo severo Diniz",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 48.45,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367936019",
+      "numero": "15702",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367904136",
       "numero": "15701",

@@ -1,7 +1,103 @@
 {
-  "atualizado_em": "2026-05-05T10:14:35",
-  "total": 29,
+  "atualizado_em": "2026-05-05T12:29:54",
+  "total": 38,
   "pedidos": [
+    {
+      "id": "367868312",
+      "numero": "15697",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "GBRAST RASTREAMENTO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 48.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367866157",
+      "numero": "15696",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 86.63,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367862205",
+      "numero": "15695",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 490,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367859971",
+      "numero": "15694",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "57.279.787 PAULO HENRIQUE CARVALHO MORENO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 3257.38,
+      "itens": 16,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367857793",
+      "numero": "15693",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "R A DE SOUZA LEAO PECAS E ACESSORIOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1591.56,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367855482",
+      "numero": "15692",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 93.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367853320",
+      "numero": "15691",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 242.15,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367829244",
+      "numero": "15690",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "50.160.947 JOAO TIAGO CARNEIRO FARIAS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 55,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367806846",
       "numero": "15689",
@@ -75,6 +171,30 @@
       "cidade": ""
     },
     {
+      "id": "367697779",
+      "numero": "15681",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 676,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367228589",
+      "numero": "15655",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1145.78,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "367715859",
       "numero": "15683",
       "data": "2026-05-04",
@@ -95,18 +215,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 147.45,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "367697779",
-      "numero": "15681",
-      "data": "2026-05-04",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 676.94,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },
@@ -345,7 +453,7 @@
       "hora": "",
       "cliente": "U. N. LIMA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 896.78,
+      "valor": 1131.28,
       "itens": 6,
       "status_gc": "",
       "cidade": ""

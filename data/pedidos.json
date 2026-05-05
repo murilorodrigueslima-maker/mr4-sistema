@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-05T12:29:54",
-  "total": 38,
+  "atualizado_em": "2026-05-05T14:14:34",
+  "total": 42,
   "pedidos": [
+    {
+      "id": "367904136",
+      "numero": "15701",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 552.06,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367897664",
+      "numero": "15700",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367889647",
+      "numero": "15699",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "FRANCISCO CRISTIANO ESTEVAM GALDINO 00349588350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 137.54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "367889585",
+      "numero": "15698",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "HELENO JOSE GOMES DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 56.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "367868312",
       "numero": "15697",

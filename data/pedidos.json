@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-06T14:27:25",
-  "total": 70,
+  "atualizado_em": "2026-05-06T16:23:06",
+  "total": 75,
   "pedidos": [
+    {
+      "id": "368240342",
+      "numero": "15735",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "RAUL ALMEIDA TEOFILO 02180916302",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 757.68,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368239182",
+      "numero": "15734",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "THYARLIANE MOURA DA SILVA 60406112355",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 500,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368237650",
+      "numero": "15733",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "CHAVEIRO&ACESSÓRIOS PEQUENO MATIAS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1595.24,
+      "itens": 26,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368227419",
+      "numero": "15732",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "FRANCISCO CRISTIANO ESTEVAM GALDINO 00349588350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 137.54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368214406",
+      "numero": "15731",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 555,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368203023",
+      "numero": "15730",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "WESLEY COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 135.38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368197251",
       "numero": "15729",
@@ -93,8 +165,8 @@
       "hora": "",
       "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 252,
-      "itens": 5,
+      "valor": 268,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },
@@ -215,18 +287,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 75,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "368079826",
-      "numero": "15710",
-      "data": "2026-05-06",
-      "hora": "",
-      "cliente": "APP AUTO CENTER LTDA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 474.74,
-      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

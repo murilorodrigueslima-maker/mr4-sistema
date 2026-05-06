@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-06T14:27:26",
+  "atualizado_em": "2026-05-06T16:23:07",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -37,13 +37,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "POPNOW",
-      "valor": 4090.9,
-      "vencimento": "2026-03-25",
-      "dias_atraso": 42,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-03-30",
@@ -62,20 +55,6 @@
       "valor": 193.92,
       "vencimento": "2026-04-08",
       "dias_atraso": 28,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "sistema gestãoclick inter",
-      "valor": 16,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 21,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SERASA",
-      "valor": 52.4,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
@@ -158,6 +137,13 @@
     {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 3711.03,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 21,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SERASA",
+      "valor": 36.49,
       "vencimento": "2026-04-15",
       "dias_atraso": 21,
       "tipo": "Pagar"
@@ -353,7 +339,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 10943.3,
+      "valor": 10755.83,
       "vencimento": "2026-05-05",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -495,7 +481,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60683.890000000014,
+  "total_vencido": 56373.61000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 44318.090000000026
+  "total_a_pagar": 44286.18000000002
 }

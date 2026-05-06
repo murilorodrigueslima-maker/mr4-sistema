@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-06T12:57:23",
-  "total": 65,
+  "atualizado_em": "2026-05-06T14:27:25",
+  "total": 70,
   "pedidos": [
+    {
+      "id": "368197251",
+      "numero": "15729",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "JOSEFA MENESES RODRIGUES 58083618349",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 96.5,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368192764",
+      "numero": "15728",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368188191",
+      "numero": "15727",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "GERSON BANDEIRA DE OLIVEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 422.35,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368186578",
+      "numero": "15726",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368178644",
+      "numero": "15725",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "ALARCON ROZENDO PINTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 56.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368161455",
       "numero": "15724",

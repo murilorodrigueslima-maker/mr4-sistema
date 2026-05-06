@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-05T22:56:27",
+  "atualizado_em": "2026-05-06T02:25:06",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -350,15 +350,16 @@
       "vencimento": "2026-05-04",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "Salário Murilo",
       "valor": 10943.3,
       "vencimento": "2026-05-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 259.26,
@@ -478,11 +479,23 @@
       "valor": 1927.2,
       "vencimento": "2026-05-12",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 2134.66,
+      "vencimento": "2026-05-13",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 3338.68,
+      "vencimento": "2026-05-13",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49740.59000000001,
+  "total_vencido": 60683.890000000014,
   "total_a_receber": 0,
-  "total_a_pagar": 40362.93000000002
+  "total_a_pagar": 44318.090000000026
 }

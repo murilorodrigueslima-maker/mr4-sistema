@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-06T16:23:06",
-  "total": 75,
+  "atualizado_em": "2026-05-06T18:03:05",
+  "total": 77,
   "pedidos": [
+    {
+      "id": "368280127",
+      "numero": "15737",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368254933",
+      "numero": "15736",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "ANTONIO TEOFILO SOBRINHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 72,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368240342",
       "numero": "15735",

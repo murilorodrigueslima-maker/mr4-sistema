@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-06T08:43:48",
-  "total": 49,
+  "atualizado_em": "2026-05-06T10:30:08",
+  "total": 55,
   "pedidos": [
+    {
+      "id": "368087399",
+      "numero": "15714",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "JAENIO NUNES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 247,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368086689",
+      "numero": "15713",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 632,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368080078",
+      "numero": "15711",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368079826",
+      "numero": "15710",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "APP AUTO CENTER LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 474.74,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368076741",
+      "numero": "15709",
+      "data": "2026-05-06",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 107,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368081924",
+      "numero": "15712",
+      "data": "2026-05-05",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 90,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368002379",
       "numero": "15708",

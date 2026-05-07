@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-07T12:59:34",
-  "total": 66,
+  "atualizado_em": "2026-05-07T14:50:11",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "368497698",
+      "numero": "15754",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 145,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368490017",
+      "numero": "15753",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 268.6,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368477539",
+      "numero": "15752",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 705,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368474129",
+      "numero": "15751",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 186.2,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368471308",
+      "numero": "15750",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "64.315.426 KAZUYUKY FREIRE MIURA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 338.67,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368468456",
+      "numero": "15749",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "WENDEMBERG FELIX",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368439095",
       "numero": "15748",
@@ -141,8 +213,8 @@
       "hora": "",
       "cliente": "JOAO JORDAN TELES MOREIRA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 815.43,
-      "itens": 3,
+      "valor": 847.43,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

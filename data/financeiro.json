@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-06T23:00:07",
+  "atualizado_em": "2026-05-07T02:35:29",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -343,21 +343,23 @@
       "vencimento": "2026-05-05",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 259.26,
       "vencimento": "2026-05-06",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 218.42,
       "vencimento": "2026-05-06",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1663.74,
@@ -477,11 +479,17 @@
       "valor": 3338.68,
       "vencimento": "2026-05-13",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 1968.6,
+      "vencimento": "2026-05-14",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56373.61000000001,
+  "total_vencido": 56851.29000000001,
   "total_a_receber": 0,
   "total_a_pagar": 44286.18000000002
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-07T08:42:34",
+  "atualizado_em": "2026-05-07T10:29:02",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -58,36 +58,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "MONITOR COMPUTADOR",
-      "valor": 200.7,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CURSO PARA SWYANNE",
       "valor": 1482.9,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "3 VENTILADOR/1 BEBEDOURO",
-      "valor": 207.04,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
-      "valor": 218.82,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SELOS DE GARANTIA MR4",
-      "valor": 38.33,
       "vencimento": "2026-04-15",
       "dias_atraso": 22,
       "tipo": "Pagar"
@@ -114,22 +86,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO ELO",
-      "valor": 5.51,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "UBER FLASH",
       "valor": 251.69,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 22,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ANUIDADADE DE CARTÃO ELO EMPRESARIAL",
-      "valor": 92,
       "vencimento": "2026-04-15",
       "dias_atraso": 22,
       "tipo": "Pagar"
@@ -142,8 +100,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "SERASA",
-      "valor": 36.49,
+      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
+      "valor": 98.89,
       "vencimento": "2026-04-15",
       "dias_atraso": 22,
       "tipo": "Pagar"
@@ -317,20 +275,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2304,
-      "vencimento": "2026-04-30",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
-      "valor": 168.66,
-      "vencimento": "2026-05-01",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 10274.74,
       "vencimento": "2026-05-04",
@@ -339,23 +283,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 10755.83,
+      "valor": 10733.93,
       "vencimento": "2026-05-05",
       "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 259.26,
-      "vencimento": "2026-05-06",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 218.42,
-      "vencimento": "2026-05-06",
-      "dias_atraso": 1,
       "tipo": "Pagar"
     }
   ],
@@ -369,12 +299,6 @@
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
-      "vencimento": "2026-05-07",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
-      "valor": 1219.52,
       "vencimento": "2026-05-07",
       "tipo": "Pagar"
     },
@@ -489,7 +413,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56851.29000000001,
+  "total_vencido": 53179.05000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 44286.18000000002
+  "total_a_pagar": 43586.18000000002
 }

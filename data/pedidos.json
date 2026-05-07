@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-07T08:42:33",
-  "total": 55,
+  "atualizado_em": "2026-05-07T10:29:01",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "368390918",
+      "numero": "15741",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "Edilberto",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 278.34,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368387513",
+      "numero": "15740",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 52.08,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368369672",
+      "numero": "15739",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 680,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368359415",
+      "numero": "15738",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "FRANCISCO FRANCINE DA SILVA FREITAS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 261.16,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368280127",
       "numero": "15737",

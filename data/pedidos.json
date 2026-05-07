@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-07T16:26:28",
-  "total": 79,
+  "atualizado_em": "2026-05-07T17:58:10",
+  "total": 81,
   "pedidos": [
+    {
+      "id": "368555822",
+      "numero": "15763",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1110,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368546114",
+      "numero": "15762",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368545563",
       "numero": "15761",

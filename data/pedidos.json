@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-07T14:50:11",
-  "total": 72,
+  "atualizado_em": "2026-05-07T16:26:28",
+  "total": 79,
   "pedidos": [
+    {
+      "id": "368545563",
+      "numero": "15761",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 167.54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368534813",
+      "numero": "15760",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 700,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368516208",
+      "numero": "15759",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "LUCIANO DA SILVA LOPES FILHO 07720489322",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 32,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368515381",
+      "numero": "15758",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "57.481.120 REGINA LUCIA FELICIANO BARBOSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 134.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368510236",
+      "numero": "15757",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "50.782.160 SAMARA REBECA MELO VIANA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 163.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368508764",
+      "numero": "15756",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "MK DISTRIBUICAO E COMERCIO DE PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 138,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368506446",
+      "numero": "15755",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 750,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368497698",
       "numero": "15754",

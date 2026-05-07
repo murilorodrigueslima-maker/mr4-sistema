@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-05-07T14:50:16",
-  "total_produtos": 883,
-  "valor_total_estoque": 395969.89000000054,
+  "atualizado_em": "2026-05-07T16:26:32",
+  "total_produtos": 882,
+  "valor_total_estoque": 394945.0000000005,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -223,13 +223,6 @@
       "custo": 8.67
     },
     {
-      "ref": "KPC-HO-0049C",
-      "nome": "PC JOKER KING HONDA UNIFICADO PADRAO CIVIC/CRV 2012/15 PARA CABLE CANBOX",
-      "margem": "-60.6",
-      "preco": 117.99,
-      "custo": 189.52
-    },
-    {
       "ref": "6175",
       "nome": "MOLDURA 9“ VW GOL/ SAVEIRO E PARATI G4 (APARELHO CHASSI PEQUENO)",
       "margem": "-45.6",
@@ -354,6 +347,13 @@
       "margem": "16.7",
       "preco": 196.54,
       "custo": 163.78
+    },
+    {
+      "ref": "64/C",
+      "nome": "FUSIVEL LAMINA MINI 10 AMP",
+      "margem": "16.7",
+      "preco": 33.6,
+      "custo": 28
     }
   ]
 }

@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-07T10:29:01",
-  "total": 59,
+  "atualizado_em": "2026-05-07T12:59:34",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "368439095",
+      "numero": "15748",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 83.77,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368438175",
+      "numero": "15747",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368432477",
+      "numero": "15746",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368428784",
+      "numero": "15745",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 431.25,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368428225",
+      "numero": "15744",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "J. A. DE CARVALHO PECAS E ACESSORIOS AUTOMOTORES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 396,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368412051",
+      "numero": "15743",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "FRANCISCO ELIAS MORAIS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 396.8,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368393739",
+      "numero": "15742",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2047.8,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368390918",
       "numero": "15741",
@@ -21,8 +105,8 @@
       "hora": "",
       "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 52.08,
-      "itens": 2,
+      "valor": 27.78,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },
@@ -46,6 +130,18 @@
       "cliente": "FRANCISCO FRANCINE DA SILVA FREITAS",
       "vendedor": "fabiana andrade da silva",
       "valor": 261.16,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368214406",
+      "numero": "15731",
+      "data": "2026-05-07",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 815.43,
       "itens": 3,
       "status_gc": "",
       "cidade": ""
@@ -118,18 +214,6 @@
       "cliente": "FRANCISCO CRISTIANO ESTEVAM GALDINO 00349588350",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 137.54,
-      "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "368214406",
-      "numero": "15731",
-      "data": "2026-05-06",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 555,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

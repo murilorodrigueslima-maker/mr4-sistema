@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-05-08T17:46:50",
-  "total": 76,
+  "atualizado_em": "2026-05-08T19:45:34",
+  "total": 77,
   "pedidos": [
+    {
+      "id": "368904539",
+      "numero": "15787",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 143.98,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368846078",
       "numero": "15786",

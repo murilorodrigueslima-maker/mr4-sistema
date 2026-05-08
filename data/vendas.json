@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-05-08T17:46:56",
-  "hoje": 6380.6900000000005,
-  "semana": 47979.939999999995,
-  "mes": 49963.88999999999,
+  "atualizado_em": "2026-05-08T19:45:39",
+  "hoje": 6524.670000000001,
+  "semana": 48123.92,
+  "mes": 50107.869999999995,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -27,9 +27,9 @@
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
-      "faturamento": 113.9,
-      "pedidos": 2,
-      "ticket_medio": 56.95
+      "faturamento": 257.88,
+      "pedidos": 3,
+      "ticket_medio": 85.96
     }
   ],
   "ultimos_7_dias": [
@@ -66,7 +66,7 @@
     {
       "data": "2026-05-08",
       "label": "sex., 08/05",
-      "valor": 6380.6900000000005
+      "valor": 6524.670000000001
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-08T16:04:34",
+  "atualizado_em": "2026-05-08T17:46:51",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -55,6 +55,13 @@
       "valor": 193.92,
       "vencimento": "2026-04-08",
       "dias_atraso": 30,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 4264.71,
+      "vencimento": "2026-04-14",
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
@@ -137,6 +144,20 @@
     {
       "nome": "Compra de tapetes para uso interno da empresa",
       "valor": 63.96,
+      "vencimento": "2026-04-20",
+      "dias_atraso": 18,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 2808.4,
+      "vencimento": "2026-04-20",
+      "dias_atraso": 18,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 98.29,
       "vencimento": "2026-04-20",
       "dias_atraso": 18,
       "tipo": "Pagar"
@@ -469,7 +490,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53733.18000000001,
+  "total_vencido": 60904.58,
   "total_a_receber": 0,
   "total_a_pagar": 43036.18000000002
 }

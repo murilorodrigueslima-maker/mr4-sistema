@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-08T16:04:34",
-  "total": 72,
+  "atualizado_em": "2026-05-08T17:46:50",
+  "total": 76,
   "pedidos": [
+    {
+      "id": "368846078",
+      "numero": "15786",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "DAVID ANDERSON BARROSO CORDEIRO 01156737338",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 21.1,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368845748",
+      "numero": "15785",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 65,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368845258",
+      "numero": "15784",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 16,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368844464",
+      "numero": "15783",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 423.4,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368835243",
       "numero": "15782",

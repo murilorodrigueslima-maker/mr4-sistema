@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-07T23:06:29",
+  "atualizado_em": "2026-05-08T02:51:06",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -287,33 +287,37 @@
       "vencimento": "2026-05-05",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1663.74,
       "vencimento": "2026-05-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-05-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 268.63,
       "vencimento": "2026-05-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 395.94,
       "vencimento": "2026-05-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 158.01,
@@ -409,11 +413,65 @@
       "valor": 1968.6,
       "vencimento": "2026-05-14",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "sistema gestãoclick inter",
+      "valor": 16,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SERASA",
+      "valor": 52.4,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MONITOR COMPUTADOR",
+      "valor": 200.7,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CURSO PARA SWYANNE",
+      "valor": 1482.9,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "3 VENTILADOR/1 BEBEDOURO",
+      "valor": 207.04,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
+      "valor": 218.82,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SELOS DE GARANTIA MR4",
+      "valor": 38.33,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SISTEMA GESTÃOCLICK",
+      "valor": 224.28,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2304,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53108.05000000001,
+  "total_vencido": 56520.21000000001,
   "total_a_receber": 0,
   "total_a_pagar": 43586.18000000002
 }

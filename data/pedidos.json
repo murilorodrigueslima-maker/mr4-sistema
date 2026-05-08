@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-08T14:03:00",
-  "total": 68,
+  "atualizado_em": "2026-05-08T16:04:34",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "368835243",
+      "numero": "15782",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "ARIADINIR ARRUDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 219.87,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368789509",
+      "numero": "15781",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "COMERCIAL DE PECAS E ACESSORIOS PARA VEICULOS BV LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 678.72,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368787010",
+      "numero": "15780",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "FRANCISCO MARCIO SANTOS ALMEIDA 05953742398",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 689,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368786710",
+      "numero": "15779",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 751.88,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368770694",
       "numero": "15778",
@@ -453,8 +501,8 @@
       "hora": "",
       "cliente": "Edilberto",
       "vendedor": "Swyanne Kethlyn",
-      "valor": 278.34,
-      "itens": 2,
+      "valor": 1303.64,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },

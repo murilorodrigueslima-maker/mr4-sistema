@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-08T10:08:58",
-  "total": 58,
+  "atualizado_em": "2026-05-08T12:13:47",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "368713867",
+      "numero": "15770",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 189,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368690129",
+      "numero": "15769",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 44,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368673773",
       "numero": "15768",
@@ -441,7 +465,7 @@
       "hora": "",
       "cliente": "CHAVEIRO&ACESSÓRIOS PEQUENO MATIAS",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1595.24,
+      "valor": 1624.34,
       "itens": 26,
       "status_gc": "",
       "cidade": ""

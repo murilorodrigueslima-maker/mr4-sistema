@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-08T10:08:59",
+  "atualizado_em": "2026-05-08T12:13:48",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -65,13 +65,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "SISTEMA GESTÃOCLICK",
-      "valor": 224.28,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 23,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "POPNOW",
       "valor": 3437.79,
       "vencimento": "2026-04-15",
@@ -86,13 +79,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "UBER FLASH",
-      "valor": 251.69,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 23,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 3711.03,
       "vencimento": "2026-04-15",
@@ -100,8 +86,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
-      "valor": 98.89,
+      "nome": "UBER FLASH",
+      "valor": 0.58,
+      "vencimento": "2026-04-15",
+      "dias_atraso": 23,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SISTEMA GESTÃOCLICK",
+      "valor": 24.28,
       "vencimento": "2026-04-15",
       "dias_atraso": 23,
       "tipo": "Pagar"
@@ -184,7 +177,7 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO ELO LEROY",
+      "nome": "JUROS ELO LEROY",
       "valor": 135.04,
       "vencimento": "2026-04-21",
       "dias_atraso": 17,
@@ -283,16 +276,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 10662.93,
+      "valor": 10089.64,
       "vencimento": "2026-05-05",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
-      "valor": 1663.74,
-      "vencimento": "2026-05-07",
-      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
@@ -333,6 +319,18 @@
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
+      "vencimento": "2026-05-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 1379.19,
+      "vencimento": "2026-05-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 48.27,
       "vencimento": "2026-05-10",
       "tipo": "Pagar"
     },
@@ -471,7 +469,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56520.21000000001,
+  "total_vencido": 53733.18000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 43586.18000000002
+  "total_a_pagar": 43036.18000000002
 }

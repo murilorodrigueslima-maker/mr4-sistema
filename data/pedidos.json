@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-08T08:03:09",
-  "total": 53,
+  "atualizado_em": "2026-05-08T10:08:58",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "368673773",
+      "numero": "15768",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368672698",
+      "numero": "15767",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "F.F.S. CHAVEIRO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 343.76,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368660952",
+      "numero": "15766",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 195,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368660728",
+      "numero": "15765",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 222.39,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368657339",
+      "numero": "15764",
+      "data": "2026-05-08",
+      "hora": "",
+      "cliente": "J ELIVAN MELO DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 606.49,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368555822",
       "numero": "15763",

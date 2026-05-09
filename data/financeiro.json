@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-09T13:41:35",
+  "atualizado_em": "2026-05-09T15:44:40",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -51,20 +51,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 193.92,
-      "vencimento": "2026-04-08",
-      "dias_atraso": 31,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 4264.71,
-      "vencimento": "2026-04-14",
-      "dias_atraso": 25,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CURSO PARA SWYANNE",
       "valor": 1482.9,
       "vencimento": "2026-04-15",
@@ -79,13 +65,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO ELO",
-      "valor": 1335.84,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 3711.03,
       "vencimento": "2026-04-15",
@@ -93,15 +72,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "UBER FLASH",
-      "valor": 0.58,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SISTEMA GESTÃOCLICK",
-      "valor": 24.28,
+      "nome": "JUROS CARTAO ELO",
+      "valor": 660.7,
       "vencimento": "2026-04-15",
       "dias_atraso": 24,
       "tipo": "Pagar"
@@ -296,8 +268,15 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "PAGAMENTO REF MÊS ABRIL",
+      "valor": 1000,
+      "vencimento": "2026-05-05",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "Salário Murilo",
-      "valor": 10089.64,
+      "valor": 10027.64,
       "vencimento": "2026-05-05",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -321,13 +300,6 @@
       "valor": 395.94,
       "vencimento": "2026-05-07",
       "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 158.01,
-      "vencimento": "2026-05-08",
-      "dias_atraso": 1,
       "tipo": "Pagar"
     }
   ],
@@ -503,7 +475,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61062.590000000004,
+  "total_vencido": 56683.950000000004,
   "total_a_receber": 0,
-  "total_a_pagar": 43036.18000000002
+  "total_a_pagar": 42336.18000000002
 }

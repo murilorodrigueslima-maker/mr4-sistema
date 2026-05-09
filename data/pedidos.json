@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-09T07:48:03",
-  "total": 52,
+  "atualizado_em": "2026-05-09T09:54:28",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "368978831",
+      "numero": "15793",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 516.46,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368970088",
+      "numero": "15792",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 984.06,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368968407",
+      "numero": "15791",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "57.216.309 FABRICIA PEREIRA DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 424.38,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368964891",
+      "numero": "15790",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 331.53,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "368960801",
+      "numero": "15789",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "STYLE WAY PERFORMANCE LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 4100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368949393",
       "numero": "15788",

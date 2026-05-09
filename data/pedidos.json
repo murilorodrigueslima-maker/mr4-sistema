@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-05-09T06:08:30",
-  "total": 51,
+  "atualizado_em": "2026-05-09T07:48:03",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "368949393",
+      "numero": "15788",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 178.98,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "368904539",
       "numero": "15787",

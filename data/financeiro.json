@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-08T23:00:12",
+  "atualizado_em": "2026-05-09T02:25:20",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -322,15 +322,16 @@
       "vencimento": "2026-05-07",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 158.01,
       "vencimento": "2026-05-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 897.75,
@@ -486,11 +487,17 @@
       "valor": 2304,
       "vencimento": "2026-05-15",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 341.98,
+      "vencimento": "2026-05-16",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60904.58,
+  "total_vencido": 61062.590000000004,
   "total_a_receber": 0,
   "total_a_pagar": 43036.18000000002
 }

@@ -1,326 +1,326 @@
 {
-  "atualizado_em": "2026-05-08T19:45:35",
+  "atualizado_em": "2026-05-08T23:00:12",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-03-17",
-      "dias_atraso": 52,
+      "dias_atraso": 53,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 1085,
       "vencimento": "2026-03-17",
-      "dias_atraso": 52,
+      "dias_atraso": 53,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1308.71,
       "vencimento": "2026-03-23",
-      "dias_atraso": 46,
+      "dias_atraso": 47,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-03-25",
-      "dias_atraso": 44,
+      "dias_atraso": 45,
       "tipo": "Pagar"
     },
     {
       "nome": "CHAT GPT",
       "valor": 95.99,
       "vencimento": "2026-03-25",
-      "dias_atraso": 44,
+      "dias_atraso": 45,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-03-30",
-      "dias_atraso": 39,
+      "dias_atraso": 40,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-03-30",
-      "dias_atraso": 39,
+      "dias_atraso": 40,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 193.92,
       "vencimento": "2026-04-08",
-      "dias_atraso": 30,
+      "dias_atraso": 31,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 4264.71,
       "vencimento": "2026-04-14",
-      "dias_atraso": 24,
+      "dias_atraso": 25,
       "tipo": "Pagar"
     },
     {
       "nome": "CURSO PARA SWYANNE",
       "valor": 1482.9,
       "vencimento": "2026-04-15",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "POPNOW",
       "valor": 3437.79,
       "vencimento": "2026-04-15",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO ELO",
       "valor": 1335.84,
       "vencimento": "2026-04-15",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 3711.03,
       "vencimento": "2026-04-15",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "UBER FLASH",
       "valor": 0.58,
       "vencimento": "2026-04-15",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "SISTEMA GESTÃOCLICK",
       "valor": 24.28,
       "vencimento": "2026-04-15",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 329.55,
       "vencimento": "2026-04-16",
-      "dias_atraso": 22,
+      "dias_atraso": 23,
       "tipo": "Pagar"
     },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 291.45,
       "vencimento": "2026-04-16",
-      "dias_atraso": 22,
+      "dias_atraso": 23,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-04-17",
-      "dias_atraso": 21,
+      "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
       "nome": "4 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
       "valor": 258.77,
       "vencimento": "2026-04-17",
-      "dias_atraso": 21,
+      "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 1213,
       "vencimento": "2026-04-17",
-      "dias_atraso": 21,
+      "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
       "nome": "Compra de tapetes para uso interno da empresa",
       "valor": 63.96,
       "vencimento": "2026-04-20",
-      "dias_atraso": 18,
+      "dias_atraso": 19,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 2808.4,
       "vencimento": "2026-04-20",
-      "dias_atraso": 18,
+      "dias_atraso": 19,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 98.29,
       "vencimento": "2026-04-20",
-      "dias_atraso": 18,
+      "dias_atraso": 19,
       "tipo": "Pagar"
     },
     {
       "nome": "PRATELEIRAS 3 UN",
       "valor": 239.31,
       "vencimento": "2026-04-21",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
       "vencimento": "2026-04-21",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "SALES COMERCIO DE PECAS E ACESSORIOS PARA VEICULOS LTDA.",
       "valor": 738.72,
       "vencimento": "2026-04-21",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "CONSULTORIA DE IMPORTAÇÃO",
       "valor": 171.3,
       "vencimento": "2026-04-21",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "MESA ESCRITORIO MURILO",
       "valor": 227.07,
       "vencimento": "2026-04-21",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS ELO LEROY",
       "valor": 135.04,
       "vencimento": "2026-04-21",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
       "valor": 327.38,
       "vencimento": "2026-04-24",
-      "dias_atraso": 14,
+      "dias_atraso": 15,
       "tipo": "Pagar"
     },
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.41,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "LAMPADAS/FIOS PARA ESCRITORIO",
       "valor": 114.52,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "UBER FLASH",
       "valor": 420.7,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER",
       "valor": 2399.74,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "LICENÇA CANVAS",
       "valor": 24.16,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "CHAT GPT",
       "valor": 95.99,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER",
       "valor": 1355.82,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "UBER FLASH",
       "valor": 81.19,
       "vencimento": "2026-04-25",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-04-28",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-04-30",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 10274.74,
       "vencimento": "2026-05-04",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 10089.64,
       "vencimento": "2026-05-05",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-05-07",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 268.63,
       "vencimento": "2026-05-07",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 395.94,
       "vencimento": "2026-05-07",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],

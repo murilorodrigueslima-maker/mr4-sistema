@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-09T11:42:29",
-  "total": 67,
+  "atualizado_em": "2026-05-09T13:41:35",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "369067265",
+      "numero": "15807",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 2550,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369066926",
+      "numero": "15806",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 145,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369063244",
+      "numero": "15805",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "57.996.870 ISAC NEWTON MARTINS RAFAEL",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 196.92,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369050414",
+      "numero": "15804",
+      "data": "2026-05-09",
+      "hora": "",
+      "cliente": "HELENO JOSE GOMES DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369041132",
       "numero": "15803",
@@ -105,7 +153,7 @@
       "hora": "",
       "cliente": "FRANCISCO CRISTIANO ESTEVAM GALDINO 00349588350",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 200,
+      "valor": 245,
       "itens": 3,
       "status_gc": "",
       "cidade": ""

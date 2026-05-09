@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-09T11:42:30",
+  "atualizado_em": "2026-05-09T13:41:35",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -332,6 +332,12 @@
     }
   ],
   "contas_vencendo": [
+    {
+      "nome": "U. N. LIMA",
+      "valor": 2450,
+      "vencimento": "2026-05-09",
+      "tipo": "Pagar"
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 897.75,

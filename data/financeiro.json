@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-11T07:53:25",
+  "atualizado_em": "2026-05-11T11:29:47",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -51,13 +51,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CURSO PARA SWYANNE",
-      "valor": 1482.9,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 26,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "POPNOW",
       "valor": 3437.79,
       "vencimento": "2026-04-15",
@@ -72,8 +65,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO ELO",
-      "valor": 660.7,
+      "nome": "CURSO PARA SWYANNE",
+      "valor": 212.03,
       "vencimento": "2026-04-15",
       "dias_atraso": 26,
       "tipo": "Pagar"
@@ -276,7 +269,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 9573.87,
+      "valor": 9108.57,
       "vencimento": "2026-05-05",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -310,13 +303,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 897.75,
-      "vencimento": "2026-05-10",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-05-10",
@@ -342,12 +328,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1744.75,
-      "vencimento": "2026-05-11",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1744.93,
       "vencimento": "2026-05-11",
       "tipo": "Pagar"
     },
@@ -498,7 +478,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61026.630000000005,
+  "total_vencido": 57732.01,
   "total_a_receber": 0,
-  "total_a_pagar": 42357.42000000002
+  "total_a_pagar": 40425.85000000001
 }

@@ -361,6 +361,9 @@ select.filter-sel:focus{border-color:var(--orange)}
       <span class="sidebar-item-count" id="cnt-semContato3d" style="background:#FEE2E2;color:#B91C1C">0</span>
     </div>
 
+    <div class="sidebar-section" style="margin-top:.5rem">Por Estado</div>
+    <div id="sidebarEstados"></div>
+
     <div class="sidebar-footer">
       <div style="font-size:.68rem;color:var(--muted);text-align:center;line-height:1.5">
         WhatsApp<br>
@@ -711,12 +714,32 @@ function atualizarContadores() {
   document.getElementById('cnt-esquecidos').textContent = esquecidos.length;
   document.getElementById('cnt-naoLidas').textContent   = naoLidas.length;
   document.getElementById('cnt-semContato3d').textContent = CLIENTES.filter(isSemContato3).length;
+
+  // ── Por Estado ──
+  const estadosMap = {};
+  CLIENTES.forEach(c => {
+    const uf = (c.estado||'').trim().toUpperCase();
+    if(uf) estadosMap[uf] = (estadosMap[uf]||0) + 1;
+  });
+  const estadosOrdenados = Object.entries(estadosMap).sort((a,b)=>b[1]-a[1]);
+  const estadoCores = ['#FF6B1A','#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899'];
+  const sidebarEstados = document.getElementById('sidebarEstados');
+  if(sidebarEstados) {
+    sidebarEstados.innerHTML = estadosOrdenados.map(([uf, cnt], i) => `
+      <div class="sidebar-item" id="filter-estado__${uf}" onclick="setFilter('estado:${uf}')">
+        <span style="display:flex;align-items:center;gap:.4rem">
+          <span class="sidebar-dot" style="background:${estadoCores[i%estadoCores.length]}"></span>${uf}
+        </span>
+        <span class="sidebar-item-count">${cnt}</span>
+      </div>`).join('');
+  }
 }
 
 window.setFilter = function(f) {
   filtroAtivo = f;
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-  const el = document.getElementById('filter-' + f);
+  const elId = 'filter-' + f.replace(':', '__');
+  const el = document.getElementById(elId);
   if(el) el.classList.add('active');
   filtrar();
 };
@@ -749,9 +772,16 @@ window.filtrar = function() {
   else if(filtroAtivo === 'esquecidos') lista = lista.filter(isEsquecido);
   else if(filtroAtivo === 'naoLidas')    lista = lista.filter(temMsgNaoLida);
   else if(filtroAtivo === 'semContato3d') lista = lista.filter(isSemContato3);
+  else if(filtroAtivo && filtroAtivo.startsWith('estado:')) {
+    const uf = filtroAtivo.slice(7).toUpperCase();
+    lista = lista.filter(c => (c.estado||'').trim().toUpperCase() === uf);
+  }
 
   const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta', esquecidos:'Sem contato há 30d+', naoLidas:'Mensagens não lidas', semContato3d:'Sem contato 3d+' };
-  document.getElementById('listTitle').textContent = (labels[filtroAtivo]||'Clientes') + ` (${lista.length})`;
+  const labelTitulo = filtroAtivo && filtroAtivo.startsWith('estado:')
+    ? `Clientes do ${filtroAtivo.slice(7).toUpperCase()}`
+    : (labels[filtroAtivo]||'Clientes');
+  document.getElementById('listTitle').textContent = labelTitulo + ` (${lista.length})`;
   renderLista(lista);
 };
 
@@ -1803,6 +1833,38 @@ function renderPainelCRM() {
       </div>
     </div>
   </div>
+
+  <!-- ── Linha 4: Ranking por Estado ── -->
+  ${(() => {
+    const estadosMap = {};
+    CLIENTES.forEach(c => {
+      const uf = (c.estado||'').trim().toUpperCase();
+      if(uf) estadosMap[uf] = (estadosMap[uf]||0) + 1;
+    });
+    const ranking = Object.entries(estadosMap).sort((a,b)=>b[1]-a[1]);
+    if(!ranking.length) return '';
+    const max = ranking[0][1];
+    const cores = ['#FF6B1A','#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899'];
+    return `
+    <div class="painel-block" style="margin-bottom:1rem">
+      <div class="painel-section-title">
+        🗺️ Ranking por Estado
+        <span class="painel-section-badge">${ranking.length} estado${ranking.length>1?'s':''}</span>
+      </div>
+      <div style="padding:.25rem 0">
+        ${ranking.map(([uf, cnt], i) => `
+          <div class="painel-bar-row" style="cursor:pointer" onclick="setModo('clientes');setFilter('estado:${uf}')">
+            <span class="painel-bar-label" style="color:var(--text);font-weight:600;display:flex;align-items:center;gap:.35rem">
+              <span style="width:8px;height:8px;border-radius:50%;background:${cores[i%cores.length]};flex-shrink:0;display:inline-block"></span>${uf}
+            </span>
+            <div class="painel-bar-track">
+              <div class="painel-bar-fill" style="background:${cores[i%cores.length]};width:${Math.round(cnt/max*100)}%"></div>
+            </div>
+            <span class="painel-bar-count">${cnt}</span>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  })()}
 
 </div>`; // fim .painel-area
 }

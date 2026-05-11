@@ -678,6 +678,7 @@ function atualizarContadores() {
   const agora = new Date();
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
   const novos = CLIENTES.filter(c => {
+    if(c.origem === 'importado') return false;
     if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
@@ -728,6 +729,7 @@ window.filtrar = function() {
   else if(filtroAtivo === 'Varejo') lista = lista.filter(c=>(c.tags||[]).includes('Varejo'));
   else if(filtroAtivo === 'Inadimplente') lista = lista.filter(c=>(c.tags||[]).includes('Inadimplente'));
   else if(filtroAtivo === 'novos') lista = lista.filter(c=>{
+    if(c.origem === 'importado') return false; // só cadastros manuais
     if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
@@ -1470,26 +1472,20 @@ function temMsgNaoLida(c) {
 
 function isEsquecido(c) {
   const DIAS = 30;
-  let ref;
-  if(c.ultimoContato) ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
-  else if(c.criado_em) ref = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
-  else return false;
+  if(!c.ultimoContato) return false; // só conta quem tem contato registrado
+  const ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
   return (Date.now() - ref.getTime()) / (1000*60*60*24) > DIAS;
 }
 
 function isSemContato3(c) {
-  let ref;
-  if(c.ultimoContato) ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
-  else if(c.criado_em) ref = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
-  else return false;
+  if(!c.ultimoContato) return false; // só conta quem tem contato registrado
+  const ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
   return (Date.now() - ref.getTime()) / (1000*60*60*24) > 3;
 }
 
 function diasSemContato(c) {
-  let ref;
-  if(c.ultimoContato) ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
-  else if(c.criado_em) ref = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
-  else return 0;
+  if(!c.ultimoContato) return 0;
+  const ref = c.ultimoContato.toDate ? c.ultimoContato.toDate() : new Date(c.ultimoContato);
   return Math.floor((Date.now() - ref.getTime()) / (1000*60*60*24));
 }
 
@@ -1574,6 +1570,7 @@ function renderPainelCRM() {
 
   // ── Métricas ──
   const novosCount = CLIENTES.filter(c => {
+    if(c.origem === 'importado') return false;
     if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
@@ -1816,7 +1813,7 @@ window.importarTodosDoInbox = async function() {
       await addDoc(collection(db,'clientes'),{
         nome, tipo:'PF', telefone:fmtPhone(phone),
         email:'', cidade:'', estado:'', cpf_cnpj:'',
-        tags:[], notas:[], pipeline:'lead',
+        tags:[], notas:[], pipeline:'lead', origem:'importado',
         criado_em:serverTimestamp(), atualizado_em:serverTimestamp(),
       });
       criados++;
@@ -2011,7 +2008,7 @@ window.salvarCliente = async function() {
     if(obs){ const c=CLIENTES.find(x=>x.id===id); const notas=[{texto:obs,data:new Date().toISOString()},...(c.notas||[])]; await updateDoc(doc(db,'clientes',id),{notas}); }
   } else {
     const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
-    await addDoc(collection(db,'clientes'),{...dados,notas,pipeline:'lead',criado_em:serverTimestamp()});
+    await addDoc(collection(db,'clientes'),{...dados,notas,pipeline:'lead',origem:'manual',criado_em:serverTimestamp()});
   }
   fecharModal();
   await carregar();

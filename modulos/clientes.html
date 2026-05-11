@@ -433,6 +433,14 @@ select.filter-sel:focus{border-color:var(--orange)}
           <div class="info-value" id="iCidade">—</div>
         </div>
         <div class="info-field">
+          <div class="info-label">Valor médio</div>
+          <div class="info-value" id="iValor">—</div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">Segmento</div>
+          <div class="info-value" id="iSegmento">—</div>
+        </div>
+        <div class="info-field">
           <div class="info-label">E-mail</div>
           <div class="info-value" id="iEmail">—</div>
         </div>
@@ -557,6 +565,23 @@ select.filter-sel:focus{border-color:var(--orange)}
         <div class="form-group">
           <label class="form-label">Estado</label>
           <input class="form-input" id="fEstado" placeholder="SP" maxlength="2">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Valor médio (R$)</label>
+          <input class="form-input" id="fValor" type="number" min="0" step="0.01" placeholder="Ex: 500,00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Segmento</label>
+          <select class="form-select" id="fSegmento">
+            <option value="">— Selecione —</option>
+            <option value="Oficina">🔧 Oficina</option>
+            <option value="Som automotivo">🔊 Som automotivo</option>
+            <option value="Elétrica veicular">⚡ Elétrica veicular</option>
+            <option value="Varejo">🛒 Varejo</option>
+            <option value="Atacado">📦 Atacado</option>
+            <option value="Particular">👤 Particular</option>
+            <option value="Outro">Outro</option>
+          </select>
         </div>
       </div>
       <div class="form-group">
@@ -781,6 +806,8 @@ window.abrirDetalhe = function(id) {
   // Info tab
   document.getElementById('iDoc').textContent = c.cpf_cnpj||'—';
   document.getElementById('iCidade').textContent = [c.cidade,c.estado].filter(Boolean).join(' / ')||'—';
+  document.getElementById('iValor').textContent = c.valor_medio ? `R$ ${Number(c.valor_medio).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
+  document.getElementById('iSegmento').textContent = c.segmento||'—';
   document.getElementById('iEmail').textContent = c.email||'—';
   const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente' };
   document.getElementById('iTags').innerHTML = (c.tags||[]).length
@@ -1216,7 +1243,11 @@ window.setModo = function(modo) {
     document.getElementById('listTitle').textContent = 'Pipeline de Vendas';
     renderPipeline();
   } else if(modo === 'painel') {
-    renderPainelCRM();
+    if(CHATS.length === 0) {
+      carregarChatsParaPainel();
+    } else {
+      renderPainelCRM();
+    }
   } else {
     filtrar();
   }
@@ -1400,6 +1431,8 @@ window.abrirChatInbox = function(phone) {
   // Preenche aba info com dados do CRM (se existir)
   document.getElementById('iDoc').textContent     = cliente ? (cliente.cpf_cnpj||'—') : '—';
   document.getElementById('iCidade').textContent  = cliente ? ([cliente.cidade,cliente.estado].filter(Boolean).join(' / ')||'—') : '—';
+  document.getElementById('iValor').textContent   = (cliente && cliente.valor_medio) ? `R$ ${Number(cliente.valor_medio).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
+  document.getElementById('iSegmento').textContent= (cliente && cliente.segmento) ? cliente.segmento : '—';
   document.getElementById('iEmail').textContent   = cliente ? (cliente.email||'—') : '—';
   const tagClasses2 = {VIP:'tag-vip',Atacado:'tag-atacado',Varejo:'tag-varejo',Inadimplente:'tag-inadimplente'};
   document.getElementById('iTags').innerHTML = (cliente&&(cliente.tags||[]).length)
@@ -1907,8 +1940,9 @@ async function pollMensagensChat(phone) {
 window.abrirModalNovo = function() {
   document.getElementById('editId').value='';
   document.getElementById('modalTitle').textContent='Novo Cliente';
-  ['fNome','fDoc','fTelefone','fEmail','fCidade','fEstado','fObs'].forEach(id=>document.getElementById(id).value='');
+  ['fNome','fDoc','fTelefone','fEmail','fCidade','fEstado','fValor','fObs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fTipo').value='PF';
+  document.getElementById('fSegmento').value='';
   document.querySelectorAll('.tag-toggle').forEach(b=>b.classList.remove('on'));
   document.getElementById('modalOverlay').classList.add('open');
 };
@@ -1925,6 +1959,8 @@ window.editarCliente = function(id) {
   document.getElementById('fEmail').value=c.email||'';
   document.getElementById('fCidade').value=c.cidade||'';
   document.getElementById('fEstado').value=c.estado||'';
+  document.getElementById('fValor').value=c.valor_medio||'';
+  document.getElementById('fSegmento').value=c.segmento||'';
   document.getElementById('fObs').value='';
   document.querySelectorAll('.tag-toggle').forEach(b=>{
     b.classList.toggle('on',(c.tags||[]).includes(b.dataset.tag));
@@ -1966,6 +2002,8 @@ window.salvarCliente = async function() {
     telefone:tel, email:document.getElementById('fEmail').value.trim(),
     cidade:document.getElementById('fCidade').value.trim(),
     estado:document.getElementById('fEstado').value.trim().toUpperCase(),
+    valor_medio: parseFloat(document.getElementById('fValor').value)||0,
+    segmento: document.getElementById('fSegmento').value,
     tags, atualizado_em:serverTimestamp(),
   };
   if(id){

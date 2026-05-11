@@ -216,6 +216,9 @@ select.filter-sel:focus{border-color:var(--orange)}
 .form-input,.form-select,.form-textarea{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.83rem;color:var(--text);background:var(--white);outline:none;transition:border .15s}
 .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
 .form-textarea{resize:vertical;min-height:70px}
+.modal-tabs{display:flex;gap:.5rem;margin-bottom:1.1rem}
+.modal-tab{flex:1;padding:.6rem .5rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;background:var(--bg);color:var(--muted);transition:all .15s;text-align:center}
+.modal-tab.active{border-color:var(--orange);background:var(--orange-lt);color:var(--orange)}
 
 /* STATS BAR */
 .stats-bar{display:flex;gap:1.5rem;padding:.65rem 1.25rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
@@ -424,9 +427,13 @@ select.filter-sel:focus{border-color:var(--orange)}
     <div class="detail-content">
       <!-- INFO -->
       <div class="tab-pane active" id="tab-info">
-        <div class="info-field">
-          <div class="info-label">CPF / CNPJ</div>
+        <div class="info-field" id="grpIDoc">
+          <div class="info-label" id="iDocLabel">CPF / CNPJ</div>
           <div class="info-value" id="iDoc">—</div>
+        </div>
+        <div class="info-field" id="grpINomeFantasia" style="display:none">
+          <div class="info-label">Nome fantasia</div>
+          <div class="info-value" id="iNomeFantasia">—</div>
         </div>
         <div class="info-field">
           <div class="info-label">Cidade / Estado</div>
@@ -534,20 +541,22 @@ select.filter-sel:focus{border-color:var(--orange)}
     </div>
     <div class="modal-body">
       <input type="hidden" id="editId">
+      <input type="hidden" id="fTipo" value="PF">
+      <div class="modal-tabs">
+        <button type="button" class="modal-tab active" id="tabPF" onclick="setModalTipo('PF')">👤 Pessoa Física</button>
+        <button type="button" class="modal-tab" id="tabPJ" onclick="setModalTipo('PJ')">🏢 Pessoa Jurídica</button>
+      </div>
       <div class="form-row">
         <div class="form-group" style="grid-column:1/-1">
-          <label class="form-label">Nome completo / Razão social *</label>
-          <input class="form-input" id="fNome" placeholder="Ex: João Silva ou Empresa Ltda">
+          <label class="form-label" id="labelNome">Nome completo *</label>
+          <input class="form-input" id="fNome" placeholder="Ex: João Silva">
+        </div>
+        <div class="form-group" id="grpNomeFantasia" style="grid-column:1/-1;display:none">
+          <label class="form-label">Nome fantasia</label>
+          <input class="form-input" id="fNomeFantasia" placeholder="Ex: Auto Peças Silva">
         </div>
         <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <select class="form-select" id="fTipo">
-            <option value="PF">Pessoa Física (PF)</option>
-            <option value="PJ">Pessoa Jurídica (PJ)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">CPF / CNPJ</label>
+          <label class="form-label" id="labelDoc">CPF</label>
           <input class="form-input" id="fDoc" placeholder="Opcional">
         </div>
         <div class="form-group">
@@ -678,7 +687,7 @@ function atualizarContadores() {
   const agora = new Date();
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
   const novos = CLIENTES.filter(c => {
-    if(c.origem === 'importado') return false;
+    if(c.origem !== 'manual') return false;
     if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
@@ -729,7 +738,7 @@ window.filtrar = function() {
   else if(filtroAtivo === 'Varejo') lista = lista.filter(c=>(c.tags||[]).includes('Varejo'));
   else if(filtroAtivo === 'Inadimplente') lista = lista.filter(c=>(c.tags||[]).includes('Inadimplente'));
   else if(filtroAtivo === 'novos') lista = lista.filter(c=>{
-    if(c.origem === 'importado') return false; // só cadastros manuais
+    if(c.origem !== 'manual') return false; // só cadastros manuais
     if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
@@ -806,7 +815,11 @@ window.abrirDetalhe = function(id) {
   if(wpp){ wppBtn.style.display='flex'; wppBtn.dataset.wpp = wpp; } else { wppBtn.style.display='none'; }
 
   // Info tab
+  const isPJ = c.tipo === 'PJ';
+  document.getElementById('iDocLabel').textContent = isPJ ? 'CNPJ' : 'CPF';
   document.getElementById('iDoc').textContent = c.cpf_cnpj||'—';
+  document.getElementById('grpINomeFantasia').style.display = isPJ ? '' : 'none';
+  document.getElementById('iNomeFantasia').textContent = c.nome_fantasia||'—';
   document.getElementById('iCidade').textContent = [c.cidade,c.estado].filter(Boolean).join(' / ')||'—';
   document.getElementById('iValor').textContent = c.valor_medio ? `R$ ${Number(c.valor_medio).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
   document.getElementById('iSegmento').textContent = c.segmento||'—';
@@ -1570,7 +1583,7 @@ function renderPainelCRM() {
 
   // ── Métricas ──
   const novosCount = CLIENTES.filter(c => {
-    if(c.origem === 'importado') return false;
+    if(c.origem !== 'manual') return false;
     if(!c.criado_em) return false;
     const d = c.criado_em.toDate ? c.criado_em.toDate() : new Date(c.criado_em);
     return d >= inicioMes;
@@ -1937,10 +1950,10 @@ async function pollMensagensChat(phone) {
 window.abrirModalNovo = function() {
   document.getElementById('editId').value='';
   document.getElementById('modalTitle').textContent='Novo Cliente';
-  ['fNome','fDoc','fTelefone','fEmail','fCidade','fEstado','fValor','fObs'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('fTipo').value='PF';
+  ['fNome','fNomeFantasia','fDoc','fTelefone','fEmail','fCidade','fEstado','fValor','fObs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fSegmento').value='';
   document.querySelectorAll('.tag-toggle').forEach(b=>b.classList.remove('on'));
+  setModalTipo('PF');
   document.getElementById('modalOverlay').classList.add('open');
 };
 
@@ -1949,8 +1962,9 @@ window.editarCliente = function(id) {
   if(!c) return;
   document.getElementById('editId').value=id;
   document.getElementById('modalTitle').textContent='Editar Cliente';
+  setModalTipo(c.tipo||'PF');
   document.getElementById('fNome').value=c.nome||'';
-  document.getElementById('fTipo').value=c.tipo||'PF';
+  document.getElementById('fNomeFantasia').value=c.nome_fantasia||'';
   document.getElementById('fDoc').value=c.cpf_cnpj||'';
   document.getElementById('fTelefone').value=c.telefone||'';
   document.getElementById('fEmail').value=c.email||'';
@@ -1986,6 +2000,18 @@ window.deletarClienteAtual = async function() {
 window.fecharModal = function() { document.getElementById('modalOverlay').classList.remove('open'); };
 window.toggleTag = function(btn) { btn.classList.toggle('on'); };
 
+window.setModalTipo = function(tipo) {
+  document.getElementById('fTipo').value = tipo;
+  document.getElementById('tabPF').classList.toggle('active', tipo === 'PF');
+  document.getElementById('tabPJ').classList.toggle('active', tipo === 'PJ');
+  const isPJ = tipo === 'PJ';
+  document.getElementById('labelNome').textContent = isPJ ? 'Razão social *' : 'Nome completo *';
+  document.getElementById('fNome').placeholder = isPJ ? 'Ex: Oficina Silva Ltda' : 'Ex: João Silva';
+  document.getElementById('labelDoc').textContent = isPJ ? 'CNPJ' : 'CPF';
+  document.getElementById('fDoc').placeholder = isPJ ? '00.000.000/0001-00' : 'Opcional';
+  document.getElementById('grpNomeFantasia').style.display = isPJ ? '' : 'none';
+};
+
 window.salvarCliente = async function() {
   const nome = document.getElementById('fNome').value.trim();
   const tel  = document.getElementById('fTelefone').value.trim();
@@ -1995,6 +2021,7 @@ window.salvarCliente = async function() {
   const id   = document.getElementById('editId').value;
   const dados = {
     nome, tipo:document.getElementById('fTipo').value,
+    nome_fantasia:document.getElementById('fNomeFantasia').value.trim(),
     cpf_cnpj:document.getElementById('fDoc').value.trim(),
     telefone:tel, email:document.getElementById('fEmail').value.trim(),
     cidade:document.getElementById('fCidade').value.trim(),

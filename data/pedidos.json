@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-11T11:29:46",
-  "total": 29,
+  "atualizado_em": "2026-05-11T14:49:25",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "369398165",
+      "numero": "15820",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369392934",
+      "numero": "15819",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "FRANCISCO JOHNY VIEIRA DE ABREU",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 603,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369391453",
+      "numero": "15818",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "FALCO COMERCIO ATACADISTA DE PECAS E ACESSORIOS PARA VEICULOS AUTOMOTORES LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369388256",
+      "numero": "15817",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369375563",
       "numero": "15816",

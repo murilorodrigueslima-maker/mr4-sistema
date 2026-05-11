@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-10T23:09:46",
+  "atualizado_em": "2026-05-11T03:58:52",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -308,33 +308,37 @@
       "vencimento": "2026-05-09",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 897.75,
       "vencimento": "2026-05-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-05-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 1379.19,
       "vencimento": "2026-05-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 48.27,
       "vencimento": "2026-05-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1744.75,
@@ -478,11 +482,23 @@
       "valor": 3000,
       "vencimento": "2026-05-17",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
+      "vencimento": "2026-05-18",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 147.75,
+      "vencimento": "2026-05-18",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58680.18000000001,
+  "total_vencido": 61026.630000000005,
   "total_a_receber": 0,
-  "total_a_pagar": 42336.18000000002
+  "total_a_pagar": 42357.42000000002
 }

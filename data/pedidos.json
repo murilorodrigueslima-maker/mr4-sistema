@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-11T16:27:35",
-  "total": 36,
+  "atualizado_em": "2026-05-11T18:10:51",
+  "total": 38,
   "pedidos": [
+    {
+      "id": "369517280",
+      "numero": "15826",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "50.122.797 JEFERSON SOARES DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 50,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369516864",
+      "numero": "15825",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "50.122.797 JEFERSON SOARES DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 830.02,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369500492",
+      "numero": "15824",
+      "data": "2026-05-11",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369492957",
       "numero": "15823",
@@ -323,18 +359,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 302,
       "itens": 4,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "368999127",
-      "numero": "15796",
-      "data": "2026-05-09",
-      "hora": "",
-      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 198.5,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

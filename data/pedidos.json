@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-12T10:55:00",
-  "total": 28,
+  "atualizado_em": "2026-05-12T13:14:26",
+  "total": 34,
   "pedidos": [
+    {
+      "id": "369676570",
+      "numero": "15841",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 399.96,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369675516",
+      "numero": "15840",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "JOSIAS DE SOUSA SANTOS 46235299320",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 405.37,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369667822",
+      "numero": "15839",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 220.34,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369665930",
+      "numero": "15838",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "57.996.870 ISAC NEWTON MARTINS RAFAEL",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 175.18,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369662917",
+      "numero": "15837",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369643595",
+      "numero": "15836",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "60.758.447 JOSE IVANILDO BRITO CUNHA FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 249.28,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369631541",
       "numero": "15835",

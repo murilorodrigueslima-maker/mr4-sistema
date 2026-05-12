@@ -1,17 +1,17 @@
 {
-  "atualizado_em": "2026-05-12T10:55:06",
-  "hoje": 4818.67,
-  "semana": 9071.4,
-  "mes": 74938.24999999999,
+  "atualizado_em": "2026-05-12T13:14:33",
+  "hoje": 6344.65,
+  "semana": 10597.380000000001,
+  "mes": 76464.22999999998,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
   "vendedores": [
     {
       "nome": "ADEMIR LOPES FURTADO",
-      "faturamento": 118709.88000000002,
-      "pedidos": 346,
-      "ticket_medio": 343.09213872832373
+      "faturamento": 120235.86000000003,
+      "pedidos": 352,
+      "ticket_medio": 341.5791477272728
     },
     {
       "nome": "fabiana andrade da silva",
@@ -66,7 +66,7 @@
     {
       "data": "2026-05-12",
       "label": "ter., 12/05",
-      "valor": 4818.67
+      "valor": 6344.65
     }
   ]
 }

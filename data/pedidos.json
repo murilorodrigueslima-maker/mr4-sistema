@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-12T13:14:26",
-  "total": 34,
+  "atualizado_em": "2026-05-12T16:28:19",
+  "total": 39,
   "pedidos": [
+    {
+      "id": "369754471",
+      "numero": "15846",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 697,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369732964",
+      "numero": "15845",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "ELETRONIC NEGO SOM ACESSORIOS VEICULAR LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 926.16,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369726688",
+      "numero": "15844",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 160,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369714141",
+      "numero": "15843",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "61.165.348 VALDEMIR DO NASCIMENTO PINHEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 420.68,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369710218",
+      "numero": "15842",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 298.03,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369676570",
       "numero": "15841",
@@ -9,8 +69,8 @@
       "hora": "",
       "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 399.96,
-      "itens": 1,
+      "valor": 545.3,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

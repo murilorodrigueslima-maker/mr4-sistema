@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-12T16:28:19",
-  "total": 39,
+  "atualizado_em": "2026-05-12T18:10:20",
+  "total": 43,
   "pedidos": [
+    {
+      "id": "369789763",
+      "numero": "15850",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 713.1,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369785986",
+      "numero": "15849",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "JF RASTREAMENTO E ASSISTENCIA VEICULAR LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 205,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369778875",
+      "numero": "15848",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 38.2,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "369777656",
+      "numero": "15847",
+      "data": "2026-05-12",
+      "hora": "",
+      "cliente": "EVANDRO CABRAL RODRIGUES JUNIOR 04387665394",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 367,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369754471",
       "numero": "15846",
@@ -9,8 +57,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 697,
-      "itens": 3,
+      "valor": 570,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

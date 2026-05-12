@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-12T16:28:20",
+  "atualizado_em": "2026-05-12T18:10:20",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -262,7 +262,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 9040.77,
+      "valor": 8580.07,
       "vencimento": "2026-05-05",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -270,20 +270,6 @@
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
-      "vencimento": "2026-05-07",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
-      "valor": 268.63,
-      "vencimento": "2026-05-07",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 395.94,
       "vencimento": "2026-05-07",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -317,13 +303,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1744.75,
-      "vencimento": "2026-05-11",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2350.82,
       "vencimento": "2026-05-11",
@@ -348,30 +327,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
-      "vencimento": "2026-05-12",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 552.8,
-      "vencimento": "2026-05-12",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 552.8,
-      "vencimento": "2026-05-12",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1165.64,
-      "vencimento": "2026-05-12",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1927.2,
       "vencimento": "2026-05-12",
       "tipo": "Pagar"
     },
@@ -486,7 +441,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60247.33000000001,
+  "total_vencido": 57377.310000000005,
   "total_a_receber": 0,
   "total_a_pagar": 40213.820000000014
 }

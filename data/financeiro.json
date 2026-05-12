@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-12T07:24:10",
+  "atualizado_em": "2026-05-12T10:55:01",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -51,13 +51,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "POPNOW",
-      "valor": 3437.79,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 27,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 3711.03,
       "vencimento": "2026-04-15",
@@ -65,8 +58,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CURSO PARA SWYANNE",
-      "valor": 212.03,
+      "nome": "POPNOW",
+      "valor": 599.82,
       "vencimento": "2026-04-15",
       "dias_atraso": 27,
       "tipo": "Pagar"
@@ -269,7 +262,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 9108.57,
+      "valor": 9040.77,
       "vencimento": "2026-05-05",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -493,7 +486,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63365.130000000005,
+  "total_vencido": 60247.33000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 40425.85000000001
+  "total_a_pagar": 40213.820000000014
 }

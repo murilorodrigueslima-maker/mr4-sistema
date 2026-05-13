@@ -651,9 +651,12 @@ async function gerarEspelho(){
     let total=calcTotal(e,sa,ra,s);
     if(total===null&&creditoD)total=creditoD.minutos||jornMin;
     if(!ehFimSemana&&!ehFuturo){totalEsperadoMin+=jornMin;if(total!==null)totalTrabMin+=total;}
-    const saldoDia=(!ehFimSemana&&!ehFuturo&&total!==null)?total-jornMin:null;
+    else if(ehFimSemana&&total!==null&&total>0){totalTrabMin+=total;} // horas extras de fim de semana contam
+    const saldoDia=(!ehFimSemana&&!ehFuturo&&total!==null)?total-jornMin:
+                   (ehFimSemana&&total!==null&&total>0)?total:null; // sábado/dom trabalhado = tudo extra
     let totalLabel='—';
     if(!ehFimSemana){if(creditoD&&total!==null&&regsD.length===0)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
+    else if(ehFimSemana&&total!==null&&total>0){totalLabel=fmtMin(total);} // mostra horas trabalhadas no fim de semana
     let ocorrencia=null;if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
     linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:!!creditoD});
   }

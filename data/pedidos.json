@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-13T14:55:03",
-  "total": 63,
+  "atualizado_em": "2026-05-13T16:40:54",
+  "total": 68,
   "pedidos": [
+    {
+      "id": "370035310",
+      "numero": "15878",
+      "data": "2026-05-13",
+      "hora": "",
+      "cliente": "JOSE EDILSON DE LIMA DA COSTA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 849.5,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370025129",
+      "numero": "15877",
+      "data": "2026-05-13",
+      "hora": "",
+      "cliente": "JONATA ACESSORIOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 430,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370015303",
+      "numero": "15876",
+      "data": "2026-05-13",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 89.65,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370007823",
+      "numero": "15875",
+      "data": "2026-05-13",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 365,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370001526",
+      "numero": "15874",
+      "data": "2026-05-13",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "369988720",
       "numero": "15873",
@@ -165,8 +225,8 @@
       "hora": "",
       "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1186.48,
-      "itens": 8,
+      "valor": 1249.48,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },
@@ -309,7 +369,7 @@
       "hora": "",
       "cliente": "EVANDRO CABRAL RODRIGUES JUNIOR 04387665394",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 367,
+      "valor": 430,
       "itens": 4,
       "status_gc": "",
       "cidade": ""

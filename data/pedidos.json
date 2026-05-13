@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-05-12T19:52:33",
-  "total": 43,
+  "atualizado_em": "2026-05-12T23:11:08",
+  "total": 42,
   "pedidos": [
     {
       "id": "369789763",
@@ -71,18 +71,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 926.16,
       "itens": 9,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "369726688",
-      "numero": "15844",
-      "data": "2026-05-12",
-      "hora": "",
-      "cliente": "cliente",
-      "vendedor": "MURILO RODRIGUES LIMA",
-      "valor": 160,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

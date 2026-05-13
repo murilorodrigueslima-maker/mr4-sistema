@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-05-13T16:40:54",
-  "total": 68,
+  "atualizado_em": "2026-05-13T18:17:28",
+  "total": 69,
   "pedidos": [
+    {
+      "id": "370045153",
+      "numero": "15879",
+      "data": "2026-05-13",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 241.4,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370035310",
       "numero": "15878",
@@ -249,8 +261,8 @@
       "hora": "",
       "cliente": "ROMMEL NELSON DE OLIVEIRA 08037739350",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1855.91,
-      "itens": 18,
+      "valor": 1831.91,
+      "itens": 17,
       "status_gc": "",
       "cidade": ""
     },
@@ -765,7 +777,7 @@
       "hora": "",
       "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 186.2,
+      "valor": 186,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

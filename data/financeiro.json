@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-13T16:40:55",
+  "atualizado_em": "2026-05-13T18:17:28",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -339,12 +339,6 @@
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 2134.66,
-      "vencimento": "2026-05-13",
-      "tipo": "Pagar"
-    },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.68,

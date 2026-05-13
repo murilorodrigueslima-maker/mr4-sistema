@@ -445,7 +445,7 @@ async function renderHoje(){
   if(!funcs.length){document.getElementById('tbody-hoje').innerHTML='<tr><td colspan="7" class="vazio">Nenhum funcionário.</td></tr>';return;}
   document.getElementById('tbody-hoje').innerHTML=funcs.map(f=>{
     const rf=regsHoje.filter(r=>r.funcId===f.id);
-    const get=tipo=>{const r=rf.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const get=tipo=>{const j=rf.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=rf.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     const total=calcTotal(e,sa,ra,s);
     const atrasou=e&&toMin(e)>toMin('08:05');
@@ -477,7 +477,7 @@ async function renderRegistros(){
   const funcs=await fbGet('funcionarios');
   if(!rows.length){document.getElementById('tbody-registros').innerHTML='<tr><td colspan="11" class="vazio">Nenhum registro.</td></tr>';return;}
   document.getElementById('tbody-registros').innerHTML=rows.map(({funcId,funcNome,data,regs})=>{
-    const get=tipo=>{const r=regs.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const get=tipo=>{const j=regs.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regs.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     const total=calcTotal(e,sa,ra,s);
     const func=funcs.find(f=>f.id===funcId);
@@ -500,7 +500,7 @@ async function renderBanco(){
   const cards=funcs.map(f=>{
     const regsF=regs.filter(r=>r.funcId===f.id&&r.data.startsWith(mesAtual()));
     const credF=creditos.filter(c=>c.funcId===f.id&&c.data.startsWith(mesAtual()));
-    const dias={};regsF.forEach(r=>{if(!dias[r.data])dias[r.data]={};dias[r.data][r.tipo]=r.hora;});
+    const dias={};regsF.forEach(r=>{if(!dias[r.data])dias[r.data]={};if(!dias[r.data][r.tipo]||r.lancadoPorJustificativa)dias[r.data][r.tipo]=r.hora;});
     let trabMin=0;Object.values(dias).forEach(d=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t)trabMin+=t;});
     credF.forEach(c=>trabMin+=c.minutos||0);
     const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
@@ -602,8 +602,12 @@ async function responderJustificativa(status){
     const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
     const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
     if(j.tipoPonto&&j.horarioPonto){
+      // Remove o registro errado original antes de criar o correto
+      const todosRegs=await fbGet('registros');
+      const regOrig=todosRegs.find(r=>r.funcId===j.funcId&&r.data===j.data&&r.tipo===j.tipoPonto&&!r.lancadoPorJustificativa);
+      if(regOrig)await fbDel('registros',regOrig.id);
       const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
-      const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida lançada automaticamente!','verde');
+      const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida corrigida e lançada automaticamente!','verde');
     }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornMin,j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
   }
   fecharModal('modal-justif-gestor');
@@ -642,7 +646,7 @@ async function gerarEspelho(){
     const regsD=regsDoMes.filter(r=>r.data===dataStr);
     const justifD=justifDoMes.find(j=>j.data===dataStr);
     const creditoD=creditosFuncMes.find(c=>c.data===dataStr);
-    const get=tipo=>{const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const get=tipo=>{const j=regsD.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     let total=calcTotal(e,sa,ra,s);
     if(total===null&&creditoD)total=creditoD.minutos||jornMin;

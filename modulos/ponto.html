@@ -637,26 +637,25 @@ async function gerarEspelho(){
   const jornMin=(parseFloat(func.jornada)||8)*60;let totalTrabMin=0,totalEsperadoMin=0;
   const creditosDoMes=await fbGet('creditos_jornada');
   const creditosFuncMes=creditosDoMes.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
+  const JORNADA_SABADO_MIN=210; // 08:30 às 12:00 = 3h30
   const hojeStr=hoje();const linhas=[];
   for(let d=1;d<=diasNoMes;d++){
     const dataStr=`${ano}-${String(mesNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const diaSemana=new Date(ano,mesNum-1,d).getDay();
     const nomesDia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    const ehFimSemana=diaSemana===0||diaSemana===6,ehFuturo=dataStr>hojeStr;
+    const ehSabado=diaSemana===6,ehDomingo=diaSemana===0,ehFimSemana=ehSabado||ehDomingo,ehFuturo=dataStr>hojeStr;
     const regsD=regsDoMes.filter(r=>r.data===dataStr);
     const justifD=justifDoMes.find(j=>j.data===dataStr);
     const creditoD=creditosFuncMes.find(c=>c.data===dataStr);
     const get=tipo=>{const j=regsD.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     let total=calcTotal(e,sa,ra,s);
-    if(total===null&&creditoD)total=creditoD.minutos||jornMin;
-    if(!ehFimSemana&&!ehFuturo){totalEsperadoMin+=jornMin;if(total!==null)totalTrabMin+=total;}
-    else if(ehFimSemana&&total!==null&&total>0){totalTrabMin+=total;} // horas extras de fim de semana contam
-    const saldoDia=(!ehFimSemana&&!ehFuturo&&total!==null)?total-jornMin:
-                   (ehFimSemana&&total!==null&&total>0)?total:null; // sábado/dom trabalhado = tudo extra
+    const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin; // sábado=3h30, dias úteis=jornada normal
+    if(total===null&&creditoD)total=creditoD.minutos||jornadaDia;
+    if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
+    const saldoDia=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;
     let totalLabel='—';
-    if(!ehFimSemana){if(creditoD&&total!==null&&regsD.length===0)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
-    else if(ehFimSemana&&total!==null&&total>0){totalLabel=fmtMin(total);} // mostra horas trabalhadas no fim de semana
+    if(!ehDomingo){if(creditoD&&total!==null&&regsD.length===0)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
     let ocorrencia=null;if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
     linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:!!creditoD});
   }

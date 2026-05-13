@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-12T23:11:09",
+  "atualizado_em": "2026-05-13T03:42:18",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -322,21 +322,23 @@
       "vencimento": "2026-05-11",
       "dias_atraso": 2,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-05-12",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-05-12",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-05-12",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-05-12",
-      "tipo": "Pagar"
-    },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
@@ -444,11 +446,17 @@
       "valor": 384.2,
       "vencimento": "2026-05-19",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
+      "valor": 1868,
+      "vencimento": "2026-05-20",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57997.3,
+  "total_vencido": 62447.3,
   "total_a_receber": 0,
   "total_a_pagar": 41325.820000000014
 }

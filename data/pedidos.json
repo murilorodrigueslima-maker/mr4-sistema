@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-14T07:06:20",
-  "total": 51,
+  "atualizado_em": "2026-05-14T10:45:38",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "370165023",
+      "numero": "15885",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "J.G. AUTOCAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370161112",
+      "numero": "15884",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 630.85,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370151881",
+      "numero": "15883",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 163.23,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370145819",
+      "numero": "15882",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 465,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370139679",
+      "numero": "15881",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "F. DE A. DA SILVA BARBOSA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370132576",
+      "numero": "15880",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "RAUL SIDNEY N DE ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 708,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370045153",
       "numero": "15879",
@@ -141,8 +213,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 294.04,
-      "itens": 1,
+      "valor": 358.64,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

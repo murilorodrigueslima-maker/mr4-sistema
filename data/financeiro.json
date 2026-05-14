@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-13T23:13:16",
+  "atualizado_em": "2026-05-14T03:40:45",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -336,15 +336,16 @@
       "vencimento": "2026-05-12",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.68,
       "vencimento": "2026-05-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 1968.6,
@@ -446,11 +447,29 @@
       "valor": 1868,
       "vencimento": "2026-05-20",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PRATELEIRAS 6 UN",
+      "valor": 423.4,
+      "vencimento": "2026-05-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONSULTORIA DE IMPORTAÇÃO",
+      "valor": 171.3,
+      "vencimento": "2026-05-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MESA ESCRITORIO MURILO",
+      "valor": 227.07,
+      "vencimento": "2026-05-21",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 62447.3,
+  "total_vencido": 65785.98,
   "total_a_receber": 0,
   "total_a_pagar": 41325.820000000014
 }

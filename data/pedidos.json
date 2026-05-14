@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-14T16:27:52",
-  "total": 76,
+  "atualizado_em": "2026-05-14T18:02:52",
+  "total": 79,
   "pedidos": [
+    {
+      "id": "370338678",
+      "numero": "15907",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "Edilberto",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 684,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370328156",
+      "numero": "15906",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "HENRIQUE JORGE CAMARA NUNES 28513029300",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 196.94,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370313760",
+      "numero": "15905",
+      "data": "2026-05-14",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 250,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370291513",
       "numero": "15904",

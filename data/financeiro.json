@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-15T07:12:47",
+  "atualizado_em": "2026-05-15T10:43:15",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -51,20 +51,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "FACEBOOK TRAFEGO",
-      "valor": 3711.03,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 30,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "POPNOW",
-      "valor": 249.82,
-      "vencimento": "2026-04-15",
-      "dias_atraso": 30,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 329.55,
       "vencimento": "2026-04-16",
@@ -100,31 +86,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Compra de tapetes para uso interno da empresa",
-      "valor": 63.96,
-      "vencimento": "2026-04-20",
-      "dias_atraso": 25,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 2808.4,
       "vencimento": "2026-04-20",
       "dias_atraso": 25,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 98.29,
-      "vencimento": "2026-04-20",
-      "dias_atraso": 25,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PRATELEIRAS 3 UN",
-      "valor": 239.31,
-      "vencimento": "2026-04-21",
-      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
@@ -142,22 +107,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CONSULTORIA DE IMPORTAÇÃO",
-      "valor": 171.3,
-      "vencimento": "2026-04-21",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MESA ESCRITORIO MURILO",
-      "valor": 227.07,
-      "vencimento": "2026-04-21",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS ELO LEROY",
-      "valor": 135.04,
+      "nome": "PRATELEIRAS 3 UN",
+      "valor": 139.08,
       "vencimento": "2026-04-21",
       "dias_atraso": 24,
       "tipo": "Pagar"
@@ -167,20 +118,6 @@
       "valor": 327.38,
       "vencimento": "2026-04-24",
       "dias_atraso": 21,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MERCADO LIVRE",
-      "valor": 51.41,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 20,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LAMPADAS/FIOS PARA ESCRITORIO",
-      "valor": 114.52,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 20,
       "tipo": "Pagar"
     },
     {
@@ -205,29 +142,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LICENÇA CANVAS",
-      "valor": 24.16,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 20,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CHAT GPT",
-      "valor": 95.99,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 20,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "JUROS CARTAO INTER",
       "valor": 1355.82,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 20,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "UBER FLASH",
-      "valor": 81.19,
       "vencimento": "2026-04-25",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -261,15 +177,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 8438.06,
+      "nome": "CONTABILIDADE REF ABRIL",
+      "valor": 1112,
       "vencimento": "2026-05-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
-      "nome": "CONTABILIDADE REF ABRIL",
-      "valor": 1112,
+      "nome": "Salário Murilo",
+      "valor": 8338.06,
       "vencimento": "2026-05-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -462,7 +378,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 64248.43,
+  "total_vencido": 59024.42,
   "total_a_receber": 0,
-  "total_a_pagar": 41325.820000000014
+  "total_a_pagar": 36601.33000000001
 }

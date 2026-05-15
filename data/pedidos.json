@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-15T12:56:52",
-  "total": 73,
+  "atualizado_em": "2026-05-15T14:24:23",
+  "total": 76,
   "pedidos": [
+    {
+      "id": "370512787",
+      "numero": "15927",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 186.2,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370512613",
+      "numero": "15926",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 160,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370499155",
+      "numero": "15925",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 864.9,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370482423",
       "numero": "15924",

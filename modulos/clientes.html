@@ -194,6 +194,21 @@ select.filter-sel:focus{border-color:var(--orange)}
 .inbox-criar-btn{font-size:.68rem;padding:.2rem .55rem;border:1.5px solid var(--border);border-radius:6px;background:none;cursor:pointer;color:var(--muted);white-space:nowrap;transition:all .12s}
 .inbox-criar-btn:hover{border-color:var(--orange);color:var(--orange)}
 .inbox-loading{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.75rem;padding:2rem;color:var(--muted);font-size:.85rem}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;margin-right:.15rem}
+.status-dot.pendente{background:#EF4444}
+.status-dot.em_atendimento{background:#F59E0B}
+.status-dot.resolvido{background:#10B981}
+.inbox-row.alerta{border-left:3px solid #EF4444!important}
+.inbox-row:hover .inbox-pin-icon{opacity:1!important}
+.inbox-row.pinned .inbox-pin-icon{opacity:1!important;color:var(--orange)!important}
+.inbox-filtro{display:flex;gap:.35rem;padding:.55rem .75rem .4rem;flex-shrink:0;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--white)}
+.inbox-filtro-btn{padding:.28rem .65rem;border-radius:20px;font-size:.7rem;font-weight:600;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif;transition:all .12s;white-space:nowrap}
+.inbox-filtro-btn.active{background:var(--orange-lt);border-color:var(--orange);color:var(--orange)}
+.chat-status-bar{display:flex;gap:.3rem;padding:.42rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.chat-status-opt{flex:1;padding:.28rem .4rem;border-radius:7px;font-size:.67rem;font-weight:600;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif;transition:all .12s;text-align:center}
+.chat-status-opt.on.sp{border-color:#EF4444;background:#FEE2E2;color:#B91C1C}
+.chat-status-opt.on.se{border-color:#F59E0B;background:#FEF3C7;color:#92400E}
+.chat-status-opt.on.sr{border-color:#10B981;background:#D1FAE5;color:#065F46}
 
 /* GARANTIAS TAB */
 .garantia-row{background:var(--bg);border-radius:9px;padding:.7rem .85rem;margin-bottom:.5rem;display:flex;justify-content:space-between;align-items:center}
@@ -493,6 +508,13 @@ select.filter-sel:focus{border-color:var(--orange)}
           </div>
         </div>
 
+        <div class="chat-status-bar" id="chatStatusBar">
+          <button class="chat-status-opt sp" id="csP" onclick="setChatStatus('pendente')">🔴 Pendente</button>
+          <button class="chat-status-opt se" id="csE" onclick="setChatStatus('em_atendimento')">🟡 Em atend.</button>
+          <button class="chat-status-opt sr" id="csR" onclick="setChatStatus('resolvido')">🟢 Resolvido</button>
+          <button id="pinBtn" onclick="togglePin(inboxPhoneAtual)" style="padding:.28rem .6rem;border-radius:7px;font-size:.8rem;border:1.5px solid var(--border);background:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s;flex-shrink:0" title="Fixar conversa">📌</button>
+        </div>
+
         <!-- Modal importar histórico -->
         <div id="importHistoricoOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center">
           <div style="background:#fff;border-radius:16px;padding:1.5rem;width:90%;max-width:460px;display:flex;flex-direction:column;gap:1rem;max-height:80vh">
@@ -633,7 +655,7 @@ select.filter-sel:focus{border-color:var(--orange)}
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
-  getFirestore, collection, collectionGroup, doc, getDocs, addDoc, updateDoc, deleteDoc,
+  getFirestore, collection, collectionGroup, doc, getDocs, addDoc, updateDoc, deleteDoc, setDoc,
   query, orderBy, where, limit, serverTimestamp, onSnapshot, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
@@ -660,6 +682,9 @@ let modoAtivo = 'clientes'; // 'clientes' | 'inbox' | 'pipeline'
 let CHATS = [];
 let inboxPhoneAtual = null;
 let CHATS_UNREAD    = {};   // phone -> unread count (para badges)
+let CHAT_STATUS = {}; // phone -> 'pendente'|'em_atendimento'|'resolvido'
+let CHAT_PINS   = new Set(JSON.parse(localStorage.getItem('mr4_chat_pins')||'[]'));
+let inboxFiltro = 'todas'; // 'todas'|'fila'|'fixadas'
 let PREV_UNREAD     = {};   // phone -> unread count anterior (para som)
 let pollingTimer    = null;
 let chatPollTimer   = null;  // polling de mensagens do chat aberto
@@ -1332,6 +1357,13 @@ async function carregarInbox() {
       });
     } catch(_) {}
 
+    // Carrega status das conversas
+    try {
+      const snapStatus = await getDocs(collection(db, 'chat_status'));
+      CHAT_STATUS = {};
+      snapStatus.forEach(d=>{ const r=d.data(); if(r.phone) CHAT_STATUS[r.phone]=r.status; });
+    } catch(_){}
+
     renderInbox(CHATS);
   } catch(e) {
     body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Erro ao carregar inbox</div><div class="empty-sub">${e.message}</div><button class="btn btn-ghost" style="margin-top:.75rem" onclick="setModo('inbox')">Tentar novamente</button></div>`;
@@ -1367,17 +1399,45 @@ function renderInbox(chats) {
   const body = document.getElementById('listBody');
   const novos = chats.filter(c => !matchClientePorPhone(c.phone)).length;
   document.getElementById('listTitle').textContent = `WhatsApp Inbox (${chats.length})`;
-  // Botão importar no header
   const importBtn = document.getElementById('btnImportarInbox');
-  if(importBtn && novos > 0) {
-    importBtn.textContent = `📥 Importar ${novos} novos`;
-    importBtn.style.display = 'inline-flex';
-  } else if(importBtn) { importBtn.style.display = 'none'; }
-  if(!chats.length){
-    body.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><div class="empty-title">Nenhuma conversa</div><div class="empty-sub">Nenhuma conversa encontrada no WhatsApp.</div></div>`;
+  if(importBtn && novos > 0) { importBtn.textContent=`📥 Importar ${novos} novos`; importBtn.style.display='inline-flex'; }
+  else if(importBtn) { importBtn.style.display='none'; }
+
+  // Contadores para tabs
+  const filaChats = chats.filter(c => c.lastFromMe === false);
+  const alertaCount = filaChats.filter(c => { const e=tempoEspera(c); return e && e.min >= 30; }).length;
+
+  // Aplica filtro
+  let lista = [...chats];
+  if(inboxFiltro === 'fila') {
+    lista = filaChats.slice().sort((a,b)=>Number(a.lastMessageTime)-Number(b.lastMessageTime));
+  } else if(inboxFiltro === 'fixadas') {
+    lista = chats.filter(c=>CHAT_PINS.has(c.phone));
+  } else {
+    // 'todas': fixadas no topo, depois por status (pendente primeiro), depois por hora
+    const statusOrd = {pendente:0, em_atendimento:1, resolvido:3};
+    lista.sort((a,b)=>{
+      const aP=CHAT_PINS.has(a.phone)?0:1, bP=CHAT_PINS.has(b.phone)?0:1;
+      if(aP!==bP) return aP-bP;
+      const aS=statusOrd[CHAT_STATUS[a.phone]]??2, bS=statusOrd[CHAT_STATUS[b.phone]]??2;
+      if(aS!==bS) return aS-bS;
+      return Number(b.lastMessageTime)-Number(a.lastMessageTime);
+    });
+  }
+
+  const tabsHtml = `<div class="inbox-filtro">
+    <button class="inbox-filtro-btn ${inboxFiltro==='todas'?'active':''}" onclick="setInboxFiltro('todas')">Todas (${chats.length})</button>
+    <button class="inbox-filtro-btn ${inboxFiltro==='fila'?'active':''}" onclick="setInboxFiltro('fila')">⏳ Aguardando${filaChats.length?` (${filaChats.length})`:''}</button>
+    <button class="inbox-filtro-btn ${inboxFiltro==='fixadas'?'active':''}" onclick="setInboxFiltro('fixadas')">📌 Fixadas${CHAT_PINS.size?` (${CHAT_PINS.size})`:''}</button>
+    ${alertaCount>0?`<span style="margin-left:auto;font-size:.65rem;font-weight:700;padding:.18rem .5rem;border-radius:20px;background:#FEE2E2;color:#B91C1C">⚠️ ${alertaCount} paradas</span>`:''}
+  </div>`;
+
+  if(!lista.length) {
+    body.innerHTML = tabsHtml + `<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">Nenhuma conversa aqui</div></div>`;
     return;
   }
-  body.innerHTML = chats.map(chat => {
+
+  const rowsHtml = lista.map(chat => {
     const phone   = chat.phone || '';
     const unread  = Number(chat.messagesUnread || chat.unread || 0);
     const cliente = matchClientePorPhone(phone);
@@ -1386,42 +1446,98 @@ function renderInbox(chats) {
     const hora    = formatarHoraInbox(chat.lastMessageTime);
     const sel     = inboxPhoneAtual === phone ? ' selected' : '';
     const unreadCls = unread > 0 ? ' unread' : '';
+    const isPinned  = CHAT_PINS.has(phone);
+    const status    = CHAT_STATUS[phone]||'';
+    const espera    = tempoEspera(chat);
+    const isAlerta  = espera && espera.min >= 30;
 
-    // Prévia da última mensagem (prioriza Firestore, depois Z-API)
     const lastFromMe = chat.lastFromMe === true || chat.fromMe === true;
     const lastMsg    = chat.lastMessage || chat.text || chat.body || {};
-    const lastTxt    = chat.lastMessageBody
-      || (typeof lastMsg === 'string' ? lastMsg : (lastMsg.body || lastMsg.message || lastMsg.caption || ''))
-      || '';
-    const previewTxt = lastTxt
-      ? escapeHtml(lastTxt.length > 50 ? lastTxt.slice(0,50)+'…' : lastTxt)
-      : '<span style="font-style:italic;color:#D1D5DB">📷 Mídia</span>';
+    const lastTxt    = chat.lastMessageBody || (typeof lastMsg==='string'?lastMsg:(lastMsg.body||lastMsg.message||lastMsg.caption||'')) || '';
+    const previewTxt = lastTxt ? escapeHtml(lastTxt.length>50?lastTxt.slice(0,50)+'…':lastTxt) : '<span style="font-style:italic;color:#D1D5DB">📷 Mídia</span>';
     const previewCls = lastFromMe ? ' fromme' : '';
 
     const unreadRing = unread > 0 ? '<div class="unread-ring"></div>' : '';
     const avatarImg  = `<img alt="" data-phone="${phone}" onload="this.classList.add('loaded')" onerror="this.remove()">`;
-    const criarBtn  = cliente
+    const criarBtn   = cliente
       ? `<div class="inbox-client-tag">CRM ✓</div>`
-      : `<button class="inbox-criar-btn" onclick="event.stopPropagation();criarClienteDoInbox('${phone}','${(chat.name||'').replace(/'/g,'\\\'')}')" title="Cadastrar no CRM">+ Criar</button>`;
+      : `<button class="inbox-criar-btn" onclick="event.stopPropagation();criarClienteDoInbox('${phone}','${(chat.name||'').replace(/'/g,"\\'")}')">+ Criar</button>`;
 
-    return `
-    <div class="inbox-row${unreadCls}${sel}" onclick="abrirChatInbox('${phone}')">
+    const statusDot  = status ? `<span class="status-dot ${status}"></span>` : '';
+    const esperaBadge = espera ? `<span style="font-size:.6rem;font-weight:700;padding:.1rem .35rem;border-radius:20px;background:${isAlerta?'#FEE2E2':'#F3F4F6'};color:${espera.cor}">${espera.txt}</span>` : '';
+    const pinIcon    = `<button class="inbox-pin-icon" onclick="event.stopPropagation();togglePin('${phone}')" style="background:none;border:none;cursor:pointer;font-size:.78rem;padding:.1rem .15rem;opacity:${isPinned?'1':'0'};color:${isPinned?'var(--orange)':'var(--muted)'};transition:opacity .12s;flex-shrink:0" title="${isPinned?'Desafixar':'Fixar'}">📌</button>`;
+
+    return `<div class="inbox-row${unreadCls}${sel}${isAlerta?' alerta':''}${isPinned?' pinned':''}" onclick="abrirChatInbox('${phone}')">
       <div class="inbox-avatar${cliente?'':' unknown'}">${ini}${unreadRing}${avatarImg}</div>
       <div class="inbox-main">
         <div class="inbox-header-row">
           <div class="inbox-nome${cliente?'':' unknown'}">${escapeHtml(nome)}</div>
-          ${hora?`<div class="inbox-time${unread>0?' unread':''}">${hora}</div>`:''}
+          <div style="display:flex;align-items:center;gap:.3rem;flex-shrink:0">
+            ${statusDot}${esperaBadge}
+            ${hora?`<div class="inbox-time${unread>0?' unread':''}">${hora}</div>`:''}
+          </div>
         </div>
         <div class="inbox-bottom-row">
           <div class="inbox-preview${previewCls}">${lastFromMe?'<span style="font-weight:600;color:#9CA3AF">Você: </span>':''}${previewTxt}</div>
-          ${unread>0?`<div class="inbox-unread-badge">${unread}</div>`:criarBtn}
+          <div style="display:flex;align-items:center;gap:.25rem">
+            ${unread>0?`<div class="inbox-unread-badge">${unread}</div>`:criarBtn}
+            ${pinIcon}
+          </div>
         </div>
       </div>
     </div>`;
   }).join('');
 
-  // Lazy-load fotos de perfil via IntersectionObserver
+  body.innerHTML = tabsHtml + `<div style="overflow-y:auto;flex:1;padding:.35rem .5rem">${rowsHtml}</div>`;
+  body.style.display = 'flex';
+  body.style.flexDirection = 'column';
+  body.style.padding = '0';
+
   iniciarLazyFotos();
+}
+
+function tempoEspera(chat) {
+  if(chat.lastFromMe !== false) return null;
+  const ts = Number(chat.lastMessageTime||0);
+  if(!ts) return null;
+  const ms = Date.now() - (ts > 1e12 ? ts : ts*1000);
+  const min = Math.floor(ms/60000);
+  if(min < 1) return {txt:'agora',cor:'#10B981',min:0};
+  if(min < 60) return {txt:`${min}min`,cor:min<30?'#10B981':'#F59E0B',min};
+  const h=Math.floor(min/60),m=min%60;
+  return {txt:`${h}h${m?m+'m':''}`,cor:h>=2?'#EF4444':'#F59E0B',min};
+}
+
+window.setInboxFiltro = function(f) {
+  inboxFiltro = f;
+  renderInbox(CHATS);
+};
+
+window.togglePin = function(phone) {
+  if(!phone) return;
+  if(CHAT_PINS.has(phone)) CHAT_PINS.delete(phone); else CHAT_PINS.add(phone);
+  localStorage.setItem('mr4_chat_pins', JSON.stringify([...CHAT_PINS]));
+  const btn = document.getElementById('pinBtn');
+  if(btn) btn.style.borderColor = CHAT_PINS.has(phone)?'var(--orange)':'var(--border)';
+  renderInbox(CHATS);
+};
+
+window.setChatStatus = async function(status) {
+  const phone = inboxPhoneAtual;
+  if(!phone) return;
+  CHAT_STATUS[phone] = status;
+  try { await setDoc(doc(db, 'chat_status', phone.replace(/\D/g,'')), {phone, status, atualizadoEm: new Date().toISOString()}); } catch(_){}
+  atualizarChatStatusBar(phone);
+  renderInbox(CHATS);
+};
+
+function atualizarChatStatusBar(phone) {
+  ['csP','csE','csR'].forEach(id=>{ const el=document.getElementById(id); if(el){el.classList.remove('on');} });
+  const s = CHAT_STATUS[phone]||'';
+  const map = {pendente:'csP', em_atendimento:'csE', resolvido:'csR'};
+  if(map[s]) document.getElementById(map[s])?.classList.add('on');
+  const pinBtn = document.getElementById('pinBtn');
+  if(pinBtn) pinBtn.style.borderColor = CHAT_PINS.has(phone)?'var(--orange)':'var(--border)';
 }
 
 // Cache de fotos por sessão
@@ -1489,6 +1605,7 @@ window.abrirChatInbox = function(phone) {
 
   document.getElementById('detailPanel').classList.add('open');
   showTab('chat');
+  atualizarChatStatusBar(phone);
 };
 
 window.criarClienteDoInbox = function(phone, nome) {
@@ -2118,7 +2235,9 @@ document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.targe
 const origListBodyStyle = document.getElementById('listBody').style.cssText;
 const _setModoOrig = window.setModo;
 window.setModo = function(modo) {
-  if(modo !== 'pipeline' && modo !== 'painel') {
+  if(modo !== 'pipeline' && modo !== 'painel' && modo !== 'inbox') {
+    document.getElementById('listBody').style.cssText = '';
+  } else if(modo !== 'pipeline' && modo !== 'painel') {
     document.getElementById('listBody').style.padding = '';
     document.getElementById('listBody').style.overflow = '';
   }

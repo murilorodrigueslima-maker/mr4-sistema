@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-15T10:43:14",
-  "total": 66,
+  "atualizado_em": "2026-05-15T12:56:52",
+  "total": 73,
   "pedidos": [
+    {
+      "id": "370482423",
+      "numero": "15924",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "JOSE J DE SOUSA PINTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 496.5,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370480598",
+      "numero": "15923",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 186.2,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370474358",
+      "numero": "15922",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 153.96,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370449162",
+      "numero": "15921",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "ALESSANDRO DA COSTA CAETANO 07248931306",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100.11,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370447460",
+      "numero": "15920",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 83.77,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370447394",
+      "numero": "15919",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "42.888.959 MATHEUS FONSECA LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 36,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370433204",
+      "numero": "15918",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "HENRIQUE JORGE CAMARA NUNES 28513029300",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 89.55,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370425527",
       "numero": "15917",

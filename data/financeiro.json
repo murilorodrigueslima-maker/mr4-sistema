@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-15T10:43:15",
+  "atualizado_em": "2026-05-15T12:56:53",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -93,27 +93,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PRATELEIRAS 6 UN",
-      "valor": 423.4,
-      "vencimento": "2026-04-21",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SALES COMERCIO DE PECAS E ACESSORIOS PARA VEICULOS LTDA.",
-      "valor": 738.72,
-      "vencimento": "2026-04-21",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PRATELEIRAS 3 UN",
-      "valor": 139.08,
-      "vencimento": "2026-04-21",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
       "valor": 327.38,
       "vencimento": "2026-04-24",
@@ -128,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "UBER FLASH",
-      "valor": 420.7,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 20,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "JUROS CARTAO INTER",
       "valor": 2399.74,
       "vencimento": "2026-04-25",
@@ -143,7 +115,7 @@
     },
     {
       "nome": "JUROS CARTAO INTER",
-      "valor": 1355.82,
+      "valor": 293.72,
       "vencimento": "2026-04-25",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -170,13 +142,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO REF MÊS ABRIL",
-      "valor": 1000,
-      "vencimento": "2026-05-05",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CONTABILIDADE REF ABRIL",
       "valor": 1112,
       "vencimento": "2026-05-05",
@@ -191,6 +156,13 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "PAGAMENTO REF MÊS ABRIL",
+      "valor": 405,
+      "vencimento": "2026-05-05",
+      "dias_atraso": 10,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-05-07",
@@ -199,7 +171,7 @@
     },
     {
       "nome": "U. N. LIMA",
-      "valor": 2450,
+      "valor": 2000,
       "vencimento": "2026-05-09",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -310,6 +282,30 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "JUROS CARTAO ELO NAQUIM",
+      "valor": 3043.37,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 26.79,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 556.75,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ANUIDADADE DE CARTÃO ELO EMPRESARIAL",
+      "valor": 92,
+      "vencimento": "2026-05-15",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 341.98,
       "vencimento": "2026-05-16",
@@ -346,6 +342,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "JUROS CARTAO NUBANK",
+      "valor": 600.96,
+      "vencimento": "2026-05-19",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1868,
       "vencimento": "2026-05-20",
@@ -374,11 +376,17 @@
       "valor": 28.95,
       "vencimento": "2026-05-21",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "2 TV PARA EMPRESA",
+      "valor": 419.8,
+      "vencimento": "2026-05-21",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59024.42,
+  "total_vencido": 55195.41999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 36601.33000000001
+  "total_a_pagar": 39295.72000000001
 }

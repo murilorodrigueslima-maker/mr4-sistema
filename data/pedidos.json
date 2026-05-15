@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-05-15T16:17:50",
-  "total": 84,
+  "atualizado_em": "2026-05-15T17:52:06",
+  "total": 85,
   "pedidos": [
+    {
+      "id": "370583553",
+      "numero": "15936",
+      "data": "2026-05-15",
+      "hora": "",
+      "cliente": "JOSEFA MENESES RODRIGUES 58083618349",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 252,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370561228",
       "numero": "15935",

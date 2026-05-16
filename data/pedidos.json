@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-16T11:47:56",
-  "total": 68,
+  "atualizado_em": "2026-05-16T13:45:36",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "370756865",
+      "numero": "15951",
+      "data": "2026-05-16",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 24.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370751295",
+      "numero": "15950",
+      "data": "2026-05-16",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 43,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370729658",
+      "numero": "15949",
+      "data": "2026-05-16",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "370722136",
       "numero": "15948",

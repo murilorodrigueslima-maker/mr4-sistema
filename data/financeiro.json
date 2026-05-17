@@ -1,20 +1,6 @@
 {
-  "atualizado_em": "2026-05-16T23:06:38",
+  "atualizado_em": "2026-05-17T03:39:42",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO BRADESCO",
-      "valor": 3669.52,
-      "vencimento": "2026-03-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 1085,
-      "vencimento": "2026-03-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1308.71,
@@ -315,15 +301,16 @@
       "vencimento": "2026-05-15",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 341.98,
       "vencimento": "2026-05-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 3000,
@@ -417,7 +404,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63658.799999999996,
+  "total_vencido": 59246.26,
   "total_a_receber": 0,
-  "total_a_pagar": 41736.19000000001
+  "total_a_pagar": 36981.67
 }

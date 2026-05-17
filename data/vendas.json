@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-05-16T19:36:50",
-  "hoje": 3338.44,
-  "semana": 44260.860000000015,
-  "mes": 110038.62000000001,
+  "atualizado_em": "2026-05-16T23:06:43",
+  "hoje": 3435.17,
+  "semana": 44357.59000000001,
+  "mes": 110135.35,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -21,9 +21,9 @@
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
-      "faturamento": 3259.88,
-      "pedidos": 6,
-      "ticket_medio": 543.3133333333334
+      "faturamento": 3356.61,
+      "pedidos": 7,
+      "ticket_medio": 479.5157142857143
     },
     {
       "nome": "Swyanne Kethlyn",
@@ -66,7 +66,7 @@
     {
       "data": "2026-05-16",
       "label": "sáb., 16/05",
-      "valor": 3338.44
+      "valor": 3435.17
     }
   ]
 }

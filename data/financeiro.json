@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-18T11:54:38",
+  "atualizado_em": "2026-05-18T14:52:21",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -185,13 +185,6 @@
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2350.82,
-      "vencimento": "2026-05-11",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
       "vencimento": "2026-05-12",
       "dias_atraso": 6,
@@ -303,15 +296,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
-      "valor": 341.98,
-      "vencimento": "2026-05-16",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO JARBAS",
-      "valor": 3000,
+      "valor": 834,
       "vencimento": "2026-05-17",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -423,7 +409,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61503.04000000001,
+  "total_vencido": 56644.240000000005,
   "total_a_receber": 0,
-  "total_a_pagar": 43651.189999999995
+  "total_a_pagar": 41485.19
 }

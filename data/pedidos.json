@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-18T11:54:37",
-  "total": 24,
+  "atualizado_em": "2026-05-18T14:52:20",
+  "total": 27,
   "pedidos": [
+    {
+      "id": "371045707",
+      "numero": "15963",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "33.278.648 JOSILIAN MARIO FLORENCIO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 496,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371026319",
+      "numero": "15962",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 122.42,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371024908",
+      "numero": "15961",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 85,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371009778",
       "numero": "15960",
@@ -99,6 +135,18 @@
       "cidade": ""
     },
     {
+      "id": "370722136",
+      "numero": "15948",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1245,
+      "itens": 15,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "370844997",
       "numero": "15952",
       "data": "2026-05-16",
@@ -143,18 +191,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 38,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "370722136",
-      "numero": "15948",
-      "data": "2026-05-16",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 304,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

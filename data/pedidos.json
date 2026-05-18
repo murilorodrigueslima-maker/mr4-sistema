@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-18T16:25:06",
-  "total": 29,
+  "atualizado_em": "2026-05-18T18:02:48",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "371131400",
+      "numero": "15967",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "WELLINGTON VINICIUS RIBEIRO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 342,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371121135",
+      "numero": "15966",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 105.33,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371109902",
       "numero": "15965",

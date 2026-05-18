@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-18T14:52:20",
-  "total": 27,
+  "atualizado_em": "2026-05-18T16:25:06",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "371109902",
+      "numero": "15965",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 67.86,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371087884",
+      "numero": "15964",
+      "data": "2026-05-18",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 329.26,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371045707",
       "numero": "15963",
@@ -57,7 +81,7 @@
       "hora": "",
       "cliente": "TK AUTOMOTIVO LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 2349.1,
+      "valor": 2249.1,
       "itens": 13,
       "status_gc": "",
       "cidade": ""

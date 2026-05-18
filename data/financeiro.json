@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-18T08:37:38",
+  "atualizado_em": "2026-05-18T11:54:38",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -135,15 +135,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 8338.06,
+      "nome": "PAGAMENTO REF MÊS ABRIL",
+      "valor": 405,
       "vencimento": "2026-05-05",
       "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO REF MÊS ABRIL",
-      "valor": 405,
+      "nome": "Salário Murilo",
+      "valor": 7594.84,
       "vencimento": "2026-05-05",
       "dias_atraso": 13,
       "tipo": "Pagar"
@@ -423,7 +423,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 62246.26,
+  "total_vencido": 61503.04000000001,
   "total_a_receber": 0,
   "total_a_pagar": 43651.189999999995
 }

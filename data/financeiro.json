@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-17T23:28:32",
+  "atualizado_em": "2026-05-18T04:54:56",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -308,15 +308,16 @@
       "vencimento": "2026-05-16",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 3000,
       "vencimento": "2026-05-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -400,11 +401,29 @@
       "valor": 836.53,
       "vencimento": "2026-05-23",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 51.41,
+      "vencimento": "2026-05-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-05-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-05-25",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59246.26,
+  "total_vencido": 62246.26,
   "total_a_receber": 0,
-  "total_a_pagar": 36981.67
+  "total_a_pagar": 43651.189999999995
 }

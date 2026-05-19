@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-19T11:37:20",
-  "total": 25,
+  "atualizado_em": "2026-05-19T14:57:47",
+  "total": 32,
   "pedidos": [
+    {
+      "id": "371316085",
+      "numero": "15984",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 364.6,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371315486",
+      "numero": "15983",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "RS LEDS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 512,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371312787",
+      "numero": "15982",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "MK DISTRIBUICAO E COMERCIO DE PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 138,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371310156",
+      "numero": "15981",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 6650,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371303930",
+      "numero": "15980",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "HE DISTRIBUIDORA AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 425,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371273478",
+      "numero": "15979",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371271108",
+      "numero": "15978",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "STYLE WAY PERFORMANCE LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 65,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371266493",
       "numero": "15977",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-19T18:11:36",
+  "atualizado_em": "2026-05-19T19:57:03",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 2808.4,
+      "valor": 994.78,
       "vencimento": "2026-04-20",
       "dias_atraso": 29,
       "tipo": "Pagar"
@@ -88,20 +88,6 @@
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO INTER",
-      "valor": 2399.74,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 24,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO INTER",
-      "valor": 293.72,
       "vencimento": "2026-04-25",
       "dias_atraso": 24,
       "tipo": "Pagar"
@@ -294,13 +280,6 @@
       "vencimento": "2026-05-18",
       "dias_atraso": 1,
       "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 147.75,
-      "vencimento": "2026-05-18",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -397,7 +376,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57747.52,
+  "total_vencido": 53092.689999999995,
   "total_a_receber": 0,
-  "total_a_pagar": 41485.19
+  "total_a_pagar": 38791.73
 }

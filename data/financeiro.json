@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-18T23:27:39",
+  "atualizado_em": "2026-05-19T04:36:51",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -301,21 +301,23 @@
       "vencimento": "2026-05-17",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-05-18",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 147.75,
       "vencimento": "2026-05-18",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1149.77,
@@ -409,7 +411,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56644.240000000005,
+  "total_vencido": 60461.51,
   "total_a_receber": 0,
   "total_a_pagar": 41485.19
 }

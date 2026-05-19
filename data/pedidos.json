@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-19T14:57:47",
-  "total": 32,
+  "atualizado_em": "2026-05-19T16:49:50",
+  "total": 38,
   "pedidos": [
+    {
+      "id": "371366779",
+      "numero": "15990",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371359317",
+      "numero": "15989",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371358159",
+      "numero": "15988",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371346098",
+      "numero": "15987",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "STOPFILM COMERCIO DE PECAS E INSTALACOES LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 302.5,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371345069",
+      "numero": "15986",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371344313",
+      "numero": "15985",
+      "data": "2026-05-19",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 210,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371316085",
       "numero": "15984",

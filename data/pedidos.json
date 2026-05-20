@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-20T11:36:36",
-  "total": 49,
+  "atualizado_em": "2026-05-20T15:09:44",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "371580711",
+      "numero": "16005",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "61.165.348 VALDEMIR DO NASCIMENTO PINHEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 354.4,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371575466",
+      "numero": "16004",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "35.438.485 WELISON DE FREITAS CHAVES",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 353.95,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371571540",
+      "numero": "16003",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "Moacir Pedro Bezerra junio",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 242,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371528438",
+      "numero": "16002",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 584.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371528104",
+      "numero": "16001",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "MARCOS RAFAEL FRANCA MOREIRA 60360121365",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 398,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371511845",
       "numero": "16000",

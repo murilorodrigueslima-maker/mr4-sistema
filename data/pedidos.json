@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-20T15:09:44",
-  "total": 54,
+  "atualizado_em": "2026-05-20T18:42:57",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "371643114",
+      "numero": "16017",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 265,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371642736",
+      "numero": "16016",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371642327",
+      "numero": "16015",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371626622",
+      "numero": "16014",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 208.34,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371615359",
+      "numero": "16013",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "J. A. DE CARVALHO PECAS E ACESSORIOS AUTOMOTORES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 786,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371611620",
+      "numero": "16012",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "J.G. AUTOCAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 83,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371580711",
       "numero": "16005",
@@ -82,7 +154,7 @@
       "cliente": "MS CENTRAL TEC LTDA",
       "vendedor": "fabiana andrade da silva",
       "valor": 2389.37,
-      "itens": 9,
+      "itens": 10,
       "status_gc": "",
       "cidade": ""
     },

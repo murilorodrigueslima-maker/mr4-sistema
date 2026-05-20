@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-05-19T23:27:28",
-  "total": 39,
+  "atualizado_em": "2026-05-20T04:35:40",
+  "total": 40,
   "pedidos": [
+    {
+      "id": "364735832",
+      "numero": "15438",
+      "data": "2026-05-20",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1268.68,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371387008",
       "numero": "15991",

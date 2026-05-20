@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-19T23:27:29",
+  "atualizado_em": "2026-05-20T04:35:41",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -280,27 +280,30 @@
       "vencimento": "2026-05-18",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1149.77,
       "vencimento": "2026-05-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 384.2,
       "vencimento": "2026-05-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO NUBANK",
       "valor": 600.96,
       "vencimento": "2026-05-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1868,
@@ -372,11 +375,47 @@
       "valor": 1537,
       "vencimento": "2026-05-25",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "CAPITALIZAÇÃO",
+      "valor": 103.16,
+      "vencimento": "2026-05-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-05-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 2225,
+      "vencimento": "2026-05-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 1105.6,
+      "vencimento": "2026-05-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1165.64,
+      "vencimento": "2026-05-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1927.2,
+      "vencimento": "2026-05-27",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53092.689999999995,
+  "total_vencido": 55227.61999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 38791.73
+  "total_a_pagar": 38894.89000000001
 }

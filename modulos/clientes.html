@@ -315,7 +315,9 @@ select.filter-sel:focus{border-color:var(--orange)}
   <a class="topbar-back" href="../index.html">← Início</a>
   <div class="topbar-title">👥 CRM Clientes</div>
   <div class="topbar-spacer"></div>
-  <select class="filter-sel" id="filterTipo" onchange="filtrar()" style="margin-right:.25rem">
+  <button class="btn btn-ghost" onclick="exportarClientesJSON()" title="Baixar todos os clientes em JSON" style="font-size:.75rem;padding:.38rem .75rem">💾 Exportar</button>
+  <button class="btn btn-ghost" onclick="abrirModalBackup()" title="Ver/restaurar backup local" style="font-size:.75rem;padding:.38rem .75rem;margin-left:.3rem" id="btnBackup">🔄 Backup</button>
+  <select class="filter-sel" id="filterTipo" onchange="filtrar()" style="margin-left:.5rem;margin-right:.25rem">
     <option value="">Todos os tipos</option>
     <option value="PF">PF</option>
     <option value="PJ">PJ</option>
@@ -707,6 +709,7 @@ async function carregar() {
   ]);
   CLIENTES = snapC.docs.map(d => ({ id: d.id, ...d.data() }));
   GARANTIAS = snapG.docs.map(d => ({ id: d.id, ...d.data() }));
+  salvarBackupLocal(); // backup automático sempre que dados são carregados
   atualizarContadores();
   filtrar();
 }
@@ -2210,7 +2213,18 @@ window.salvarCliente = async function() {
     tags, atualizado_em:serverTimestamp(),
   };
   if(id){
-    await updateDoc(doc(db,'clientes',id), dados);
+    // Ao editar: preserva campos existentes que não estão no formulário
+    // Remove campos vazios para não sobrescrever dados existentes com vazio
+    const clienteExistente = CLIENTES.find(x=>x.id===id)||{};
+    const dadosLimpos = {...dados};
+    if(!dadosLimpos.nome_fantasia && clienteExistente.nome_fantasia) delete dadosLimpos.nome_fantasia;
+    if(!dadosLimpos.cpf_cnpj && clienteExistente.cpf_cnpj) delete dadosLimpos.cpf_cnpj;
+    if(!dadosLimpos.email && clienteExistente.email) delete dadosLimpos.email;
+    if(!dadosLimpos.cidade && clienteExistente.cidade) delete dadosLimpos.cidade;
+    if(!dadosLimpos.estado && clienteExistente.estado) delete dadosLimpos.estado;
+    if(!dadosLimpos.valor_medio && clienteExistente.valor_medio) dadosLimpos.valor_medio = clienteExistente.valor_medio;
+    if(!dadosLimpos.segmento && clienteExistente.segmento) delete dadosLimpos.segmento;
+    await updateDoc(doc(db,'clientes',id), dadosLimpos);
     if(obs){ const c=CLIENTES.find(x=>x.id===id); const notas=[{texto:obs,data:new Date().toISOString()},...(c.notas||[])]; await updateDoc(doc(db,'clientes',id),{notas}); }
   } else {
     const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
@@ -2354,6 +2368,105 @@ if('Notification' in window && Notification.permission === 'default') {
 } else {
   iniciarListenerGlobal();
 }
+
+// ── SISTEMA DE BACKUP ─────────────────────────────────────────────────────────
+const BACKUP_KEY = 'mr4_clientes_backup';
+const BACKUP_TS_KEY = 'mr4_clientes_backup_ts';
+const MAX_BACKUPS = 7; // mantém 7 versões (1 por dia)
+
+function salvarBackupLocal() {
+  if(!CLIENTES.length) return;
+  try {
+    // Serializa (converte Timestamps Firestore para ISO string)
+    const serializado = CLIENTES.map(c => {
+      const obj = {...c};
+      if(obj.criado_em?.toDate) obj.criado_em = obj.criado_em.toDate().toISOString();
+      if(obj.atualizado_em?.toDate) obj.atualizado_em = obj.atualizado_em.toDate().toISOString();
+      if(obj.ultimoContato?.toDate) obj.ultimoContato = obj.ultimoContato.toDate().toISOString();
+      return obj;
+    });
+    const hoje = new Date().toISOString().slice(0,10);
+    // Carrega histórico de backups
+    let historico = [];
+    try { historico = JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]'); } catch(_){}
+    // Remove versão do mesmo dia se existir e adiciona nova
+    historico = historico.filter(b => b.data !== hoje);
+    historico.unshift({ data: hoje, ts: new Date().toISOString(), clientes: serializado });
+    // Mantém só os últimos MAX_BACKUPS
+    historico = historico.slice(0, MAX_BACKUPS);
+    localStorage.setItem(BACKUP_KEY, JSON.stringify(historico));
+    localStorage.setItem(BACKUP_TS_KEY, new Date().toISOString());
+    // Atualiza badge do botão
+    const btn = document.getElementById('btnBackup');
+    if(btn) btn.title = `Backup: ${serializado.length} clientes salvo em ${new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+  } catch(e) { console.warn('Backup local falhou:', e); }
+}
+
+window.exportarClientesJSON = function() {
+  if(!CLIENTES.length){ alert('Carregue o CRM primeiro.'); return; }
+  const serializado = CLIENTES.map(c => {
+    const obj = {...c};
+    if(obj.criado_em?.toDate) obj.criado_em = obj.criado_em.toDate().toISOString();
+    if(obj.atualizado_em?.toDate) obj.atualizado_em = obj.atualizado_em.toDate().toISOString();
+    if(obj.ultimoContato?.toDate) obj.ultimoContato = obj.ultimoContato.toDate().toISOString();
+    return obj;
+  });
+  const blob = new Blob([JSON.stringify(serializado, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `clientes-mr4-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  notif(`✅ ${serializado.length} clientes exportados!`);
+};
+
+window.abrirModalBackup = function() {
+  let historico = [];
+  try { historico = JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]'); } catch(_){}
+  const overlay = document.createElement('div');
+  overlay.id = 'backupOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:flex;align-items:center;justify-content:center;padding:1rem';
+  const listaHtml = historico.length
+    ? historico.map((b,i) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.75rem;border-radius:10px;background:${i===0?'var(--orange-lt)':'var(--bg)'};margin-bottom:.4rem;border:1.5px solid ${i===0?'var(--orange)':'var(--border)'}">
+          <div>
+            <div style="font-size:.85rem;font-weight:700">${b.data} ${i===0?'<span style="font-size:.65rem;color:var(--orange);font-weight:700">● mais recente</span>':''}</div>
+            <div style="font-size:.72rem;color:var(--muted)">${b.clientes.length} clientes · ${new Date(b.ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+          <div style="display:flex;gap:.4rem">
+            <button onclick="baixarBackup(${i})" style="padding:.3rem .65rem;border:1.5px solid var(--border);border-radius:7px;background:none;cursor:pointer;font-size:.72rem;font-family:'Inter',sans-serif">⬇️ JSON</button>
+          </div>
+        </div>`).join('')
+    : '<div style="text-align:center;padding:1.5rem;color:var(--muted);font-size:.85rem">Nenhum backup local ainda.<br>O backup é salvo automaticamente ao abrir o CRM.</div>';
+  overlay.innerHTML = `
+    <div style="background:var(--white);border-radius:18px;width:100%;max-width:460px;max-height:80vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,.2)">
+      <div style="padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--white)">
+        <div style="font-size:.95rem;font-weight:800">🔄 Backups locais</div>
+        <button onclick="document.getElementById('backupOverlay').remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted)">✕</button>
+      </div>
+      <div style="padding:1rem 1.5rem">
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+          Backup automático salvo neste navegador a cada abertura do CRM.<br>
+          <strong style="color:var(--text)">Use "💾 Exportar" para salvar um arquivo permanente.</strong>
+        </div>
+        ${listaHtml}
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+};
+
+window.baixarBackup = function(idx) {
+  let historico = [];
+  try { historico = JSON.parse(localStorage.getItem(BACKUP_KEY)||'[]'); } catch(_){}
+  const b = historico[idx];
+  if(!b) return;
+  const blob = new Blob([JSON.stringify(b.clientes, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `backup-clientes-${b.data}.json`;
+  a.click();
+};
+// ──────────────────────────────────────────────────────────────────────────────
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-21T07:58:58",
+  "atualizado_em": "2026-05-21T11:41:52",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 994.78,
+      "valor": 455.66,
       "vencimento": "2026-04-20",
       "dias_atraso": 31,
       "tipo": "Pagar"
@@ -122,7 +122,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7510.85,
+      "valor": 7466.85,
       "vencimento": "2026-05-05",
       "dias_atraso": 16,
       "tipo": "Pagar"
@@ -160,20 +160,6 @@
       "valor": 48.27,
       "vencimento": "2026-05-10",
       "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-05-12",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
-      "valor": 3338.68,
-      "vencimento": "2026-05-13",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -342,6 +328,18 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "JUROS ELO LEROY",
+      "valor": 570.46,
+      "vencimento": "2026-05-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ANUIDADADE DE CARTÃO ELO",
+      "valor": 19.99,
+      "vencimento": "2026-05-21",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.58,
       "vencimento": "2026-05-23",
@@ -440,7 +438,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57095.61999999999,
+  "total_vencido": 50948.81999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 38894.89000000001
+  "total_a_pagar": 39485.340000000004
 }

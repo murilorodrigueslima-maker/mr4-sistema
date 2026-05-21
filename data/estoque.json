@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-05-21T07:59:02",
-  "total_produtos": 895,
-  "valor_total_estoque": 392198.20000000077,
+  "atualizado_em": "2026-05-21T11:41:56",
+  "total_produtos": 894,
+  "valor_total_estoque": 383330.0800000009,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -237,6 +237,20 @@
       "custo": 36.33
     },
     {
+      "ref": "4994",
+      "nome": "MOLDURA 9 FIAT MOBI - PRETA",
+      "margem": "-4.7",
+      "preco": 140,
+      "custo": 146.54
+    },
+    {
+      "ref": "4150",
+      "nome": "MOLDURA 9 SUZUKI GRAND VITARA 16/19 -  PRETA",
+      "margem": "-2.9",
+      "preco": 130,
+      "custo": 133.71
+    },
+    {
       "ref": "MAXHB4",
       "nome": "REF: HB4 - LAMPADA AUTOMOTIVA",
       "margem": "0.0",
@@ -340,20 +354,6 @@
       "margem": "16.7",
       "preco": 128.35,
       "custo": 106.96
-    },
-    {
-      "ref": "VA10000078",
-      "nome": "KIT PRATICO 1 PAR TRIAK 6“ + 1 PAR AF 6X9",
-      "margem": "16.7",
-      "preco": 196.54,
-      "custo": 163.78
-    },
-    {
-      "ref": "64/C",
-      "nome": "FUSIVEL LAMINA MINI 10 AMP",
-      "margem": "16.7",
-      "preco": 33.6,
-      "custo": 28
     }
   ]
 }

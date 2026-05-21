@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-21T16:43:24",
-  "total": 69,
+  "atualizado_em": "2026-05-21T18:21:40",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "371917745",
+      "numero": "16046",
+      "data": "2026-05-21",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1720.61,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371903056",
+      "numero": "16045",
+      "data": "2026-05-21",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 45.16,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371891859",
       "numero": "16044",

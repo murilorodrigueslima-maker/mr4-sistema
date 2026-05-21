@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-05-21T14:50:21",
-  "total": 67,
+  "atualizado_em": "2026-05-21T16:43:24",
+  "total": 69,
   "pedidos": [
+    {
+      "id": "371891859",
+      "numero": "16044",
+      "data": "2026-05-21",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 67.32,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371876007",
+      "numero": "16043",
+      "data": "2026-05-21",
+      "hora": "",
+      "cliente": "45.210.185 MARILIA MARIA CRUZ VIANA DE MELO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 265,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371874608",
+      "numero": "16042",
+      "data": "2026-05-21",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 252.31,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "371835473",
       "numero": "16041",
@@ -755,18 +791,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 202.2,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "371204448",
-      "numero": "15972",
-      "data": "2026-05-19",
-      "hora": "",
-      "cliente": "JOSE EDILSON DE LIMA DA COSTA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 849.5,
-      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

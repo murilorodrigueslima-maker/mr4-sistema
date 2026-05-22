@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-21T23:29:38",
+  "atualizado_em": "2026-05-22T04:36:25",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -189,51 +189,58 @@
       "vencimento": "2026-05-20",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CONSULTORIA DE IMPORTAÇÃO",
       "valor": 171.3,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MESA ESCRITORIO MURILO",
       "valor": 227.07,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MERCADO LIVRE",
       "valor": 28.95,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "2 TV PARA EMPRESA",
       "valor": 419.8,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS ELO LEROY",
       "valor": 570.46,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ANUIDADADE DE CARTÃO ELO",
       "valor": 19.99,
       "vencimento": "2026-05-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.58,
@@ -329,11 +336,17 @@
       "valor": 153.03,
       "vencimento": "2026-05-28",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 345.69,
+      "vencimento": "2026-05-29",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 44547.329999999994,
+  "total_vencido": 46408.299999999996,
   "total_a_receber": 0,
-  "total_a_pagar": 37499.81
+  "total_a_pagar": 38741.380000000005
 }

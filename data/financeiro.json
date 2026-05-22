@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-22T07:41:56",
+  "atualizado_em": "2026-05-22T11:16:59",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -115,7 +115,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7238.01,
+      "valor": 7229.01,
       "vencimento": "2026-05-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -165,13 +165,6 @@
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1149.77,
-      "vencimento": "2026-05-19",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 384.2,
       "vencimento": "2026-05-19",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -346,7 +339,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46408.299999999996,
+  "total_vencido": 46015.1,
   "total_a_receber": 0,
   "total_a_pagar": 38741.380000000005
 }

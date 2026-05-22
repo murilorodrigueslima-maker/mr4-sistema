@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-22T14:45:04",
+  "atualizado_em": "2026-05-22T16:23:11",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -115,7 +115,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7078.22,
+      "valor": 6844.73,
       "vencimento": "2026-05-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -198,13 +198,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "MESA ESCRITORIO MURILO",
-      "valor": 227.07,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "MERCADO LIVRE",
       "valor": 28.95,
       "vencimento": "2026-05-21",
@@ -237,12 +230,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.58,
-      "vencimento": "2026-05-23",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1276.3,
       "vencimento": "2026-05-23",
       "tipo": "Pagar"
     },
@@ -339,7 +326,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45864.31,
+  "total_vencido": 45403.74999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 38741.380000000005
+  "total_a_pagar": 38514.310000000005
 }

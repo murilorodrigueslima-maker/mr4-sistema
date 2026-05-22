@@ -1,15 +1,63 @@
 {
-  "atualizado_em": "2026-05-22T14:45:02",
-  "total": 63,
+  "atualizado_em": "2026-05-22T16:23:10",
+  "total": 67,
   "pedidos": [
     {
-      "id": "372095496",
-      "numero": "16061",
+      "id": "372127944",
+      "numero": "16066",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "SPACE GARAGE LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 82.96,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372126805",
+      "numero": "16065",
       "data": "2026-05-22",
       "hora": "",
       "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 76,
+      "valor": 147,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372114025",
+      "numero": "16064",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "BR FAROIS- BRUNO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 78.14,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372111258",
+      "numero": "16063",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2642.98,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372110261",
+      "numero": "16062",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 36,
       "itens": 1,
       "status_gc": "",
       "cidade": ""
@@ -191,6 +239,18 @@
       "vendedor": "Swyanne Kethlyn",
       "valor": 280.58,
       "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "371742102",
+      "numero": "16021",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 591.89,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },
@@ -479,18 +539,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 64,
       "itens": 3,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "371742102",
-      "numero": "16021",
-      "data": "2026-05-21",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 591.89,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

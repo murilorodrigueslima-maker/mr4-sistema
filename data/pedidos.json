@@ -1,7 +1,103 @@
 {
-  "atualizado_em": "2026-05-22T11:16:58",
-  "total": 56,
+  "atualizado_em": "2026-05-22T14:45:02",
+  "total": 63,
   "pedidos": [
+    {
+      "id": "372095496",
+      "numero": "16061",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 76,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372094905",
+      "numero": "16060",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 630.14,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372086168",
+      "numero": "16059",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 155.91,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372082341",
+      "numero": "16058",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "JORGE DA SILVA RIBEIRO JUNIOR",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 704.74,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372081470",
+      "numero": "16057",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "CHAVEIRO&ACESSÓRIOS PEQUENO MATIAS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 186.51,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372071709",
+      "numero": "16056",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 89.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372057848",
+      "numero": "16055",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "FRANCISCO RONIERES SILVA DE LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 168.83,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372052433",
+      "numero": "16054",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "FRANCISCO RONIERES SILVA DE LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 168.83,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372017779",
       "numero": "16053",
@@ -99,6 +195,18 @@
       "cidade": ""
     },
     {
+      "id": "371741243",
+      "numero": "16020",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 209.84,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "371917745",
       "numero": "16046",
       "data": "2026-05-21",
@@ -167,18 +275,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 251.99,
       "itens": 8,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "371831599",
-      "numero": "16040",
-      "data": "2026-05-21",
-      "hora": "",
-      "cliente": "FRANCISCO DAVI DE AGUIAR SOARES",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 328,
-      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },
@@ -395,18 +491,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 591.89,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "371741243",
-      "numero": "16020",
-      "data": "2026-05-21",
-      "hora": "",
-      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 150,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

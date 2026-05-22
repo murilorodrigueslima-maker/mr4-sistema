@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-22T11:16:59",
+  "atualizado_em": "2026-05-22T14:45:04",
   "contas_vencidas": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
@@ -115,7 +115,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7229.01,
+      "valor": 7078.22,
       "vencimento": "2026-05-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -339,7 +339,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46015.1,
+  "total_vencido": 45864.31,
   "total_a_receber": 0,
   "total_a_pagar": 38741.380000000005
 }

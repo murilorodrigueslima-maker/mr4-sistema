@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-05-22T16:23:10",
-  "total": 67,
+  "atualizado_em": "2026-05-22T18:03:27",
+  "total": 69,
   "pedidos": [
+    {
+      "id": "372157333",
+      "numero": "16068",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 162.9,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372157040",
+      "numero": "16067",
+      "data": "2026-05-22",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 144,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372127944",
       "numero": "16066",

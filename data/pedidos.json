@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-23T10:01:18",
-  "total": 56,
+  "atualizado_em": "2026-05-23T11:53:34",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "372297503",
+      "numero": "16082",
+      "data": "2026-05-23",
+      "hora": "",
+      "cliente": "PAULO SOM E ACESSORIOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 467.21,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372297464",
+      "numero": "16081",
+      "data": "2026-05-23",
+      "hora": "",
+      "cliente": "JULIANO ALBUQUERQUE DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 65,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372296461",
+      "numero": "16080",
+      "data": "2026-05-23",
+      "hora": "",
+      "cliente": "VALWENIO VASCONCELOS SILVA 07362776330",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1570,
+      "itens": 22,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372294454",
+      "numero": "16079",
+      "data": "2026-05-23",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 24.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372289559",
+      "numero": "16078",
+      "data": "2026-05-23",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 298,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372272237",
+      "numero": "16077",
+      "data": "2026-05-23",
+      "hora": "",
+      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1930,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372243324",
       "numero": "16076",

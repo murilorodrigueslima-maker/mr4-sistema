@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-05-22T23:06:16",
+  "atualizado_em": "2026-05-23T03:28:27",
   "contas_vencidas": [
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1308.71,
-      "vencimento": "2026-03-23",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
@@ -322,11 +315,29 @@
       "valor": 345.69,
       "vencimento": "2026-05-29",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO ESTER",
+      "valor": 2019.94,
+      "vencimento": "2026-05-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PARCELAMENTO IMPOSTOS",
+      "valor": 517.47,
+      "vencimento": "2026-05-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2439,
+      "vencimento": "2026-05-30",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45403.74999999999,
+  "total_vencido": 44095.03999999999,
   "total_a_receber": 0,
   "total_a_pagar": 38514.310000000005
 }

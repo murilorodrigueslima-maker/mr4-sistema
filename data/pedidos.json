@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-23T11:53:34",
+  "atualizado_em": "2026-05-23T13:51:15",
   "total": 62,
   "pedidos": [
     {
@@ -21,8 +21,8 @@
       "hora": "",
       "cliente": "JULIANO ALBUQUERQUE DA SILVA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 65,
-      "itens": 1,
+      "valor": 300,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

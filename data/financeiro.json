@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-23T23:14:47",
+  "atualizado_em": "2026-05-24T03:53:59",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -217,21 +217,23 @@
       "vencimento": "2026-05-21",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.58,
       "vencimento": "2026-05-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 836.53,
       "vencimento": "2026-05-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.41,
@@ -337,7 +339,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 44095.03999999999,
+  "total_vencido": 46208.149999999994,
   "total_a_receber": 0,
   "total_a_pagar": 38514.310000000005
 }

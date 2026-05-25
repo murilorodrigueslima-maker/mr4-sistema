@@ -20,6 +20,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 
 /* ── TOP BAR ── */
 .topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:1rem;flex-shrink:0;z-index:50}
+.crm-toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:.7rem 1.25rem;border-radius:10px;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;z-index:9999;display:none;align-items:center;gap:.5rem;box-shadow:0 8px 30px rgba(0,0,0,.18);animation:toastIn .2s ease}
+.crm-toast.ok{background:#D1FAE5;color:#065F46;border:1.5px solid #6EE7B7}
+.crm-toast.erro{background:#FEE2E2;color:#B91C1C;border:1.5px solid #FCA5A5}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 .topbar-back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.35rem .7rem;border:1px solid var(--border);border-radius:8px;transition:all .15s;white-space:nowrap}
 .topbar-back:hover{color:var(--text);border-color:var(--border-dk)}
 .topbar-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.5rem}
@@ -309,6 +313,9 @@ select.filter-sel:focus{border-color:var(--orange)}
 </style>
 </head>
 <body>
+
+<!-- TOAST NOTIFICATION -->
+<div class="crm-toast" id="crmToast"></div>
 
 <!-- TOP BAR -->
 <div class="topbar">
@@ -964,10 +971,16 @@ window.adicionarNota = async function() {
   if(!texto||!clienteAtualId) return;
   const c = CLIENTES.find(x=>x.id===clienteAtualId);
   const notas = [{ texto, data:new Date().toISOString() }, ...(c.notas||[])];
-  await updateDoc(doc(db,'clientes',clienteAtualId),{ notas, ultimoContato: serverTimestamp() });
-  c.notas = notas;
-  input.value = '';
-  renderNotas(c);
+  try {
+    await updateDoc(doc(db,'clientes',clienteAtualId),{ notas, ultimoContato: serverTimestamp() });
+    c.notas = notas;
+    input.value = '';
+    renderNotas(c);
+    mostrarToast('Anotação salva!');
+  } catch(err) {
+    console.error('Erro ao salvar anotação:', err);
+    mostrarToast('Erro ao salvar anotação. Tente novamente.', 'erro');
+  }
 };
 
 window.deletarNota = async function(idx) {
@@ -1695,10 +1708,16 @@ function renderPipeline() {
 }
 
 window.moverPipeline = async function(clienteId, novoStage) {
-  await updateDoc(doc(db,'clientes',clienteId),{ pipeline: novoStage });
-  const c = CLIENTES.find(x=>x.id===clienteId);
-  if(c) c.pipeline = novoStage;
-  renderPipeline();
+  try {
+    await updateDoc(doc(db,'clientes',clienteId),{ pipeline: novoStage });
+    const c = CLIENTES.find(x=>x.id===clienteId);
+    if(c) c.pipeline = novoStage;
+    renderPipeline();
+    mostrarToast('Cliente movido!');
+  } catch(err) {
+    console.error('Erro ao mover pipeline:', err);
+    mostrarToast('Erro ao mover cliente. Tente novamente.', 'erro');
+  }
 };
 
 // ── Carregar CHATS silenciosamente (para o Painel) ─────────────────────────────
@@ -2165,9 +2184,15 @@ window.editarClienteAtual = function() { if(clienteAtualId) editarCliente(client
 
 window.alterarPipeline = async function(stage) {
   if(!clienteAtualId) return;
-  await updateDoc(doc(db,'clientes',clienteAtualId),{ pipeline: stage });
-  const c = CLIENTES.find(x=>x.id===clienteAtualId);
-  if(c) c.pipeline = stage;
+  try {
+    await updateDoc(doc(db,'clientes',clienteAtualId),{ pipeline: stage });
+    const c = CLIENTES.find(x=>x.id===clienteAtualId);
+    if(c) c.pipeline = stage;
+    mostrarToast('Etapa do pipeline atualizada!');
+  } catch(err) {
+    console.error('Erro ao alterar pipeline:', err);
+    mostrarToast('Erro ao atualizar etapa. Tente novamente.', 'erro');
+  }
 };
 
 window.deletarClienteAtual = async function() {
@@ -2194,6 +2219,18 @@ window.setModalTipo = function(tipo) {
   document.getElementById('grpNomeFantasia').style.display = isPJ ? '' : 'none';
 };
 
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _toastTimer = null;
+function mostrarToast(msg, tipo = 'ok') {
+  const t = document.getElementById('crmToast');
+  if(!t) return;
+  clearTimeout(_toastTimer);
+  t.textContent = (tipo === 'ok' ? '✅ ' : '❌ ') + msg;
+  t.className = 'crm-toast ' + tipo;
+  t.style.display = 'flex';
+  _toastTimer = setTimeout(() => { t.style.display = 'none'; }, 3500);
+}
+
 window.salvarCliente = async function() {
   const nome = document.getElementById('fNome').value.trim();
   const tel  = document.getElementById('fTelefone').value.trim();
@@ -2212,30 +2249,36 @@ window.salvarCliente = async function() {
     segmento: document.getElementById('fSegmento').value,
     tags, atualizado_em:serverTimestamp(),
   };
-  if(id){
-    // Ao editar: preserva campos existentes que não estão no formulário
-    // Remove campos vazios para não sobrescrever dados existentes com vazio
-    const clienteExistente = CLIENTES.find(x=>x.id===id)||{};
-    const dadosLimpos = {...dados};
-    if(!dadosLimpos.nome_fantasia && clienteExistente.nome_fantasia) delete dadosLimpos.nome_fantasia;
-    if(!dadosLimpos.cpf_cnpj && clienteExistente.cpf_cnpj) delete dadosLimpos.cpf_cnpj;
-    if(!dadosLimpos.email && clienteExistente.email) delete dadosLimpos.email;
-    if(!dadosLimpos.cidade && clienteExistente.cidade) delete dadosLimpos.cidade;
-    if(!dadosLimpos.estado && clienteExistente.estado) delete dadosLimpos.estado;
-    if(!dadosLimpos.valor_medio && clienteExistente.valor_medio) dadosLimpos.valor_medio = clienteExistente.valor_medio;
-    if(!dadosLimpos.segmento && clienteExistente.segmento) delete dadosLimpos.segmento;
-    await updateDoc(doc(db,'clientes',id), dadosLimpos);
-    if(obs){ const c=CLIENTES.find(x=>x.id===id); const notas=[{texto:obs,data:new Date().toISOString()},...(c.notas||[])]; await updateDoc(doc(db,'clientes',id),{notas}); }
-  } else {
-    const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
-    await addDoc(collection(db,'clientes'),{...dados,notas,pipeline:'lead',origem:'manual',criado_em:serverTimestamp()});
-  }
-  fecharModal();
-  await carregar();
-  if(modoAtivo === 'inbox') {
-    renderInbox(CHATS); // atualiza tags CRM na inbox com novo cliente
-  } else if(clienteAtualId) {
-    abrirDetalhe(clienteAtualId);
+  try {
+    if(id){
+      // Ao editar: preserva campos existentes que não estão no formulário
+      // Remove campos vazios para não sobrescrever dados existentes com vazio
+      const clienteExistente = CLIENTES.find(x=>x.id===id)||{};
+      const dadosLimpos = {...dados};
+      if(!dadosLimpos.nome_fantasia && clienteExistente.nome_fantasia) delete dadosLimpos.nome_fantasia;
+      if(!dadosLimpos.cpf_cnpj && clienteExistente.cpf_cnpj) delete dadosLimpos.cpf_cnpj;
+      if(!dadosLimpos.email && clienteExistente.email) delete dadosLimpos.email;
+      if(!dadosLimpos.cidade && clienteExistente.cidade) delete dadosLimpos.cidade;
+      if(!dadosLimpos.estado && clienteExistente.estado) delete dadosLimpos.estado;
+      if(!dadosLimpos.valor_medio && clienteExistente.valor_medio) dadosLimpos.valor_medio = clienteExistente.valor_medio;
+      if(!dadosLimpos.segmento && clienteExistente.segmento) delete dadosLimpos.segmento;
+      await updateDoc(doc(db,'clientes',id), dadosLimpos);
+      if(obs){ const c=CLIENTES.find(x=>x.id===id); const notas=[{texto:obs,data:new Date().toISOString()},...(c.notas||[])]; await updateDoc(doc(db,'clientes',id),{notas}); }
+    } else {
+      const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
+      await addDoc(collection(db,'clientes'),{...dados,notas,pipeline:'lead',origem:'manual',criado_em:serverTimestamp()});
+    }
+    fecharModal();
+    await carregar();
+    if(modoAtivo === 'inbox') {
+      renderInbox(CHATS);
+    } else if(clienteAtualId) {
+      abrirDetalhe(clienteAtualId);
+    }
+    mostrarToast(id ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!');
+  } catch(err) {
+    console.error('Erro ao salvar cliente:', err);
+    mostrarToast('Erro ao salvar. Verifique sua conexão e tente novamente.', 'erro');
   }
 };
 

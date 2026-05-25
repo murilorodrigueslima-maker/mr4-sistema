@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-25T05:11:30",
-  "total": 14,
+  "atualizado_em": "2026-05-25T09:56:14",
+  "total": 19,
   "pedidos": [
+    {
+      "id": "372523652",
+      "numero": "16086",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 145.67,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372517857",
+      "numero": "16085",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "VH SARAIVA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 265,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372514167",
+      "numero": "16084",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "MARCOS RAFAEL FRANCA MOREIRA 60360121365",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 663,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372509885",
+      "numero": "16083",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "49.321.145 JEFFERSON BRUNO MESQUITA MOTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 691.55,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370705737",
+      "numero": "15947",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 554.04,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372297503",
       "numero": "16082",
@@ -129,7 +189,7 @@
       "hora": "",
       "cliente": "U. N. LIMA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1384.69,
+      "valor": 1360.28,
       "itens": 7,
       "status_gc": "",
       "cidade": ""

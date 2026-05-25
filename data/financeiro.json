@@ -1,20 +1,6 @@
 {
-  "atualizado_em": "2026-05-24T23:33:36",
+  "atualizado_em": "2026-05-25T05:11:32",
   "contas_vencidas": [
-    {
-      "nome": "CAPITALIZAÇÃO",
-      "valor": 103.16,
-      "vencimento": "2026-03-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CHAT GPT",
-      "valor": 95.99,
-      "vencimento": "2026-03-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
@@ -339,7 +325,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46208.149999999994,
+  "total_vencido": 46008.99999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 38514.310000000005
+  "total_a_pagar": 38315.16000000001
 }

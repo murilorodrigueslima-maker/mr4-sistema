@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-05-25T09:56:14",
-  "total": 19,
+  "atualizado_em": "2026-05-25T13:15:29",
+  "total": 24,
   "pedidos": [
+    {
+      "id": "372596925",
+      "numero": "16092",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 840,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372595567",
+      "numero": "16091",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "JOAN VITOR VALE 08327151312",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 272.99,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372542015",
+      "numero": "16090",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 93.52,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372539911",
+      "numero": "16089",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "ADLER DE MELO SILVA 04123071384",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 265,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372538724",
+      "numero": "16087",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "L & K LOCACOES DE REBOQUE E MAQUINAS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 213,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372523652",
       "numero": "16086",

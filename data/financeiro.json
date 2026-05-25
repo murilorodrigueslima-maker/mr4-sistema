@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-25T09:56:15",
+  "atualizado_em": "2026-05-25T13:15:31",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 6844.73,
+      "valor": 5594.73,
       "vencimento": "2026-05-05",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -139,13 +139,6 @@
       "valor": 3669.52,
       "vencimento": "2026-05-18",
       "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 1149.77,
-      "vencimento": "2026-05-19",
-      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
@@ -325,7 +318,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46008.99999999999,
+  "total_vencido": 43609.229999999996,
   "total_a_receber": 0,
   "total_a_pagar": 38315.16000000001
 }

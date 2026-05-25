@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-25T13:15:31",
+  "atualizado_em": "2026-05-25T16:15:17",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5594.73,
+      "valor": 5368.12,
       "vencimento": "2026-05-05",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -114,20 +114,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO ELO NAQUIM",
-      "valor": 3043.37,
-      "vencimento": "2026-05-15",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CURSO PARA SWYANNE",
-      "valor": 1151.72,
-      "vencimento": "2026-05-15",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 834,
       "vencimento": "2026-05-17",
@@ -142,59 +128,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO NUBANK",
-      "valor": 600.96,
-      "vencimento": "2026-05-19",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1868,
       "vencimento": "2026-05-20",
       "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PRATELEIRAS 6 UN",
-      "valor": 423.4,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONSULTORIA DE IMPORTAÇÃO",
-      "valor": 171.3,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MERCADO LIVRE",
-      "valor": 28.95,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "2 TV PARA EMPRESA",
-      "valor": 419.8,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS ELO LEROY",
-      "valor": 570.46,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ANUIDADADE DE CARTÃO ELO",
-      "valor": 19.99,
-      "vencimento": "2026-05-21",
-      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
@@ -318,7 +255,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 43609.229999999996,
+  "total_vencido": 36952.67,
   "total_a_receber": 0,
-  "total_a_pagar": 38315.16000000001
+  "total_a_pagar": 31914.160000000007
 }

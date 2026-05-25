@@ -302,6 +302,33 @@ select.filter-sel:focus{border-color:var(--orange)}
 /* WhatsApp reconnect */
 .wpp-reconnect-btn{width:100%;margin-top:.45rem;padding:.38rem .65rem;background:#FEF2F2;color:#B91C1C;border:1.5px solid #FECACA;border-radius:8px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;display:none;transition:all .15s}
 .wpp-reconnect-btn:hover{background:#FEE2E2;border-color:#FCA5A5}
+/* ── VENDAS ── */
+.venda-add{display:flex;gap:.45rem;margin-bottom:.85rem;flex-wrap:wrap}
+.venda-add input{padding:.4rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.78rem;outline:none;transition:border .15s}
+.venda-add input:focus{border-color:var(--orange)}
+.venda-add button{padding:.4rem .8rem;background:var(--orange);color:#fff;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:.77rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.venda-row{background:var(--bg);border-radius:9px;padding:.6rem .8rem;margin-bottom:.35rem;display:flex;align-items:center;gap:.55rem}
+.venda-prod{font-size:.81rem;font-weight:600;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.venda-val{font-size:.81rem;font-weight:700;color:var(--green);flex-shrink:0}
+.venda-data{font-size:.65rem;color:var(--muted);flex-shrink:0}
+.venda-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.72rem;opacity:.45;transition:opacity .12s;padding:.1rem}
+.venda-del:hover{opacity:1;color:var(--red)}
+.venda-total{background:var(--orange-lt);border:1.5px solid rgba(255,107,26,.25);border-radius:10px;padding:.7rem .9rem;margin-bottom:.85rem;display:flex;align-items:center;justify-content:space-between}
+.venda-total-label{font-size:.73rem;font-weight:600;color:var(--orange)}
+.venda-total-val{font-size:1.02rem;font-weight:800;color:var(--orange)}
+/* ── FOLLOW-UP ── */
+.followup-indicator{font-size:.66rem;font-weight:700;padding:.13rem .45rem;border-radius:20px;display:inline-flex;align-items:center;gap:.25rem}
+.followup-indicator.vencido{background:#FEE2E2;color:#B91C1C}
+.followup-indicator.hoje{background:#FEF3C7;color:#92400E}
+.followup-indicator.futuro{background:#DBEAFE;color:#1E40AF}
+.contact-followup-dot{position:absolute;top:10px;right:10px;width:9px;height:9px;background:var(--blue);border-radius:50%;border:2px solid var(--white);z-index:2}
+/* ── AVATAR COM FOTO NO DETALHE ── */
+.detail-avatar{position:relative!important;overflow:hidden!important}
+#detAvatarImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s}
+#detAvatarImg.loaded{opacity:1}
+/* ── TAGS PERSONALIZADAS ── */
+.custom-tag-del{background:none;border:none;cursor:pointer;color:rgba(255,107,26,.55);font-size:.6rem;padding:0 .12rem .05rem;margin-left:.2rem;line-height:1;vertical-align:middle}
+.custom-tag-del:hover{color:var(--red)}
 /* QR Code modal */
 .qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
 .qr-overlay.open{display:flex}
@@ -329,6 +356,17 @@ select.filter-sel:focus{border-color:var(--orange)}
     <option value="PF">PF</option>
     <option value="PJ">PJ</option>
   </select>
+  <select class="filter-sel" id="filterSegmento" onchange="filtrar()" style="margin-right:.25rem">
+    <option value="">Todos segmentos</option>
+    <option value="Oficina">🔧 Oficina</option>
+    <option value="Som automotivo">🔊 Som automotivo</option>
+    <option value="Elétrica veicular">⚡ Elétrica veicular</option>
+    <option value="Varejo">🛒 Varejo</option>
+    <option value="Atacado">📦 Atacado</option>
+    <option value="Particular">👤 Particular</option>
+    <option value="Outro">Outro</option>
+  </select>
+  <button class="btn btn-ghost" onclick="exportarClientesExcel()" title="Exportar para Excel" style="font-size:.75rem;padding:.38rem .75rem;margin-left:.1rem">📊 Excel</button>
   <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Cliente</button>
 </div>
 
@@ -384,6 +422,10 @@ select.filter-sel:focus{border-color:var(--orange)}
       <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#EF4444"></span>Sem contato 3d+</span>
       <span class="sidebar-item-count" id="cnt-semContato3d" style="background:#FEE2E2;color:#B91C1C">0</span>
     </div>
+    <div class="sidebar-item" id="filter-followup" onclick="setFilter('followup')">
+      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#3B82F6"></span>Follow-up hoje</span>
+      <span class="sidebar-item-count" id="cnt-followup" style="background:#DBEAFE;color:#1E40AF">0</span>
+    </div>
 
     <div class="sidebar-section" style="margin-top:.5rem">Por Estado</div>
     <div id="sidebarEstados"></div>
@@ -434,7 +476,7 @@ select.filter-sel:focus{border-color:var(--orange)}
   <aside class="detail-panel" id="detailPanel">
     <div class="detail-top" style="position:relative">
       <button class="detail-close" onclick="fecharDetalhe()">✕</button>
-      <div class="detail-avatar" id="detAvatar">?</div>
+      <div class="detail-avatar" id="detAvatar">?<img id="detAvatarImg" alt=""></div>
       <div class="detail-nome" id="detNome">—</div>
       <div class="detail-sub" id="detSub">—</div>
       <div class="detail-contact-row" id="detContacts"></div>
@@ -447,6 +489,7 @@ select.filter-sel:focus{border-color:var(--orange)}
     <div class="detail-tabs">
       <div class="detail-tab active" onclick="showTab('info')">Info</div>
       <div class="detail-tab" onclick="showTab('notas')">📝 Notas</div>
+      <div class="detail-tab" onclick="showTab('vendas')">💰 Vendas</div>
       <div class="detail-tab" onclick="showTab('chat')">💬 Chat</div>
       <div class="detail-tab" onclick="showTab('garantias')">🛡️</div>
     </div>
@@ -469,6 +512,17 @@ select.filter-sel:focus{border-color:var(--orange)}
         <div class="info-field">
           <div class="info-label">Valor médio</div>
           <div class="info-value" id="iValor">—</div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">💰 Total gasto (vendas)</div>
+          <div class="info-value" id="iTotalVendas">—</div>
+        </div>
+        <div class="info-field">
+          <div class="info-label">📅 Follow-up agendado</div>
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+            <div class="info-value" id="iFollowUp">—</div>
+            <input type="date" id="iFollowUpDate" style="padding:.25rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.75rem;outline:none;transition:border .15s" onchange="setFollowUp(this.value)" title="Agendar follow-up">
+          </div>
         </div>
         <div class="info-field">
           <div class="info-label">Segmento</div>
@@ -505,6 +559,23 @@ select.filter-sel:focus{border-color:var(--orange)}
           <button onclick="adicionarNota()">+</button>
         </div>
         <div id="notasList"></div>
+      </div>
+
+      <!-- VENDAS -->
+      <div class="tab-pane" id="tab-vendas">
+        <div id="vendasTotal" class="venda-total" style="display:none">
+          <span class="venda-total-label">💰 Total gasto</span>
+          <span class="venda-total-val" id="vendasTotalVal">R$ 0,00</span>
+        </div>
+        <div class="venda-add">
+          <input type="text" id="vendaProduto" placeholder="Produto / serviço" style="flex:2;min-width:110px">
+          <input type="number" id="vendaValor" placeholder="Valor R$" min="0" step="0.01" style="width:90px">
+          <input type="date" id="vendaData" style="width:130px">
+          <button onclick="adicionarVenda()">＋ Add</button>
+        </div>
+        <div id="vendasList">
+          <div style="color:var(--muted);font-size:.8rem;text-align:center;padding:.75rem 0">Nenhuma venda registrada ainda.</div>
+        </div>
       </div>
 
       <!-- CHAT -->
@@ -635,6 +706,12 @@ select.filter-sel:focus{border-color:var(--orange)}
           <button type="button" class="tag-toggle" data-tag="Varejo" onclick="toggleTag(this)">🛒 Varejo</button>
           <button type="button" class="tag-toggle" data-tag="Inadimplente" onclick="toggleTag(this)">⚠️ Inadimplente</button>
         </div>
+        <div id="customTagsGrid" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.4rem"></div>
+        <button type="button" onclick="adicionarTagCustom()" style="margin-top:.45rem;font-size:.7rem;padding:.25rem .6rem;border:1.5px dashed var(--border);border-radius:7px;background:none;cursor:pointer;color:var(--muted);font-family:'Inter',sans-serif;transition:all .12s">＋ Nova tag personalizada</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Follow-up agendado</label>
+        <input type="date" class="form-input" id="fFollowUp">
       </div>
       <div class="form-group">
         <label class="form-label">Observação inicial</label>
@@ -658,6 +735,9 @@ select.filter-sel:focus{border-color:var(--orange)}
     <button onclick="fecharReconectarWpp()" style="margin-top:1rem;width:100%;padding:.5rem;border:1.5px solid var(--border);border-radius:9px;background:none;cursor:pointer;font-size:.8rem;font-family:'Inter',sans-serif;color:var(--muted)">Fechar</button>
   </div>
 </div>
+
+<!-- SheetJS (Excel export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -749,6 +829,8 @@ function atualizarContadores() {
   document.getElementById('cnt-esquecidos').textContent = esquecidos.length;
   document.getElementById('cnt-naoLidas').textContent   = naoLidas.length;
   document.getElementById('cnt-semContato3d').textContent = CLIENTES.filter(isSemContato3).length;
+  const hoje2 = new Date().toISOString().slice(0,10);
+  document.getElementById('cnt-followup').textContent = CLIENTES.filter(c => c.followUp && c.followUp <= hoje2).length;
 
   // ── Por Estado ──
   const estadosMap = {};
@@ -780,15 +862,18 @@ window.setFilter = function(f) {
 };
 
 window.filtrar = function() {
-  const q = normalizar(document.getElementById('searchInput').value);
-  const tipo = document.getElementById('filterTipo').value;
-  const agora = new Date();
+  const q        = normalizar(document.getElementById('searchInput').value);
+  const tipo     = document.getElementById('filterTipo').value;
+  const segmento = document.getElementById('filterSegmento')?.value || '';
+  const agora    = new Date();
   const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+  const hoje     = agora.toISOString().slice(0,10);
 
   let lista = CLIENTES.filter(c => {
-    const matchQ = !q || normalizar(c.nome).includes(q) || normalizar(c.telefone||'').includes(q) || normalizar(c.cidade||'').includes(q);
+    const matchQ    = !q || normalizar(c.nome).includes(q) || normalizar(c.telefone||'').includes(q) || normalizar(c.cidade||'').includes(q) || normalizar(c.cpf_cnpj||'').includes(q);
     const matchTipo = !tipo || c.tipo === tipo;
-    return matchQ && matchTipo;
+    const matchSeg  = !segmento || c.segmento === segmento;
+    return matchQ && matchTipo && matchSeg;
   });
 
   if(filtroAtivo === 'VIP') lista = lista.filter(c=>(c.tags||[]).includes('VIP'));
@@ -807,12 +892,13 @@ window.filtrar = function() {
   else if(filtroAtivo === 'esquecidos') lista = lista.filter(isEsquecido);
   else if(filtroAtivo === 'naoLidas')    lista = lista.filter(temMsgNaoLida);
   else if(filtroAtivo === 'semContato3d') lista = lista.filter(isSemContato3);
+  else if(filtroAtivo === 'followup')   lista = lista.filter(c => c.followUp && c.followUp <= hoje);
   else if(filtroAtivo && filtroAtivo.startsWith('estado:')) {
     const uf = filtroAtivo.slice(7).toUpperCase();
     lista = lista.filter(c => (c.estado||'').trim().toUpperCase() === uf);
   }
 
-  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta', esquecidos:'Sem contato há 30d+', naoLidas:'Mensagens não lidas', semContato3d:'Sem contato 3d+' };
+  const labels = { todos:'Todos os clientes', VIP:'Clientes VIP', Atacado:'Clientes Atacado', Varejo:'Clientes Varejo', Inadimplente:'Inadimplentes', novos:'Novos este mês', garantias:'Com garantia aberta', esquecidos:'Sem contato há 30d+', naoLidas:'Mensagens não lidas', semContato3d:'Sem contato 3d+', followup:'Follow-up para hoje' };
   const labelTitulo = filtroAtivo && filtroAtivo.startsWith('estado:')
     ? `Clientes do ${filtroAtivo.slice(7).toUpperCase()}`
     : (labels[filtroAtivo]||'Clientes');
@@ -834,10 +920,12 @@ function renderLista(lista) {
     const wpp = (c.telefone||'').replace(/\D/g,'');
     const unreadDot = temMsgNaoLida(c) ? `<div class="contact-unread-dot" title="Mensagem não lida"></div>` : '';
     const esqTag = isEsquecido(c) ? `<span class="tag tag-esquecido">⏰ Esquecido</span>` : '';
+    const hoje3 = new Date().toISOString().slice(0,10);
+    const followupDot = (c.followUp && c.followUp <= hoje3) ? `<div class="contact-followup-dot" title="Follow-up: ${c.followUp}"></div>` : '';
     return `
     <div class="contact-row${clienteAtualId===c.id?' selected':''}" onclick="abrirDetalhe('${c.id}')">
       ${gAberta.length?`<div class="garantia-indicator">🛡️ ${gAberta.length}</div>`:''}
-      ${unreadDot}
+      ${unreadDot}${followupDot}
       <div class="contact-avatar">${ini}</div>
       <div class="contact-main">
         <div class="contact-nome">${c.nome}</div>
@@ -887,6 +975,22 @@ window.abrirDetalhe = function(id) {
   document.getElementById('iNomeFantasia').textContent = c.nome_fantasia||'—';
   document.getElementById('iCidade').textContent = [c.cidade,c.estado].filter(Boolean).join(' / ')||'—';
   document.getElementById('iValor').textContent = c.valor_medio ? `R$ ${Number(c.valor_medio).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
+  // Total gasto (vendas)
+  const vendasArr = c.vendas||[];
+  const totalGasto = vendasArr.reduce((s,v)=>s+(Number(v.valor)||0),0);
+  document.getElementById('iTotalVendas').textContent = vendasArr.length ? `R$ ${totalGasto.toLocaleString('pt-BR',{minimumFractionDigits:2})} (${vendasArr.length} compra${vendasArr.length>1?'s':''})` : '—';
+  // Follow-up
+  const hojeStr = new Date().toISOString().slice(0,10);
+  const followUpEl   = document.getElementById('iFollowUp');
+  const followUpDate = document.getElementById('iFollowUpDate');
+  if(c.followUp) {
+    const isV = c.followUp < hojeStr, isH = c.followUp === hojeStr;
+    followUpEl.innerHTML = `<span class="followup-indicator ${isV?'vencido':isH?'hoje':'futuro'}">${isV?'⚠️':'📅'} ${c.followUp}</span>`;
+    if(followUpDate) followUpDate.value = c.followUp;
+  } else {
+    followUpEl.textContent = '—';
+    if(followUpDate) followUpDate.value = '';
+  }
   document.getElementById('iSegmento').textContent = c.segmento||'—';
   document.getElementById('iEmail').textContent = c.email||'—';
   const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente' };
@@ -914,6 +1018,14 @@ window.abrirDetalhe = function(id) {
 
   document.getElementById('detailPanel').classList.add('open');
   showTab('info');
+
+  // Foto do avatar
+  const detImg = document.getElementById('detAvatarImg');
+  if(detImg) {
+    detImg.classList.remove('loaded');
+    detImg.src = '';
+    if(wpp) { detImg.dataset.phone = wpp; carregarFoto(detImg); }
+  }
 };
 
 window.fecharDetalhe = function() {
@@ -934,7 +1046,7 @@ window.abrirWpp = function() {
 window.showTab = function(tab) {
   tabAtiva = tab;
   document.querySelectorAll('.detail-tab').forEach((t,i)=>{
-    const names=['info','notas','chat','garantias'];
+    const names=['info','notas','vendas','chat','garantias'];
     t.classList.toggle('active', names[i]===tab);
   });
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
@@ -950,6 +1062,10 @@ window.showTab = function(tab) {
     }
   } else {
     dc.style.overflow='';
+    if(tab==='vendas' && clienteAtualId) {
+      const c = CLIENTES.find(x=>x.id===clienteAtualId);
+      if(c) renderVendas(c);
+    }
   }
 };
 
@@ -1562,16 +1678,25 @@ const FOTO_CACHE = {};
 async function carregarFoto(img) {
   const phone = img.dataset.phone;
   if(!phone) return;
-  if(FOTO_CACHE[phone] === null) { img.remove(); return; } // já tentou, sem foto
-  if(FOTO_CACHE[phone]) { img.src = FOTO_CACHE[phone]; return; }
+  const isDetalhe = img.id === 'detAvatarImg';
+  const semFoto = () => { if(!isDetalhe) img.remove(); }; // detalhe: mantém oculta
+  if(FOTO_CACHE[phone] === null) { semFoto(); return; }
+  if(FOTO_CACHE[phone]) {
+    img.src = FOTO_CACHE[phone];
+    if(isDetalhe) img.onload = () => img.classList.add('loaded');
+    return;
+  }
   try {
     const r = await fetch(`${ZAPI_BASE}/profile-picture?phone=55${phone}`, { headers: ZAPI_HEADERS });
-    if(!r.ok) { FOTO_CACHE[phone] = null; img.remove(); return; }
+    if(!r.ok) { FOTO_CACHE[phone] = null; semFoto(); return; }
     const j = await r.json();
     const url = j.value || j.profilePictureUrl || j.url || '';
-    if(url) { FOTO_CACHE[phone] = url; img.src = url; }
-    else     { FOTO_CACHE[phone] = null; img.remove(); }
-  } catch { FOTO_CACHE[phone] = null; img.remove(); }
+    if(url) {
+      FOTO_CACHE[phone] = url;
+      img.src = url;
+      if(isDetalhe) img.onload = () => img.classList.add('loaded');
+    } else { FOTO_CACHE[phone] = null; semFoto(); }
+  } catch { FOTO_CACHE[phone] = null; semFoto(); }
 }
 
 function iniciarLazyFotos() {
@@ -2151,9 +2276,10 @@ async function pollMensagensChat(phone) {
 window.abrirModalNovo = function() {
   document.getElementById('editId').value='';
   document.getElementById('modalTitle').textContent='Novo Cliente';
-  ['fNome','fNomeFantasia','fDoc','fTelefone','fEmail','fCidade','fEstado','fValor','fObs'].forEach(id=>document.getElementById(id).value='');
+  ['fNome','fNomeFantasia','fDoc','fTelefone','fEmail','fCidade','fEstado','fValor','fObs','fFollowUp'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   document.getElementById('fSegmento').value='';
   document.querySelectorAll('.tag-toggle').forEach(b=>b.classList.remove('on'));
+  renderCustomTagsModal();
   setModalTipo('PF');
   document.getElementById('modalOverlay').classList.add('open');
 };
@@ -2173,10 +2299,12 @@ window.editarCliente = function(id) {
   document.getElementById('fEstado').value=c.estado||'';
   document.getElementById('fValor').value=c.valor_medio||'';
   document.getElementById('fSegmento').value=c.segmento||'';
+  document.getElementById('fFollowUp').value=c.followUp||'';
   document.getElementById('fObs').value='';
-  document.querySelectorAll('.tag-toggle').forEach(b=>{
+  document.querySelectorAll('#tagsGrid .tag-toggle').forEach(b=>{
     b.classList.toggle('on',(c.tags||[]).includes(b.dataset.tag));
   });
+  renderCustomTagsModal();
   document.getElementById('modalOverlay').classList.add('open');
 };
 
@@ -2235,7 +2363,7 @@ window.salvarCliente = async function() {
   const nome = document.getElementById('fNome').value.trim();
   const tel  = document.getElementById('fTelefone').value.trim();
   if(!nome||!tel){ alert('Nome e WhatsApp são obrigatórios.'); return; }
-  const tags = [...document.querySelectorAll('.tag-toggle.on')].map(b=>b.dataset.tag);
+  const tags = [...document.querySelectorAll('#tagsGrid .tag-toggle.on, #customTagsGrid .tag-toggle.on')].map(b=>b.dataset.tag);
   const obs  = document.getElementById('fObs').value.trim();
   const id   = document.getElementById('editId').value;
   const dados = {
@@ -2247,6 +2375,7 @@ window.salvarCliente = async function() {
     estado:document.getElementById('fEstado').value.trim().toUpperCase(),
     valor_medio: parseFloat(document.getElementById('fValor').value)||0,
     segmento: document.getElementById('fSegmento').value,
+    followUp: document.getElementById('fFollowUp').value || null,
     tags, atualizado_em:serverTimestamp(),
   };
   try {
@@ -2412,6 +2541,150 @@ if('Notification' in window && Notification.permission === 'default') {
   iniciarListenerGlobal();
 }
 
+// ── VENDAS ────────────────────────────────────────────────────────────────────
+function renderVendas(c) {
+  const vendas = (c.vendas||[]).slice().sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  const total  = vendas.reduce((s,v)=>s+(Number(v.valor)||0),0);
+  const totalEl    = document.getElementById('vendasTotal');
+  const totalValEl = document.getElementById('vendasTotalVal');
+  if(totalEl)    totalEl.style.display = vendas.length ? '' : 'none';
+  if(totalValEl) totalValEl.textContent = `R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})}`;
+  document.getElementById('vendasList').innerHTML = vendas.length
+    ? vendas.map((v,i) => `
+        <div class="venda-row">
+          <div style="flex:1;min-width:0">
+            <div class="venda-prod">${escapeHtml(v.produto||'Produto')}</div>
+            ${v.obs?`<div class="venda-data" style="color:var(--muted)">${escapeHtml(v.obs)}</div>`:''}
+          </div>
+          <span class="venda-val">R$ ${Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+          <span class="venda-data">${v.data||'—'}</span>
+          <button class="venda-del" onclick="excluirVenda(${i})" title="Remover">✕</button>
+        </div>`).join('')
+    : '<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:.75rem 0">Nenhuma venda registrada ainda.<br><small>Use o formulário acima para registrar compras.</small></div>';
+}
+
+window.adicionarVenda = async function() {
+  if(!clienteAtualId) return;
+  const prod = document.getElementById('vendaProduto').value.trim();
+  const val  = parseFloat(document.getElementById('vendaValor').value) || 0;
+  const data = document.getElementById('vendaData').value;
+  if(!prod) { mostrarToast('Informe o produto ou serviço.','erro'); return; }
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  const vendas = [...(c.vendas||[]), { id:Date.now()+'', produto:prod, valor:val, data:data||new Date().toISOString().slice(0,10), obs:'' }];
+  try {
+    await updateDoc(doc(db,'clientes',clienteAtualId),{ vendas });
+    c.vendas = vendas;
+    document.getElementById('vendaProduto').value='';
+    document.getElementById('vendaValor').value='';
+    document.getElementById('vendaData').value='';
+    renderVendas(c);
+    const total = vendas.reduce((s,v)=>s+(Number(v.valor)||0),0);
+    document.getElementById('iTotalVendas').textContent = `R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})} (${vendas.length} compra${vendas.length>1?'s':''})`;
+    mostrarToast('Venda registrada!');
+  } catch(err) { console.error(err); mostrarToast('Erro ao salvar venda.','erro'); }
+};
+
+window.excluirVenda = async function(idx) {
+  if(!confirm('Remover esta venda?')) return;
+  const c = CLIENTES.find(x=>x.id===clienteAtualId);
+  const vendas = (c.vendas||[]).filter((_,i)=>i!==idx);
+  try {
+    await updateDoc(doc(db,'clientes',clienteAtualId),{ vendas });
+    c.vendas = vendas;
+    renderVendas(c);
+    const total = vendas.reduce((s,v)=>s+(Number(v.valor)||0),0);
+    document.getElementById('iTotalVendas').textContent = vendas.length ? `R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:2})} (${vendas.length} compra${vendas.length>1?'s':''})` : '—';
+    mostrarToast('Venda removida.');
+  } catch(err) { mostrarToast('Erro ao remover venda.','erro'); }
+};
+
+// ── FOLLOW-UP ─────────────────────────────────────────────────────────────────
+window.setFollowUp = async function(dateStr) {
+  if(!clienteAtualId) return;
+  const valido = dateStr && dateStr.length === 10;
+  try {
+    await updateDoc(doc(db,'clientes',clienteAtualId),{ followUp: valido ? dateStr : null });
+    const c = CLIENTES.find(x=>x.id===clienteAtualId);
+    if(c) c.followUp = valido ? dateStr : null;
+    const hojeStr = new Date().toISOString().slice(0,10);
+    const isV = valido && dateStr < hojeStr, isH = valido && dateStr === hojeStr;
+    const el = document.getElementById('iFollowUp');
+    if(el) el.innerHTML = valido
+      ? `<span class="followup-indicator ${isV?'vencido':isH?'hoje':'futuro'}">${isV?'⚠️':'📅'} ${dateStr}</span>`
+      : '—';
+    atualizarContadores();
+    mostrarToast(valido ? 'Follow-up agendado!' : 'Follow-up removido!');
+  } catch(err) { mostrarToast('Erro ao salvar follow-up.','erro'); }
+};
+
+// ── TAGS PERSONALIZADAS ───────────────────────────────────────────────────────
+let CUSTOM_TAGS = JSON.parse(localStorage.getItem('mr4_custom_tags')||'[]');
+
+function renderCustomTagsModal() {
+  const grid = document.getElementById('customTagsGrid');
+  if(!grid) return;
+  grid.innerHTML = CUSTOM_TAGS.map(t => `
+    <button type="button" class="tag-toggle" data-tag="${escapeHtml(t)}" onclick="toggleTag(this)">${escapeHtml(t)}<span class="custom-tag-del" onclick="event.stopPropagation();removerTagCustom('${escapeHtml(t)}')" title="Apagar tag">✕</span></button>`).join('');
+  // Reaplicar seleção ao editar
+  const id = document.getElementById('editId').value;
+  if(id) {
+    const c = CLIENTES.find(x=>x.id===id);
+    if(c) grid.querySelectorAll('.tag-toggle').forEach(b=>b.classList.toggle('on',(c.tags||[]).includes(b.dataset.tag)));
+  }
+}
+
+window.adicionarTagCustom = function() {
+  const tag = prompt('Nome da nova tag (ex: Mecânico, Revendedor, Frotista):');
+  if(!tag || !tag.trim()) return;
+  const t = tag.trim();
+  if(!CUSTOM_TAGS.includes(t)) {
+    CUSTOM_TAGS.push(t);
+    localStorage.setItem('mr4_custom_tags', JSON.stringify(CUSTOM_TAGS));
+  }
+  renderCustomTagsModal();
+};
+
+window.removerTagCustom = function(tag) {
+  if(!confirm(`Remover a tag "${tag}"?`)) return;
+  CUSTOM_TAGS = CUSTOM_TAGS.filter(t=>t!==tag);
+  localStorage.setItem('mr4_custom_tags', JSON.stringify(CUSTOM_TAGS));
+  renderCustomTagsModal();
+};
+
+// ── EXPORTAR EXCEL ────────────────────────────────────────────────────────────
+window.exportarClientesExcel = function() {
+  if(!CLIENTES.length) { mostrarToast('Carregue o CRM primeiro.','erro'); return; }
+  if(typeof XLSX === 'undefined') { mostrarToast('Biblioteca Excel não carregada. Recarregue a página.','erro'); return; }
+  const rows = CLIENTES.map(c => {
+    const ts = obj => obj?.toDate ? obj.toDate().toLocaleDateString('pt-BR') : (obj ? new Date(obj).toLocaleDateString('pt-BR') : '');
+    return {
+      'Nome': c.nome||'',
+      'Tipo': c.tipo||'PF',
+      'Nome Fantasia': c.nome_fantasia||'',
+      'CPF/CNPJ': c.cpf_cnpj||'',
+      'WhatsApp': c.telefone||'',
+      'E-mail': c.email||'',
+      'Cidade': c.cidade||'',
+      'Estado': c.estado||'',
+      'Segmento': c.segmento||'',
+      'Tags': (c.tags||[]).join(', '),
+      'Pipeline': c.pipeline||'lead',
+      'Valor médio (R$)': c.valor_medio||0,
+      'Total vendas (R$)': (c.vendas||[]).reduce((s,v)=>s+(Number(v.valor)||0),0),
+      'Qtd vendas': (c.vendas||[]).length,
+      'Follow-up': c.followUp||'',
+      'Origem': c.origem||'',
+      'Cadastrado em': ts(c.criado_em),
+      'Atualizado em': ts(c.atualizado_em),
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Clientes');
+  XLSX.writeFile(wb, `clientes-mr4-${new Date().toISOString().slice(0,10)}.xlsx`);
+  mostrarToast(`${rows.length} clientes exportados para Excel!`);
+};
+
 // ── SISTEMA DE BACKUP ─────────────────────────────────────────────────────────
 const BACKUP_KEY = 'mr4_clientes_backup';
 const BACKUP_TS_KEY = 'mr4_clientes_backup_ts';
@@ -2459,7 +2732,7 @@ window.exportarClientesJSON = function() {
   a.href = URL.createObjectURL(blob);
   a.download = `clientes-mr4-${new Date().toISOString().slice(0,10)}.json`;
   a.click();
-  notif(`✅ ${serializado.length} clientes exportados!`);
+  mostrarToast(`${serializado.length} clientes exportados em JSON!`);
 };
 
 window.abrirModalBackup = function() {

@@ -13,13 +13,30 @@
   --bg:#F7F7F5;--white:#FFFFFF;--text:#1A1A1A;--muted:#9CA3AF;
   --border:#EBEBEB;--border-dk:#D1D5DB;
   --green:#10B981;--yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
-  --sidebar-w:220px;--detail-w:480px;
+  --sidebar-w:230px;--detail-w:360px;
 }
 html,body{height:100%;overflow:hidden}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
 
 /* ── TOP BAR ── */
-.topbar{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:1rem;flex-shrink:0;z-index:50}
+.topbar{height:54px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.1rem;gap:.75rem;flex-shrink:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.topbar-logo{display:flex;align-items:center;gap:.55rem;text-decoration:none}
+.topbar-logo-mark{width:28px;height:28px;background:var(--orange);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.85rem;flex-shrink:0}
+.topbar-logo-name{font-size:.88rem;font-weight:800;color:var(--text)}
+.topbar-divider{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.topbar-search{display:flex;align-items:center;gap:.45rem;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:.38rem .75rem;min-width:200px;transition:border .15s}
+.topbar-search:focus-within{border-color:var(--orange)}
+.topbar-search input{border:none;background:none;outline:none;font-family:'Inter',sans-serif;font-size:.78rem;color:var(--text);width:100%}
+.topbar-search input::placeholder{color:var(--muted)}
+/* Dropdown "•••" */
+.tb-dropdown{position:relative}
+.tb-dropdown-btn{width:34px;height:34px;padding:0;border-radius:8px;background:none;border:1.5px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.88rem;transition:all .15s;font-weight:700;letter-spacing:.05em}
+.tb-dropdown-btn:hover{border-color:var(--border-dk);color:var(--text)}
+.tb-dropdown-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--white);border:1.5px solid var(--border);border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:185px;z-index:200;display:none;overflow:hidden}
+.tb-dropdown-menu.open{display:block}
+.tb-dropdown-item{display:flex;align-items:center;gap:.55rem;padding:.62rem .9rem;font-size:.8rem;font-weight:500;color:var(--text);cursor:pointer;transition:background .1s;font-family:'Inter',sans-serif}
+.tb-dropdown-item:hover{background:var(--bg)}
+.tb-dropdown-sep{height:1px;background:var(--border);margin:.25rem 0}
 .crm-toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:.7rem 1.25rem;border-radius:10px;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;z-index:9999;display:none;align-items:center;gap:.5rem;box-shadow:0 8px 30px rgba(0,0,0,.18);animation:toastIn .2s ease}
 .crm-toast.ok{background:#D1FAE5;color:#065F46;border:1.5px solid #6EE7B7}
 .crm-toast.erro{background:#FEE2E2;color:#B91C1C;border:1.5px solid #FCA5A5}
@@ -39,27 +56,43 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 
 /* ── SIDEBAR ── */
 .sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
-.sidebar-search{padding:.85rem .85rem .5rem}
-.sidebar-search input{width:100%;padding:.55rem .8rem .55rem 2rem;border:1.5px solid var(--border);border-radius:9px;font-family:'Inter',sans-serif;font-size:.8rem;color:var(--text);background:var(--bg);outline:none;transition:border .15s}
-.sidebar-search input:focus{border-color:var(--orange);background:var(--white)}
-.sidebar-search{position:relative}
-.sidebar-search::before{content:'';position:absolute;left:1.4rem;top:50%;transform:translateY(-10%);width:14px;height:14px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat}
-.sidebar-section{padding:.85rem .85rem .3rem;font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.sidebar-item{display:flex;align-items:center;justify-content:space-between;padding:.5rem .85rem;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border-radius:8px;margin:0 .4rem;transition:all .12s}
+/* Sidebar — grade de modos (Clientes / WhatsApp / Pipeline / Painel) */
+.sidebar-modes{padding:.6rem .8rem;display:grid;grid-template-columns:1fr 1fr;gap:.3rem}
+.sidebar-mode-btn{padding:.5rem .4rem;border-radius:9px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--muted);transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
+.sidebar-mode-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);box-shadow:0 2px 8px rgba(255,107,26,.3)}
+.sidebar-mode-btn:hover:not(.active){background:var(--bg);color:var(--text)}
+/* Sidebar — seção urgência */
+.sidebar-urgencia{background:linear-gradient(135deg,rgba(239,68,68,.04),rgba(245,158,11,.04));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.5rem 0}
+.sidebar-section{padding:.7rem .85rem .25rem;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;justify-content:space-between}
+.sidebar-section-badge{font-size:.6rem;padding:.1rem .4rem;border-radius:20px;background:var(--red);color:#fff;font-weight:700}
+.sidebar-item{display:flex;align-items:center;justify-content:space-between;padding:.48rem .85rem;font-size:.81rem;font-weight:500;color:var(--muted);cursor:pointer;border-radius:8px;margin:0 .35rem .05rem;transition:all .12s}
 .sidebar-item:hover{background:var(--bg);color:var(--text)}
 .sidebar-item.active{background:var(--orange-lt);color:var(--orange);font-weight:600}
-.sidebar-item-count{font-size:.7rem;font-weight:600;background:var(--bg);padding:.1rem .45rem;border-radius:20px;color:var(--muted)}
+.sidebar-item-count{font-size:.67rem;font-weight:700;background:var(--bg);padding:.1rem .42rem;border-radius:20px;color:var(--muted)}
 .sidebar-item.active .sidebar-item-count{background:rgba(255,107,26,.15);color:var(--orange)}
-.sidebar-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-right:.35rem}
-.sidebar-footer{margin-top:auto;padding:.85rem;border-top:1px solid var(--border)}
+.sidebar-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sidebar-footer{margin-top:auto;padding:.75rem .85rem;border-top:1px solid var(--border)}
 
 /* ── MAIN LIST ── */
 .main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
-.list-header{padding:.85rem 1.25rem;display:flex;align-items:center;gap:.75rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.list-header{padding:.7rem 1.15rem .65rem;display:flex;align-items:center;gap:.75rem;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0}
+.list-title{font-size:.88rem;font-weight:800;color:var(--text);white-space:nowrap}
+.list-count{font-size:.75rem;font-weight:600;color:var(--muted);margin-left:.15rem}
 .list-header-title{font-size:.88rem;font-weight:700;color:var(--text);flex:1}
-.list-filter{display:flex;gap:.5rem}
-select.filter-sel{padding:.4rem .7rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.75rem;color:var(--muted);background:var(--white);cursor:pointer;outline:none}
+.list-spacer{flex:1}
+/* Mini stats inline no header */
+.header-stats{display:flex;gap:.85rem}
+.hstat{display:flex;align-items:center;gap:.3rem;font-size:.72rem;color:var(--muted)}
+.hstat strong{color:var(--text);font-weight:700}
+.hstat-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.list-filter{display:flex;gap:.35rem}
+select.filter-sel{padding:.3rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.73rem;color:var(--muted);background:var(--white);cursor:pointer;outline:none}
 select.filter-sel:focus{border-color:var(--orange)}
+/* Quick filter pills */
+.quick-filters{display:flex;gap:.3rem;padding:.45rem 1.15rem;border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;background:var(--white)}
+.quick-filters::-webkit-scrollbar{display:none}
+.qf-pill{padding:.22rem .7rem;border-radius:20px;font-size:.7rem;font-weight:600;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--muted);white-space:nowrap;transition:all .12s;font-family:'Inter',sans-serif}
+.qf-pill.active{background:var(--orange-lt);border-color:var(--orange);color:var(--orange)}
 
 .list-body{flex:1;overflow-y:auto;padding:.5rem}
 
@@ -97,24 +130,42 @@ select.filter-sel:focus{border-color:var(--orange)}
 .empty-sub{font-size:.8rem}
 
 /* ── DETAIL PANEL ── */
-.detail-panel{width:var(--detail-w);background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transform:translateX(100%);transition:transform .25s ease;position:absolute;right:0;top:52px;bottom:0;z-index:40}
+.detail-panel{width:var(--detail-w);background:var(--white);border-left:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transform:translateX(100%);transition:transform .25s ease;position:absolute;right:0;top:54px;bottom:0;z-index:40}
 .detail-panel.open{transform:translateX(0);position:relative;top:auto;right:auto;bottom:auto}
-.detail-top{padding:1.25rem 1.25rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0}
-.detail-close{position:absolute;top:1rem;right:1rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:7px;transition:all .12s}
+/* Novo cabeçalho horizontal */
+.detail-head{padding:1.1rem 1.1rem .85rem;background:linear-gradient(160deg,#FFF7F3 0%,#FFFFFF 100%);border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
+.detail-head-top{display:flex;align-items:center;gap:.85rem;margin-bottom:.85rem}
+.detail-head-info{flex:1;min-width:0}
+.detail-pipeline-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;margin-top:.35rem}
+/* Botões de ação rápida */
+.detail-actions{display:flex;gap:.4rem}
+.detail-action-btn{flex:1;padding:.45rem .4rem;border-radius:9px;font-size:.72rem;font-weight:600;border:1.5px solid var(--border);background:none;cursor:pointer;color:var(--muted);text-align:center;transition:all .15s;font-family:'Inter',sans-serif}
+.detail-action-btn:hover{border-color:var(--border-dk);color:var(--text)}
+.detail-action-btn.wpp{border-color:#25D36630;background:#25D36608;color:#128C7E}
+.detail-action-btn.wpp:hover{background:#25D36615}
+.detail-action-btn.del{color:#B91C1C;border-color:#FECACA}
+.detail-action-btn.del:hover{background:#FEF2F2}
+/* manter retrocompat */
+.detail-top{padding:1.1rem 1.1rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0}
+.detail-close{position:absolute;top:.85rem;right:.85rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:7px;transition:all .12s}
 .detail-close:hover{background:var(--bg);color:var(--text)}
-.detail-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ffb380);color:#fff;font-weight:800;font-size:1.3rem;display:flex;align-items:center;justify-content:center;margin-bottom:.75rem}
-.detail-nome{font-size:1.05rem;font-weight:800;color:var(--text)}
-.detail-sub{font-size:.75rem;color:var(--muted);margin-top:.2rem}
+.detail-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ffb380);color:#fff;font-weight:800;font-size:1.25rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 3px 12px rgba(255,107,26,.25)}
+.detail-nome{font-size:1rem;font-weight:800;color:var(--text);line-height:1.2}
+.detail-sub{font-size:.72rem;color:var(--muted);margin-top:.2rem}
 .detail-contact-row{display:flex;gap:.75rem;margin-top:.85rem;flex-wrap:wrap}
 .detail-contact-item{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--muted)}
-.detail-wpp-btn{margin-top:.85rem;width:100%;padding:.55rem;background:#25D36615;color:#128C7E;border:1.5px solid #25D36630;border-radius:9px;font-family:'Inter',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:.5rem}
-.detail-wpp-btn:hover{background:#25D36625;border-color:#25D36650}
+.detail-wpp-btn{display:none}
 
-/* TABS */
-.detail-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
-.detail-tab{flex:1;padding:.7rem;font-size:.75rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s}
+/* TABS com ícone + texto */
+.detail-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.detail-tab{flex:1;padding:.6rem .4rem;font-size:.68rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;border-bottom:2px solid transparent;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:.1rem;line-height:1.2}
+.detail-tab .tab-icon{font-size:.95rem}
 .detail-tab.active{color:var(--orange);border-bottom-color:var(--orange)}
 .detail-tab:hover:not(.active){color:var(--text)}
+/* Info sections + grid */
+.info-section{margin-bottom:1.1rem}
+.info-section-title{font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.5rem;padding-bottom:.35rem;border-bottom:1px solid var(--border)}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem}
 .detail-content{flex:1;overflow-y:auto}
 .tab-pane{display:none;padding:1rem 1.25rem}
 .tab-pane.active{display:block}
@@ -269,7 +320,7 @@ select.filter-sel:focus{border-color:var(--orange)}
 .pipeline-empty{font-size:.72rem;color:var(--muted);text-align:center;padding:.75rem;background:var(--bg);border-radius:8px;border:1.5px dashed var(--border)}
 
 @media(max-width:768px){
-  .detail-panel{position:fixed;width:100%;right:0;top:52px;bottom:0;transform:translateX(100%)}
+  .detail-panel{position:fixed;width:100%;right:0;top:54px;bottom:0;transform:translateX(100%)}
   .detail-panel.open{transform:translateX(0)}
   .sidebar{display:none}
 }
@@ -346,17 +397,37 @@ select.filter-sel:focus{border-color:var(--orange)}
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <a class="topbar-back" href="../index.html">← Início</a>
-  <div class="topbar-title">👥 CRM Clientes</div>
+  <a class="topbar-logo" href="../index.html">
+    <div class="topbar-logo-mark">M4</div>
+    <div class="topbar-logo-name">MR4 Sistema</div>
+  </a>
+  <div class="topbar-divider"></div>
+  <div style="font-size:.8rem;font-weight:600;color:var(--text);display:flex;align-items:center;gap:.4rem;white-space:nowrap">👥 CRM Clientes</div>
   <div class="topbar-spacer"></div>
-  <button class="btn btn-ghost" onclick="exportarClientesJSON()" title="Baixar todos os clientes em JSON" style="font-size:.75rem;padding:.38rem .75rem">💾 Exportar</button>
-  <button class="btn btn-ghost" onclick="abrirModalBackup()" title="Ver/restaurar backup local" style="font-size:.75rem;padding:.38rem .75rem;margin-left:.3rem" id="btnBackup">🔄 Backup</button>
-  <select class="filter-sel" id="filterTipo" onchange="filtrar()" style="margin-left:.5rem;margin-right:.25rem">
+  <div class="topbar-search">
+    <span style="font-size:.8rem;color:var(--muted)">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar nome, CPF, cidade…" oninput="filtrar()">
+  </div>
+  <div class="topbar-spacer"></div>
+  <button class="btn btn-primary" onclick="abrirModalNovo()">＋ Novo Cliente</button>
+  <div class="tb-dropdown" id="tbMoreMenu">
+    <button class="tb-dropdown-btn" onclick="toggleTbDropdown()" title="Mais opções">···</button>
+    <div class="tb-dropdown-menu" id="tbMoreDropdown">
+      <div class="tb-dropdown-item" onclick="exportarClientesJSON();toggleTbDropdown()">💾 Exportar JSON</div>
+      <div class="tb-dropdown-item" onclick="exportarClientesExcel();toggleTbDropdown()">📊 Exportar Excel</div>
+      <div class="tb-dropdown-sep"></div>
+      <div class="tb-dropdown-item" onclick="abrirModalBackup();toggleTbDropdown()" id="btnBackup">🔄 Backups locais</div>
+      <div class="tb-dropdown-sep"></div>
+      <div class="tb-dropdown-item" onclick="abrirReconectarWpp();toggleTbDropdown()">📱 Reconectar WhatsApp</div>
+    </div>
+  </div>
+  <!-- hidden selects mantidos para compatibilidade com filtrar() -->
+  <select class="filter-sel" id="filterTipo" onchange="filtrar()" style="display:none">
     <option value="">Todos os tipos</option>
     <option value="PF">PF</option>
     <option value="PJ">PJ</option>
   </select>
-  <select class="filter-sel" id="filterSegmento" onchange="filtrar()" style="margin-right:.25rem">
+  <select class="filter-sel" id="filterSegmento" onchange="filtrar()" style="display:none">
     <option value="">Todos segmentos</option>
     <option value="Oficina">🔧 Oficina</option>
     <option value="Som automotivo">🔊 Som automotivo</option>
@@ -366,8 +437,6 @@ select.filter-sel:focus{border-color:var(--orange)}
     <option value="Particular">👤 Particular</option>
     <option value="Outro">Outro</option>
   </select>
-  <button class="btn btn-ghost" onclick="exportarClientesExcel()" title="Exportar para Excel" style="font-size:.75rem;padding:.38rem .75rem;margin-left:.1rem">📊 Excel</button>
-  <button class="btn btn-primary" onclick="abrirModalNovo()">+ Novo Cliente</button>
 </div>
 
 <!-- APP -->
@@ -375,11 +444,37 @@ select.filter-sel:focus{border-color:var(--orange)}
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-search">
-      <input type="text" id="searchInput" placeholder="Buscar cliente…" oninput="filtrar()">
+
+    <!-- Grade de modos: Clientes / WhatsApp / Pipeline / Painel -->
+    <div class="sidebar-modes">
+      <button class="sidebar-mode-btn active" id="modoClientes" onclick="setModo('clientes')">👥 Clientes</button>
+      <button class="sidebar-mode-btn" id="modoInbox" onclick="setModo('inbox')">💬 WhatsApp</button>
+      <button class="sidebar-mode-btn" id="modoPipeline" onclick="setModo('pipeline')">🏷️ Pipeline</button>
+      <button class="sidebar-mode-btn" id="modoPainel" onclick="setModo('painel')">📊 Painel</button>
     </div>
 
-    <div class="sidebar-section">Filtros</div>
+    <!-- Seção urgência -->
+    <div class="sidebar-urgencia">
+      <div class="sidebar-section">⚡ Atenção <span class="sidebar-section-badge" id="cntUrgencia">0</span></div>
+      <div class="sidebar-item" id="filter-semContato3d" onclick="setFilter('semContato3d')">
+        <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#EF4444"></span>Sem contato 3d+</span>
+        <span class="sidebar-item-count" id="cnt-semContato3d" style="background:#FEE2E2;color:#B91C1C">0</span>
+      </div>
+      <div class="sidebar-item" id="filter-esquecidos" onclick="setFilter('esquecidos')">
+        <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#F59E0B"></span>Sem contato 30d+</span>
+        <span class="sidebar-item-count" id="cnt-esquecidos" style="background:#FEF3C7;color:#92400E">0</span>
+      </div>
+      <div class="sidebar-item" id="filter-followup" onclick="setFilter('followup')">
+        <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#3B82F6"></span>Follow-up hoje</span>
+        <span class="sidebar-item-count" id="cnt-followup" style="background:#DBEAFE;color:#1E40AF">0</span>
+      </div>
+      <div class="sidebar-item" id="filter-naoLidas" onclick="setFilter('naoLidas')">
+        <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:var(--green)"></span>Msg não lida</span>
+        <span class="sidebar-item-count" id="cnt-naoLidas" style="background:#D1FAE5;color:#065F46">0</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section" style="margin-top:.35rem">Clientes</div>
     <div class="sidebar-item active" id="filter-todos" onclick="setFilter('todos')">
       <span>Todos</span>
       <span class="sidebar-item-count" id="cnt-todos">0</span>
@@ -400,40 +495,22 @@ select.filter-sel:focus{border-color:var(--orange)}
       <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#B71C1C"></span>Inadimplente</span>
       <span class="sidebar-item-count" id="cnt-inadimplente">0</span>
     </div>
-
-    <div class="sidebar-section" style="margin-top:.5rem">Este mês</div>
     <div class="sidebar-item" id="filter-novos" onclick="setFilter('novos')">
-      <span>Novos clientes</span>
+      <span>🆕 Novos este mês</span>
       <span class="sidebar-item-count" id="cnt-novos">0</span>
     </div>
     <div class="sidebar-item" id="filter-garantias" onclick="setFilter('garantias')">
-      <span>Com garantia aberta</span>
+      <span>🛡️ Com garantia aberta</span>
       <span class="sidebar-item-count" id="cnt-garantias" style="background:#FFEBEE;color:#B71C1C">0</span>
     </div>
-    <div class="sidebar-item" id="filter-esquecidos" onclick="setFilter('esquecidos')">
-      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#F59E0B"></span>Sem contato 30d+</span>
-      <span class="sidebar-item-count" id="cnt-esquecidos" style="background:#FEF3C7;color:#92400E">0</span>
-    </div>
-    <div class="sidebar-item" id="filter-naoLidas" onclick="setFilter('naoLidas')">
-      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:var(--green)"></span>Msg não lida</span>
-      <span class="sidebar-item-count" id="cnt-naoLidas" style="background:#D1FAE5;color:#065F46">0</span>
-    </div>
-    <div class="sidebar-item" id="filter-semContato3d" onclick="setFilter('semContato3d')">
-      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#EF4444"></span>Sem contato 3d+</span>
-      <span class="sidebar-item-count" id="cnt-semContato3d" style="background:#FEE2E2;color:#B91C1C">0</span>
-    </div>
-    <div class="sidebar-item" id="filter-followup" onclick="setFilter('followup')">
-      <span style="display:flex;align-items:center;gap:.4rem"><span class="sidebar-dot" style="background:#3B82F6"></span>Follow-up hoje</span>
-      <span class="sidebar-item-count" id="cnt-followup" style="background:#DBEAFE;color:#1E40AF">0</span>
-    </div>
 
-    <div class="sidebar-section" style="margin-top:.5rem">Por Estado</div>
+    <div class="sidebar-section" style="margin-top:.35rem">Por Estado</div>
     <div id="sidebarEstados"></div>
 
     <div class="sidebar-footer">
-      <div style="font-size:.68rem;color:var(--muted);text-align:center;line-height:1.5">
-        WhatsApp<br>
-        <strong style="color:var(--text)" id="wppStatus">Não configurado</strong>
+      <div style="font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:.45rem">
+        <span style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;display:inline-block"></span>
+        WhatsApp: <strong style="color:var(--text)" id="wppStatus">Não configurado</strong>
       </div>
       <button class="wpp-reconnect-btn" id="wppReconnectBtn" onclick="abrirReconectarWpp()">
         🔄 Reconectar WhatsApp
@@ -443,24 +520,53 @@ select.filter-sel:focus{border-color:var(--orange)}
 
   <!-- MAIN -->
   <div class="main-area">
-    <!-- Stats bar -->
-    <div class="stats-bar">
-      <div class="stat-pill"><span class="dot" style="background:var(--orange)"></span>Total: <strong id="stTotal">—</strong></div>
-      <div class="stat-pill"><span class="dot" style="background:var(--blue)"></span>PJ: <strong id="stPJ">—</strong></div>
-      <div class="stat-pill"><span class="dot" style="background:var(--green)"></span>PF: <strong id="stPF">—</strong></div>
-      <div class="stat-pill"><span class="dot" style="background:var(--purple)"></span>Novos mês: <strong id="stNovos">—</strong></div>
+    <!-- List header unificado: título + stats + filtros -->
+    <div class="list-header">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:.45rem">
+          <span class="list-title" id="listTitle">Todos os clientes</span>
+          <span class="list-count" id="listCount"></span>
+        </div>
+      </div>
+      <div class="list-spacer"></div>
+      <!-- Stats inline -->
+      <div class="header-stats" id="headerStats">
+        <div class="hstat"><div class="hstat-dot" style="background:var(--orange)"></div>Total: <strong id="stTotal">—</strong></div>
+        <div class="hstat"><div class="hstat-dot" style="background:var(--blue)"></div>PJ: <strong id="stPJ">—</strong></div>
+        <div class="hstat"><div class="hstat-dot" style="background:var(--green)"></div>PF: <strong id="stPF">—</strong></div>
+        <div class="hstat"><div class="hstat-dot" style="background:var(--purple)"></div>Novos mês: <strong id="stNovos">—</strong></div>
+      </div>
+      <!-- Filtros por tipo/segmento compactos -->
+      <div class="list-filter" id="listFilters">
+        <select class="filter-sel" id="filterTipoInline" onchange="document.getElementById('filterTipo').value=this.value;filtrar()">
+          <option value="">Tipo</option>
+          <option value="PF">PF</option>
+          <option value="PJ">PJ</option>
+        </select>
+        <select class="filter-sel" id="filterSegmentoInline" onchange="document.getElementById('filterSegmento').value=this.value;filtrar()">
+          <option value="">Segmento</option>
+          <option value="Oficina">🔧 Oficina</option>
+          <option value="Som automotivo">🔊 Som</option>
+          <option value="Elétrica veicular">⚡ Elétrica</option>
+          <option value="Varejo">🛒 Varejo</option>
+          <option value="Atacado">📦 Atacado</option>
+          <option value="Particular">👤 Particular</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost" id="btnImportarInbox" onclick="importarTodosDoInbox()" style="display:none;font-size:.73rem;padding:.35rem .75rem">📥 Importar novos</button>
     </div>
 
-    <!-- List header -->
-    <div class="list-header">
-      <div class="modo-toggle">
-        <button class="modo-btn active" id="modoClientes"  onclick="setModo('clientes')">👥 Clientes</button>
-        <button class="modo-btn"        id="modoInbox"     onclick="setModo('inbox')">💬 WhatsApp</button>
-        <button class="modo-btn"        id="modoPipeline"  onclick="setModo('pipeline')">🏷️ Pipeline</button>
-        <button class="modo-btn"        id="modoPainel"    onclick="setModo('painel')">📊 Painel</button>
-      </div>
-      <div class="list-header-title" id="listTitle" style="margin-left:.5rem"></div>
-      <button class="btn btn-ghost" id="btnImportarInbox" onclick="importarTodosDoInbox()" style="display:none;font-size:.73rem;padding:.35rem .75rem">📥 Importar novos</button>
+    <!-- Quick filter pills -->
+    <div class="quick-filters" id="quickFilters">
+      <button class="qf-pill active" data-filter="todos" onclick="setFilter('todos')">Todos</button>
+      <button class="qf-pill" data-filter="VIP" onclick="setFilter('VIP')">⭐ VIP</button>
+      <button class="qf-pill" data-filter="Atacado" onclick="setFilter('Atacado')">📦 Atacado</button>
+      <button class="qf-pill" data-filter="Varejo" onclick="setFilter('Varejo')">🛒 Varejo</button>
+      <button class="qf-pill" data-filter="Inadimplente" onclick="setFilter('Inadimplente')">⚠️ Inadimplente</button>
+      <button class="qf-pill" data-filter="semContato3d" onclick="setFilter('semContato3d')" style="color:#B91C1C;border-color:#FECACA">🔴 Sem contato</button>
+      <button class="qf-pill" data-filter="followup" onclick="setFilter('followup')" style="color:#1E40AF;border-color:#BFDBFE">📅 Follow-up</button>
+      <button class="qf-pill" data-filter="novos" onclick="setFilter('novos')">🆕 Novos</button>
     </div>
 
     <!-- List body -->
@@ -474,71 +580,97 @@ select.filter-sel:focus{border-color:var(--orange)}
 
   <!-- DETAIL PANEL -->
   <aside class="detail-panel" id="detailPanel">
-    <div class="detail-top" style="position:relative">
+    <!-- Cabeçalho horizontal -->
+    <div class="detail-head">
       <button class="detail-close" onclick="fecharDetalhe()">✕</button>
-      <div class="detail-avatar" id="detAvatar">?<img id="detAvatarImg" alt=""></div>
-      <div class="detail-nome" id="detNome">—</div>
-      <div class="detail-sub" id="detSub">—</div>
-      <div class="detail-contact-row" id="detContacts"></div>
-      <button class="detail-wpp-btn" id="detWppBtn" onclick="abrirWpp()" style="display:none">
-        💬 Abrir conversa no WhatsApp
-      </button>
+      <div class="detail-head-top">
+        <div class="detail-avatar" id="detAvatar">?<img id="detAvatarImg" alt=""></div>
+        <div class="detail-head-info">
+          <div class="detail-nome" id="detNome">—</div>
+          <div class="detail-sub" id="detSub">—</div>
+          <div><span class="detail-pipeline-badge" id="detPipelineBadge" style="display:none"></span></div>
+        </div>
+      </div>
+      <!-- Ações rápidas -->
+      <div class="detail-actions">
+        <button class="detail-action-btn wpp" id="detWppAction" onclick="abrirWpp()" style="display:none">💬 WhatsApp</button>
+        <button class="detail-action-btn" onclick="editarClienteAtual()">✏️ Editar</button>
+        <button class="detail-action-btn" onclick="focarFollowUp()">📅 Follow-up</button>
+        <button class="detail-action-btn del" style="flex:0.5" onclick="deletarClienteAtual()">🗑</button>
+      </div>
+      <!-- elementos mantidos para compat (ocultos) -->
+      <div class="detail-contact-row" id="detContacts" style="display:none"></div>
+      <button class="detail-wpp-btn" id="detWppBtn" onclick="abrirWpp()" style="display:none">💬 Abrir conversa no WhatsApp</button>
     </div>
 
-    <!-- TABS -->
+    <!-- TABS com ícone + texto -->
     <div class="detail-tabs">
-      <div class="detail-tab active" onclick="showTab('info')">Info</div>
-      <div class="detail-tab" onclick="showTab('notas')">📝 Notas</div>
-      <div class="detail-tab" onclick="showTab('vendas')">💰 Vendas</div>
-      <div class="detail-tab" onclick="showTab('chat')">💬 Chat</div>
-      <div class="detail-tab" onclick="showTab('garantias')">🛡️</div>
+      <div class="detail-tab active" onclick="showTab('info')"><span class="tab-icon">ℹ️</span>Info</div>
+      <div class="detail-tab" onclick="showTab('notas')"><span class="tab-icon">📝</span>Notas</div>
+      <div class="detail-tab" onclick="showTab('vendas')"><span class="tab-icon">💰</span>Vendas</div>
+      <div class="detail-tab" onclick="showTab('chat')"><span class="tab-icon">💬</span>Chat</div>
+      <div class="detail-tab" onclick="showTab('garantias')"><span class="tab-icon">🛡️</span>Garantia</div>
     </div>
 
     <div class="detail-content">
       <!-- INFO -->
       <div class="tab-pane active" id="tab-info">
-        <div class="info-field" id="grpIDoc">
-          <div class="info-label" id="iDocLabel">CPF / CNPJ</div>
-          <div class="info-value" id="iDoc">—</div>
-        </div>
-        <div class="info-field" id="grpINomeFantasia" style="display:none">
-          <div class="info-label">Nome fantasia</div>
-          <div class="info-value" id="iNomeFantasia">—</div>
-        </div>
-        <div class="info-field">
-          <div class="info-label">Cidade / Estado</div>
-          <div class="info-value" id="iCidade">—</div>
-        </div>
-        <div class="info-field">
-          <div class="info-label">Valor médio</div>
-          <div class="info-value" id="iValor">—</div>
-        </div>
-        <div class="info-field">
-          <div class="info-label">💰 Total gasto (vendas)</div>
-          <div class="info-value" id="iTotalVendas">—</div>
-        </div>
-        <div class="info-field">
-          <div class="info-label">📅 Follow-up agendado</div>
-          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            <div class="info-value" id="iFollowUp">—</div>
-            <input type="date" id="iFollowUpDate" style="padding:.25rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.75rem;outline:none;transition:border .15s" onchange="setFollowUp(this.value)" title="Agendar follow-up">
+        <!-- Seção: Contato -->
+        <div class="info-section">
+          <div class="info-section-title">Contato</div>
+          <div class="info-grid">
+            <div class="info-field">
+              <div class="info-label">WhatsApp</div>
+              <div class="info-value" id="iWpp">—</div>
+            </div>
+            <div class="info-field">
+              <div class="info-label">E-mail</div>
+              <div class="info-value" id="iEmail">—</div>
+            </div>
+            <div class="info-field" id="grpIDoc">
+              <div class="info-label" id="iDocLabel">CPF / CNPJ</div>
+              <div class="info-value" id="iDoc">—</div>
+            </div>
+            <div class="info-field">
+              <div class="info-label">Cidade / UF</div>
+              <div class="info-value" id="iCidade">—</div>
+            </div>
+            <div class="info-field" id="grpINomeFantasia" style="display:none">
+              <div class="info-label">Nome fantasia</div>
+              <div class="info-value" id="iNomeFantasia">—</div>
+            </div>
+            <div class="info-field">
+              <div class="info-label">Segmento</div>
+              <div class="info-value" id="iSegmento">—</div>
+            </div>
           </div>
         </div>
-        <div class="info-field">
-          <div class="info-label">Segmento</div>
-          <div class="info-value" id="iSegmento">—</div>
+        <!-- Seção: Financeiro -->
+        <div class="info-section">
+          <div class="info-section-title">Financeiro</div>
+          <div class="info-grid">
+            <div class="info-field">
+              <div class="info-label">Valor médio</div>
+              <div class="info-value" id="iValor">—</div>
+            </div>
+            <div class="info-field">
+              <div class="info-label">Total gasto</div>
+              <div class="info-value" id="iTotalVendas" style="color:var(--green);font-weight:700">—</div>
+            </div>
+            <div class="info-field">
+              <div class="info-label">Follow-up</div>
+              <div class="info-value" id="iFollowUp">—</div>
+            </div>
+            <div class="info-field">
+              <div class="info-label">Agendar follow-up</div>
+              <input type="date" id="iFollowUpDate" style="padding:.25rem .55rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;font-size:.75rem;outline:none;transition:border .15s;width:100%" onchange="setFollowUp(this.value)" title="Agendar follow-up">
+            </div>
+          </div>
         </div>
-        <div class="info-field">
-          <div class="info-label">E-mail</div>
-          <div class="info-value" id="iEmail">—</div>
-        </div>
-        <div class="info-field">
-          <div class="info-label">Tags</div>
-          <div class="info-tags" id="iTags"></div>
-        </div>
-        <div class="info-field">
-          <div class="info-label">Pipeline</div>
-          <select id="iPipeline" onchange="alterarPipeline(this.value)" style="font-size:.82rem;padding:.35rem .6rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;outline:none;background:var(--white);color:var(--text);cursor:pointer">
+        <!-- Seção: Pipeline + Tags -->
+        <div class="info-section">
+          <div class="info-section-title">Pipeline</div>
+          <select id="iPipeline" onchange="alterarPipeline(this.value)" style="font-size:.82rem;padding:.35rem .6rem;border:1.5px solid var(--border);border-radius:7px;font-family:'Inter',sans-serif;outline:none;background:var(--white);color:var(--text);cursor:pointer;width:100%;margin-bottom:.75rem">
             <option value="lead">👀 Lead</option>
             <option value="contato">📞 Contato</option>
             <option value="proposta">📄 Proposta</option>
@@ -546,9 +678,10 @@ select.filter-sel:focus{border-color:var(--orange)}
             <option value="recorrente">🔄 Recorrente</option>
           </select>
         </div>
-        <div style="display:flex;gap:.5rem;margin-top:1rem">
-          <button class="btn btn-ghost" style="flex:1" onclick="editarClienteAtual()">✏️ Editar</button>
-          <button class="btn" style="flex:1;background:#FEF2F2;color:#B91C1C;border:1.5px solid #FECACA" onclick="deletarClienteAtual()">🗑 Excluir</button>
+        <!-- Seção: Tags -->
+        <div class="info-section">
+          <div class="info-section-title">Tags</div>
+          <div class="info-tags" id="iTags"></div>
         </div>
       </div>
 
@@ -828,9 +961,18 @@ function atualizarContadores() {
   document.getElementById('cnt-garantias').textContent = comGarantia.length;
   document.getElementById('cnt-esquecidos').textContent = esquecidos.length;
   document.getElementById('cnt-naoLidas').textContent   = naoLidas.length;
-  document.getElementById('cnt-semContato3d').textContent = CLIENTES.filter(isSemContato3).length;
+  const semContato3Cnt = CLIENTES.filter(isSemContato3).length;
+  document.getElementById('cnt-semContato3d').textContent = semContato3Cnt;
   const hoje2 = new Date().toISOString().slice(0,10);
-  document.getElementById('cnt-followup').textContent = CLIENTES.filter(c => c.followUp && c.followUp <= hoje2).length;
+  const followupCnt = CLIENTES.filter(c => c.followUp && c.followUp <= hoje2).length;
+  document.getElementById('cnt-followup').textContent = followupCnt;
+  // Badge de urgência total
+  const urgBadge = document.getElementById('cntUrgencia');
+  if(urgBadge) {
+    const total = semContato3Cnt + esquecidos.length + followupCnt + naoLidas.length;
+    urgBadge.textContent = total;
+    urgBadge.style.display = total > 0 ? '' : 'none';
+  }
 
   // ── Por Estado ──
   const estadosMap = {};
@@ -854,10 +996,16 @@ function atualizarContadores() {
 
 window.setFilter = function(f) {
   filtroAtivo = f;
+  // sidebar items
   document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
   const elId = 'filter-' + f.replace(':', '__');
   const el = document.getElementById(elId);
   if(el) el.classList.add('active');
+  // quick-filter pills
+  document.querySelectorAll('.qf-pill').forEach(p => {
+    const pf = p.dataset.filter||'';
+    p.classList.toggle('active', pf === f);
+  });
   filtrar();
 };
 
@@ -902,7 +1050,10 @@ window.filtrar = function() {
   const labelTitulo = filtroAtivo && filtroAtivo.startsWith('estado:')
     ? `Clientes do ${filtroAtivo.slice(7).toUpperCase()}`
     : (labels[filtroAtivo]||'Clientes');
-  document.getElementById('listTitle').textContent = labelTitulo + ` (${lista.length})`;
+  const titleEl = document.getElementById('listTitle');
+  if(titleEl) titleEl.textContent = labelTitulo;
+  const countEl = document.getElementById('listCount');
+  if(countEl) countEl.textContent = lista.length;
   renderLista(lista);
 };
 
@@ -959,15 +1110,32 @@ window.abrirDetalhe = function(id) {
   document.getElementById('detSub').textContent = [c.tipo||'PF', c.cidade, c.estado].filter(Boolean).join(' · ');
 
   const wpp = (c.telefone||'').replace(/\D/g,'');
+
+  // Pipeline badge
+  const pipLabels = { lead:'👀 Lead', contato:'📞 Contato', proposta:'📄 Proposta', ativo:'✅ Cliente Ativo', recorrente:'🔄 Recorrente' };
+  const pipColors = { lead:'background:#F3F4F6;color:#6B7280', contato:'background:#DBEAFE;color:#1E40AF', proposta:'background:#FEF3C7;color:#92400E', ativo:'background:#D1FAE5;color:#065F46', recorrente:'background:#EDE9FE;color:#5B21B6' };
+  const badge = document.getElementById('detPipelineBadge');
+  if(badge) {
+    const pKey = c.pipeline||'lead';
+    badge.textContent = pipLabels[pKey]||pKey;
+    badge.setAttribute('style', (pipColors[pKey]||'') + ';display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;margin-top:.35rem');
+  }
+
+  // Botão WhatsApp rápido
+  const wppAction = document.getElementById('detWppAction');
+  if(wppAction){ if(wpp){ wppAction.style.display=''; wppAction.dataset.wpp=wpp; } else { wppAction.style.display='none'; } }
+  // compat: wppBtn oculto usado por abrirWpp()
+  const wppBtn = document.getElementById('detWppBtn');
+  if(wppBtn){ if(wpp){ wppBtn.dataset.wpp = wpp; } }
+
   document.getElementById('detContacts').innerHTML = [
     c.telefone ? `<div class="detail-contact-item">📱 ${c.telefone}</div>` : '',
     c.email    ? `<div class="detail-contact-item">✉️ ${c.email}</div>` : '',
   ].join('');
 
-  const wppBtn = document.getElementById('detWppBtn');
-  if(wpp){ wppBtn.style.display='flex'; wppBtn.dataset.wpp = wpp; } else { wppBtn.style.display='none'; }
-
   // Info tab
+  const iWppEl = document.getElementById('iWpp');
+  if(iWppEl) iWppEl.textContent = c.telefone||'—';
   const isPJ = c.tipo === 'PJ';
   document.getElementById('iDocLabel').textContent = isPJ ? 'CNPJ' : 'CPF';
   document.getElementById('iDoc').textContent = c.cpf_cnpj||'—';
@@ -1038,7 +1206,9 @@ window.fecharDetalhe = function() {
 };
 
 window.abrirWpp = function() {
-  const wpp = document.getElementById('detWppBtn').dataset.wpp;
+  const wppBtn = document.getElementById('detWppBtn');
+  const wppAct = document.getElementById('detWppAction');
+  const wpp = (wppBtn&&wppBtn.dataset.wpp) || (wppAct&&wppAct.dataset.wpp);
   if(wpp) window.open(`https://wa.me/55${wpp}`,'_blank');
 };
 
@@ -1433,18 +1603,33 @@ window.enviarMsg = async function() {
 
 window.setModo = function(modo) {
   modoAtivo = modo;
+  // Atualiza botões da sidebar
   document.getElementById('modoClientes').classList.toggle('active', modo === 'clientes');
   document.getElementById('modoInbox').classList.toggle('active', modo === 'inbox');
   document.getElementById('modoPipeline').classList.toggle('active', modo === 'pipeline');
   document.getElementById('modoPainel')?.classList.toggle('active', modo === 'painel');
+  // Mostra/oculta quick-filters e header-stats apenas no modo clientes
+  const isClientes = modo === 'clientes';
+  const qf = document.getElementById('quickFilters');
+  const hs = document.getElementById('headerStats');
+  const lf = document.getElementById('listFilters');
+  if(qf) qf.style.display = isClientes ? '' : 'none';
+  if(hs) hs.style.display = isClientes ? '' : 'none';
+  if(lf) lf.style.display = isClientes ? '' : 'none';
   fecharDetalhe();
+  const titleEl = document.getElementById('listTitle');
+  const countEl = document.getElementById('listCount');
   if(modo === 'inbox') {
-    document.getElementById('listTitle').textContent = 'WhatsApp Inbox';
+    if(titleEl) titleEl.textContent = 'WhatsApp Inbox';
+    if(countEl) countEl.textContent = '';
     carregarInbox();
   } else if(modo === 'pipeline') {
-    document.getElementById('listTitle').textContent = 'Pipeline de Vendas';
+    if(titleEl) titleEl.textContent = 'Pipeline de Vendas';
+    if(countEl) countEl.textContent = '';
     renderPipeline();
   } else if(modo === 'painel') {
+    if(titleEl) titleEl.textContent = 'Painel CRM';
+    if(countEl) countEl.textContent = '';
     if(CHATS.length === 0) {
       carregarChatsParaPainel();
     } else {
@@ -1530,7 +1715,10 @@ function fmtPhone(phone) {
 function renderInbox(chats) {
   const body = document.getElementById('listBody');
   const novos = chats.filter(c => !matchClientePorPhone(c.phone)).length;
-  document.getElementById('listTitle').textContent = `WhatsApp Inbox (${chats.length})`;
+  const titleElInbox = document.getElementById('listTitle');
+  const countElInbox = document.getElementById('listCount');
+  if(titleElInbox) titleElInbox.textContent = 'WhatsApp Inbox';
+  if(countElInbox) countElInbox.textContent = chats.length;
   const importBtn = document.getElementById('btnImportarInbox');
   if(importBtn && novos > 0) { importBtn.textContent=`📥 Importar ${novos} novos`; importBtn.style.display='inline-flex'; }
   else if(importBtn) { importBtn.style.display='none'; }
@@ -1729,8 +1917,22 @@ window.abrirChatInbox = function(phone) {
   document.getElementById('detSub').textContent = cliente ? `Cliente CRM · ${fmtPhone(phone)}` : `Não cadastrado · ${fmtPhone(phone)}`;
   document.getElementById('detContacts').innerHTML = `<div class="detail-contact-item">📱 ${fmtPhone(phone)}</div>`;
   document.getElementById('detWppBtn').style.display = 'none';
+  // Pipeline badge
+  const badge2 = document.getElementById('detPipelineBadge');
+  if(badge2 && cliente) {
+    const pipLabels2 = { lead:'👀 Lead', contato:'📞 Contato', proposta:'📄 Proposta', ativo:'✅ Cliente Ativo', recorrente:'🔄 Recorrente' };
+    const pipColors2 = { lead:'background:#F3F4F6;color:#6B7280', contato:'background:#DBEAFE;color:#1E40AF', proposta:'background:#FEF3C7;color:#92400E', ativo:'background:#D1FAE5;color:#065F46', recorrente:'background:#EDE9FE;color:#5B21B6' };
+    const pKey2 = cliente.pipeline||'lead';
+    badge2.textContent = pipLabels2[pKey2]||pKey2;
+    badge2.setAttribute('style', (pipColors2[pKey2]||'') + ';display:inline-flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:700;padding:.18rem .55rem;border-radius:20px;margin-top:.35rem');
+  } else if(badge2) { badge2.style.display='none'; }
+  // Botão WhatsApp rápido
+  const wppAct2 = document.getElementById('detWppAction');
+  if(wppAct2){ wppAct2.style.display=''; wppAct2.dataset.wpp=phone; }
 
   // Preenche aba info com dados do CRM (se existir)
+  const iWppEl2 = document.getElementById('iWpp');
+  if(iWppEl2) iWppEl2.textContent = fmtPhone(phone);
   document.getElementById('iDoc').textContent     = cliente ? (cliente.cpf_cnpj||'—') : '—';
   document.getElementById('iCidade').textContent  = cliente ? ([cliente.cidade,cliente.estado].filter(Boolean).join(' / ')||'—') : '—';
   document.getElementById('iValor').textContent   = (cliente && cliente.valor_medio) ? `R$ ${Number(cliente.valor_medio).toLocaleString('pt-BR',{minimumFractionDigits:2})}` : '—';
@@ -1794,7 +1996,10 @@ function diasSemContato(c) {
 
 function renderPipeline() {
   const body = document.getElementById('listBody');
-  document.getElementById('listTitle').textContent = `Pipeline de Vendas (${CLIENTES.length} clientes)`;
+  const titleElPip = document.getElementById('listTitle');
+  const countElPip = document.getElementById('listCount');
+  if(titleElPip) titleElPip.textContent = 'Pipeline de Vendas';
+  if(countElPip) countElPip.textContent = CLIENTES.length + ' clientes';
   const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente' };
 
   body.style.padding = '0';
@@ -2345,6 +2550,30 @@ window.setModalTipo = function(tipo) {
   document.getElementById('labelDoc').textContent = isPJ ? 'CNPJ' : 'CPF';
   document.getElementById('fDoc').placeholder = isPJ ? '00.000.000/0001-00' : 'Opcional';
   document.getElementById('grpNomeFantasia').style.display = isPJ ? '' : 'none';
+};
+
+// ── Topbar dropdown ───────────────────────────────────────────────────────────
+window.toggleTbDropdown = function() {
+  const menu = document.getElementById('tbMoreDropdown');
+  if(!menu) return;
+  menu.classList.toggle('open');
+};
+// Fecha ao clicar fora
+document.addEventListener('click', function(e) {
+  const wrapper = document.getElementById('tbMoreMenu');
+  if(wrapper && !wrapper.contains(e.target)) {
+    const menu = document.getElementById('tbMoreDropdown');
+    if(menu) menu.classList.remove('open');
+  }
+});
+
+// ── Focar campo follow-up ─────────────────────────────────────────────────────
+window.focarFollowUp = function() {
+  showTab('info');
+  setTimeout(() => {
+    const el = document.getElementById('iFollowUpDate');
+    if(el) { el.focus(); el.showPicker && el.showPicker(); }
+  }, 100);
 };
 
 // ── Toast ─────────────────────────────────────────────────────────────────────

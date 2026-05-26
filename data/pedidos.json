@@ -1,7 +1,115 @@
 {
-  "atualizado_em": "2026-05-26T04:36:19",
-  "total": 18,
+  "atualizado_em": "2026-05-26T11:45:24",
+  "total": 26,
   "pedidos": [
+    {
+      "id": "372840203",
+      "numero": "16108",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 454.99,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372823647",
+      "numero": "16107",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "FRANCISCO TIAGO LOPES TABOSA 03481782390",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 151.34,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372820278",
+      "numero": "16105",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1331,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372816429",
+      "numero": "16104",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 183.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372800508",
+      "numero": "16103",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "THALIS GOMES DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 500.54,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372790309",
+      "numero": "16102",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372778881",
+      "numero": "16101",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 212.98,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370705737",
+      "numero": "15947",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 898.74,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372820488",
+      "numero": "16106",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 255,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372677284",
       "numero": "16100",
@@ -203,18 +311,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 691.55,
       "itens": 3,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "370705737",
-      "numero": "15947",
-      "data": "2026-05-25",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 554.04,
-      "itens": 7,
       "status_gc": "",
       "cidade": ""
     }

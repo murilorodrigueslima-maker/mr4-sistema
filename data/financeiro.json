@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-25T23:13:50",
+  "atualizado_em": "2026-05-26T04:36:21",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -147,33 +147,37 @@
       "vencimento": "2026-05-23",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.41,
       "vencimento": "2026-05-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-05-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-05-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-05-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
@@ -251,11 +255,29 @@
       "valor": 2439,
       "vencimento": "2026-05-30",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 729.83,
+      "vencimento": "2026-06-02",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 313.66,
+      "vencimento": "2026-06-02",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
+      "valor": 279.55,
+      "vencimento": "2026-06-02",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 36952.67,
+  "total_vencido": 40181.240000000005,
   "total_a_receber": 0,
   "total_a_pagar": 31914.160000000007
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-26T11:45:26",
+  "atualizado_em": "2026-05-26T15:17:24",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -175,6 +175,13 @@
       "vencimento": "2026-05-25",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 553.04,
+      "vencimento": "2026-05-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -277,7 +284,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 40181.240000000005,
+  "total_vencido": 40734.280000000006,
   "total_a_receber": 0,
   "total_a_pagar": 31914.160000000007
 }

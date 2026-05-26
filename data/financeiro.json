@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-26T15:17:24",
+  "atualizado_em": "2026-05-26T18:28:39",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -80,7 +80,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 10274.74,
+      "valor": 6575.01,
       "vencimento": "2026-05-04",
       "dias_atraso": 22,
       "tipo": "Pagar"
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5368.12,
+      "valor": 5260.62,
       "vencimento": "2026-05-05",
       "dias_atraso": 21,
       "tipo": "Pagar"
@@ -177,8 +177,43 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 553.04,
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 2272.31,
+      "vencimento": "2026-05-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 30.91,
+      "vencimento": "2026-05-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LICENÇA CANVAS",
+      "valor": 24.16,
+      "vencimento": "2026-05-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 103.18,
+      "vencimento": "2026-05-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER",
+      "valor": 368.07,
+      "vencimento": "2026-05-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CHAT GPT",
+      "valor": 95.99,
       "vencimento": "2026-05-25",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -284,7 +319,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 40734.280000000006,
+  "total_vencido": 39268.630000000005,
   "total_a_receber": 0,
-  "total_a_pagar": 31914.160000000007
+  "total_a_pagar": 34808.78000000001
 }

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-26T15:17:22",
-  "total": 35,
+  "atualizado_em": "2026-05-26T18:28:38",
+  "total": 39,
   "pedidos": [
+    {
+      "id": "372954852",
+      "numero": "16121",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "MAGÃO FUME E ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 68,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372949374",
+      "numero": "16120",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 145.64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372947871",
+      "numero": "16119",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372947642",
+      "numero": "16118",
+      "data": "2026-05-26",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1591.08,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372910493",
       "numero": "16117",

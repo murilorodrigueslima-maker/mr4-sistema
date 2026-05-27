@@ -2510,6 +2510,10 @@ window.editarCliente = function(id) {
     b.classList.toggle('on',(c.tags||[]).includes(b.dataset.tag));
   });
   renderCustomTagsModal();
+  // Restaura o estado .on das tags customizadas (bug: eram sempre enviadas como [] ao editar)
+  document.querySelectorAll('#customTagsGrid .tag-toggle').forEach(b=>{
+    b.classList.toggle('on',(c.tags||[]).includes(b.dataset.tag));
+  });
   document.getElementById('modalOverlay').classList.add('open');
 };
 
@@ -2607,6 +2611,7 @@ window.salvarCliente = async function() {
     followUp: document.getElementById('fFollowUp').value || null,
     tags, atualizado_em:serverTimestamp(),
   };
+  // ── SALVAR no Firestore (try separado para não mascarar erro real) ──
   try {
     if(id){
       // Ao editar: preserva campos existentes que não estão no formulário
@@ -2626,17 +2631,27 @@ window.salvarCliente = async function() {
       const notas = obs?[{texto:obs,data:new Date().toISOString()}]:[];
       await addDoc(collection(db,'clientes'),{...dados,notas,pipeline:'lead',origem:'manual',criado_em:serverTimestamp()});
     }
-    fecharModal();
+  } catch(err) {
+    console.error('Erro ao salvar cliente:', err);
+    mostrarToast('Erro ao salvar. Verifique sua conexão e tente novamente.', 'erro');
+    return; // ← para aqui; não fecha modal, não perde os dados digitados
+  }
+
+  // ── SUCESSO: fecha modal e notifica ──
+  fecharModal();
+  mostrarToast(id ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!');
+
+  // ── REFRESH da lista (try separado — erro aqui não apaga os dados salvos) ──
+  try {
     await carregar();
     if(modoAtivo === 'inbox') {
       renderInbox(CHATS);
     } else if(clienteAtualId) {
       abrirDetalhe(clienteAtualId);
     }
-    mostrarToast(id ? 'Cliente atualizado com sucesso!' : 'Cliente cadastrado com sucesso!');
-  } catch(err) {
-    console.error('Erro ao salvar cliente:', err);
-    mostrarToast('Erro ao salvar. Verifique sua conexão e tente novamente.', 'erro');
+  } catch(e) {
+    console.warn('Aviso: dados salvos, mas erro ao recarregar lista:', e);
+    // Não mostra toast de erro aqui — os dados foram salvos com sucesso
   }
 };
 

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-27T08:30:54",
+  "atualizado_em": "2026-05-27T11:55:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5260.62,
+      "valor": 5093.1,
       "vencimento": "2026-05-05",
       "dias_atraso": 22,
       "tipo": "Pagar"
@@ -125,20 +125,6 @@
       "valor": 3669.52,
       "vencimento": "2026-05-18",
       "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
-      "valor": 1868,
-      "vencimento": "2026-05-20",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1276.58,
-      "vencimento": "2026-05-23",
-      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
@@ -319,7 +305,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 39268.630000000005,
+  "total_vencido": 35956.530000000006,
   "total_a_receber": 0,
   "total_a_pagar": 34808.78000000001
 }

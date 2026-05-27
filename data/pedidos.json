@@ -1,7 +1,103 @@
 {
-  "atualizado_em": "2026-05-27T08:30:53",
-  "total": 39,
+  "atualizado_em": "2026-05-27T11:54:59",
+  "total": 45,
   "pedidos": [
+    {
+      "id": "373088527",
+      "numero": "16127",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1300,
+      "itens": 33,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373073371",
+      "numero": "16126",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 90.94,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373069642",
+      "numero": "16125",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 120.92,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373061337",
+      "numero": "16124",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 190,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373055362",
+      "numero": "16123",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "J B DA SILVA MENDES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 76,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373036188",
+      "numero": "16122",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "ARIADINIR ARRUDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 219.87,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "372947642",
+      "numero": "16118",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 880.98,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "370705737",
+      "numero": "15947",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1596.74,
+      "itens": 14,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "372954852",
       "numero": "16121",
@@ -35,18 +131,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 62.69,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "372947642",
-      "numero": "16118",
-      "data": "2026-05-26",
-      "hora": "",
-      "cliente": "ALISSON FIUZA DE OLIVEIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 1591.08,
-      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },
@@ -239,18 +323,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 212.98,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "370705737",
-      "numero": "15947",
-      "data": "2026-05-26",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 898.74,
-      "itens": 12,
       "status_gc": "",
       "cidade": ""
     },

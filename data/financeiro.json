@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-27T18:50:00",
+  "atualizado_em": "2026-05-27T20:10:15",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -307,5 +307,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 35956.530000000006,
   "total_a_receber": 0,
-  "total_a_pagar": 34808.78000000001
+  "total_a_pagar": 35080.890000000014
 }

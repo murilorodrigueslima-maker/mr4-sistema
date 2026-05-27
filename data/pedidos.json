@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-27T11:54:59",
-  "total": 45,
+  "atualizado_em": "2026-05-27T15:20:07",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "373156226",
+      "numero": "16133",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "STOPFILM COMERCIO DE PECAS E INSTALACOES LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 184,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373135502",
+      "numero": "16132",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 179.3,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373135062",
+      "numero": "16131",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "EMANUEL ARAUJO DE MORAES 62483939317",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 86,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373133755",
+      "numero": "16130",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 360,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373131173",
+      "numero": "16129",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "Edilberto",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1942.5,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373126822",
+      "numero": "16128",
+      "data": "2026-05-27",
+      "hora": "",
+      "cliente": "SETE ACESSORIOS VEICULAR DISTRIBUIDORA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 92,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "373088527",
       "numero": "16127",
@@ -322,6 +394,18 @@
       "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 212.98,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373160716",
+      "numero": "16134",
+      "data": "2026-05-25",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 70.13,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

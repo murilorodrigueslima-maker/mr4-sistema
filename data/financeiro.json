@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-28T08:29:20",
+  "atualizado_em": "2026-05-28T12:28:33",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -135,13 +135,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "MERCADO LIVRE",
-      "valor": 51.41,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-05-25",
@@ -164,42 +157,7 @@
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 2272.31,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "UBER FLASH",
-      "valor": 30.91,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LICENÇA CANVAS",
-      "valor": 24.16,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "UBER FLASH",
-      "valor": 103.18,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO INTER",
-      "valor": 368.07,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CHAT GPT",
-      "valor": 95.99,
+      "valor": 1107.05,
       "vencimento": "2026-05-25",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -322,7 +280,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 44604.97,
+  "total_vencido": 42765.99,
   "total_a_receber": 0,
-  "total_a_pagar": 35080.890000000014
+  "total_a_pagar": 33293.32000000001
 }

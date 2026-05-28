@@ -216,6 +216,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
               <optgroup label="Feriados"><option value="Feriado nacional">Feriado nacional</option><option value="Feriado estadual">Feriado estadual (Ceará)</option><option value="Feriado municipal">Feriado municipal (Fortaleza)</option></optgroup>
               <optgroup label="Folgas"><option value="Folga compensatória">Folga compensatória</option><option value="Folga remunerada">Folga remunerada</option><option value="Folga não remunerada">Folga não remunerada</option></optgroup>
               <optgroup label="Ausências"><option value="Atestado médico">Atestado médico</option><option value="Falta justificada">Falta justificada</option><option value="Falta injustificada">Falta injustificada</option><option value="Licença maternidade/paternidade">Licença maternidade/paternidade</option></optgroup>
+              <optgroup label="Trabalho remoto"><option value="Home Office">🏠 Home Office</option></optgroup>
               <optgroup label="Outros"><option value="Saída antecipada autorizada">Saída antecipada autorizada</option><option value="Atraso autorizado">Atraso autorizado</option><option value="Outro">Outro</option></optgroup>
             </select>
           </div>
@@ -535,7 +536,7 @@ async function aplicarFeriados2026(){
   const alvo=funcSel==='todos'?funcs:funcs.filter(f=>f.id===funcSel);
   const status=document.getElementById('feriados-status');status.textContent='Aplicando...';
   let count=0;
-  for(const func of alvo){for(const fer of FERIADOS_2026){const id=uid();await fbSet('justificativas',id,{id,funcId:func.id,funcNome:func.nome,data:fer.data,motivo:fer.tipo,descricao:fer.nome,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(func.id,func.nome,fer.data,jornMin,fer.tipo);count++;}}
+  for(const func of alvo){for(const fer of FERIADOS_2026){const id=uid();await fbSet('justificativas',id,{id,funcId:func.id,funcNome:func.nome,data:fer.data,motivo:fer.tipo,descricao:fer.nome,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(func.id,func.nome,fer.data,jornadaParaData(fer.data,jornMin),fer.tipo);count++;}}
   status.textContent=`${count} feriados aplicados para ${alvo.length} funcionário(s)!`;status.style.color='var(--verde)';renderJustificativas();
 }
 window.aplicarFeriados2026=aplicarFeriados2026;
@@ -546,7 +547,7 @@ async function lancarOcorrenciaGestor(){
   if(!funcId||!data||!tipo){notif('Preencha funcionário, data e tipo','vermelho');return;}
   const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===funcId);
   const id=uid();await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data,motivo:tipo,descricao:obs||tipo,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
-  const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(funcId,func.nome,data,jornMin,tipo);
+  const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(funcId,func.nome,data,jornadaParaData(data,jornMin),tipo);
   document.getElementById('gest-data').value='';document.getElementById('gest-tipo').value='';document.getElementById('gest-obs').value='';
   info.textContent=`✓ ${tipo} lançado para ${func.nome} em ${fmtData(data)}`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',4000);
   notif('Ocorrência lançada!');renderJustificativas();atualizarBadgeJustif();
@@ -602,19 +603,24 @@ async function responderJustificativa(status){
     const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
     const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
     if(j.tipoPonto&&j.horarioPonto){
-      // Remove o registro errado original antes de criar o correto
       const todosRegs=await fbGet('registros');
       const regOrig=todosRegs.find(r=>r.funcId===j.funcId&&r.data===j.data&&r.tipo===j.tipoPonto&&!r.lancadoPorJustificativa);
       if(regOrig)await fbDel('registros',regOrig.id);
       const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
       const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida corrigida e lançada automaticamente!','verde');
-    }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornMin,j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
+    }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornadaParaData(j.data,jornMin),j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
   }
   fecharModal('modal-justif-gestor');
   if(status!=='aprovado')notif('Justificativa rejeitada.','vermelho');
   renderJustificativas();
 }
 window.responderJustificativa=responderJustificativa;
+
+// Retorna os minutos de jornada corretos para a data (sábado = 3h30, demais = jornMin)
+function jornadaParaData(data,jornMin){
+  const d=new Date(data+'T12:00:00');
+  return d.getDay()===6?210:jornMin; // 210 min = 3h30 (08:30–12:00)
+}
 
 async function creditarJornada(funcId,funcNome,data,jornMin,motivo){
   const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
@@ -650,7 +656,7 @@ async function gerarEspelho(){
     const get=tipo=>{const j=regsD.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     let total=calcTotal(e,sa,ra,s);
-    const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin; // sábado=3h30, dias úteis=jornada normal
+    const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
     if(total===null&&creditoD)total=creditoD.minutos||jornadaDia;
     if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
     const saldoDia=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;

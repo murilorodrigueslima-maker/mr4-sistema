@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-28T23:12:06",
+  "atualizado_em": "2026-05-29T04:45:55",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -196,33 +196,37 @@
       "vencimento": "2026-05-27",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-05-28",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
       "vencimento": "2026-05-28",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.68,
       "vencimento": "2026-05-28",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 153.03,
       "vencimento": "2026-05-28",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 345.69,
@@ -276,11 +280,35 @@
       "valor": 156.2,
       "vencimento": "2026-06-04",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 1219.37,
+      "vencimento": "2026-06-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ALUGUEL GALPÃO REF MAIO",
+      "valor": 3955.16,
+      "vencimento": "2026-06-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "Salário Murilo",
+      "valor": 15000,
+      "vencimento": "2026-06-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 251.73,
+      "vencimento": "2026-06-05",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 42765.99,
+  "total_vencido": 49093.13999999999,
   "total_a_receber": 0,
   "total_a_pagar": 33293.32000000001
 }

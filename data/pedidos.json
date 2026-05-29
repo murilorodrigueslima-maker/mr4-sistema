@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-05-29T15:26:51",
-  "total": 58,
+  "atualizado_em": "2026-05-29T18:45:07",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "373761824",
+      "numero": "16182",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 727.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373742744",
+      "numero": "16181",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "J. A. DE CARVALHO PECAS E ACESSORIOS AUTOMOTORES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 750,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373735785",
+      "numero": "16180",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "49.321.145 JEFFERSON BRUNO MESQUITA MOTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 466,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373726458",
+      "numero": "16179",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "ARIADINIR ARRUDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 76,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "373714421",
       "numero": "16178",
@@ -57,8 +105,8 @@
       "hora": "",
       "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 4278.68,
-      "itens": 7,
+      "valor": 2760,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },
@@ -171,13 +219,25 @@
       "cidade": ""
     },
     {
+      "id": "370705737",
+      "numero": "15947",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1676.74,
+      "itens": 15,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "373491279",
       "numero": "16165",
       "data": "2026-05-28",
       "hora": "",
       "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1114,
+      "valor": 795,
       "itens": 5,
       "status_gc": "",
       "cidade": ""
@@ -683,18 +743,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 880.98,
       "itens": 6,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "370705737",
-      "numero": "15947",
-      "data": "2026-05-27",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 1676.74,
-      "itens": 15,
       "status_gc": "",
       "cidade": ""
     }

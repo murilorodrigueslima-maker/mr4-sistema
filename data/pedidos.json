@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-29T11:40:13",
-  "total": 52,
+  "atualizado_em": "2026-05-29T15:26:51",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "373714421",
+      "numero": "16178",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "52.544.425 SANDRO MARCELO BARBOSA DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 60,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373710080",
+      "numero": "16177",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 253.06,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373695374",
+      "numero": "16176",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 530.54,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373679641",
+      "numero": "16175",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 66.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373666934",
+      "numero": "16174",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 4278.68,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373656262",
+      "numero": "16173",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1000,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373655309",
+      "numero": "16172",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "JONATA ACESSORIOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1025,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "373630457",
       "numero": "16171",
@@ -171,18 +255,6 @@
       "cidade": ""
     },
     {
-      "id": "373390489",
-      "numero": "16157",
-      "data": "2026-05-28",
-      "hora": "",
-      "cliente": "FRANCISCA ANDRESSA ARAUJO GOMES",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 285,
-      "itens": 5,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
       "id": "373388087",
       "numero": "16156",
       "data": "2026-05-28",
@@ -200,8 +272,8 @@
       "data": "2026-05-28",
       "hora": "",
       "cliente": "Luiz Cândido da Silvia",
-      "vendedor": "Swyanne Kethlyn",
-      "valor": 150.8,
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-05-29T08:19:43",
-  "total": 46,
+  "atualizado_em": "2026-05-29T11:40:13",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "373630457",
+      "numero": "16171",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 187.6,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373626766",
+      "numero": "16170",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 305,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373620334",
+      "numero": "16169",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "53.215.493 THIAGO SALVADOR LOPES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 238.7,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373595695",
+      "numero": "16168",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 217.9,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373586869",
+      "numero": "16167",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 64.74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373579931",
+      "numero": "16166",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 240,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373450844",
+      "numero": "16159",
+      "data": "2026-05-29",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 579.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "373491279",
       "numero": "16165",
@@ -71,18 +155,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 91.85,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "373450844",
-      "numero": "16159",
-      "data": "2026-05-28",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 579.9,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

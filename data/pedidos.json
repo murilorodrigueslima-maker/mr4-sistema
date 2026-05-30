@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-05-30T11:59:03",
-  "total": 56,
+  "atualizado_em": "2026-05-30T13:52:03",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "373962884",
+      "numero": "16204",
+      "data": "2026-05-30",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 27,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373953812",
+      "numero": "16203",
+      "data": "2026-05-30",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373953492",
+      "numero": "16202",
+      "data": "2026-05-30",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 3997.01,
+      "itens": 16,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373943876",
+      "numero": "16201",
+      "data": "2026-05-30",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 246.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373942298",
+      "numero": "16200",
+      "data": "2026-05-30",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 242.24,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "373938448",
+      "numero": "16199",
+      "data": "2026-05-30",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 400,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "373927811",
       "numero": "16198",
@@ -117,8 +189,8 @@
       "hora": "",
       "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 140,
-      "itens": 3,
+      "valor": 216,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

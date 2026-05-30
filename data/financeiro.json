@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-30T10:03:55",
+  "atualizado_em": "2026-05-30T11:59:04",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -72,13 +72,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CONTABILIDADE REF ABRIL",
-      "valor": 1112,
-      "vencimento": "2026-05-05",
-      "dias_atraso": 25,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
       "valor": 5093.1,
       "vencimento": "2026-05-05",
@@ -114,27 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 836.53,
-      "vencimento": "2026-05-23",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-05-25",
@@ -158,13 +130,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 2225,
-      "vencimento": "2026-05-27",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 1105.6,
       "vencimento": "2026-05-27",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -220,12 +185,6 @@
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "EMPRESTIMO ESTER",
-      "valor": 2019.94,
-      "vencimento": "2026-05-30",
-      "tipo": "Pagar"
-    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
@@ -301,7 +260,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 48220.579999999994,
+  "total_vencido": 42092.450000000004,
   "total_a_receber": 0,
-  "total_a_pagar": 32775.85000000001
+  "total_a_pagar": 29643.910000000007
 }

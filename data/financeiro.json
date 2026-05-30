@@ -1,20 +1,6 @@
 {
-  "atualizado_em": "2026-05-29T23:08:12",
+  "atualizado_em": "2026-05-30T03:40:20",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO PRONAMP",
-      "valor": 700.78,
-      "vencimento": "2026-03-30",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PARCELAMENTO IMPOSTOS",
-      "valor": 517.47,
-      "vencimento": "2026-03-30",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 329.55,
@@ -224,15 +210,16 @@
       "vencimento": "2026-05-28",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 345.69,
       "vencimento": "2026-05-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO ESTER",
       "valor": 2019.94,
@@ -304,11 +291,17 @@
       "valor": 251.73,
       "vencimento": "2026-06-05",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 208.63,
+      "vencimento": "2026-06-06",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49093.13999999999,
+  "total_vencido": 48220.579999999994,
   "total_a_receber": 0,
-  "total_a_pagar": 33293.32000000001
+  "total_a_pagar": 32775.85000000001
 }

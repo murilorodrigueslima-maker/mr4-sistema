@@ -230,7 +230,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
       </div>
       <div class="secao-header">
         <div class="secao-titulo" style="margin:0">Histórico de ocorrências</div>
-        <select id="fil-justif" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+        <select id="fil-justif" onchange="renderJustificativas()" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
           <option value="pendente">Pendentes (funcionário)</option>
           <option value="todos">Todas</option>
           <option value="aprovado">Aprovadas</option>

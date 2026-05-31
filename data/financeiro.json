@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-30T23:34:01",
+  "atualizado_em": "2026-05-31T04:38:00",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -182,21 +182,23 @@
       "vencimento": "2026-05-29",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-05-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-05-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 729.83,
@@ -256,11 +258,17 @@
       "valor": 208.63,
       "vencimento": "2026-06-06",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 158,
+      "vencimento": "2026-06-07",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 42092.450000000004,
+  "total_vencido": 45048.920000000006,
   "total_a_receber": 0,
-  "total_a_pagar": 29643.910000000007
+  "total_a_pagar": 32181.320000000007
 }

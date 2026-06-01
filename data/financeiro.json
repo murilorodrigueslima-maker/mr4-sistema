@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-05-31T23:43:29",
+  "atualizado_em": "2026-06-01T06:12:26",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -263,6 +263,12 @@
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 158,
       "vencimento": "2026-06-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
+      "valor": 153.76,
+      "vencimento": "2026-06-08",
       "tipo": "Pagar"
     }
   ],

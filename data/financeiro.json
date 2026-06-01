@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-01T12:48:22",
+  "atualizado_em": "2026-06-01T17:10:44",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -136,13 +136,6 @@
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1165.64,
-      "vencimento": "2026-05-27",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-05-27",
       "dias_atraso": 5,
@@ -199,6 +192,12 @@
     }
   ],
   "contas_vencendo": [
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 14540.3,
+      "vencimento": "2026-06-01",
+      "tipo": "Pagar"
+    },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 729.83,
@@ -274,7 +273,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 43998.91999999999,
+  "total_vencido": 42833.27999999999,
   "total_a_receber": 0,
   "total_a_pagar": 32181.320000000007
 }

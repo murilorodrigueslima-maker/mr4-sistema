@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-01T06:12:26",
+  "atualizado_em": "2026-06-01T12:48:22",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5093.1,
+      "valor": 4043.1,
       "vencimento": "2026-05-05",
       "dias_atraso": 27,
       "tipo": "Pagar"
@@ -274,7 +274,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45048.920000000006,
+  "total_vencido": 43998.91999999999,
   "total_a_receber": 0,
   "total_a_pagar": 32181.320000000007
 }

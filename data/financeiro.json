@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-01T23:41:33",
+  "atualizado_em": "2026-06-02T05:20:43",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -189,15 +189,16 @@
       "vencimento": "2026-05-30",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 14540.3,
       "vencimento": "2026-06-01",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 729.83,
@@ -269,11 +270,23 @@
       "valor": 153.76,
       "vencimento": "2026-06-08",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-09",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-09",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 42833.27999999999,
+  "total_vencido": 57373.57999999999,
   "total_a_receber": 0,
   "total_a_pagar": 32181.320000000007
 }

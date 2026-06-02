@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-02T05:20:43",
+  "atualizado_em": "2026-06-02T10:52:13",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -118,13 +118,6 @@
       "valor": 1107.05,
       "vencimento": "2026-05-25",
       "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-05-27",
-      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
@@ -286,7 +279,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57373.57999999999,
+  "total_vencido": 55148.58,
   "total_a_receber": 0,
   "total_a_pagar": 32181.320000000007
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-02T10:52:13",
+  "atualizado_em": "2026-06-02T14:59:27",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -121,13 +121,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 2225,
-      "vencimento": "2026-05-27",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-05-27",
@@ -235,14 +228,14 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 15000,
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 251.73,
       "vencimento": "2026-06-05",
       "tipo": "Pagar"
     },
     {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 251.73,
+      "nome": "Salário Murilo",
+      "valor": 14340,
       "vencimento": "2026-06-05",
       "tipo": "Pagar"
     },
@@ -279,7 +272,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55148.58,
+  "total_vencido": 52923.58,
   "total_a_receber": 0,
   "total_a_pagar": 32181.320000000007
 }

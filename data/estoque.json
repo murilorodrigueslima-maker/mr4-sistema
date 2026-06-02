@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-06-02T14:59:31",
-  "total_produtos": 893,
-  "valor_total_estoque": 384756.0600000007,
+  "atualizado_em": "2026-06-02T17:51:45",
+  "total_produtos": 892,
+  "valor_total_estoque": 393350.2600000007,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -342,18 +342,18 @@
       "custo": 147.89
     },
     {
+      "ref": "1015H4",
+      "nome": "LAMPADA HALOGENA H4 12V/60/55W",
+      "margem": "15.7",
+      "preco": 8.03,
+      "custo": 6.77
+    },
+    {
       "ref": "AF10000139",
       "nome": "QUADRIAXIAL 4“",
       "margem": "16.7",
       "preco": 90.34,
       "custo": 75.28
-    },
-    {
-      "ref": "AF10000118",
-      "nome": "AF QUADRIAXIAL AZUL 6X9“",
-      "margem": "16.7",
-      "preco": 128.35,
-      "custo": 106.96
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-02T23:49:54",
+  "atualizado_em": "2026-06-03T05:47:26",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -182,27 +182,30 @@
       "vencimento": "2026-06-01",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 729.83,
       "vencimento": "2026-06-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 313.66,
       "vencimento": "2026-06-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 279.55,
       "vencimento": "2026-06-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 265.09,
@@ -268,11 +271,17 @@
       "valor": 1537,
       "vencimento": "2026-06-09",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MAQUINETA DE CARTÃO",
+      "valor": 21.24,
+      "vencimento": "2026-06-10",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52923.58,
+  "total_vencido": 54246.62000000001,
   "total_a_receber": 0,
   "total_a_pagar": 32181.320000000007
 }

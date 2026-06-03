@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-06-03T16:41:49",
-  "total": 70,
+  "atualizado_em": "2026-06-03T19:23:46",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "374922778",
+      "numero": "16274",
+      "data": "2026-06-03",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 275,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "374917527",
       "numero": "16273",

@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-06-04T13:45:01",
-  "total": 58,
+  "atualizado_em": "2026-06-04T16:54:13",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "375055912",
+      "numero": "16285",
+      "data": "2026-06-04",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 509.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "375047853",
       "numero": "16284",

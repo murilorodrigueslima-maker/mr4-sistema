@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-03T23:45:03",
+  "atualizado_em": "2026-06-04T05:12:28",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -276,6 +276,42 @@
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-06-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 1105.6,
+      "vencimento": "2026-06-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1165.65,
+      "vencimento": "2026-06-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1927.2,
+      "vencimento": "2026-06-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1744.75,
+      "vencimento": "2026-06-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1744.93,
+      "vencimento": "2026-06-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2421,
+      "vencimento": "2026-06-11",
       "tipo": "Pagar"
     }
   ],

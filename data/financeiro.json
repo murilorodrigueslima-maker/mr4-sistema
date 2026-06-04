@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-04T09:38:12",
+  "atualizado_em": "2026-06-04T13:45:02",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -66,7 +66,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 6575.01,
+      "valor": 3108.3,
       "vencimento": "2026-05-04",
       "dias_atraso": 31,
       "tipo": "Pagar"
@@ -114,13 +114,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 1107.05,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-05-27",
@@ -130,27 +123,6 @@
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
-      "vencimento": "2026-05-28",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 2134.66,
-      "vencimento": "2026-05-28",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
-      "valor": 3338.68,
-      "vencimento": "2026-05-28",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 153.03,
       "vencimento": "2026-05-28",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -219,6 +191,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 2930.5,
+      "vencimento": "2026-06-04",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1219.37,
       "vencimento": "2026-06-05",
@@ -238,7 +216,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 14340,
+      "valor": 11563.5,
       "vencimento": "2026-06-05",
       "tipo": "Pagar"
     },
@@ -317,7 +295,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54246.62000000001,
+  "total_vencido": 44046.490000000005,
   "total_a_receber": 0,
-  "total_a_pagar": 32181.320000000007
+  "total_a_pagar": 31074.270000000008
 }

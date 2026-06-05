@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-06-05T14:47:29",
-  "total": 66,
+  "atualizado_em": "2026-06-05T16:41:59",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "375337456",
+      "numero": "16317",
+      "data": "2026-06-05",
+      "hora": "",
+      "cliente": "53.343.706 JUSSIE SOARES DE SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 292.2,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375332144",
+      "numero": "16316",
+      "data": "2026-06-05",
+      "hora": "",
+      "cliente": "JOSIAS DE SOUSA SANTOS 46235299320",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 304.94,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375312482",
+      "numero": "16315",
+      "data": "2026-06-05",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 240,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375310013",
+      "numero": "16314",
+      "data": "2026-06-05",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2320.63,
+      "itens": 17,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375292526",
+      "numero": "16313",
+      "data": "2026-06-05",
+      "hora": "",
+      "cliente": "NATANAEL LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 264.6,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "375290447",
       "numero": "16312",

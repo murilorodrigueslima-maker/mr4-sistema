@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-05T14:47:30",
+  "atualizado_em": "2026-06-05T16:42:00",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -206,12 +206,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ALUGUEL GALPÃO REF MAIO",
-      "valor": 3955.16,
-      "vencimento": "2026-06-05",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 251.73,
       "vencimento": "2026-06-05",
@@ -219,7 +213,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 11512.5,
+      "valor": 11393.72,
       "vencimento": "2026-06-05",
       "tipo": "Pagar"
     },
@@ -336,5 +330,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 45648.28,
   "total_a_receber": 0,
-  "total_a_pagar": 31074.270000000008
+  "total_a_pagar": 27119.11
 }

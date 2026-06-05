@@ -657,7 +657,7 @@ async function gerarEspelho(){
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     let total=calcTotal(e,sa,ra,s);
     const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
-    if(total===null&&creditoD)total=creditoD.minutos||jornadaDia;
+    if(total===null&&creditoD)total=Math.min(creditoD.minutos||jornadaDia,jornadaDia);
     if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
     const saldoDia=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;
     let totalLabel='—';

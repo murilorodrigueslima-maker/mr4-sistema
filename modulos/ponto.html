@@ -192,7 +192,11 @@ tr:hover td{background:rgba(255,107,26,.04);}
         <div class="secao-titulo" style="margin:0">Registros</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <select id="fil-func-reg" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;"><option value="">Todos</option></select>
-          <input type="month" id="fil-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="btn-ghost" onclick="mudarMes('fil-mes',-1)" style="padding:7px 10px;font-size:14px;">◀</button>
+            <input type="month" id="fil-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+            <button class="btn-ghost" onclick="mudarMes('fil-mes',1)" style="padding:7px 10px;font-size:14px;">▶</button>
+          </div>
           <button class="btn-ghost" onclick="renderRegistros()">Filtrar</button>
         </div>
       </div><br>
@@ -246,7 +250,11 @@ tr:hover td{background:rgba(255,107,26,.04);}
         <div class="secao-titulo" style="margin:0">Espelho de ponto mensal</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <select id="esp-func" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;"><option value="">Selecione funcionário</option></select>
-          <input type="month" id="esp-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="btn-ghost" onclick="mudarMes('esp-mes',-1)" style="padding:7px 10px;font-size:14px;">◀</button>
+            <input type="month" id="esp-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+            <button class="btn-ghost" onclick="mudarMes('esp-mes',1)" style="padding:7px 10px;font-size:14px;">▶</button>
+          </div>
           <button class="btn-novo" onclick="gerarEspelho()">Gerar espelho</button>
         </div>
       </div><br>
@@ -387,9 +395,29 @@ onAuthStateChanged(auth, user => {
 function db(){return window._db;}
 function col(n){return window._col(db(),n);}
 function docRef(n,id){return window._doc(db(),n,id);}
-async function fbGet(c){const s=await window._getDocs(col(c));return s.docs.map(d=>({id:d.id,...d.data()}));}
-async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});}
-async function fbDel(c,id){await window._deleteDoc(docRef(c,id));}
+
+// Cache local com TTL de 30s para reduzir leituras ao Firestore
+const _fbCache={};const _FB_TTL=30000;
+async function fbGet(c){
+  const now=Date.now();
+  if(_fbCache[c]&&(now-_fbCache[c].ts)<_FB_TTL)return _fbCache[c].data;
+  const s=await window._getDocs(col(c));
+  const data=s.docs.map(d=>({id:d.id,...d.data()}));
+  _fbCache[c]={data,ts:now};
+  return data;
+}
+async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});delete _fbCache[c];}
+async function fbDel(c,id){await window._deleteDoc(docRef(c,id));delete _fbCache[c];}
+
+// Navegar meses com ◀ ▶
+function mudarMes(inputId,delta){
+  const inp=document.getElementById(inputId);
+  if(!inp.value)inp.value=mesAtual();
+  const[y,m]=inp.value.split('-').map(Number);
+  const d=new Date(y,m-1+delta,1);
+  inp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+window.mudarMes=mudarMes;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function hoje(){return new Date().toISOString().slice(0,10);}
@@ -798,9 +826,14 @@ window.fecharModal=fecharModal;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 window.addEventListener('firebaseReady',()=>{
-  atualizarData();renderHoje();atualizarBadgeJustif();
+  atualizarData();
   document.getElementById('fil-mes').value=mesAtual();
   document.getElementById('esp-mes').value=mesAtual();
+  // Carrega funcionários logo no início para popular todos os selects
+  renderFuncionarios().then(()=>{
+    renderHoje();
+    atualizarBadgeJustif();
+  });
 });
 </script>
 </body>

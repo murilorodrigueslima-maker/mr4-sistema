@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-06-05T16:41:59",
-  "total": 71,
+  "atualizado_em": "2026-06-05T18:17:12",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "375360009",
+      "numero": "16318",
+      "data": "2026-06-05",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 117.58,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "375337456",
       "numero": "16317",

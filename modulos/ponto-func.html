@@ -622,9 +622,9 @@ async function abrirAssinar(espelhoId){
 window.abrirAssinar=abrirAssinar;
 
 async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
-  const funcs=await fbGet('funcionarios');
-  const func=funcs.find(f=>f.id===funcId);
-  if(!func)return'<div style="font-size:12px;color:var(--cinza-texto);">Funcionário não encontrado.</div>';
+  // Usa funcAtivo já carregado — evita buscar coleção funcionarios
+  const func=funcAtivo;
+  if(!func)return'<div style="font-size:12px;color:var(--cinza-texto);">Dados do funcionário não encontrados.</div>';
   const regs=await fbGet('registros');
   const justifs=await fbGet('justificativas');
   const creditos=await fbGet('creditos_jornada');

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-05T08:30:22",
+  "atualizado_em": "2026-06-05T11:25:51",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -66,7 +66,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 3108.3,
+      "valor": 1358.3,
       "vencimento": "2026-05-04",
       "dias_atraso": 32,
       "tipo": "Pagar"
@@ -219,7 +219,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 11563.5,
+      "valor": 11512.5,
       "vencimento": "2026-06-05",
       "tipo": "Pagar"
     },
@@ -334,7 +334,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47398.28,
+  "total_vencido": 45648.28,
   "total_a_receber": 0,
   "total_a_pagar": 31074.270000000008
 }

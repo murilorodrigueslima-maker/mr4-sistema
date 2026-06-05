@@ -685,13 +685,17 @@ async function gerarEspelho(){
     const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
     let total=calcTotal(e,sa,ra,s);
     const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
-    if(total===null&&creditoD)total=Math.min(creditoD.minutos||jornadaDia,jornadaDia);
+    // Crédito por justificativa aprovada (atestado, feriado, home office, etc.)
+    const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
+    const justifCredita=justifD&&justifD.status==='aprovado'&&!TIPOS_SEM_CREDITO.includes(justifD.motivo);
+    if(total===null&&(creditoD||justifCredita))total=jornadaDia;
     if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
     const saldoDia=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;
+    const temCreditoSemPonto=!!(creditoD||justifCredita)&&total!==null&&regsD.length===0;
     let totalLabel='—';
-    if(!ehDomingo){if(creditoD&&total!==null&&regsD.length===0)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
+    if(!ehDomingo){if(temCreditoSemPonto)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
     let ocorrencia=null;if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
-    linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:!!creditoD});
+    linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:temCreditoSemPonto});
   }
   const saldoTotal=totalTrabMin-totalEsperadoMin;
   const espelhos=await fbGet('espelhos');const espExist=espelhos.find(e=>e.funcId===funcId&&e.mes===mes);

@@ -242,13 +242,17 @@ canvas#canvasFoto{display:none;}
 </div>
 
 <!-- MODAL ASSINATURA ESPELHO -->
-<div class="modal-overlay" id="modal-assinar">
-  <div class="modal" style="max-width:500px;">
+<div class="modal-overlay" id="modal-assinar" style="align-items:flex-start;padding-top:1rem;overflow-y:auto;">
+  <div class="modal" style="max-width:780px;width:100%;">
     <div class="modal-titulo"><span>Assinar espelho de ponto</span><button class="modal-fechar" onclick="fecharModal('modal-assinar')">×</button></div>
     <div id="assinar-info" style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;"></div>
-    <div style="font-size:12px;color:var(--cinza-texto);margin-bottom:6px;">Assine no campo abaixo:</div>
+    <!-- Espelho gerado dinamicamente -->
+    <div id="espelho-para-assinar" style="margin-bottom:1.25rem;min-height:60px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>
+    </div>
+    <div style="font-size:12px;color:var(--cinza-texto);margin-bottom:6px;font-weight:600;">Assine no campo abaixo para confirmar:</div>
     <canvas id="canvas-assinatura" class="assinatura-area" width="440" height="150"></canvas>
-    <div style="display:flex;gap:8px;margin-top:8px;"><button onclick="limparAssinatura()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;cursor:pointer;">Limpar</button></div>
+    <div style="display:flex;gap:8px;margin-top:8px;"><button onclick="limparAssinatura()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;cursor:pointer;">Limpar assinatura</button></div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="fecharModal('modal-assinar')">Cancelar</button>
       <button class="btn-salvar" onclick="confirmarAssinatura()">Confirmar assinatura</button>
@@ -279,6 +283,7 @@ window.dispatchEvent(new Event('firebaseReady'));
 
 <script>
 const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200, JORNADA=8, FACE_THRESHOLD=0.6;
+const JORNADA_SABADO_MIN=210; // 08:30 às 12:00 = 3h30
 let funcAtivo=null, streamCam=null, locAtual=null;
 let notaAv=0, fotoNova=null, faceDetectionInterval=null, rostoVerificado=false;
 let fotoCapturadaBase64=null, modelsCarregados=false, facialScoreGlobal=null;
@@ -596,13 +601,101 @@ async function renderEspelhosFunc(){
     </div>`).join('');
 }
 
-function abrirAssinar(espelhoId){
+async function abrirAssinar(espelhoId){
   espelhoAtualFuncId=espelhoId;
-  document.getElementById('assinar-info').textContent='Assine para confirmar que está de acordo com seu espelho de ponto.';
+  document.getElementById('assinar-info').textContent='Revise seu espelho de ponto e assine abaixo para confirmar.';
+  document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>';
   document.getElementById('modal-assinar').classList.add('aberto');
   setTimeout(iniciarCanvas,100);
+  // Carregar espelho
+  try{
+    const espelhos=await fbGet('espelhos');
+    const esp=espelhos.find(e=>e.id===espelhoId);
+    if(esp){
+      const html=await gerarEspelhoFuncHTML(esp.funcId,esp.mes,esp.mesLabel||esp.mes);
+      document.getElementById('espelho-para-assinar').innerHTML=html;
+    }
+  }catch(err){
+    document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:12px;color:var(--cinza-texto);">Não foi possível carregar o espelho.</div>';
+  }
 }
 window.abrirAssinar=abrirAssinar;
+
+async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
+  const funcs=await fbGet('funcionarios');
+  const func=funcs.find(f=>f.id===funcId);
+  if(!func)return'<div style="font-size:12px;color:var(--cinza-texto);">Funcionário não encontrado.</div>';
+  const regs=await fbGet('registros');
+  const justifs=await fbGet('justificativas');
+  const creditos=await fbGet('creditos_jornada');
+  const [ano,mesNum]=mes.split('-').map(Number);
+  const diasNoMes=new Date(ano,mesNum,0).getDate();
+  const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];
+  const jornMin=(parseFloat(func.jornada)||8)*60;
+  const regsDoMes=regs.filter(r=>r.funcId===funcId&&r.data.startsWith(mes));
+  const justifDoMes=justifs.filter(j=>j.funcId===funcId&&j.data.startsWith(mes)&&j.status==='aprovado');
+  const creditosFuncMes=creditos.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
+  const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
+  const hojeStr=hoje();
+  let totalTrabMin=0,totalEsperadoMin=0;
+  const nomesDia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  let rows='';
+  for(let d=1;d<=diasNoMes;d++){
+    const dataStr=`${ano}-${String(mesNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const diaSemana=new Date(ano,mesNum-1,d).getDay();
+    const ehSabado=diaSemana===6,ehDomingo=diaSemana===0,ehFuturo=dataStr>hojeStr;
+    const regsD=regsDoMes.filter(r=>r.data===dataStr);
+    const justifD=justifDoMes.find(j=>j.data===dataStr);
+    const creditoD=creditosFuncMes.find(c=>c.data===dataStr);
+    const get=tipo=>{const j=regsD.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
+    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
+    const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
+    let total=calcTotal(e,sa,ra,s);
+    const justifCredita=justifD&&!TIPOS_SEM_CREDITO.includes(justifD.motivo);
+    if(total===null&&(creditoD||justifCredita))total=jornadaDia;
+    if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
+    const saldo=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;
+    let totalLabel='—';
+    if(!ehDomingo){
+      if(total!==null)totalLabel=fmtMin(total);
+      else if(ehFuturo)totalLabel='—';
+      else if(e)totalLabel='Incompleto';
+      else totalLabel='Falta';
+    }
+    let ocorrencia='';if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
+    const bgColor=(ehSabado||ehDomingo)?'background:#eeeeee;':(creditoD||justifCredita)&&!e?'background:#f0fff4;':justifD?'background:#fff8e1;':'';
+    const totalColor=totalLabel==='Falta'?'color:#c0392b;font-weight:600;':totalLabel==='Incompleto'?'color:#e67e22;font-weight:600;':'color:#111;';
+    const saldoColor=saldo>0?'color:#1a7a3a;font-weight:600;':saldo<0?'color:#c0392b;font-weight:600;':'color:#111;';
+    rows+=`<tr style="${bgColor}"><td style="color:#111;font-weight:600;"><strong>${d}</strong> ${nomesDia[diaSemana]}</td><td style="color:#111;">${e||'—'}</td><td style="color:#111;">${sa||'—'}</td><td style="color:#111;">${ra||'—'}</td><td style="color:#111;">${s||'—'}</td><td style="${totalColor}">${totalLabel}</td><td style="${saldoColor}">${saldo!==null?(saldo>=0?'+':'')+fmtMin(saldo):'—'}</td><td style="color:#555;font-size:10px;">${ocorrencia}</td></tr>`;
+  }
+  const saldoTotal=totalTrabMin-totalEsperadoMin;
+  return `<div style="background:white;color:#111;padding:1rem;border-radius:8px;font-family:'Barlow',sans-serif;font-size:11px;border:1px solid #ddd;overflow-x:auto;">
+    <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">
+      <div style="font-size:13px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div>
+      <div style="font-size:15px;font-weight:700;">Espelho de Ponto — ${nomeMes}/${ano}</div>
+      <div style="font-size:11px;color:#555;">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:480px;">
+      <thead><tr style="background:#333;color:white;">
+        <th style="padding:5px 6px;text-align:left;border:1px solid #555;">Dia</th>
+        <th style="padding:5px 6px;border:1px solid #555;">Entrada</th>
+        <th style="padding:5px 6px;border:1px solid #555;">S.Almoço</th>
+        <th style="padding:5px 6px;border:1px solid #555;">Retorno</th>
+        <th style="padding:5px 6px;border:1px solid #555;">Saída</th>
+        <th style="padding:5px 6px;border:1px solid #555;">Total</th>
+        <th style="padding:5px 6px;border:1px solid #555;">Saldo</th>
+        <th style="padding:5px 6px;border:1px solid #555;">Ocorrência</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr style="background:#222;">
+        <td colspan="5" style="color:white;font-weight:700;padding:6px;">TOTAIS DO MÊS</td>
+        <td style="color:white;font-weight:700;padding:6px;">${fmtMin(totalTrabMin)}</td>
+        <td style="color:${saldoTotal>=0?'#4ade80':'#f87171'};font-weight:700;padding:6px;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td>
+        <td></td>
+      </tr></tfoot>
+    </table>
+  </div>`;
+}
 
 function iniciarCanvas(){
   assinaturaCanvas=document.getElementById('canvas-assinatura');assinaturaCtx=assinaturaCanvas.getContext('2d');

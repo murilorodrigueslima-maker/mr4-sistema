@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-06-06T08:16:49",
-  "total": 45,
+  "atualizado_em": "2026-06-06T10:08:28",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "375469838",
+      "numero": "16325",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "57.481.120 REGINA LUCIA FELICIANO BARBOSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 684.13,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375463455",
+      "numero": "16324",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA 00418492301",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 65.09,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375459479",
+      "numero": "16323",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "J. A. DE CARVALHO PECAS E ACESSORIOS AUTOMOTORES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1320,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375453478",
+      "numero": "16322",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 271,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375448680",
+      "numero": "16321",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "Ermilton som",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 225,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375444511",
+      "numero": "16320",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 240,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "375441361",
+      "numero": "16319",
+      "data": "2026-06-06",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "375360009",
       "numero": "16318",

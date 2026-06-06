@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-05T23:10:54",
+  "atualizado_em": "2026-06-06T03:46:53",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -196,27 +196,30 @@
       "vencimento": "2026-06-04",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1219.37,
       "vencimento": "2026-06-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 251.73,
       "vencimento": "2026-06-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 11393.72,
       "vencimento": "2026-06-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 208.63,
@@ -328,7 +331,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45648.28,
+  "total_vencido": 58513.100000000006,
   "total_a_receber": 0,
   "total_a_pagar": 27119.11
 }

@@ -597,26 +597,22 @@ async function renderEspelhosFunc(){
         <div style="font-size:14px;font-weight:600;">${e.mesLabel||e.mes}</div>
         <div style="font-size:12px;color:var(--cinza-texto);">${e.assinado?'Assinado em '+fmtData(e.assinadoEm?.slice(0,10)):'Aguardando sua assinatura'}</div>
       </div>
-      ${e.assinado?`<span class="badge assinado">✓ Assinado</span>`:`<button class="btn-laranja" style="padding:8px 16px;font-size:13px;width:auto;" onclick="abrirAssinar('${e.id}')">Assinar</button>`}
+      ${e.assinado?`<span class="badge assinado">✓ Assinado</span>`:`<button class="btn-laranja" style="padding:8px 16px;font-size:13px;width:auto;" onclick="abrirAssinar('${e.id}','${e.funcId}','${e.mes}','${e.mesLabel||e.mes}')">Assinar</button>`}
     </div>`).join('');
 }
 
-async function abrirAssinar(espelhoId){
+async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
   espelhoAtualFuncId=espelhoId;
   document.getElementById('assinar-info').textContent='Revise seu espelho de ponto e assine abaixo para confirmar.';
   document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>';
   document.getElementById('modal-assinar').classList.add('aberto');
   setTimeout(iniciarCanvas,100);
-  // Carregar espelho
   try{
-    const espelhos=await fbGet('espelhos');
-    const esp=espelhos.find(e=>e.id===espelhoId);
-    if(esp){
-      const html=await gerarEspelhoFuncHTML(esp.funcId,esp.mes,esp.mesLabel||esp.mes);
-      document.getElementById('espelho-para-assinar').innerHTML=html;
-    }
+    const html=await gerarEspelhoFuncHTML(funcId,mes,mesLabel);
+    document.getElementById('espelho-para-assinar').innerHTML=html;
   }catch(err){
-    document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:12px;color:var(--cinza-texto);">Não foi possível carregar o espelho.</div>';
+    console.error('Erro ao gerar espelho:',err);
+    document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:12px;color:#EF4444;">Erro ao carregar espelho: '+err.message+'</div>';
   }
 }
 window.abrirAssinar=abrirAssinar;

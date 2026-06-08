@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-07T23:41:36",
+  "atualizado_em": "2026-06-08T05:45:38",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -224,15 +224,16 @@
       "vencimento": "2026-06-06",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 158,
       "vencimento": "2026-06-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 153.76,
@@ -346,11 +347,89 @@
       "valor": 1668.73,
       "vencimento": "2026-06-14",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "sistema gestãoclick inter",
+      "valor": 16,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SERASA",
+      "valor": 52.4,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MONITOR COMPUTADOR",
+      "valor": 200.7,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CURSO PARA SWYANNE",
+      "valor": 1482.9,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "3 VENTILADOR/1 BEBEDOURO",
+      "valor": 207.04,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
+      "valor": 218.82,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SELOS DE GARANTIA MR4",
+      "valor": 38.33,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SISTEMA GESTÃOCLICK",
+      "valor": 224.28,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 3937.2,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 860.27,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 919.13,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
+      "valor": 1647.1,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
+      "valor": 1010.5,
+      "vencimento": "2026-06-15",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58721.73,
+  "total_vencido": 58879.73,
   "total_a_receber": 0,
   "total_a_pagar": 27119.11
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-08T14:23:05",
+  "atualizado_em": "2026-06-08T17:01:28",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -121,13 +121,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 345.69,
-      "vencimento": "2026-05-29",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-05-30",
@@ -199,7 +192,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 10603.34,
+      "valor": 8723.44,
       "vencimento": "2026-06-05",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -415,7 +408,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53723.15,
+  "total_vencido": 51497.560000000005,
   "total_a_receber": 0,
   "total_a_pagar": 27119.11
 }

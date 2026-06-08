@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-08T10:58:54",
+  "atualizado_em": "2026-06-08T14:23:05",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -114,13 +114,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1927.2,
-      "vencimento": "2026-05-27",
-      "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-05-28",
@@ -137,13 +130,6 @@
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
-      "vencimento": "2026-05-30",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2439,
       "vencimento": "2026-05-30",
       "dias_atraso": 9,
       "tipo": "Pagar"
@@ -213,7 +199,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 11393.72,
+      "valor": 10603.34,
       "vencimento": "2026-06-05",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -429,7 +415,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58879.73,
+  "total_vencido": 53723.15,
   "total_a_receber": 0,
   "total_a_pagar": 27119.11
 }

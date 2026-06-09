@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-08T23:07:56",
+  "atualizado_em": "2026-06-09T04:37:24",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -210,15 +210,16 @@
       "vencimento": "2026-06-07",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 153.76,
       "vencimento": "2026-06-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
@@ -404,11 +405,29 @@
       "valor": 1010.5,
       "vencimento": "2026-06-15",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 891.47,
+      "vencimento": "2026-06-16",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 384.2,
+      "vencimento": "2026-06-16",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 288.29,
+      "vencimento": "2026-06-16",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51497.560000000005,
+  "total_vencido": 51651.32000000001,
   "total_a_receber": 0,
   "total_a_pagar": 27119.11
 }

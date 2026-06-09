@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-09T14:54:12",
+  "atualizado_em": "2026-06-09T16:56:20",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -65,13 +65,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 1358.3,
-      "vencimento": "2026-05-04",
-      "dias_atraso": 36,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
       "valor": 4043.1,
       "vencimento": "2026-05-05",
@@ -129,16 +122,9 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 14540.3,
+      "valor": 12798.6,
       "vencimento": "2026-06-01",
       "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 729.83,
-      "vencimento": "2026-06-02",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -151,6 +137,13 @@
     {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 279.55,
+      "vencimento": "2026-06-02",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 139.43,
       "vencimento": "2026-06-02",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -192,7 +185,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 8723.44,
+      "valor": 8089.44,
       "vencimento": "2026-06-05",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -202,13 +195,6 @@
       "valor": 208.63,
       "vencimento": "2026-06-06",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 158,
-      "vencimento": "2026-06-07",
-      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
@@ -315,6 +301,12 @@
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 259.33,
       "vencimento": "2026-06-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ESTOQUISTA",
+      "valor": 410,
+      "vencimento": "2026-06-13",
       "tipo": "Pagar"
     },
     {
@@ -430,11 +422,17 @@
       "valor": 288.29,
       "vencimento": "2026-06-16",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 663.74,
+      "vencimento": "2026-06-16",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52233.97000000001,
+  "total_vencido": 47751.57000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 27119.11
+  "total_a_pagar": 27529.11
 }

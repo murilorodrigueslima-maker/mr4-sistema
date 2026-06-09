@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-06-09T14:56:07",
+  "atualizado_em": "2026-06-09T16:56:24",
   "total_produtos": 893,
-  "valor_total_estoque": 416762.8100000003,
+  "valor_total_estoque": 442106.7200000003,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -349,11 +349,11 @@
       "custo": 6.77
     },
     {
-      "ref": "AF10000139",
-      "nome": "QUADRIAXIAL 4“",
+      "ref": "AF10000118",
+      "nome": "AF QUADRIAXIAL AZUL 6X9“",
       "margem": "16.7",
-      "preco": 90.34,
-      "custo": 75.28
+      "preco": 128.35,
+      "custo": 106.96
     }
   ]
 }

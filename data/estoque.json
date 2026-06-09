@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-06-09T11:26:29",
-  "total_produtos": 891,
-  "valor_total_estoque": 391112.6800000002,
+  "atualizado_em": "2026-06-09T14:56:07",
+  "total_produtos": 893,
+  "valor_total_estoque": 416762.8100000003,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -25,6 +25,20 @@
       "margem": "-629.2",
       "preco": 2.95,
       "custo": 21.51
+    },
+    {
+      "ref": "TP-2027",
+      "nome": "SOQUETE 9006 HB4 PLASTICO 2027",
+      "margem": "-616.0",
+      "preco": 3.87,
+      "custo": 27.71
+    },
+    {
+      "ref": "TP-2025",
+      "nome": "SOQUETE 9005 HB3 PLASTICO 2025",
+      "margem": "-616.0",
+      "preco": 3.87,
+      "custo": 27.71
     },
     {
       "ref": "TP-2005",
@@ -69,6 +83,41 @@
       "custo": 70.84
     },
     {
+      "ref": "TP-2048",
+      "nome": "SOQUETES BA15D 2 POLOS PLASTICO 2048",
+      "margem": "-581.6",
+      "preco": 2.66,
+      "custo": 18.13
+    },
+    {
+      "ref": "TP-2035",
+      "nome": "SOQUETE H4 CERAMICA (2035)",
+      "margem": "-580.8",
+      "preco": 4.63,
+      "custo": 31.52
+    },
+    {
+      "ref": "TP-2028",
+      "nome": "SOQUETE 9006 HB4 CERAMICA (2028)",
+      "margem": "-580.6",
+      "preco": 6.08,
+      "custo": 41.38
+    },
+    {
+      "ref": "TP-2026",
+      "nome": "SOQUETE 9005 HB3 CERAMICA (2026)",
+      "margem": "-580.6",
+      "preco": 6.08,
+      "custo": 41.38
+    },
+    {
+      "ref": "TP-2047",
+      "nome": "SOQUETES BA15S 1 POLO PLASTICO 2047",
+      "margem": "-580.1",
+      "preco": 2.26,
+      "custo": 15.37
+    },
+    {
       "ref": "TP-2015",
       "nome": "SOQUETES BA15S LISO 1 POLO 2015",
       "margem": "-575.7",
@@ -88,13 +137,6 @@
       "margem": "-557.9",
       "preco": 6.65,
       "custo": 43.75
-    },
-    {
-      "ref": "TP-2048",
-      "nome": "SOQUETES BA15D 2 POLOS PLASTICO 2048",
-      "margem": "-525.9",
-      "preco": 2.66,
-      "custo": 16.65
     },
     {
       "ref": "TP-2059",
@@ -125,29 +167,8 @@
       "custo": 25.45
     },
     {
-      "ref": "TP-2035",
-      "nome": "SOQUETE H4 CERAMICA (2035)",
-      "margem": "-525.3",
-      "preco": 4.63,
-      "custo": 28.95
-    },
-    {
       "ref": "TP-2032",
       "nome": "SOQUETE H8/H11 CERAMICO (2032)",
-      "margem": "-525.0",
-      "preco": 6.08,
-      "custo": 38
-    },
-    {
-      "ref": "TP-2028",
-      "nome": "SOQUETE 9006 HB4 CERAMICA (2028)",
-      "margem": "-525.0",
-      "preco": 6.08,
-      "custo": 38
-    },
-    {
-      "ref": "TP-2026",
-      "nome": "SOQUETE 9005 HB3 CERAMICA (2026)",
       "margem": "-525.0",
       "preco": 6.08,
       "custo": 38
@@ -167,13 +188,6 @@
       "custo": 32.68
     },
     {
-      "ref": "TP-2047",
-      "nome": "SOQUETES BA15S 1 POLO PLASTICO 2047",
-      "margem": "-524.8",
-      "preco": 2.26,
-      "custo": 14.12
-    },
-    {
       "ref": "TP-2030",
       "nome": "SOQUETES H1/H3 CERAMICO 2030",
       "margem": "-524.6",
@@ -186,20 +200,6 @@
       "margem": "-522.7",
       "preco": 7.3,
       "custo": 45.46
-    },
-    {
-      "ref": "TP-2027",
-      "nome": "SOQUETE 9006 HB4 PLASTICO 2027",
-      "margem": "-515.8",
-      "preco": 3.87,
-      "custo": 23.83
-    },
-    {
-      "ref": "TP-2025",
-      "nome": "SOQUETE 9005 HB3 PLASTICO 2025",
-      "margem": "-515.8",
-      "preco": 3.87,
-      "custo": 23.83
     },
     {
       "ref": "TP-2031",

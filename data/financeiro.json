@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-09T16:56:20",
+  "atualizado_em": "2026-06-09T18:47:33",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -128,13 +128,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 313.66,
-      "vencimento": "2026-06-02",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 279.55,
       "vencimento": "2026-06-02",
@@ -158,13 +151,6 @@
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 156.2,
-      "vencimento": "2026-06-04",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 2930.5,
       "vencimento": "2026-06-04",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -432,7 +418,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47751.57000000001,
+  "total_vencido": 44507.41,
   "total_a_receber": 0,
   "total_a_pagar": 27529.11
 }

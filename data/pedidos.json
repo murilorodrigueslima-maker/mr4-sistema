@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-06-10T15:24:28",
-  "total": 77,
+  "atualizado_em": "2026-06-10T18:51:01",
+  "total": 80,
   "pedidos": [
     {
       "id": "374538705",
@@ -11,6 +11,42 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 635,
       "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376545568",
+      "numero": "1330386",
+      "data": "2026-06-10",
+      "hora": "",
+      "cliente": "FRANCISCO JOHNY VIEIRA DE ABREU",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 796.84,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376517717",
+      "numero": "1330385",
+      "data": "2026-06-10",
+      "hora": "",
+      "cliente": "FRANCISCO ELIAS MORAIS FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 332.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376515298",
+      "numero": "1330384",
+      "data": "2026-06-10",
+      "hora": "",
+      "cliente": "JOSEFA MENESES RODRIGUES 58083618349",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

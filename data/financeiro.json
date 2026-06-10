@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-09T23:32:15",
+  "atualizado_em": "2026-06-10T05:00:09",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -196,21 +196,23 @@
       "vencimento": "2026-06-08",
       "dias_atraso": 2,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-09",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-09",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-09",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-09",
-      "tipo": "Pagar"
-    },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
@@ -414,11 +416,47 @@
       "valor": 663.74,
       "vencimento": "2026-06-16",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
+      "vencimento": "2026-06-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 3000,
+      "vencimento": "2026-06-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 616.29,
+      "vencimento": "2026-06-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 773.63,
+      "vencimento": "2026-06-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 1162.45,
+      "vencimento": "2026-06-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 259.14,
+      "vencimento": "2026-06-17",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 44507.41,
+  "total_vencido": 47581.41,
   "total_a_receber": 0,
-  "total_a_pagar": 27529.11
+  "total_a_pagar": 27550.350000000002
 }

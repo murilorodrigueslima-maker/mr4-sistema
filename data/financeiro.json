@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-10T23:42:21",
+  "atualizado_em": "2026-06-11T05:28:00",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -210,21 +210,23 @@
       "vencimento": "2026-06-09",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-06-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "TAXA PARA MUDAR ENDEREÇO DA EMPRESA",
       "valor": 750,
       "vencimento": "2026-06-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1105.6,
@@ -446,11 +448,17 @@
       "valor": 259.14,
       "vencimento": "2026-06-17",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 1621.2,
+      "vencimento": "2026-06-18",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45981.41,
+  "total_vencido": 46752.65,
   "total_a_receber": 0,
   "total_a_pagar": 28300.350000000006
 }

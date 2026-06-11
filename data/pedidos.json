@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-06-11T17:10:10",
-  "total": 96,
+  "atualizado_em": "2026-06-11T20:14:22",
+  "total": 98,
   "pedidos": [
     {
       "id": "375176890",
@@ -23,6 +23,30 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 73.78,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376855266",
+      "numero": "1330419",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 165.04,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376838713",
+      "numero": "1330418",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1040,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },
@@ -331,10 +355,10 @@
       "numero": "1330393",
       "data": "2026-06-11",
       "hora": "",
-      "cliente": "FRANCISCO DE ASSIS LIMA 00418492301",
+      "cliente": "F. DE A. DA SILVA BARBOSA LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 321.96,
-      "itens": 3,
+      "valor": 135.76,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

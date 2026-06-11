@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-11T05:28:00",
+  "atualizado_em": "2026-06-11T10:52:15",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -128,73 +128,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
-      "valor": 279.55,
-      "vencimento": "2026-06-02",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 139.43,
-      "vencimento": "2026-06-02",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 265.09,
-      "vencimento": "2026-06-04",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 156.2,
-      "vencimento": "2026-06-04",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
-      "valor": 1219.37,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 251.73,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
       "valor": 6489.44,
       "vencimento": "2026-06-05",
       "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 208.63,
-      "vencimento": "2026-06-06",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
-      "valor": 153.76,
-      "vencimento": "2026-06-08",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
-      "valor": 582.65,
-      "vencimento": "2026-06-08",
-      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
@@ -301,7 +238,7 @@
     },
     {
       "nome": "ESTOQUISTA",
-      "valor": 410,
+      "valor": 364,
       "vencimento": "2026-06-13",
       "tipo": "Pagar"
     },
@@ -458,7 +395,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46752.65,
+  "total_vencido": 43496.24,
   "total_a_receber": 0,
-  "total_a_pagar": 28300.350000000006
+  "total_a_pagar": 28254.350000000006
 }

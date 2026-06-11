@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-06-11T14:32:21",
-  "total": 87,
+  "atualizado_em": "2026-06-11T17:10:10",
+  "total": 96,
   "pedidos": [
     {
       "id": "375176890",
@@ -23,6 +23,114 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 73.78,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376826050",
+      "numero": "1330417",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 294.9,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376821151",
+      "numero": "1330416",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 290,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376820089",
+      "numero": "1330415",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "FRANCISCO BARBOSA DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376809499",
+      "numero": "1330414",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376785251",
+      "numero": "1330413",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376782175",
+      "numero": "1330412",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 696,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376769277",
+      "numero": "1330411",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 351.24,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376763423",
+      "numero": "1330410",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 199.6,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376763420",
+      "numero": "1330410",
+      "data": "2026-06-11",
+      "hora": "",
+      "cliente": "52.436.002 TYAGO FELIX DE OLIVEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 386.5,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-12T09:49:22",
+  "atualizado_em": "2026-06-12T13:38:18",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -129,7 +129,28 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 6489.44,
+      "valor": 6294.44,
+      "vencimento": "2026-06-05",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO REF MÊS MAIO",
+      "valor": 1400,
+      "vencimento": "2026-06-05",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO SALARIO MAIO",
+      "valor": 64.51,
+      "vencimento": "2026-06-05",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO SALARIO MAIO",
+      "valor": 2209.71,
       "vencimento": "2026-06-05",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -186,13 +207,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1744.75,
-      "vencimento": "2026-06-11",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1744.93,
       "vencimento": "2026-06-11",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -401,7 +415,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53605.369999999995,
+  "total_vencido": 55339.659999999996,
   "total_a_receber": 0,
   "total_a_pagar": 28254.350000000006
 }

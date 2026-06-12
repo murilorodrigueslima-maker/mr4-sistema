@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-06-12T05:15:52",
-  "total": 70,
+  "atualizado_em": "2026-06-12T09:49:22",
+  "total": 76,
   "pedidos": [
+    {
+      "id": "376922473",
+      "numero": "1330425",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 269.38,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376921409",
+      "numero": "1330424",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376914894",
+      "numero": "1330423",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 132.13,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376914009",
+      "numero": "1330422",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "49.064.542 VICTOR GABRIEL AIRES DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 99.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376913822",
+      "numero": "1330421",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 89.1,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376904851",
+      "numero": "1330420",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 739.04,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "376684798",
+      "numero": "1330398",
+      "data": "2026-06-12",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 978.15,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "375176890",
       "numero": "16290",
@@ -287,18 +371,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 229,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "376684798",
-      "numero": "1330398",
-      "data": "2026-06-11",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 978.15,
-      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

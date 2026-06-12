@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-11T23:37:33",
+  "atualizado_em": "2026-06-12T05:15:53",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -161,45 +161,51 @@
       "vencimento": "2026-06-10",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1105.6,
       "vencimento": "2026-06-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1165.65,
       "vencimento": "2026-06-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
       "vencimento": "2026-06-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1744.75,
       "vencimento": "2026-06-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1744.93,
       "vencimento": "2026-06-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2421,
       "vencimento": "2026-06-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
@@ -395,7 +401,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 43496.24,
+  "total_vencido": 53605.369999999995,
   "total_a_receber": 0,
   "total_a_pagar": 28254.350000000006
 }

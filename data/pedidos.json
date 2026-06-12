@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-12T18:24:22",
+  "atualizado_em": "2026-06-12T20:07:41",
   "total": 98,
   "pedidos": [
     {
@@ -68,7 +68,7 @@
       "data": "2026-06-12",
       "hora": "",
       "cliente": "Edilberto",
-      "vendedor": "Swyanne Kethlyn",
+      "vendedor": "fabiana andrade da silva",
       "valor": 1133.68,
       "itens": 10,
       "status_gc": "",

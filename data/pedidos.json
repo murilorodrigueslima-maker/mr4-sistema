@@ -1,16 +1,52 @@
 {
-  "atualizado_em": "2026-06-13T07:21:36",
-  "total": 65,
+  "atualizado_em": "2026-06-13T10:26:04",
+  "total": 68,
   "pedidos": [
     {
       "id": "374538705",
       "numero": "16237",
-      "data": "2026-06-12",
+      "data": "2026-06-13",
       "hora": "",
       "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 980,
-      "itens": 13,
+      "valor": 915.26,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377232338",
+      "numero": "1330451",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 240,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377216722",
+      "numero": "1330450",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 274.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377209386",
+      "numero": "1330449",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 796.66,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

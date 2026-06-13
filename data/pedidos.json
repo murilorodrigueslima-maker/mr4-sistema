@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-06-13T10:26:04",
-  "total": 68,
+  "atualizado_em": "2026-06-13T12:25:42",
+  "total": 76,
   "pedidos": [
     {
       "id": "374538705",
@@ -11,6 +11,102 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 915.26,
       "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377289038",
+      "numero": "1330459",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "MIGUEL ANDREWS ALVES SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 791.42,
+      "itens": 28,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377280827",
+      "numero": "1330458",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 26.89,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377279922",
+      "numero": "1330457",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 73.37,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377275321",
+      "numero": "1330456",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 220,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377267979",
+      "numero": "1330455",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "FRANCISCO RONIERES SILVA DE LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377260069",
+      "numero": "1330454",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "Thyago da Silva Vaz",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 426.27,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377242060",
+      "numero": "1330453",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "DAVID LIMA DE OLIVEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 256,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377240007",
+      "numero": "1330452",
+      "data": "2026-06-13",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 275,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

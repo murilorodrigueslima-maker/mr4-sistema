@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-12T23:30:41",
+  "atualizado_em": "2026-06-13T04:39:21",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -217,45 +217,51 @@
       "vencimento": "2026-06-11",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
       "vencimento": "2026-06-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.68,
       "vencimento": "2026-06-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 702,
       "vencimento": "2026-06-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 778.09,
       "vencimento": "2026-06-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1281.44,
       "vencimento": "2026-06-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 259.33,
       "vencimento": "2026-06-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ESTOQUISTA",
       "valor": 364,
@@ -415,7 +421,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55339.659999999996,
+  "total_vencido": 63833.85999999999,
   "total_a_receber": 0,
   "total_a_pagar": 28254.350000000006
 }

@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-06-15T16:37:50",
-  "total": 28,
+  "atualizado_em": "2026-06-15T19:10:12",
+  "total": 32,
   "pedidos": [
     {
       "id": "374538705",
@@ -11,6 +11,54 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 915,
       "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377710744",
+      "numero": "1330479",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377688879",
+      "numero": "1330478",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "DILEDXENON",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 305,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377677032",
+      "numero": "1330477",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 599.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377676126",
+      "numero": "1330476",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 328,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

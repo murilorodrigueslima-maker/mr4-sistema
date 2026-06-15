@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-14T23:46:45",
+  "atualizado_em": "2026-06-15T06:52:12",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -266,27 +266,30 @@
       "vencimento": "2026-06-13",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-06-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1668.73,
       "vencimento": "2026-06-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "sistema gestãoclick inter",
       "valor": 16,
@@ -460,11 +463,23 @@
       "valor": 5099.28,
       "vencimento": "2026-06-21",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 681.61,
+      "vencimento": "2026-06-22",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 4875.65,
+      "vencimento": "2026-06-22",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 64197.85999999999,
+  "total_vencido": 69316.08999999998,
   "total_a_receber": 0,
-  "total_a_pagar": 28254.350000000006
+  "total_a_pagar": 29004.890000000007
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-15T12:36:51",
+  "atualizado_em": "2026-06-15T16:37:52",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -115,7 +115,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 10898.6,
+      "valor": 8798.6,
       "vencimento": "2026-06-01",
       "dias_atraso": 14,
       "tipo": "Pagar"
@@ -135,15 +135,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 4699.46,
+      "nome": "PAGAMENTO SALARIO MAIO",
+      "valor": 709.71,
       "vencimento": "2026-06-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO MAIO",
-      "valor": 709.71,
+      "nome": "Salário Murilo",
+      "valor": 4544.46,
       "vencimento": "2026-06-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -193,6 +193,13 @@
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2421,
+      "vencimento": "2026-06-11",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1016.22,
       "vencimento": "2026-06-11",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -403,7 +410,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57737.2,
+  "total_vencido": 56498.42,
   "total_a_receber": 0,
   "total_a_pagar": 27875.78
 }

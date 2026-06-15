@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-06-15T12:36:49",
-  "total": 22,
+  "atualizado_em": "2026-06-15T16:37:50",
+  "total": 28,
   "pedidos": [
     {
       "id": "374538705",
@@ -11,6 +11,78 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 915,
       "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377633425",
+      "numero": "1330475",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 15,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377615869",
+      "numero": "1330474",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 700,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377614185",
+      "numero": "1330473",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "Francisco Wesley do Nascimento",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 42.22,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377599392",
+      "numero": "1330472",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 83,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377597648",
+      "numero": "1330471",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 87.04,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377591041",
+      "numero": "1330470",
+      "data": "2026-06-15",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 135,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },
@@ -33,8 +105,8 @@
       "hora": "",
       "cliente": "ARISNEVES FERREIRA SANTOS 02068641321",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 160.05,
-      "itens": 3,
+      "valor": 202.27,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

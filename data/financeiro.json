@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-15T06:52:12",
+  "atualizado_em": "2026-06-15T12:36:51",
   "contas_vencidas": [
     {
       "nome": "CAGECE RUA CEARA 634",
@@ -65,13 +65,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 4043.1,
-      "vencimento": "2026-05-05",
-      "dias_atraso": 41,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-05-07",
@@ -87,7 +80,7 @@
     },
     {
       "nome": "EMPRESTIMO JARBAS",
-      "valor": 834,
+      "valor": 216.43,
       "vencimento": "2026-05-17",
       "dias_atraso": 29,
       "tipo": "Pagar"
@@ -122,23 +115,9 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 12798.6,
+      "valor": 10898.6,
       "vencimento": "2026-06-01",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "Salário Murilo",
-      "valor": 6294.44,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PAGAMENTO REF MÊS MAIO",
-      "valor": 1400,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
@@ -149,8 +128,22 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CONTABILIDADE REF ABRIL",
+      "valor": 612,
+      "vencimento": "2026-06-05",
+      "dias_atraso": 10,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "Salário Murilo",
+      "valor": 4699.46,
+      "vencimento": "2026-06-05",
+      "dias_atraso": 10,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "PAGAMENTO SALARIO MAIO",
-      "valor": 2209.71,
+      "valor": 709.71,
       "vencimento": "2026-06-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -167,20 +160,6 @@
       "valor": 1537,
       "vencimento": "2026-06-09",
       "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MAQUINETA DE CARTÃO",
-      "valor": 21.24,
-      "vencimento": "2026-06-10",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "TAXA PARA MUDAR ENDEREÇO DA EMPRESA",
-      "valor": 750,
-      "vencimento": "2026-06-10",
-      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
@@ -261,13 +240,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ESTOQUISTA",
-      "valor": 364,
-      "vencimento": "2026-06-13",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-14",
@@ -290,54 +262,6 @@
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "sistema gestãoclick inter",
-      "valor": 16,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SERASA",
-      "valor": 52.4,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MONITOR COMPUTADOR",
-      "valor": 200.7,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CURSO PARA SWYANNE",
-      "valor": 1482.9,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "3 VENTILADOR/1 BEBEDOURO",
-      "valor": 207.04,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
-      "valor": 218.82,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SELOS DE GARANTIA MR4",
-      "valor": 38.33,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SISTEMA GESTÃOCLICK",
-      "valor": 224.28,
-      "vencimento": "2026-06-15",
-      "tipo": "Pagar"
-    },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 3937.2,
@@ -479,7 +403,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 69316.08999999998,
+  "total_vencido": 57737.2,
   "total_a_receber": 0,
-  "total_a_pagar": 29004.890000000007
+  "total_a_pagar": 27875.78
 }

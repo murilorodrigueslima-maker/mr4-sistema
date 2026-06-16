@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-16T06:15:44",
+  "atualizado_em": "2026-06-16T11:51:57",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -129,7 +129,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 4544.46,
+      "valor": 4479.03,
       "vencimento": "2026-06-05",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -280,13 +280,6 @@
       "vencimento": "2026-06-15",
       "dias_atraso": 1,
       "tipo": "Pagar"
-    },
-    {
-      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
-      "valor": 1010.5,
-      "vencimento": "2026-06-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -413,7 +406,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 64251.61999999999,
+  "total_vencido": 63175.689999999995,
   "total_a_receber": 0,
   "total_a_pagar": 27254.78
 }

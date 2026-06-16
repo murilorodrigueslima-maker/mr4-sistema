@@ -1,20 +1,6 @@
 {
-  "atualizado_em": "2026-06-15T23:48:34",
+  "atualizado_em": "2026-06-16T06:15:44",
   "contas_vencidas": [
-    {
-      "nome": "CAGECE RUA CEARA 634",
-      "valor": 329.55,
-      "vencimento": "2026-04-16",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CAGECE RUA CEARA 634",
-      "valor": 291.45,
-      "vencimento": "2026-04-16",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -266,39 +252,44 @@
       "vencimento": "2026-06-14",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 3937.2,
       "vencimento": "2026-06-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 860.27,
       "vencimento": "2026-06-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 919.13,
       "vencimento": "2026-06-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1647.1,
       "vencimento": "2026-06-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-06-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 891.47,
@@ -406,11 +397,23 @@
       "valor": 4875.65,
       "vencimento": "2026-06-22",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1276.18,
+      "vencimento": "2026-06-23",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1276.3,
+      "vencimento": "2026-06-23",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56498.42,
+  "total_vencido": 64251.61999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 27875.78
+  "total_a_pagar": 27254.78
 }

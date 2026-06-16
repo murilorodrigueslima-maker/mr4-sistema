@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-06-16T16:28:04",
-  "total": 43,
+  "atualizado_em": "2026-06-16T19:05:01",
+  "total": 45,
   "pedidos": [
+    {
+      "id": "377943271",
+      "numero": "1330501",
+      "data": "2026-06-16",
+      "hora": "",
+      "cliente": "50.091.279 PEDRO IGOR MACIEL CARNEIRO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 85,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377935011",
+      "numero": "1330500",
+      "data": "2026-06-16",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 198.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "377907713",
       "numero": "1330499",

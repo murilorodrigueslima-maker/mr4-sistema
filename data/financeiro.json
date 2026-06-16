@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-16T11:51:57",
+  "atualizado_em": "2026-06-16T16:28:06",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -129,23 +129,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 4479.03,
+      "valor": 4124.36,
       "vencimento": "2026-06-05",
       "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-09",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-09",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -172,20 +158,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1744.75,
-      "vencimento": "2026-06-11",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2421,
-      "vencimento": "2026-06-11",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1016.22,
       "vencimento": "2026-06-11",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -240,13 +212,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
-      "valor": 1010.5,
-      "vencimento": "2026-06-14",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1668.73,
       "vencimento": "2026-06-14",
@@ -270,13 +235,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 919.13,
-      "vencimento": "2026-06-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
-      "valor": 1647.1,
       "vencimento": "2026-06-15",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -406,7 +364,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63175.689999999995,
+  "total_vencido": 53652.2,
   "total_a_receber": 0,
   "total_a_pagar": 27254.78
 }

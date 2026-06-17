@@ -1,7 +1,127 @@
 {
-  "atualizado_em": "2026-06-17T10:36:15",
-  "total": 51,
+  "atualizado_em": "2026-06-17T13:50:26",
+  "total": 61,
   "pedidos": [
+    {
+      "id": "378127274",
+      "numero": "1330517",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 17.44,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378117488",
+      "numero": "1330516",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 513,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378117129",
+      "numero": "1330515",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "TULIPA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 121.49,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378116917",
+      "numero": "1330514",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 835,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378116178",
+      "numero": "1330513",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378095098",
+      "numero": "1330512",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "EVANDRO CABRAL RODRIGUES JUNIOR 04387665394",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 214.74,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378094773",
+      "numero": "1330511",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378090490",
+      "numero": "1330510",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 386.5,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378090078",
+      "numero": "1330509",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "ROMMEL NELSON DE OLIVEIRA 08037739350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1376.09,
+      "itens": 24,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378061613",
+      "numero": "1330508",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 45.18,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "378045866",
       "numero": "1330507",
@@ -83,6 +203,30 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 198.9,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377828081",
+      "numero": "1330490",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 261.78,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377279922",
+      "numero": "1330457",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 223.37,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },
@@ -207,18 +351,6 @@
       "cidade": ""
     },
     {
-      "id": "377828081",
-      "numero": "1330490",
-      "data": "2026-06-16",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 261.78,
-      "itens": 3,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
       "id": "377826591",
       "numero": "1330489",
       "data": "2026-06-16",
@@ -334,18 +466,6 @@
       "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 584.9,
-      "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "377279922",
-      "numero": "1330457",
-      "data": "2026-06-16",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 223.37,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

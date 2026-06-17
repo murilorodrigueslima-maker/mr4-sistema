@@ -1,27 +1,6 @@
 {
-  "atualizado_em": "2026-06-16T23:45:30",
+  "atualizado_em": "2026-06-17T05:53:37",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO BRADESCO",
-      "valor": 3669.52,
-      "vencimento": "2026-04-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "4 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
-      "valor": 258.77,
-      "vencimento": "2026-04-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 1213,
-      "vencimento": "2026-04-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
       "valor": 327.38,
@@ -238,33 +217,37 @@
       "vencimento": "2026-06-15",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 891.47,
       "vencimento": "2026-06-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 384.2,
       "vencimento": "2026-06-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 288.29,
       "vencimento": "2026-06-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 663.74,
       "vencimento": "2026-06-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -360,11 +343,29 @@
       "valor": 1276.3,
       "vencimento": "2026-06-23",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-24",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-24",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1500,
+      "vencimento": "2026-06-24",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53652.2,
+  "total_vencido": 50738.609999999986,
   "total_a_receber": 0,
-  "total_a_pagar": 27254.78
+  "total_a_pagar": 28783.010000000006
 }

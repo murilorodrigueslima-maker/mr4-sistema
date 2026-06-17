@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-06-17T16:59:57",
-  "total": 68,
+  "atualizado_em": "2026-06-17T19:03:12",
+  "total": 69,
   "pedidos": [
+    {
+      "id": "378222429",
+      "numero": "1330525",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 560,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "378209326",
       "numero": "1330524",

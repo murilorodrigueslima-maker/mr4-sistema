@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-06-17T05:53:36",
-  "total": 45,
+  "atualizado_em": "2026-06-17T10:36:15",
+  "total": 51,
   "pedidos": [
+    {
+      "id": "378045866",
+      "numero": "1330507",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 124,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378045145",
+      "numero": "1330506",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378035961",
+      "numero": "1330505",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 765,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378030932",
+      "numero": "1330504",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 140,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378024839",
+      "numero": "1330503",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 250,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378021000",
+      "numero": "1330502",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377935011",
+      "numero": "1330500",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 198.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "377943271",
       "numero": "1330501",
@@ -11,18 +95,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 85,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "377935011",
-      "numero": "1330500",
-      "data": "2026-06-16",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 198.9,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

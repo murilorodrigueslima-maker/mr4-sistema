@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-06-17T13:50:26",
-  "total": 61,
+  "atualizado_em": "2026-06-17T16:59:57",
+  "total": 68,
   "pedidos": [
+    {
+      "id": "378209326",
+      "numero": "1330524",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "EVANDRO CABRAL RODRIGUES JUNIOR 04387665394",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 215,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378208594",
+      "numero": "1330523",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378188202",
+      "numero": "1330522",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "ELETRONIC NEGO SOM ACESSORIOS VEICULAR LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 750,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378172741",
+      "numero": "1330521",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378153219",
+      "numero": "1330520",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "ADEMIR LOPES FURTADO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 730,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378143184",
+      "numero": "1330519",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "J N DE MELO E SILVA JUNIOR ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1011.7,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378135512",
+      "numero": "1330518",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "50.122.797 JEFERSON SOARES DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1550.6,
+      "itens": 16,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "378127274",
       "numero": "1330517",
@@ -219,6 +303,18 @@
       "cidade": ""
     },
     {
+      "id": "377771236",
+      "numero": "1330483",
+      "data": "2026-06-17",
+      "hora": "",
+      "cliente": "Ermilton som",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 346.68,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "377279922",
       "numero": "1330457",
       "data": "2026-06-17",
@@ -418,18 +514,6 @@
       "cliente": "ADRIANO A MARTINS",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 1508.08,
-      "itens": 9,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "377771236",
-      "numero": "1330483",
-      "data": "2026-06-16",
-      "hora": "",
-      "cliente": "Ermilton som",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 346.68,
       "itens": 9,
       "status_gc": "",
       "cidade": ""

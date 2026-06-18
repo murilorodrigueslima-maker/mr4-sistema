@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-17T23:41:49",
+  "atualizado_em": "2026-06-18T05:37:43",
   "contas_vencidas": [
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
@@ -245,33 +245,37 @@
       "vencimento": "2026-06-16",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-06-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 3000,
       "vencimento": "2026-06-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1162.45,
       "vencimento": "2026-06-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 259.14,
       "vencimento": "2026-06-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1621.2,
@@ -361,11 +365,17 @@
       "valor": 1500,
       "vencimento": "2026-06-24",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 51.39,
+      "vencimento": "2026-06-25",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50738.609999999986,
+  "total_vencido": 58829.71999999998,
   "total_a_receber": 0,
   "total_a_pagar": 28783.010000000006
 }

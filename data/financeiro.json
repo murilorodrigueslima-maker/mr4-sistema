@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-18T13:50:52",
+  "atualizado_em": "2026-06-18T17:11:38",
   "contas_vencidas": [
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
@@ -86,13 +86,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO MAIO",
-      "valor": 64.51,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CONTABILIDADE REF ABRIL",
       "valor": 612,
       "vencimento": "2026-06-05",
@@ -100,24 +93,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO MAIO",
-      "valor": 709.71,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
-      "valor": 4124.36,
+      "valor": 3890.47,
       "vencimento": "2026-06-05",
       "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 1105.6,
-      "vencimento": "2026-06-11",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -130,13 +109,6 @@
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1927.2,
-      "vencimento": "2026-06-11",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1744.75,
       "vencimento": "2026-06-11",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -254,13 +226,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 3000,
-      "vencimento": "2026-06-17",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1162.45,
       "vencimento": "2026-06-17",
@@ -273,12 +238,25 @@
       "vencimento": "2026-06-17",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 884,
+      "vencimento": "2026-06-17",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1621.2,
+      "vencimento": "2026-06-18",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "RAUL CÍCERO RODRIGUES BRAGA",
+      "valor": 466.67,
       "vencimento": "2026-06-18",
       "tipo": "Pagar"
     },
@@ -375,7 +353,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58829.71999999998,
+  "total_vencido": 52855.25999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 28783.010000000006
+  "total_a_pagar": 26667.010000000006
 }

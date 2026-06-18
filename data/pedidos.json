@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-06-18T05:37:42",
-  "total": 47,
+  "atualizado_em": "2026-06-18T09:45:39",
+  "total": 50,
   "pedidos": [
+    {
+      "id": "378300030",
+      "numero": "1330528",
+      "data": "2026-06-18",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378295747",
+      "numero": "1330527",
+      "data": "2026-06-18",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378290838",
+      "numero": "1330526",
+      "data": "2026-06-18",
+      "hora": "",
+      "cliente": "THAYNARA DA COSTA RODRIGUES LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "378222429",
       "numero": "1330525",

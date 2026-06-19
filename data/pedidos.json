@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-06-19T16:25:57",
-  "total": 76,
+  "atualizado_em": "2026-06-19T18:01:20",
+  "total": 80,
   "pedidos": [
+    {
+      "id": "378752946",
+      "numero": "1330578",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "K LEDS DISTRIBUIDORA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 120,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378744970",
+      "numero": "1330577",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 70,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378737500",
+      "numero": "1330576",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378727978",
+      "numero": "1330575",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 273.34,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "378707963",
       "numero": "1330574",

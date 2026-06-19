@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-06-19T10:27:37",
-  "total": 60,
+  "atualizado_em": "2026-06-19T13:27:56",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "378634232",
+      "numero": "1330564",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 764,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378599791",
+      "numero": "1330563",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378592746",
+      "numero": "1330562",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1041.86,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378589320",
+      "numero": "1330561",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "VITOR LEONARDO ARAUJO DE ASSIS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 142.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378583682",
+      "numero": "1330560",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "ANDERSON MOREIRA PEREIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 355,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "378582843",
+      "numero": "1330559",
+      "data": "2026-06-19",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "378578362",
       "numero": "1330558",
@@ -93,8 +165,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 735.75,
-      "itens": 3,
+      "valor": 1599.65,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },

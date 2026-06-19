@@ -1,29 +1,29 @@
 {
-  "atualizado_em": "2026-06-19T10:27:43",
-  "hoje": 3192.6200000000003,
-  "semana": 34157.25,
-  "mes": 143204.16,
+  "atualizado_em": "2026-06-19T13:28:02",
+  "hoje": 6720.279999999999,
+  "semana": 37684.91,
+  "mes": 146502.82,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
   "vendedores": [
     {
       "nome": "ADEMIR LOPES FURTADO",
-      "faturamento": 159202.61,
-      "pedidos": 408,
-      "ticket_medio": 390.20247549019604
+      "faturamento": 161437.37,
+      "pedidos": 412,
+      "ticket_medio": 391.8382766990291
     },
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 72439.79000000001,
+      "faturamento": 73303.69000000002,
       "pedidos": 163,
-      "ticket_medio": 444.4158895705522
+      "ticket_medio": 449.71588957055224
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
-      "faturamento": 4093.52,
-      "pedidos": 3,
-      "ticket_medio": 1364.5066666666667
+      "faturamento": 4293.52,
+      "pedidos": 4,
+      "ticket_medio": 1073.38
     },
     {
       "nome": "Swyanne Kethlyn",
@@ -66,7 +66,7 @@
     {
       "data": "2026-06-19",
       "label": "sex., 19/06",
-      "valor": 3192.6200000000003
+      "valor": 6720.279999999999
     }
   ]
 }

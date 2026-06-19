@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-18T23:58:29",
+  "atualizado_em": "2026-06-19T05:58:07",
   "contas_vencidas": [
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
@@ -245,21 +245,23 @@
       "vencimento": "2026-06-17",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1621.2,
       "vencimento": "2026-06-18",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "RAUL CÍCERO RODRIGUES BRAGA",
       "valor": 466.67,
       "vencimento": "2026-06-18",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
@@ -349,11 +351,29 @@
       "valor": 51.39,
       "vencimento": "2026-06-25",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 1105.6,
+      "vencimento": "2026-06-26",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2421,
+      "vencimento": "2026-06-26",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
+      "valor": 127.01,
+      "vencimento": "2026-06-26",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52855.25999999999,
+  "total_vencido": 54943.12999999998,
   "total_a_receber": 0,
   "total_a_pagar": 26667.010000000006
 }

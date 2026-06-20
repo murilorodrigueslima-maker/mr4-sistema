@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-19T23:30:55",
+  "atualizado_em": "2026-06-20T04:42:47",
   "contas_vencidas": [
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
@@ -252,15 +252,16 @@
       "vencimento": "2026-06-18",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
       "valor": 130.85,
       "vencimento": "2026-06-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
@@ -352,6 +353,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CAPITALIZAÇÃO",
+      "valor": 103.16,
+      "vencimento": "2026-06-25",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1105.6,
       "vencimento": "2026-06-26",
@@ -368,11 +375,29 @@
       "valor": 127.01,
       "vencimento": "2026-06-26",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 2134.66,
+      "vencimento": "2026-06-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 3338.68,
+      "vencimento": "2026-06-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 778.09,
+      "vencimento": "2026-06-27",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53777.47999999998,
+  "total_vencido": 53908.32999999998,
   "total_a_receber": 0,
-  "total_a_pagar": 26667.010000000006
+  "total_a_pagar": 26770.170000000002
 }

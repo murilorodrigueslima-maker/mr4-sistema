@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-06-22T16:18:11",
-  "total": 29,
+  "atualizado_em": "2026-06-22T18:55:18",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "379278518",
+      "numero": "1330610",
+      "data": "2026-06-22",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 148.81,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379278304",
+      "numero": "1330609",
+      "data": "2026-06-22",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 672.26,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379278044",
+      "numero": "1330608",
+      "data": "2026-06-22",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 520,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379269848",
+      "numero": "1330607",
+      "data": "2026-06-22",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 108.85,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "379252754",
       "numero": "1330606",

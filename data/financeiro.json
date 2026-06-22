@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-22T12:13:07",
+  "atualizado_em": "2026-06-22T16:18:12",
   "contas_vencidas": [
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 3890.47,
+      "valor": 2908.26,
       "vencimento": "2026-06-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -230,48 +230,6 @@
       "valor": 130.85,
       "vencimento": "2026-06-19",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PRATELEIRAS 6 UN",
-      "valor": 423.4,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONSULTORIA DE IMPORTAÇÃO",
-      "valor": 171.3,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MESA ESCRITORIO MURILO",
-      "valor": 227.07,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MERCADO LIVRE",
-      "valor": 28.95,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "2 TV PARA EMPRESA",
-      "valor": 419.8,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "AQUISIÇÃO DE FRIGOBAR, CERVEJEIRA E ITENS DE APOIO PARA MELHORIA DA ESTRUTURA E ATENDIMENTO INTERNO DA EMPRESA",
-      "valor": 272.11,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
@@ -412,7 +370,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51582.779999999984,
+  "total_vencido": 49057.93999999998,
   "total_a_receber": 0,
-  "total_a_pagar": 28707.220000000005
+  "total_a_pagar": 27193.540000000005
 }

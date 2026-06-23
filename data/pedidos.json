@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-06-23T14:47:31",
-  "total": 38,
+  "atualizado_em": "2026-06-23T16:49:59",
+  "total": 41,
   "pedidos": [
+    {
+      "id": "379521201",
+      "numero": "1330633",
+      "data": "2026-06-23",
+      "hora": "",
+      "cliente": "João Batista Gomes",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 186,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379509886",
+      "numero": "1330632",
+      "data": "2026-06-23",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 265,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379477143",
+      "numero": "1330631",
+      "data": "2026-06-23",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "379472146",
       "numero": "1330630",
@@ -129,8 +165,8 @@
       "hora": "",
       "cliente": "CAIO CESAR CAVALCANTE SILVA 02794150367",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 459,
-      "itens": 3,
+      "valor": 1135,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },

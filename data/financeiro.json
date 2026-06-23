@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-23T14:47:32",
+  "atualizado_em": "2026-06-23T16:50:00",
   "contas_vencidas": [
     {
       "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
@@ -97,13 +97,6 @@
       "valor": 2908.26,
       "vencimento": "2026-06-05",
       "dias_atraso": 18,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 2134.66,
-      "vencimento": "2026-06-12",
-      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
@@ -388,7 +381,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49995.079999999994,
+  "total_vencido": 47860.42,
   "total_a_receber": 0,
   "total_a_pagar": 27193.540000000005
 }

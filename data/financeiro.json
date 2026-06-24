@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-06-23T23:15:14",
+  "atualizado_em": "2026-06-24T04:32:39",
   "contas_vencidas": [
-    {
-      "nome": "5 DIARRIAS PEDREIRO REFORMA RIO GRANDE SO NORTE 1105",
-      "valor": 327.38,
-      "vencimento": "2026-04-24",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
@@ -224,21 +217,23 @@
       "vencimento": "2026-06-22",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
       "vencimento": "2026-06-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.3,
       "vencimento": "2026-06-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
@@ -374,7 +369,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 46239.22,
+  "total_vencido": 48464.32000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 27193.540000000005
+  "total_a_pagar": 26866.16
 }

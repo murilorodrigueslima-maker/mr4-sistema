@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-24T11:06:47",
+  "atualizado_em": "2026-06-24T14:47:11",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 3497.76,
+      "valor": 3417.76,
       "vencimento": "2026-06-01",
       "dias_atraso": 23,
       "tipo": "Pagar"
@@ -95,13 +95,6 @@
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
-      "vencimento": "2026-06-14",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
-      "valor": 1668.73,
       "vencimento": "2026-06-14",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -221,13 +214,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
-      "vencimento": "2026-06-23",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1276.3,
       "vencimento": "2026-06-23",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -365,11 +351,17 @@
       "valor": 1259.5,
       "vencimento": "2026-06-30",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 14905.44,
+      "vencimento": "2026-06-30",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 48464.32000000001,
+  "total_vencido": 45439.29,
   "total_a_receber": 0,
   "total_a_pagar": 26866.16
 }

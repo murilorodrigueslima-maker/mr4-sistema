@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-24T14:47:11",
+  "atualizado_em": "2026-06-24T16:26:20",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -354,7 +354,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 14905.44,
+      "valor": 12200.38,
       "vencimento": "2026-06-30",
       "tipo": "Pagar"
     }

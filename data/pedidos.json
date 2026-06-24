@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-06-24T14:47:11",
-  "total": 65,
+  "atualizado_em": "2026-06-24T16:26:19",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "379721839",
+      "numero": "1330664",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "50.091.279 PEDRO IGOR MACIEL CARNEIRO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 38,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379717896",
+      "numero": "1330663",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 252.04,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379717705",
+      "numero": "1330662",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 4100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379710884",
+      "numero": "1330661",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 567.79,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379706743",
+      "numero": "1330660",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "DAVID ANDERSON BARROSO CORDEIRO 01156737338",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 24,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379698918",
+      "numero": "1330659",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 71,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "379692560",
       "numero": "1330658",
@@ -263,6 +335,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 1034.09,
       "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "377267979",
+      "numero": "1330455",
+      "data": "2026-06-24",
+      "hora": "",
+      "cliente": "FRANCISCO RONIERES SILVA DE LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 290,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

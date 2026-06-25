@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-06-25T15:02:57",
-  "total": 78,
+  "atualizado_em": "2026-06-25T18:22:11",
+  "total": 82,
   "pedidos": [
+    {
+      "id": "379970447",
+      "numero": "1330693",
+      "data": "2026-06-25",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 520,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379944900",
+      "numero": "1330692",
+      "data": "2026-06-25",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379944205",
+      "numero": "1330691",
+      "data": "2026-06-25",
+      "hora": "",
+      "cliente": "51.696.947 THIAGO DOS SANTOS CARVALHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 48.6,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379927445",
+      "numero": "1330690",
+      "data": "2026-06-25",
+      "hora": "",
+      "cliente": "JOSE ADELANO RIBEIRO CARVALHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 432,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "379911699",
       "numero": "1330689",

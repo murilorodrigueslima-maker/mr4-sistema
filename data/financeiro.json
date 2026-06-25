@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-25T15:02:58",
+  "atualizado_em": "2026-06-25T18:22:12",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -83,27 +83,6 @@
       "valor": 2688.26,
       "vencimento": "2026-06-05",
       "dias_atraso": 20,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 891.47,
-      "vencimento": "2026-06-16",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 288.29,
-      "vencimento": "2026-06-16",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 663.74,
-      "vencimento": "2026-06-16",
-      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
@@ -340,7 +319,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 41150.33,
+  "total_vencido": 39306.829999999994,
   "total_a_receber": 0,
   "total_a_pagar": 27605.44
 }

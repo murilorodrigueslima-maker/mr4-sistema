@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-06-24T23:27:07",
+  "atualizado_em": "2026-06-25T04:34:00",
   "contas_vencidas": [
-    {
-      "nome": "CAPITALIZAÇÃO",
-      "valor": 103.16,
-      "vencimento": "2026-04-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
@@ -217,27 +210,30 @@
       "vencimento": "2026-06-23",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-06-24",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-06-24",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-06-24",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.39,
@@ -357,11 +353,29 @@
       "valor": 12200.38,
       "vencimento": "2026-06-30",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 728.83,
+      "vencimento": "2026-07-02",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1137.57,
+      "vencimento": "2026-07-02",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1135.33,
+      "vencimento": "2026-07-02",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45439.29,
+  "total_vencido": 49910.13000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 26866.16
+  "total_a_pagar": 26763.000000000004
 }

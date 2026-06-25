@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-25T07:34:15",
+  "atualizado_em": "2026-06-25T11:04:15",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -80,7 +80,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 2908.26,
+      "valor": 2688.26,
       "vencimento": "2026-06-05",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -90,13 +90,6 @@
       "valor": 2439,
       "vencimento": "2026-06-14",
       "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 3937.2,
-      "vencimento": "2026-06-15",
-      "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
@@ -375,7 +368,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49910.13000000001,
+  "total_vencido": 45752.93000000001,
   "total_a_receber": 0,
   "total_a_pagar": 26763.000000000004
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-26T14:29:33",
+  "atualizado_em": "2026-06-26T16:28:01",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -66,7 +66,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 2108.26,
+      "valor": 1710.43,
       "vencimento": "2026-06-05",
       "dias_atraso": 21,
       "tipo": "Pagar"
@@ -189,6 +189,20 @@
       "vencimento": "2026-06-25",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 35.73,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 4042.91,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -265,12 +279,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO ESTER",
-      "valor": 2019.94,
-      "vencimento": "2026-06-30",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
@@ -315,7 +323,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53129.44000000001,
+  "total_vencido": 56810.250000000015,
   "total_a_receber": 0,
-  "total_a_pagar": 30509.78000000001
+  "total_a_pagar": 32568.48
 }

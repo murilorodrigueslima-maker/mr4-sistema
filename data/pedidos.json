@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-06-26T16:28:00",
-  "total": 82,
+  "atualizado_em": "2026-06-26T18:11:50",
+  "total": 84,
   "pedidos": [
+    {
+      "id": "380237080",
+      "numero": "16388",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "CRISTOVAO FIRMO ARAGAO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 330,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380222713",
+      "numero": "16387",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 71.23,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "380202038",
       "numero": "16386",

@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-06-26T11:03:14",
-  "total": 69,
+  "atualizado_em": "2026-06-26T14:29:32",
+  "total": 74,
   "pedidos": [
+    {
+      "id": "380154433",
+      "numero": "16378",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "52.544.425 SANDRO MARCELO BARBOSA DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 355.91,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380150853",
+      "numero": "16377",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 98,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380133938",
+      "numero": "16376",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 55,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380105401",
+      "numero": "16375",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "60.758.447 JOSE IVANILDO BRITO CUNHA FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 142.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380100280",
+      "numero": "16374",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 87.82,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "380082211",
       "numero": "1330704",
@@ -119,6 +179,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 432,
       "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "379884085",
+      "numero": "1330684",
+      "data": "2026-06-26",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 847,
+      "itens": 7,
       "status_gc": "",
       "cidade": ""
     },
@@ -251,18 +323,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 1854,
       "itens": 21,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "379884085",
-      "numero": "1330684",
-      "data": "2026-06-25",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 126.96,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

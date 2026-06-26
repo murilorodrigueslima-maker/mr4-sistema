@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-26T07:43:47",
+  "atualizado_em": "2026-06-26T11:03:16",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -65,22 +65,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 3417.76,
-      "vencimento": "2026-06-01",
-      "dias_atraso": 25,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTABILIDADE REF ABRIL",
-      "valor": 612,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 21,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
-      "valor": 2688.26,
+      "valor": 2108.26,
       "vencimento": "2026-06-05",
       "dias_atraso": 21,
       "tipo": "Pagar"
@@ -100,31 +86,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 259.14,
-      "vencimento": "2026-06-17",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 884,
       "vencimento": "2026-06-17",
       "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "RAUL CÍCERO RODRIGUES BRAGA",
-      "valor": 466.67,
-      "vencimento": "2026-06-18",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
-      "valor": 130.85,
-      "vencimento": "2026-06-19",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -186,6 +151,41 @@
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 3417.76,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 12200.38,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LICENÇA CANVAS",
+      "valor": 24.16,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 1842.92,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 1649.26,
       "vencimento": "2026-06-25",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -295,12 +295,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 12200.38,
-      "vencimento": "2026-06-30",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
@@ -321,7 +315,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 39461.38,
+  "total_vencido": 53129.44000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 27605.44
+  "total_a_pagar": 30509.78000000001
 }

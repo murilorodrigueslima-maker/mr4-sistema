@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-06-27T12:08:04",
-  "total": 68,
+  "atualizado_em": "2026-06-27T13:57:20",
+  "total": 70,
   "pedidos": [
+    {
+      "id": "380403791",
+      "numero": "16405",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 109,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380381761",
+      "numero": "16404",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "380369330",
       "numero": "16403",

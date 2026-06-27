@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-27T10:10:04",
+  "atualizado_em": "2026-06-27T12:08:05",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -246,12 +246,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ESTOQUISTA",
-      "valor": 423.37,
-      "vencimento": "2026-06-27",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
@@ -328,5 +322,5 @@
   "inadimplencia_pct": 0,
   "total_vencido": 60463.860000000015,
   "total_a_receber": 0,
-  "total_a_pagar": 32568.48
+  "total_a_pagar": 32145.110000000004
 }

@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-06-27T08:23:38",
-  "total": 53,
+  "atualizado_em": "2026-06-27T10:10:03",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "380307571",
+      "numero": "16394",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1966.6,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380307066",
+      "numero": "16393",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 24.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380305282",
+      "numero": "16392",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380297920",
+      "numero": "16391",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "61.165.348 VALDEMIR DO NASCIMENTO PINHEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 390.22,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380294288",
+      "numero": "16390",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 804.06,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380292536",
+      "numero": "16389",
+      "data": "2026-06-27",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 161.82,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "380237080",
       "numero": "16388",

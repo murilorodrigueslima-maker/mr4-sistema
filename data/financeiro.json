@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-26T23:13:09",
+  "atualizado_em": "2026-06-27T03:46:03",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -203,27 +203,30 @@
       "vencimento": "2026-06-25",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1105.6,
       "vencimento": "2026-06-26",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2421,
       "vencimento": "2026-06-26",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
       "valor": 127.01,
       "vencimento": "2026-06-26",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
@@ -323,7 +326,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56810.250000000015,
+  "total_vencido": 60463.860000000015,
   "total_a_receber": 0,
   "total_a_pagar": 32568.48
 }

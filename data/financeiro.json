@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-06-27T23:34:44",
+  "atualizado_em": "2026-06-28T04:43:04",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO PRONAMP",
-      "valor": 700.78,
-      "vencimento": "2026-04-28",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
@@ -224,27 +217,30 @@
       "vencimento": "2026-06-26",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
       "vencimento": "2026-06-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.68,
       "vencimento": "2026-06-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 778.09,
       "vencimento": "2026-06-27",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
@@ -316,11 +312,17 @@
       "valor": 1135.33,
       "vencimento": "2026-07-02",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "Salário Murilo",
+      "valor": 15000,
+      "vencimento": "2026-07-05",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60358.850000000006,
+  "total_vencido": 65909.50000000001,
   "total_a_receber": 0,
   "total_a_pagar": 32145.110000000004
 }

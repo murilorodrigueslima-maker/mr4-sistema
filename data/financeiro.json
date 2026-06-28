@@ -1,122 +1,129 @@
 {
-  "atualizado_em": "2026-06-27T19:54:56",
+  "atualizado_em": "2026-06-27T23:34:44",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-04-28",
-      "dias_atraso": 60,
+      "dias_atraso": 61,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-04-30",
-      "dias_atraso": 58,
+      "dias_atraso": 59,
       "tipo": "Pagar"
     },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-05-07",
-      "dias_atraso": 51,
+      "dias_atraso": 52,
       "tipo": "Pagar"
     },
     {
       "nome": "U. N. LIMA",
       "valor": 2000,
       "vencimento": "2026-05-09",
-      "dias_atraso": 49,
+      "dias_atraso": 50,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 216.43,
       "vencimento": "2026-05-17",
-      "dias_atraso": 41,
+      "dias_atraso": 42,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-05-18",
-      "dias_atraso": 40,
+      "dias_atraso": 41,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-05-25",
-      "dias_atraso": 33,
+      "dias_atraso": 34,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-05-28",
-      "dias_atraso": 30,
+      "dias_atraso": 31,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-05-30",
-      "dias_atraso": 28,
+      "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 1605.42,
       "vencimento": "2026-06-05",
-      "dias_atraso": 22,
+      "dias_atraso": 23,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-06-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1162.45,
       "vencimento": "2026-06-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 884,
       "vencimento": "2026-06-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
       "vencimento": "2026-06-21",
-      "dias_atraso": 6,
+      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 681.61,
       "vencimento": "2026-06-22",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 4875.65,
       "vencimento": "2026-06-22",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
       "vencimento": "2026-06-23",
+      "dias_atraso": 5,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-06-24",
       "dias_atraso": 4,
       "tipo": "Pagar"
     },
@@ -124,105 +131,98 @@
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-06-24",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-24",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-06-24",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "MERCADO LIVRE",
       "valor": 51.39,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 3417.76,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 12200.38,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "LICENÇA CANVAS",
       "valor": 24.16,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 1842.92,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 1649.26,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "UBER FLASH",
       "valor": 35.73,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 4042.91,
       "vencimento": "2026-06-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1105.6,
       "vencimento": "2026-06-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2421,
       "vencimento": "2026-06-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
       "valor": 127.01,
       "vencimento": "2026-06-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-29T05:49:39",
+  "atualizado_em": "2026-06-29T10:58:13",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -72,38 +72,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 1162.45,
-      "vencimento": "2026-06-17",
-      "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 884,
       "vencimento": "2026-06-17",
       "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 5099.28,
-      "vencimento": "2026-06-21",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 681.61,
-      "vencimento": "2026-06-22",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 4875.65,
-      "vencimento": "2026-06-22",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -346,7 +318,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 65909.50000000001,
+  "total_vencido": 54090.51,
   "total_a_receber": 0,
   "total_a_pagar": 32145.110000000004
 }

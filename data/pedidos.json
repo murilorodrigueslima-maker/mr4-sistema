@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-06-29T10:58:11",
-  "total": 29,
+  "atualizado_em": "2026-06-29T13:55:20",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "380660174",
+      "numero": "16418",
+      "data": "2026-06-29",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 753.48,
+      "itens": 14,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380625826",
+      "numero": "16417",
+      "data": "2026-06-29",
+      "hora": "",
+      "cliente": "JULIANO ALBUQUERQUE DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 61,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "380609004",
       "numero": "16416",
@@ -81,8 +105,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 156.07,
-      "itens": 1,
+      "valor": 707,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-28T23:34:44",
+  "atualizado_em": "2026-06-29T05:49:39",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -317,6 +317,30 @@
       "nome": "Salário Murilo",
       "valor": 15000,
       "vencimento": "2026-07-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 1492.2,
+      "vencimento": "2026-07-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
+      "valor": 582.65,
+      "vencimento": "2026-07-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 5099.28,
+      "vencimento": "2026-07-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 259.14,
+      "vencimento": "2026-07-06",
       "tipo": "Pagar"
     }
   ],

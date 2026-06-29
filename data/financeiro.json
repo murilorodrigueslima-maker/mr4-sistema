@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-29T13:55:21",
+  "atualizado_em": "2026-06-29T16:42:54",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -76,13 +76,6 @@
       "valor": 884,
       "vencimento": "2026-06-17",
       "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1276.18,
-      "vencimento": "2026-06-23",
-      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
@@ -318,7 +311,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54090.51,
+  "total_vencido": 52814.33000000001,
   "total_a_receber": 0,
   "total_a_pagar": 32145.110000000004
 }

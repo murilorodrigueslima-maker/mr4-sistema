@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-06-29T23:29:03",
+  "atualizado_em": "2026-06-30T04:41:48",
   "contas_vencidas": [
-    {
-      "nome": "PARCELAMENTO IMPOSTOS",
-      "valor": 517.47,
-      "vencimento": "2026-04-30",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
@@ -203,39 +196,44 @@
       "vencimento": "2026-06-27",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 860.27,
       "vencimento": "2026-06-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1281.44,
       "vencimento": "2026-06-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 155.1,
       "vencimento": "2026-06-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
@@ -307,11 +305,23 @@
       "valor": 259.14,
       "vencimento": "2026-07-06",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 718.66,
+      "vencimento": "2026-07-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CAGECE RUA CEARA 634",
+      "valor": 321.56,
+      "vencimento": "2026-07-07",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52814.33000000001,
+  "total_vencido": 57733.450000000004,
   "total_a_receber": 0,
-  "total_a_pagar": 32145.110000000004
+  "total_a_pagar": 34165.05
 }

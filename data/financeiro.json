@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-30T13:19:01",
+  "atualizado_em": "2026-06-30T16:42:30",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -52,7 +52,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 983.39,
+      "valor": 339.42,
       "vencimento": "2026-06-05",
       "dias_atraso": 25,
       "tipo": "Pagar"
@@ -81,13 +81,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
-      "vencimento": "2026-06-24",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1500,
       "vencimento": "2026-06-24",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -321,7 +314,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57111.420000000006,
+  "total_vencido": 54967.450000000004,
   "total_a_receber": 0,
   "total_a_pagar": 34165.05
 }

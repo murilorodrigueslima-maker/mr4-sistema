@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-30T10:56:21",
+  "atualizado_em": "2026-06-30T13:19:01",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -52,7 +52,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 1605.42,
+      "valor": 983.39,
       "vencimento": "2026-06-05",
       "dias_atraso": 25,
       "tipo": "Pagar"
@@ -321,7 +321,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57733.450000000004,
+  "total_vencido": 57111.420000000006,
   "total_a_receber": 0,
   "total_a_pagar": 34165.05
 }

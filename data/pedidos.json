@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-06-30T10:56:19",
-  "total": 24,
+  "atualizado_em": "2026-06-30T13:19:00",
+  "total": 30,
   "pedidos": [
+    {
+      "id": "380859619",
+      "numero": "16434",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 256.66,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380826577",
+      "numero": "16433",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "42.888.959 MATHEUS FONSECA LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 54,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380823015",
+      "numero": "16432",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "HEMETERIO RONALD CARDOSO DE SOUSA 01563559307",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 184.99,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380815783",
+      "numero": "16431",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "NELSON SILVA DE OLIVEIRA 07649731340",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 46.66,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380814992",
+      "numero": "16430",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 155.12,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380812036",
+      "numero": "16429",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "NP COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1040,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "380807037",
       "numero": "16428",
@@ -45,7 +117,7 @@
       "hora": "",
       "cliente": "FRANCISCO JOHNY VIEIRA DE ABREU",
       "vendedor": "fabiana andrade da silva",
-      "valor": 318,
+      "valor": 306.9,
       "itens": 3,
       "status_gc": "",
       "cidade": ""
@@ -99,14 +171,26 @@
       "cidade": ""
     },
     {
+      "id": "380573264",
+      "numero": "16410",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1500,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "380563415",
       "numero": "16406",
       "data": "2026-06-30",
       "hora": "",
       "cliente": "FERNANDO FREITAS ALMEIDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 266.8,
-      "itens": 2,
+      "valor": 496,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },
@@ -227,18 +311,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 554.7,
       "itens": 5,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "380573264",
-      "numero": "16410",
-      "data": "2026-06-29",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 707,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

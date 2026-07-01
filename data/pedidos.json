@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-01T18:18:07",
-  "total": 57,
+  "atualizado_em": "2026-07-01T20:02:40",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "381294586",
+      "numero": "16461",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "RAUL ALMEIDA TEOFILO 02180916302",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 2120,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381245232",
       "numero": "16460",
@@ -152,9 +164,9 @@
       "data": "2026-07-01",
       "hora": "",
       "cliente": "U. N. LIMA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1268.68,
-      "itens": 1,
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 3510,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

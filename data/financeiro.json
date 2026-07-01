@@ -1,18 +1,11 @@
 {
-  "atualizado_em": "2026-07-01T18:18:08",
+  "atualizado_em": "2026-07-01T20:02:40",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
       "valor": 1083.85,
       "vencimento": "2026-05-07",
       "dias_atraso": 55,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "U. N. LIMA",
-      "valor": 2000,
-      "vencimento": "2026-05-09",
-      "dias_atraso": 53,
       "tipo": "Pagar"
     },
     {
@@ -69,13 +62,6 @@
       "valor": 884,
       "vencimento": "2026-06-17",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-24",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -174,20 +160,6 @@
       "valor": 67.35,
       "vencimento": "2026-06-25",
       "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 1105.6,
-      "vencimento": "2026-06-26",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2421,
-      "vencimento": "2026-06-26",
-      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
@@ -310,7 +282,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 15000,
+      "valor": 14426.38,
       "vencimento": "2026-07-05",
       "tipo": "Pagar"
     },
@@ -365,7 +337,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 64106.130000000005,
+  "total_vencido": 57042.53,
   "total_a_receber": 0,
   "total_a_pagar": 34365.030000000006
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-01T16:30:04",
+  "atualizado_em": "2026-07-01T18:18:08",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -144,6 +144,34 @@
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 7600.38,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 6629.64,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 232.01,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 1924.16,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 67.35,
       "vencimento": "2026-06-25",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -337,7 +365,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55252.97,
+  "total_vencido": 64106.130000000005,
   "total_a_receber": 0,
   "total_a_pagar": 34365.030000000006
 }

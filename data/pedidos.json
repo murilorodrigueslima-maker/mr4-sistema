@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-01T16:30:03",
-  "total": 56,
+  "atualizado_em": "2026-07-01T18:18:07",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "381245232",
+      "numero": "16460",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 30,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381216149",
       "numero": "16459",

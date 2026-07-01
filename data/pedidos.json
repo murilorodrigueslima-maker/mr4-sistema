@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-01T09:27:22",
-  "total": 44,
+  "atualizado_em": "2026-07-01T13:16:14",
+  "total": 51,
   "pedidos": [
+    {
+      "id": "381135147",
+      "numero": "16454",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "61.017.393 JAMESON FONSECA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381118831",
+      "numero": "16453",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "JOSE J DE SOUSA PINTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 545,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381086859",
+      "numero": "16452",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 460,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381074620",
+      "numero": "16451",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 128.33,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381063148",
+      "numero": "16450",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "DEUSIMAR RAMOS DE FARIAS FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 33.6,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381061464",
+      "numero": "16449",
+      "data": "2026-07-01",
+      "hora": "",
+      "cliente": "EDILARDO ELVIS DO NASCIMENTO DE QUEIROZ",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 85,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "364735832",
       "numero": "15438",
@@ -11,6 +83,18 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 1268.68,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381060688",
+      "numero": "16448",
+      "data": "2026-06-30",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 336.89,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },
@@ -117,8 +201,8 @@
       "hora": "",
       "cliente": "ANTONIO MAURICIO DA COSTA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 270.98,
-      "itens": 4,
+      "valor": 204.7,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },
@@ -129,8 +213,8 @@
       "hora": "",
       "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 3774.15,
-      "itens": 11,
+      "valor": 4774.15,
+      "itens": 12,
       "status_gc": "",
       "cidade": ""
     },

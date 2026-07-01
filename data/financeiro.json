@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-01T09:27:23",
+  "atualizado_em": "2026-07-01T13:16:15",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -52,7 +52,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 339.42,
+      "valor": 71.18,
       "vencimento": "2026-06-05",
       "dias_atraso": 26,
       "tipo": "Pagar"
@@ -107,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 12200.38,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "LICENÇA CANVAS",
       "valor": 24.16,
       "vencimento": "2026-06-25",
@@ -144,6 +137,13 @@
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 4042.91,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 7600.38,
       "vencimento": "2026-06-25",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -252,6 +252,13 @@
       "vencimento": "2026-06-30",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 132.62,
+      "vencimento": "2026-06-30",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -330,7 +337,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59988.590000000004,
+  "total_vencido": 55252.97,
   "total_a_receber": 0,
-  "total_a_pagar": 34165.05
+  "total_a_pagar": 34365.030000000006
 }

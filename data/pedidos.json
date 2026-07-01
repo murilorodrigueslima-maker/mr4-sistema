@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-01T05:03:23",
+  "atualizado_em": "2026-07-01T09:27:22",
   "total": 44,
   "pedidos": [
     {
@@ -57,8 +57,8 @@
       "hora": "",
       "cliente": "Edson Farias Teixeira",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 270.32,
-      "itens": 5,
+      "valor": 345.32,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },

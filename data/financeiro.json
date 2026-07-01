@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-06-30T23:35:41",
+  "atualizado_em": "2026-07-01T05:03:24",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -224,33 +224,37 @@
       "vencimento": "2026-06-29",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 313.67,
       "vencimento": "2026-06-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 2930.5,
       "vencimento": "2026-06-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1259.5,
       "vencimento": "2026-06-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
@@ -310,11 +314,23 @@
       "valor": 321.56,
       "vencimento": "2026-07-07",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1624.18,
+      "vencimento": "2026-07-08",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1691.5,
+      "vencimento": "2026-07-08",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54967.450000000004,
+  "total_vencido": 59988.590000000004,
   "total_a_receber": 0,
   "total_a_pagar": 34165.05
 }

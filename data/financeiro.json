@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-02T07:28:29",
+  "atualizado_em": "2026-07-02T10:29:56",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -44,13 +44,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 71.18,
-      "vencimento": "2026-06-05",
-      "dias_atraso": 27,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-06-17",
@@ -62,13 +55,6 @@
       "valor": 884,
       "vencimento": "2026-06-17",
       "dias_atraso": 15,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-06-24",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -355,7 +341,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57042.53,
+  "total_vencido": 55434.350000000006,
   "total_a_receber": 0,
   "total_a_pagar": 34365.030000000006
 }

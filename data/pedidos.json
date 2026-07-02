@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-02T16:09:34",
-  "total": 69,
+  "atualizado_em": "2026-07-02T17:54:04",
+  "total": 73,
   "pedidos": [
+    {
+      "id": "381534483",
+      "numero": "16490",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2328.75,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381518737",
+      "numero": "16489",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381518444",
+      "numero": "16488",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "MOTA VEICULOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 420,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381503938",
+      "numero": "16487",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381484239",
       "numero": "16486",

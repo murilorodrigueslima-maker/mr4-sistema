@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-02T14:50:48",
-  "total": 66,
+  "atualizado_em": "2026-07-02T16:09:34",
+  "total": 69,
   "pedidos": [
+    {
+      "id": "381484239",
+      "numero": "16486",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381476983",
+      "numero": "16485",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 335,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381464397",
+      "numero": "16484",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 196.94,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381436455",
       "numero": "16483",

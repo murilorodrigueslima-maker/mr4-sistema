@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-02T12:59:39",
-  "total": 62,
+  "atualizado_em": "2026-07-02T14:50:48",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "381436455",
+      "numero": "16483",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 314,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381430458",
+      "numero": "16482",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 188,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381429184",
+      "numero": "16481",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 112,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381425652",
+      "numero": "16480",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 257,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381415002",
       "numero": "16479",
@@ -9,8 +57,8 @@
       "hora": "",
       "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 945.86,
-      "itens": 6,
+      "valor": 1652.36,
+      "itens": 8,
       "status_gc": "",
       "cidade": ""
     },

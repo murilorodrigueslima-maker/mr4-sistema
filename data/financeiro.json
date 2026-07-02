@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-01T23:15:14",
+  "atualizado_em": "2026-07-02T03:59:58",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -332,6 +332,24 @@
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1691.5,
       "vencimento": "2026-07-08",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-07-09",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-07-09",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1500,
+      "vencimento": "2026-07-09",
       "tipo": "Pagar"
     }
   ],

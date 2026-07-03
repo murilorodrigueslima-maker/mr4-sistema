@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-03T12:48:44",
+  "atualizado_em": "2026-07-03T14:13:25",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -52,7 +52,7 @@
     },
     {
       "nome": "EMPRESTIMO JARBAS",
-      "valor": 884,
+      "valor": 584,
       "vencimento": "2026-06-17",
       "dias_atraso": 16,
       "tipo": "Pagar"
@@ -259,6 +259,13 @@
       "vencimento": "2026-07-02",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "valor": 995,
+      "vencimento": "2026-07-02",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -355,7 +362,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50903.45999999999,
+  "total_vencido": 51598.45999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 38320.19000000001
+  "total_a_pagar": 38020.19000000001
 }

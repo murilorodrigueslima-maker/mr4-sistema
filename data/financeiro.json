@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-03T09:00:15",
+  "atualizado_em": "2026-07-03T12:48:44",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -114,13 +114,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 7600.38,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 6629.64,
       "vencimento": "2026-06-25",
@@ -144,6 +137,13 @@
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 67.35,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 8,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 200.38,
       "vencimento": "2026-06-25",
       "dias_atraso": 8,
       "tipo": "Pagar"
@@ -240,13 +240,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 132.62,
-      "vencimento": "2026-06-30",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
@@ -270,8 +263,14 @@
   ],
   "contas_vencendo": [
     {
+      "nome": "ALUGUEL GALPÃO REF JUNHO",
+      "valor": 3955.16,
+      "vencimento": "2026-07-05",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "Salário Murilo",
-      "valor": 14426.38,
+      "valor": 11359.72,
       "vencimento": "2026-07-05",
       "tipo": "Pagar"
     },
@@ -356,7 +355,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58436.08000000001,
+  "total_vencido": 50903.45999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 34365.030000000006
+  "total_a_pagar": 38320.19000000001
 }

@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-03T14:13:24",
-  "total": 67,
+  "atualizado_em": "2026-07-03T16:02:07",
+  "total": 74,
   "pedidos": [
+    {
+      "id": "381760612",
+      "numero": "16523",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 285,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381747974",
+      "numero": "16522",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381747576",
+      "numero": "16521",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 333.99,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381745482",
+      "numero": "16520",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 15,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381743450",
+      "numero": "16519",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381737656",
+      "numero": "16518",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "LOCCEL RENT A CAR COMERCIO E SERVICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 520,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381721962",
+      "numero": "16517",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381713231",
       "numero": "16516",

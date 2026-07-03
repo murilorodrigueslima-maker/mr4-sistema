@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-03T14:13:25",
+  "atualizado_em": "2026-07-03T16:02:08",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -58,13 +58,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "MERCADO LIVRE",
-      "valor": 51.39,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-06-25",
@@ -74,34 +67,6 @@
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 3417.76,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LICENÇA CANVAS",
-      "valor": 24.16,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FACEBOOK TRAFEGO",
-      "valor": 1842.92,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FACEBOOK TRAFEGO",
-      "valor": 1649.26,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "UBER FLASH",
-      "valor": 35.73,
       "vencimento": "2026-06-25",
       "dias_atraso": 8,
       "tipo": "Pagar"
@@ -122,28 +87,14 @@
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 232.01,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1924.16,
       "vencimento": "2026-06-25",
       "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
-      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 67.35,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 200.38,
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 1603.2,
       "vencimento": "2026-06-25",
       "dias_atraso": 8,
       "tipo": "Pagar"
@@ -277,7 +228,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 11359.72,
+      "valor": 10854.55,
       "vencimento": "2026-07-05",
       "tipo": "Pagar"
     },
@@ -362,7 +313,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51598.45999999999,
+  "total_vencido": 49098.45999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 38020.19000000001
+  "total_a_pagar": 36071.32000000001
 }

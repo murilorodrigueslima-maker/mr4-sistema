@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-02T22:59:43",
+  "atualizado_em": "2026-07-03T02:56:24",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -245,27 +245,30 @@
       "vencimento": "2026-06-30",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1137.57,
       "vencimento": "2026-07-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-07-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "Salário Murilo",
       "valor": 14426.38,
@@ -337,11 +340,23 @@
       "valor": 1500,
       "vencimento": "2026-07-09",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MAQUINETA DE CARTÃO",
+      "valor": 21.24,
+      "vencimento": "2026-07-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ENEL RUA CEARA 634",
+      "valor": 520.88,
+      "vencimento": "2026-07-10",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55434.350000000006,
+  "total_vencido": 58436.08000000001,
   "total_a_receber": 0,
   "total_a_pagar": 34365.030000000006
 }

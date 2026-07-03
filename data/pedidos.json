@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-03T16:02:07",
-  "total": 74,
+  "atualizado_em": "2026-07-03T17:52:47",
+  "total": 79,
   "pedidos": [
+    {
+      "id": "381802917",
+      "numero": "16528",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "ADEMIR LOPES FURTADO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 42.45,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381789532",
+      "numero": "16527",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 276,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381789066",
+      "numero": "16526",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "ELETRONIC NEGO SOM ACESSORIOS VEICULAR LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 431.18,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381780187",
+      "numero": "16525",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 525.46,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381778193",
+      "numero": "16524",
+      "data": "2026-07-03",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 189.15,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381760612",
       "numero": "16523",

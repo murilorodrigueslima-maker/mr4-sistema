@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-03T05:53:32",
-  "total": 42,
+  "atualizado_em": "2026-07-03T09:00:14",
+  "total": 43,
   "pedidos": [
+    {
+      "id": "381588014",
+      "numero": "16491",
+      "data": "2026-07-02",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 232,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381534483",
       "numero": "16490",

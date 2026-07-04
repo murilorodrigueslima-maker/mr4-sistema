@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-03T22:58:11",
+  "atualizado_em": "2026-07-04T02:44:38",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -308,6 +308,18 @@
       "nome": "ENEL RUA CEARA 634",
       "valor": 520.88,
       "vencimento": "2026-07-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2440.5,
+      "vencimento": "2026-07-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1500,
+      "vencimento": "2026-07-11",
       "tipo": "Pagar"
     }
   ],

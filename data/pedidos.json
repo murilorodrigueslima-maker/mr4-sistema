@@ -1,7 +1,103 @@
 {
-  "atualizado_em": "2026-07-04T10:00:24",
-  "total": 71,
+  "atualizado_em": "2026-07-04T11:57:26",
+  "total": 79,
   "pedidos": [
+    {
+      "id": "381927573",
+      "numero": "16543",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 29.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381920914",
+      "numero": "16542",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 213.61,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381920251",
+      "numero": "16541",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 85.23,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381907180",
+      "numero": "16540",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "ARISNEVES FERREIRA SANTOS 02068641321",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 137.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381906355",
+      "numero": "16539",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "32.434.009 ANTONIO ALISON LOPES DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381902846",
+      "numero": "16538",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "32.434.009 ANTONIO ALISON LOPES DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 520,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381896563",
+      "numero": "16537",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 670.99,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381895576",
+      "numero": "16536",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 13.2,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "381887537",
       "numero": "16535",
@@ -83,6 +179,30 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 95,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381393907",
+      "numero": "16475",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 676.8,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "380794133",
+      "numero": "16425",
+      "data": "2026-07-04",
+      "hora": "",
+      "cliente": "FRANCISCO JOHNY VIEIRA DE ABREU",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 326.9,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },
@@ -519,18 +639,6 @@
       "cidade": ""
     },
     {
-      "id": "381393907",
-      "numero": "16475",
-      "data": "2026-07-03",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 585.39,
-      "itens": 5,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
       "id": "381588014",
       "numero": "16491",
       "data": "2026-07-02",
@@ -839,18 +947,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 1379,
       "itens": 12,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "380794133",
-      "numero": "16425",
-      "data": "2026-07-02",
-      "hora": "",
-      "cliente": "FRANCISCO JOHNY VIEIRA DE ABREU",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 306.9,
-      "itens": 3,
       "status_gc": "",
       "cidade": ""
     }

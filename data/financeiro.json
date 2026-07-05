@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-04T23:06:00",
+  "atualizado_em": "2026-07-05T03:59:35",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -320,6 +320,24 @@
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 2134.66,
+      "vencimento": "2026-07-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 3338.69,
+      "vencimento": "2026-07-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 778.09,
+      "vencimento": "2026-07-12",
       "tipo": "Pagar"
     }
   ],

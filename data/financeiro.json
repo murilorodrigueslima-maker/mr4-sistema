@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-06T13:47:24",
+  "atualizado_em": "2026-07-06T16:42:51",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -170,6 +170,13 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 190.92,
+      "vencimento": "2026-07-01",
+      "dias_atraso": 5,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
@@ -179,13 +186,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1137.57,
-      "vencimento": "2026-07-02",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1135.33,
       "vencimento": "2026-07-02",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -360,7 +360,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58600.96,
+  "total_vencido": 57656.549999999996,
   "total_a_receber": 0,
-  "total_a_pagar": 38823.28000000001
+  "total_a_pagar": 38917.28000000001
 }

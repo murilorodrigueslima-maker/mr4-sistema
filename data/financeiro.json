@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-06T10:37:47",
+  "atualizado_em": "2026-07-06T13:47:24",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -114,13 +114,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 778.09,
-      "vencimento": "2026-06-27",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
@@ -137,13 +130,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 860.27,
-      "vencimento": "2026-06-29",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1281.44,
       "vencimento": "2026-06-29",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -374,7 +360,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60660.49,
+  "total_vencido": 58600.96,
   "total_a_receber": 0,
   "total_a_pagar": 38823.28000000001
 }

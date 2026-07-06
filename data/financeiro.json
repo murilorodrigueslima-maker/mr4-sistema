@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-05T23:11:11",
+  "atualizado_em": "2026-07-06T05:09:58",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -217,21 +217,23 @@
       "vencimento": "2026-07-02",
       "dias_atraso": 4,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ALUGUEL GALPÃO REF JUNHO",
       "valor": 3955.16,
       "vencimento": "2026-07-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 10854.55,
       "vencimento": "2026-07-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1492.2,
@@ -339,11 +341,41 @@
       "valor": 778.09,
       "vencimento": "2026-07-12",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 3937.2,
+      "vencimento": "2026-07-13",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 860.27,
+      "vencimento": "2026-07-13",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 919.13,
+      "vencimento": "2026-07-13",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 1404,
+      "vencimento": "2026-07-13",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1281.44,
+      "vencimento": "2026-07-13",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49098.45999999999,
+  "total_vencido": 63908.17,
   "total_a_receber": 0,
-  "total_a_pagar": 36071.32000000001
+  "total_a_pagar": 40026.48000000001
 }

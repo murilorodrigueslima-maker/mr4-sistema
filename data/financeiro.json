@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-06T05:09:58",
+  "atualizado_em": "2026-07-06T10:37:47",
   "contas_vencidas": [
     {
       "nome": "FIAMON IND. E COM. DE PLASTICO LTDA",
@@ -87,14 +87,7 @@
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 1924.16,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FACEBOOK TRAFEGO",
-      "valor": 1603.2,
+      "valor": 1527.36,
       "vencimento": "2026-06-25",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -227,7 +220,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 10854.55,
+      "valor": 9606.87,
       "vencimento": "2026-07-05",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -325,6 +318,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "ESTOQUISTA",
+      "valor": 400,
+      "vencimento": "2026-07-11",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
       "vencimento": "2026-07-12",
@@ -375,7 +374,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63908.17,
+  "total_vencido": 60660.49,
   "total_a_receber": 0,
-  "total_a_pagar": 40026.48000000001
+  "total_a_pagar": 38823.28000000001
 }

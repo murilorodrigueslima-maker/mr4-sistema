@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-07T16:41:35",
+  "atualizado_em": "2026-07-07T18:15:14",
   "total": 40,
   "pedidos": [
+    {
+      "id": "382663917",
+      "numero": "16581",
+      "data": "2026-07-07",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 293.98,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "382609055",
       "numero": "16580",
@@ -9,7 +21,7 @@
       "hora": "",
       "cliente": "WANDERLEY MOTO PECAS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 856.95,
+      "valor": 825,
       "itens": 4,
       "status_gc": "",
       "cidade": ""
@@ -119,18 +131,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 544,
       "itens": 3,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "382529096",
-      "numero": "16570",
-      "data": "2026-07-07",
-      "hora": "",
-      "cliente": "KELIANE DA SILVA LIMA 06504549362",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 508.34,
-      "itens": 8,
       "status_gc": "",
       "cidade": ""
     },

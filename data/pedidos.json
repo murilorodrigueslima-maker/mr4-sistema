@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-07T07:45:27",
-  "total": 23,
+  "atualizado_em": "2026-07-07T11:07:44",
+  "total": 24,
   "pedidos": [
+    {
+      "id": "382480975",
+      "numero": "16564",
+      "data": "2026-07-07",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 305.45,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381343784",
+      "numero": "16465",
+      "data": "2026-07-07",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2350,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "382345481",
       "numero": "16563",
@@ -263,18 +287,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 676.8,
       "itens": 6,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "381343784",
-      "numero": "16465",
-      "data": "2026-07-06",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 2350,
-      "itens": 7,
       "status_gc": "",
       "cidade": ""
     }

@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-07T18:15:14",
-  "total": 40,
+  "atualizado_em": "2026-07-07T19:51:35",
+  "total": 41,
   "pedidos": [
+    {
+      "id": "382683998",
+      "numero": "16582",
+      "data": "2026-07-07",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1265.39,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "382663917",
       "numero": "16581",

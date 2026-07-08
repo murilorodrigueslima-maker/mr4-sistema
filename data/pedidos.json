@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-08T16:07:46",
-  "total": 65,
+  "atualizado_em": "2026-07-08T17:56:35",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "382929434",
+      "numero": "16612",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 38,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382914086",
+      "numero": "16611",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382913782",
+      "numero": "16610",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 155,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382903195",
+      "numero": "16609",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382897245",
+      "numero": "16608",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 82.5,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382890002",
+      "numero": "16607",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 500,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382889837",
+      "numero": "16606",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1949,
+      "itens": 25,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "382877741",
       "numero": "16605",

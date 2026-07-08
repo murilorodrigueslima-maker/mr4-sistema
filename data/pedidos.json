@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-08T10:40:52",
-  "total": 50,
+  "atualizado_em": "2026-07-08T12:57:13",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "382807930",
+      "numero": "16595",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "39.847.013 MARCOS CEZAR DA SILVA MEDEIROS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 813.68,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382805039",
+      "numero": "16594",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "FRANCISCO OLIVEIRA DA COSTA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 300,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382774336",
+      "numero": "16593",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "LOCCEL RENT A CAR COMERCIO E SERVICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 444.5,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382765514",
+      "numero": "16592",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 610.92,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "382753275",
       "numero": "16591",
@@ -81,8 +129,8 @@
       "hora": "",
       "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 126,
-      "itens": 1,
+      "valor": 416,
+      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },

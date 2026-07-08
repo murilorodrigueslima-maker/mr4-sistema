@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-07T22:47:26",
+  "atualizado_em": "2026-07-08T01:59:53",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -231,21 +231,23 @@
       "vencimento": "2026-07-06",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 718.66,
       "vencimento": "2026-07-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 321.56,
       "vencimento": "2026-07-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624.18,
@@ -377,11 +379,59 @@
       "valor": 1668.73,
       "vencimento": "2026-07-14",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "sistema gestãoclick inter",
+      "valor": 16.01,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SERASA",
+      "valor": 52.4,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MONITOR COMPUTADOR",
+      "valor": 200.7,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
+      "valor": 218.82,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SELOS DE GARANTIA MR4",
+      "valor": 38.33,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SISTEMA GESTÃOCLICK",
+      "valor": 224.28,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO ELO NAQUIM",
+      "valor": 2452.17,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 4767.81,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60557.719999999994,
+  "total_vencido": 61597.939999999995,
   "total_a_receber": 0,
   "total_a_pagar": 34962.119999999995
 }

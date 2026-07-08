@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-08T14:25:20",
+  "atualizado_em": "2026-07-08T16:07:47",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -142,13 +142,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 190.92,
-      "vencimento": "2026-07-01",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
@@ -163,15 +156,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
-      "valor": 995,
-      "vencimento": "2026-07-02",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
-      "valor": 9406.87,
+      "valor": 9206.87,
       "vencimento": "2026-07-05",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -424,7 +410,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59463.28,
+  "total_vencido": 58077.36,
   "total_a_receber": 0,
-  "total_a_pagar": 34962.119999999995
+  "total_a_pagar": 35007.079999999994
 }

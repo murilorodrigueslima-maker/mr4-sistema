@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-08T12:57:13",
-  "total": 54,
+  "atualizado_em": "2026-07-08T14:25:19",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "382826719",
+      "numero": "16600",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75.91,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382825879",
+      "numero": "16599",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 94,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382823421",
+      "numero": "16598",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "PEDRO HENRIQUE SOUSA AVELINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 490,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382817398",
+      "numero": "16597",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "Francisco Wesley do Nascimento",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 22,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382809933",
+      "numero": "16596",
+      "data": "2026-07-08",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 153.54,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "382807930",
       "numero": "16595",

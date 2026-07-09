@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-07-09T14:47:29",
+  "atualizado_em": "2026-07-09T16:22:44",
   "total_produtos": 904,
-  "valor_total_estoque": 403510.24000000034,
+  "valor_total_estoque": 402760.3300000004,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -237,6 +237,13 @@
       "custo": 36.33
     },
     {
+      "ref": "2470",
+      "nome": "MOLDURA 2 DIN GM ONIX, COBALT, SPIN, PRISMA 12/16, ONIX JOY 21 - PRETA",
+      "margem": "-8.2",
+      "preco": 36.06,
+      "custo": 39
+    },
+    {
       "ref": "4994",
       "nome": "MOLDURA 9 FIAT MOBI - PRETA",
       "margem": "-4.7",
@@ -347,13 +354,6 @@
       "margem": "16.7",
       "preco": 128.35,
       "custo": 106.96
-    },
-    {
-      "ref": "VA10000078",
-      "nome": "KIT PRATICO 1 PAR TRIAK 6“ + 1 PAR AF 6X9",
-      "margem": "16.7",
-      "preco": 196.54,
-      "custo": 163.78
     }
   ]
 }

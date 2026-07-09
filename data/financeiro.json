@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-09T11:30:49",
+  "atualizado_em": "2026-07-09T14:47:25",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -108,27 +108,6 @@
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 313.67,
-      "vencimento": "2026-06-30",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 2930.5,
-      "vencimento": "2026-06-30",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 1259.5,
-      "vencimento": "2026-06-30",
-      "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
       "dias_atraso": 7,
@@ -199,7 +178,7 @@
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 718.66,
+      "valor": 2874.67,
       "vencimento": "2026-07-07",
       "dias_atraso": 2,
       "tipo": "Pagar"
@@ -410,7 +389,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60377.67,
+  "total_vencido": 58030.009999999995,
   "total_a_receber": 0,
   "total_a_pagar": 35007.079999999994
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-09T07:45:22",
+  "atualizado_em": "2026-07-09T11:30:49",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -95,20 +95,6 @@
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
-      "vencimento": "2026-06-29",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 860.27,
-      "vencimento": "2026-06-29",
-      "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 155.1,
       "vencimento": "2026-06-29",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -424,7 +410,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61393.04,
+  "total_vencido": 60377.67,
   "total_a_receber": 0,
   "total_a_pagar": 35007.079999999994
 }

@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-09T16:22:39",
-  "total": 75,
+  "atualizado_em": "2026-07-09T18:12:32",
+  "total": 78,
   "pedidos": [
+    {
+      "id": "383163986",
+      "numero": "16638",
+      "data": "2026-07-09",
+      "hora": "",
+      "cliente": "DAVID LIMA DE OLIVEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 93.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383162785",
+      "numero": "16637",
+      "data": "2026-07-09",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 800,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383143869",
+      "numero": "16636",
+      "data": "2026-07-09",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 430,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383130122",
       "numero": "16635",

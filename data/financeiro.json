@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-09T16:22:40",
+  "atualizado_em": "2026-07-09T18:12:33",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -122,7 +122,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 9206.87,
+      "valor": 8538.9,
       "vencimento": "2026-07-05",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -389,7 +389,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58030.009999999995,
+  "total_vencido": 57362.03999999999,
   "total_a_receber": 0,
   "total_a_pagar": 35007.079999999994
 }

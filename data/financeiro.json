@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-08T22:59:39",
+  "atualizado_em": "2026-07-09T03:07:38",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -224,21 +224,23 @@
       "vencimento": "2026-07-07",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624.18,
       "vencimento": "2026-07-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1691.5,
       "vencimento": "2026-07-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
@@ -406,11 +408,23 @@
       "valor": 4767.81,
       "vencimento": "2026-07-15",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 891.47,
+      "vencimento": "2026-07-16",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 384.2,
+      "vencimento": "2026-07-16",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58077.36,
+  "total_vencido": 61393.04,
   "total_a_receber": 0,
   "total_a_pagar": 35007.079999999994
 }

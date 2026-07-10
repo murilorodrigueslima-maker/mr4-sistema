@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-10T16:15:46",
-  "total": 79,
+  "atualizado_em": "2026-07-10T17:59:28",
+  "total": 80,
   "pedidos": [
+    {
+      "id": "383436180",
+      "numero": "16659",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 140,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383400740",
       "numero": "16658",

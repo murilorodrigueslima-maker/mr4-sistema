@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-10T10:59:41",
-  "total": 63,
+  "atualizado_em": "2026-07-10T13:26:27",
+  "total": 70,
   "pedidos": [
+    {
+      "id": "383321986",
+      "numero": "16649",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383321255",
+      "numero": "16648",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 585,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383316233",
+      "numero": "16647",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "HENRIQUE JORGE CAMARA NUNES 28513029300",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 89.55,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383306661",
+      "numero": "16646",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "NELSON SILVA DE OLIVEIRA 07649731340",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 306.52,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383303257",
+      "numero": "16645",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "CLIENTE FINAL",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383284443",
+      "numero": "16644",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "53.492.423 MANUEL LIMA FILHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 311.13,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383261871",
       "numero": "16643",
@@ -59,6 +131,30 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 310,
       "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "382889837",
+      "numero": "16606",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1952,
+      "itens": 25,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "381920251",
+      "numero": "16541",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 160.23,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },
@@ -467,18 +563,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 500,
       "itens": 3,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "382889837",
-      "numero": "16606",
-      "data": "2026-07-08",
-      "hora": "",
-      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1802.3,
-      "itens": 25,
       "status_gc": "",
       "cidade": ""
     },

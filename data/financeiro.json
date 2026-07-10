@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-09T22:58:19",
+  "atualizado_em": "2026-07-10T03:02:53",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -203,27 +203,30 @@
       "vencimento": "2026-07-08",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-07-09",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-07-09",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-09",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
@@ -385,11 +388,53 @@
       "valor": 384.2,
       "vencimento": "2026-07-16",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 3000,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 1439.8,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1134.83,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1135.33,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 277.01,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 426.43,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57362.03999999999,
+  "total_vencido": 61936.03999999999,
   "total_a_receber": 0,
   "total_a_pagar": 35007.079999999994
 }

@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-10T07:44:09",
-  "total": 58,
+  "atualizado_em": "2026-07-10T10:59:41",
+  "total": 63,
   "pedidos": [
+    {
+      "id": "383261871",
+      "numero": "16643",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "FRANCISCA ANDRESSA ARAUJO GOMES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 554,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383249816",
+      "numero": "16642",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "REI AUTO PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 125,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383249311",
+      "numero": "16641",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 190,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383247502",
+      "numero": "16640",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "MP LAMPADA E ACESSÓRIOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 478.4,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383245578",
+      "numero": "16639",
+      "data": "2026-07-10",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 310,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383163986",
       "numero": "16638",
@@ -417,8 +477,8 @@
       "hora": "",
       "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1799,
-      "itens": 24,
+      "valor": 1802.3,
+      "itens": 25,
       "status_gc": "",
       "cidade": ""
     },

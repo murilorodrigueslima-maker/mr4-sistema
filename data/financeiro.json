@@ -1,206 +1,199 @@
 {
-  "atualizado_em": "2026-07-10T19:50:43",
+  "atualizado_em": "2026-07-10T22:46:09",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 216.43,
       "vencimento": "2026-05-17",
-      "dias_atraso": 54,
+      "dias_atraso": 55,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-05-18",
-      "dias_atraso": 53,
+      "dias_atraso": 54,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-05-25",
-      "dias_atraso": 46,
+      "dias_atraso": 47,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-05-28",
-      "dias_atraso": 43,
+      "dias_atraso": 44,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-05-30",
-      "dias_atraso": 41,
+      "dias_atraso": 42,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-06-17",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 584,
       "vencimento": "2026-06-17",
-      "dias_atraso": 23,
+      "dias_atraso": 24,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-06-25",
-      "dias_atraso": 15,
+      "dias_atraso": 16,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 3417.76,
       "vencimento": "2026-06-25",
-      "dias_atraso": 15,
+      "dias_atraso": 16,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 4042.91,
       "vencimento": "2026-06-25",
-      "dias_atraso": 15,
+      "dias_atraso": 16,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 6629.64,
       "vencimento": "2026-06-25",
-      "dias_atraso": 15,
+      "dias_atraso": 16,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1527.36,
       "vencimento": "2026-06-25",
-      "dias_atraso": 15,
+      "dias_atraso": 16,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
-      "dias_atraso": 11,
+      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-29",
-      "dias_atraso": 11,
+      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 728.83,
       "vencimento": "2026-07-02",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1137.57,
       "vencimento": "2026-07-02",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 8538.9,
       "vencimento": "2026-07-05",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1492.2,
       "vencimento": "2026-07-06",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
       "valor": 582.65,
       "vencimento": "2026-07-06",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
       "vencimento": "2026-07-06",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 259.14,
       "vencimento": "2026-07-06",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PAGAMENTO SALARIO JUNHO",
-      "valor": 1464.88,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PAGAMENTO REF MÊS JUNHO",
-      "valor": 350,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "PAGAMENTO SALARIO JUNHO",
       "valor": 2357.72,
       "vencimento": "2026-07-06",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 2874.67,
       "vencimento": "2026-07-07",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 321.56,
       "vencimento": "2026-07-07",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624.18,
       "vencimento": "2026-07-08",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1691.5,
       "vencimento": "2026-07-08",
+      "dias_atraso": 3,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-07-09",
       "dias_atraso": 2,
       "tipo": "Pagar"
     },
@@ -208,21 +201,14 @@
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-07-09",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-07-09",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-09",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],
@@ -434,7 +420,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61936.03999999999,
+  "total_vencido": 60121.159999999996,
   "total_a_receber": 0,
   "total_a_pagar": 35007.079999999994
 }

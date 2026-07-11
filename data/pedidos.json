@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-11T11:43:58",
-  "total": 63,
+  "atualizado_em": "2026-07-11T13:42:52",
+  "total": 65,
   "pedidos": [
+    {
+      "id": "383586563",
+      "numero": "16673",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "Rafael Teixeira Andrade",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383576575",
+      "numero": "16672",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "53.343.706 JUSSIE SOARES DE SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383569223",
       "numero": "16671",

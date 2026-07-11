@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-11T15:44:55",
+  "atualizado_em": "2026-07-11T17:38:16",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -58,13 +58,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 3417.76,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 16,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 4042.91,
       "vencimento": "2026-06-25",
@@ -81,6 +74,13 @@
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1527.36,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 16,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 944.63,
       "vencimento": "2026-06-25",
       "dias_atraso": 16,
       "tipo": "Pagar"
@@ -128,20 +128,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
-      "valor": 1492.2,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
-      "valor": 582.65,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
       "vencimento": "2026-07-06",
@@ -153,13 +139,6 @@
       "valor": 259.14,
       "vencimento": "2026-07-06",
       "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 2874.67,
-      "vencimento": "2026-07-07",
-      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
@@ -409,7 +388,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57875.55999999999,
+  "total_vencido": 50452.909999999996,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

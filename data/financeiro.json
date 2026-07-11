@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-10T22:46:09",
+  "atualizado_em": "2026-07-11T01:54:40",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -210,21 +210,23 @@
       "vencimento": "2026-07-09",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-07-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ENEL RUA CEARA 634",
       "valor": 520.88,
       "vencimento": "2026-07-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
@@ -420,7 +422,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60121.159999999996,
+  "total_vencido": 60663.27999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 35007.079999999994
+  "total_a_pagar": 35028.31999999999
 }

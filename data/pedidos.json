@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-11T09:55:40",
-  "total": 58,
+  "atualizado_em": "2026-07-11T11:43:58",
+  "total": 63,
   "pedidos": [
+    {
+      "id": "383569223",
+      "numero": "16671",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "AUTO SOM COMERCIO E MANUTENCAO DE SOM PARA AUTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 430.94,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383563177",
+      "numero": "16670",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2750,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383550596",
+      "numero": "16669",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 262,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383529764",
+      "numero": "16668",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 36.89,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383519939",
+      "numero": "16667",
+      "data": "2026-07-11",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 108.86,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383514791",
       "numero": "16666",
@@ -45,8 +105,8 @@
       "hora": "",
       "cliente": "JOAO JORDAN TELES MOREIRA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 555,
-      "itens": 1,
+      "valor": 628.78,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

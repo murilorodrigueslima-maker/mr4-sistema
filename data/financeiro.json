@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-11T22:48:36",
+  "atualizado_em": "2026-07-12T02:17:49",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -196,21 +196,23 @@
       "vencimento": "2026-07-10",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-07-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
@@ -384,11 +386,29 @@
       "valor": 426.43,
       "vencimento": "2026-07-17",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1351.41,
+      "vencimento": "2026-07-19",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1512.71,
+      "vencimento": "2026-07-19",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
+      "valor": 44.96,
+      "vencimento": "2026-07-19",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50452.909999999996,
+  "total_vencido": 54393.409999999996,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

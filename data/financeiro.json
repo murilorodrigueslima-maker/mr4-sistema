@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-12T22:51:02",
+  "atualizado_em": "2026-07-13T02:27:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -210,27 +210,30 @@
       "vencimento": "2026-07-11",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
       "vencimento": "2026-07-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.69,
       "vencimento": "2026-07-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 778.09,
       "vencimento": "2026-07-12",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 3937.2,
@@ -408,7 +411,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54393.409999999996,
+  "total_vencido": 60644.84999999999,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

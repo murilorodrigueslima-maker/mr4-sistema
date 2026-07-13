@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-13T09:25:56",
+  "atualizado_em": "2026-07-13T13:21:06",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -107,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 728.83,
-      "vencimento": "2026-07-02",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1137.57,
       "vencimento": "2026-07-02",
@@ -122,7 +115,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 8108.9,
+      "valor": 7821.53,
       "vencimento": "2026-07-05",
       "dias_atraso": 8,
       "tipo": "Pagar"
@@ -411,7 +404,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60644.84999999999,
+  "total_vencido": 59628.649999999994,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

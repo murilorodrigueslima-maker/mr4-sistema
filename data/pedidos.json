@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-13T05:48:49",
-  "total": 15,
+  "atualizado_em": "2026-07-13T09:25:55",
+  "total": 17,
   "pedidos": [
+    {
+      "id": "383784353",
+      "numero": "16675",
+      "data": "2026-07-13",
+      "hora": "",
+      "cliente": "61.165.348 VALDEMIR DO NASCIMENTO PINHEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 385.6,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383780659",
+      "numero": "16674",
+      "data": "2026-07-13",
+      "hora": "",
+      "cliente": "HENRIQUE JORGE CAMARA NUNES 28513029300",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 316.6,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383586563",
       "numero": "16673",

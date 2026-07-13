@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-13T13:21:06",
+  "atualizado_em": "2026-07-13T16:12:02",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -104,13 +104,6 @@
       "valor": 517.47,
       "vencimento": "2026-06-30",
       "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1137.57,
-      "vencimento": "2026-07-02",
-      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
@@ -404,7 +397,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59628.649999999994,
+  "total_vencido": 58491.07999999999,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

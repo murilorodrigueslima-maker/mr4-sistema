@@ -1,16 +1,16 @@
 {
-  "atualizado_em": "2026-07-13T16:12:01",
+  "atualizado_em": "2026-07-13T17:49:30",
   "total": 37,
   "pedidos": [
     {
-      "id": "383923388",
-      "numero": "16696",
+      "id": "383958153",
+      "numero": "16697",
       "data": "2026-07-13",
       "hora": "",
       "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 580,
-      "itens": 1,
+      "valor": 313.95,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-14T14:03:06",
-  "total": 30,
+  "atualizado_em": "2026-07-14T16:02:20",
+  "total": 36,
   "pedidos": [
+    {
+      "id": "384207149",
+      "numero": "16712",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1651.25,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384203656",
+      "numero": "16711",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "MK DISTRIBUICAO E COMERCIO DE PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 565,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384180997",
+      "numero": "16710",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "AGUIAR & AGUIAR VARIEDADES LTDA",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 350,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384180103",
+      "numero": "16709",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1300,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384172197",
+      "numero": "16708",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384169587",
+      "numero": "16707",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 86.89,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384104420",
       "numero": "16705",

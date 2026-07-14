@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-07-14T12:16:31",
-  "total": 29,
+  "atualizado_em": "2026-07-14T14:03:06",
+  "total": 30,
   "pedidos": [
     {
       "id": "384104420",
@@ -95,6 +95,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 216.73,
       "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383569223",
+      "numero": "16671",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "AUTO SOM COMERCIO E MANUTENCAO DE SOM PARA AUTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 700.94,
+      "itens": 12,
       "status_gc": "",
       "cidade": ""
     },

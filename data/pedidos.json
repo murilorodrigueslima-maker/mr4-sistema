@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-14T16:02:20",
-  "total": 36,
+  "atualizado_em": "2026-07-14T17:49:48",
+  "total": 37,
   "pedidos": [
+    {
+      "id": "384235055",
+      "numero": "16713",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 111.08,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384207149",
       "numero": "16712",

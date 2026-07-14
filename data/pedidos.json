@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-14T10:08:34",
-  "total": 25,
+  "atualizado_em": "2026-07-14T12:16:31",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "384104420",
+      "numero": "16705",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "MAGÃO FUME E ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384087227",
+      "numero": "16704",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 65,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384077975",
+      "numero": "16703",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "LEGAL FUMÊ",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384064330",
       "numero": "16702",
@@ -63,13 +99,25 @@
       "cidade": ""
     },
     {
+      "id": "384104702",
+      "numero": "16706",
+      "data": "2026-07-13",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 254.6,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "384064071",
       "numero": "16701",
       "data": "2026-07-13",
       "hora": "",
       "cliente": "JF RASTREAMENTO E ASSISTENCIA VEICULAR LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 768.55,
+      "valor": 1229.45,
       "itens": 19,
       "status_gc": "",
       "cidade": ""

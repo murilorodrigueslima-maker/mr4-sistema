@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-13T22:27:54",
+  "atualizado_em": "2026-07-14T01:41:13",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -217,39 +217,44 @@
       "vencimento": "2026-07-12",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 3937.2,
       "vencimento": "2026-07-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 860.27,
       "vencimento": "2026-07-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 919.13,
       "vencimento": "2026-07-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 1404,
       "vencimento": "2026-07-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1281.44,
       "vencimento": "2026-07-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
@@ -393,11 +398,59 @@
       "valor": 44.96,
       "vencimento": "2026-07-19",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PRATELEIRAS 6 UN",
+      "valor": 423.4,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONSULTORIA DE IMPORTAÇÃO",
+      "valor": 171.3,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MESA ESCRITORIO MURILO",
+      "valor": 227.07,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 28.95,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "2 TV PARA EMPRESA",
+      "valor": 419.8,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "AQUISIÇÃO DE FRIGOBAR, CERVEJEIRA E ITENS DE APOIO PARA MELHORIA DA ESTRUTURA E ATENDIMENTO INTERNO DA EMPRESA",
+      "valor": 272.11,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 5099.28,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PRATELEIRAS 2 UN",
+      "valor": 199.98,
+      "vencimento": "2026-07-21",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58491.07999999999,
+  "total_vencido": 66893.11999999998,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

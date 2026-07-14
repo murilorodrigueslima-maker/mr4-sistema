@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-14T08:17:41",
-  "total": 20,
+  "atualizado_em": "2026-07-14T10:08:34",
+  "total": 25,
   "pedidos": [
+    {
+      "id": "384064330",
+      "numero": "16702",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 60,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384061380",
+      "numero": "16700",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 84,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384060157",
+      "numero": "16699",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 211.23,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384059781",
+      "numero": "16698",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "STTOP FILM COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "383881257",
+      "numero": "16689",
+      "data": "2026-07-14",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 216.73,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384064071",
+      "numero": "16701",
+      "data": "2026-07-13",
+      "hora": "",
+      "cliente": "JF RASTREAMENTO E ASSISTENCIA VEICULAR LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 768.55,
+      "itens": 19,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "383958153",
       "numero": "16697",
@@ -82,18 +154,6 @@
       "cliente": "62.218.684 GESAIAS BEZERRA LIMA",
       "vendedor": "fabiana andrade da silva",
       "valor": 73,
-      "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "383881257",
-      "numero": "16689",
-      "data": "2026-07-13",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 131.5,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

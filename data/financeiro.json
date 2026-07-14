@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-14T08:17:42",
+  "atualizado_em": "2026-07-14T10:08:35",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -108,23 +108,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7821.53,
+      "valor": 7166.53,
       "vencimento": "2026-07-05",
       "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 5099.28,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 259.14,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -450,7 +436,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 66893.11999999998,
+  "total_vencido": 60879.69999999998,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

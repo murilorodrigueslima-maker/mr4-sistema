@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-15T08:21:38",
-  "total": 37,
+  "atualizado_em": "2026-07-15T10:12:29",
+  "total": 44,
   "pedidos": [
+    {
+      "id": "384326356",
+      "numero": "16720",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 752,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384320634",
+      "numero": "16719",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 289.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384320059",
+      "numero": "16718",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "MARCOS RAFAEL FRANCA MOREIRA 60360121365",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 19.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384318932",
+      "numero": "16717",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "Eliabe da Silva de Oliveira",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 98,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384315369",
+      "numero": "16716",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "MARDSON NUNES DUARTE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 278,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384307412",
+      "numero": "16715",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 26.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384303569",
+      "numero": "16714",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "J ELIVAN MELO DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1104,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384235055",
       "numero": "16713",

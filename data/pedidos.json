@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-15T10:12:29",
-  "total": 44,
+  "atualizado_em": "2026-07-15T12:18:08",
+  "total": 47,
   "pedidos": [
+    {
+      "id": "384368028",
+      "numero": "16723",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "LEGAL FUMÊ",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384367678",
+      "numero": "16722",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 695.63,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384349438",
+      "numero": "16721",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "59.921.493 GLAUBER ARRUDA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 152.5,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384326356",
       "numero": "16720",

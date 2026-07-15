@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-14T22:24:37",
+  "atualizado_em": "2026-07-15T01:41:04",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -238,33 +238,37 @@
       "vencimento": "2026-07-13",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-07-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-07-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.49,
       "vencimento": "2026-07-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1668.73,
       "vencimento": "2026-07-14",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "sistema gestãoclick inter",
       "valor": 16.01,
@@ -432,11 +436,23 @@
       "valor": 199.98,
       "vencimento": "2026-07-21",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 681.61,
+      "vencimento": "2026-07-22",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 3593.33,
+      "vencimento": "2026-07-22",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60879.69999999998,
+  "total_vencido": 67008.41999999998,
   "total_a_receber": 0,
   "total_a_pagar": 34628.31999999999
 }

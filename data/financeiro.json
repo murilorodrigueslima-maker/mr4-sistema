@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-15T12:18:09",
+  "atualizado_em": "2026-07-15T14:05:28",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -108,7 +108,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7166.53,
+      "valor": 7138.53,
       "vencimento": "2026-07-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -144,13 +144,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
-      "vencimento": "2026-07-09",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1500,
       "vencimento": "2026-07-09",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -318,6 +311,18 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "COLA RATO",
+      "valor": 30.99,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 381.22,
+      "vencimento": "2026-07-15",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 891.47,
       "vencimento": "2026-07-16",
@@ -452,7 +457,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 67008.41999999998,
+  "total_vencido": 65480.419999999984,
   "total_a_receber": 0,
-  "total_a_pagar": 34628.31999999999
+  "total_a_pagar": 35040.52999999999
 }

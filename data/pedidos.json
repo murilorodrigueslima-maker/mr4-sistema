@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-15T15:55:11",
-  "total": 55,
+  "atualizado_em": "2026-07-15T17:50:00",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "384491518",
+      "numero": "16733",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "COMERCIAL DE PECAS E ACESSORIOS PARA VEICULOS BV LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 309.28,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384469853",
+      "numero": "16732",
+      "data": "2026-07-15",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 187.36,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384397501",
       "numero": "16731",

@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-07-15T15:55:18",
-  "hoje": 7610.83,
-  "semana": 21441.05999999999,
-  "mes": 117294.84999999998,
+  "atualizado_em": "2026-07-15T17:50:09",
+  "hoje": 8107.469999999999,
+  "semana": 21937.69999999999,
+  "mes": 117791.48999999998,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -15,9 +15,9 @@
     },
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 74269.77999999998,
-      "pedidos": 172,
-      "ticket_medio": 431.8010465116278
+      "faturamento": 74766.41999999997,
+      "pedidos": 174,
+      "ticket_medio": 429.6920689655171
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
@@ -66,7 +66,7 @@
     {
       "data": "2026-07-15",
       "label": "qua., 15/07",
-      "valor": 7610.83
+      "valor": 8107.469999999999
     }
   ]
 }

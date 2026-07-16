@@ -1,136 +1,143 @@
 {
-  "atualizado_em": "2026-07-15T19:49:17",
+  "atualizado_em": "2026-07-15T22:44:50",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 216.43,
       "vencimento": "2026-05-17",
-      "dias_atraso": 59,
+      "dias_atraso": 60,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-05-18",
-      "dias_atraso": 58,
+      "dias_atraso": 59,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-05-25",
-      "dias_atraso": 51,
+      "dias_atraso": 52,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-05-28",
-      "dias_atraso": 48,
+      "dias_atraso": 49,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-05-30",
-      "dias_atraso": 46,
+      "dias_atraso": 47,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-06-17",
-      "dias_atraso": 28,
+      "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 584,
       "vencimento": "2026-06-17",
-      "dias_atraso": 28,
+      "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-06-25",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 4042.91,
       "vencimento": "2026-06-25",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 6629.64,
       "vencimento": "2026-06-25",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1527.36,
       "vencimento": "2026-06-25",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 944.63,
       "vencimento": "2026-06-25",
-      "dias_atraso": 20,
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
-      "dias_atraso": 16,
+      "dias_atraso": 17,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-29",
-      "dias_atraso": 16,
+      "dias_atraso": 17,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
-      "dias_atraso": 15,
+      "dias_atraso": 16,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 7138.53,
       "vencimento": "2026-07-05",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 321.56,
       "vencimento": "2026-07-07",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624.18,
       "vencimento": "2026-07-08",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1691.5,
       "vencimento": "2026-07-08",
+      "dias_atraso": 8,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1537,
+      "vencimento": "2026-07-09",
       "dias_atraso": 7,
       "tipo": "Pagar"
     },
@@ -138,126 +145,119 @@
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1537,
       "vencimento": "2026-07-09",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-07-09",
-      "dias_atraso": 6,
+      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-07-10",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "ENEL RUA CEARA 634",
       "valor": 520.88,
       "vencimento": "2026-07-10",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-07-11",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-11",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 2134.66,
       "vencimento": "2026-07-12",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3338.69,
       "vencimento": "2026-07-12",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 778.09,
       "vencimento": "2026-07-12",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 3937.2,
       "vencimento": "2026-07-13",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 860.27,
       "vencimento": "2026-07-13",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 919.13,
       "vencimento": "2026-07-13",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 1404,
       "vencimento": "2026-07-13",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1281.44,
       "vencimento": "2026-07-13",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-07-14",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-07-14",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.49,
       "vencimento": "2026-07-14",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1668.73,
       "vencimento": "2026-07-14",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],

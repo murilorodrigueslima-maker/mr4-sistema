@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-16T12:25:59",
-  "total": 44,
+  "atualizado_em": "2026-07-16T14:03:20",
+  "total": 46,
   "pedidos": [
+    {
+      "id": "384672155",
+      "numero": "16743",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 365,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384666128",
+      "numero": "16742",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "MK DISTRIBUICAO E COMERCIO DE PECAS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 36.08,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384624112",
       "numero": "16741",

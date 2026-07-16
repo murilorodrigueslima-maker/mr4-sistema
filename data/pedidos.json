@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-16T15:55:54",
-  "total": 53,
+  "atualizado_em": "2026-07-16T17:45:57",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "384759379",
+      "numero": "16751",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "ANDERSON MOREIRA PEREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 300,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384722784",
       "numero": "16750",

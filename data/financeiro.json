@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-16T14:03:21",
+  "atualizado_em": "2026-07-16T15:55:55",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -118,13 +118,6 @@
       "valor": 321.56,
       "vencimento": "2026-07-07",
       "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1624.18,
-      "vencimento": "2026-07-08",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -415,7 +408,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 62442.849999999984,
+  "total_vencido": 60818.66999999999,
   "total_a_receber": 0,
   "total_a_pagar": 34709.649999999994
 }

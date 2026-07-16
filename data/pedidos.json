@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-16T14:03:20",
-  "total": 46,
+  "atualizado_em": "2026-07-16T15:55:54",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "384722784",
+      "numero": "16750",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "57.279.787 PAULO HENRIQUE CARVALHO MORENO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2055,
+      "itens": 20,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384722610",
+      "numero": "16749",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "57.279.787 PAULO HENRIQUE CARVALHO MORENO",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 110,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384719265",
+      "numero": "16748",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "STTOP FILM COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 513.82,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384707668",
+      "numero": "16747",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 556.4,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384692808",
+      "numero": "16746",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "NP COMERCIO E SERVICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 587.5,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384691095",
+      "numero": "16745",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "56.119.790 DANIELTON VIEIRA DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384684684",
+      "numero": "16744",
+      "data": "2026-07-16",
+      "hora": "",
+      "cliente": "RANYELLE FELICIO OLIVEIRA 02988869367",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384672155",
       "numero": "16743",

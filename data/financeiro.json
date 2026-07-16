@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-16T08:38:19",
+  "atualizado_em": "2026-07-16T10:20:34",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -108,7 +108,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 7138.53,
+      "valor": 5569.97,
       "vencimento": "2026-07-05",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -261,71 +261,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "sistema gestãoclick inter",
-      "valor": 16.01,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SERASA",
-      "valor": 52.4,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MONITOR COMPUTADOR",
-      "valor": 200.7,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
-      "valor": 218.82,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SELOS DE GARANTIA MR4",
-      "valor": 38.33,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "SISTEMA GESTÃOCLICK",
-      "valor": 224.28,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO ELO NAQUIM",
-      "valor": 2452.17,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 4767.81,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "COLA RATO",
       "valor": 30.99,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "UBER FLASH",
-      "valor": 381.22,
       "vencimento": "2026-07-15",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -405,6 +342,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CLAUDI",
+      "valor": 118.75,
+      "vencimento": "2026-07-19",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
       "vencimento": "2026-07-21",
@@ -479,7 +422,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 73863.15,
+  "total_vencido": 63942.849999999984,
   "total_a_receber": 0,
-  "total_a_pagar": 38174.82999999999
+  "total_a_pagar": 34709.649999999994
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-16T10:20:34",
+  "atualizado_em": "2026-07-16T12:26:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO JARBAS",
@@ -165,13 +165,6 @@
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
-      "vencimento": "2026-07-11",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1500,
       "vencimento": "2026-07-11",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -422,7 +415,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63942.849999999984,
+  "total_vencido": 62442.849999999984,
   "total_a_receber": 0,
   "total_a_pagar": 34709.649999999994
 }

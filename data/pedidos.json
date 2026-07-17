@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-17T14:00:02",
-  "total": 54,
+  "atualizado_em": "2026-07-17T15:52:28",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "384974765",
+      "numero": "16771",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "53.492.423 MANUEL LIMA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 187.82,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384971576",
+      "numero": "16770",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 7052.7,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384965489",
+      "numero": "16769",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 26.89,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384964211",
+      "numero": "16768",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 102,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384939445",
+      "numero": "16767",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 542,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384928235",
       "numero": "16766",

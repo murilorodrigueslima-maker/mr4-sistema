@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-17T15:52:28",
-  "total": 59,
+  "atualizado_em": "2026-07-17T17:42:45",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "384997518",
+      "numero": "16774",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "NATANIEL RIBEIRO DOS REIS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1227,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384996985",
+      "numero": "16773",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384985595",
+      "numero": "16772",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 115.45,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384974765",
       "numero": "16771",

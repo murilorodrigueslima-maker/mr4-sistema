@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-17T10:04:46",
+  "atualizado_em": "2026-07-17T12:05:35",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -101,7 +101,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5569.97,
+      "valor": 5561.97,
       "vencimento": "2026-07-05",
       "dias_atraso": 12,
       "tipo": "Pagar"
@@ -111,13 +111,6 @@
       "valor": 321.56,
       "vencimento": "2026-07-07",
       "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1691.5,
-      "vencimento": "2026-07-08",
-      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
@@ -153,13 +146,6 @@
       "valor": 2440.5,
       "vencimento": "2026-07-11",
       "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 2134.66,
-      "vencimento": "2026-07-12",
-      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
@@ -269,12 +255,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 3000,
-      "vencimento": "2026-07-17",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1439.8,
       "vencimento": "2026-07-17",
@@ -301,6 +281,12 @@
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 426.43,
+      "vencimento": "2026-07-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 2000,
       "vencimento": "2026-07-17",
       "tipo": "Pagar"
     },
@@ -409,7 +395,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61877.909999999996,
+  "total_vencido": 58043.74999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 34493.22
+  "total_a_pagar": 33493.22
 }

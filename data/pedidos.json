@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-17T10:04:45",
-  "total": 42,
+  "atualizado_em": "2026-07-17T12:05:34",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "384896120",
+      "numero": "16761",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "DEUSIMAR RAMOS DE FARIAS FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 52,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384890323",
+      "numero": "16760",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 14,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384888897",
+      "numero": "16759",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 145.64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384885697",
+      "numero": "16758",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384876291",
+      "numero": "16757",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "NELSON SILVA DE OLIVEIRA 07649731340",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 186,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384864453",
+      "numero": "16756",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 35.98,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384862747",
+      "numero": "16755",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "FRANCISCO CRISTIANO ESTEVAM GALDINO 00349588350",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 480,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384847876",
       "numero": "16754",
@@ -33,7 +117,7 @@
       "hora": "",
       "cliente": "43.418.262 SERGIO UILTON SOUSA PORTO",
       "vendedor": "fabiana andrade da silva",
-      "valor": 533.36,
+      "valor": 598.82,
       "itens": 10,
       "status_gc": "",
       "cidade": ""

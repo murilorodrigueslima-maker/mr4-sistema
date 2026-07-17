@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-17T12:05:34",
-  "total": 49,
+  "atualizado_em": "2026-07-17T14:00:02",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "384928235",
+      "numero": "16766",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 71,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384918425",
+      "numero": "16765",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 231.57,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384907696",
+      "numero": "16764",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 196,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384904491",
+      "numero": "16763",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 300,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384900847",
+      "numero": "16762",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384896120",
       "numero": "16761",

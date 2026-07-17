@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-07-16T22:48:26",
+  "atualizado_em": "2026-07-17T01:54:45",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 216.43,
-      "vencimento": "2026-05-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -252,21 +245,23 @@
       "vencimento": "2026-07-15",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 891.47,
       "vencimento": "2026-07-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 384.2,
       "vencimento": "2026-07-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -404,11 +399,17 @@
       "valor": 1276.3,
       "vencimento": "2026-07-23",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1644,
+      "vencimento": "2026-07-24",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60818.66999999999,
+  "total_vencido": 61877.909999999996,
   "total_a_receber": 0,
-  "total_a_pagar": 34709.649999999994
+  "total_a_pagar": 34493.22
 }

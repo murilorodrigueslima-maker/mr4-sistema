@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-17T08:14:26",
-  "total": 39,
+  "atualizado_em": "2026-07-17T10:04:45",
+  "total": 42,
   "pedidos": [
+    {
+      "id": "384847876",
+      "numero": "16754",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 110,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384845257",
+      "numero": "16753",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "CARLOS EMANUEL BERNARDINO OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "384844195",
+      "numero": "16752",
+      "data": "2026-07-17",
+      "hora": "",
+      "cliente": "43.418.262 SERGIO UILTON SOUSA PORTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 533.36,
+      "itens": 10,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384759379",
       "numero": "16751",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-18T07:55:33",
+  "atualizado_em": "2026-07-18T09:52:28",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -142,20 +142,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
-      "valor": 3338.69,
-      "vencimento": "2026-07-12",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 778.09,
-      "vencimento": "2026-07-12",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 3937.2,
       "vencimento": "2026-07-13",
@@ -172,13 +158,6 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 919.13,
-      "vencimento": "2026-07-13",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 1404,
       "vencimento": "2026-07-13",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -261,13 +240,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1135.33,
-      "vencimento": "2026-07-17",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 277.01,
       "vencimento": "2026-07-17",
@@ -283,7 +255,7 @@
     },
     {
       "nome": "EMPRESTIMO JARBAS",
-      "valor": 2000,
+      "valor": 834,
       "vencimento": "2026-07-17",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -407,7 +379,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 64457.15,
+  "total_vencido": 56635.04,
   "total_a_receber": 0,
-  "total_a_pagar": 36493.219999999994
+  "total_a_pagar": 35327.22
 }

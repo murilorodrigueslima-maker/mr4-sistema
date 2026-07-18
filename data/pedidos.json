@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-18T07:55:32",
-  "total": 42,
+  "atualizado_em": "2026-07-18T09:52:27",
+  "total": 47,
   "pedidos": [
+    {
+      "id": "385102862",
+      "numero": "16779",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 145.64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385101209",
+      "numero": "16778",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "ALESSANDRO DA COSTA CAETANO 07248931306",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 413,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385100647",
+      "numero": "16777",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 616.82,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385099685",
+      "numero": "16776",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385088988",
+      "numero": "16775",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "384997518",
       "numero": "16774",

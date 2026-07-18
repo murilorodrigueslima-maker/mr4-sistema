@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-07-17T22:28:53",
+  "atualizado_em": "2026-07-18T01:39:14",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO BRADESCO",
-      "valor": 3669.52,
-      "vencimento": "2026-05-18",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
@@ -245,51 +238,58 @@
       "vencimento": "2026-07-16",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1439.8,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 277.01,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 426.43,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 2000,
       "vencimento": "2026-07-17",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1351.41,
@@ -391,11 +391,23 @@
       "valor": 1644,
       "vencimento": "2026-07-24",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1663.94,
+      "vencimento": "2026-07-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ESTANTE ESCRITORIO MURILO",
+      "valor": 94,
+      "vencimento": "2026-07-25",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58043.74999999999,
+  "total_vencido": 64457.15,
   "total_a_receber": 0,
-  "total_a_pagar": 33493.22
+  "total_a_pagar": 36493.219999999994
 }

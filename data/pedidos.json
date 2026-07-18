@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-18T09:52:27",
-  "total": 47,
+  "atualizado_em": "2026-07-18T11:43:21",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "385144942",
+      "numero": "16781",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 204.67,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385114030",
+      "numero": "16780",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "MAGÃO FUME E ACESSORIOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 135.01,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385102862",
       "numero": "16779",

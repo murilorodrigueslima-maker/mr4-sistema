@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-18T11:43:21",
-  "total": 49,
+  "atualizado_em": "2026-07-18T13:43:46",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "385195767",
+      "numero": "16785",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385175876",
+      "numero": "16784",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "ARISNEVES FERREIRA SANTOS 02068641321",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 145.64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385157878",
+      "numero": "16783",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "JOSIAS DE SOUSA SANTOS 46235299320",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 280,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385156760",
+      "numero": "16782",
+      "data": "2026-07-18",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 1498.13,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385144942",
       "numero": "16781",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-18T22:46:12",
+  "atualizado_em": "2026-07-19T02:12:04",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -374,6 +374,18 @@
       "nome": "ESTANTE ESCRITORIO MURILO",
       "valor": 94,
       "vencimento": "2026-07-25",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2440.5,
+      "vencimento": "2026-07-26",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1500,
+      "vencimento": "2026-07-26",
       "tipo": "Pagar"
     }
   ],

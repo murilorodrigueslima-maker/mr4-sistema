@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-20T14:22:47",
-  "total": 23,
+  "atualizado_em": "2026-07-20T16:25:11",
+  "total": 26,
   "pedidos": [
+    {
+      "id": "385530608",
+      "numero": "16800",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 555,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385515996",
+      "numero": "16799",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "HARMEILTONG WENDELL PAZ PAIVA 03861409364",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385515386",
+      "numero": "16798",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "LEGAL FUMÊ",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 140,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385480463",
       "numero": "16797",

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-20T12:44:40",
-  "total": 19,
+  "atualizado_em": "2026-07-20T14:22:47",
+  "total": 23,
   "pedidos": [
+    {
+      "id": "385480463",
+      "numero": "16797",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "VALWENIO VASCONCELOS SILVA 07362776330",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 458,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385473739",
+      "numero": "16796",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 735.92,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385467197",
+      "numero": "16795",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 280,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385454155",
+      "numero": "16794",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "Edilberto",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 573.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385431600",
       "numero": "16793",

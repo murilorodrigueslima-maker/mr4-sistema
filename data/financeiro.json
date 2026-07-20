@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-19T23:02:43",
+  "atualizado_em": "2026-07-20T03:38:11",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -259,33 +259,37 @@
       "vencimento": "2026-07-17",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1351.41,
       "vencimento": "2026-07-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1512.71,
       "vencimento": "2026-07-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
       "valor": 44.96,
       "vencimento": "2026-07-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CLAUDI",
       "valor": 118.75,
       "vencimento": "2026-07-19",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
@@ -377,6 +381,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CAPITALIZAÇÃO",
+      "valor": 103.16,
+      "vencimento": "2026-07-25",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-07-26",
@@ -387,11 +397,29 @@
       "valor": 1500,
       "vencimento": "2026-07-26",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 778.12,
+      "vencimento": "2026-07-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1281.47,
+      "vencimento": "2026-07-27",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1757.59,
+      "vencimento": "2026-07-27",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56635.04,
+  "total_vencido": 59662.87,
   "total_a_receber": 0,
-  "total_a_pagar": 35327.22
+  "total_a_pagar": 35475.340000000004
 }

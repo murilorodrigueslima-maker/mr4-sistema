@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-20T07:40:54",
-  "total": 11,
+  "atualizado_em": "2026-07-20T10:48:05",
+  "total": 17,
   "pedidos": [
+    {
+      "id": "385392979",
+      "numero": "16791",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "CAIO CESAR CAVALCANTE SILVA 02794150367",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1088.28,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385384317",
+      "numero": "16790",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "FRANCISCO GLEISON LOPES COSTA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1167.21,
+      "itens": 21,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385377703",
+      "numero": "16789",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "Francisco Wesley do Nascimento",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 152.02,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385366393",
+      "numero": "16788",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 440,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385365776",
+      "numero": "16787",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 382.5,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385361885",
+      "numero": "16786",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 18.4,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385195767",
       "numero": "16785",

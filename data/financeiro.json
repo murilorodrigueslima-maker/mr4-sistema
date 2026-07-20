@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-20T07:40:55",
+  "atualizado_em": "2026-07-20T10:48:06",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5561.97,
+      "valor": 5196.64,
       "vencimento": "2026-07-05",
       "dias_atraso": 15,
       "tipo": "Pagar"
@@ -261,20 +261,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1351.41,
-      "vencimento": "2026-07-19",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1512.71,
-      "vencimento": "2026-07-19",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
       "valor": 44.96,
       "vencimento": "2026-07-19",
@@ -419,7 +405,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59662.87,
+  "total_vencido": 56433.42,
   "total_a_receber": 0,
   "total_a_pagar": 35475.340000000004
 }

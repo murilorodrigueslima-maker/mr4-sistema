@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-20T16:25:11",
-  "total": 26,
+  "atualizado_em": "2026-07-20T18:00:48",
+  "total": 28,
   "pedidos": [
+    {
+      "id": "385572861",
+      "numero": "16802",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "53.492.423 MANUEL LIMA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 223,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385555251",
+      "numero": "16801",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "FRANCISCO DEIVID BEZERRA BARROSO 61788943333",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 74.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385530608",
       "numero": "16800",
@@ -117,7 +141,7 @@
       "hora": "",
       "cliente": "CAIO CESAR CAVALCANTE SILVA 02794150367",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1088.28,
+      "valor": 1008,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

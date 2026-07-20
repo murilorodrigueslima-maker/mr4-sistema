@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-20T10:48:05",
-  "total": 17,
+  "atualizado_em": "2026-07-20T12:44:40",
+  "total": 19,
   "pedidos": [
+    {
+      "id": "385431600",
+      "numero": "16793",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 78.98,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385410627",
+      "numero": "16792",
+      "data": "2026-07-20",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 215,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385392979",
       "numero": "16791",
@@ -81,8 +105,8 @@
       "hora": "",
       "cliente": "Paulo Victor Santos da Silva",
       "vendedor": "Swyanne Kethlyn",
-      "valor": 170,
-      "itens": 2,
+      "valor": 75,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

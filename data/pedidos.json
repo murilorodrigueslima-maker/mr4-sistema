@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-21T08:41:35",
-  "total": 17,
+  "atualizado_em": "2026-07-21T10:16:53",
+  "total": 24,
   "pedidos": [
+    {
+      "id": "385650829",
+      "numero": "16809",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "67.309.792 ANA KARINE FARRAPO DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1088.75,
+      "itens": 23,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385650387",
+      "numero": "16808",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 290.84,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385649950",
+      "numero": "16807",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 467.88,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385649441",
+      "numero": "16806",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "53.492.423 MANUEL LIMA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 29.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385633239",
+      "numero": "16805",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 169.99,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385631603",
+      "numero": "16804",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 78.93,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385628047",
+      "numero": "16803",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "LRW PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1100,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385572861",
       "numero": "16802",

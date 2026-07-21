@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-21T12:28:41",
-  "total": 32,
+  "atualizado_em": "2026-07-21T14:06:18",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "385737555",
+      "numero": "16818",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "RANYELLE FELICIO OLIVEIRA 02988869367",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 405,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385694483",
       "numero": "16817",

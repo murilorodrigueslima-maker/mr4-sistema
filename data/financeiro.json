@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-21T16:03:29",
+  "atualizado_em": "2026-07-21T17:57:45",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5196.64,
+      "valor": 4906.58,
       "vencimento": "2026-07-05",
       "dias_atraso": 16,
       "tipo": "Pagar"
@@ -104,13 +104,6 @@
       "valor": 321.56,
       "vencimento": "2026-07-07",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-07-09",
-      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
@@ -259,68 +252,12 @@
       "vencimento": "2026-07-17",
       "dias_atraso": 4,
       "tipo": "Pagar"
-    },
-    {
-      "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
-      "valor": 44.96,
-      "vencimento": "2026-07-19",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CLAUDI",
-      "valor": 118.75,
-      "vencimento": "2026-07-19",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
     {
-      "nome": "PRATELEIRAS 6 UN",
-      "valor": 423.4,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONSULTORIA DE IMPORTAÇÃO",
-      "valor": 171.3,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MESA ESCRITORIO MURILO",
-      "valor": 227.07,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MERCADO LIVRE",
-      "valor": 28.95,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "2 TV PARA EMPRESA",
-      "valor": 419.8,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "AQUISIÇÃO DE FRIGOBAR, CERVEJEIRA E ITENS DE APOIO PARA MELHORIA DA ESTRUTURA E ATENDIMENTO INTERNO DA EMPRESA",
-      "valor": 272.11,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
-      "vencimento": "2026-07-21",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PRATELEIRAS 2 UN",
-      "valor": 199.98,
       "vencimento": "2026-07-21",
       "tipo": "Pagar"
     },
@@ -417,7 +354,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56433.42,
+  "total_vencido": 54442.65,
   "total_a_receber": 0,
-  "total_a_pagar": 35475.340000000004
+  "total_a_pagar": 33951.38999999999
 }

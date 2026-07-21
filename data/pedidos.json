@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-21T16:03:28",
-  "total": 40,
+  "atualizado_em": "2026-07-21T17:57:44",
+  "total": 43,
   "pedidos": [
+    {
+      "id": "385819575",
+      "numero": "16829",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "SINEY FREIRE SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 45,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385819293",
+      "numero": "16828",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385817748",
+      "numero": "16827",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "61.165.348 VALDEMIR DO NASCIMENTO PINHEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 261,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385801983",
+      "numero": "16826",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 275,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385783097",
       "numero": "16825",
@@ -167,18 +215,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 331,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "385660709",
-      "numero": "16811",
-      "data": "2026-07-21",
-      "hora": "",
-      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 205.42,
-      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

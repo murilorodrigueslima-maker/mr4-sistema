@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-07-21T17:57:50",
-  "hoje": 8512.310000000001,
-  "semana": 15462.570000000002,
-  "mes": 157945.06999999992,
+  "atualizado_em": "2026-07-21T19:44:50",
+  "hoje": 8746.310000000001,
+  "semana": 15696.570000000002,
+  "mes": 158179.06999999992,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -27,9 +27,9 @@
     },
     {
       "nome": "Swyanne Kethlyn",
-      "faturamento": 2760.67,
-      "pedidos": 9,
-      "ticket_medio": 306.74111111111114
+      "faturamento": 2994.67,
+      "pedidos": 10,
+      "ticket_medio": 299.467
     }
   ],
   "ultimos_7_dias": [
@@ -66,7 +66,7 @@
     {
       "data": "2026-07-21",
       "label": "ter., 21/07",
-      "valor": 8512.310000000001
+      "valor": 8746.310000000001
     }
   ]
 }

@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-21T17:57:44",
-  "total": 43,
+  "atualizado_em": "2026-07-21T19:44:44",
+  "total": 44,
   "pedidos": [
+    {
+      "id": "385851256",
+      "numero": "16830",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 234,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385819575",
       "numero": "16829",

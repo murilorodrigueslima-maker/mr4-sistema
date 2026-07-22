@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-22T12:25:20",
-  "total": 60,
+  "atualizado_em": "2026-07-22T14:07:15",
+  "total": 64,
   "pedidos": [
+    {
+      "id": "385986378",
+      "numero": "16849",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "ERLANO DE CASTRO MACHADO 05640142308",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 235,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385983374",
+      "numero": "16848",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 55.2,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385982307",
+      "numero": "16847",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 157.83,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385964184",
+      "numero": "16846",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385960613",
       "numero": "16845",
@@ -621,8 +669,8 @@
       "hora": "",
       "cliente": "Edilberto",
       "vendedor": "fabiana andrade da silva",
-      "valor": 573.9,
-      "itens": 3,
+      "valor": 1656.12,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

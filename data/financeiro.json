@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-22T12:25:21",
+  "atualizado_em": "2026-07-22T14:07:15",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -118,13 +118,6 @@
       "valor": 520.88,
       "vencimento": "2026-07-10",
       "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2440.5,
-      "vencimento": "2026-07-11",
-      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
@@ -252,6 +245,13 @@
       "vencimento": "2026-07-21",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 485.52,
+      "vencimento": "2026-07-21",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -366,7 +366,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57931.41,
+  "total_vencido": 55976.43,
   "total_a_receber": 0,
   "total_a_pagar": 35665.05
 }

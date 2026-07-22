@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-22T10:21:36",
+  "atualizado_em": "2026-07-22T12:25:21",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -94,7 +94,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 4906.58,
+      "valor": 4833.06,
       "vencimento": "2026-07-05",
       "dias_atraso": 17,
       "tipo": "Pagar"
@@ -104,13 +104,6 @@
       "valor": 321.56,
       "vencimento": "2026-07-07",
       "dias_atraso": 15,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1537,
-      "vencimento": "2026-07-09",
-      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
@@ -373,7 +366,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59541.93,
+  "total_vencido": 57931.41,
   "total_a_receber": 0,
   "total_a_pagar": 35665.05
 }

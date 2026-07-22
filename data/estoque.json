@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-07-22T10:21:40",
+  "atualizado_em": "2026-07-22T12:25:25",
   "total_produtos": 906,
-  "valor_total_estoque": 386847.49000000046,
+  "valor_total_estoque": 411319.98000000033,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -293,6 +293,13 @@
       "custo": 20.25
     },
     {
+      "ref": "6009",
+      "nome": "MOLDURA 10.1 TOYOTA COROLLA 2018/2019 (MODELO COM RELOGIO) - BLACK PIANO ACABAMENTO PRATA",
+      "margem": "5.9",
+      "preco": 193.37,
+      "custo": 182
+    },
+    {
       "ref": "5859",
       "nome": "MOLD 9\" S10 16+ AR-ANALOGICO BLK PIANO 1UN X 1UN",
       "margem": "9.4",
@@ -347,13 +354,6 @@
       "margem": "14.4",
       "preco": 172.8,
       "custo": 147.89
-    },
-    {
-      "ref": "AF10000118",
-      "nome": "AF QUADRIAXIAL AZUL 6X9“",
-      "margem": "16.7",
-      "preco": 128.35,
-      "custo": 106.96
     }
   ]
 }

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR4 — Caixa Diário</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:    #FF6B1A;
+    --orange-dk: #e85d0f;
+    --bg:        #F3F4F6;
+    --white:     #FFFFFF;
+    --text:      #1A1A2E;
+    --muted:     #6B7280;
+    --border:    #E5E7EB;
+    --green:     #10B981;
+    --green-bg:  #D1FAE5;
+    --yellow:    #F59E0B;
+    --yellow-bg: #FEF3C7;
+    --red:       #EF4444;
+    --red-bg:    #FEE2E2;
+    --blue:      #6366F1;
+    --blue-bg:   #EEF2FF;
+    --sidebar-w: 240px;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    position: fixed; inset: 0;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  #loadingScreen img { height: 48px; object-fit: contain; }
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+  .sidebar-logo {
+    padding: 1.5rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    display: block;
+    text-decoration: none;
+  }
+  .sidebar-logo img { height: 36px; object-fit: contain; }
+  .sidebar-user {
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .user-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--orange);
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .sidebar-nav { flex: 1; padding: .75rem 0; }
+  .nav-section {
+    font-size: .62rem;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: .75rem 1.25rem .3rem;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: .6rem 1.25rem;
+    font-size: .84rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    margin: .1rem 0;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: rgba(255,107,26,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+  .btn-sair {
+    width: 100%;
+    padding: .6rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: none;
+    font-family: 'Inter', sans-serif;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-sair:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.05); }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 2rem;
+    min-height: 100vh;
+  }
+  .page-header {
+    margin-bottom: 1.75rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .page-title { font-size: 1.5rem; font-weight: 800; color: var(--text); letter-spacing: -.3px; }
+  .page-sub { font-size: .85rem; color: var(--muted); margin-top: .25rem; }
+  .last-update {
+    font-size: .75rem;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .4rem .75rem;
+  }
+
+  /* ── KPI ROW ── */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .kpi-card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.green::before  { background: var(--green); }
+  .kpi-card.red::before    { background: var(--red); }
+  .kpi-card.yellow::before { background: var(--yellow); }
+  .kpi-card.blue::before   { background: var(--blue); }
+  .kpi-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+  .kpi-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.55rem;
+    font-weight: 600;
+    letter-spacing: -.5px;
+    line-height: 1.1;
+  }
+  .kpi-card.orange .kpi-value { color: var(--orange); }
+  .kpi-card.green  .kpi-value { color: var(--green); }
+  .kpi-card.red    .kpi-value { color: var(--red); }
+  .kpi-card.yellow .kpi-value { color: var(--yellow); }
+  .kpi-card.blue   .kpi-value { color: var(--blue); }
+  .kpi-icon { position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 2rem; opacity: .1; }
+
+  /* ── CONTENT CARD ── */
+  .content-card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .content-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+  }
+  .card-orange::before { background: var(--orange); }
+  .card-green::before  { background: var(--green); }
+  .card-blue::before   { background: var(--blue); }
+  .card-yellow::before { background: var(--yellow); }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -.2px; }
+
+  /* ── CHANNEL FORM ── */
+  .channel-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .channel-item {
+    background: var(--bg);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .channel-label {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+  .channel-input {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--border);
+    padding: .3rem 0;
+    width: 100%;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .channel-input:focus { border-bottom-color: var(--orange); }
+  .channel-input::placeholder { color: var(--border); font-weight: 400; }
+
+  /* ── RECONCILIATION BOX ── */
+  .recon-box {
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    transition: background .3s, border-color .3s;
+    border: 2px solid var(--border);
+  }
+  .recon-box.ok     { background: var(--green-bg);  border-color: var(--green); }
+  .recon-box.falta  { background: var(--red-bg);    border-color: var(--red); }
+  .recon-box.sobra  { background: var(--yellow-bg); border-color: var(--yellow); }
+  .recon-status { font-size: 1.1rem; font-weight: 700; }
+  .recon-box.ok    .recon-status { color: #065F46; }
+  .recon-box.falta .recon-status { color: #991B1B; }
+  .recon-box.sobra .recon-status { color: #92400E; }
+  .recon-detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .9rem;
+    color: var(--muted);
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  .recon-detail span { white-space: nowrap; }
+
+  /* ── D+1 ALERT ── */
+  .d1-box {
+    background: var(--blue-bg);
+    border: 1px solid #C7D2FE;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+  .d1-label { font-size: .85rem; font-weight: 600; color: #3730A3; }
+  .d1-value { font-family: 'JetBrains Mono', monospace; font-size: 1.1rem; font-weight: 700; color: var(--blue); }
+
+  /* ── ACTION BUTTONS ── */
+  .btn-row { display: flex; gap: .75rem; margin-top: 1.25rem; }
+  .btn {
+    padding: .7rem 1.5rem;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .15s;
+  }
+  .btn-primary { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: var(--orange-dk); }
+  .btn-secondary { background: var(--bg); color: var(--muted); border: 1.5px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── HISTORY TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  thead th {
+    padding: .6rem .75rem;
+    text-align: left;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: var(--muted);
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: .75rem .75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-size: .84rem;
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--bg); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+
+  .badge {
+    display: inline-block;
+    padding: .2rem .6rem;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+  }
+  .badge-ok     { background: var(--green-bg);  color: #065F46; }
+  .badge-falta  { background: var(--red-bg);    color: #991B1B; }
+  .badge-sobra  { background: var(--yellow-bg); color: #92400E; }
+
+  .empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted);
+    font-size: .88rem;
+  }
+
+  /* ── TOAST ── */
+  #toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--text);
+    color: #fff;
+    padding: .75rem 1.25rem;
+    border-radius: 10px;
+    font-size: .85rem;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .25s, transform .25s;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <img src="../assets/logo.png" alt="MR4">
+  <div class="spinner"></div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <a class="sidebar-logo" href="../index.html" title="Página inicial">
+    <img src="../assets/logo.png" alt="MR4 Distribuidora">
+  </a>
+
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="userName">Carregando...</div>
+      <div class="user-role" id="userRole">—</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Módulos</div>
+    <a class="nav-item" href="vendas.html">
+      <span class="nav-icon">📊</span> Painel de Vendas
+    </a>
+    <a class="nav-item" href="estoque.html">
+      <span class="nav-icon">🗄️</span> Estoque
+    </a>
+    <a class="nav-item" href="financeiro.html">
+      <span class="nav-icon">💰</span> Financeiro
+    </a>
+    <a class="nav-item active" href="caixa.html">
+      <span class="nav-icon">🏦</span> Caixa Diário
+    </a>
+    <a class="nav-item" href="https://catalogo.mr4distribuidora.com.br" target="_blank">
+      <span class="nav-icon">📦</span> Catálogo
+    </a>
+    <a class="nav-item" href="expedicao.html">
+      <span class="nav-icon">🚚</span> Expedição
+    </a>
+    <a class="nav-item" href="ponto.html">
+      <span class="nav-icon">📍</span> Ponto
+    </a>
+    <a class="nav-item" href="marketing.html">
+      <span class="nav-icon">📢</span> Marketing
+    </a>
+    <a class="nav-item" href="garantia.html">
+      <span class="nav-icon">🛡️</span> Garantia
+    </a>
+    <a class="nav-item" href="admin.html">
+      <span class="nav-icon">⚙️</span> Administração
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="btn-sair" id="btnSair">↩ Sair do sistema</button>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main" id="mainContent" style="display:none">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🏦 Caixa Diário</h1>
+      <p class="page-sub">Conferência de recebimentos e fechamento do dia</p>
+    </div>
+    <div class="last-update" id="lastUpdate">Sincronizando...</div>
+  </div>
+
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi-card orange">
+      <span class="kpi-label">Vendas GestãoClick</span>
+      <span class="kpi-value" id="kpiGC">R$ —</span>
+      <span class="kpi-icon">🧾</span>
+    </div>
+    <div class="kpi-card green">
+      <span class="kpi-label">Total Confirmado</span>
+      <span class="kpi-value" id="kpiConfirmado">R$ 0,00</span>
+      <span class="kpi-icon">✅</span>
+    </div>
+    <div class="kpi-card blue">
+      <span class="kpi-label">Infinitipay D+1</span>
+      <span class="kpi-value" id="kpiD1">R$ —</span>
+      <span class="kpi-icon">⏳</span>
+    </div>
+    <div class="kpi-card" id="kpiStatusCard">
+      <span class="kpi-label">Status</span>
+      <span class="kpi-value" id="kpiStatus">—</span>
+      <span class="kpi-icon" id="kpiStatusIcon">⚖️</span>
+    </div>
+  </div>
+
+  <!-- D+1 Alert (if applicable) -->
+  <div class="d1-box" id="d1Alert" style="display:none">
+    <div>
+      <div class="d1-label">⏳ Infinitipay D+1 a confirmar hoje</div>
+      <div style="font-size:.8rem;color:#4338CA;margin-top:.2rem">Valor lançado ontem via link de cartão — verifique se entrou na conta</div>
+    </div>
+    <div class="d1-value" id="d1AlertValue">R$ 0,00</div>
+  </div>
+
+  <!-- Lançamento de Recebimentos -->
+  <div class="content-card card-orange">
+    <div class="card-header">
+      <span class="card-title">💵 Lançamento de Recebimentos — <span id="dataHoje">hoje</span></span>
+    </div>
+
+    <div class="channel-grid">
+      <div class="channel-item">
+        <span class="channel-label">🏦 Pix — Inter</span>
+        <input class="channel-input" type="number" id="inPix" placeholder="0,00" min="0" step="0.01">
+      </div>
+      <div class="channel-item">
+        <span class="channel-label">💳 Cartão — Pagbank</span>
+        <input class="channel-input" type="number" id="inPagbank" placeholder="0,00" min="0" step="0.01">
+      </div>
+      <div class="channel-item">
+        <span class="channel-label">💵 Dinheiro espécie</span>
+        <input class="channel-input" type="number" id="inDinheiro" placeholder="0,00" min="0" step="0.01">
+      </div>
+      <div class="channel-item">
+        <span class="channel-label">🔗 Infinitipay (link confirmado hoje)</span>
+        <input class="channel-input" type="number" id="inInfiniti" placeholder="0,00" min="0" step="0.01">
+      </div>
+    </div>
+
+    <!-- Reconciliation -->
+    <div class="recon-box" id="reconBox">
+      <div class="recon-status" id="reconStatus">Preencha os valores acima para conferir</div>
+      <div class="recon-detail" id="reconDetail"></div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnSalvar">💾 Salvar Fechamento</button>
+      <button class="btn btn-secondary" id="btnLimpar">🗑️ Limpar</button>
+    </div>
+  </div>
+
+  <!-- Histórico -->
+  <div class="content-card card-blue">
+    <div class="card-header">
+      <span class="card-title">📅 Histórico de Fechamentos</span>
+    </div>
+    <div class="table-wrap">
+      <table id="tblHistorico">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>GestãoClick</th>
+            <th>Pix Inter</th>
+            <th>Pagbank</th>
+            <th>Dinheiro</th>
+            <th>Infinitipay</th>
+            <th>Total Conf.</th>
+            <th>Diferença</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyHistorico">
+          <tr><td colspan="9" class="empty-state">Nenhum fechamento registrado ainda</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<!-- Firebase Auth -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+    authDomain: "mr4-ponto.firebaseapp.com",
+    projectId: "mr4-ponto",
+    storageBucket: "mr4-ponto.firebasestorage.app",
+    messagingSenderId: "848211361584",
+    appId: "1:848211361584:web:2732e1893122f4a23452f5"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) {
+      window.location.href = '../login.html';
+      return;
+    }
+
+    const nome = user.displayName || user.email.split('@')[0];
+    document.getElementById('userName').textContent = nome;
+    document.getElementById('userAvatar').textContent = nome.charAt(0).toUpperCase();
+
+    const roleMap = {
+      'murilorodrigues_lima@hotmail.com': 'Administrador',
+      'fabiana': 'Vendas',
+    };
+    const role = Object.entries(roleMap).find(([k]) => user.email.toLowerCase().includes(k))?.[1] || 'Usuário';
+    document.getElementById('userRole').textContent = role;
+
+    document.getElementById('loadingScreen').style.display = 'none';
+    document.getElementById('sidebar').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'block';
+
+    inicializar();
+  });
+
+  document.getElementById('btnSair').addEventListener('click', () => signOut(auth));
+</script>
+
+<script>
+// ── UTILS ─────────────────────────────────────────────────────────────────
+
+function brl(v) {
+  return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function hoje() {
+  return new Date().toLocaleDateString('pt-BR');
+}
+
+function hojeISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── STORAGE ───────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'mr4_caixa_historico';
+
+function getHistorico() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function saveHistorico(hist) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(hist));
+}
+
+// ── RECONCILIATION ────────────────────────────────────────────────────────
+
+let gcTotal = 0;
+
+function getInputVal(id) {
+  return parseFloat(document.getElementById(id).value) || 0;
+}
+
+function calcular() {
+  const pix      = getInputVal('inPix');
+  const pagbank  = getInputVal('inPagbank');
+  const dinheiro = getInputVal('inDinheiro');
+  const infiniti = getInputVal('inInfiniti');
+  const total    = pix + pagbank + dinheiro + infiniti;
+  const diff     = total - gcTotal;
+
+  document.getElementById('kpiConfirmado').textContent = brl(total);
+
+  const box    = document.getElementById('reconBox');
+  const status = document.getElementById('reconStatus');
+  const detail = document.getElementById('reconDetail');
+  const kpiStatusCard = document.getElementById('kpiStatusCard');
+  const kpiStatus     = document.getElementById('kpiStatus');
+
+  detail.innerHTML = `
+    <span>GestãoClick: <strong>${brl(gcTotal)}</strong></span>
+    <span>Confirmado: <strong>${brl(total)}</strong></span>
+    <span>Diferença: <strong>${brl(Math.abs(diff))}</strong></span>
+  `;
+
+  box.className = 'recon-box';
+  kpiStatusCard.className = 'kpi-card';
+
+  if (total === 0 && gcTotal === 0) {
+    status.textContent = 'Preencha os valores acima para conferir';
+    kpiStatus.textContent = '—';
+  } else if (Math.abs(diff) < 0.01) {
+    box.classList.add('ok');
+    status.textContent = '✅ Caixa fechado — valores conferem!';
+    kpiStatusCard.classList.add('green');
+    kpiStatus.textContent = 'OK';
+  } else if (diff < 0) {
+    box.classList.add('falta');
+    status.textContent = `🔴 Falta ${brl(Math.abs(diff))} no caixa`;
+    kpiStatusCard.classList.add('red');
+    kpiStatus.textContent = 'Falta';
+  } else {
+    box.classList.add('sobra');
+    status.textContent = `⚠️ Sobra ${brl(diff)} no caixa`;
+    kpiStatusCard.classList.add('yellow');
+    kpiStatus.textContent = 'Sobra';
+  }
+}
+
+// ── HISTORY RENDER ────────────────────────────────────────────────────────
+
+function renderHistorico() {
+  const hist = getHistorico().slice().reverse();
+  const tbody = document.getElementById('tbodyHistorico');
+
+  if (!hist.length) {
+    tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Nenhum fechamento registrado ainda</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = hist.slice(0, 30).map(r => {
+    const diff = r.total_confirmado - r.gc_total;
+    let badgeClass = 'badge-ok';
+    let badgeLabel = 'OK';
+    if (Math.abs(diff) >= 0.01) {
+      badgeClass = diff < 0 ? 'badge-falta' : 'badge-sobra';
+      badgeLabel = diff < 0 ? 'Falta' : 'Sobra';
+    }
+    const diffStr = Math.abs(diff) < 0.01 ? '—' : (diff < 0 ? '-' : '+') + brl(Math.abs(diff)).replace('R$ ', '');
+
+    return `<tr>
+      <td>${r.data}</td>
+      <td class="mono">${brl(r.gc_total)}</td>
+      <td class="mono">${brl(r.pix)}</td>
+      <td class="mono">${brl(r.pagbank)}</td>
+      <td class="mono">${brl(r.dinheiro)}</td>
+      <td class="mono">${brl(r.infiniti)}</td>
+      <td class="mono"><strong>${brl(r.total_confirmado)}</strong></td>
+      <td class="mono">${diffStr}</td>
+      <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── D+1 ALERT ─────────────────────────────────────────────────────────────
+
+function checkD1Alert() {
+  const hist = getHistorico();
+  const ontem = new Date();
+  ontem.setDate(ontem.getDate() - 1);
+  const ontemISO = ontem.toISOString().slice(0, 10);
+
+  const recOntem = hist.find(r => r.iso === ontemISO);
+  if (recOntem && recOntem.infiniti > 0) {
+    document.getElementById('d1Alert').style.display = 'flex';
+    document.getElementById('d1AlertValue').textContent = brl(recOntem.infiniti);
+    document.getElementById('kpiD1').textContent = brl(recOntem.infiniti);
+  } else {
+    document.getElementById('kpiD1').textContent = 'R$ 0,00';
+  }
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────────────
+
+function salvar() {
+  const pix      = getInputVal('inPix');
+  const pagbank  = getInputVal('inPagbank');
+  const dinheiro = getInputVal('inDinheiro');
+  const infiniti = getInputVal('inInfiniti');
+  const total    = pix + pagbank + dinheiro + infiniti;
+
+  if (total === 0) {
+    showToast('⚠️ Preencha ao menos um valor antes de salvar');
+    return;
+  }
+
+  const hist = getHistorico();
+  const iso  = hojeISO();
+
+  const idx = hist.findIndex(r => r.iso === iso);
+  const record = {
+    iso,
+    data:            hoje(),
+    gc_total:        gcTotal,
+    pix,
+    pagbank,
+    dinheiro,
+    infiniti,
+    total_confirmado: total,
+    salvo_em:        new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  };
+
+  if (idx >= 0) hist[idx] = record;
+  else hist.push(record);
+
+  saveHistorico(hist);
+  renderHistorico();
+  showToast('✅ Fechamento salvo com sucesso!');
+}
+
+function limpar() {
+  ['inPix','inPagbank','inDinheiro','inInfiniti'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  calcular();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+
+async function inicializar() {
+  // Set today's date label
+  document.getElementById('dataHoje').textContent = hoje();
+
+  // Load GestãoClick total from vendas.json
+  try {
+    const resp = await fetch('../data/vendas.json', { cache: 'no-cache' });
+    if (resp.ok) {
+      const d = await resp.json();
+      gcTotal = Number(d.hoje) || 0;
+      document.getElementById('kpiGC').textContent = brl(gcTotal);
+      if (d.atualizado_em) {
+        const dt = new Date(d.atualizado_em);
+        document.getElementById('lastUpdate').textContent =
+          'GestãoClick: ' + dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+  } catch (e) {
+    document.getElementById('kpiGC').textContent = 'Indisponível';
+    document.getElementById('lastUpdate').textContent = 'Erro ao carregar dados';
+  }
+
+  // Check D+1 from yesterday
+  checkD1Alert();
+
+  // Load today's saved values if any
+  const hist = getHistorico();
+  const hoje_rec = hist.find(r => r.iso === hojeISO());
+  if (hoje_rec) {
+    document.getElementById('inPix').value      = hoje_rec.pix      || '';
+    document.getElementById('inPagbank').value  = hoje_rec.pagbank  || '';
+    document.getElementById('inDinheiro').value = hoje_rec.dinheiro || '';
+    document.getElementById('inInfiniti').value = hoje_rec.infiniti || '';
+    calcular();
+  }
+
+  // Render history
+  renderHistorico();
+
+  // Events
+  ['inPix','inPagbank','inDinheiro','inInfiniti'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calcular);
+  });
+  document.getElementById('btnSalvar').addEventListener('click', salvar);
+  document.getElementById('btnLimpar').addEventListener('click', limpar);
+}
+</script>
+
+</body>
+</html>

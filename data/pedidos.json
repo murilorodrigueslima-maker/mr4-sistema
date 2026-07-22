@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-07-22T05:08:18",
-  "total": 44,
+  "atualizado_em": "2026-07-22T08:41:37",
+  "total": 45,
   "pedidos": [
     {
       "id": "385851256",
@@ -227,6 +227,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 331,
       "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385660709",
+      "numero": "16811",
+      "data": "2026-07-21",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 434.42,
+      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

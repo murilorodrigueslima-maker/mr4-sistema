@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-22T14:07:15",
-  "total": 64,
+  "atualizado_em": "2026-07-22T15:57:27",
+  "total": 67,
   "pedidos": [
+    {
+      "id": "386033741",
+      "numero": "16852",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "FRANCISCA ANDRESSA ARAUJO GOMES",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 120.13,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386024645",
+      "numero": "16851",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "LETICIA H M COSTA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 365.35,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385996957",
+      "numero": "16850",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "MARCOS RAFAEL FRANCA MOREIRA 60360121365",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2250.08,
+      "itens": 16,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385986378",
       "numero": "16849",
@@ -141,8 +177,8 @@
       "hora": "",
       "cliente": "J ELIVAN MELO DE SOUZA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 722.06,
-      "itens": 2,
+      "valor": 798.06,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },
@@ -669,8 +705,8 @@
       "hora": "",
       "cliente": "Edilberto",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1656.12,
-      "itens": 9,
+      "valor": 2048.12,
+      "itens": 11,
       "status_gc": "",
       "cidade": ""
     },

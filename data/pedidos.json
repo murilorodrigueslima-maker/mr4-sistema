@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-22T15:57:27",
-  "total": 67,
+  "atualizado_em": "2026-07-22T17:55:23",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "386073800",
+      "numero": "16856",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 47,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386043376",
+      "numero": "16855",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 167,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386043090",
+      "numero": "16854",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 676,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386042647",
+      "numero": "16853",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 520,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386033741",
       "numero": "16852",
@@ -69,7 +117,7 @@
       "hora": "",
       "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 157.83,
+      "valor": 157,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

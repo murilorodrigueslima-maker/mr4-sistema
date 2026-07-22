@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-22T15:57:27",
+  "atualizado_em": "2026-07-22T17:55:23",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -100,13 +100,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CAGECE RUA CEARA 634",
-      "valor": 321.56,
-      "vencimento": "2026-07-07",
-      "dias_atraso": 15,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-07-10",
@@ -146,13 +139,6 @@
       "valor": 1281.44,
       "vencimento": "2026-07-13",
       "dias_atraso": 9,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2439,
-      "vencimento": "2026-07-14",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -242,13 +228,6 @@
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
-      "vencimento": "2026-07-21",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 485.52,
       "vencimento": "2026-07-21",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -366,7 +345,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55976.43,
+  "total_vencido": 52730.350000000006,
   "total_a_receber": 0,
-  "total_a_pagar": 35665.05
+  "total_a_pagar": 35343.490000000005
 }

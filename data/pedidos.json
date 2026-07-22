@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-22T08:41:37",
-  "total": 45,
+  "atualizado_em": "2026-07-22T10:21:36",
+  "total": 51,
   "pedidos": [
+    {
+      "id": "385910784",
+      "numero": "16836",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "ROMMEL NELSON DE OLIVEIRA 08037739350",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 988.33,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385908296",
+      "numero": "16835",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "JR CAR",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 339.9,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385904093",
+      "numero": "16834",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "FRANCISCO DEIVID BEZERRA BARROSO 61788943333",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 270,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385895382",
+      "numero": "16833",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 667.4,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385895307",
+      "numero": "16832",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 111.58,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385887550",
+      "numero": "16831",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 218.54,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "385660709",
+      "numero": "16811",
+      "data": "2026-07-22",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 439.5,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "385851256",
       "numero": "16830",
@@ -227,18 +311,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 331,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "385660709",
-      "numero": "16811",
-      "data": "2026-07-21",
-      "hora": "",
-      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 434.42,
-      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

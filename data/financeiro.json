@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-21T22:45:22",
+  "atualizado_em": "2026-07-22T01:59:12",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -252,15 +252,16 @@
       "vencimento": "2026-07-17",
       "dias_atraso": 5,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
       "vencimento": "2026-07-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 681.61,
@@ -350,11 +351,29 @@
       "valor": 860.27,
       "vencimento": "2026-07-28",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 919.13,
+      "vencimento": "2026-07-29",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 2930.5,
+      "vencimento": "2026-07-29",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 1259.5,
+      "vencimento": "2026-07-29",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54442.65,
+  "total_vencido": 59541.93,
   "total_a_receber": 0,
-  "total_a_pagar": 33951.38999999999
+  "total_a_pagar": 35665.05
 }

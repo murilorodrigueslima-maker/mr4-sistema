@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-22T22:52:51",
+  "atualizado_em": "2026-07-23T02:16:36",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -231,21 +231,23 @@
       "vencimento": "2026-07-21",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 681.61,
       "vencimento": "2026-07-22",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
       "vencimento": "2026-07-22",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
@@ -341,11 +343,29 @@
       "valor": 1259.5,
       "vencimento": "2026-07-29",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO ESTER",
+      "valor": 2019.94,
+      "vencimento": "2026-07-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PARCELAMENTO IMPOSTOS",
+      "valor": 517.47,
+      "vencimento": "2026-07-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 6816.67,
+      "vencimento": "2026-07-30",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52730.350000000006,
+  "total_vencido": 57005.29000000001,
   "total_a_receber": 0,
   "total_a_pagar": 35343.490000000005
 }

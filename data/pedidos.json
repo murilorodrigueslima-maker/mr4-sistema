@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-23T15:59:11",
-  "total": 65,
+  "atualizado_em": "2026-07-23T17:51:21",
+  "total": 69,
   "pedidos": [
+    {
+      "id": "386324916",
+      "numero": "16871",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386315452",
+      "numero": "16870",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386304772",
+      "numero": "16869",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386293875",
+      "numero": "16868",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 593,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386281280",
       "numero": "16867",

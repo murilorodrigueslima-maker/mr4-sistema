@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-23T08:45:20",
+  "atualizado_em": "2026-07-23T10:24:29",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -191,13 +191,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
-      "valor": 1439.8,
-      "vencimento": "2026-07-17",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-07-17",
@@ -365,7 +358,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57005.29000000001,
+  "total_vencido": 55565.490000000005,
   "total_a_receber": 0,
   "total_a_pagar": 35343.490000000005
 }

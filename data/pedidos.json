@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-23T08:45:19",
-  "total": 54,
+  "atualizado_em": "2026-07-23T10:24:28",
+  "total": 56,
   "pedidos": [
+    {
+      "id": "386161207",
+      "numero": "16858",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1170,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386151616",
+      "numero": "16857",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 128,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386073800",
       "numero": "16856",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-23T14:09:24",
+  "atualizado_em": "2026-07-23T15:59:12",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -111,13 +111,6 @@
       "valor": 520.88,
       "vencimento": "2026-07-10",
       "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 3937.2,
-      "vencimento": "2026-07-13",
-      "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
@@ -358,7 +351,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55565.490000000005,
+  "total_vencido": 51628.29000000001,
   "total_a_receber": 0,
   "total_a_pagar": 35343.490000000005
 }

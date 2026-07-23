@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-23T12:47:29",
-  "total": 62,
+  "atualizado_em": "2026-07-23T14:09:23",
+  "total": 63,
   "pedidos": [
+    {
+      "id": "386227994",
+      "numero": "16865",
+      "data": "2026-07-23",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386217632",
       "numero": "16864",

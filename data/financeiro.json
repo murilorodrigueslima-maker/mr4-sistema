@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-24T14:20:14",
+  "atualizado_em": "2026-07-24T16:12:13",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -327,6 +327,12 @@
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 6816.67,
       "vencimento": "2026-07-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 455.05,
+      "vencimento": "2026-07-31",
       "tipo": "Pagar"
     }
   ],

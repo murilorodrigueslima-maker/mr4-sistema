@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-24T14:20:13",
-  "total": 65,
+  "atualizado_em": "2026-07-24T16:12:12",
+  "total": 68,
   "pedidos": [
+    {
+      "id": "386526053",
+      "numero": "16899",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 509.9,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386511253",
+      "numero": "16898",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386510783",
+      "numero": "16897",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "ARISNEVES FERREIRA SANTOS 02068641321",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 212.99,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386503360",
+      "numero": "16896",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 44,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386501106",
       "numero": "16895",
@@ -515,18 +563,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 120.13,
       "itens": 4,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "386024645",
-      "numero": "16851",
-      "data": "2026-07-22",
-      "hora": "",
-      "cliente": "LETICIA H M COSTA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 365.35,
-      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

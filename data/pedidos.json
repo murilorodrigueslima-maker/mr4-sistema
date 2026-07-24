@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-07-24T08:29:58",
-  "total": 42,
+  "atualizado_em": "2026-07-24T10:17:37",
+  "total": 48,
   "pedidos": [
+    {
+      "id": "386416124",
+      "numero": "16878",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 147.8,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386412957",
+      "numero": "16877",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "FRANCISCO BARBOSA DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386405743",
+      "numero": "16876",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 176,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386405400",
+      "numero": "16875",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 601.81,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386403713",
+      "numero": "16874",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 6560,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386402249",
+      "numero": "16873",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "MARCOS PEREIRA SAMPAIO FILHO FAROIS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 234.5,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386395109",
+      "numero": "16872",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 93.4,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386324916",
       "numero": "16871",
@@ -22,18 +106,6 @@
       "cliente": "JOAO JORDAN TELES MOREIRA",
       "vendedor": "fabiana andrade da silva",
       "valor": 150,
-      "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "386304772",
-      "numero": "16869",
-      "data": "2026-07-23",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 200,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

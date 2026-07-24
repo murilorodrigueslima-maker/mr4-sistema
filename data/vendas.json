@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-07-24T08:30:05",
-  "hoje": 0,
-  "semana": 32516.209999999995,
-  "mes": 174998.70999999993,
+  "atualizado_em": "2026-07-24T10:17:44",
+  "hoje": 8073.509999999999,
+  "semana": 40389.719999999994,
+  "mes": 182872.21999999994,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -15,21 +15,21 @@
     },
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 113586.40999999999,
-      "pedidos": 260,
-      "ticket_medio": 436.87080769230766
+      "faturamento": 114899.91999999997,
+      "pedidos": 265,
+      "ticket_medio": 433.5846037735848
+    },
+    {
+      "nome": "Swyanne Kethlyn",
+      "faturamento": 9554.67,
+      "pedidos": 11,
+      "ticket_medio": 868.6063636363637
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
       "faturamento": 5890,
       "pedidos": 5,
       "ticket_medio": 1178
-    },
-    {
-      "nome": "Swyanne Kethlyn",
-      "faturamento": 2994.67,
-      "pedidos": 10,
-      "ticket_medio": 299.467
     }
   ],
   "ultimos_7_dias": [
@@ -61,12 +61,12 @@
     {
       "data": "2026-07-23",
       "label": "qui., 23/07",
-      "valor": 4273.27
+      "valor": 4073.27
     },
     {
       "data": "2026-07-24",
       "label": "sex., 24/07",
-      "valor": 0
+      "valor": 8073.509999999999
     }
   ]
 }

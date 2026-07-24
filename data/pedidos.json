@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-24T16:12:12",
-  "total": 68,
+  "atualizado_em": "2026-07-24T17:55:09",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "386587118",
+      "numero": "16903",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "Edilberto",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 446,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386564795",
+      "numero": "16902",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 68,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386560114",
+      "numero": "16901",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "Moacir Pedro Bezerra junio",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 24.9,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386557916",
+      "numero": "16900",
+      "data": "2026-07-24",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386526053",
       "numero": "16899",
@@ -309,8 +357,8 @@
       "hora": "",
       "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
       "vendedor": "fabiana andrade da silva",
-      "valor": 6865.96,
-      "itens": 12,
+      "valor": 6893.56,
+      "itens": 13,
       "status_gc": "",
       "cidade": ""
     },

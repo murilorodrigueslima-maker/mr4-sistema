@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-23T22:48:52",
+  "atualizado_em": "2026-07-24T02:11:32",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -231,21 +231,23 @@
       "vencimento": "2026-07-22",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
       "vencimento": "2026-07-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.3,
       "vencimento": "2026-07-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
@@ -351,7 +353,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51628.29000000001,
+  "total_vencido": 54180.77000000001,
   "total_a_receber": 0,
   "total_a_pagar": 35343.490000000005
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-24T12:20:18",
+  "atualizado_em": "2026-07-24T14:20:14",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -94,9 +94,16 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 4833.06,
+      "valor": 4450.17,
       "vencimento": "2026-07-05",
       "dias_atraso": 19,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTABILIDADE REF ABRIL",
+      "valor": 771,
+      "vencimento": "2026-07-06",
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
@@ -111,27 +118,6 @@
       "valor": 520.88,
       "vencimento": "2026-07-10",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 860.27,
-      "vencimento": "2026-07-13",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 919.13,
-      "vencimento": "2026-07-13",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1281.44,
-      "vencimento": "2026-07-13",
-      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
@@ -235,13 +221,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
-      "vencimento": "2026-07-23",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1276.3,
       "vencimento": "2026-07-23",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -353,7 +332,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54180.77000000001,
+  "total_vencido": 50231.740000000005,
   "total_a_receber": 0,
-  "total_a_pagar": 35343.490000000005
+  "total_a_pagar": 36114.490000000005
 }

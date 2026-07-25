@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-25T08:01:35",
-  "total": 46,
+  "atualizado_em": "2026-07-25T10:01:11",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "386656274",
+      "numero": "16909",
+      "data": "2026-07-25",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386651446",
+      "numero": "16908",
+      "data": "2026-07-25",
+      "hora": "",
+      "cliente": "LEANDRO CAVALCANTE MACHADO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 205.29,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386651205",
+      "numero": "16907",
+      "data": "2026-07-25",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386648128",
+      "numero": "16906",
+      "data": "2026-07-25",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 19.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386640134",
+      "numero": "16905",
+      "data": "2026-07-25",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386639256",
+      "numero": "16904",
+      "data": "2026-07-25",
+      "hora": "",
+      "cliente": "EVILASIO SANTOS DA SILVA 02139322371",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 120,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386587118",
       "numero": "16903",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-25T08:01:36",
+  "atualizado_em": "2026-07-25T10:01:12",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -123,13 +123,6 @@
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.49,
-      "vencimento": "2026-07-14",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
-      "valor": 1668.73,
       "vencimento": "2026-07-14",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -332,7 +325,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51772.58000000001,
+  "total_vencido": 50103.85000000001,
   "total_a_receber": 0,
   "total_a_pagar": 36011.330000000016
 }

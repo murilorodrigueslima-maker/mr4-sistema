@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-07-24T22:48:41",
+  "atualizado_em": "2026-07-25T01:57:18",
   "contas_vencidas": [
-    {
-      "nome": "CAPITALIZAÇÃO",
-      "valor": 103.16,
-      "vencimento": "2026-05-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
@@ -224,15 +217,16 @@
       "vencimento": "2026-07-23",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-07-24",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
@@ -338,7 +332,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50231.740000000005,
+  "total_vencido": 51772.58000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 36114.490000000005
+  "total_a_pagar": 36011.330000000016
 }

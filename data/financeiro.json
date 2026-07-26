@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-25T22:51:34",
+  "atualizado_em": "2026-07-26T02:22:19",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -217,27 +217,30 @@
       "vencimento": "2026-07-24",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
       "vencimento": "2026-07-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ESTANTE ESCRITORIO MURILO",
       "valor": 94,
       "vencimento": "2026-07-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-07-25",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
@@ -321,11 +324,23 @@
       "valor": 455.05,
       "vencimento": "2026-07-31",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1134.83,
+      "vencimento": "2026-08-02",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1135.33,
+      "vencimento": "2026-08-02",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 50103.85000000001,
+  "total_vencido": 51964.95000000002,
   "total_a_receber": 0,
-  "total_a_pagar": 36011.330000000016
+  "total_a_pagar": 36105.330000000016
 }

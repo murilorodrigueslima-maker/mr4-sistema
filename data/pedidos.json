@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-27T16:12:55",
-  "total": 40,
+  "atualizado_em": "2026-07-27T18:02:22",
+  "total": 41,
   "pedidos": [
+    {
+      "id": "387076562",
+      "numero": "16944",
+      "data": "2026-07-27",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387069477",
       "numero": "16943",

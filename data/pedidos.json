@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-27T06:31:26",
-  "total": 16,
+  "atualizado_em": "2026-07-27T09:50:41",
+  "total": 19,
   "pedidos": [
+    {
+      "id": "386924872",
+      "numero": "16922",
+      "data": "2026-07-27",
+      "hora": "",
+      "cliente": "Bruno Pinheiro de Sousa",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 144.03,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386921075",
+      "numero": "16921",
+      "data": "2026-07-27",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 300,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386914619",
+      "numero": "16920",
+      "data": "2026-07-27",
+      "hora": "",
+      "cliente": "RAIMUNDO CRISOSTOMO LIMA NETO 00533855357",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 332.17,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "386702881",
       "numero": "16919",

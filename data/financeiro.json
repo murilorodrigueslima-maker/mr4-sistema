@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-27T06:31:28",
+  "atualizado_em": "2026-07-27T09:50:42",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -87,7 +87,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 4450.17,
+      "valor": 3533.11,
       "vencimento": "2026-07-05",
       "dias_atraso": 22,
       "tipo": "Pagar"
@@ -130,6 +130,13 @@
     {
       "nome": "COLA RATO",
       "valor": 30.99,
+      "vencimento": "2026-07-15",
+      "dias_atraso": 12,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FERIAS 15/06/2026 A 30/06/2026",
+      "valor": 380,
       "vencimento": "2026-07-15",
       "dias_atraso": 12,
       "tipo": "Pagar"
@@ -240,6 +247,62 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "UBER FLASH",
+      "valor": 22.55,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 931.65,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 60.06,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LICENÇA CANVAS",
+      "valor": 24.24,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 2443.77,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CHAT GPT",
+      "valor": 95.99,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTÃO INTER",
+      "valor": 172.34,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "INTERNET EMPRESA",
+      "valor": 127.75,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 2,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-07-26",
@@ -274,6 +337,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CAGECE RUA RIO GRANDE DO NORTE 1105",
+      "valor": 394.26,
+      "vencimento": "2026-07-27",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-07-28",
@@ -282,6 +351,12 @@
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 860.27,
+      "vencimento": "2026-07-28",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PLANO CLARO CELULAR",
+      "valor": 193.29,
       "vencimento": "2026-07-28",
       "tipo": "Pagar"
     },
@@ -354,7 +429,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55905.45000000002,
+  "total_vencido": 59246.74000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 36105.330000000016
+  "total_a_pagar": 41419.28000000001
 }

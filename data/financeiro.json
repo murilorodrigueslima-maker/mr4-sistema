@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-26T22:59:25",
+  "atualizado_em": "2026-07-27T02:52:32",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -238,21 +238,23 @@
       "vencimento": "2026-07-25",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-07-26",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-26",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 778.12,
@@ -336,11 +338,23 @@
       "valor": 1135.33,
       "vencimento": "2026-08-02",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1351.39,
+      "vencimento": "2026-08-03",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 727.86,
+      "vencimento": "2026-08-03",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51964.95000000002,
+  "total_vencido": 55905.45000000002,
   "total_a_receber": 0,
   "total_a_pagar": 36105.330000000016
 }

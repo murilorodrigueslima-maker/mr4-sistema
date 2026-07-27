@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-27T09:50:42",
+  "atualizado_em": "2026-07-27T13:07:27",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -107,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ENEL RUA CEARA 634",
-      "valor": 520.88,
-      "vencimento": "2026-07-10",
-      "dias_atraso": 17,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-07-14",
@@ -139,20 +132,6 @@
       "valor": 380,
       "vencimento": "2026-07-15",
       "dias_atraso": 12,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 891.47,
-      "vencimento": "2026-07-16",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 384.2,
-      "vencimento": "2026-07-16",
-      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
@@ -337,12 +316,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CAGECE RUA RIO GRANDE DO NORTE 1105",
-      "valor": 394.26,
-      "vencimento": "2026-07-27",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-07-28",
@@ -429,7 +402,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59246.74000000001,
+  "total_vencido": 57450.19000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 41419.28000000001
+  "total_a_pagar": 40504.140000000014
 }

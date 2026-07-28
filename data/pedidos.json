@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-28T17:58:40",
-  "total": 42,
+  "atualizado_em": "2026-07-28T19:51:10",
+  "total": 43,
   "pedidos": [
+    {
+      "id": "387370169",
+      "numero": "16962",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 127.26,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387351248",
       "numero": "16961",

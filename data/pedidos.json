@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-28T08:49:59",
-  "total": 25,
+  "atualizado_em": "2026-07-28T10:39:31",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "387197154",
+      "numero": "16948",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "F ALEX DE MENEZES FELINTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 50,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387190688",
+      "numero": "16947",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "51.908.552 MAGNO ERNESTO TEIXEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387174550",
+      "numero": "16946",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387170688",
+      "numero": "16945",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "JOSE BARROSO DOS SANTOS FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 30,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387076562",
       "numero": "16944",
@@ -117,7 +165,7 @@
       "hora": "",
       "cliente": "Luiz Cândido da Silvia",
       "vendedor": "fabiana andrade da silva",
-      "valor": 260,
+      "valor": 230,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

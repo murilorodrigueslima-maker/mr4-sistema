@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-28T08:50:00",
+  "atualizado_em": "2026-07-28T10:39:32",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -101,13 +101,6 @@
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
-      "valor": 1010.5,
-      "vencimento": "2026-07-14",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.49,
       "vencimento": "2026-07-14",
       "dias_atraso": 14,
@@ -142,20 +135,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 277.01,
-      "vencimento": "2026-07-17",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 426.43,
-      "vencimento": "2026-07-17",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 834,
       "vencimento": "2026-07-17",
@@ -172,13 +151,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 681.61,
-      "vencimento": "2026-07-22",
-      "dias_atraso": 6,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 3593.33,
       "vencimento": "2026-07-22",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -404,7 +376,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 60566.59000000001,
+  "total_vencido": 55259.32000000001,
   "total_a_receber": 0,
   "total_a_pagar": 39803.36000000001
 }

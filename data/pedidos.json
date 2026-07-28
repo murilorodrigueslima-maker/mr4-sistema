@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-28T12:57:50",
-  "total": 33,
+  "atualizado_em": "2026-07-28T14:23:35",
+  "total": 35,
   "pedidos": [
+    {
+      "id": "387261802",
+      "numero": "16954",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 42.04,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387258722",
+      "numero": "16953",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 124.5,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387231814",
       "numero": "16952",

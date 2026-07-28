@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-07-28T10:39:38",
+  "atualizado_em": "2026-07-28T12:57:55",
   "total_produtos": 917,
-  "valor_total_estoque": 423365.2600000005,
+  "valor_total_estoque": 421676.79000000056,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -209,13 +209,6 @@
       "custo": 24.72
     },
     {
-      "ref": "89/M4A",
-      "nome": "MOLD. GM ONIX/COBALT 2DIN S/ PINTURA",
-      "margem": "-150.0",
-      "preco": 7.06,
-      "custo": 17.65
-    },
-    {
       "ref": "IP09-0275/V1",
       "nome": "MOLDURA 2 DIN 9 TOYOTA COROLLA 2008/13 CINZA (CH) JOKER",
       "margem": "-75.6",
@@ -354,6 +347,13 @@
       "margem": "11.8",
       "preco": 170,
       "custo": 150
+    },
+    {
+      "ref": "2107-0",
+      "nome": "ULTRA LED CSP H27 70W 10.000 LUMENS BIVOLT - ASX1027",
+      "margem": "14.1",
+      "preco": 135,
+      "custo": 116.01
     }
   ]
 }

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-28T10:39:31",
-  "total": 29,
+  "atualizado_em": "2026-07-28T12:57:50",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "387231814",
+      "numero": "16952",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 51,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387223730",
+      "numero": "16951",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2527.49,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387214685",
+      "numero": "16950",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 148.4,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387208264",
+      "numero": "16949",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "MARCOS RAFAEL FRANCA MOREIRA 60360121365",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 60,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387197154",
       "numero": "16948",

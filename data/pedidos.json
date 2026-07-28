@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-28T14:23:35",
-  "total": 35,
+  "atualizado_em": "2026-07-28T16:07:41",
+  "total": 38,
   "pedidos": [
+    {
+      "id": "387302426",
+      "numero": "16957",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 300,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387297778",
+      "numero": "16956",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 246.11,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387294900",
+      "numero": "16955",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1833.48,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387261802",
       "numero": "16954",

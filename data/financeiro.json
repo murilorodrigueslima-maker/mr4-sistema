@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-28T14:23:36",
+  "atualizado_em": "2026-07-28T16:07:41",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -80,16 +80,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 3533.11,
+      "valor": 3267.89,
       "vencimento": "2026-07-05",
       "dias_atraso": 23,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTABILIDADE REF ABRIL",
-      "valor": 771,
-      "vencimento": "2026-07-06",
-      "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
@@ -109,13 +102,6 @@
     {
       "nome": "COLA RATO",
       "valor": 30.99,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FERIAS 15/06/2026 A 30/06/2026",
-      "valor": 380,
       "vencimento": "2026-07-15",
       "dias_atraso": 13,
       "tipo": "Pagar"
@@ -338,6 +324,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
+      "valor": 687.77,
+      "vencimento": "2026-07-30",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 455.05,
       "vencimento": "2026-07-31",
@@ -376,7 +368,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55259.32000000001,
+  "total_vencido": 53843.100000000006,
   "total_a_receber": 0,
-  "total_a_pagar": 39803.36000000001
+  "total_a_pagar": 39720.130000000005
 }

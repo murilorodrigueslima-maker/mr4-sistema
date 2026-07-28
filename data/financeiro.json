@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-28T16:07:41",
+  "atualizado_em": "2026-07-28T17:58:41",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -114,13 +114,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1134.83,
-      "vencimento": "2026-07-17",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 834,
       "vencimento": "2026-07-17",
@@ -230,13 +223,6 @@
       "valor": 127.75,
       "vencimento": "2026-07-25",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2440.5,
-      "vencimento": "2026-07-26",
-      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
@@ -368,7 +354,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53843.100000000006,
+  "total_vencido": 50267.770000000004,
   "total_a_receber": 0,
   "total_a_pagar": 39720.130000000005
 }

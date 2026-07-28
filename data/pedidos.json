@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-28T16:07:41",
-  "total": 38,
+  "atualizado_em": "2026-07-28T17:58:40",
+  "total": 42,
   "pedidos": [
+    {
+      "id": "387351248",
+      "numero": "16961",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387342943",
+      "numero": "16960",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2130,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387337146",
+      "numero": "16959",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 156.02,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387329801",
+      "numero": "16958",
+      "data": "2026-07-28",
+      "hora": "",
+      "cliente": "RM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2129.6,
+      "itens": 19,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387302426",
       "numero": "16957",

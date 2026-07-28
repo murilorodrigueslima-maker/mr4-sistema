@@ -1,298 +1,298 @@
 {
-  "atualizado_em": "2026-07-27T19:52:15",
+  "atualizado_em": "2026-07-27T22:42:25",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-05-28",
-      "dias_atraso": 60,
+      "dias_atraso": 61,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-05-30",
-      "dias_atraso": 58,
+      "dias_atraso": 59,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-06-17",
-      "dias_atraso": 40,
+      "dias_atraso": 41,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 584,
       "vencimento": "2026-06-17",
-      "dias_atraso": 40,
+      "dias_atraso": 41,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-06-25",
-      "dias_atraso": 32,
+      "dias_atraso": 33,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 4042.91,
       "vencimento": "2026-06-25",
-      "dias_atraso": 32,
+      "dias_atraso": 33,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 6629.64,
       "vencimento": "2026-06-25",
-      "dias_atraso": 32,
+      "dias_atraso": 33,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1527.36,
       "vencimento": "2026-06-25",
-      "dias_atraso": 32,
+      "dias_atraso": 33,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 944.63,
       "vencimento": "2026-06-25",
-      "dias_atraso": 32,
+      "dias_atraso": 33,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
-      "dias_atraso": 28,
+      "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-29",
-      "dias_atraso": 28,
+      "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
-      "dias_atraso": 27,
+      "dias_atraso": 28,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 3533.11,
       "vencimento": "2026-07-05",
-      "dias_atraso": 22,
+      "dias_atraso": 23,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTABILIDADE REF ABRIL",
       "valor": 771,
       "vencimento": "2026-07-06",
-      "dias_atraso": 21,
+      "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-07-10",
-      "dias_atraso": 17,
+      "dias_atraso": 18,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-07-14",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.49,
       "vencimento": "2026-07-14",
-      "dias_atraso": 13,
+      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
       "nome": "COLA RATO",
       "valor": 30.99,
       "vencimento": "2026-07-15",
-      "dias_atraso": 12,
+      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
       "nome": "FERIAS 15/06/2026 A 30/06/2026",
       "valor": 380,
       "vencimento": "2026-07-15",
-      "dias_atraso": 12,
+      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-07-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-07-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 277.01,
       "vencimento": "2026-07-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 426.43,
       "vencimento": "2026-07-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 834,
       "vencimento": "2026-07-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
       "vencimento": "2026-07-21",
-      "dias_atraso": 6,
+      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 681.61,
       "vencimento": "2026-07-22",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
       "vencimento": "2026-07-22",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1276.18,
       "vencimento": "2026-07-23",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-07-24",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "ESTANTE ESCRITORIO MURILO",
       "valor": 94,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "UBER FLASH",
       "valor": 22.55,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 931.65,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "UBER FLASH",
       "valor": 60.06,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "LICENÇA CANVAS",
       "valor": 24.24,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 2443.77,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "CHAT GPT",
       "valor": 95.99,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTÃO INTER",
       "valor": 172.34,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "INTERNET EMPRESA",
       "valor": 127.75,
       "vencimento": "2026-07-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-07-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1500,
       "vencimento": "2026-07-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],

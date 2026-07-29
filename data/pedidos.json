@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-29T14:04:02",
-  "total": 55,
+  "atualizado_em": "2026-07-29T15:57:39",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "387561302",
+      "numero": "16979",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 110.74,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387557915",
+      "numero": "16978",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "JOSE BARROSO DOS SANTOS FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387557321",
+      "numero": "16977",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "F ALEX DE MENEZES FELINTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 775,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387531116",
+      "numero": "16976",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 430,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387529632",
+      "numero": "16975",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 250,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387513242",
       "numero": "16974",

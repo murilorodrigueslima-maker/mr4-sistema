@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-29T10:45:34",
-  "total": 49,
+  "atualizado_em": "2026-07-29T12:43:41",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "387488461",
+      "numero": "16972",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 324.53,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387480381",
+      "numero": "16971",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "ELETRONIC NEGO SOM ACESSORIOS VEICULAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 489,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387464408",
+      "numero": "16970",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "NP COMERCIO E SERVICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387461443",
+      "numero": "16969",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "APLICAR FILMS E RETOQUE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1327.46,
+      "itens": 19,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387452642",
       "numero": "16968",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-29T10:45:35",
+  "atualizado_em": "2026-07-29T12:43:41",
   "contas_vencidas": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
@@ -142,13 +142,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1644,
-      "vencimento": "2026-07-24",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
       "vencimento": "2026-07-25",
@@ -223,13 +216,6 @@
       "valor": 127.75,
       "vencimento": "2026-07-25",
       "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1500,
-      "vencimento": "2026-07-26",
-      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
@@ -387,7 +373,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52022.11,
+  "total_vencido": 48878.11,
   "total_a_receber": 0,
   "total_a_pagar": 40420.91
 }

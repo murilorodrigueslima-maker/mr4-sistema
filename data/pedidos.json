@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-29T12:43:41",
-  "total": 53,
+  "atualizado_em": "2026-07-29T14:04:02",
+  "total": 55,
   "pedidos": [
+    {
+      "id": "387513242",
+      "numero": "16974",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "SPACE GARAGE LTDA",
+      "vendedor": "Swyanne Kethlyn",
+      "valor": 263.4,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387507436",
+      "numero": "16973",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1258.16,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387488461",
       "numero": "16972",

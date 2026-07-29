@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-29T08:54:06",
-  "total": 43,
+  "atualizado_em": "2026-07-29T10:45:34",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "387452642",
+      "numero": "16968",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "RAFAEL NUNES CARNEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 651.5,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387443838",
+      "numero": "16967",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "STYLE WAY PERFORMANCE LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 26.74,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387443595",
+      "numero": "16966",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "NP COMERCIO E SERVICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 76.84,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387434984",
+      "numero": "16965",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "HELENO JOSE GOMES DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 32.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387427019",
+      "numero": "16964",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "PEDRO HENRIQUE SOUSA AVELINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 60,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387423282",
+      "numero": "16963",
+      "data": "2026-07-29",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 186.2,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387370169",
       "numero": "16962",

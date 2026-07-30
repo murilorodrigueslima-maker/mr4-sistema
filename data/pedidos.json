@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-30T16:09:34",
+  "atualizado_em": "2026-07-30T17:55:59",
   "total": 66,
   "pedidos": [
     {
@@ -45,8 +45,8 @@
       "hora": "",
       "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
       "vendedor": "fabiana andrade da silva",
-      "valor": 74,
-      "itens": 1,
+      "valor": 152.44,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },
@@ -129,8 +129,8 @@
       "hora": "",
       "cliente": "A S SERVICOS ELETRONICOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 490,
-      "itens": 3,
+      "valor": 720,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

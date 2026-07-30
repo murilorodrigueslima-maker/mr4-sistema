@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-30T10:27:07",
-  "total": 49,
+  "atualizado_em": "2026-07-30T12:44:52",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "387743241",
+      "numero": "16997",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "SPACE GARAGE LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 65,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387742952",
+      "numero": "16996",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "FRANCISCO ELIAS MORAIS FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 380,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387729796",
+      "numero": "16995",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 477,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387702219",
+      "numero": "16994",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 198.28,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387700187",
+      "numero": "16993",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387694976",
       "numero": "16992",
@@ -69,8 +129,8 @@
       "hora": "",
       "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 346,
-      "itens": 3,
+      "valor": 497.5,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

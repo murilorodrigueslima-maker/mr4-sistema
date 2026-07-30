@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-07-30T05:07:27",
-  "total": 43,
+  "atualizado_em": "2026-07-30T08:45:11",
+  "total": 45,
   "pedidos": [
+    {
+      "id": "387661100",
+      "numero": "16988",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 164,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386151616",
+      "numero": "16857",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 291,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387606811",
       "numero": "16987",

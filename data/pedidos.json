@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-30T14:14:45",
-  "total": 60,
+  "atualizado_em": "2026-07-30T16:09:34",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "387821822",
+      "numero": "17009",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 318.14,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387809543",
+      "numero": "17008",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 70,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387806018",
+      "numero": "17007",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "JULIANO ALBUQUERQUE DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 156.6,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387804265",
+      "numero": "17006",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387790925",
+      "numero": "17005",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387787841",
+      "numero": "17004",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387776768",
       "numero": "17003",
@@ -177,8 +249,8 @@
       "hora": "",
       "cliente": "SINEY FREIRE SILVA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 240,
-      "itens": 5,
+      "valor": 320,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

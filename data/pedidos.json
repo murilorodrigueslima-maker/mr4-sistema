@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-07-30T12:44:52",
-  "total": 54,
+  "atualizado_em": "2026-07-30T14:14:45",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "387776768",
+      "numero": "17003",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 48.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387774644",
+      "numero": "17002",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 230,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387767980",
+      "numero": "17001",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 90,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387762611",
+      "numero": "17000",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 84,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387762090",
+      "numero": "16999",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 490,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387750956",
+      "numero": "16998",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "JK FUNILARIA E PINTURA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 111.68,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387743241",
       "numero": "16997",

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-07-30T08:45:11",
-  "total": 45,
+  "atualizado_em": "2026-07-30T10:27:07",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "387694976",
+      "numero": "16992",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 49,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387685476",
+      "numero": "16991",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "37.815.442 THAIS PACHECO CASTELO BRANCO DE LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 48,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387671864",
+      "numero": "16990",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 415.97,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387670746",
+      "numero": "16989",
+      "data": "2026-07-30",
+      "hora": "",
+      "cliente": "SINEY FREIRE SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 240,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387661100",
       "numero": "16988",
@@ -21,7 +69,7 @@
       "hora": "",
       "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 291,
+      "valor": 346,
       "itens": 3,
       "status_gc": "",
       "cidade": ""

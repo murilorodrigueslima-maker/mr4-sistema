@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-31T12:54:19",
-  "total": 58,
+  "atualizado_em": "2026-07-31T14:19:27",
+  "total": 61,
   "pedidos": [
+    {
+      "id": "388055299",
+      "numero": "17023",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 153.46,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388037367",
+      "numero": "17022",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388036145",
+      "numero": "17021",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388028102",
       "numero": "17020",

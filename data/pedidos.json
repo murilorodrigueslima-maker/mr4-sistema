@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-07-31T14:19:27",
-  "total": 61,
+  "atualizado_em": "2026-07-31T16:08:00",
+  "total": 67,
   "pedidos": [
+    {
+      "id": "388084725",
+      "numero": "17028",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "JOSE ELITON DE ANDRADE SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 272,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388067296",
+      "numero": "17027",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388063968",
+      "numero": "17026",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 352,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388062944",
+      "numero": "17025",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "ARISNEVES FERREIRA SANTOS 02068641321",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 135,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388062719",
+      "numero": "17024",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "REI AUTO PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388055299",
       "numero": "17023",
@@ -171,6 +231,42 @@
       "cidade": ""
     },
     {
+      "id": "387750956",
+      "numero": "16998",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "JK FUNILARIA E PINTURA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 111.68,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387670746",
+      "numero": "16989",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "SINEY FREIRE SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 320,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "386933833",
+      "numero": "16924",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 425.2,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "387821822",
       "numero": "17009",
       "data": "2026-07-30",
@@ -303,18 +399,6 @@
       "cidade": ""
     },
     {
-      "id": "387750956",
-      "numero": "16998",
-      "data": "2026-07-30",
-      "hora": "",
-      "cliente": "JK FUNILARIA E PINTURA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 111.68,
-      "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
       "id": "387743241",
       "numero": "16997",
       "data": "2026-07-30",
@@ -407,18 +491,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 415.97,
       "itens": 3,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "387670746",
-      "numero": "16989",
-      "data": "2026-07-30",
-      "hora": "",
-      "cliente": "SINEY FREIRE SILVA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 320,
-      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

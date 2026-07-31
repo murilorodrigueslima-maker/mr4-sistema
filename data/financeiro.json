@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-31T10:41:00",
+  "atualizado_em": "2026-07-31T12:54:20",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -273,6 +273,13 @@
       "vencimento": "2026-07-30",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
+      "valor": 90,
+      "vencimento": "2026-07-30",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -369,7 +376,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58508.05,
+  "total_vencido": 58598.05,
   "total_a_receber": 0,
   "total_a_pagar": 41108.680000000015
 }

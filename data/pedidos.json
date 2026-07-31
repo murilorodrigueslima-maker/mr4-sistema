@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-07-31T05:34:20",
-  "total": 48,
+  "atualizado_em": "2026-07-31T08:51:48",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "387930627",
+      "numero": "17010",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "HS COMERCIO DE SOM E ACESSORIOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 205,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387821822",
       "numero": "17009",

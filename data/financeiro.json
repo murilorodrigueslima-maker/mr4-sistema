@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-30T22:53:09",
+  "atualizado_em": "2026-07-31T02:26:05",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -273,33 +273,37 @@
       "vencimento": "2026-07-29",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "EMPRESTIMO ESTER",
       "valor": 2019.94,
       "vencimento": "2026-07-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-07-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
       "valor": 6816.67,
       "vencimento": "2026-07-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
       "valor": 687.77,
       "vencimento": "2026-07-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 455.05,
@@ -389,11 +393,23 @@
       "valor": 3169.45,
       "vencimento": "2026-08-06",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 147.99,
+      "vencimento": "2026-08-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CAGECE RUA CEARA 634",
+      "valor": 334.92,
+      "vencimento": "2026-08-07",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53469.77,
+  "total_vencido": 63511.619999999995,
   "total_a_receber": 0,
-  "total_a_pagar": 39903.44
+  "total_a_pagar": 43128.62
 }

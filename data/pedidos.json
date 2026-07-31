@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-31T16:08:00",
-  "total": 67,
+  "atualizado_em": "2026-07-31T17:53:41",
+  "total": 68,
   "pedidos": [
+    {
+      "id": "388117443",
+      "numero": "17031",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 25,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388115919",
+      "numero": "17030",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 33.09,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388115725",
+      "numero": "17029",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "53.215.493 THIAGO SALVADOR LOPES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 45,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388084725",
       "numero": "17028",
@@ -82,30 +118,6 @@
       "cliente": "cliente",
       "vendedor": "fabiana andrade da silva",
       "valor": 54,
-      "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "388036145",
-      "numero": "17021",
-      "data": "2026-07-31",
-      "hora": "",
-      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 46,
-      "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "388028102",
-      "numero": "17020",
-      "data": "2026-07-31",
-      "hora": "",
-      "cliente": "ANTONIO MAURICIO DA COSTA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 175,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

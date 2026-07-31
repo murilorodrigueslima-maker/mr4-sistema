@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-07-31T08:51:48",
-  "total": 49,
+  "atualizado_em": "2026-07-31T10:40:59",
+  "total": 51,
   "pedidos": [
+    {
+      "id": "387975352",
+      "numero": "17013",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 51,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387965406",
+      "numero": "17012",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "56.119.790 DANIELTON VIEIRA DOS SANTOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 71.23,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "387948047",
+      "numero": "17011",
+      "data": "2026-07-31",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 738.2,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "387930627",
       "numero": "17010",
@@ -275,18 +311,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 164,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "386151616",
-      "numero": "16857",
-      "data": "2026-07-30",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 497.5,
-      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

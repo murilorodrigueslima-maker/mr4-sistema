@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-31T08:51:49",
+  "atualizado_em": "2026-07-31T10:41:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 3267.89,
+      "valor": 3074.15,
       "vencimento": "2026-07-05",
       "dias_atraso": 26,
       "tipo": "Pagar"
@@ -83,13 +83,6 @@
       "valor": 21.24,
       "vencimento": "2026-07-10",
       "dias_atraso": 21,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
-      "valor": 1010.49,
-      "vencimento": "2026-07-14",
-      "dias_atraso": 17,
       "tipo": "Pagar"
     },
     {
@@ -240,24 +233,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 860.27,
-      "vencimento": "2026-07-28",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PLANO CLARO CELULAR",
       "valor": 193.29,
       "vencimento": "2026-07-28",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 919.13,
-      "vencimento": "2026-07-29",
-      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
@@ -272,13 +251,6 @@
       "valor": 1259.5,
       "vencimento": "2026-07-29",
       "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "EMPRESTIMO ESTER",
-      "valor": 2019.94,
-      "vencimento": "2026-07-30",
-      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
@@ -320,18 +292,6 @@
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-08-02",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1351.39,
-      "vencimento": "2026-08-03",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 727.86,
-      "vencimento": "2026-08-03",
       "tipo": "Pagar"
     },
     {
@@ -409,7 +369,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63511.619999999995,
+  "total_vencido": 58508.05,
   "total_a_receber": 0,
-  "total_a_pagar": 43128.62
+  "total_a_pagar": 41108.680000000015
 }

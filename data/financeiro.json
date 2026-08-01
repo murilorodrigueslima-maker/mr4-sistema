@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-07-31T22:54:11",
+  "atualizado_em": "2026-08-01T02:18:45",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -280,15 +280,16 @@
       "vencimento": "2026-07-30",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 455.05,
       "vencimento": "2026-07-31",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
@@ -372,11 +373,17 @@
       "valor": 334.92,
       "vencimento": "2026-08-07",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1644,
+      "vencimento": "2026-08-08",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58598.05,
+  "total_vencido": 59053.100000000006,
   "total_a_receber": 0,
   "total_a_pagar": 41108.680000000015
 }

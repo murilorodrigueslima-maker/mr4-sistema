@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-01T08:10:21",
-  "total": 43,
+  "atualizado_em": "2026-08-01T09:56:38",
+  "total": 47,
   "pedidos": [
+    {
+      "id": "388238671",
+      "numero": "17035",
+      "data": "2026-08-01",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1069.88,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388236312",
+      "numero": "17034",
+      "data": "2026-08-01",
+      "hora": "",
+      "cliente": "ANTONIO MAURICIO DA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 203,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388235618",
+      "numero": "17033",
+      "data": "2026-08-01",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 235.53,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388225751",
+      "numero": "17032",
+      "data": "2026-08-01",
+      "hora": "",
+      "cliente": "WANDERLEY MOTO PECAS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 394,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388117443",
       "numero": "17031",

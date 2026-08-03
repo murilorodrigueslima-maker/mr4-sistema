@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-02T22:53:06",
+  "atualizado_em": "2026-08-03T02:32:22",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -287,21 +287,23 @@
       "vencimento": "2026-07-31",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-08-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-08-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 466,
@@ -385,11 +387,41 @@
       "valor": 1663.94,
       "vencimento": "2026-08-09",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MAQUINETA DE CARTÃO",
+      "valor": 21.24,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2440.5,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1644,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1757.59,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ENEL RUA CEARA 634",
+      "valor": 513.13,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59053.100000000006,
+  "total_vencido": 61323.26000000001,
   "total_a_receber": 0,
   "total_a_pagar": 41108.680000000015
 }

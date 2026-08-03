@@ -211,12 +211,15 @@ tr:hover td{background:rgba(255,107,26,.04);}
     <div class="dash-secao" id="sec-justificativas">
       <div class="ficha" style="margin-bottom:1.5rem;">
         <div class="secao-titulo">Lançar ocorrência (gestor)</div>
+        <div id="monitor-aviso" style="display:none;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:7px;padding:9px 14px;font-size:12px;color:var(--amarelo);margin-bottom:12px;">👁 Modo monitor — você pode acompanhar o ponto de todos, mas não pode lançar ocorrências para você mesmo.</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
           <div class="form-campo"><label>Funcionário</label><select id="gest-func" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"><option value="">Selecione...</option></select></div>
-          <div class="form-campo"><label>Data</label><input type="date" id="gest-data" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+          <div class="form-campo"><label id="gest-data-label">Data</label><input type="date" id="gest-data" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+          <div class="form-campo" id="campo-data-fim" style="display:none;"><label>Data fim</label><input type="date" id="gest-data-fim" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
           <div class="form-campo"><label>Tipo de ocorrência</label>
-            <select id="gest-tipo" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;">
+            <select id="gest-tipo" onchange="onTipoChange(this.value)" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;">
               <option value="">Selecione...</option>
+              <optgroup label="Férias"><option value="Férias">🏖️ Férias (período)</option></optgroup>
               <optgroup label="Feriados"><option value="Feriado nacional">Feriado nacional</option><option value="Feriado estadual">Feriado estadual (Ceará)</option><option value="Feriado municipal">Feriado municipal (Fortaleza)</option></optgroup>
               <optgroup label="Folgas"><option value="Folga compensatória">Folga compensatória</option><option value="Folga remunerada">Folga remunerada</option><option value="Folga não remunerada">Folga não remunerada</option></optgroup>
               <optgroup label="Ausências"><option value="Atestado médico">Atestado médico</option><option value="Falta justificada">Falta justificada</option><option value="Falta injustificada">Falta injustificada</option><option value="Licença maternidade/paternidade">Licença maternidade/paternidade</option></optgroup>
@@ -381,8 +384,10 @@ window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
 window._deleteDoc=deleteDoc;
 window._signOut = () => signOut(auth);
 
+window._userEmail='';window._monitorFuncId=null;
 onAuthStateChanged(auth, user => {
   if (!user) { window.location.href='../login.html'; return; }
+  window._userEmail = user.email || '';
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dashboard').style.display='flex';
   window._firebaseReady=true;
@@ -570,15 +575,49 @@ async function aplicarFeriados2026(){
 window.aplicarFeriados2026=aplicarFeriados2026;
 
 // ── Ocorrências gestor ────────────────────────────────────────────────────────
+function onTipoChange(v){
+  const campoFim=document.getElementById('campo-data-fim');
+  const label=document.getElementById('gest-data-label');
+  if(v==='Férias'){campoFim.style.display='';label.textContent='Data início';}
+  else{campoFim.style.display='none';label.textContent='Data';}
+}
+window.onTipoChange=onTipoChange;
+
 async function lancarOcorrenciaGestor(){
-  const funcId=document.getElementById('gest-func').value,data=document.getElementById('gest-data').value,tipo=document.getElementById('gest-tipo').value,obs=document.getElementById('gest-obs').value.trim(),info=document.getElementById('gest-info');
-  if(!funcId||!data||!tipo){notif('Preencha funcionário, data e tipo','vermelho');return;}
+  const funcId=document.getElementById('gest-func').value,dataIni=document.getElementById('gest-data').value,tipo=document.getElementById('gest-tipo').value,obs=document.getElementById('gest-obs').value.trim(),info=document.getElementById('gest-info');
+  if(!funcId||!dataIni||!tipo){notif('Preencha funcionário, data e tipo','vermelho');return;}
   const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===funcId);
-  const id=uid();await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data,motivo:tipo,descricao:obs||tipo,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
-  const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(funcId,func.nome,data,jornadaParaData(data,jornMin),tipo);
-  document.getElementById('gest-data').value='';document.getElementById('gest-tipo').value='';document.getElementById('gest-obs').value='';
-  info.textContent=`✓ ${tipo} lançado para ${func.nome} em ${fmtData(data)}`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',4000);
-  notif('Ocorrência lançada!');renderJustificativas();atualizarBadgeJustif();
+  const jornMin=(parseFloat(func.jornada)||8)*60;
+
+  if(tipo==='Férias'){
+    const dataFim=document.getElementById('gest-data-fim').value;
+    if(!dataFim){notif('Informe a data fim das férias','vermelho');return;}
+    if(dataFim<dataIni){notif('Data fim deve ser igual ou após a data início','vermelho');return;}
+    // itera todos os dias do período, pulando domingos
+    let cur=new Date(dataIni+'T12:00:00');const fim=new Date(dataFim+'T12:00:00');
+    let total=0;
+    while(cur<=fim){
+      if(cur.getDay()!==0){ // pula domingo
+        const d=cur.toISOString().slice(0,10);
+        const id=uid();
+        await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data:d,motivo:'Férias',descricao:obs||'Férias',status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
+        await creditarJornada(funcId,func.nome,d,jornadaParaData(d,jornMin),'Férias');
+        total++;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    document.getElementById('gest-data').value='';document.getElementById('gest-data-fim').value='';document.getElementById('gest-tipo').value='';document.getElementById('gest-obs').value='';
+    onTipoChange('');
+    info.textContent=`✓ Férias lançadas para ${func.nome}: ${total} dia(s)`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',5000);
+    notif(`Férias lançadas — ${total} dia(s)`);
+  } else {
+    const id=uid();await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data:dataIni,motivo:tipo,descricao:obs||tipo,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
+    await creditarJornada(funcId,func.nome,dataIni,jornadaParaData(dataIni,jornMin),tipo);
+    document.getElementById('gest-data').value='';document.getElementById('gest-tipo').value='';document.getElementById('gest-obs').value='';
+    info.textContent=`✓ ${tipo} lançado para ${func.nome} em ${fmtData(dataIni)}`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',4000);
+    notif('Ocorrência lançada!');
+  }
+  renderJustificativas();atualizarBadgeJustif();
 }
 window.lancarOcorrenciaGestor=lancarOcorrenciaGestor;
 
@@ -732,8 +771,21 @@ async function renderFuncionarios(){
     const temFoto=f.foto?`<span style="font-size:11px;color:var(--verde);">✓ Foto</span>`:`<span style="font-size:11px;color:var(--vermelho);">⚠ Sem foto</span>`;
     return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div class="ficha-nome">${f.nome}</div><div class="ficha-cargo">${f.cargo||'Sem cargo'} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${f.cpf||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${f.telefone||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${f.jornada||8}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${f.endereco||'—'}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${f.id}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${f.id}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${f.id}')">Remover</button></div></div>`;
   }).join('');
+  // detecta perfil monitor pelo email do usuário logado
+  const monitor=funcs.find(f=>f.email&&f.email.toLowerCase()===window._userEmail.toLowerCase()&&f.perfil==='monitor');
+  window._monitorFuncId=monitor?monitor.id:null;
+  const avisoMon=document.getElementById('monitor-aviso');
+  if(avisoMon)avisoMon.style.display=window._monitorFuncId?'':'none';
+
   const sels=['fil-func-reg','esp-func','gest-func'];
-  sels.forEach(sid=>{const sel=document.getElementById(sid);if(!sel)return;const val=sel.value;sel.innerHTML='<option value="">'+( sid==='esp-func'?'Selecione funcionário':'Todos')+'</option>'+funcs.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');sel.value=val;});
+  sels.forEach(sid=>{
+    const sel=document.getElementById(sid);if(!sel)return;
+    const val=sel.value;
+    // no select gest-func, exclui o próprio funcionário monitor
+    const lista=sid==='gest-func'&&window._monitorFuncId?funcs.filter(f=>f.id!==window._monitorFuncId):funcs;
+    sel.innerHTML='<option value="">'+( sid==='esp-func'?'Selecione funcionário':'Todos')+'</option>'+lista.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');
+    sel.value=val;
+  });
 }
 
 async function renderLinks(){

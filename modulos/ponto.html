@@ -315,6 +315,13 @@ tr:hover td{background:rgba(255,107,26,.04);}
       <div class="form-campo"><label>Salário (R$)</label><input type="number" id="f-salario" min="0" step="0.01"></div>
       <div class="form-campo full"><label>Jornada</label><select id="f-jornada"><option value="8">8h/dia — 44h/semana</option><option value="6">6h/dia — 30h/semana</option></select></div>
       <div class="form-campo full"><label>Observações</label><textarea id="f-obs"></textarea></div>
+      <div class="form-campo full" id="campo-perfil-func" style="display:none;border-top:1px solid var(--cinza-borda);padding-top:12px;margin-top:4px;">
+        <label style="color:var(--laranja);">Acesso ao sistema</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
+          <div><label style="font-size:11px;color:var(--cinza-texto);">Email de login</label><input type="email" id="f-email" placeholder="email@exemplo.com" style="width:100%;padding:8px 10px;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;color:var(--branco);font-size:13px;"></div>
+          <div><label style="font-size:11px;color:var(--cinza-texto);">Perfil</label><select id="f-perfil" style="width:100%;padding:8px 10px;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;color:var(--branco);font-size:13px;"><option value="">Padrão (só bate ponto)</option><option value="monitor">Monitor (vê todas as folhas)</option></select></div>
+        </div>
+      </div>
     </div>
     <div class="modal-footer"><button class="btn-cancelar" onclick="fecharModal('modal-func')">Cancelar</button><button class="btn-salvar" onclick="salvarFuncionario()">Salvar</button></div>
   </div>
@@ -800,8 +807,10 @@ window.copiarLink=copiarLink;
 async function abrirModalFunc(id){
   editFuncId=id||null;fotoNova=null;
   document.getElementById('modal-func-titulo').textContent=id?'Editar funcionário':'Novo funcionário';
-  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
-  else{['f-nome','f-cpf','f-rg','f-nasc','f-tel','f-end','f-cargo','f-admissao','f-salario','f-obs'].forEach(i=>document.getElementById(i).value='');document.getElementById('foto-preview').innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;document.getElementById('foto-status').textContent='Nenhuma foto cadastrada';document.getElementById('foto-status').style.color='var(--cinza-texto)';}
+  // mostra seção de perfil só para quem não é monitor
+  document.getElementById('campo-perfil-func').style.display=window._monitorFuncId?'none':'';
+  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';document.getElementById('f-email').value=f.email||'';document.getElementById('f-perfil').value=f.perfil||'';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
+  else{['f-nome','f-cpf','f-rg','f-nasc','f-tel','f-end','f-cargo','f-admissao','f-salario','f-obs','f-email'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-perfil').value='';document.getElementById('foto-preview').innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;document.getElementById('foto-status').textContent='Nenhuma foto cadastrada';document.getElementById('foto-status').style.color='var(--cinza-texto)';}
   document.getElementById('modal-func').classList.add('aberto');
 }
 window.abrirModalFunc=abrirModalFunc;
@@ -834,6 +843,7 @@ async function salvarFuncionario(){
   const nome=document.getElementById('f-nome').value.trim();if(!nome){notif('Nome é obrigatório','vermelho');return;}
   const id=editFuncId||uid();
   const data={nome,cpf:document.getElementById('f-cpf').value,rg:document.getElementById('f-rg').value,nascimento:document.getElementById('f-nasc').value,telefone:document.getElementById('f-tel').value,endereco:document.getElementById('f-end').value,cargo:document.getElementById('f-cargo').value,admissao:document.getElementById('f-admissao').value,salario:document.getElementById('f-salario').value,jornada:document.getElementById('f-jornada').value,obs:document.getElementById('f-obs').value,atualizadoEm:new Date().toISOString()};
+  if(!window._monitorFuncId){data.email=(document.getElementById('f-email').value||'').trim().toLowerCase();data.perfil=document.getElementById('f-perfil').value||'';}
   if(fotoNova)data.foto=fotoNova;if(!editFuncId)data.criadoEm=new Date().toISOString();
   await fbSet('funcionarios',id,data);fotoNova=null;editFuncId=null;fecharModal('modal-func');renderFuncionarios();notif('Funcionário salvo!');
 }

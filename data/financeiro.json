@@ -1,10 +1,393 @@
 {
-  "atualizado_em": "2026-08-03T13:16:09",
-  "contas_vencidas": [],
-  "contas_vencendo": [],
+  "atualizado_em": "2026-08-03T16:18:55",
+  "contas_vencidas": [
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
+      "vencimento": "2026-06-17",
+      "dias_atraso": 47,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 584,
+      "vencimento": "2026-06-17",
+      "dias_atraso": 47,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CAPITALIZAÇÃO",
+      "valor": 103.16,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 39,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 4042.91,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 39,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 6629.64,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 39,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 1527.36,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 39,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 944.63,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 39,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO PRONAMP",
+      "valor": 700.78,
+      "vencimento": "2026-06-29",
+      "dias_atraso": 35,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2439,
+      "vencimento": "2026-06-29",
+      "dias_atraso": 35,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PARCELAMENTO IMPOSTOS",
+      "valor": 517.47,
+      "vencimento": "2026-06-30",
+      "dias_atraso": 34,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "Salário Murilo",
+      "valor": 3074.15,
+      "vencimento": "2026-07-05",
+      "dias_atraso": 29,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MAQUINETA DE CARTÃO",
+      "valor": 21.24,
+      "vencimento": "2026-07-10",
+      "dias_atraso": 24,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "COLA RATO",
+      "valor": 30.99,
+      "vencimento": "2026-07-15",
+      "dias_atraso": 19,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
+      "vencimento": "2026-07-17",
+      "dias_atraso": 17,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 834,
+      "vencimento": "2026-07-17",
+      "dias_atraso": 17,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 681.61,
+      "vencimento": "2026-07-22",
+      "dias_atraso": 12,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1276.18,
+      "vencimento": "2026-07-23",
+      "dias_atraso": 11,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ESTANTE ESCRITORIO MURILO",
+      "valor": 94,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CAPITALIZAÇÃO",
+      "valor": 103.16,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 22.55,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 931.65,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "UBER FLASH",
+      "valor": 60.06,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LICENÇA CANVAS",
+      "valor": 24.24,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FACEBOOK TRAFEGO",
+      "valor": 2443.77,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CHAT GPT",
+      "valor": 95.99,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTÃO INTER",
+      "valor": 172.34,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "INTERNET EMPRESA",
+      "valor": 127.75,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 9,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1281.47,
+      "vencimento": "2026-07-27",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1757.59,
+      "vencimento": "2026-07-27",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO PRONAMP",
+      "valor": 700.78,
+      "vencimento": "2026-07-28",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PLANO CLARO CELULAR",
+      "valor": 193.29,
+      "vencimento": "2026-07-28",
+      "dias_atraso": 6,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 2930.5,
+      "vencimento": "2026-07-29",
+      "dias_atraso": 5,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 1259.5,
+      "vencimento": "2026-07-29",
+      "dias_atraso": 5,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PARCELAMENTO IMPOSTOS",
+      "valor": 517.47,
+      "vencimento": "2026-07-30",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 6816.67,
+      "vencimento": "2026-07-30",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
+      "valor": 687.77,
+      "vencimento": "2026-07-30",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
+      "valor": 90,
+      "vencimento": "2026-07-30",
+      "dias_atraso": 4,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 455.05,
+      "vencimento": "2026-07-31",
+      "dias_atraso": 3,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1134.83,
+      "vencimento": "2026-08-02",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
+    }
+  ],
+  "contas_vencendo": [
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 466,
+      "vencimento": "2026-08-04",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "TARPONN COMERCIAL DE UTENSILIOS EIRELI",
+      "valor": 582.65,
+      "vencimento": "2026-08-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 5099.28,
+      "vencimento": "2026-08-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 373.57,
+      "vencimento": "2026-08-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "Salário Murilo",
+      "valor": 12105.22,
+      "vencimento": "2026-08-05",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 3593.33,
+      "vencimento": "2026-08-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1227.5,
+      "vencimento": "2026-08-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1624,
+      "vencimento": "2026-08-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 3169.45,
+      "vencimento": "2026-08-06",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 147.99,
+      "vencimento": "2026-08-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CAGECE RUA CEARA 634",
+      "valor": 334.92,
+      "vencimento": "2026-08-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1644,
+      "vencimento": "2026-08-08",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1663.94,
+      "vencimento": "2026-08-09",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MAQUINETA DE CARTÃO",
+      "valor": 21.24,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 2440.5,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1644,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1757.59,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ENEL RUA CEARA 634",
+      "valor": 513.13,
+      "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    }
+  ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 0,
+  "total_vencido": 52646.590000000004,
   "total_a_receber": 0,
-  "total_a_pagar": 0
+  "total_a_pagar": 37812.9
 }

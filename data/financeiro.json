@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-03T06:21:40",
+  "atualizado_em": "2026-08-03T09:49:33",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -104,13 +104,6 @@
       "valor": 834,
       "vencimento": "2026-07-17",
       "dias_atraso": 17,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 5099.28,
-      "vencimento": "2026-07-21",
-      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
@@ -329,14 +322,14 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 15000,
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 373.57,
       "vencimento": "2026-08-05",
       "tipo": "Pagar"
     },
     {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 373.57,
+      "nome": "Salário Murilo",
+      "valor": 12141.11,
       "vencimento": "2026-08-05",
       "tipo": "Pagar"
     },
@@ -421,7 +414,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 61323.26000000001,
+  "total_vencido": 56223.979999999996,
   "total_a_receber": 0,
   "total_a_pagar": 41108.680000000015
 }

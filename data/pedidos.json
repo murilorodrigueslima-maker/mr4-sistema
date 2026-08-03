@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-03T06:21:39",
-  "total": 14,
+  "atualizado_em": "2026-08-03T09:49:32",
+  "total": 16,
   "pedidos": [
+    {
+      "id": "388527062",
+      "numero": "17047",
+      "data": "2026-08-03",
+      "hora": "",
+      "cliente": "J ELIVAN MELO DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 424.35,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388515572",
+      "numero": "17046",
+      "data": "2026-08-03",
+      "hora": "",
+      "cliente": "62.876.033 ANTONIO LIMA CAETANO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 3400,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388290225",
       "numero": "17045",

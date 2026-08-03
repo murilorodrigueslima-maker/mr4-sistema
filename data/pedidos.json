@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-03T16:18:54",
-  "total": 31,
+  "atualizado_em": "2026-08-03T17:54:39",
+  "total": 32,
   "pedidos": [
+    {
+      "id": "388707632",
+      "numero": "17064",
+      "data": "2026-08-03",
+      "hora": "",
+      "cliente": "FALCO COMERCIO ATACADISTA DE PECAS E ACESSORIOS PARA VEICULOS AUTOMOTORES LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 430,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388685480",
       "numero": "17062",

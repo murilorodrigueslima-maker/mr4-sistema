@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-04T10:51:09",
-  "total": 24,
+  "atualizado_em": "2026-08-04T13:07:23",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "388872478",
+      "numero": "17075",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 30,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388851035",
+      "numero": "17074",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "IVANILDO J. DE LIMA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 270,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388850177",
+      "numero": "17073",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 302.1,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388843257",
+      "numero": "17072",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 70,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388839251",
+      "numero": "17071",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "EVANDRO CABRAL RODRIGUES JUNIOR 04387665394",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 582.42,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388822640",
       "numero": "17070",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-04T10:51:10",
+  "atualizado_em": "2026-08-04T13:07:24",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -69,13 +69,6 @@
       "valor": 517.47,
       "vencimento": "2026-06-30",
       "dias_atraso": 35,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "Salário Murilo",
-      "valor": 3074.15,
-      "vencimento": "2026-07-05",
-      "dias_atraso": 30,
       "tipo": "Pagar"
     },
     {
@@ -240,13 +233,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 6816.67,
-      "vencimento": "2026-07-30",
-      "dias_atraso": 5,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
       "valor": 687.77,
       "vencimento": "2026-07-30",
@@ -256,6 +242,13 @@
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 90,
+      "vencimento": "2026-07-30",
+      "dias_atraso": 5,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "LED STORE(ALIEXPRESS)",
+      "valor": 5396.67,
       "vencimento": "2026-07-30",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -302,7 +295,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 12105.22,
+      "valor": 11945.22,
       "vencimento": "2026-08-05",
       "tipo": "Pagar"
     },
@@ -393,7 +386,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52646.590000000004,
+  "total_vencido": 48152.44000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 37812.9
+  "total_a_pagar": 37851.23
 }

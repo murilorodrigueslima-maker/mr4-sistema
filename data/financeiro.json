@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-03T22:28:19",
+  "atualizado_em": "2026-08-04T01:54:11",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -382,6 +382,12 @@
       "nome": "ENEL RUA CEARA 634",
       "valor": 513.13,
       "vencimento": "2026-08-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "FABIANO PAES LEME GOULART",
+      "valor": 1404,
+      "vencimento": "2026-08-11",
       "tipo": "Pagar"
     }
   ],

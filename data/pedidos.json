@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-04T16:17:50",
-  "total": 38,
+  "atualizado_em": "2026-08-04T18:01:44",
+  "total": 40,
   "pedidos": [
+    {
+      "id": "388986776",
+      "numero": "17085",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "L. BRITO BEZERRA BELO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 450,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "388968615",
+      "numero": "17084",
+      "data": "2026-08-04",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 906.15,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388940919",
       "numero": "17083",
@@ -69,7 +93,7 @@
       "hora": "",
       "cliente": "MARCOS RAFAEL FRANCA MOREIRA 60360121365",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1984.02,
+      "valor": 2045.64,
       "itens": 22,
       "status_gc": "",
       "cidade": ""

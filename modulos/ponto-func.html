@@ -182,7 +182,10 @@ canvas#canvasFoto{display:none;}
     </div>
 
     <!-- ABA BANCO -->
-    <div class="func-aba" id="aba-banco"><div id="banco-func"></div></div>
+    <div class="func-aba" id="aba-banco">
+      <select id="mes-banco" onchange="renderBancoFunc()" style="width:100%;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;margin-bottom:12px;"></select>
+      <div id="banco-func"></div>
+    </div>
 
     <!-- ABA JUSTIFICATIVAS -->
     <div class="func-aba" id="aba-justif">
@@ -231,6 +234,14 @@ canvas#canvasFoto{display:none;}
 
     <!-- ABA ESPELHO -->
     <div class="func-aba" id="aba-espelho">
+      <div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:1rem;">
+        <div class="hist-titulo" style="margin-bottom:10px;">Ver minha folha</div>
+        <div style="display:flex;gap:8px;">
+          <select id="mes-espelho-func" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;"></select>
+          <button onclick="verMinhaFolha()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;">Ver</button>
+        </div>
+        <div id="minha-folha-container" style="margin-top:10px;overflow-x:auto;"></div>
+      </div>
       <div id="espelhos-func-lista"></div>
     </div>
   </div>
@@ -533,16 +544,32 @@ async function renderHistDia(){
   else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}
 }
 
+function popularMeses(selId,qtd){
+  const sel=document.getElementById(selId);if(!sel||sel.options.length>1)return;
+  const nomes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const agora=new Date();const opts=[];
+  for(let i=0;i<qtd;i++){
+    const d=new Date(agora.getFullYear(),agora.getMonth()-i,1);
+    const val=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    opts.push(`<option value="${val}">${nomes[d.getMonth()]}/${d.getFullYear()}</option>`);
+  }
+  sel.innerHTML=opts.join('');
+}
+
 async function renderBancoFunc(){
   if(!funcAtivo)return;
-  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mesAtual()));
-  const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mesAtual()));
+  popularMeses('mes-banco',6);
+  const sel=document.getElementById('mes-banco');
+  const mes=sel?sel.value:mesAtual();
+  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));
+  const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
   const dias={};regs.forEach(r=>{if(!dias[r.data])dias[r.data]={};dias[r.data][r.tipo]=r.hora;});
   let trabMin=0;Object.values(dias).forEach(d=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t)trabMin+=t;});
   credF.forEach(c=>trabMin+=c.minutos||0);
   const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
   const diasTrab=Object.keys(dias).length+diasComCredito.length;
-  const esperMin=diasTrab*JORNADA*60;const saldo=trabMin-esperMin;
+  const jornaDia=(parseFloat(funcAtivo.jornada)||8)*60;
+  const esperMin=diasTrab*jornaDia;const saldo=trabMin-esperMin;
   document.getElementById('banco-func').innerHTML=`
     <div class="banco-card"><div><div class="banco-label">Trabalhado no mês</div><div class="banco-valor">${fmtMin(trabMin)}</div></div><div style="text-align:right"><div class="banco-label">Saldo banco</div><div class="banco-valor" style="color:${saldo>=0?'var(--verde)':'var(--vermelho)'}">${saldo>=0?'+':''}${fmtMin(saldo)}</div></div></div>
     <div class="banco-card"><div><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div><div style="text-align:right"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div></div>`;
@@ -588,8 +615,26 @@ async function renderJustifFunc(){
 }
 
 // ── Espelho ───────────────────────────────────────────────────────────────────
+async function verMinhaFolha(){
+  const sel=document.getElementById('mes-espelho-func');
+  const mes=sel?sel.value:mesAtual();
+  const nomes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const [ano,mesNum]=mes.split('-').map(Number);
+  const mesLabel=`${nomes[mesNum-1]}/${ano}`;
+  const cont=document.getElementById('minha-folha-container');
+  cont.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);padding:6px 0;">Carregando...</div>';
+  try{
+    const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel);
+    cont.innerHTML=html;
+  }catch(err){
+    cont.innerHTML=`<div style="font-size:12px;color:var(--vermelho);">Erro ao carregar: ${err.message}</div>`;
+  }
+}
+window.verMinhaFolha=verMinhaFolha;
+
 async function renderEspelhosFunc(){
   if(!funcAtivo)return;
+  popularMeses('mes-espelho-func',12);
   const espelhos=(await fbGet('espelhos')).filter(e=>e.funcId===funcAtivo.id).sort((a,b)=>a.mes>b.mes?-1:1);
   const el=document.getElementById('espelhos-func-lista');
   if(!espelhos.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum espelho disponível.</div>';return;}

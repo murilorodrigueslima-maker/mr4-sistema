@@ -624,8 +624,17 @@ async function verMinhaFolha(){
   const cont=document.getElementById('minha-folha-container');
   cont.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);padding:6px 0;">Carregando...</div>';
   try{
+    const espelhos=await fbGet('espelhos');
+    const espExist=espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes);
+    const espId=espExist?espExist.id:uid();
     const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel);
-    cont.innerHTML=html;
+    let btnAssin='';
+    if(espExist&&espExist.assinado){
+      btnAssin=`<div style="margin-top:10px;text-align:center;padding:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:13px;color:var(--verde);">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
+    } else {
+      btnAssin=`<div style="margin-top:10px;"><button class="btn-laranja" onclick="abrirAssinar('${espId}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
+    }
+    cont.innerHTML=html+btnAssin;
   }catch(err){
     cont.innerHTML=`<div style="font-size:12px;color:var(--vermelho);">Erro ao carregar: ${err.message}</div>`;
   }
@@ -650,6 +659,10 @@ async function renderEspelhosFunc(){
 
 async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
   espelhoAtualFuncId=espelhoId;
+  // garante que o registro existe no Firestore antes de assinar
+  const espelhos=await fbGet('espelhos');
+  const exist=espelhos.find(e=>e.id===espelhoId);
+  if(!exist)await fbSet('espelhos',espelhoId,{id:espelhoId,funcId,mes,mesLabel,assinado:false,criadoEm:new Date().toISOString()});
   document.getElementById('assinar-info').textContent='Revise seu espelho de ponto e assine abaixo para confirmar.';
   document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>';
   document.getElementById('modal-assinar').classList.add('aberto');

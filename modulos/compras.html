@@ -310,6 +310,20 @@
       </div>
     </div>
 
+    <!-- Baixa Margem -->
+    <div id="baixaMargemArea" style="display:none">
+      <div class="content-card card-red">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📉 Baixa Margem — Decisão Manual</div>
+            <div class="card-sub">Itens abaixo da margem mínima configurada. O agente não inclui esses no pedido automático.</div>
+          </div>
+          <span class="card-count" id="countBaixaMargem">0</span>
+        </div>
+        <div class="table-wrap" id="tableBaixaMargem"></div>
+      </div>
+    </div>
+
   </div>
 
   <!-- ── TAB: MAPEAMENTO ─────────────────────────────────── -->
@@ -331,6 +345,8 @@
           <thead>
             <tr>
               <th>Produto</th>
+              <th>Curva</th>
+              <th>Margem</th>
               <th>Vel. Mensal</th>
               <th>Estoque</th>
               <th>Cobertura</th>
@@ -365,6 +381,11 @@
         <div class="form-group">
           <label class="form-label">Velocidade mínima P1 (un/mês)</label>
           <input class="form-input" id="cfgVelP1" type="number" value="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Margem mínima para compra (%)</label>
+          <input class="form-input" id="cfgMgMin" type="number" value="0" min="0" max="100">
+          <span style="font-size:.72rem;color:var(--muted)">0 = sem filtro. Ex: 10 exclui produtos abaixo de 10% de margem</span>
         </div>
       </div>
       <div style="margin-top:1rem">
@@ -438,9 +459,10 @@ const FORNECEDORES_DEFAULT = {
 
 // ── APP STATE ────────────────────────────────────────────────────────────────
 let app, auth, db;
-let config = { reserva_minima: 8000, cob_p1: 45, cob_p2: 60, vel_p1: 10, fornecedores: { ...FORNECEDORES_DEFAULT }, mapeamento: {} };
-let cacheVelocidade = null; // produto_id -> { qtd90, custo_total, nome }
+let config = { reserva_minima: 8000, cob_p1: 45, cob_p2: 60, vel_p1: 10, mg_min: 0, fornecedores: { ...FORNECEDORES_DEFAULT }, mapeamento: {} };
+let cacheVelocidade = null; // produto_id -> { qtd, custo_total, rec_total, nome }
 let cacheStock     = null; // produto_id -> { nome, estoque }
+let cacheABC       = {};   // produto_id -> 'A'|'B'|'C'
 let lastResult     = null;
 let allVelItems    = []; // for mapeamento tab
 
@@ -494,6 +516,7 @@ async function carregarConfig() {
       config.cob_p1         = d.cob_p1        ?? 45;
       config.cob_p2         = d.cob_p2        ?? 60;
       config.vel_p1         = d.vel_p1        ?? 10;
+      config.mg_min         = d.mg_min        ?? 0;
     }
     const snapF = await getDoc(doc(db, 'compras_config', 'fornecedores'));
     if (snapF.exists() && Object.keys(snapF.data()).length > 0) {
@@ -511,9 +534,10 @@ window.salvarConfigGeral = async function() {
   config.cob_p1         = Number(document.getElementById('cfgCobP1').value)   || 45;
   config.cob_p2         = Number(document.getElementById('cfgCobP2').value)   || 60;
   config.vel_p1         = Number(document.getElementById('cfgVelP1').value)   || 10;
+  config.mg_min         = Number(document.getElementById('cfgMgMin').value)   || 0;
   await setDoc(doc(db, 'compras_config', 'settings'), {
     reserva_minima: config.reserva_minima,
-    cob_p1: config.cob_p1, cob_p2: config.cob_p2, vel_p1: config.vel_p1
+    cob_p1: config.cob_p1, cob_p2: config.cob_p2, vel_p1: config.vel_p1, mg_min: config.mg_min
   });
   flash('Configurações salvas!');
 };
@@ -657,19 +681,31 @@ async function rodarAgente(forceRefresh = false) {
           const p = item?.produto || item || {};
           const id = String(p.produto_id || p.id || '');
           if (!id || id === 'null') continue;
-          const qtd   = Number(p.quantidade    || p.qtd)     || 0;
-          const custo = Number(p.valor_custo   || p.custo)   || 0;
+          const qtd   = Number(p.quantidade    || p.qtd)       || 0;
+          const custo = Number(p.valor_custo   || p.custo)     || 0;
+          const venda = Number(p.valor_venda   || p.preco_venda || p.preco) || 0;
           const nome  = p.nome_produto || p.nome || cacheStock[id]?.nome || '';
-          if (!cacheVelocidade[id]) cacheVelocidade[id] = { qtd: 0, custo_total: 0, nome };
+          if (!cacheVelocidade[id]) cacheVelocidade[id] = { qtd: 0, custo_total: 0, rec_total: 0, nome };
           cacheVelocidade[id].qtd         += qtd;
           cacheVelocidade[id].custo_total += qtd * custo;
+          cacheVelocidade[id].rec_total   += qtd * venda;
           if (nome && !cacheVelocidade[id].nome) cacheVelocidade[id].nome = nome;
         }
       }
 
+      // Calcular curva ABC por receita dos 90 dias
+      cacheABC = calcABC(cacheVelocidade);
+
       // Build allVelItems for mapeamento tab
       allVelItems = Object.entries(cacheVelocidade)
-        .map(([id, v]) => ({ id, nome: v.nome || cacheStock[id]?.nome || id, qtd90: v.qtd, qtd_mes: v.qtd/3 }))
+        .map(([id, v]) => ({
+          id,
+          nome:    v.nome || cacheStock[id]?.nome || id,
+          qtd90:   v.qtd,
+          qtd_mes: v.qtd / 3,
+          abc:     cacheABC[id] || 'C',
+          margem:  v.rec_total > 0 ? Math.round((1 - v.custo_total / v.rec_total) * 100) : 0
+        }))
         .sort((a,b) => b.qtd_mes - a.qtd_mes);
     }
 
@@ -684,7 +720,7 @@ async function rodarAgente(forceRefresh = false) {
     setProgress(90, 'Calculando sugestão...');
 
     // ── 5. Run agent ─────────────────────────────────────────────────────
-    lastResult = calcAgente(cacheStock, cacheVelocidade, pagamentos, recebimentos, config);
+    lastResult = calcAgente(cacheStock, cacheVelocidade, cacheABC, pagamentos, recebimentos, config);
 
     // ── 6. Render ─────────────────────────────────────────────────────────
     renderResult(lastResult);
@@ -702,8 +738,36 @@ async function rodarAgente(forceRefresh = false) {
   }
 }
 
+// ── ABC + SCORE HELPERS ───────────────────────────────────────────────────────
+function calcABC(velMap) {
+  const prods = Object.entries(velMap)
+    .filter(([, v]) => v.rec_total > 0)
+    .map(([id, v]) => ({ id, rec: v.rec_total }))
+    .sort((a, b) => b.rec - a.rec);
+  const total = prods.reduce((s, p) => s + p.rec, 0);
+  if (!total) return {};
+  let cum = 0;
+  const abc = {};
+  for (const p of prods) {
+    cum += p.rec;
+    const pct = cum / total;
+    abc[p.id] = pct <= 0.8 ? 'A' : pct <= 0.95 ? 'B' : 'C';
+  }
+  return abc;
+}
+
+function calcScore(urgencia, abc, margem) {
+  // Urgência: zerado e crítico dominam sempre
+  const u = { zerado: 100, critico: 40, urgente: 20, normal: 5 }[urgencia] || 0;
+  // Curva ABC: A vale mais que B ou C
+  const a = { A: 30, B: 15, C: 3 }[abc] || 3;
+  // Margem: até 20 pontos, capped em 80%
+  const m = Math.min(Math.max(margem, 0), 80) / 80 * 20;
+  return u + a + m;
+}
+
 // ── AGENT LOGIC ──────────────────────────────────────────────────────────────
-function calcAgente(stock, velocity, pagamentos, recebimentos, cfg) {
+function calcAgente(stock, velocity, abc, pagamentos, recebimentos, cfg) {
   const t0  = today();
   const t15 = addDays(t0, 15);
 
@@ -720,42 +784,55 @@ function calcAgente(stock, velocity, pagamentos, recebimentos, cfg) {
 
   const reserva = Number(cfg.reserva_minima) || 8000;
   const caixa   = receber_15d - pagar_15d - reserva;
+  const mg_min  = Number(cfg.mg_min) || 0;
 
   // Reorder needs
   const needs = [];
+  const baixa_margem = []; // produtos abaixo da margem mínima
+
   for (const [id, vel] of Object.entries(velocity)) {
     const vel_d = vel.qtd / 90;
-    if (vel_d < 0.017) continue; // < 0.5 units/month → skip
+    if (vel_d < 0.017) continue; // < 0.5 un/mês → skip
 
-    const s         = stock[id] || { nome: vel.nome, estoque: 0 };
-    const estoque   = s.estoque;
-    const nome      = vel.nome || s.nome || id;
-    const custo_u   = vel.qtd > 0 ? vel.custo_total / vel.qtd : 0;
-    const dias_cob  = vel_d > 0 ? estoque / vel_d : 9999;
-    const forn_id   = cfg.mapeamento?.[id] || null;
-    const forn      = forn_id ? cfg.fornecedores?.[forn_id] : null;
-    const lead      = forn?.lead_time_dias ?? 7;
-    const is_p1     = (vel.qtd / 3) >= Number(cfg.vel_p1 ?? 10);
-    const safety    = is_p1 ? 7 : 15;
+    const s        = stock[id] || { nome: vel.nome, estoque: 0 };
+    const estoque  = s.estoque;
+    const nome     = vel.nome || s.nome || id;
+    const custo_u  = vel.qtd > 0 ? vel.custo_total / vel.qtd : 0;
+    const venda_u  = vel.qtd > 0 ? vel.rec_total   / vel.qtd : 0;
+    const margem   = venda_u > 0 ? Math.round((1 - custo_u / venda_u) * 100) : 0;
+    const curva    = abc[id] || 'C';
+    const dias_cob = vel_d > 0 ? estoque / vel_d : 9999;
+    const forn_id  = cfg.mapeamento?.[id] || null;
+    const forn     = forn_id ? cfg.fornecedores?.[forn_id] : null;
+    const lead     = forn?.lead_time_dias ?? 7;
+    const is_p1    = (vel.qtd / 3) >= Number(cfg.vel_p1 ?? 10);
+    const safety   = is_p1 ? 7 : 15;
 
-    if (dias_cob > lead + safety) continue; // still covered
+    if (dias_cob > lead + safety) continue; // ainda coberto
 
     const alvo    = is_p1 ? Number(cfg.cob_p1 ?? 45) : Number(cfg.cob_p2 ?? 60);
     const qtd_ped = Math.max(1, Math.ceil(vel_d * alvo) - estoque);
     const custo_t = qtd_ped * custo_u;
 
-    const urgencia = estoque === 0     ? 'zerado' :
-                     dias_cob < lead   ? 'critico' :
+    const urgencia = estoque === 0   ? 'zerado' :
+                     dias_cob < lead ? 'critico' :
                      dias_cob < lead + safety ? 'urgente' : 'normal';
 
-    needs.push({ id, nome, estoque, vel_d, dias_cob: Math.round(dias_cob), custo_u, qtd_ped, custo_t, forn_id, forn_nome: forn_id || '—', is_p1, urgencia });
+    const item = { id, nome, estoque, vel_d, dias_cob: Math.round(dias_cob), custo_u, venda_u, margem, curva, qtd_ped, custo_t, forn_id, forn_nome: forn_id || '—', is_p1, urgencia, score: calcScore(urgencia, curva, margem) };
+
+    // Separar produtos abaixo da margem mínima (exceto zerados/críticos que são emergência)
+    if (mg_min > 0 && margem < mg_min && urgencia !== 'zerado' && urgencia !== 'critico') {
+      baixa_margem.push(item);
+    } else {
+      needs.push(item);
+    }
   }
 
-  // Sort: zerado → critico → urgente → normal; then by dias_cob asc
-  const ord = { zerado: 0, critico: 1, urgente: 2, normal: 3 };
-  needs.sort((a,b) => (ord[a.urgencia]-ord[b.urgencia]) || (a.dias_cob-b.dias_cob));
+  // Ordenar por score decrescente (combina urgência + curva ABC + margem)
+  needs.sort((a, b) => b.score - a.score);
+  baixa_margem.sort((a, b) => b.score - a.score);
 
-  // Allocate budget
+  // Alocar orçamento
   let restante = Math.max(0, caixa);
   const pedidos = needs.map(n => {
     const fits = caixa > 0 && restante >= n.custo_t && n.custo_t > 0;
@@ -764,14 +841,14 @@ function calcAgente(stock, velocity, pagamentos, recebimentos, cfg) {
   });
 
   return {
-    pedidos, pagar_15d, receber_15d, reserva, caixa,
+    pedidos, baixa_margem, pagar_15d, receber_15d, reserva, caixa, mg_min,
     total_conf: pedidos.filter(p=>!p.sem_orc).reduce((s,p)=>s+p.custo_t, 0)
   };
 }
 
 // ── RENDER RESULT ─────────────────────────────────────────────────────────────
 function renderResult(res) {
-  const { pedidos, pagar_15d, receber_15d, reserva, caixa, total_conf } = res;
+  const { pedidos, baixa_margem, pagar_15d, receber_15d, reserva, caixa, total_conf, mg_min } = res;
 
   // KPIs
   const kpiCaixa = document.getElementById('kpiCaixa');
@@ -800,6 +877,10 @@ function renderResult(res) {
   if (semForn > 0) {
     alerts += `<div class="alert alert-info"><span class="alert-icon">💡</span>
       <span><strong>${semForn} item(ns)</strong> sem fornecedor mapeado. Acesse a aba "Produto × Fornecedor" para associar e agrupar esses pedidos por fornecedor.</span></div>`;
+  }
+  if (baixa_margem?.length > 0) {
+    alerts += `<div class="alert alert-warning"><span class="alert-icon">📉</span>
+      <span><strong>${baixa_margem.length} item(ns) com margem abaixo de ${mg_min}%</strong> foram removidos da sugestão automática. Veja abaixo na seção "Baixa Margem" — você pode decidir manualmente se vale comprar.</span></div>`;
   }
   alertArea.innerHTML = alerts;
 
@@ -847,10 +928,11 @@ function renderResult(res) {
           <table>
             <thead><tr>
               <th>Produto</th>
-              <th>Tipo</th>
+              <th>Curva</th>
+              <th>Margem</th>
               <th>Estoque</th>
               <th>Cobertura</th>
-              <th>Vel. Diária</th>
+              <th>Vel./dia</th>
               <th>Qtd Pedir</th>
               <th>Custo Unit</th>
               <th>Total</th>
@@ -858,11 +940,12 @@ function renderResult(res) {
             </tr></thead>
             <tbody>
               ${itens.map(i => `<tr>
-                <td class="td-nome">${escH(i.nome)}</td>
-                <td><span class="badge ${i.is_p1 ? 'badge-orange' : 'badge-blue'}">${i.is_p1 ? 'P1' : 'P2'}</span></td>
+                <td class="td-nome">${escH(i.nome)}<small>${i.is_p1 ? 'P1' : 'P2'}</small></td>
+                <td>${abcBadge(i.curva)}</td>
+                <td>${margemBadge(i.margem)}</td>
                 <td class="td-mono">${i.estoque}</td>
                 <td class="td-mono">${i.dias_cob === 9999 ? '∞' : i.dias_cob + 'd'}</td>
-                <td class="td-mono td-muted">${i.vel_d.toFixed(2)}/d</td>
+                <td class="td-mono td-muted">${i.vel_d.toFixed(2)}</td>
                 <td class="td-mono" style="color:var(--orange);font-weight:700">${i.qtd_ped}</td>
                 <td class="td-mono">${brl(i.custo_u)}</td>
                 <td class="td-mono" style="font-weight:700">${brl(i.custo_t)}</td>
@@ -883,13 +966,14 @@ function renderResult(res) {
     document.getElementById('tableSemOrcamento').innerHTML = `
       <table>
         <thead><tr>
-          <th>Produto</th><th>Tipo</th><th>Estoque</th><th>Cobertura</th>
+          <th>Produto</th><th>Curva</th><th>Margem</th><th>Estoque</th><th>Cobertura</th>
           <th>Qtd Pedir</th><th>Estimativa</th><th>Urgência</th>
         </tr></thead>
         <tbody>
           ${semOrcamento.map(i => `<tr>
-            <td class="td-nome">${escH(i.nome)}</td>
-            <td><span class="badge ${i.is_p1 ? 'badge-orange' : 'badge-blue'}">${i.is_p1 ? 'P1' : 'P2'}</span></td>
+            <td class="td-nome">${escH(i.nome)}<small>${i.is_p1 ? 'P1' : 'P2'}</small></td>
+            <td>${abcBadge(i.curva)}</td>
+            <td>${margemBadge(i.margem)}</td>
             <td class="td-mono">${i.estoque}</td>
             <td class="td-mono">${i.dias_cob === 9999 ? '∞' : i.dias_cob + 'd'}</td>
             <td class="td-mono">${i.qtd_ped}</td>
@@ -899,12 +983,52 @@ function renderResult(res) {
         </tbody>
       </table>`;
   }
+
+  // Baixa margem
+  const bmArea = document.getElementById('baixaMargemArea');
+  if (baixa_margem?.length) {
+    document.getElementById('countBaixaMargem').textContent = baixa_margem.length;
+    document.getElementById('tableBaixaMargem').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Produto</th><th>Curva</th><th>Margem</th><th>Estoque</th><th>Cobertura</th>
+          <th>Vel./dia</th><th>Qtd Pedir</th><th>Estimativa</th>
+        </tr></thead>
+        <tbody>
+          ${baixa_margem.map(i => `<tr>
+            <td class="td-nome">${escH(i.nome)}<small>${i.is_p1 ? 'P1' : 'P2'}</small></td>
+            <td>${abcBadge(i.curva)}</td>
+            <td>${margemBadge(i.margem)}</td>
+            <td class="td-mono">${i.estoque}</td>
+            <td class="td-mono">${i.dias_cob === 9999 ? '∞' : i.dias_cob + 'd'}</td>
+            <td class="td-mono td-muted">${i.vel_d.toFixed(2)}</td>
+            <td class="td-mono">${i.qtd_ped}</td>
+            <td class="td-mono td-muted">${brl(i.custo_t)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    bmArea.style.display = 'block';
+  } else {
+    bmArea.style.display = 'none';
+  }
 }
 
 function urgenciaBadge(u) {
   const map = { zerado: ['badge-red','🔴 Zerado'], critico: ['badge-red','🚨 Crítico'], urgente: ['badge-orange','⚠️ Urgente'], normal: ['badge-yellow','⏰ Normal'] };
   const [cls,txt] = map[u] || ['badge-gray','—'];
   return `<span class="badge ${cls}">${txt}</span>`;
+}
+
+function abcBadge(curva) {
+  const map = { A: ['badge-green','A'], B: ['badge-blue','B'], C: ['badge-gray','C'] };
+  const [cls, txt] = map[curva] || ['badge-gray','—'];
+  return `<span class="badge ${cls}" title="Curva ${txt}">${txt}</span>`;
+}
+
+function margemBadge(pct) {
+  if (pct === null || pct === undefined) return '<span class="badge badge-gray">—</span>';
+  const cls = pct >= 30 ? 'badge-green' : pct >= 15 ? 'badge-yellow' : 'badge-red';
+  return `<span class="badge ${cls}">${pct}%</span>`;
 }
 
 // ── MAPEAMENTO TAB ────────────────────────────────────────────────────────────
@@ -921,14 +1045,15 @@ function renderMapeamento() {
     .map(k => `<option value="${escH(k)}">${escH(k)}</option>`).join('');
 
   tbody.innerHTML = allVelItems.map(item => {
-    const stk     = cacheStock?.[item.id];
-    const estoque = stk?.estoque ?? '?';
-    const vel_d   = item.qtd90 / 90;
+    const stk      = cacheStock?.[item.id];
+    const estoque  = stk?.estoque ?? '?';
+    const vel_d    = item.qtd90 / 90;
     const dias_cob = vel_d > 0 && estoque !== '?' ? Math.round(estoque / vel_d) : '—';
-    const forn_sel = config.mapeamento[item.id] || '';
 
     return `<tr>
       <td class="td-nome">${escH(item.nome)}<small>ID: ${escH(item.id)}</small></td>
+      <td>${abcBadge(item.abc)}</td>
+      <td>${margemBadge(item.margem)}</td>
       <td class="td-mono">${item.qtd_mes.toFixed(1)}/mês</td>
       <td class="td-mono">${estoque}</td>
       <td class="td-mono">${typeof dias_cob === 'number' ? dias_cob + 'd' : dias_cob}</td>
@@ -997,6 +1122,7 @@ function preencherFormConfig() {
   document.getElementById('cfgCobP1').value   = config.cob_p1;
   document.getElementById('cfgCobP2').value   = config.cob_p2;
   document.getElementById('cfgVelP1').value   = config.vel_p1;
+  document.getElementById('cfgMgMin').value   = config.mg_min ?? 0;
 }
 
 // ── TOAST ─────────────────────────────────────────────────────────────────────

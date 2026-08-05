@@ -43,7 +43,7 @@ export default {
     const params   = url.searchParams.get('params')   || '';
 
     // Segurança: só permite endpoints do GC esperados
-    const ENDPOINTS_PERMITIDOS = ['/vendas', '/produtos', '/pagamentos', '/clientes'];
+    const ENDPOINTS_PERMITIDOS = ['/vendas', '/produtos', '/pagamentos', '/clientes', '/recebimentos'];
     const baseEndpoint = endpoint.split('?')[0];
     if (!ENDPOINTS_PERMITIDOS.some(e => baseEndpoint.startsWith(e))) {
       return new Response(

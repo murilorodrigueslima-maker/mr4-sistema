@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MR4 — Agente de Compras</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:    #FF6B1A;
+    --orange-dk: #e85d0f;
+    --bg:        #F3F4F6;
+    --white:     #FFFFFF;
+    --text:      #1A1A2E;
+    --muted:     #6B7280;
+    --border:    #E5E7EB;
+    --green:     #10B981;
+    --green-bg:  #D1FAE5;
+    --yellow:    #F59E0B;
+    --yellow-bg: #FEF3C7;
+    --red:       #EF4444;
+    --red-bg:    #FEE2E2;
+    --blue:      #6366F1;
+    --blue-bg:   #EEF2FF;
+    --sidebar-w: 240px;
+  }
+
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+
+  /* ── LOADING ── */
+  #loadingScreen {
+    position: fixed; inset: 0;
+    background: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 999; flex-direction: column; gap: 1rem;
+  }
+  #loadingScreen img { height: 48px; object-fit: contain; }
+  .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loadStatus { font-size: .82rem; color: var(--muted); text-align: center; max-width: 260px; line-height: 1.5; }
+
+  /* ── PROGRESS BAR ── */
+  #progressWrap { width: 240px; height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  #progressBar  { height: 100%; background: var(--orange); border-radius: 4px; transition: width .3s; width: 0%; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--white); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; overflow-y: auto;
+  }
+  .sidebar-logo { padding: 1.5rem 1.25rem 1rem; border-bottom: 1px solid var(--border); cursor: pointer; display: block; text-decoration: none; }
+  .sidebar-logo img { height: 36px; object-fit: contain; }
+  .sidebar-user { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .75rem; }
+  .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--orange); color: #fff; font-weight: 700; font-size: .9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .sidebar-nav { flex: 1; padding: .75rem 0; }
+  .nav-section { font-size: .62rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; padding: .75rem 1.25rem .3rem; }
+  .nav-item { display: flex; align-items: center; gap: .65rem; padding: .6rem 1.25rem; font-size: .84rem; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .15s; text-decoration: none; border-left: 3px solid transparent; margin: .1rem 0; }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: rgba(255,107,26,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
+  .btn-sair { width: 100%; padding: .6rem; border: 1.5px solid var(--border); border-radius: 8px; background: none; font-family: 'Inter', sans-serif; font-size: .8rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .15s; }
+  .btn-sair:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.05); }
+
+  /* ── MAIN ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; padding: 2rem; min-height: 100vh; }
+  .page-header { margin-bottom: 1.75rem; display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .page-title { font-size: 1.5rem; font-weight: 800; color: var(--text); letter-spacing: -.3px; }
+  .page-sub { font-size: .85rem; color: var(--muted); margin-top: .25rem; }
+  .last-update { font-size: .75rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: .4rem .75rem; }
+
+  /* ── TABS ── */
+  .tabs { display: flex; gap: .25rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 0; }
+  .tab-btn { padding: .6rem 1.1rem; font-size: .84rem; font-weight: 600; color: var(--muted); background: none; border: none; border-bottom: 3px solid transparent; margin-bottom: -2px; cursor: pointer; transition: all .15s; border-radius: 6px 6px 0 0; }
+  .tab-btn:hover { color: var(--text); background: var(--bg); }
+  .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* ── KPI ROW ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .kpi-card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: .3rem; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.red::before    { background: var(--red); }
+  .kpi-card.green::before  { background: var(--green); }
+  .kpi-card.orange::before { background: var(--orange); }
+  .kpi-card.blue::before   { background: var(--blue); }
+  .kpi-label { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+  .kpi-value { font-family: 'JetBrains Mono', monospace; font-size: 1.45rem; font-weight: 600; letter-spacing: -.5px; line-height: 1.1; }
+  .kpi-card.red   .kpi-value { color: var(--red); }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.orange .kpi-value{ color: var(--orange); }
+  .kpi-card.blue   .kpi-value{ color: var(--blue); }
+  .kpi-sub { font-size: .7rem; color: var(--muted); }
+  .kpi-icon { position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); font-size: 2rem; opacity: .1; }
+
+  /* ── CONTENT CARDS ── */
+  .content-card { background: var(--white); border-radius: 14px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; position: relative; overflow: hidden; }
+  .content-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; border-radius: 4px 0 0 4px; }
+  .card-red::before    { background: var(--red); }
+  .card-orange::before { background: var(--orange); }
+  .card-green::before  { background: var(--green); }
+  .card-blue::before   { background: var(--blue); }
+  .card-gray::before   { background: var(--muted); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; flex-wrap: wrap; gap: .5rem; }
+  .card-title { font-size: 1rem; font-weight: 700; color: var(--text); letter-spacing: -.2px; }
+  .card-sub { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
+  .card-count { font-size: .72rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; padding: .2rem .6rem; border-radius: 20px; background: var(--bg); color: var(--muted); }
+  .card-total { font-size: .82rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--orange); }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  thead th { padding: .6rem .75rem; text-align: left; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .12s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  tbody td { padding: .7rem .75rem; color: var(--text); vertical-align: middle; }
+  .td-mono { font-family: 'JetBrains Mono', monospace; font-size: .82rem; font-weight: 600; }
+  .td-muted { color: var(--muted); font-size: .8rem; }
+  .td-nome { font-weight: 600; font-size: .84rem; max-width: 220px; }
+  .td-nome small { display: block; font-size: .7rem; color: var(--muted); font-weight: 400; }
+
+  /* ── BADGES ── */
+  .badge { display: inline-flex; align-items: center; padding: .2rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
+  .badge-red    { background: var(--red-bg);    color: var(--red); }
+  .badge-orange { background: #FEF0E7;          color: var(--orange-dk); }
+  .badge-yellow { background: var(--yellow-bg); color: #92400E; }
+  .badge-green  { background: var(--green-bg);  color: #065F46; }
+  .badge-blue   { background: var(--blue-bg);   color: #3730A3; }
+  .badge-gray   { background: var(--bg);        color: var(--muted); }
+
+  /* ── ALERT ── */
+  .alert { display: flex; align-items: flex-start; gap: .75rem; padding: 1rem 1.25rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: .86rem; line-height: 1.5; }
+  .alert-warning { background: var(--yellow-bg); color: #78350F; border: 1px solid #FDE68A; }
+  .alert-danger  { background: var(--red-bg);    color: #7F1D1D; border: 1px solid #FCA5A5; }
+  .alert-info    { background: var(--blue-bg);   color: #3730A3; border: 1px solid #C7D2FE; }
+  .alert-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  /* ── EMPTY / STATUS ── */
+  .empty-state { display: flex; align-items: center; justify-content: center; gap: .6rem; padding: 2rem 1rem; font-size: .88rem; font-weight: 500; color: #065F46; background: var(--green-bg); border-radius: 10px; }
+  .empty-data  { display: flex; align-items: center; justify-content: center; gap: .6rem; padding: 2rem 1rem; font-size: .88rem; font-weight: 500; color: var(--muted); background: var(--bg); border-radius: 10px; }
+
+  /* ── SUPPLIER SELECT ── */
+  .forn-select { font-family: 'Inter', sans-serif; font-size: .78rem; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: .3rem .5rem; cursor: pointer; transition: border-color .15s; min-width: 110px; }
+  .forn-select:hover, .forn-select:focus { border-color: var(--orange); outline: none; }
+
+  /* ── CONFIG FORMS ── */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: .35rem; }
+  .form-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+  .form-input { font-family: 'Inter', sans-serif; font-size: .84rem; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: .55rem .75rem; transition: border-color .15s; }
+  .form-input:focus { border-color: var(--orange); outline: none; background: var(--white); }
+  .btn { display: inline-flex; align-items: center; gap: .4rem; padding: .55rem 1.1rem; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: .83rem; font-weight: 700; cursor: pointer; transition: all .15s; border: none; }
+  .btn-primary { background: var(--orange); color: #fff; }
+  .btn-primary:hover { background: var(--orange-dk); }
+  .btn-ghost { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+  .btn-sm { padding: .35rem .75rem; font-size: .76rem; }
+  .btn-danger { background: var(--red-bg); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: #fff; }
+  .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+
+  /* ── FORN CARD ── */
+  .forn-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+  .forn-card { background: var(--bg); border-radius: 10px; border: 1px solid var(--border); padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: .5rem; }
+  .forn-card-header { display: flex; align-items: center; justify-content: space-between; }
+  .forn-card-nome { font-weight: 700; font-size: .9rem; color: var(--text); }
+  .forn-card-body { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .forn-stat { display: flex; flex-direction: column; gap: .1rem; }
+  .forn-stat-label { font-size: .65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  .forn-stat-value { font-size: .85rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); }
+
+  /* ── SEARCH ── */
+  .search-row { display: flex; gap: .75rem; margin-bottom: 1rem; align-items: center; }
+  .search-input { flex: 1; font-family: 'Inter', sans-serif; font-size: .84rem; color: var(--text); background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: .55rem .75rem; }
+  .search-input:focus { border-color: var(--orange); outline: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 768px) {
+    .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
+    .main { margin-left: 0; padding: 1rem; }
+    body { flex-direction: column; }
+    .sidebar-nav { display: flex; overflow-x: auto; padding: .5rem; }
+    .nav-section { display: none; }
+    .nav-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
+    .nav-item.active { border-left-color: transparent; border-bottom-color: var(--orange); }
+    .kpi-row { grid-template-columns: 1fr 1fr; }
+    .page-header { flex-direction: column; align-items: flex-start; }
+  }
+  @media (max-width: 480px) { .kpi-row { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <img src="../assets/logo.png" alt="MR4">
+  <div id="progressWrap"><div id="progressBar"></div></div>
+  <div class="spinner"></div>
+  <div id="loadStatus">Iniciando agente de compras...</div>
+</div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar" style="display:none">
+  <a class="sidebar-logo" href="../index.html" title="Página inicial">
+    <img src="../assets/logo.png" alt="MR4 Distribuidora">
+  </a>
+  <div class="sidebar-user">
+    <div class="user-avatar" id="userAvatar">?</div>
+    <div class="user-info">
+      <div class="user-name" id="userName">Carregando...</div>
+      <div class="user-role" id="userRole">—</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Módulos</div>
+    <a class="nav-item" href="vendas.html"><span class="nav-icon">📊</span> Painel de Vendas</a>
+    <a class="nav-item" href="estoque.html"><span class="nav-icon">🗄️</span> Estoque</a>
+    <a class="nav-item" href="financeiro.html"><span class="nav-icon">💰</span> Financeiro</a>
+    <a class="nav-item" href="caixa.html"><span class="nav-icon">🏦</span> Caixa Diário</a>
+    <a class="nav-item active" href="compras.html"><span class="nav-icon">🛒</span> Agente de Compras</a>
+    <a class="nav-item" href="expedicao.html"><span class="nav-icon">🚚</span> Expedição</a>
+    <a class="nav-item" href="ponto.html"><span class="nav-icon">📍</span> Ponto</a>
+    <a class="nav-item" href="marketing.html"><span class="nav-icon">📢</span> Marketing</a>
+    <a class="nav-item" href="garantia.html"><span class="nav-icon">🛡️</span> Garantia</a>
+    <a class="nav-item" href="admin.html"><span class="nav-icon">⚙️</span> Administração</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="btn-sair" id="btnSair">↩ Sair do sistema</button>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main" id="mainContent" style="display:none">
+
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🛒 Agente de Compras</h1>
+      <p class="page-sub">Sugestão de pedidos baseada em velocidade de venda, estoque e caixa disponível</p>
+    </div>
+    <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+      <div class="last-update" id="lastUpdate">—</div>
+      <button class="btn btn-primary" id="btnAtualizar">↻ Atualizar Dados</button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="compras">📦 Sugestão de Compras</button>
+    <button class="tab-btn" data-tab="mapeamento">🔗 Produto × Fornecedor</button>
+    <button class="tab-btn" data-tab="config">⚙️ Configurações</button>
+  </div>
+
+  <!-- ── TAB: COMPRAS ─────────────────────────────────────── -->
+  <div class="tab-pane active" id="tab-compras">
+
+    <!-- KPI Row -->
+    <div class="kpi-row">
+      <div class="kpi-card green">
+        <span class="kpi-label">Caixa p/ Compras</span>
+        <span class="kpi-value" id="kpiCaixa">R$ —</span>
+        <span class="kpi-sub" id="kpiCaixaSub">receber − pagar − reserva</span>
+        <span class="kpi-icon">💵</span>
+      </div>
+      <div class="kpi-card green">
+        <span class="kpi-label">A Receber 15 dias</span>
+        <span class="kpi-value" id="kpiReceber">R$ —</span>
+        <span class="kpi-icon">📥</span>
+      </div>
+      <div class="kpi-card red">
+        <span class="kpi-label">A Pagar 15 dias</span>
+        <span class="kpi-value" id="kpiPagar">R$ —</span>
+        <span class="kpi-icon">📤</span>
+      </div>
+      <div class="kpi-card orange">
+        <span class="kpi-label">Itens Urgentes</span>
+        <span class="kpi-value" id="kpiUrgentes">—</span>
+        <span class="kpi-sub" id="kpiUrgentesSub">zerados ou críticos</span>
+        <span class="kpi-icon">🚨</span>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div id="alertArea"></div>
+
+    <!-- Pedidos confirmados por fornecedor -->
+    <div id="pedidosArea">
+      <div class="empty-data">⏳ Clique em "Atualizar Dados" para gerar a sugestão de compras</div>
+    </div>
+
+    <!-- Sem orçamento -->
+    <div id="semOrcamentoArea" style="display:none">
+      <div class="content-card card-gray">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⏸ Aguardando Orçamento</div>
+            <div class="card-sub">Itens que precisam de reposição mas não cabem no caixa atual</div>
+          </div>
+          <span class="card-count" id="countSemOrcamento">0</span>
+        </div>
+        <div class="table-wrap" id="tableSemOrcamento"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── TAB: MAPEAMENTO ─────────────────────────────────── -->
+  <div class="tab-pane" id="tab-mapeamento">
+    <div class="content-card card-blue">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🔗 Produto × Fornecedor</div>
+          <div class="card-sub">Associe cada produto ao seu fornecedor. Salvo automaticamente ao mudar o seletor.</div>
+        </div>
+        <span class="card-count" id="mapTotal">—</span>
+      </div>
+      <div class="search-row">
+        <input class="search-input" id="mapSearch" placeholder="Buscar produto..." oninput="filtrarMapeamento()">
+        <span class="td-muted" id="mapFiltrado"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Vel. Mensal</th>
+              <th>Estoque</th>
+              <th>Cobertura</th>
+              <th>Fornecedor</th>
+            </tr>
+          </thead>
+          <tbody id="tableMapBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: CONFIG ─────────────────────────────────────── -->
+  <div class="tab-pane" id="tab-config">
+
+    <!-- Orçamento -->
+    <div class="content-card card-orange">
+      <div class="card-header"><div class="card-title">💰 Orçamento e Cobertura</div></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Reserva mínima de caixa (R$)</label>
+          <input class="form-input" id="cfgReserva" type="number" step="500" value="8000">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dias de cobertura alvo P1</label>
+          <input class="form-input" id="cfgCobP1" type="number" value="45">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Dias de cobertura alvo P2</label>
+          <input class="form-input" id="cfgCobP2" type="number" value="60">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Velocidade mínima P1 (un/mês)</label>
+          <input class="form-input" id="cfgVelP1" type="number" value="10">
+        </div>
+      </div>
+      <div style="margin-top:1rem">
+        <button class="btn btn-primary" onclick="salvarConfigGeral()">💾 Salvar Configurações</button>
+      </div>
+    </div>
+
+    <!-- Fornecedores -->
+    <div class="content-card card-blue">
+      <div class="card-header">
+        <div class="card-title">🏭 Fornecedores</div>
+      </div>
+      <div id="fornCards" class="forn-cards"></div>
+      <div class="divider"></div>
+      <div style="margin-bottom:.75rem"><strong style="font-size:.9rem">Adicionar / Editar Fornecedor</strong></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Nome (chave única)</label>
+          <input class="form-input" id="fNome" placeholder="Ex: GELJORS" style="text-transform:uppercase">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Lead time (dias)</label>
+          <input class="form-input" id="fLead" type="number" value="5">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Prazo de pagamento (dias)</label>
+          <input class="form-input" id="fPrazo" type="number" value="28">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pedido mínimo (R$)</label>
+          <input class="form-input" id="fPedMin" type="number" value="300">
+        </div>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:.75rem">
+        <button class="btn btn-primary" onclick="salvarFornecedor()">+ Salvar Fornecedor</button>
+        <button class="btn btn-ghost" onclick="limparFormForn()">Limpar</button>
+      </div>
+      <div id="fornMsg" style="margin-top:.6rem;font-size:.8rem;color:var(--green);display:none"></div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- Firebase + Agent Logic -->
+<script type="module">
+import { initializeApp }                         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── CONSTANTS ────────────────────────────────────────────────────────────────
+const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain: "mr4-ponto.firebaseapp.com",
+  projectId: "mr4-ponto",
+  storageBucket: "mr4-ponto.firebasestorage.app",
+  messagingSenderId: "848211361584",
+  appId: "1:848211361584:web:2732e1893122f4a23452f5"
+};
+
+const FORNECEDORES_DEFAULT = {
+  GELJORS:  { nome: 'GELJORS',  lead_time_dias: 3, prazo_pagamento_dias: 28, pedido_minimo: 500  },
+  THOR:     { nome: 'THOR',     lead_time_dias: 5, prazo_pagamento_dias: 0,  pedido_minimo: 300  },
+  AK:       { nome: 'AK',       lead_time_dias: 4, prazo_pagamento_dias: 28, pedido_minimo: 400  },
+  NBM:      { nome: 'NBM',      lead_time_dias: 7, prazo_pagamento_dias: 28, pedido_minimo: 1000 },
+  ASX:      { nome: 'ASX',      lead_time_dias: 5, prazo_pagamento_dias: 28, pedido_minimo: 300  },
+  CONTREX:  { nome: 'CONTREX',  lead_time_dias: 7, prazo_pagamento_dias: 28, pedido_minimo: 500  },
+};
+
+// ── APP STATE ────────────────────────────────────────────────────────────────
+let app, auth, db;
+let config = { reserva_minima: 8000, cob_p1: 45, cob_p2: 60, vel_p1: 10, fornecedores: { ...FORNECEDORES_DEFAULT }, mapeamento: {} };
+let cacheVelocidade = null; // produto_id -> { qtd90, custo_total, nome }
+let cacheStock     = null; // produto_id -> { nome, estoque }
+let lastResult     = null;
+let allVelItems    = []; // for mapeamento tab
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+app  = initializeApp(FIREBASE_CONFIG);
+auth = getAuth(app);
+db   = getFirestore(app);
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = '../login.html'; return; }
+
+  const nome = user.displayName || user.email.split('@')[0];
+  document.getElementById('userName').textContent  = nome;
+  document.getElementById('userRole').textContent  = 'Usuário';
+  document.getElementById('userAvatar').textContent = nome[0].toUpperCase();
+
+  setProgress(10, 'Carregando configurações...');
+  await carregarConfig();
+  preencherFormConfig();
+  renderFornCards();
+  setProgress(20, 'Configurações carregadas.');
+
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('sidebar').style.display       = '';
+  document.getElementById('mainContent').style.display   = '';
+});
+
+document.getElementById('btnSair').addEventListener('click', async () => {
+  await signOut(auth); window.location.href = '../login.html';
+});
+
+document.getElementById('btnAtualizar').addEventListener('click', () => rodarAgente(true));
+
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── CONFIG (FIRESTORE) ───────────────────────────────────────────────────────
+async function carregarConfig() {
+  try {
+    const snap = await getDoc(doc(db, 'compras_config', 'settings'));
+    if (snap.exists()) {
+      const d = snap.data();
+      config.reserva_minima = d.reserva_minima ?? 8000;
+      config.cob_p1         = d.cob_p1        ?? 45;
+      config.cob_p2         = d.cob_p2        ?? 60;
+      config.vel_p1         = d.vel_p1        ?? 10;
+    }
+    const snapF = await getDoc(doc(db, 'compras_config', 'fornecedores'));
+    if (snapF.exists() && Object.keys(snapF.data()).length > 0) {
+      config.fornecedores = snapF.data();
+    }
+    const snapM = await getDoc(doc(db, 'compras_config', 'mapeamento'));
+    if (snapM.exists()) config.mapeamento = snapM.data() || {};
+  } catch (e) {
+    console.warn('Config não encontrada, usando padrão:', e.message);
+  }
+}
+
+window.salvarConfigGeral = async function() {
+  config.reserva_minima = Number(document.getElementById('cfgReserva').value) || 8000;
+  config.cob_p1         = Number(document.getElementById('cfgCobP1').value)   || 45;
+  config.cob_p2         = Number(document.getElementById('cfgCobP2').value)   || 60;
+  config.vel_p1         = Number(document.getElementById('cfgVelP1').value)   || 10;
+  await setDoc(doc(db, 'compras_config', 'settings'), {
+    reserva_minima: config.reserva_minima,
+    cob_p1: config.cob_p1, cob_p2: config.cob_p2, vel_p1: config.vel_p1
+  });
+  flash('Configurações salvas!');
+};
+
+window.salvarFornecedor = async function() {
+  const nome = document.getElementById('fNome').value.trim().toUpperCase();
+  if (!nome) { alert('Informe o nome do fornecedor'); return; }
+  config.fornecedores[nome] = {
+    nome,
+    lead_time_dias:      Number(document.getElementById('fLead').value)   || 5,
+    prazo_pagamento_dias: Number(document.getElementById('fPrazo').value)  || 0,
+    pedido_minimo:       Number(document.getElementById('fPedMin').value) || 300,
+  };
+  await setDoc(doc(db, 'compras_config', 'fornecedores'), config.fornecedores);
+  renderFornCards();
+  limparFormForn();
+  document.getElementById('fornMsg').textContent = `✅ Fornecedor "${nome}" salvo.`;
+  document.getElementById('fornMsg').style.display = 'block';
+  setTimeout(() => { document.getElementById('fornMsg').style.display = 'none'; }, 3000);
+};
+
+window.limparFormForn = function() {
+  ['fNome','fLead','fPrazo','fPedMin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el.type === 'number') el.value = id === 'fLead' ? 5 : id === 'fPrazo' ? 28 : 300;
+    else el.value = '';
+  });
+};
+
+window.editarFornecedor = function(nome) {
+  const f = config.fornecedores[nome];
+  if (!f) return;
+  document.getElementById('fNome').value  = nome;
+  document.getElementById('fLead').value  = f.lead_time_dias;
+  document.getElementById('fPrazo').value = f.prazo_pagamento_dias;
+  document.getElementById('fPedMin').value= f.pedido_minimo;
+  document.querySelector('[data-tab="config"]').click();
+};
+
+window.deletarFornecedor = async function(nome) {
+  if (!confirm(`Remover fornecedor "${nome}"?`)) return;
+  delete config.fornecedores[nome];
+  await setDoc(doc(db, 'compras_config', 'fornecedores'), config.fornecedores);
+  renderFornCards();
+};
+
+async function salvarMapeamentoId(prodId, fornNome) {
+  if (!fornNome) {
+    delete config.mapeamento[prodId];
+  } else {
+    config.mapeamento[prodId] = fornNome;
+  }
+  try {
+    await setDoc(doc(db, 'compras_config', 'mapeamento'), config.mapeamento);
+  } catch(e) { console.error('Erro ao salvar mapeamento:', e); }
+}
+
+// ── GC FETCH ─────────────────────────────────────────────────────────────────
+async function gcFetch(endpoint, paramsStr = '') {
+  const url = `${WORKER}?endpoint=${encodeURIComponent(endpoint)}&params=${encodeURIComponent(paramsStr)}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(30000) });
+  if (!r.ok) throw new Error(`Worker ${r.status}`);
+  return r.json();
+}
+
+async function gcFetchAll(endpoint, extra = '', onProgress = null) {
+  const items = [];
+  let page = 1;
+  while (true) {
+    const params = `pagina=${page}&itens=100${extra ? '&' + extra : ''}`;
+    const data = await gcFetch(endpoint, params);
+    const batch = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+    items.push(...batch);
+    if (onProgress) onProgress(items.length);
+    if (batch.length < 100) break;
+    page++;
+    if (page > 50) break; // safety cap
+  }
+  return items;
+}
+
+// ── DATE UTILS ───────────────────────────────────────────────────────────────
+function today() { return new Date().toISOString().split('T')[0]; }
+function addDays(iso, n) {
+  const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n);
+  return d.toISOString().split('T')[0];
+}
+function toISO(s) {
+  if (!s) return null;
+  s = String(s);
+  if (s.includes('/')) { const [d,m,y] = s.split('/'); return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+  return s.substring(0,10);
+}
+function brl(v) { return (Number(v)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fmtDate(iso) { if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}/${y}`; }
+function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── PROGRESS ─────────────────────────────────────────────────────────────────
+function setProgress(pct, msg) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('loadStatus').textContent = msg;
+}
+
+// ── MAIN AGENT RUNNER ────────────────────────────────────────────────────────
+async function rodarAgente(forceRefresh = false) {
+  const btnAtualizar = document.getElementById('btnAtualizar');
+  btnAtualizar.disabled = true;
+  btnAtualizar.textContent = '⏳ Carregando...';
+  document.getElementById('pedidosArea').innerHTML = '<div class="empty-data">⏳ Calculando sugestão de compras...</div>';
+  document.getElementById('alertArea').innerHTML   = '';
+  document.getElementById('semOrcamentoArea').style.display = 'none';
+
+  try {
+    // ── 1. Produtos ──────────────────────────────────────────────────────
+    if (!cacheStock || forceRefresh) {
+      setProgress(25, 'Carregando produtos...');
+      const prods = await gcFetchAll('/produtos', '', c => setProgress(25, `Produtos: ${c} carregados...`));
+      cacheStock = {};
+      for (const p of prods) {
+        const id = String(p.id || p.produto_id || '');
+        if (!id) continue;
+        cacheStock[id] = { nome: p.nome || p.descricao || id, estoque: Number(p.estoque) || 0 };
+      }
+    }
+
+    // ── 2. Vendas 90 dias ────────────────────────────────────────────────
+    if (!cacheVelocidade || forceRefresh) {
+      const dataFim   = today();
+      const dataIni   = addDays(dataFim, -90);
+      const extraP    = `data_inicio=${dataIni}&data_fim=${dataFim}`;
+      setProgress(40, `Carregando vendas (${fmtDate(dataIni)} → ${fmtDate(dataFim)})...`);
+
+      const vendas = await gcFetchAll('/vendas', extraP, c => setProgress(40, `Vendas: ${c} registros...`));
+
+      cacheVelocidade = {};
+      allVelItems = [];
+
+      for (const venda of vendas) {
+        const itens = Array.isArray(venda.produtos) ? venda.produtos : [];
+        for (const item of itens) {
+          const p = item?.produto || item || {};
+          const id = String(p.produto_id || p.id || '');
+          if (!id || id === 'null') continue;
+          const qtd   = Number(p.quantidade    || p.qtd)     || 0;
+          const custo = Number(p.valor_custo   || p.custo)   || 0;
+          const nome  = p.nome_produto || p.nome || cacheStock[id]?.nome || '';
+          if (!cacheVelocidade[id]) cacheVelocidade[id] = { qtd: 0, custo_total: 0, nome };
+          cacheVelocidade[id].qtd         += qtd;
+          cacheVelocidade[id].custo_total += qtd * custo;
+          if (nome && !cacheVelocidade[id].nome) cacheVelocidade[id].nome = nome;
+        }
+      }
+
+      // Build allVelItems for mapeamento tab
+      allVelItems = Object.entries(cacheVelocidade)
+        .map(([id, v]) => ({ id, nome: v.nome || cacheStock[id]?.nome || id, qtd90: v.qtd, qtd_mes: v.qtd/3 }))
+        .sort((a,b) => b.qtd_mes - a.qtd_mes);
+    }
+
+    // ── 3. Pagamentos ────────────────────────────────────────────────────
+    setProgress(65, 'Carregando contas a pagar...');
+    const pagamentos = await gcFetchAll('/pagamentos', '', c => setProgress(65, `Pagamentos: ${c}...`));
+
+    // ── 4. Recebimentos ──────────────────────────────────────────────────
+    setProgress(80, 'Carregando contas a receber...');
+    const recebimentos = await gcFetchAll('/recebimentos', '', c => setProgress(80, `Recebimentos: ${c}...`));
+
+    setProgress(90, 'Calculando sugestão...');
+
+    // ── 5. Run agent ─────────────────────────────────────────────────────
+    lastResult = calcAgente(cacheStock, cacheVelocidade, pagamentos, recebimentos, config);
+
+    // ── 6. Render ─────────────────────────────────────────────────────────
+    renderResult(lastResult);
+    renderMapeamento();
+
+    document.getElementById('lastUpdate').textContent = 'Atualizado: ' + new Date().toLocaleString('pt-BR');
+    setProgress(100, 'Pronto!');
+
+  } catch(e) {
+    console.error(e);
+    document.getElementById('pedidosArea').innerHTML = `<div class="alert alert-danger"><span class="alert-icon">❌</span><span>Erro ao carregar dados: ${escH(e.message)}</span></div>`;
+  } finally {
+    btnAtualizar.disabled = false;
+    btnAtualizar.textContent = '↻ Atualizar Dados';
+  }
+}
+
+// ── AGENT LOGIC ──────────────────────────────────────────────────────────────
+function calcAgente(stock, velocity, pagamentos, recebimentos, cfg) {
+  const t0  = today();
+  const t15 = addDays(t0, 15);
+
+  // Budget
+  const pagar_15d = pagamentos
+    .filter(p => String(p.liquidado) === '0')
+    .filter(p => { const v = toISO(p.data_vencimento); return v && v >= t0 && v <= t15; })
+    .reduce((s,p) => s + (Number(p.valor)||0), 0);
+
+  const receber_15d = recebimentos
+    .filter(p => String(p.liquidado) === '0')
+    .filter(p => { const v = toISO(p.data_vencimento); return v && v >= t0 && v <= t15; })
+    .reduce((s,p) => s + (Number(p.valor)||0), 0);
+
+  const reserva = Number(cfg.reserva_minima) || 8000;
+  const caixa   = receber_15d - pagar_15d - reserva;
+
+  // Reorder needs
+  const needs = [];
+  for (const [id, vel] of Object.entries(velocity)) {
+    const vel_d = vel.qtd / 90;
+    if (vel_d < 0.017) continue; // < 0.5 units/month → skip
+
+    const s         = stock[id] || { nome: vel.nome, estoque: 0 };
+    const estoque   = s.estoque;
+    const nome      = vel.nome || s.nome || id;
+    const custo_u   = vel.qtd > 0 ? vel.custo_total / vel.qtd : 0;
+    const dias_cob  = vel_d > 0 ? estoque / vel_d : 9999;
+    const forn_id   = cfg.mapeamento?.[id] || null;
+    const forn      = forn_id ? cfg.fornecedores?.[forn_id] : null;
+    const lead      = forn?.lead_time_dias ?? 7;
+    const is_p1     = (vel.qtd / 3) >= Number(cfg.vel_p1 ?? 10);
+    const safety    = is_p1 ? 7 : 15;
+
+    if (dias_cob > lead + safety) continue; // still covered
+
+    const alvo    = is_p1 ? Number(cfg.cob_p1 ?? 45) : Number(cfg.cob_p2 ?? 60);
+    const qtd_ped = Math.max(1, Math.ceil(vel_d * alvo) - estoque);
+    const custo_t = qtd_ped * custo_u;
+
+    const urgencia = estoque === 0     ? 'zerado' :
+                     dias_cob < lead   ? 'critico' :
+                     dias_cob < lead + safety ? 'urgente' : 'normal';
+
+    needs.push({ id, nome, estoque, vel_d, dias_cob: Math.round(dias_cob), custo_u, qtd_ped, custo_t, forn_id, forn_nome: forn_id || '—', is_p1, urgencia });
+  }
+
+  // Sort: zerado → critico → urgente → normal; then by dias_cob asc
+  const ord = { zerado: 0, critico: 1, urgente: 2, normal: 3 };
+  needs.sort((a,b) => (ord[a.urgencia]-ord[b.urgencia]) || (a.dias_cob-b.dias_cob));
+
+  // Allocate budget
+  let restante = Math.max(0, caixa);
+  const pedidos = needs.map(n => {
+    const fits = caixa > 0 && restante >= n.custo_t && n.custo_t > 0;
+    if (fits) restante -= n.custo_t;
+    return { ...n, sem_orc: !fits };
+  });
+
+  return {
+    pedidos, pagar_15d, receber_15d, reserva, caixa,
+    total_conf: pedidos.filter(p=>!p.sem_orc).reduce((s,p)=>s+p.custo_t, 0)
+  };
+}
+
+// ── RENDER RESULT ─────────────────────────────────────────────────────────────
+function renderResult(res) {
+  const { pedidos, pagar_15d, receber_15d, reserva, caixa, total_conf } = res;
+
+  // KPIs
+  const kpiCaixa = document.getElementById('kpiCaixa');
+  kpiCaixa.textContent = brl(Math.max(0, caixa));
+  kpiCaixa.closest('.kpi-card').className = `kpi-card ${caixa >= 5000 ? 'green' : caixa >= 0 ? 'yellow' : 'red'}`;
+  document.getElementById('kpiCaixaSub').textContent = caixa < 0 ? '⚠️ Caixa insuficiente' : `reserva: ${brl(reserva)}`;
+  document.getElementById('kpiReceber').textContent = brl(receber_15d);
+  document.getElementById('kpiPagar').textContent   = brl(pagar_15d);
+  const urgentes = pedidos.filter(p => p.urgencia === 'zerado' || p.urgencia === 'critico').length;
+  document.getElementById('kpiUrgentes').textContent   = urgentes;
+  document.getElementById('kpiUrgentesSub').textContent = urgentes > 0 ? 'atenção imediata' : 'tudo ok';
+
+  // Alerts
+  const alertArea = document.getElementById('alertArea');
+  let alerts = '';
+  if (caixa < 0) {
+    alerts += `<div class="alert alert-danger"><span class="alert-icon">🚨</span>
+      <span>Caixa insuficiente para compras. Receber: ${brl(receber_15d)} | Pagar: ${brl(pagar_15d)} | Reserva: ${brl(reserva)}.
+      Aguarde recebimentos ou reduza a reserva em Configurações.</span></div>`;
+  }
+  if (urgentes > 0) {
+    alerts += `<div class="alert alert-warning"><span class="alert-icon">⚠️</span>
+      <span><strong>${urgentes} item(ns) zerado(s) ou crítico(s)</strong> — risco de ruptura de estoque imediata. Priorize esses pedidos mesmo que precise usar capital extra.</span></div>`;
+  }
+  const semForn = pedidos.filter(p=>!p.sem_orc && p.forn_id === null).length;
+  if (semForn > 0) {
+    alerts += `<div class="alert alert-info"><span class="alert-icon">💡</span>
+      <span><strong>${semForn} item(ns)</strong> sem fornecedor mapeado. Acesse a aba "Produto × Fornecedor" para associar e agrupar esses pedidos por fornecedor.</span></div>`;
+  }
+  alertArea.innerHTML = alerts;
+
+  // Pedidos confirmados — grouped by supplier
+  const confirmados = pedidos.filter(p => !p.sem_orc);
+  const semOrcamento = pedidos.filter(p => p.sem_orc);
+
+  if (!confirmados.length) {
+    document.getElementById('pedidosArea').innerHTML = caixa <= 0
+      ? '<div class="empty-data">💸 Sem orçamento disponível para compras agora</div>'
+      : '<div class="empty-state">✅ Nenhum item precisa de reposição no momento</div>';
+  } else {
+    // Group by forn_id
+    const groups = {};
+    for (const p of confirmados) {
+      const key = p.forn_id || '__sem_forn__';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(p);
+    }
+
+    let html = '';
+    for (const [key, itens] of Object.entries(groups)) {
+      const forn = key !== '__sem_forn__' ? config.fornecedores[key] : null;
+      const fNome  = forn?.nome || (key !== '__sem_forn__' ? key : 'Sem fornecedor mapeado');
+      const prazo  = forn ? `${forn.prazo_pagamento_dias}d prazo` : '';
+      const totalG = itens.reduce((s,i)=>s+i.custo_t, 0);
+      const pedMin = forn?.pedido_minimo || 0;
+      const abaixoMin = pedMin > 0 && totalG < pedMin;
+
+      html += `<div class="content-card ${key === '__sem_forn__' ? 'card-gray' : 'card-orange'}">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🏭 ${escH(fNome)}</div>
+            <div class="card-sub">${prazo}${prazo && forn?.lead_time_dias ? ' · ' : ''}${forn ? forn.lead_time_dias + ' dias entrega' : ''}</div>
+          </div>
+          <div style="display:flex;gap:.75rem;align-items:center">
+            ${abaixoMin ? `<span class="badge badge-yellow">Pedido mín: ${brl(pedMin)}</span>` : ''}
+            <div style="text-align:right">
+              <div class="card-total">${brl(totalG)}</div>
+              <div class="td-muted">${itens.length} item(ns)</div>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Produto</th>
+              <th>Tipo</th>
+              <th>Estoque</th>
+              <th>Cobertura</th>
+              <th>Vel. Diária</th>
+              <th>Qtd Pedir</th>
+              <th>Custo Unit</th>
+              <th>Total</th>
+              <th>Urgência</th>
+            </tr></thead>
+            <tbody>
+              ${itens.map(i => `<tr>
+                <td class="td-nome">${escH(i.nome)}</td>
+                <td><span class="badge ${i.is_p1 ? 'badge-orange' : 'badge-blue'}">${i.is_p1 ? 'P1' : 'P2'}</span></td>
+                <td class="td-mono">${i.estoque}</td>
+                <td class="td-mono">${i.dias_cob === 9999 ? '∞' : i.dias_cob + 'd'}</td>
+                <td class="td-mono td-muted">${i.vel_d.toFixed(2)}/d</td>
+                <td class="td-mono" style="color:var(--orange);font-weight:700">${i.qtd_ped}</td>
+                <td class="td-mono">${brl(i.custo_u)}</td>
+                <td class="td-mono" style="font-weight:700">${brl(i.custo_t)}</td>
+                <td>${urgenciaBadge(i.urgencia)}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+    }
+    document.getElementById('pedidosArea').innerHTML = html;
+  }
+
+  // Sem orçamento
+  if (semOrcamento.length) {
+    document.getElementById('semOrcamentoArea').style.display = 'block';
+    document.getElementById('countSemOrcamento').textContent = semOrcamento.length;
+    document.getElementById('tableSemOrcamento').innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Produto</th><th>Tipo</th><th>Estoque</th><th>Cobertura</th>
+          <th>Qtd Pedir</th><th>Estimativa</th><th>Urgência</th>
+        </tr></thead>
+        <tbody>
+          ${semOrcamento.map(i => `<tr>
+            <td class="td-nome">${escH(i.nome)}</td>
+            <td><span class="badge ${i.is_p1 ? 'badge-orange' : 'badge-blue'}">${i.is_p1 ? 'P1' : 'P2'}</span></td>
+            <td class="td-mono">${i.estoque}</td>
+            <td class="td-mono">${i.dias_cob === 9999 ? '∞' : i.dias_cob + 'd'}</td>
+            <td class="td-mono">${i.qtd_ped}</td>
+            <td class="td-mono td-muted">${brl(i.custo_t)}</td>
+            <td>${urgenciaBadge(i.urgencia)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+}
+
+function urgenciaBadge(u) {
+  const map = { zerado: ['badge-red','🔴 Zerado'], critico: ['badge-red','🚨 Crítico'], urgente: ['badge-orange','⚠️ Urgente'], normal: ['badge-yellow','⏰ Normal'] };
+  const [cls,txt] = map[u] || ['badge-gray','—'];
+  return `<span class="badge ${cls}">${txt}</span>`;
+}
+
+// ── MAPEAMENTO TAB ────────────────────────────────────────────────────────────
+function renderMapeamento() {
+  const tbody = document.getElementById('tableMapBody');
+  document.getElementById('mapTotal').textContent = allVelItems.length + ' produtos ativos';
+
+  if (!allVelItems.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-data">Nenhum produto com vendas nos últimos 90 dias</td></tr>';
+    return;
+  }
+
+  const fornOptions = Object.keys(config.fornecedores)
+    .map(k => `<option value="${escH(k)}">${escH(k)}</option>`).join('');
+
+  tbody.innerHTML = allVelItems.map(item => {
+    const stk     = cacheStock?.[item.id];
+    const estoque = stk?.estoque ?? '?';
+    const vel_d   = item.qtd90 / 90;
+    const dias_cob = vel_d > 0 && estoque !== '?' ? Math.round(estoque / vel_d) : '—';
+    const forn_sel = config.mapeamento[item.id] || '';
+
+    return `<tr>
+      <td class="td-nome">${escH(item.nome)}<small>ID: ${escH(item.id)}</small></td>
+      <td class="td-mono">${item.qtd_mes.toFixed(1)}/mês</td>
+      <td class="td-mono">${estoque}</td>
+      <td class="td-mono">${typeof dias_cob === 'number' ? dias_cob + 'd' : dias_cob}</td>
+      <td>
+        <select class="forn-select" data-prod-id="${escH(item.id)}" onchange="window.__mapChange(this)">
+          <option value="">— sem fornecedor —</option>
+          ${fornOptions}
+        </select>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Set current selections after rendering
+  tbody.querySelectorAll('.forn-select').forEach(sel => {
+    const pid = sel.dataset.prodId;
+    if (config.mapeamento[pid]) sel.value = config.mapeamento[pid];
+  });
+
+  document.getElementById('mapFiltrado').textContent = '';
+}
+
+window.__mapChange = async function(sel) {
+  const pid = sel.dataset.prodId;
+  await salvarMapeamentoId(pid, sel.value);
+};
+
+window.filtrarMapeamento = function() {
+  const q = document.getElementById('mapSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#tableMapBody tr');
+  let vis = 0;
+  rows.forEach(row => {
+    const nome = row.querySelector('.td-nome')?.textContent?.toLowerCase() || '';
+    const show = !q || nome.includes(q);
+    row.style.display = show ? '' : 'none';
+    if (show) vis++;
+  });
+  document.getElementById('mapFiltrado').textContent = q ? `${vis} resultados` : '';
+};
+
+// ── RENDER FORNECEDOR CARDS ───────────────────────────────────────────────────
+function renderFornCards() {
+  const container = document.getElementById('fornCards');
+  const fns = Object.values(config.fornecedores);
+  if (!fns.length) { container.innerHTML = '<div class="empty-data">Nenhum fornecedor cadastrado</div>'; return; }
+  container.innerHTML = fns.map(f => `
+    <div class="forn-card">
+      <div class="forn-card-header">
+        <span class="forn-card-nome">🏭 ${escH(f.nome)}</span>
+        <div style="display:flex;gap:.4rem">
+          <button class="btn btn-ghost btn-sm" onclick="editarFornecedor('${escH(f.nome)}')">✏️</button>
+          <button class="btn btn-danger btn-sm" onclick="deletarFornecedor('${escH(f.nome)}')">🗑</button>
+        </div>
+      </div>
+      <div class="forn-card-body">
+        <div class="forn-stat"><span class="forn-stat-label">Lead time</span><span class="forn-stat-value">${f.lead_time_dias}d</span></div>
+        <div class="forn-stat"><span class="forn-stat-label">Prazo pag.</span><span class="forn-stat-value">${f.prazo_pagamento_dias ? f.prazo_pagamento_dias + 'd' : 'À vista'}</span></div>
+        <div class="forn-stat"><span class="forn-stat-label">Ped. mínimo</span><span class="forn-stat-value">${brl(f.pedido_minimo)}</span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── FORM PREFILL ──────────────────────────────────────────────────────────────
+function preencherFormConfig() {
+  document.getElementById('cfgReserva').value = config.reserva_minima;
+  document.getElementById('cfgCobP1').value   = config.cob_p1;
+  document.getElementById('cfgCobP2').value   = config.cob_p2;
+  document.getElementById('cfgVelP1').value   = config.vel_p1;
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────────
+function flash(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;background:var(--text);color:#fff;padding:.65rem 1.1rem;border-radius:8px;font-size:.82rem;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,.18)';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+</script>
+</body>
+</html>

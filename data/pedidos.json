@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-05T10:43:03",
-  "total": 44,
+  "atualizado_em": "2026-08-05T12:54:04",
+  "total": 47,
   "pedidos": [
+    {
+      "id": "389143407",
+      "numero": "17092",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "FRANCISCA ANDRESSA ARAUJO GOMES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 258.26,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389111442",
+      "numero": "17091",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 346.67,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389108189",
+      "numero": "17090",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 10,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389094566",
       "numero": "17089",

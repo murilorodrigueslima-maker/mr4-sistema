@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-05T10:43:04",
+  "atualizado_em": "2026-08-05T12:54:05",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -72,20 +72,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "MAQUINETA DE CARTÃO",
-      "valor": 21.24,
-      "vencimento": "2026-07-10",
-      "dias_atraso": 26,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "COLA RATO",
-      "valor": 30.99,
-      "vencimento": "2026-07-15",
-      "dias_atraso": 21,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-07-17",
@@ -100,13 +86,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ESTANTE ESCRITORIO MURILO",
-      "valor": 94,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-07-25",
@@ -114,43 +93,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "UBER FLASH",
-      "valor": 22.55,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 931.65,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "UBER FLASH",
-      "valor": 60.06,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LICENÇA CANVAS",
-      "valor": 24.24,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "FACEBOOK TRAFEGO",
       "valor": 2443.77,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CHAT GPT",
-      "valor": 95.99,
       "vencimento": "2026-07-25",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -165,6 +109,13 @@
     {
       "nome": "INTERNET EMPRESA",
       "valor": 127.75,
+      "vencimento": "2026-07-25",
+      "dias_atraso": 11,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 873.62,
       "vencimento": "2026-07-25",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -280,6 +231,12 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "PAGAMENTO REF MÊS JULHO",
+      "valor": 2550,
+      "vencimento": "2026-08-05",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
       "vencimento": "2026-08-06",
@@ -378,7 +335,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45862.65000000001,
+  "total_vencido": 45455.55,
   "total_a_receber": 0,
-  "total_a_pagar": 37851.23
+  "total_a_pagar": 37444.130000000005
 }

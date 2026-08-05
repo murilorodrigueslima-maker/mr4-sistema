@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-05T16:14:27",
-  "total": 57,
+  "atualizado_em": "2026-08-05T17:57:13",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "389248605",
+      "numero": "17104",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 48,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389247974",
+      "numero": "17103",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "STTOP FILM COMERCIO DE ACESSORIOS PARA VEICULOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 814.93,
+      "itens": 19,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389218335",
       "numero": "17102",

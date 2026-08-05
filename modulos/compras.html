@@ -659,7 +659,7 @@ async function rodarAgente(forceRefresh = false) {
       for (const p of prods) {
         const id = String(p.id || p.produto_id || '');
         if (!id) continue;
-        cacheStock[id] = { nome: p.nome || p.descricao || id, estoque: Number(p.estoque) || 0 };
+        cacheStock[id] = { nome: p.nome || p.descricao || id, estoque: Number(p.estoque) || 0, codigo: p.codigo_interno || '' };
       }
     }
 
@@ -818,7 +818,8 @@ function calcAgente(stock, velocity, abc, pagamentos, recebimentos, cfg) {
                      dias_cob < lead ? 'critico' :
                      dias_cob < lead + safety ? 'urgente' : 'normal';
 
-    const item = { id, nome, estoque, vel_d, dias_cob: Math.round(dias_cob), custo_u, venda_u, margem, curva, qtd_ped, custo_t, forn_id, forn_nome: forn_id || '—', is_p1, urgencia, score: calcScore(urgencia, curva, margem) };
+    const codigo = stock[id]?.codigo || '';
+    const item = { id, nome, codigo, estoque, vel_d, dias_cob: Math.round(dias_cob), custo_u, venda_u, margem, curva, qtd_ped, custo_t, forn_id, forn_nome: forn_id || '—', is_p1, urgencia, score: calcScore(urgencia, curva, margem) };
 
     // Separar produtos abaixo da margem mínima (exceto zerados/críticos que são emergência)
     if (mg_min > 0 && margem < mg_min && urgencia !== 'zerado' && urgencia !== 'critico') {
@@ -927,6 +928,7 @@ function renderResult(res) {
         <div class="table-wrap">
           <table>
             <thead><tr>
+              <th>Código</th>
               <th>Produto</th>
               <th>Curva</th>
               <th>Margem</th>
@@ -940,6 +942,7 @@ function renderResult(res) {
             </tr></thead>
             <tbody>
               ${itens.map(i => `<tr>
+                <td class="td-mono td-muted">${escH(i.codigo)}</td>
                 <td class="td-nome">${escH(i.nome)}<small>${i.is_p1 ? 'P1' : 'P2'}</small></td>
                 <td>${abcBadge(i.curva)}</td>
                 <td>${margemBadge(i.margem)}</td>
@@ -966,11 +969,12 @@ function renderResult(res) {
     document.getElementById('tableSemOrcamento').innerHTML = `
       <table>
         <thead><tr>
-          <th>Produto</th><th>Curva</th><th>Margem</th><th>Estoque</th><th>Cobertura</th>
+          <th>Código</th><th>Produto</th><th>Curva</th><th>Margem</th><th>Estoque</th><th>Cobertura</th>
           <th>Qtd Pedir</th><th>Estimativa</th><th>Urgência</th>
         </tr></thead>
         <tbody>
           ${semOrcamento.map(i => `<tr>
+            <td class="td-mono td-muted">${escH(i.codigo)}</td>
             <td class="td-nome">${escH(i.nome)}<small>${i.is_p1 ? 'P1' : 'P2'}</small></td>
             <td>${abcBadge(i.curva)}</td>
             <td>${margemBadge(i.margem)}</td>
@@ -991,11 +995,12 @@ function renderResult(res) {
     document.getElementById('tableBaixaMargem').innerHTML = `
       <table>
         <thead><tr>
-          <th>Produto</th><th>Curva</th><th>Margem</th><th>Estoque</th><th>Cobertura</th>
+          <th>Código</th><th>Produto</th><th>Curva</th><th>Margem</th><th>Estoque</th><th>Cobertura</th>
           <th>Vel./dia</th><th>Qtd Pedir</th><th>Estimativa</th>
         </tr></thead>
         <tbody>
           ${baixa_margem.map(i => `<tr>
+            <td class="td-mono td-muted">${escH(i.codigo)}</td>
             <td class="td-nome">${escH(i.nome)}<small>${i.is_p1 ? 'P1' : 'P2'}</small></td>
             <td>${abcBadge(i.curva)}</td>
             <td>${margemBadge(i.margem)}</td>

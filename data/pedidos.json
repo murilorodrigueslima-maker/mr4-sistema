@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-05T08:50:36",
-  "total": 40,
+  "atualizado_em": "2026-08-05T10:43:03",
+  "total": 44,
   "pedidos": [
+    {
+      "id": "389094566",
+      "numero": "17089",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "PANDA COMERCIO E SERVICOS DE SOM LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 52.11,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389092154",
+      "numero": "17088",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "J ELIVAN MELO DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 190,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389075634",
+      "numero": "17087",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "MIGUEL ANDREWS ALVES SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 581.89,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389075128",
+      "numero": "17086",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 187.63,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "388986776",
       "numero": "17085",

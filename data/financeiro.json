@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-05T08:50:37",
+  "atualizado_em": "2026-08-05T10:43:04",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -97,20 +97,6 @@
       "valor": 834,
       "vencimento": "2026-07-17",
       "dias_atraso": 19,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 681.61,
-      "vencimento": "2026-07-22",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1276.18,
-      "vencimento": "2026-07-23",
-      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
@@ -241,7 +227,7 @@
     },
     {
       "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 5396.67,
+      "valor": 4688.67,
       "vencimento": "2026-07-30",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -392,7 +378,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 48528.44000000001,
+  "total_vencido": 45862.65000000001,
   "total_a_receber": 0,
   "total_a_pagar": 37851.23
 }

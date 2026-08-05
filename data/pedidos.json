@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-05T12:54:04",
-  "total": 47,
+  "atualizado_em": "2026-08-05T14:19:59",
+  "total": 50,
   "pedidos": [
+    {
+      "id": "389185393",
+      "numero": "17095",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 41.2,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389176814",
+      "numero": "17094",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "FRANCISCO FRANCINE DA SILVA FREITAS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 543.18,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389168322",
+      "numero": "17093",
+      "data": "2026-08-05",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 196.93,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389143407",
       "numero": "17092",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-05T12:54:05",
+  "atualizado_em": "2026-08-05T14:20:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -39,13 +39,6 @@
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1527.36,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 41,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 944.63,
       "vencimento": "2026-06-25",
       "dias_atraso": 41,
       "tipo": "Pagar"
@@ -100,13 +93,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTÃO INTER",
-      "valor": 172.34,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "INTERNET EMPRESA",
       "valor": 127.75,
       "vencimento": "2026-07-25",
@@ -115,7 +101,7 @@
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 873.62,
+      "valor": 378.4,
       "vencimento": "2026-07-25",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -335,7 +321,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45455.55,
+  "total_vencido": 43843.36000000001,
   "total_a_receber": 0,
-  "total_a_pagar": 37444.130000000005
+  "total_a_pagar": 36776.57
 }

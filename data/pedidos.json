@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-06T08:56:36",
-  "total": 43,
+  "atualizado_em": "2026-08-06T10:49:53",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "389376697",
+      "numero": "17111",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389365237",
+      "numero": "17110",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "JOSE ELITON DE ANDRADE SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 340,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389364301",
+      "numero": "17109",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "59.921.493 GLAUBER ARRUDA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 185,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389358607",
+      "numero": "17108",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "ELIAS SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 920,
+      "itens": 19,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389349921",
+      "numero": "17107",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 282.33,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389349523",
+      "numero": "17106",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 110,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389336339",
       "numero": "17105",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-07T15:39:43",
+  "atualizado_em": "2026-08-07T17:29:30",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -38,7 +38,7 @@
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 1527.36,
+      "valor": 72.59,
       "vencimento": "2026-06-25",
       "dias_atraso": 43,
       "tipo": "Pagar"
@@ -86,22 +86,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "FACEBOOK TRAFEGO",
-      "valor": 2443.77,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "INTERNET EMPRESA",
       "valor": 127.75,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 378.4,
       "vencimento": "2026-07-25",
       "dias_atraso": 13,
       "tipo": "Pagar"
@@ -184,13 +170,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 3593.33,
-      "vencimento": "2026-08-06",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1227.5,
       "vencimento": "2026-08-06",
@@ -222,12 +201,6 @@
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 334.92,
-      "vencimento": "2026-08-07",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 3085.56,
       "vencimento": "2026-08-07",
       "tipo": "Pagar"
     },
@@ -324,7 +297,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63432.439999999995,
+  "total_vencido": 55562.17,
   "total_a_receber": 0,
-  "total_a_pagar": 40731.729999999996
+  "total_a_pagar": 37909.56
 }

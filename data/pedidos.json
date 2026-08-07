@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-07T15:39:42",
-  "total": 70,
+  "atualizado_em": "2026-08-07T17:29:30",
+  "total": 72,
   "pedidos": [
+    {
+      "id": "389795924",
+      "numero": "17154",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389791113",
       "numero": "17153",
@@ -33,7 +45,7 @@
       "hora": "",
       "cliente": "J.G. AUTOCAR LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 99.99,
+      "valor": 36.89,
       "itens": 1,
       "status_gc": "",
       "cidade": ""
@@ -243,6 +255,18 @@
       "cidade": ""
     },
     {
+      "id": "389470901",
+      "numero": "17126",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 568,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "388784892",
       "numero": "17065",
       "data": "2026-08-07",
@@ -251,6 +275,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 430,
       "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389831697",
+      "numero": "17155",
+      "data": "2026-08-06",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },
@@ -335,18 +371,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 73.71,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "389470901",
-      "numero": "17126",
-      "data": "2026-08-06",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 568,
-      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

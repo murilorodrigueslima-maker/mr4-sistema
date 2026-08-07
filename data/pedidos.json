@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-07T11:44:25",
-  "total": 60,
+  "atualizado_em": "2026-08-07T13:41:23",
+  "total": 65,
   "pedidos": [
+    {
+      "id": "389735938",
+      "numero": "17148",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 110,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389733064",
+      "numero": "17147",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 175,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389729148",
+      "numero": "17146",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "U. N. LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 225,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389714998",
+      "numero": "17145",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "FRANCISCO RONIERES SILVA DE LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 376.74,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389700427",
+      "numero": "17144",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 190,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389690672",
       "numero": "17143",

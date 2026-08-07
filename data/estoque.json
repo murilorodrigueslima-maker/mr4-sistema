@@ -1,7 +1,7 @@
 {
-  "atualizado_em": "2026-08-07T13:41:26",
-  "total_produtos": 897,
-  "valor_total_estoque": 393499.2800000002,
+  "atualizado_em": "2026-08-07T15:39:47",
+  "total_produtos": 902,
+  "valor_total_estoque": 423623.53000000026,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
@@ -216,11 +216,46 @@
       "custo": 95
     },
     {
+      "ref": "KRC6000",
+      "nome": "ANDROID 10\", 4GB RAM 64GB MEMORIA, CP/AA SEM FIO",
+      "margem": "-73.6",
+      "preco": 449.74,
+      "custo": 780.88
+    },
+    {
       "ref": "860.352",
       "nome": "LAMPADA HALOGENA INDIVIDUAL PROMOÇÃO",
       "margem": "-73.4",
       "preco": 5,
       "custo": 8.67
+    },
+    {
+      "ref": "MK5001",
+      "nome": "TRAVA ANTIFURTO PARA ESTEPE HILUX",
+      "margem": "-72.8",
+      "preco": 73.83,
+      "custo": 127.59
+    },
+    {
+      "ref": "KCVW01",
+      "nome": "CAM RE COM MACANETA E BOTAO PORTA MALAS VW, 170., LENTE VIDR",
+      "margem": "-65.8",
+      "preco": 77.22,
+      "custo": 128
+    },
+    {
+      "ref": "KX1076",
+      "nome": "FITA ISOLANTE 20M KX3",
+      "margem": "-62.1",
+      "preco": 2.19,
+      "custo": 3.55
+    },
+    {
+      "ref": "KX1075",
+      "nome": "FITA ISOLANTE 10M KX3",
+      "margem": "-61.7",
+      "preco": 1.2,
+      "custo": 1.94
     },
     {
       "ref": "6175",
@@ -319,41 +354,6 @@
       "margem": "10.0",
       "preco": 150,
       "custo": 135
-    },
-    {
-      "ref": "I-SLIMH1",
-      "nome": "H1 SLIM RAY X 11.000 LUMENS",
-      "margem": "10.0",
-      "preco": 150,
-      "custo": 135
-    },
-    {
-      "ref": "134/F",
-      "nome": "ESPUMA P/ CHICOTE S/COLA",
-      "margem": "11.3",
-      "preco": 16.8,
-      "custo": 14.91
-    },
-    {
-      "ref": "I-SLIMH4",
-      "nome": "H4 SLIM RAY X 11.000 LUMENS",
-      "margem": "11.8",
-      "preco": 170,
-      "custo": 150
-    },
-    {
-      "ref": "2107-0",
-      "nome": "ULTRA LED CSP H27 70W 10.000 LUMENS BIVOLT - ASX1027",
-      "margem": "14.1",
-      "preco": 135,
-      "custo": 116.01
-    },
-    {
-      "ref": "IP09-0161/V1",
-      "nome": "TOYOTA HILUX 2012/15, SW4 COM UMA MOLDURA AUXILIAR PARA A/C DIGITAL, UMA MOLDURA AUXILIAR PARA A/C ANALOGICO E ADESIVO, BLACK PIANO",
-      "margem": "14.4",
-      "preco": 172.8,
-      "custo": 147.89
     }
   ]
 }

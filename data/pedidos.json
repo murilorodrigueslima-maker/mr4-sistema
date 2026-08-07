@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-07T07:42:16",
-  "total": 49,
+  "atualizado_em": "2026-08-07T09:40:03",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "389635889",
+      "numero": "17137",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "52.170.501 DAVI ANTONIO ALENCAR DE ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 118.08,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389629516",
+      "numero": "17136",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "REI AUTO PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 420,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389625175",
+      "numero": "17135",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 104.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389619944",
+      "numero": "17134",
+      "data": "2026-08-07",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 47.82,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389546768",
       "numero": "17133",

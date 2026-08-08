@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-08T07:20:58",
-  "total": 52,
+  "atualizado_em": "2026-08-08T09:26:31",
+  "total": 53,
   "pedidos": [
+    {
+      "id": "389924014",
+      "numero": "17156",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "CRISTIANO CESAR TAVARES CAVALCANTE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 331.1,
+      "itens": 11,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389795924",
       "numero": "17154",

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-08T11:22:43",
-  "total": 60,
+  "atualizado_em": "2026-08-08T13:20:40",
+  "total": 64,
   "pedidos": [
+    {
+      "id": "390010693",
+      "numero": "17167",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 71,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389999322",
+      "numero": "17166",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 151.82,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389991241",
+      "numero": "17165",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 390,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389989415",
+      "numero": "17164",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100.7,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389973978",
       "numero": "17163",

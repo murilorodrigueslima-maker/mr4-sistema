@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-08-08T11:22:49",
-  "hoje": 1967.3899999999999,
-  "semana": 41762.799999999996,
-  "mes": 46586.43,
+  "atualizado_em": "2026-08-08T13:20:45",
+  "hoje": 2680.91,
+  "semana": 42476.31999999999,
+  "mes": 47299.95,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -15,9 +15,9 @@
     },
     {
       "nome": "ADEMIR LOPES FURTADO",
-      "faturamento": 56653.96999999999,
-      "pedidos": 171,
-      "ticket_medio": 331.30976608187126
+      "faturamento": 57367.48999999999,
+      "pedidos": 175,
+      "ticket_medio": 327.81422857142854
     },
     {
       "nome": "Swyanne Kethlyn",
@@ -66,7 +66,7 @@
     {
       "data": "2026-08-08",
       "label": "sáb., 08/08",
-      "valor": 1967.3899999999999
+      "valor": 2680.91
     }
   ]
 }

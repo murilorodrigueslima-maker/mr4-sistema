@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-07T21:54:00",
+  "atualizado_em": "2026-08-08T00:16:36",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -189,21 +189,23 @@
       "vencimento": "2026-08-06",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 147.99,
       "vencimento": "2026-08-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CAGECE RUA CEARA 634",
       "valor": 334.92,
       "vencimento": "2026-08-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
@@ -293,11 +295,59 @@
       "valor": 3144.96,
       "vencimento": "2026-08-13",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MONITOR COMPUTADOR",
+      "valor": 200.7,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
+      "valor": 218.82,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SELOS DE GARANTIA MR4",
+      "valor": 38.33,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SISTEMA GESTÃOCLICK",
+      "valor": 224.28,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO ELO NAQUIM",
+      "valor": 2452.17,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 52.01,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NOTEBOOK ASUS PARA ESCRITORIO",
+      "valor": 298.95,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SELOS DE GARANTIA MR4",
+      "valor": 38.33,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55562.17,
+  "total_vencido": 56045.079999999994,
   "total_a_receber": 0,
   "total_a_pagar": 37909.56
 }

@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-08-08T09:26:31",
-  "total": 53,
+  "atualizado_em": "2026-08-08T11:22:43",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "389973978",
+      "numero": "17163",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 346.31,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389971710",
+      "numero": "17162",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 104.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389970253",
+      "numero": "17161",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 19.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389958071",
+      "numero": "17160",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389955865",
+      "numero": "17159",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389955478",
+      "numero": "17158",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 750,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389932928",
+      "numero": "17157",
+      "data": "2026-08-08",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 135,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "389924014",
       "numero": "17156",

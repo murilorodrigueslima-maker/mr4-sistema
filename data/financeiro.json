@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-08T21:57:11",
+  "atualizado_em": "2026-08-09T00:23:50",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -203,15 +203,16 @@
       "vencimento": "2026-08-07",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-08-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
@@ -343,11 +344,23 @@
       "valor": 38.33,
       "vencimento": "2026-08-15",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1134.83,
+      "vencimento": "2026-08-16",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1135.33,
+      "vencimento": "2026-08-16",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56045.079999999994,
+  "total_vencido": 57689.079999999994,
   "total_a_receber": 0,
   "total_a_pagar": 37909.56
 }

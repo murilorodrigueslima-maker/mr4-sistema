@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-10T07:57:42",
-  "total": 12,
+  "atualizado_em": "2026-08-10T09:44:22",
+  "total": 14,
   "pedidos": [
+    {
+      "id": "390284405",
+      "numero": "17169",
+      "data": "2026-08-10",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 54,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390275036",
+      "numero": "17168",
+      "data": "2026-08-10",
+      "hora": "",
+      "cliente": "JR PE AR CONDICIONADO AUTOMOTIVO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 122.46,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390010693",
       "numero": "17167",

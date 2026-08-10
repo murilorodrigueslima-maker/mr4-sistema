@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-10T15:42:11",
+  "atualizado_em": "2026-08-10T17:31:09",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -23,13 +23,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 4042.91,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 46,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 6629.64,
       "vencimento": "2026-06-25",
@@ -39,6 +32,13 @@
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 72.59,
+      "vencimento": "2026-06-25",
+      "dias_atraso": 46,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO INTER BLACK",
+      "valor": 3086.74,
       "vencimento": "2026-06-25",
       "dias_atraso": 46,
       "tipo": "Pagar"
@@ -399,7 +399,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59234.26,
+  "total_vencido": 58278.090000000004,
   "total_a_receber": 0,
-  "total_a_pagar": 37909.56
+  "total_a_pagar": 36953.39
 }

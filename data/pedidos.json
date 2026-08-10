@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-10T15:42:10",
-  "total": 38,
+  "atualizado_em": "2026-08-10T17:31:07",
+  "total": 40,
   "pedidos": [
+    {
+      "id": "390480906",
+      "numero": "17194",
+      "data": "2026-08-10",
+      "hora": "",
+      "cliente": "ABRAAO RASTREAMENTO E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 608,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390454869",
+      "numero": "17193",
+      "data": "2026-08-10",
+      "hora": "",
+      "cliente": "MIGUEL ANDREWS ALVES SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 697.95,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390428806",
       "numero": "17192",

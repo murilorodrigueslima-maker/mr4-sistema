@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-09T21:59:29",
+  "atualizado_em": "2026-08-10T00:43:11",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -210,15 +210,16 @@
       "vencimento": "2026-08-08",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
       "vencimento": "2026-08-09",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
@@ -356,11 +357,35 @@
       "valor": 1135.33,
       "vencimento": "2026-08-16",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO BRADESCO",
+      "valor": 3669.52,
+      "vencimento": "2026-08-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 3000,
+      "vencimento": "2026-08-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 1919.05,
+      "vencimento": "2026-08-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 709.24,
+      "vencimento": "2026-08-17",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57689.079999999994,
+  "total_vencido": 59353.02,
   "total_a_receber": 0,
   "total_a_pagar": 37909.56
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-10T09:44:23",
+  "atualizado_em": "2026-08-10T11:49:52",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -76,6 +76,20 @@
       "valor": 834,
       "vencimento": "2026-07-17",
       "dias_atraso": 24,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JR AUTOGIFIT",
+      "valor": 2176.57,
+      "vencimento": "2026-07-20",
+      "dias_atraso": 21,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JR AUTOGIFIT",
+      "valor": 76.18,
+      "vencimento": "2026-07-20",
+      "dias_atraso": 21,
       "tipo": "Pagar"
     },
     {
@@ -156,15 +170,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 6285.63,
+      "nome": "PAGAMENTO REF MÊS JULHO",
+      "valor": 550,
       "vencimento": "2026-08-05",
       "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO REF MÊS JULHO",
-      "valor": 2550,
+      "nome": "Salário Murilo",
+      "valor": 5914.12,
       "vencimento": "2026-08-05",
       "dias_atraso": 5,
       "tipo": "Pagar"
@@ -385,7 +399,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59353.02,
+  "total_vencido": 59234.26,
   "total_a_receber": 0,
   "total_a_pagar": 37909.56
 }

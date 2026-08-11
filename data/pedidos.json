@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-11T09:40:56",
-  "total": 31,
+  "atualizado_em": "2026-08-11T11:49:56",
+  "total": 37,
   "pedidos": [
+    {
+      "id": "390612328",
+      "numero": "17203",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 290,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390610762",
+      "numero": "17202",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390577203",
+      "numero": "17201",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "VH SARAIVA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 120.27,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390573363",
+      "numero": "17200",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "ANDERSON MOREIRA PEREIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390571423",
+      "numero": "17199",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 231.42,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390570465",
+      "numero": "17198",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "Dalyson De Queiroz Barros",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 498.73,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390563409",
       "numero": "17197",
@@ -35,6 +107,30 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 129.91,
       "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390325567",
+      "numero": "17176",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1335,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "389470901",
+      "numero": "17126",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 108,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },
@@ -255,18 +351,6 @@
       "cidade": ""
     },
     {
-      "id": "390325567",
-      "numero": "17176",
-      "data": "2026-08-10",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 780,
-      "itens": 4,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
       "id": "390322898",
       "numero": "17175",
       "data": "2026-08-10",
@@ -359,18 +443,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 122.46,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "389470901",
-      "numero": "17126",
-      "data": "2026-08-10",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 568,
-      "itens": 5,
       "status_gc": "",
       "cidade": ""
     }

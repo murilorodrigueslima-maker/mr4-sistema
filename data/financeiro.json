@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-11T09:40:57",
+  "atualizado_em": "2026-08-11T11:49:57",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -100,22 +100,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "INTERNET EMPRESA",
-      "valor": 127.75,
-      "vencimento": "2026-07-25",
-      "dias_atraso": 17,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
-      "vencimento": "2026-07-28",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PLANO CLARO CELULAR",
-      "valor": 193.29,
       "vencimento": "2026-07-28",
       "dias_atraso": 14,
       "tipo": "Pagar"
@@ -171,7 +157,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5914.12,
+      "valor": 5615.77,
       "vencimento": "2026-08-05",
       "dias_atraso": 6,
       "tipo": "Pagar"
@@ -402,7 +388,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58725.6,
+  "total_vencido": 58106.21,
   "total_a_receber": 0,
-  "total_a_pagar": 36974.63
+  "total_a_pagar": 36653.59
 }

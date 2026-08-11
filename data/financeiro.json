@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-10T21:58:34",
+  "atualizado_em": "2026-08-11T00:26:06",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -217,39 +217,44 @@
       "vencimento": "2026-08-09",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "MAQUINETA DE CARTÃO",
       "valor": 21.24,
       "vencimento": "2026-08-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-08-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-08-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1757.59,
       "vencimento": "2026-08-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ENEL RUA CEARA 634",
       "valor": 513.13,
       "vencimento": "2026-08-10",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 1404,
@@ -381,11 +386,23 @@
       "valor": 709.24,
       "vencimento": "2026-08-17",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 727.86,
+      "vencimento": "2026-08-18",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1351.39,
+      "vencimento": "2026-08-18",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52349.14000000001,
+  "total_vencido": 58725.6,
   "total_a_receber": 0,
-  "total_a_pagar": 36953.39
+  "total_a_pagar": 36974.63
 }

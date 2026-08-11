@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-11T13:46:35",
-  "total": 45,
+  "atualizado_em": "2026-08-11T15:46:39",
+  "total": 49,
   "pedidos": [
+    {
+      "id": "390707323",
+      "numero": "17216",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 256,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390672149",
+      "numero": "17215",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 22.59,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390669582",
+      "numero": "17214",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "GILSON DA SILVA ARAUJO 03973386358",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390663689",
+      "numero": "17213",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "JAENIO NUNES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 600,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390651688",
       "numero": "17212",

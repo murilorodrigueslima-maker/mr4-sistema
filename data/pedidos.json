@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-11T07:41:41",
-  "total": 28,
+  "atualizado_em": "2026-08-11T09:40:56",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "390563409",
+      "numero": "17197",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "50.122.797 JEFERSON SOARES DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 620.6,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390557763",
+      "numero": "17196",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 142.46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390555052",
+      "numero": "17195",
+      "data": "2026-08-11",
+      "hora": "",
+      "cliente": "RONALDO LEMOS TORQUATO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 129.91,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390480906",
       "numero": "17194",
@@ -57,8 +93,8 @@
       "hora": "",
       "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 498.36,
-      "itens": 10,
+      "valor": 648.36,
+      "itens": 11,
       "status_gc": "",
       "cidade": ""
     },

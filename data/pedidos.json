@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-12T11:49:33",
-  "total": 63,
+  "atualizado_em": "2026-08-12T13:45:47",
+  "total": 68,
   "pedidos": [
+    {
+      "id": "390917406",
+      "numero": "17236",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "SILVANO SOM",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 721.4,
+      "itens": 14,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390912353",
+      "numero": "17235",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390897851",
+      "numero": "17234",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "MATHEUS ALEXANDRE DA SILVA 03531251309",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 87.5,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390892053",
+      "numero": "17233",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 604.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390891364",
+      "numero": "17232",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 105,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390879853",
       "numero": "17231",

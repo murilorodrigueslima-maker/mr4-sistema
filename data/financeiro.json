@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-12T11:49:34",
+  "atualizado_em": "2026-08-12T13:45:48",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -139,13 +139,6 @@
       "valor": 1134.83,
       "vencimento": "2026-08-02",
       "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 5099.28,
-      "vencimento": "2026-08-05",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -401,7 +394,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 59510.21,
+  "total_vencido": 54410.93,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

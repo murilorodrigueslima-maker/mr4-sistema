@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-11T22:05:11",
+  "atualizado_em": "2026-08-12T00:55:11",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -238,15 +238,16 @@
       "vencimento": "2026-08-10",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "FABIANO PAES LEME GOULART",
       "valor": 1404,
       "vencimento": "2026-08-11",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 2039.03,
@@ -384,11 +385,23 @@
       "valor": 1351.39,
       "vencimento": "2026-08-18",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
+      "valor": 44.96,
+      "vencimento": "2026-08-19",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SUGURO GALPÃO",
+      "valor": 353.42,
+      "vencimento": "2026-08-19",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58106.21,
+  "total_vencido": 59510.21,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

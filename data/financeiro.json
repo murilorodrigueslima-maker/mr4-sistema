@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-12T13:45:48",
+  "atualizado_em": "2026-08-12T15:47:41",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -151,6 +151,13 @@
     {
       "nome": "Salário Murilo",
       "valor": 5615.77,
+      "vencimento": "2026-08-05",
+      "dias_atraso": 7,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PAGAMENTO SALARIO JULHO",
+      "valor": 1816.26,
       "vencimento": "2026-08-05",
       "dias_atraso": 7,
       "tipo": "Pagar"
@@ -332,6 +339,36 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "V.T+VR",
+      "valor": 564,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "BONUUS MES DE JULHO",
+      "valor": 96.97,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "V.T+VR",
+      "valor": 305.4,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "V.T+VR",
+      "valor": 305.4,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "BONUS MES DE JULHO",
+      "valor": 962.28,
+      "vencimento": "2026-08-15",
+      "tipo": "Pagar"
+    },
+    {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-08-16",
@@ -394,7 +431,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54410.93,
+  "total_vencido": 56227.19,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

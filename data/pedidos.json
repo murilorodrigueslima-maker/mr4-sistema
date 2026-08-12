@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-12T15:47:41",
-  "total": 73,
+  "atualizado_em": "2026-08-12T17:32:47",
+  "total": 76,
   "pedidos": [
+    {
+      "id": "390996498",
+      "numero": "17244",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390978269",
+      "numero": "17243",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 137,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390971428",
+      "numero": "17242",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 116,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390958290",
       "numero": "17241",

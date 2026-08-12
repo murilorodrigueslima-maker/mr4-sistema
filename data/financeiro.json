@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-12T15:47:41",
+  "atualizado_em": "2026-08-12T17:32:48",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -142,13 +142,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO REF MÊS JULHO",
-      "valor": 550,
-      "vencimento": "2026-08-05",
-      "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
       "valor": 5615.77,
       "vencimento": "2026-08-05",
@@ -248,18 +241,6 @@
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 2039.03,
-      "vencimento": "2026-08-12",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1846.74,
-      "vencimento": "2026-08-12",
-      "tipo": "Pagar"
-    },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
@@ -431,7 +412,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 56227.19,
+  "total_vencido": 55677.19,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

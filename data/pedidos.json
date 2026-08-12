@@ -1,7 +1,103 @@
 {
-  "atualizado_em": "2026-08-12T09:44:10",
-  "total": 55,
+  "atualizado_em": "2026-08-12T11:49:33",
+  "total": 63,
   "pedidos": [
+    {
+      "id": "390879853",
+      "numero": "17231",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "48.112.533 ITALO CARNEIRO ROCHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 368.6,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390863336",
+      "numero": "17230",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 72,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390860323",
+      "numero": "17229",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 37,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390857625",
+      "numero": "17228",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 131.82,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390848998",
+      "numero": "17227",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "53.215.493 THIAGO SALVADOR LOPES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 116.74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390847302",
+      "numero": "17226",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "AUTO ELETRICA PRADO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 68.44,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390845310",
+      "numero": "17225",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 72.3,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390836755",
+      "numero": "17224",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 519.86,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390828558",
       "numero": "17223",
@@ -39,6 +135,18 @@
       "cidade": ""
     },
     {
+      "id": "390714493",
+      "numero": "17217",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 733.92,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
       "id": "390730210",
       "numero": "17220",
       "data": "2026-08-11",
@@ -58,18 +166,6 @@
       "cliente": "J D DO NASCIMENTO SERVICOS AUTOMOTIVOS",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 200,
-      "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "390714493",
-      "numero": "17217",
-      "data": "2026-08-11",
-      "hora": "",
-      "cliente": "49.658.959 FRANCISCO ALESSANDRO FROTA VASCONCELOS",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 733.92,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

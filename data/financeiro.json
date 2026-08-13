@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-12T22:07:08",
+  "atualizado_em": "2026-08-13T01:00:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -407,6 +407,18 @@
       "nome": "SUGURO GALPÃO",
       "valor": 353.42,
       "vencimento": "2026-08-19",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
+      "valor": 5099.28,
+      "vencimento": "2026-08-20",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 630.74,
+      "vencimento": "2026-08-20",
       "tipo": "Pagar"
     }
   ],

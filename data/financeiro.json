@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-13T11:50:04",
+  "atualizado_em": "2026-08-13T13:44:47",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -315,18 +315,6 @@
     {
       "nome": "V.T+VR",
       "valor": 564,
-      "vencimento": "2026-08-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "BONUUS MES DE JULHO",
-      "valor": 96.97,
-      "vencimento": "2026-08-15",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "V.T+VR",
-      "valor": 305.4,
       "vencimento": "2026-08-15",
       "tipo": "Pagar"
     },

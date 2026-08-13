@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-13T07:52:56",
+  "atualizado_em": "2026-08-13T09:45:19",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -132,13 +132,6 @@
       "valor": 3188.67,
       "vencimento": "2026-07-30",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1134.83,
-      "vencimento": "2026-08-02",
-      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
@@ -424,7 +417,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55677.19,
+  "total_vencido": 54542.36,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

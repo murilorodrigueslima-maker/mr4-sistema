@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-13T07:52:55",
-  "total": 50,
+  "atualizado_em": "2026-08-13T09:45:18",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "391085976",
+      "numero": "17248",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 260,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391084088",
+      "numero": "17247",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 78.93,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391073981",
+      "numero": "17246",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "THAYNARA DA COSTA RODRIGUES LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 652.84,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390892053",
+      "numero": "17233",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 604.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391073965",
+      "numero": "17245",
+      "data": "2026-08-12",
+      "hora": "",
+      "cliente": "ANTONIO KAIRO JUSTINO DA SILVA 01390006310",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 35,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390996498",
       "numero": "17244",
@@ -131,18 +191,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 87.5,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "390892053",
-      "numero": "17233",
-      "data": "2026-08-12",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 604.8,
-      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

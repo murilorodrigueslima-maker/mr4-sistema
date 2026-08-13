@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-13T15:48:13",
-  "total": 73,
+  "atualizado_em": "2026-08-13T17:30:53",
+  "total": 78,
   "pedidos": [
+    {
+      "id": "391253159",
+      "numero": "17273",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 144,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391249018",
+      "numero": "17272",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391248285",
+      "numero": "17271",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 600,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391237542",
+      "numero": "17270",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391236844",
+      "numero": "17269",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "PRICYLLA DE OLIVEIRA GARCIA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 173,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391205508",
       "numero": "17268",
@@ -33,7 +93,7 @@
       "hora": "",
       "cliente": "AUTO SOM COMERCIO E MANUTENCAO DE SOM PARA AUTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 97.98,
+      "valor": 90,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

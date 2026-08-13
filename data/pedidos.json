@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-13T13:44:46",
-  "total": 67,
+  "atualizado_em": "2026-08-13T15:48:13",
+  "total": 73,
   "pedidos": [
+    {
+      "id": "391205508",
+      "numero": "17268",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 285,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391204116",
+      "numero": "17267",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391201153",
+      "numero": "17266",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "AUTO SOM COMERCIO E MANUTENCAO DE SOM PARA AUTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 97.98,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391190032",
+      "numero": "17265",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "DEUSIMAR RAMOS DE FARIAS FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 47.56,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391182649",
+      "numero": "17264",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "ANA RUTH MOURA PINHEIRO 61418019356",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 768.69,
+      "itens": 18,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391177305",
+      "numero": "17263",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 46.63,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391173446",
       "numero": "17262",

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-14T07:48:59",
-  "total": 53,
+  "atualizado_em": "2026-08-14T09:40:57",
+  "total": 56,
   "pedidos": [
+    {
+      "id": "391334062",
+      "numero": "17276",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1544.44,
+      "itens": 17,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391323108",
+      "numero": "17275",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "JADERSON MARQUES MAGALHAES 00962514330",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391073981",
+      "numero": "17246",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "THAYNARA DA COSTA RODRIGUES LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 652.84,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391321852",
+      "numero": "17274",
+      "data": "2026-08-13",
+      "hora": "",
+      "cliente": "ANTONIO MARCOS REIS LOPES 02266581392",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1696.8,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391253159",
       "numero": "17273",
@@ -311,18 +359,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 78.93,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "391073981",
-      "numero": "17246",
-      "data": "2026-08-13",
-      "hora": "",
-      "cliente": "THAYNARA DA COSTA RODRIGUES LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 652.84,
-      "itens": 6,
       "status_gc": "",
       "cidade": ""
     },

@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-14T09:40:57",
-  "total": 56,
+  "atualizado_em": "2026-08-14T11:43:39",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "391384150",
+      "numero": "17278",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391368243",
+      "numero": "17277",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "M & I COMERCIO VAREJISTA DE PECAS E SERVICOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 180,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391334062",
       "numero": "17276",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-14T09:40:57",
+  "atualizado_em": "2026-08-14T11:43:39",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -107,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "ASX COMERCIO LTDA - EPP",
-      "valor": 2930.5,
-      "vencimento": "2026-07-29",
-      "dias_atraso": 16,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-07-30",
@@ -150,23 +143,9 @@
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1227.5,
-      "vencimento": "2026-08-06",
-      "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624,
       "vencimento": "2026-08-06",
       "dias_atraso": 8,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 147.99,
-      "vencimento": "2026-08-07",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -470,7 +449,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63294.87999999999,
+  "total_vencido": 58988.88999999999,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

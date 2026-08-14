@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-14T15:40:13",
+  "atualizado_em": "2026-08-14T17:21:27",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -136,7 +136,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 5600.77,
+      "valor": 4754.97,
       "vencimento": "2026-08-05",
       "dias_atraso": 9,
       "tipo": "Pagar"
@@ -449,7 +449,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58988.88999999999,
+  "total_vencido": 58143.08999999999,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

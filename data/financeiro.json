@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-13T22:06:04",
+  "atualizado_em": "2026-08-14T00:55:56",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -231,39 +231,44 @@
       "vencimento": "2026-08-11",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.5,
       "vencimento": "2026-08-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "LOOK OUT INDUSTRIA E COMERCIO DE EQUIPAMENTOS ELETRONICOS LT",
       "valor": 1010.49,
       "vencimento": "2026-08-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1668.73,
       "vencimento": "2026-08-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1932.84,
       "vencimento": "2026-08-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 3144.96,
       "vencimento": "2026-08-13",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "MONITOR COMPUTADOR",
       "valor": 200.7,
@@ -401,11 +406,71 @@
       "valor": 630.74,
       "vencimento": "2026-08-20",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PRATELEIRAS 6 UN",
+      "valor": 423.4,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "CONSULTORIA DE IMPORTAÇÃO",
+      "valor": 171.3,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MESA ESCRITORIO MURILO",
+      "valor": 227.07,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 28.95,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "2 TV PARA EMPRESA",
+      "valor": 419.8,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 3593.33,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "AQUISIÇÃO DE FRIGOBAR, CERVEJEIRA E ITENS DE APOIO PARA MELHORIA DA ESTRUTURA E ATENDIMENTO INTERNO DA EMPRESA",
+      "valor": 272.11,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PRATELEIRAS 2 UN",
+      "valor": 199.98,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MESA ESCRITORIO CAMISLA",
+      "valor": 360.43,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 391.59,
+      "vencimento": "2026-08-21",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54527.35999999999,
+  "total_vencido": 63294.87999999999,
   "total_a_receber": 0,
   "total_a_pagar": 36653.59
 }

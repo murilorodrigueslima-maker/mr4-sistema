@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-14T11:43:39",
-  "total": 58,
+  "atualizado_em": "2026-08-14T13:40:06",
+  "total": 61,
   "pedidos": [
+    {
+      "id": "391400398",
+      "numero": "17281",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "ALEXSANDRO AUTO PECAS ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1674.6,
+      "itens": 15,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391392853",
+      "numero": "17280",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "DELIO FEITOSA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1098.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391392694",
+      "numero": "17279",
+      "data": "2026-08-14",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 56.27,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391384150",
       "numero": "17278",

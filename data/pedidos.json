@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-15T11:12:53",
-  "total": 61,
+  "atualizado_em": "2026-08-15T13:12:29",
+  "total": 65,
   "pedidos": [
+    {
+      "id": "391664240",
+      "numero": "17309",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "MARDSON L. F. DA SILVA LTDA",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 9.26,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391663227",
+      "numero": "17308",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 560,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391656645",
+      "numero": "17307",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "Thyago da Silva Vaz",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 143.07,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391645173",
+      "numero": "17306",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "53.360.621 ANTONIO CASSIO SOUSA NASCIMENTO",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 142.46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391635099",
       "numero": "17305",

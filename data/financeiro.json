@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-15T09:18:07",
+  "atualizado_em": "2026-08-15T11:12:54",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -128,15 +128,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO JULHO",
-      "valor": 1816.26,
+      "nome": "Salário Murilo",
+      "valor": 4754.97,
       "vencimento": "2026-08-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 4754.97,
+      "nome": "PAGAMENTO SALARIO JULHO",
+      "valor": 1476.26,
       "vencimento": "2026-08-05",
       "dias_atraso": 10,
       "tipo": "Pagar"
@@ -333,12 +333,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 3000,
-      "vencimento": "2026-08-17",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 1919.05,
       "vencimento": "2026-08-17",
@@ -347,6 +341,12 @@
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 709.24,
+      "vencimento": "2026-08-17",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO JARBAS",
+      "valor": 684,
       "vencimento": "2026-08-17",
       "tipo": "Pagar"
     },
@@ -449,7 +449,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58143.08999999999,
+  "total_vencido": 57803.09,
   "total_a_receber": 0,
-  "total_a_pagar": 36653.59
+  "total_a_pagar": 34337.59
 }

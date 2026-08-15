@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-15T09:18:06",
-  "total": 56,
+  "atualizado_em": "2026-08-15T11:12:53",
+  "total": 61,
   "pedidos": [
+    {
+      "id": "391635099",
+      "numero": "17305",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 60.23,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391623030",
+      "numero": "17304",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391622325",
+      "numero": "17303",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "CLAUSTON CUNHA CASTRO",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 2.5,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391606830",
+      "numero": "17302",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "CLAUSTON CUNHA CASTRO",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 90.37,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391603865",
+      "numero": "17301",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 99.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391595859",
       "numero": "17300",
@@ -9,7 +69,7 @@
       "hora": "",
       "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
       "vendedor": "MURILO RODRIGUES LIMA",
-      "valor": 120.56,
+      "valor": 114,
       "itens": 1,
       "status_gc": "",
       "cidade": ""

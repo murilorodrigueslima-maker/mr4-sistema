@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-15T07:12:33",
-  "total": 52,
+  "atualizado_em": "2026-08-15T09:18:06",
+  "total": 56,
   "pedidos": [
+    {
+      "id": "391595859",
+      "numero": "17300",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 120.56,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391595267",
+      "numero": "17299",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "56.968.809 RAIMUNDA NONATA RODRIGUES DOS SANTOS NUNES",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 128,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391594611",
+      "numero": "17298",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "FRANÇA SOM",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 214.39,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391588672",
+      "numero": "17297",
+      "data": "2026-08-15",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 592.08,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "390643665",
       "numero": "17207",

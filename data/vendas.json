@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-08-15T07:12:38",
-  "hoje": 1046.9,
-  "semana": 47732.46,
-  "mes": 95568.95999999996,
+  "atualizado_em": "2026-08-15T09:18:13",
+  "hoje": 2101.9300000000003,
+  "semana": 48787.49,
+  "mes": 96623.98999999996,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -26,16 +26,16 @@
       "ticket_medio": 224.42833333333337
     },
     {
+      "nome": "MURILO RODRIGUES LIMA",
+      "faturamento": 1315.03,
+      "pedidos": 5,
+      "ticket_medio": 263.006
+    },
+    {
       "nome": "Camila Silveira Silva",
       "faturamento": 440,
       "pedidos": 1,
       "ticket_medio": 440
-    },
-    {
-      "nome": "MURILO RODRIGUES LIMA",
-      "faturamento": 260,
-      "pedidos": 1,
-      "ticket_medio": 260
     }
   ],
   "ultimos_7_dias": [
@@ -72,7 +72,7 @@
     {
       "data": "2026-08-15",
       "label": "sáb., 15/08",
-      "valor": 1046.9
+      "valor": 2101.9300000000003
     }
   ]
 }

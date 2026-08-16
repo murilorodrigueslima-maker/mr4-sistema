@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-15T23:52:01",
+  "atualizado_em": "2026-08-16T01:25:44",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -245,75 +245,86 @@
       "vencimento": "2026-08-13",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "MONITOR COMPUTADOR",
       "valor": 200.7,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
       "valor": 218.82,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SELOS DE GARANTIA MR4",
       "valor": 38.33,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SISTEMA GESTÃOCLICK",
       "valor": 224.28,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO ELO NAQUIM",
       "valor": 2452.17,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MERCADO LIVRE",
       "valor": 52.01,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NOTEBOOK ASUS PARA ESCRITORIO",
       "valor": 298.95,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "SELOS DE GARANTIA MR4",
       "valor": 38.33,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "V.T+VR",
       "valor": 564,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "V.T+VR",
       "valor": 305.4,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "BONUS MES DE JULHO",
       "valor": 962.28,
       "vencimento": "2026-08-15",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
@@ -445,11 +456,17 @@
       "valor": 391.59,
       "vencimento": "2026-08-21",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
+      "valor": 1875.35,
+      "vencimento": "2026-08-23",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57803.09,
+  "total_vencido": 63158.35999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 34337.59
+  "total_a_pagar": 37570.13999999999
 }

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-17T11:17:57",
-  "total": 21,
+  "atualizado_em": "2026-08-17T13:15:15",
+  "total": 26,
   "pedidos": [
+    {
+      "id": "391963022",
+      "numero": "17320",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 132,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391959980",
+      "numero": "17319",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 133.24,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391943925",
+      "numero": "17318",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 170,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391940035",
+      "numero": "17317",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "cliente",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 85,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391925691",
       "numero": "17316",
@@ -95,6 +143,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 99.99,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390707323",
+      "numero": "17216",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1000,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },

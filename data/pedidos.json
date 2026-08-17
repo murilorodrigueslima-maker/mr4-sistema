@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-17T09:22:29",
-  "total": 15,
+  "atualizado_em": "2026-08-17T11:17:57",
+  "total": 21,
   "pedidos": [
+    {
+      "id": "391925691",
+      "numero": "17316",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "52.544.425 SANDRO MARCELO BARBOSA DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 161.96,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391898006",
+      "numero": "17315",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "JULIANA MONTEIRO LIMA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 229,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391890182",
+      "numero": "17314",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "LUCILANE SANTIAGO ARAUJO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391882401",
+      "numero": "17313",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 268.04,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391881957",
+      "numero": "17312",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "JOSE ANESIO DE OLIVEIRA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200.99,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391881668",
+      "numero": "17311",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 609.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391877158",
       "numero": "17310",
@@ -11,6 +83,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 572.9,
       "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391603865",
+      "numero": "17301",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 99.99,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },
@@ -107,18 +191,6 @@
       "vendedor": "MURILO RODRIGUES LIMA",
       "valor": 90.37,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "391603865",
-      "numero": "17301",
-      "data": "2026-08-15",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 99.99,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

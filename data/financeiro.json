@@ -1,20 +1,6 @@
 {
-  "atualizado_em": "2026-08-16T23:52:06",
+  "atualizado_em": "2026-08-17T01:31:33",
   "contas_vencidas": [
-    {
-      "nome": "EMPRESTIMO BRADESCO",
-      "valor": 3669.52,
-      "vencimento": "2026-06-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 584,
-      "vencimento": "2026-06-17",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
@@ -322,21 +308,23 @@
       "vencimento": "2026-08-15",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-08-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-08-16",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -462,11 +450,23 @@
       "valor": 1875.35,
       "vencimento": "2026-08-23",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1663.94,
+      "vencimento": "2026-08-24",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1757.59,
+      "vencimento": "2026-08-24",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 63158.35999999999,
+  "total_vencido": 61174.999999999985,
   "total_a_receber": 0,
-  "total_a_pagar": 37570.13999999999
+  "total_a_pagar": 33316.619999999995
 }

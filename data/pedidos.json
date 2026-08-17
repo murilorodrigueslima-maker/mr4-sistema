@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-17T13:15:15",
-  "total": 26,
+  "atualizado_em": "2026-08-17T15:23:04",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "392014750",
+      "numero": "17325",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 375,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392007101",
+      "numero": "17324",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "61.212.167 ADILSON JUSTINO DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1588.01,
+      "itens": 31,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392006349",
+      "numero": "17323",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "FRANCISCO FONTENELE DE CASTRO NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 310,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392003577",
+      "numero": "17322",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "JOSIAS DE SOUSA SANTOS 46235299320",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 49.8,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391993281",
+      "numero": "17321",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "AUTO SOM COMERCIO E MANUTENCAO DE SOM PARA AUTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 68.85,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391963022",
       "numero": "17320",
@@ -153,8 +213,8 @@
       "hora": "",
       "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1000,
-      "itens": 4,
+      "valor": 1072,
+      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

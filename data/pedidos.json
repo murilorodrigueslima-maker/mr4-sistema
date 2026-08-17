@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-17T07:21:48",
-  "total": 14,
+  "atualizado_em": "2026-08-17T09:22:29",
+  "total": 15,
   "pedidos": [
+    {
+      "id": "391877158",
+      "numero": "17310",
+      "data": "2026-08-17",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 572.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "391664240",
       "numero": "17309",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-18T13:19:09",
+  "atualizado_em": "2026-08-18T15:22:13",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -100,15 +100,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO JULHO",
-      "valor": 1476.26,
+      "nome": "Salário Murilo",
+      "valor": 4554.97,
       "vencimento": "2026-08-05",
       "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 4554.97,
+      "nome": "PAGAMENTO SALARIO JULHO",
+      "valor": 1026.26,
       "vencimento": "2026-08-05",
       "dias_atraso": 13,
       "tipo": "Pagar"
@@ -390,7 +390,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58900.37999999999,
+  "total_vencido": 58450.37999999999,
   "total_a_receber": 0,
   "total_a_pagar": 36493.32
 }

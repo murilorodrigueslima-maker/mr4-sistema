@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-18T09:24:11",
-  "total": 29,
+  "atualizado_em": "2026-08-18T11:22:35",
+  "total": 35,
   "pedidos": [
+    {
+      "id": "392181275",
+      "numero": "17341",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 581.99,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392181108",
+      "numero": "17340",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "THYARLIANE MOURA DA SILVA 60406112355",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 116.74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392178751",
+      "numero": "17339",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "56.968.809 RAIMUNDA NONATA RODRIGUES DOS SANTOS NUNES",
+      "vendedor": "MURILO RODRIGUES LIMA",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392178274",
+      "numero": "17338",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "RAUL ALMEIDA TEOFILO 02180916302",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1156.95,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392168369",
+      "numero": "17337",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "52.961.453 MARIO GEAN LIMA PEREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 220.31,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392162668",
+      "numero": "17336",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 140,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392142029",
       "numero": "17335",
@@ -9,8 +81,8 @@
       "hora": "",
       "cliente": "JOAO JORDAN TELES MOREIRA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1076,
-      "itens": 1,
+      "valor": 1631,
+      "itens": 2,
       "status_gc": "",
       "cidade": ""
     },

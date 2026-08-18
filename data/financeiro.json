@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-18T11:22:36",
+  "atualizado_em": "2026-08-18T13:19:09",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -255,18 +255,6 @@
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 727.86,
-      "vencimento": "2026-08-18",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1351.39,
-      "vencimento": "2026-08-18",
-      "tipo": "Pagar"
-    },
     {
       "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
       "valor": 44.96,

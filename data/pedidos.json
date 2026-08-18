@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-18T11:22:35",
-  "total": 35,
+  "atualizado_em": "2026-08-18T13:19:08",
+  "total": 39,
   "pedidos": [
+    {
+      "id": "392228606",
+      "numero": "17345",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "HELENO JOSE GOMES DA SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 128.25,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392222104",
+      "numero": "17344",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392206013",
+      "numero": "17343",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 150,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392205585",
+      "numero": "17342",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "53.215.493 THIAGO SALVADOR LOPES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 790.74,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392181275",
       "numero": "17341",
@@ -45,8 +93,8 @@
       "hora": "",
       "cliente": "RAUL ALMEIDA TEOFILO 02180916302",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 1156.95,
-      "itens": 7,
+      "valor": 1432.95,
+      "itens": 8,
       "status_gc": "",
       "cidade": ""
     },

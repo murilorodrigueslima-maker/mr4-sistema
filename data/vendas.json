@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-08-17T23:47:12",
-  "hoje": 7649.339999999999,
+  "atualizado_em": "2026-08-18T01:25:00",
+  "hoje": 0,
   "semana": 7649.339999999999,
   "mes": 104933.34999999999,
   "meta_mes": 200000,
@@ -9,9 +9,9 @@
   "vendedores": [
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 119681.04999999999,
-      "pedidos": 312,
-      "ticket_medio": 383.5931089743589
+      "faturamento": 117465.26999999999,
+      "pedidos": 303,
+      "ticket_medio": 387.67415841584153
     },
     {
       "nome": "ADEMIR LOPES FURTADO",
@@ -20,16 +20,16 @@
       "ticket_medio": 346.2645283018867
     },
     {
-      "nome": "Swyanne Kethlyn",
-      "faturamento": 2569.1400000000003,
-      "pedidos": 10,
-      "ticket_medio": 256.91400000000004
-    },
-    {
       "nome": "MURILO RODRIGUES LIMA",
       "faturamento": 1904.0499999999997,
       "pedidos": 13,
       "ticket_medio": 146.4653846153846
+    },
+    {
+      "nome": "Swyanne Kethlyn",
+      "faturamento": 996.01,
+      "pedidos": 8,
+      "ticket_medio": 124.50125
     },
     {
       "nome": "Camila Silveira Silva",
@@ -39,11 +39,6 @@
     }
   ],
   "ultimos_7_dias": [
-    {
-      "data": "2026-08-11",
-      "label": "ter., 11/08",
-      "valor": 6452.69
-    },
     {
       "data": "2026-08-12",
       "label": "qua., 12/08",
@@ -73,6 +68,11 @@
       "data": "2026-08-17",
       "label": "seg., 17/08",
       "valor": 7649.339999999999
+    },
+    {
+      "data": "2026-08-18",
+      "label": "ter., 18/08",
+      "valor": 0
     }
   ]
 }

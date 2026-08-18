@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-18T07:17:43",
-  "total": 26,
+  "atualizado_em": "2026-08-18T09:24:11",
+  "total": 29,
   "pedidos": [
+    {
+      "id": "392142029",
+      "numero": "17335",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1076,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392138707",
+      "numero": "17334",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "CLIENTE FINAL",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 212.24,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "391522616",
+      "numero": "17294",
+      "data": "2026-08-18",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 472,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392055779",
       "numero": "17333",

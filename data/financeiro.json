@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-18T17:12:16",
+  "atualizado_em": "2026-08-18T19:12:08",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -107,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PAGAMENTO SALARIO JULHO",
-      "valor": 1026.26,
-      "vencimento": "2026-08-05",
-      "dias_atraso": 13,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624,
       "vencimento": "2026-08-06",
@@ -192,21 +185,7 @@
     },
     {
       "nome": "V.T+VR",
-      "valor": 564,
-      "vencimento": "2026-08-15",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "V.T+VR",
       "valor": 305.4,
-      "vencimento": "2026-08-15",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "BONUS MES DE JULHO",
-      "valor": 962.28,
       "vencimento": "2026-08-15",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -390,7 +369,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 58450.37999999999,
+  "total_vencido": 55897.84,
   "total_a_receber": 0,
   "total_a_pagar": 36493.32
 }

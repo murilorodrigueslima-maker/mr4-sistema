@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-19T09:24:10",
-  "total": 54,
+  "atualizado_em": "2026-08-19T11:22:51",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "392440467",
+      "numero": "17363",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "50.967.131 GUSTAVO MELO PAULA PESSOA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 850,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392440099",
+      "numero": "17362",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "Thyago da Silva Vaz",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 139.77,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392412415",
+      "numero": "17361",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "21.563.921 JOSE WINDSON PEIXOTO DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 453,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392400212",
       "numero": "17360",
@@ -33,8 +69,8 @@
       "hora": "",
       "cliente": "NATANIEL RIBEIRO DOS REIS",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 2357.92,
-      "itens": 24,
+      "valor": 2357.11,
+      "itens": 23,
       "status_gc": "",
       "cidade": ""
     },
@@ -45,8 +81,8 @@
       "hora": "",
       "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1072,
-      "itens": 5,
+      "valor": 1494,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

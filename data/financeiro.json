@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-19T09:24:11",
+  "atualizado_em": "2026-08-19T11:22:52",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -101,7 +101,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 4554.97,
+      "valor": 4136.97,
       "vencimento": "2026-08-05",
       "dias_atraso": 14,
       "tipo": "Pagar"
@@ -381,7 +381,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55897.84,
+  "total_vencido": 55479.84,
   "total_a_receber": 0,
   "total_a_pagar": 36493.32
 }

@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-19T13:19:13",
-  "total": 61,
+  "atualizado_em": "2026-08-19T15:19:01",
+  "total": 65,
   "pedidos": [
+    {
+      "id": "392500505",
+      "numero": "17371",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "SINEY FREIRE SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 414.77,
+      "itens": 14,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392494014",
+      "numero": "17370",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392490910",
+      "numero": "17369",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392490160",
+      "numero": "17368",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 640,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392479995",
       "numero": "17367",
@@ -119,6 +167,18 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 2357.11,
       "itens": 23,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392181275",
+      "numero": "17341",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 581.99,
+      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },
@@ -323,18 +383,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 790.74,
       "itens": 9,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "392181275",
-      "numero": "17341",
-      "data": "2026-08-18",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 581.99,
-      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },

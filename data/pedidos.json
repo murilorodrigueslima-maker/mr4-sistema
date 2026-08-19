@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-19T07:18:33",
-  "total": 51,
+  "atualizado_em": "2026-08-19T09:24:10",
+  "total": 54,
   "pedidos": [
+    {
+      "id": "392400212",
+      "numero": "17360",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "RONALDO LEMOS TORQUATO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 146,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392397805",
+      "numero": "17359",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "DAVID ANDERSON BARROSO CORDEIRO 01156737338",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 298.34,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392391573",
+      "numero": "17358",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "NATANIEL RIBEIRO DOS REIS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2357.92,
+      "itens": 24,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390707323",
+      "numero": "17216",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1072,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392313204",
       "numero": "17357",
@@ -599,18 +647,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 99.99,
       "itens": 1,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "390707323",
-      "numero": "17216",
-      "data": "2026-08-17",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 1072,
-      "itens": 5,
       "status_gc": "",
       "cidade": ""
     }

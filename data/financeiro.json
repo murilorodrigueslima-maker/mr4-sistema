@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-19T15:19:02",
+  "atualizado_em": "2026-08-19T17:15:38",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -17,7 +17,7 @@
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 3086.74,
+      "valor": 2243.64,
       "vencimento": "2026-06-25",
       "dias_atraso": 55,
       "tipo": "Pagar"
@@ -55,13 +55,6 @@
       "valor": 834,
       "vencimento": "2026-07-17",
       "dias_atraso": 33,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JR AUTOGIFIT",
-      "valor": 498.67,
-      "vencimento": "2026-07-20",
-      "dias_atraso": 30,
       "tipo": "Pagar"
     },
     {
@@ -235,12 +228,6 @@
   ],
   "contas_vencendo": [
     {
-      "nome": "ALUGUEL MAQUINETAS ACORDO DEVOLUÇÃO",
-      "valor": 44.96,
-      "vencimento": "2026-08-19",
-      "tipo": "Pagar"
-    },
-    {
       "nome": "SUGURO GALPÃO",
       "valor": 353.42,
       "vencimento": "2026-08-19",
@@ -381,7 +368,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 55479.84,
+  "total_vencido": 54138.06999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 36493.32
+  "total_a_pagar": 35605.26
 }

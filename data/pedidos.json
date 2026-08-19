@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-19T15:19:01",
-  "total": 65,
+  "atualizado_em": "2026-08-19T17:15:38",
+  "total": 70,
   "pedidos": [
+    {
+      "id": "392574460",
+      "numero": "17376",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "LEONARDO DE OLIVEIRA SALES 00146410548",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 141.44,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392571190",
+      "numero": "17375",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 275,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392562503",
+      "numero": "17374",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 485.38,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392561763",
+      "numero": "17373",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392546441",
+      "numero": "17372",
+      "data": "2026-08-19",
+      "hora": "",
+      "cliente": "MARIA LAURA SOARES DE OLIVEIRA MONTEIRO 41398505315",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392500505",
       "numero": "17371",

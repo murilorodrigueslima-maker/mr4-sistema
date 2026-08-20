@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-20T07:19:43",
-  "total": 45,
+  "atualizado_em": "2026-08-20T09:26:54",
+  "total": 46,
   "pedidos": [
+    {
+      "id": "392664236",
+      "numero": "17377",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 319.48,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392574460",
       "numero": "17376",

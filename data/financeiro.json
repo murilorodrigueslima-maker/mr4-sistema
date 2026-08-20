@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-20T13:22:05",
+  "atualizado_em": "2026-08-20T15:23:20",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -86,15 +86,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "LED STORE(ALIEXPRESS)",
-      "valor": 3188.67,
-      "vencimento": "2026-07-30",
-      "dias_atraso": 21,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
-      "valor": 4136.97,
+      "valor": 3336.97,
       "vencimento": "2026-08-05",
       "dias_atraso": 15,
       "tipo": "Pagar"
@@ -146,13 +139,6 @@
       "valor": 513.13,
       "vencimento": "2026-08-10",
       "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "FABIANO PAES LEME GOULART",
-      "valor": 1404,
-      "vencimento": "2026-08-11",
-      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
@@ -228,13 +214,6 @@
     {
       "nome": "SUGURO GALPÃO",
       "valor": 353.42,
-      "vencimento": "2026-08-19",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 215.86,
       "vencimento": "2026-08-19",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -400,7 +379,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54707.34999999999,
+  "total_vencido": 49098.82,
   "total_a_receber": 0,
   "total_a_pagar": 36106.799999999996
 }

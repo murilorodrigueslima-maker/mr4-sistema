@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-20T11:25:22",
+  "atualizado_em": "2026-08-20T13:22:05",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -231,6 +231,13 @@
       "vencimento": "2026-08-19",
       "dias_atraso": 1,
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 215.86,
+      "vencimento": "2026-08-19",
+      "dias_atraso": 1,
+      "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
@@ -393,7 +400,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54491.48999999999,
+  "total_vencido": 54707.34999999999,
   "total_a_receber": 0,
   "total_a_pagar": 36106.799999999996
 }

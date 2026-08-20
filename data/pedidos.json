@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-20T11:25:21",
-  "total": 52,
+  "atualizado_em": "2026-08-20T13:22:04",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "392754046",
+      "numero": "17389",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "51.696.947 THIAGO DOS SANTOS CARVALHO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 48.9,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392743605",
+      "numero": "17388",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 354.98,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392730959",
+      "numero": "17387",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "NOVO FRIO REFRIGERACAO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2115,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392729807",
+      "numero": "17386",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 810.48,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392718818",
+      "numero": "17385",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "PAULO HENRIQUE BEZERRA BARROSO 06854388309",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 414.44,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392716300",
+      "numero": "17384",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "LUCAS MONTEIRO SALES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 88.38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392701001",
       "numero": "17383",

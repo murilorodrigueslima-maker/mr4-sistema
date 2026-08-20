@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-20T09:26:54",
-  "total": 46,
+  "atualizado_em": "2026-08-20T11:25:21",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "392701001",
+      "numero": "17383",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 667.46,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392694483",
+      "numero": "17382",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "GERSON BANDEIRA DE OLIVEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 192.76,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392693139",
+      "numero": "17381",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "GUSTAVO PAIVA DIAS 07533088352",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 237.59,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392686558",
+      "numero": "17380",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 579.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392676308",
+      "numero": "17379",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "61.165.348 VALDEMIR DO NASCIMENTO PINHEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 134,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392675507",
+      "numero": "17378",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "MK DISTRIBUICAO E COMERCIO DE PECAS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 192,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392664236",
       "numero": "17377",
@@ -11,6 +83,18 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 319.48,
       "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390707323",
+      "numero": "17216",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1494,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },
@@ -251,18 +335,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 581.99,
       "itens": 5,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "390707323",
-      "numero": "17216",
-      "data": "2026-08-19",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 1494,
-      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

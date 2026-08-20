@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-20T15:23:19",
-  "total": 67,
+  "atualizado_em": "2026-08-20T17:17:19",
+  "total": 71,
   "pedidos": [
+    {
+      "id": "392843557",
+      "numero": "17402",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "JOSIAS DE SOUSA SANTOS 46235299320",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 230,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392837554",
+      "numero": "17401",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 580,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392803453",
+      "numero": "17400",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 156.02,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392800372",
+      "numero": "17399",
+      "data": "2026-08-20",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 3650,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392798644",
       "numero": "17398",

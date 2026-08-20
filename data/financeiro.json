@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-20T15:23:20",
+  "atualizado_em": "2026-08-20T17:17:19",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -191,13 +191,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
-      "valor": 1919.05,
-      "vencimento": "2026-08-17",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 709.24,
       "vencimento": "2026-08-17",
@@ -379,7 +372,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 49098.82,
+  "total_vencido": 47179.77,
   "total_a_receber": 0,
   "total_a_pagar": 36106.799999999996
 }

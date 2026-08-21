@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-21T15:22:19",
+  "atualizado_em": "2026-08-21T17:14:25",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -90,13 +90,6 @@
       "valor": 2833.5,
       "vencimento": "2026-08-05",
       "dias_atraso": 16,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CAGECE RUA CEARA 634",
-      "valor": 334.92,
-      "vencimento": "2026-08-07",
-      "dias_atraso": 14,
       "tipo": "Pagar"
     },
     {
@@ -389,7 +382,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47469.59,
+  "total_vencido": 47134.67,
   "total_a_receber": 0,
-  "total_a_pagar": 36106.799999999996
+  "total_a_pagar": 35771.88
 }

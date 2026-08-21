@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-21T09:26:33",
+  "atualizado_em": "2026-08-21T11:24:26",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -87,16 +87,9 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 3336.97,
+      "valor": 2833.5,
       "vencimento": "2026-08-05",
       "dias_atraso": 16,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 1624,
-      "vencimento": "2026-08-06",
-      "dias_atraso": 15,
       "tipo": "Pagar"
     },
     {
@@ -104,13 +97,6 @@
       "valor": 334.92,
       "vencimento": "2026-08-07",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1644,
-      "vencimento": "2026-08-08",
-      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
@@ -139,13 +125,6 @@
       "valor": 513.13,
       "vencimento": "2026-08-10",
       "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
-      "valor": 1668.73,
-      "vencimento": "2026-08-13",
-      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
@@ -410,7 +389,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 52909.78999999999,
+  "total_vencido": 47469.59,
   "total_a_receber": 0,
   "total_a_pagar": 36106.799999999996
 }

@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-21T09:26:32",
-  "total": 49,
+  "atualizado_em": "2026-08-21T11:24:25",
+  "total": 52,
   "pedidos": [
+    {
+      "id": "392965417",
+      "numero": "17407",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 200,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392948438",
+      "numero": "17406",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "ARIADINIR ARRUDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392942270",
+      "numero": "17405",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "JONATA ACESSORIOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2860.78,
+      "itens": 19,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "392919362",
       "numero": "17404",
@@ -23,6 +59,18 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 63,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "390707323",
+      "numero": "17216",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1494,
+      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },
@@ -335,18 +383,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 319.48,
       "itens": 4,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "390707323",
-      "numero": "17216",
-      "data": "2026-08-20",
-      "hora": "",
-      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 1494,
-      "itens": 9,
       "status_gc": "",
       "cidade": ""
     },

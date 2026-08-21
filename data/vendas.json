@@ -1,8 +1,8 @@
 {
-  "atualizado_em": "2026-08-21T09:26:39",
-  "hoje": 723,
-  "semana": 41869.43,
-  "mes": 138581.4400000001,
+  "atualizado_em": "2026-08-21T11:24:34",
+  "hoje": 5377.780000000001,
+  "semana": 45030.20999999999,
+  "mes": 141742.22000000006,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
@@ -15,9 +15,9 @@
     },
     {
       "nome": "ADEMIR LOPES FURTADO",
-      "faturamento": 95402.75000000001,
-      "pedidos": 260,
-      "ticket_medio": 366.9336538461539
+      "faturamento": 98563.53000000004,
+      "pedidos": 263,
+      "ticket_medio": 374.7662737642587
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
@@ -67,12 +67,12 @@
     {
       "data": "2026-08-20",
       "label": "qui., 20/08",
-      "valor": 16240.73
+      "valor": 14746.73
     },
     {
       "data": "2026-08-21",
       "label": "sex., 21/08",
-      "valor": 723
+      "valor": 5377.780000000001
     }
   ]
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-21T17:14:25",
+  "atualizado_em": "2026-08-21T19:13:26",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -95,13 +95,6 @@
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
-      "vencimento": "2026-08-10",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 1644,
       "vencimento": "2026-08-10",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -382,7 +375,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 47134.67,
+  "total_vencido": 45490.66999999999,
   "total_a_receber": 0,
   "total_a_pagar": 35771.88
 }

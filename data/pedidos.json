@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-08-21T13:20:09",
-  "total": 60,
+  "atualizado_em": "2026-08-21T15:22:18",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "393057494",
+      "numero": "17422",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 303.6,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393050530",
+      "numero": "17421",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 152.33,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393048761",
+      "numero": "17420",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "22.891.705 ALYNNE MONTEIRO DE QUEIROZ TEIXEIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 88.38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393045915",
+      "numero": "17419",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "JOSE ANESIO DE OLIVEIRA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393031876",
+      "numero": "17418",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 555,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393022045",
+      "numero": "17417",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "RAUL CÍCERO RODRIGUES BRAGA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 65,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393003297",
       "numero": "17416",

@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-22T09:18:36",
-  "total": 55,
+  "atualizado_em": "2026-08-22T11:11:26",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "393224378",
+      "numero": "17436",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "DAVID ANDERSON BARROSO CORDEIRO 01156737338",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 175,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393204676",
+      "numero": "17435",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 639.12,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393204572",
+      "numero": "17434",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "KAIO CESAR SILVA POMPILIO 08579680336",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1008.9,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393202665",
+      "numero": "17433",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "WANDERLEY MOTO PECAS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 536,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393198973",
+      "numero": "17432",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "42.477.649 ANA ALICE RODRIGUES FAUSTINO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 139.41,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393192704",
       "numero": "17431",

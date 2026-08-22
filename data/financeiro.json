@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-21T23:45:23",
+  "atualizado_em": "2026-08-22T01:22:13",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -189,69 +189,79 @@
       "vencimento": "2026-08-20",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PRATELEIRAS 6 UN",
       "valor": 423.4,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "CONSULTORIA DE IMPORTAÇÃO",
       "valor": 171.3,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MESA ESCRITORIO MURILO",
       "valor": 227.07,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MERCADO LIVRE",
       "valor": 28.95,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "2 TV PARA EMPRESA",
       "valor": 419.8,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "AQUISIÇÃO DE FRIGOBAR, CERVEJEIRA E ITENS DE APOIO PARA MELHORIA DA ESTRUTURA E ATENDIMENTO INTERNO DA EMPRESA",
       "valor": 272.11,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PRATELEIRAS 2 UN",
       "valor": 199.98,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "MESA ESCRITORIO CAMISLA",
       "valor": 360.43,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 391.59,
       "vencimento": "2026-08-21",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1875.35,
@@ -375,7 +385,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 45490.66999999999,
+  "total_vencido": 51578.63,
   "total_a_receber": 0,
-  "total_a_pagar": 35771.88
+  "total_a_pagar": 37062.14000000001
 }

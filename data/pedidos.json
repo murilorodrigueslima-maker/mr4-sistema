@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-22T07:12:49",
-  "total": 54,
+  "atualizado_em": "2026-08-22T09:18:36",
+  "total": 55,
   "pedidos": [
+    {
+      "id": "393192704",
+      "numero": "17431",
+      "data": "2026-08-21",
+      "hora": "",
+      "cliente": "PAULO SERGIO MORAIS DE OLIVEIRA 61508624372",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 299.99,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393100248",
       "numero": "17430",

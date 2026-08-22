@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-22T11:11:26",
-  "total": 60,
+  "atualizado_em": "2026-08-22T13:12:03",
+  "total": 62,
   "pedidos": [
+    {
+      "id": "393264683",
+      "numero": "17438",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "61.352.711 WENDEMBERG FELIX DO NASCIMENTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 82,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393246993",
+      "numero": "17437",
+      "data": "2026-08-22",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 152.49,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393224378",
       "numero": "17436",

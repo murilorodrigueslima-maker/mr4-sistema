@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-22T23:54:07",
+  "atualizado_em": "2026-08-23T01:27:07",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -380,6 +380,24 @@
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 1250,
       "vencimento": "2026-08-28",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "EMPRESTIMO ESTER",
+      "valor": 2019.94,
+      "vencimento": "2026-08-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PARCELAMENTO IMPOSTOS",
+      "valor": 517.47,
+      "vencimento": "2026-08-30",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
+      "valor": 687.77,
+      "vencimento": "2026-08-30",
       "tipo": "Pagar"
     }
   ],

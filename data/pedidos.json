@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-24T13:23:37",
-  "total": 22,
+  "atualizado_em": "2026-08-24T15:24:56",
+  "total": 26,
   "pedidos": [
+    {
+      "id": "393602110",
+      "numero": "17457",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 126.75,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393592764",
+      "numero": "17456",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 612.2,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393586514",
+      "numero": "17455",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 859.8,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393586371",
+      "numero": "17454",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "JOSE ANESIO DE OLIVEIRA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 480,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393564385",
       "numero": "17453",
@@ -165,8 +213,8 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 1189.12,
-      "itens": 2,
+      "valor": 3330,
+      "itens": 17,
       "status_gc": "",
       "cidade": ""
     },

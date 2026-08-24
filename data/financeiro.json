@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-24T09:27:12",
+  "atualizado_em": "2026-08-24T11:31:57",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -100,34 +100,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 2440.5,
-      "vencimento": "2026-08-10",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1757.59,
-      "vencimento": "2026-08-10",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ENEL RUA CEARA 634",
-      "valor": 513.13,
-      "vencimento": "2026-08-10",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1932.84,
-      "vencimento": "2026-08-13",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 3144.96,
       "vencimento": "2026-08-13",
@@ -209,13 +181,6 @@
       "valor": 391.59,
       "vencimento": "2026-08-21",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ENTREGADOR TERCEIRIZADO",
-      "valor": 225,
-      "vencimento": "2026-08-22",
-      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
@@ -386,7 +351,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51315.68999999999,
+  "total_vencido": 44446.63,
   "total_a_receber": 0,
-  "total_a_pagar": 35392.61000000001
+  "total_a_pagar": 34654.48000000001
 }

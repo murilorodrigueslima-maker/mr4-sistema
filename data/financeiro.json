@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-24T17:18:34",
+  "atualizado_em": "2026-08-24T19:15:24",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -160,27 +160,6 @@
       "valor": 5099.28,
       "vencimento": "2026-08-20",
       "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 630.74,
-      "vencimento": "2026-08-20",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 3593.33,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
-      "valor": 391.59,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
@@ -351,7 +330,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 44446.63,
+  "total_vencido": 39830.97,
   "total_a_receber": 0,
   "total_a_pagar": 34654.48000000001
 }

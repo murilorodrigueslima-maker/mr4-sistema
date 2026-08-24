@@ -1,7 +1,67 @@
 {
-  "atualizado_em": "2026-08-24T15:24:56",
-  "total": 26,
+  "atualizado_em": "2026-08-24T17:18:33",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "393661516",
+      "numero": "17462",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393648940",
+      "numero": "17461",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "67.836.646 ROBSON FELIPE JERONIMO DOS SANTOS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 262,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393646977",
+      "numero": "17460",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "JOSE AIRTON DE OLIVEIRA FILHO 01001220358",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393644194",
+      "numero": "17459",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "YOHANES MATHEUS DO NASCIMENTO PEREIRA DE ARAUJO 10550935401",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 2990,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393631844",
+      "numero": "17458",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "ASA DE URUBU FORTALEZA LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 37,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393602110",
       "numero": "17457",
@@ -92,7 +152,7 @@
       "data": "2026-08-24",
       "hora": "",
       "cliente": "ELETRONIC NEGO SOM ACESSORIOS VEICULAR LTDA",
-      "vendedor": "Camila Silveira Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 267.24,
       "itens": 5,
       "status_gc": "",
@@ -213,7 +273,7 @@
       "hora": "",
       "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
       "vendedor": "fabiana andrade da silva",
-      "valor": 3330,
+      "valor": 2830,
       "itens": 17,
       "status_gc": "",
       "cidade": ""

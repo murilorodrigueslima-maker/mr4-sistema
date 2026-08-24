@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-24T11:31:55",
-  "total": 19,
+  "atualizado_em": "2026-08-24T13:23:37",
+  "total": 22,
   "pedidos": [
+    {
+      "id": "393564385",
+      "numero": "17453",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "50.091.279 PEDRO IGOR MACIEL CARNEIRO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 296,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393558305",
+      "numero": "17452",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "MAGÃO FUME E ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 634,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393547740",
+      "numero": "17451",
+      "data": "2026-08-24",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 289.29,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393544816",
       "numero": "17450",
@@ -21,8 +57,8 @@
       "hora": "",
       "cliente": "DELIO FEITOSA FILHO",
       "vendedor": "fabiana andrade da silva",
-      "valor": 105,
-      "itens": 1,
+      "valor": 855,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

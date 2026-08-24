@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-24T07:27:49",
+  "atualizado_em": "2026-08-24T09:27:12",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -17,7 +17,7 @@
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 2243.64,
+      "valor": 1602.2,
       "vencimento": "2026-06-25",
       "dias_atraso": 60,
       "tipo": "Pagar"
@@ -86,8 +86,15 @@
       "tipo": "Pagar"
     },
     {
+      "nome": "CONTABILIDADE REF JULHO",
+      "valor": 821,
+      "vencimento": "2026-08-05",
+      "dias_atraso": 19,
+      "tipo": "Pagar"
+    },
+    {
       "nome": "Salário Murilo",
-      "valor": 2833.5,
+      "valor": 2393.69,
       "vencimento": "2026-08-05",
       "dias_atraso": 19,
       "tipo": "Pagar"
@@ -191,64 +198,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "PRATELEIRAS 6 UN",
-      "valor": 423.4,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONSULTORIA DE IMPORTAÇÃO",
-      "valor": 171.3,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MESA ESCRITORIO MURILO",
-      "valor": 227.07,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MERCADO LIVRE",
-      "valor": 28.95,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "2 TV PARA EMPRESA",
-      "valor": 419.8,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "AQUISIÇÃO DE FRIGOBAR, CERVEJEIRA E ITENS DE APOIO PARA MELHORIA DA ESTRUTURA E ATENDIMENTO INTERNO DA EMPRESA",
-      "valor": 272.11,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "PRATELEIRAS 2 UN",
-      "valor": 199.98,
-      "vencimento": "2026-08-21",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MESA ESCRITORIO CAMISLA",
-      "valor": 360.43,
       "vencimento": "2026-08-21",
       "dias_atraso": 3,
       "tipo": "Pagar"
@@ -258,6 +209,13 @@
       "valor": 391.59,
       "vencimento": "2026-08-21",
       "dias_atraso": 3,
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ENTREGADOR TERCEIRIZADO",
+      "valor": 225,
+      "vencimento": "2026-08-22",
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
@@ -428,7 +386,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53453.979999999996,
+  "total_vencido": 51315.68999999999,
   "total_a_receber": 0,
-  "total_a_pagar": 37062.14000000001
+  "total_a_pagar": 35392.61000000001
 }

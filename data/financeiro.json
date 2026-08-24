@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-23T23:55:12",
+  "atualizado_em": "2026-08-24T01:35:00",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
@@ -259,15 +259,16 @@
       "vencimento": "2026-08-21",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1875.35,
       "vencimento": "2026-08-23",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
@@ -399,11 +400,35 @@
       "valor": 687.77,
       "vencimento": "2026-08-30",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "U. N. LIMA",
+      "valor": 2527.49,
+      "vencimento": "2026-08-31",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 494.7,
+      "vencimento": "2026-08-31",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 1304.8,
+      "vencimento": "2026-08-31",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "U. N. LIMA",
+      "valor": 2790.02,
+      "vencimento": "2026-08-31",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 51578.63,
+  "total_vencido": 53453.979999999996,
   "total_a_receber": 0,
   "total_a_pagar": 37062.14000000001
 }

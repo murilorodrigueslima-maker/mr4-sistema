@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-25T11:34:25",
-  "total": 31,
+  "atualizado_em": "2026-08-25T13:24:22",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "393833398",
+      "numero": "17472",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "ADLER DE MELO SILVA 04123071384",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 160,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393809961",
+      "numero": "17471",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 99.6,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393794738",
       "numero": "17470",

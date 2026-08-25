@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-25T11:34:25",
+  "atualizado_em": "2026-08-25T13:24:22",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 2191.27,
+      "valor": 2074.85,
       "vencimento": "2026-08-05",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -292,7 +292,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 33580.25,
+  "total_vencido": 33463.83,
   "total_a_receber": 0,
   "total_a_pagar": 32855.12
 }

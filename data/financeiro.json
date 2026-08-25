@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-25T15:24:03",
+  "atualizado_em": "2026-08-25T17:17:25",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -90,13 +90,6 @@
       "valor": 305.4,
       "vencimento": "2026-08-15",
       "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1135.33,
-      "vencimento": "2026-08-16",
-      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
@@ -292,7 +285,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 33463.83,
+  "total_vencido": 32328.5,
   "total_a_receber": 0,
   "total_a_pagar": 32855.12
 }

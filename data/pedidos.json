@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-08-25T09:27:37",
-  "total": 25,
+  "atualizado_em": "2026-08-25T11:34:25",
+  "total": 31,
   "pedidos": [
+    {
+      "id": "393794738",
+      "numero": "17470",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "DELIO FEITOSA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1421.6,
+      "itens": 15,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393791915",
+      "numero": "17469",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "E MOREIRA COMERCIO DE MATERIAL ELETRONICO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 283.49,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393785660",
+      "numero": "17468",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 480,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393771464",
+      "numero": "17467",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "ANDERSON MOREIRA PEREIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 254.17,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393768726",
+      "numero": "17466",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "FRANCISCO OLIVEIRA DA COSTA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 200,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393760218",
+      "numero": "17465",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "BRUNO DA SILVA ABREU 04112043350",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 80,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393750832",
+      "numero": "17464",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "52.387.639 ANTONIA EVANDA DE MATOS SOUSA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 118,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393741662",
       "numero": "17463",
@@ -167,18 +251,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 267.24,
       "itens": 5,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "393539299",
-      "numero": "17449",
-      "data": "2026-08-24",
-      "hora": "",
-      "cliente": "DELIO FEITOSA FILHO",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 855,
-      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

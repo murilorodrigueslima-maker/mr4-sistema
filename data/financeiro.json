@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-25T09:27:38",
+  "atualizado_em": "2026-08-25T11:34:25",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 2393.69,
+      "valor": 2191.27,
       "vencimento": "2026-08-05",
       "dias_atraso": 20,
       "tipo": "Pagar"
@@ -90,13 +90,6 @@
       "valor": 305.4,
       "vencimento": "2026-08-15",
       "dias_atraso": 10,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1134.83,
-      "vencimento": "2026-08-16",
-      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
@@ -173,18 +166,6 @@
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
-      "vencimento": "2026-08-25",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "ESTANTE ESCRITORIO MURILO",
-      "valor": 94,
-      "vencimento": "2026-08-25",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JR AUTOGIFIT",
-      "valor": 2744.41,
       "vencimento": "2026-08-25",
       "tipo": "Pagar"
     },
@@ -311,7 +292,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 34917.5,
+  "total_vencido": 33580.25,
   "total_a_receber": 0,
-  "total_a_pagar": 32949.12
+  "total_a_pagar": 32855.12
 }

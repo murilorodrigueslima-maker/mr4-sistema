@@ -1,7 +1,55 @@
 {
-  "atualizado_em": "2026-08-25T13:24:22",
-  "total": 33,
+  "atualizado_em": "2026-08-25T15:24:03",
+  "total": 37,
   "pedidos": [
+    {
+      "id": "393876873",
+      "numero": "17476",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "KELIANE DA SILVA LIMA 06504549362",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 53.92,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393867841",
+      "numero": "17475",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 141.34,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393851234",
+      "numero": "17474",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 560,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393846265",
+      "numero": "17473",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 69.3,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393833398",
       "numero": "17472",
@@ -119,6 +167,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 190,
       "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "392991664",
+      "numero": "17410",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "FERNANDO FREITAS ALMEIDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 108,
+      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },
@@ -383,18 +443,6 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 2830,
       "itens": 17,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "392991664",
-      "numero": "17410",
-      "data": "2026-08-24",
-      "hora": "",
-      "cliente": "FERNANDO FREITAS ALMEIDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 108,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     }

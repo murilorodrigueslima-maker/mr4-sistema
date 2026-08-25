@@ -1,172 +1,172 @@
 {
-  "atualizado_em": "2026-08-24T19:15:24",
+  "atualizado_em": "2026-08-24T21:40:38",
   "contas_vencidas": [
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-06-25",
-      "dias_atraso": 60,
+      "dias_atraso": 61,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 6629.64,
       "vencimento": "2026-06-25",
-      "dias_atraso": 60,
+      "dias_atraso": 61,
       "tipo": "Pagar"
     },
     {
       "nome": "JUROS CARTAO INTER BLACK",
       "valor": 1602.2,
       "vencimento": "2026-06-25",
-      "dias_atraso": 60,
+      "dias_atraso": 61,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
-      "dias_atraso": 56,
+      "dias_atraso": 57,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-29",
-      "dias_atraso": 56,
+      "dias_atraso": 57,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
-      "dias_atraso": 55,
+      "dias_atraso": 56,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-07-17",
-      "dias_atraso": 38,
+      "dias_atraso": 39,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 834,
       "vencimento": "2026-07-17",
-      "dias_atraso": 38,
+      "dias_atraso": 39,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-07-25",
-      "dias_atraso": 30,
+      "dias_atraso": 31,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-07-28",
-      "dias_atraso": 27,
+      "dias_atraso": 28,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-07-30",
-      "dias_atraso": 25,
+      "dias_atraso": 26,
       "tipo": "Pagar"
     },
     {
       "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
       "valor": 687.77,
       "vencimento": "2026-07-30",
-      "dias_atraso": 25,
+      "dias_atraso": 26,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTABILIDADE REF JULHO",
       "valor": 821,
       "vencimento": "2026-08-05",
-      "dias_atraso": 19,
+      "dias_atraso": 20,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 2393.69,
       "vencimento": "2026-08-05",
-      "dias_atraso": 19,
+      "dias_atraso": 20,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 3144.96,
       "vencimento": "2026-08-13",
-      "dias_atraso": 11,
+      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
       "nome": "V.T+VR",
       "valor": 305.4,
       "vencimento": "2026-08-15",
-      "dias_atraso": 9,
+      "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-08-16",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-08-16",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-08-17",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 709.24,
       "vencimento": "2026-08-17",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 684,
       "vencimento": "2026-08-17",
-      "dias_atraso": 7,
+      "dias_atraso": 8,
       "tipo": "Pagar"
     },
     {
       "nome": "SUGURO GALPÃO",
       "valor": 353.42,
       "vencimento": "2026-08-19",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
       "valor": 5099.28,
       "vencimento": "2026-08-20",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1875.35,
       "vencimento": "2026-08-23",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],

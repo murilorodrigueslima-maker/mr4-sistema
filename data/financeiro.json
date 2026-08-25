@@ -1,27 +1,6 @@
 {
-  "atualizado_em": "2026-08-24T23:50:17",
+  "atualizado_em": "2026-08-25T01:29:21",
   "contas_vencidas": [
-    {
-      "nome": "CAPITALIZAÇÃO",
-      "valor": 103.16,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
-      "valor": 6629.64,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "JUROS CARTAO INTER BLACK",
-      "valor": 1602.2,
-      "vencimento": "2026-06-25",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
@@ -168,21 +147,23 @@
       "vencimento": "2026-08-23",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
       "vencimento": "2026-08-24",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1757.59,
       "vencimento": "2026-08-24",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
@@ -330,7 +311,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 39830.97,
+  "total_vencido": 34917.5,
   "total_a_receber": 0,
-  "total_a_pagar": 34654.48000000001
+  "total_a_pagar": 32949.12
 }

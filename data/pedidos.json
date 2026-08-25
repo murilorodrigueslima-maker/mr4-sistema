@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-25T07:21:42",
-  "total": 24,
+  "atualizado_em": "2026-08-25T09:27:37",
+  "total": 25,
   "pedidos": [
+    {
+      "id": "393741662",
+      "numero": "17463",
+      "data": "2026-08-25",
+      "hora": "",
+      "cliente": "Eliabe da Silva de Oliveira",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 190,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "393661516",
       "numero": "17462",

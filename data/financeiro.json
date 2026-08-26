@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-26T13:41:13",
+  "atualizado_em": "2026-08-26T16:33:54",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -73,7 +73,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 2074.85,
+      "valor": 563.2,
       "vencimento": "2026-08-05",
       "dias_atraso": 21,
       "tipo": "Pagar"
@@ -118,13 +118,6 @@
       "valor": 353.42,
       "vencimento": "2026-08-19",
       "dias_atraso": 7,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "CONTREX COMERCIAL IMPORTACAO E EXPORT DE EQUIPAMEN",
-      "valor": 5099.28,
-      "vencimento": "2026-08-20",
-      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
@@ -337,7 +330,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 36852.98,
+  "total_vencido": 30242.049999999996,
   "total_a_receber": 0,
   "total_a_pagar": 32949.12
 }

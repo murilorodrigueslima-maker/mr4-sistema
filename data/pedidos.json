@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-08-26T13:41:12",
-  "total": 50,
+  "atualizado_em": "2026-08-26T16:33:53",
+  "total": 57,
   "pedidos": [
+    {
+      "id": "394132834",
+      "numero": "17492",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "LRW PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1258.32,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394127697",
+      "numero": "17491",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "F ALEX DE MENEZES FELINTO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 450,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394108193",
+      "numero": "17490",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "62.644.057 JEFFERSON DOS SANTOS ALMEIDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 90,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "394076665",
       "numero": "17489",
@@ -129,7 +165,55 @@
       "hora": "",
       "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 2250,
+      "valor": 2700,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394152720",
+      "numero": "1330708",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 860.64,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394152219",
+      "numero": "1330707",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "MS CENTRAL TEC LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 911,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394145134",
+      "numero": "1330706",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "53.215.493 THIAGO SALVADOR LOPES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100.46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394135197",
+      "numero": "1330705",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "G3 EMPREENDIMENTOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 265.14,
       "itens": 1,
       "status_gc": "",
       "cidade": ""
@@ -429,8 +513,8 @@
       "hora": "",
       "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 859.8,
-      "itens": 2,
+      "valor": 886.4,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

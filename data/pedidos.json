@@ -1,6 +1,6 @@
 {
-  "atualizado_em": "2026-08-26T16:33:53",
-  "total": 57,
+  "atualizado_em": "2026-08-26T19:35:30",
+  "total": 60,
   "pedidos": [
     {
       "id": "394132834",
@@ -167,6 +167,42 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 2700,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394183536",
+      "numero": "1330711",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "NAQUISON JERÓNIMO DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 169.6,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394181489",
+      "numero": "1330710",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "Paulo Victor Santos da Silva",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394175836",
+      "numero": "1330709",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "FABRICIO ALBUQUERQUE FERREIRA DA PONTE 03639587383",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 202,
+      "itens": 4,
       "status_gc": "",
       "cidade": ""
     },
@@ -513,7 +549,7 @@
       "hora": "",
       "cliente": "C E DA SILVA COMERCIO E SERVICOS LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 886.4,
+      "valor": 884.8,
       "itens": 3,
       "status_gc": "",
       "cidade": ""

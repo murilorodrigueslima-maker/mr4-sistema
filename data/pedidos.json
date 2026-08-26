@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-08-26T11:34:37",
-  "total": 48,
+  "atualizado_em": "2026-08-26T13:41:12",
+  "total": 50,
   "pedidos": [
+    {
+      "id": "394076665",
+      "numero": "17489",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "FRANCISCO OLIVEIRA DA COSTA FILHO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1032.39,
+      "itens": 9,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "394066640",
+      "numero": "17488",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "WANDO DE SIQUEIRA BARROS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 190,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "394050580",
       "numero": "17487",
@@ -94,6 +118,18 @@
       "cliente": "W. SOUZA CUNHA",
       "vendedor": "fabiana andrade da silva",
       "valor": 75,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "393057494",
+      "numero": "17422",
+      "data": "2026-08-26",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2250,
       "itens": 1,
       "status_gc": "",
       "cidade": ""
@@ -251,18 +287,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 254.17,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "393768726",
-      "numero": "17466",
-      "data": "2026-08-25",
-      "hora": "",
-      "cliente": "FRANCISCO OLIVEIRA DA COSTA FILHO",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 200,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

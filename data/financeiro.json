@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-27T22:54:35",
+  "atualizado_em": "2026-08-28T10:33:08",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -288,6 +288,24 @@
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 436.82,
       "vencimento": "2026-09-02",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1227.5,
+      "vencimento": "2026-09-04",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1624,
+      "vencimento": "2026-09-04",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
+      "valor": 2855.6,
+      "vencimento": "2026-09-04",
       "tipo": "Pagar"
     }
   ],

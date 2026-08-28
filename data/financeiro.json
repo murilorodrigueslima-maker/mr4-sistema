@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-28T10:33:08",
+  "atualizado_em": "2026-08-28T20:17:31",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
@@ -65,15 +65,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "CONTABILIDADE REF JULHO",
-      "valor": 821,
-      "vencimento": "2026-08-05",
-      "dias_atraso": 23,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "Salário Murilo",
-      "valor": 563.2,
+      "valor": 184.81,
       "vencimento": "2026-08-05",
       "dias_atraso": 23,
       "tipo": "Pagar"
@@ -97,13 +90,6 @@
       "valor": 684,
       "vencimento": "2026-08-17",
       "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
-      "valor": 1875.35,
-      "vencimento": "2026-08-23",
-      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
@@ -135,31 +121,10 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 336.82,
-      "vencimento": "2026-08-25",
-      "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-08-25",
       "dias_atraso": 3,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1360.1,
-      "vencimento": "2026-08-26",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1073.02,
-      "vencimento": "2026-08-26",
-      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],
@@ -195,15 +160,15 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
-      "valor": 1250,
-      "vencimento": "2026-08-28",
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1360.1,
+      "vencimento": "2026-08-29",
       "tipo": "Pagar"
     },
     {
-      "nome": "EMPRESTIMO ESTER",
-      "valor": 2019.94,
-      "vencimento": "2026-08-30",
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1073.02,
+      "vencimento": "2026-08-29",
       "tipo": "Pagar"
     },
     {
@@ -311,7 +276,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 29703.939999999995,
+  "total_vencido": 23859.26,
   "total_a_receber": 0,
-  "total_a_pagar": 31907.930000000004
+  "total_a_pagar": 29066.99
 }

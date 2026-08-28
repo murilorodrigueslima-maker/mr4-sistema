@@ -1,187 +1,169 @@
 {
-  "atualizado_em": "2026-08-27T14:05:44",
+  "atualizado_em": "2026-08-27T22:54:35",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-06-29",
-      "dias_atraso": 59,
+      "dias_atraso": 60,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2439,
       "vencimento": "2026-06-29",
-      "dias_atraso": 59,
+      "dias_atraso": 60,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-06-30",
-      "dias_atraso": 58,
+      "dias_atraso": 59,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-07-17",
-      "dias_atraso": 41,
+      "dias_atraso": 42,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 834,
       "vencimento": "2026-07-17",
-      "dias_atraso": 41,
+      "dias_atraso": 42,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-07-25",
-      "dias_atraso": 33,
+      "dias_atraso": 34,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1924.16,
       "vencimento": "2026-07-25",
-      "dias_atraso": 33,
+      "dias_atraso": 34,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-07-28",
-      "dias_atraso": 30,
+      "dias_atraso": 31,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-07-30",
-      "dias_atraso": 28,
+      "dias_atraso": 29,
       "tipo": "Pagar"
     },
     {
       "nome": "CONTABILIDADE REF JULHO",
       "valor": 821,
       "vencimento": "2026-08-05",
-      "dias_atraso": 22,
+      "dias_atraso": 23,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 563.2,
       "vencimento": "2026-08-05",
-      "dias_atraso": 22,
+      "dias_atraso": 23,
       "tipo": "Pagar"
     },
     {
       "nome": "V.T+VR",
       "valor": 305.4,
       "vencimento": "2026-08-15",
-      "dias_atraso": 12,
+      "dias_atraso": 13,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-08-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO JARBAS",
       "valor": 684,
       "vencimento": "2026-08-17",
-      "dias_atraso": 10,
+      "dias_atraso": 11,
       "tipo": "Pagar"
     },
     {
       "nome": "RPX ACESSORIOS E ILUMINACAO AUTOMOTIVA LTDA",
       "valor": 1875.35,
       "vencimento": "2026-08-23",
-      "dias_atraso": 4,
+      "dias_atraso": 5,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.94,
       "vencimento": "2026-08-24",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1757.59,
       "vencimento": "2026-08-24",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 2440.5,
       "vencimento": "2026-08-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-08-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 336.82,
       "vencimento": "2026-08-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-08-25",
-      "dias_atraso": 2,
+      "dias_atraso": 3,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1360.1,
       "vencimento": "2026-08-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1073.02,
       "vencimento": "2026-08-26",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],
   "contas_vencendo": [
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 971.57,
-      "vencimento": "2026-08-27",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1846.74,
-      "vencimento": "2026-08-27",
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "A K COMERCIO E IMPORTACAO LTDA",
-      "valor": 7583.7,
-      "vencimento": "2026-08-27",
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,

@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-08-29T01:48:28",
-  "total": 57,
+  "atualizado_em": "2026-08-29T08:57:57",
+  "total": 58,
   "pedidos": [
+    {
+      "id": "394760014",
+      "numero": "1330768",
+      "data": "2026-08-29",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 124.66,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "394693296",
       "numero": "1330767",

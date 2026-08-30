@@ -1,13 +1,6 @@
 {
-  "atualizado_em": "2026-08-29T23:27:40",
+  "atualizado_em": "2026-08-30T06:34:33",
   "contas_vencidas": [
-    {
-      "nome": "PARCELAMENTO IMPOSTOS",
-      "valor": 517.47,
-      "vencimento": "2026-06-30",
-      "dias_atraso": 61,
-      "tipo": "Pagar"
-    },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
@@ -147,21 +140,23 @@
       "vencimento": "2026-08-28",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1360.1,
       "vencimento": "2026-08-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
       "valor": 1073.02,
       "vencimento": "2026-08-29",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
@@ -285,7 +280,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 30688.059999999998,
+  "total_vencido": 32603.71,
   "total_a_receber": 0,
-  "total_a_pagar": 29066.99
+  "total_a_pagar": 28549.52
 }

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-30T23:22:05",
+  "atualizado_em": "2026-08-31T07:15:25",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -154,21 +154,23 @@
       "vencimento": "2026-08-29",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-08-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
       "valor": 687.77,
       "vencimento": "2026-08-30",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "U. N. LIMA",
       "valor": 2527.49,
@@ -276,11 +278,29 @@
       "valor": 15000,
       "vencimento": "2026-09-05",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 1644,
+      "vencimento": "2026-09-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 4981.75,
+      "vencimento": "2026-09-07",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 4652.81,
+      "vencimento": "2026-09-07",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 32603.71,
+  "total_vencido": 33808.95,
   "total_a_receber": 0,
-  "total_a_pagar": 28549.52
+  "total_a_pagar": 31086.93
 }

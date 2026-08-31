@@ -1,16 +1,9 @@
 {
-  "atualizado_em": "2026-08-31T07:15:25",
+  "atualizado_em": "2026-08-31T15:26:25",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
-      "vencimento": "2026-07-17",
-      "dias_atraso": 45,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 834,
       "vencimento": "2026-07-17",
       "dias_atraso": 45,
       "tipo": "Pagar"
@@ -44,13 +37,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "Salário Murilo",
-      "valor": 184.81,
-      "vencimento": "2026-08-05",
-      "dias_atraso": 26,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "V.T+VR",
       "valor": 305.4,
       "vencimento": "2026-08-15",
@@ -62,20 +48,6 @@
       "valor": 3669.52,
       "vencimento": "2026-08-17",
       "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "EMPRESTIMO JARBAS",
-      "valor": 684,
-      "vencimento": "2026-08-17",
-      "dias_atraso": 14,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1663.94,
-      "vencimento": "2026-08-24",
-      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
@@ -142,29 +114,8 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1360.1,
-      "vencimento": "2026-08-29",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
-      "valor": 1073.02,
-      "vencimento": "2026-08-29",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
-      "vencimento": "2026-08-30",
-      "dias_atraso": 1,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NEGOCIAÇÃO DE CHEQUE ESPECIAL",
-      "valor": 687.77,
       "vencimento": "2026-08-30",
       "dias_atraso": 1,
       "tipo": "Pagar"
@@ -300,7 +251,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 33808.95,
+  "total_vencido": 27321.309999999998,
   "total_a_receber": 0,
-  "total_a_pagar": 31086.93
+  "total_a_pagar": 28881.159999999996
 }

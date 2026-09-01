@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-09-01T15:59:52",
-  "total": 33,
+  "atualizado_em": "2026-09-01T19:10:55",
+  "total": 35,
   "pedidos": [
+    {
+      "id": "395562471",
+      "numero": "1330822",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "APP AUTO CENTER LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 174.14,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395561748",
+      "numero": "1330821",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "AUTOMIDIA COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 62.69,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "395538748",
       "numero": "1330820",

@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-08-31T23:39:02",
+  "atualizado_em": "2026-09-01T06:00:17",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -119,33 +119,37 @@
       "vencimento": "2026-08-30",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "U. N. LIMA",
       "valor": 2527.49,
       "vencimento": "2026-08-31",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 494.7,
       "vencimento": "2026-08-31",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1304.8,
       "vencimento": "2026-08-31",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "U. N. LIMA",
       "valor": 2790.02,
       "vencimento": "2026-08-31",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
@@ -247,11 +251,29 @@
       "valor": 4652.81,
       "vencimento": "2026-09-07",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1663.97,
+      "vencimento": "2026-09-08",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 1225.4,
+      "vencimento": "2026-09-08",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
+      "valor": 818.45,
+      "vencimento": "2026-09-08",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 26558.66,
+  "total_vencido": 33675.67,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

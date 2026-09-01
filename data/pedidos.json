@@ -1,7 +1,31 @@
 {
-  "atualizado_em": "2026-09-01T06:00:17",
-  "total": 23,
+  "atualizado_em": "2026-09-01T11:23:46",
+  "total": 25,
   "pedidos": [
+    {
+      "id": "395415706",
+      "numero": "1330812",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "59.921.493 GLAUBER ARRUDA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 95,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395392256",
+      "numero": "1330811",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 915,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "395292200",
       "numero": "1330810",
@@ -45,7 +69,7 @@
       "hora": "",
       "cliente": "SPACE GARAGE LTDA",
       "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 2100,
+      "valor": 2540,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

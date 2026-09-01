@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-09-01T11:23:46",
-  "total": 25,
+  "atualizado_em": "2026-09-01T15:59:52",
+  "total": 33,
   "pedidos": [
+    {
+      "id": "395538748",
+      "numero": "1330820",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "ANGELA MARIA MOREIRA DE ALMEIDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 76,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395532259",
+      "numero": "1330819",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "48.112.533 ITALO CARNEIRO ROCHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 488,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395520020",
+      "numero": "1330817",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "ROCAR ACCESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 330.18,
+      "itens": 12,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395514007",
+      "numero": "1330816",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "61.371.956 RODRIGO ALVES MOURA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 94.1,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395458433",
+      "numero": "1330815",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "OMAN DE SA MOREIRA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 165.3,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395450992",
+      "numero": "1330814",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "BEATRIZ NEGREIROS FORTE 07014862367",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 25,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395444066",
+      "numero": "1330813",
+      "data": "2026-09-01",
+      "hora": "",
+      "cliente": "JOSE J DE SOUSA PINTO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 650,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "395415706",
       "numero": "1330812",
@@ -23,6 +107,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 915,
       "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395523320",
+      "numero": "1330818",
+      "data": "2026-08-31",
+      "hora": "",
+      "cliente": "JIUSSEPE DE SOUSA SILVA 90389387304",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1250.8,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

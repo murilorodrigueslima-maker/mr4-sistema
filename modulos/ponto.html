@@ -542,13 +542,12 @@ async function renderBanco(){
     const regsF=regs.filter(r=>r.funcId===f.id&&r.data.startsWith(mesAtual()));
     const credF=creditos.filter(c=>c.funcId===f.id&&c.data.startsWith(mesAtual()));
     const dias={};regsF.forEach(r=>{if(!dias[r.data])dias[r.data]={};if(!dias[r.data][r.tipo]||r.lancadoPorJustificativa)dias[r.data][r.tipo]=r.hora;});
-    let trabMin=0;Object.values(dias).forEach(d=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t)trabMin+=t;});
+    const jornMin=(parseFloat(f.jornada)||8)*60;
+    let trabMin=0,esperMin=0;
+    Object.entries(dias).forEach(([data,d])=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t!==null&&t!==undefined){trabMin+=t;esperMin+=jornadaParaData(data,jornMin);}});
     credF.forEach(c=>trabMin+=c.minutos||0);
     const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
     const diasTrab=Object.keys(dias).length+diasComCredito.length;
-    const jornMin=(parseFloat(f.jornada)||8)*60;
-    let esperMin=0;
-    Object.keys(dias).forEach(data=>{ esperMin+=jornadaParaData(data,jornMin); });
     diasComCredito.forEach(data=>{ esperMin+=jornadaParaData(data,jornMin); });
     const saldo=trabMin-esperMin;
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;

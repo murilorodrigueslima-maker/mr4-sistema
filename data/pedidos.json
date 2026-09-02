@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-09-02T03:56:50",
-  "total": 35,
+  "atualizado_em": "2026-09-02T09:23:29",
+  "total": 38,
   "pedidos": [
+    {
+      "id": "395674036",
+      "numero": "1330825",
+      "data": "2026-09-02",
+      "hora": "",
+      "cliente": "ANTONIO DENNES DE SOUZA ANDRADE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395673969",
+      "numero": "1330824",
+      "data": "2026-09-02",
+      "hora": "",
+      "cliente": "F.F.S. CHAVEIRO LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 274,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395662528",
+      "numero": "1330823",
+      "data": "2026-09-02",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 71.99,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "395562471",
       "numero": "1330822",

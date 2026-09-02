@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-02T14:30:17",
+  "atualizado_em": "2026-09-02T17:17:22",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -48,13 +48,6 @@
       "valor": 3669.52,
       "vencimento": "2026-08-17",
       "dias_atraso": 16,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
-      "valor": 1145.82,
-      "vencimento": "2026-08-18",
-      "dias_atraso": 15,
       "tipo": "Pagar"
     },
     {
@@ -280,7 +273,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 34821.48999999999,
+  "total_vencido": 33675.67,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

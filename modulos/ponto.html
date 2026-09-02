@@ -546,7 +546,11 @@ async function renderBanco(){
     credF.forEach(c=>trabMin+=c.minutos||0);
     const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
     const diasTrab=Object.keys(dias).length+diasComCredito.length;
-    const jornMin=(parseFloat(f.jornada)||8)*60;const esperMin=diasTrab*jornMin;const saldo=trabMin-esperMin;
+    const jornMin=(parseFloat(f.jornada)||8)*60;
+    let esperMin=0;
+    Object.keys(dias).forEach(data=>{ esperMin+=jornadaParaData(data,jornMin); });
+    diasComCredito.forEach(data=>{ esperMin+=jornadaParaData(data,jornMin); });
+    const saldo=trabMin-esperMin;
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
     return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div></div>`;

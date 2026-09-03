@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-03T17:17:02",
+  "atualizado_em": "2026-09-03T20:41:26",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -48,13 +48,6 @@
       "valor": 3669.52,
       "vencimento": "2026-08-17",
       "dias_atraso": 17,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 1757.59,
-      "vencimento": "2026-08-24",
-      "dias_atraso": 10,
       "tipo": "Pagar"
     },
     {
@@ -327,7 +320,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 37006.83000000001,
+  "total_vencido": 35249.240000000005,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

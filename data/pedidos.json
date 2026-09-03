@@ -1,19 +1,7 @@
 {
-  "atualizado_em": "2026-09-03T17:17:02",
-  "total": 60,
+  "atualizado_em": "2026-09-03T20:41:25",
+  "total": 59,
   "pedidos": [
-    {
-      "id": "396144687",
-      "numero": "1330872",
-      "data": "2026-09-03",
-      "hora": "",
-      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
-      "vendedor": "ADEMIR LOPES FURTADO",
-      "valor": 2880,
-      "itens": 6,
-      "status_gc": "",
-      "cidade": ""
-    },
     {
       "id": "396136121",
       "numero": "1330871",

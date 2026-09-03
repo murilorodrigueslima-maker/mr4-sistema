@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-09-03T14:35:38",
-  "total": 54,
+  "atualizado_em": "2026-09-03T17:17:02",
+  "total": 60,
   "pedidos": [
+    {
+      "id": "396144687",
+      "numero": "1330872",
+      "data": "2026-09-03",
+      "hora": "",
+      "cliente": "L. FERREIRA MOREIRA E F. JANDERSON PEREIRA DA SILVA LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2880,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396136121",
+      "numero": "1330871",
+      "data": "2026-09-03",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1052.83,
+      "itens": 7,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396135946",
+      "numero": "1330870",
+      "data": "2026-09-03",
+      "hora": "",
+      "cliente": "A S SERVICOS ELETRONICOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 130,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396128561",
+      "numero": "1330869",
+      "data": "2026-09-03",
+      "hora": "",
+      "cliente": "LEANDRO FERREIRA ANDRADE",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 125,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396080090",
+      "numero": "1330868",
+      "data": "2026-09-03",
+      "hora": "",
+      "cliente": "LORIM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 46,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396079789",
+      "numero": "1330867",
+      "data": "2026-09-03",
+      "hora": "",
+      "cliente": "SPACE GARAGE LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 120,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "396076011",
       "numero": "1330866",

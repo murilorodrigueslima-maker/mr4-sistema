@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-02T23:04:53",
+  "atualizado_em": "2026-09-03T05:23:04",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -147,45 +147,51 @@
       "vencimento": "2026-08-31",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-09-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1135.33,
       "vencimento": "2026-09-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 152.83,
       "vencimento": "2026-09-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 321.91,
       "vencimento": "2026-09-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 149.44,
       "vencimento": "2026-09-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 436.82,
       "vencimento": "2026-09-02",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1227.5,
@@ -269,11 +275,59 @@
       "valor": 1757.59,
       "vencimento": "2026-09-09",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "MAQUINETA DE CARTÃO",
+      "valor": 21.24,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1134.83,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NBM - Indústria Eletrônica Ltda",
+      "valor": 1135.33,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 577.96,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1073.01,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1891.7,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 3082.52,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
+      "valor": 253.16,
+      "vencimento": "2026-09-10",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 33675.67,
+  "total_vencido": 37006.83000000001,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

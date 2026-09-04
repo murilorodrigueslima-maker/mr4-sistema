@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-09-04T05:18:59",
-  "total": 49,
+  "atualizado_em": "2026-09-04T10:52:31",
+  "total": 51,
   "pedidos": [
+    {
+      "id": "396273879",
+      "numero": "1330874",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 144,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396243140",
+      "numero": "1330873",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "PAULO ITALO FERREIRA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 270,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395978643",
+      "numero": "1330850",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 165.02,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "396136121",
       "numero": "1330871",
@@ -251,18 +287,6 @@
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 115.89,
       "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "395978643",
-      "numero": "1330850",
-      "data": "2026-09-03",
-      "hora": "",
-      "cliente": "JOAO JORDAN TELES MOREIRA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 165.02,
-      "itens": 1,
       "status_gc": "",
       "cidade": ""
     },

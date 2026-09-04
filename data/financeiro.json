@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-03T23:01:12",
+  "atualizado_em": "2026-09-04T05:19:00",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -308,6 +308,24 @@
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 253.16,
       "vencimento": "2026-09-10",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 971.57,
+      "vencimento": "2026-09-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "THOR AUTO IMPORTACAO E EXPORTACAO LTDA",
+      "valor": 1846.74,
+      "vencimento": "2026-09-11",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "A K COMERCIO E IMPORTACAO LTDA",
+      "valor": 7583.7,
+      "vencimento": "2026-09-11",
       "tipo": "Pagar"
     }
   ],

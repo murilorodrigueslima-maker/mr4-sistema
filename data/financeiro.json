@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-04T17:01:56",
+  "atualizado_em": "2026-09-04T20:33:48",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -107,13 +107,6 @@
       "tipo": "Pagar"
     },
     {
-      "nome": "U. N. LIMA",
-      "valor": 2527.49,
-      "vencimento": "2026-08-31",
-      "dias_atraso": 4,
-      "tipo": "Pagar"
-    },
-    {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 494.7,
       "vencimento": "2026-08-31",
@@ -129,7 +122,7 @@
     },
     {
       "nome": "U. N. LIMA",
-      "valor": 2790.02,
+      "valor": 2317.51,
       "vencimento": "2026-08-31",
       "dias_atraso": 4,
       "tipo": "Pagar"
@@ -137,13 +130,6 @@
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
-      "vencimento": "2026-09-02",
-      "dias_atraso": 2,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "NBM - Indústria Eletrônica Ltda",
-      "valor": 1135.33,
       "vencimento": "2026-09-02",
       "dias_atraso": 2,
       "tipo": "Pagar"
@@ -210,7 +196,7 @@
     },
     {
       "nome": "Salário Murilo",
-      "valor": 11445.8,
+      "valor": 11412.9,
       "vencimento": "2026-09-05",
       "tipo": "Pagar"
     },
@@ -331,7 +317,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 32808.74,
+  "total_vencido": 28673.410000000003,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

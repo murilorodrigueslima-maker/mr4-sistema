@@ -1,7 +1,103 @@
 {
-  "atualizado_em": "2026-09-04T10:52:31",
-  "total": 51,
+  "atualizado_em": "2026-09-04T14:15:52",
+  "total": 59,
   "pedidos": [
+    {
+      "id": "396322820",
+      "numero": "1330882",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "TK AUTOMOTIVO LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 81.5,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396315991",
+      "numero": "1330881",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "UP CAR COMERCIO DE ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 53.96,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396294519",
+      "numero": "1330880",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "Edson Farias Teixeira",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 331.29,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396294504",
+      "numero": "1330879",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "JOAO JORDAN TELES MOREIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 35,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396291617",
+      "numero": "1330878",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 36,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396289849",
+      "numero": "1330877",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 190,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396284548",
+      "numero": "1330876",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "THAGILA DE ALMEIDA PARENTE",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 3112,
+      "itens": 18,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396283253",
+      "numero": "1330875",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1093.08,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "396273879",
       "numero": "1330874",
@@ -35,6 +131,18 @@
       "vendedor": "fabiana andrade da silva",
       "valor": 165.02,
       "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "395970994",
+      "numero": "1330849",
+      "data": "2026-09-04",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1950,
+      "itens": 5,
       "status_gc": "",
       "cidade": ""
     },
@@ -286,18 +394,6 @@
       "cliente": "Francisco Wesley do Nascimento",
       "vendedor": "ADEMIR LOPES FURTADO",
       "valor": 115.89,
-      "itens": 2,
-      "status_gc": "",
-      "cidade": ""
-    },
-    {
-      "id": "395970994",
-      "numero": "1330849",
-      "data": "2026-09-03",
-      "hora": "",
-      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
-      "vendedor": "fabiana andrade da silva",
-      "valor": 452.8,
       "itens": 2,
       "status_gc": "",
       "cidade": ""

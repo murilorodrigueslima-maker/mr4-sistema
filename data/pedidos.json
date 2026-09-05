@@ -1,7 +1,43 @@
 {
-  "atualizado_em": "2026-09-05T11:14:06",
-  "total": 63,
+  "atualizado_em": "2026-09-05T14:48:11",
+  "total": 66,
   "pedidos": [
+    {
+      "id": "396616759",
+      "numero": "1330912",
+      "data": "2026-09-05",
+      "hora": "",
+      "cliente": "Luiz Cândido da Silvia",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 460,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396612988",
+      "numero": "1330911",
+      "data": "2026-09-05",
+      "hora": "",
+      "cliente": "FRANCISCO DE ASSIS LIMA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 76.24,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396599904",
+      "numero": "1330910",
+      "data": "2026-09-05",
+      "hora": "",
+      "cliente": "JUNIN PARTS",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 231.8,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "396593352",
       "numero": "1330909",
@@ -45,8 +81,8 @@
       "hora": "",
       "cliente": "cliente",
       "vendedor": "fabiana andrade da silva",
-      "valor": 124,
-      "itens": 4,
+      "valor": 108,
+      "itens": 3,
       "status_gc": "",
       "cidade": ""
     },

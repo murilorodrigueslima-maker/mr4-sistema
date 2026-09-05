@@ -1,10 +1,31 @@
 {
-  "atualizado_em": "2026-09-04T23:01:42",
-  "total_produtos": 600,
-  "valor_total_estoque": 376712.1800000004,
+  "atualizado_em": "2026-09-05T04:55:32",
+  "total_produtos": 876,
+  "valor_total_estoque": 460567.0000000009,
   "abaixo_minimo": [],
   "sem_giro": [],
   "margem_baixa": [
+    {
+      "ref": "TP-2002",
+      "nome": "SOQUETES T10 2002",
+      "margem": "-647.8",
+      "preco": 2.3,
+      "custo": 17.2
+    },
+    {
+      "ref": "TP-2003",
+      "nome": "SOQUETES T10 2003",
+      "margem": "-641.9",
+      "preco": 2.7,
+      "custo": 20.03
+    },
+    {
+      "ref": "TP-2041",
+      "nome": "SOQUETE H7 CERAMICA (2041)",
+      "margem": "-629.2",
+      "preco": 2.95,
+      "custo": 21.51
+    },
     {
       "ref": "TP-2027",
       "nome": "SOQUETE 9006 HB4 PLASTICO 2027",
@@ -20,11 +41,88 @@
       "custo": 27.71
     },
     {
+      "ref": "TP-2005",
+      "nome": "SOQUETES T10 2005",
+      "margem": "-596.5",
+      "preco": 2.3,
+      "custo": 16.02
+    },
+    {
       "ref": "TP-2055",
       "nome": "CHICOTE SOM 16 VIAS MACHO 2055",
       "margem": "-592.3",
       "preco": 15,
       "custo": 103.84
+    },
+    {
+      "ref": "TP-2016",
+      "nome": "SOQUETES BA15D LISO 2 POLOS 2016",
+      "margem": "-590.9",
+      "preco": 2.2,
+      "custo": 15.2
+    },
+    {
+      "ref": "TP-2012",
+      "nome": "SOQUETES BA15D HASTE “L“ 2 POLOS 2012",
+      "margem": "-590.9",
+      "preco": 2.2,
+      "custo": 15.2
+    },
+    {
+      "ref": "TP-2018",
+      "nome": "PORTA FUSÍVEL",
+      "margem": "-588.0",
+      "preco": 2.5,
+      "custo": 17.2
+    },
+    {
+      "ref": "TP-2020",
+      "nome": "CHICOTES SOM 4 VIAS 2020",
+      "margem": "-587.8",
+      "preco": 10.3,
+      "custo": 70.84
+    },
+    {
+      "ref": "TP-2048",
+      "nome": "SOQUETES BA15D 2 POLOS PLASTICO 2048",
+      "margem": "-581.6",
+      "preco": 2.66,
+      "custo": 18.13
+    },
+    {
+      "ref": "TP-2035",
+      "nome": "SOQUETE H4 CERAMICA (2035)",
+      "margem": "-580.8",
+      "preco": 4.63,
+      "custo": 31.52
+    },
+    {
+      "ref": "TP-2028",
+      "nome": "SOQUETE 9006 HB4 CERAMICA (2028)",
+      "margem": "-580.6",
+      "preco": 6.08,
+      "custo": 41.38
+    },
+    {
+      "ref": "TP-2026",
+      "nome": "SOQUETE 9005 HB3 CERAMICA (2026)",
+      "margem": "-580.6",
+      "preco": 6.08,
+      "custo": 41.38
+    },
+    {
+      "ref": "TP-2047",
+      "nome": "SOQUETES BA15S 1 POLO PLASTICO 2047",
+      "margem": "-580.1",
+      "preco": 2.26,
+      "custo": 15.37
+    },
+    {
+      "ref": "TP-2015",
+      "nome": "SOQUETES BA15S LISO 1 POLO 2015",
+      "margem": "-575.7",
+      "preco": 1.85,
+      "custo": 12.5
     },
     {
       "ref": "TP-2033",
@@ -34,11 +132,25 @@
       "custo": 25.93
     },
     {
+      "ref": "TP-2009",
+      "nome": "SOQUETES T20 2 POLOS 2009",
+      "margem": "-557.9",
+      "preco": 6.65,
+      "custo": 43.75
+    },
+    {
       "ref": "TP-2059",
       "nome": "PORTA FUSIVEL LAMINA MAX PLASTICO 2059",
       "margem": "-525.7",
       "preco": 4.24,
       "custo": 26.53
+    },
+    {
+      "ref": "TP-2021",
+      "nome": "CHICOTES SOM 2 VIAS 2021",
+      "margem": "-525.4",
+      "preco": 5.11,
+      "custo": 31.96
     },
     {
       "ref": "TP-2040",
@@ -48,11 +160,46 @@
       "custo": 28.95
     },
     {
+      "ref": "TP-2006",
+      "nome": "CONECTORES T10 2006",
+      "margem": "-525.3",
+      "preco": 4.07,
+      "custo": 25.45
+    },
+    {
+      "ref": "TP-2032",
+      "nome": "SOQUETE H8/H11 CERAMICO (2032)",
+      "margem": "-525.0",
+      "preco": 6.08,
+      "custo": 38
+    },
+    {
+      "ref": "TP-2008",
+      "nome": "SOQUETES T5 2008",
+      "margem": "-524.9",
+      "preco": 2.49,
+      "custo": 15.56
+    },
+    {
+      "ref": "TP-2049",
+      "nome": "SOQUETES BA15S 1 POLO GARRA PLASTICO 2049",
+      "margem": "-524.9",
+      "preco": 5.23,
+      "custo": 32.68
+    },
+    {
       "ref": "TP-2030",
       "nome": "SOQUETES H1/H3 CERAMICO 2030",
       "margem": "-524.6",
       "preco": 3.05,
       "custo": 19.05
+    },
+    {
+      "ref": "TP-2010",
+      "nome": "SOQUETES T20 1 POLO 2010",
+      "margem": "-522.7",
+      "preco": 7.3,
+      "custo": 45.46
     },
     {
       "ref": "TP-2031",
@@ -69,6 +216,13 @@
       "custo": 95
     },
     {
+      "ref": "860.352",
+      "nome": "LAMPADA HALOGENA INDIVIDUAL PROMOÇÃO",
+      "margem": "-73.4",
+      "preco": 5,
+      "custo": 8.67
+    },
+    {
       "ref": "6175",
       "nome": "MOLDURA 9“ VW GOL/ SAVEIRO E PARATI G4 (APARELHO CHASSI PEQUENO)",
       "margem": "-45.6",
@@ -81,6 +235,55 @@
       "margem": "-21.7",
       "preco": 29.85,
       "custo": 36.33
+    },
+    {
+      "ref": "2470",
+      "nome": "MOLDURA 2 DIN GM ONIX, COBALT, SPIN, PRISMA 12/16, ONIX JOY 21 - PRETA",
+      "margem": "-8.2",
+      "preco": 36.06,
+      "custo": 39
+    },
+    {
+      "ref": "4994",
+      "nome": "MOLDURA 9 FIAT MOBI - PRETA",
+      "margem": "-4.7",
+      "preco": 140,
+      "custo": 146.54
+    },
+    {
+      "ref": "4150",
+      "nome": "MOLDURA 9 SUZUKI GRAND VITARA 16/19 -  PRETA",
+      "margem": "-2.9",
+      "preco": 130,
+      "custo": 133.71
+    },
+    {
+      "ref": "MAXHB4",
+      "nome": "REF: HB4 - LAMPADA AUTOMOTIVA",
+      "margem": "0.0",
+      "preco": 260,
+      "custo": 260
+    },
+    {
+      "ref": "MAXH11",
+      "nome": "REF: H11 - LAMPADA AUTOMOTIVA",
+      "margem": "0.0",
+      "preco": 260,
+      "custo": 260
+    },
+    {
+      "ref": "I-SLIMH27",
+      "nome": "H27 SLIM RAY X 11.000 LUMENS",
+      "margem": "0.0",
+      "preco": 135,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH16",
+      "nome": "H16 SLIM RAY X 11.000 LUMENS",
+      "margem": "0.6",
+      "preco": 135,
+      "custo": 134.25
     },
     {
       "ref": "6009",
@@ -97,6 +300,48 @@
       "custo": 240
     },
     {
+      "ref": "I-SLIMHB3",
+      "nome": "HB3 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH11",
+      "nome": "H11 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH7",
+      "nome": "H7 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "I-SLIMH1",
+      "nome": "H1 SLIM RAY X 11.000 LUMENS",
+      "margem": "10.0",
+      "preco": 150,
+      "custo": 135
+    },
+    {
+      "ref": "134/F",
+      "nome": "ESPUMA P/ CHICOTE S/COLA",
+      "margem": "11.3",
+      "preco": 16.8,
+      "custo": 14.91
+    },
+    {
+      "ref": "I-SLIMH4",
+      "nome": "H4 SLIM RAY X 11.000 LUMENS",
+      "margem": "11.8",
+      "preco": 170,
+      "custo": 150
+    },
+    {
       "ref": "2107-0",
       "nome": "ULTRA LED CSP H27 70W 10.000 LUMENS BIVOLT - ASX1027",
       "margem": "14.1",
@@ -109,251 +354,6 @@
       "margem": "14.4",
       "preco": 172.8,
       "custo": 147.89
-    },
-    {
-      "ref": "LDCAR012",
-      "nome": "FAROL PROJETOR LED AUXILIAR TOYOTA",
-      "margem": "16.7",
-      "preco": 663.88,
-      "custo": 553.23
-    },
-    {
-      "ref": "AF10000118",
-      "nome": "AF QUADRIAXIAL AZUL 6X9“",
-      "margem": "16.7",
-      "preco": 128.35,
-      "custo": 106.96
-    },
-    {
-      "ref": "VA10000078",
-      "nome": "KIT PRATICO 1 PAR TRIAK 6“ + 1 PAR AF 6X9",
-      "margem": "16.7",
-      "preco": 196.54,
-      "custo": 163.78
-    },
-    {
-      "ref": "15210",
-      "nome": "Caixa De Som Amplificada Exclusive Subwoofer Xc300 Slim 300w",
-      "margem": "17.1",
-      "preco": 519.89,
-      "custo": 430.79
-    },
-    {
-      "ref": "15200",
-      "nome": "Caixa Amplificada Exclusive Xc 300 Trapezio 8 Universal 300w",
-      "margem": "17.1",
-      "preco": 519.89,
-      "custo": 430.79
-    },
-    {
-      "ref": "30100",
-      "nome": "Caixa De Som Trio Amplificada 8 Exclusive Bt300 Usb Aux",
-      "margem": "17.1",
-      "preco": 810.78,
-      "custo": 671.82
-    },
-    {
-      "ref": "30804036",
-      "nome": "MR200 PLUS- MÓDULO REBOQUE- SINALEIRA E FREIOS UNIFICADOS (R 200 PLUS)",
-      "margem": "17.1",
-      "preco": 72.3,
-      "custo": 59.93
-    },
-    {
-      "ref": "30800373",
-      "nome": "FKI505 CAN - SEM CONTROLEARGOS/CRONOS/MOBI/TORO/UNO A PARTIR DE 2016 (A 505 CAN)",
-      "margem": "17.1",
-      "preco": 197.54,
-      "custo": 163.75
-    },
-    {
-      "ref": "TP-6168",
-      "nome": "KIT LAMPADA LED SKY 4K PREMIUM H27 40W 4100LM",
-      "margem": "17.2",
-      "preco": 95,
-      "custo": 78.7
-    },
-    {
-      "ref": "AF10000294",
-      "nome": "KIT 2 VIAS 6.2 SAMURAI 1 PAR ALTO FALANTE 6 + 1 PAR TWEETERS + 1 PAR DIVIDORES",
-      "margem": "18.0",
-      "preco": 398.84,
-      "custo": 326.92
-    },
-    {
-      "ref": "AF10000180",
-      "nome": "MB8K 4 OHMS - AF MIDBASS 8\" OGIVA CENTRAL - 800 WRMS (PAR)",
-      "margem": "18.0",
-      "preco": 398.84,
-      "custo": 326.92
-    },
-    {
-      "ref": "1.20.046",
-      "nome": "SW 10'' OUTDOOR LC 300 WATTS RMS 4 OHMS",
-      "margem": "18.0",
-      "preco": 252.31,
-      "custo": 206.9
-    },
-    {
-      "ref": "1.20.011",
-      "nome": "SW 12'' OUTDOOR 500 WATTS RMS 4 OHMS",
-      "margem": "18.0",
-      "preco": 384.09,
-      "custo": 314.95
-    },
-    {
-      "ref": "AF10000139",
-      "nome": "QUADRIAXIAL 4“",
-      "margem": "18.0",
-      "preco": 91.9,
-      "custo": 75.33
-    },
-    {
-      "ref": "AF10000123",
-      "nome": "QR6 AF QUADRIAXIAL 6“ CINZA 160 RMS",
-      "margem": "18.0",
-      "preco": 128.33,
-      "custo": 105.19
-    },
-    {
-      "ref": "2106-1",
-      "nome": "ULTRA LED CSP HB3/HB4 70W 10.000 LUMENS BIVOLT - ASX1006",
-      "margem": "18.4",
-      "preco": 135,
-      "custo": 110.21
-    },
-    {
-      "ref": "2104-3",
-      "nome": "ULTRA LED CSP H7 70W 10.000 LUMENS BIVOLT - ASX1007",
-      "margem": "18.4",
-      "preco": 135,
-      "custo": 110.21
-    },
-    {
-      "ref": "0207012D",
-      "nome": "FAROL DE MILHA AVULSO HILUX PICK-UP 09 11",
-      "margem": "19.0",
-      "preco": 82,
-      "custo": 66.39
-    },
-    {
-      "ref": "1015H4",
-      "nome": "LAMPADA HALOGENA H4 12V/60/55W",
-      "margem": "19.9",
-      "preco": 8.03,
-      "custo": 6.43
-    },
-    {
-      "ref": "30804008",
-      "nome": "Módulo De Travamento Portas Centralina Universal Ctl100 Fks",
-      "margem": "20.0",
-      "preco": 24.28,
-      "custo": 19.42
-    },
-    {
-      "ref": "16300",
-      "nome": "Caixa Amplificada Exclusive Xc 200 Trapezio 8 Universal 200w",
-      "margem": "20.0",
-      "preco": 431.18,
-      "custo": 344.94
-    },
-    {
-      "ref": "30140",
-      "nome": "Caixa Amp Trio Bt500 Trio 12 Pol 12/110/220v 500w Exclusive",
-      "margem": "20.0",
-      "preco": 984.06,
-      "custo": 787.25
-    },
-    {
-      "ref": "1.37.002",
-      "nome": "QUADRIAXIAL 6X9 TKL 200W RMS 4 OHMS",
-      "margem": "20.0",
-      "preco": 521.98,
-      "custo": 417.58
-    },
-    {
-      "ref": "1.23.075",
-      "nome": "PENTAXIAL 6X9'' BICHO PAPAO 175W",
-      "margem": "20.0",
-      "preco": 431.84,
-      "custo": 345.47
-    },
-    {
-      "ref": "1.07.022",
-      "nome": "KIT TWO WAY 6'' 100 WATTS RMS",
-      "margem": "20.0",
-      "preco": 330.81,
-      "custo": 264.65
-    },
-    {
-      "ref": "1.49.011",
-      "nome": "TWEETER BL 10",
-      "margem": "20.0",
-      "preco": 26.89,
-      "custo": 21.51
-    },
-    {
-      "ref": "6002",
-      "nome": "MOLDURA 9  CHINES MITSUBISHI PAJERO SPORT G3 2016  - BLACK PIANO",
-      "margem": "20.0",
-      "preco": 204.99,
-      "custo": 163.99
-    },
-    {
-      "ref": "VIP-97-0003C",
-      "nome": "KIT TESLA MOLD 9.7P CHEVROLET GM CRUZE 2015/22 BLACK PIANO",
-      "margem": "20.0",
-      "preco": 783.68,
-      "custo": 626.94
-    },
-    {
-      "ref": "30802034",
-      "nome": "Módulo Antifurto Fks Corta Corrente Para Carro Universal",
-      "margem": "20.0",
-      "preco": 38.05,
-      "custo": 30.44
-    },
-    {
-      "ref": "30800447",
-      "nome": "Alarme Fks Fiat Sobe Vidros Com Sirene E Auto Lock",
-      "margem": "20.0",
-      "preco": 192.76,
-      "custo": 154.21
-    },
-    {
-      "ref": "30800450",
-      "nome": "Kit Alarme De Carro Automotivo Chevrolet Bloqueador + Sirene",
-      "margem": "20.0",
-      "preco": 192.76,
-      "custo": 154.21
-    },
-    {
-      "ref": "30800446",
-      "nome": "Alarme Automotivo Seguranca Veícular Carro Universal Hyundai",
-      "margem": "20.0",
-      "preco": 192.76,
-      "custo": 154.21
-    },
-    {
-      "ref": "30800342",
-      "nome": "FK903 ALF - 02 CONTROLE CR941- COM ANTIFURTO+TRAVAMENTO UNIVERSAL C/ RELÉ (A 903 ALF C941)",
-      "margem": "20.2",
-      "preco": 169.48,
-      "custo": 135.21
-    },
-    {
-      "ref": "PRIMEH4",
-      "nome": "H4 LD PRIME",
-      "margem": "20.6",
-      "preco": 330,
-      "custo": 262.11
-    },
-    {
-      "ref": "1501004",
-      "nome": "INTERRUPTOR VIDRO GOL G4/G5 FOX DUPLO 1 ESTAGIO",
-      "margem": "21.0",
-      "preco": 22.29,
-      "custo": 17.61
     }
   ]
 }

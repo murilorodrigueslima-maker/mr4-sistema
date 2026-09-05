@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-04T23:01:40",
+  "atualizado_em": "2026-09-05T04:55:30",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -161,27 +161,30 @@
       "vencimento": "2026-09-02",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1227.5,
       "vencimento": "2026-09-04",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624,
       "vencimento": "2026-09-04",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 2855.6,
       "vencimento": "2026-09-04",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
@@ -313,11 +316,23 @@
       "valor": 7583.7,
       "vencimento": "2026-09-11",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 625,
+      "vencimento": "2026-09-12",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
+      "valor": 625,
+      "vencimento": "2026-09-12",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 28673.410000000003,
+  "total_vencido": 34380.51,
   "total_a_receber": 0,
-  "total_a_pagar": 29385.949999999997
+  "total_a_pagar": 33341.11
 }

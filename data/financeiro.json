@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-05T22:57:53",
+  "atualizado_em": "2026-09-06T03:47:50",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -182,27 +182,30 @@
       "vencimento": "2026-09-04",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 3593.33,
       "vencimento": "2026-09-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "ALUGUEL GALPÃO",
       "valor": 3955.16,
       "vencimento": "2026-09-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "Salário Murilo",
       "valor": 11412.9,
       "vencimento": "2026-09-05",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
@@ -328,11 +331,17 @@
       "valor": 625,
       "vencimento": "2026-09-12",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
+      "valor": 3812.88,
+      "vencimento": "2026-09-13",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 34380.51,
+  "total_vencido": 53341.9,
   "total_a_receber": 0,
   "total_a_pagar": 33341.11
 }

@@ -1,186 +1,186 @@
 {
-  "atualizado_em": "2026-09-05T20:27:18",
+  "atualizado_em": "2026-09-05T22:57:53",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-07-17",
-      "dias_atraso": 50,
+      "dias_atraso": 51,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-07-25",
-      "dias_atraso": 42,
+      "dias_atraso": 43,
       "tipo": "Pagar"
     },
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 1161.51,
       "vencimento": "2026-07-25",
-      "dias_atraso": 42,
+      "dias_atraso": 43,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-07-28",
-      "dias_atraso": 39,
+      "dias_atraso": 40,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-07-30",
-      "dias_atraso": 37,
+      "dias_atraso": 38,
       "tipo": "Pagar"
     },
     {
       "nome": "V.T+VR",
       "valor": 305.4,
       "vencimento": "2026-08-15",
-      "dias_atraso": 21,
+      "dias_atraso": 22,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO BRADESCO",
       "valor": 3669.52,
       "vencimento": "2026-08-17",
-      "dias_atraso": 19,
+      "dias_atraso": 20,
       "tipo": "Pagar"
     },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-08-25",
-      "dias_atraso": 11,
+      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
       "nome": "CAPITALIZAÇÃO",
       "valor": 103.16,
       "vencimento": "2026-08-25",
-      "dias_atraso": 11,
+      "dias_atraso": 12,
       "tipo": "Pagar"
     },
     {
       "nome": "EMPRESTIMO PRONAMP",
       "valor": 700.78,
       "vencimento": "2026-08-28",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 2930.5,
       "vencimento": "2026-08-28",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1259.5,
       "vencimento": "2026-08-28",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1932.84,
       "vencimento": "2026-08-28",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 3144.96,
       "vencimento": "2026-08-28",
-      "dias_atraso": 8,
+      "dias_atraso": 9,
       "tipo": "Pagar"
     },
     {
       "nome": "PARCELAMENTO IMPOSTOS",
       "valor": 517.47,
       "vencimento": "2026-08-30",
-      "dias_atraso": 6,
+      "dias_atraso": 7,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 494.7,
       "vencimento": "2026-08-31",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1304.8,
       "vencimento": "2026-08-31",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "U. N. LIMA",
       "valor": 2317.51,
       "vencimento": "2026-08-31",
-      "dias_atraso": 5,
+      "dias_atraso": 6,
       "tipo": "Pagar"
     },
     {
       "nome": "NBM - Indústria Eletrônica Ltda",
       "valor": 1134.83,
       "vencimento": "2026-09-02",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 152.83,
       "vencimento": "2026-09-02",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "N2 COMERCIO DE PRODUTOS ELETRONICOS LTDA",
       "valor": 321.91,
       "vencimento": "2026-09-02",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "G B SIQUEIRA PECAS E ACESSORIOS",
       "valor": 149.44,
       "vencimento": "2026-09-02",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 436.82,
       "vencimento": "2026-09-02",
-      "dias_atraso": 3,
+      "dias_atraso": 4,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1227.5,
       "vencimento": "2026-09-04",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1624,
       "vencimento": "2026-09-04",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     },
     {
       "nome": "PERMAK INDUSTRIA E COMERCIO LTDA",
       "valor": 2855.6,
       "vencimento": "2026-09-04",
-      "dias_atraso": 1,
+      "dias_atraso": 2,
       "tipo": "Pagar"
     }
   ],

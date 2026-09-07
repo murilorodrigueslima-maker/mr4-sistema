@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-06T22:54:26",
+  "atualizado_em": "2026-09-07T03:47:53",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -336,6 +336,18 @@
       "nome": "THOMAS KL INDUSTRIA DE ALTO FALANTES LTDA",
       "valor": 3812.88,
       "vencimento": "2026-09-13",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 1932.84,
+      "vencimento": "2026-09-14",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
+      "valor": 3144.96,
+      "vencimento": "2026-09-14",
       "tipo": "Pagar"
     }
   ],

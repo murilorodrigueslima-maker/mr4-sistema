@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-07T23:05:25",
+  "atualizado_em": "2026-09-08T05:25:33",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -203,27 +203,30 @@
       "vencimento": "2026-09-05",
       "dias_atraso": 3,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
       "vencimento": "2026-09-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 4981.75,
       "vencimento": "2026-09-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 4652.81,
       "vencimento": "2026-09-07",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.97,
@@ -349,11 +352,65 @@
       "valor": 3144.96,
       "vencimento": "2026-09-14",
       "tipo": "Pagar"
+    },
+    {
+      "nome": "PEDREIRO P/CASA ANTIGA(WILTON).",
+      "valor": 218.82,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SISTEMA GESTÃOCLICK",
+      "valor": 224.28,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "JUROS CARTAO ELO NAQUIM",
+      "valor": 2452.17,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MERCADO LIVRE",
+      "valor": 52.01,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "NOTEBOOK ASUS PARA ESCRITORIO",
+      "valor": 298.95,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 494.7,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ASX COMERCIO LTDA - EPP",
+      "valor": 1150.8,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "SELOS DE GARANTIA MR4",
+      "valor": 38.33,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
+      "valor": 5699,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
     }
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 53341.9,
+  "total_vencido": 64620.46,
   "total_a_receber": 0,
   "total_a_pagar": 33341.11
 }

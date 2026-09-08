@@ -1,7 +1,19 @@
 {
-  "atualizado_em": "2026-09-08T17:29:10",
-  "total": 20,
+  "atualizado_em": "2026-09-08T20:44:59",
+  "total": 21,
   "pedidos": [
+    {
+      "id": "397139517",
+      "numero": "1330934",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "50.782.160 SAMARA REBECA MELO VIANA COSTA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 120.94,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "397117419",
       "numero": "1330933",

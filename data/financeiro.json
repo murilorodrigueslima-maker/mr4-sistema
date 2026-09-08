@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-08T14:47:55",
+  "atualizado_em": "2026-09-08T17:29:12",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -81,13 +81,6 @@
     {
       "nome": "ASX COMERCIO LTDA - EPP",
       "valor": 1259.5,
-      "vencimento": "2026-08-28",
-      "dias_atraso": 11,
-      "tipo": "Pagar"
-    },
-    {
-      "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
-      "valor": 3144.96,
       "vencimento": "2026-08-28",
       "dias_atraso": 11,
       "tipo": "Pagar"
@@ -396,7 +389,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 57227.09,
+  "total_vencido": 54082.13,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

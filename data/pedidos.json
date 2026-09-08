@@ -1,7 +1,79 @@
 {
-  "atualizado_em": "2026-09-08T10:59:28",
-  "total": 9,
+  "atualizado_em": "2026-09-08T14:47:53",
+  "total": 15,
   "pedidos": [
+    {
+      "id": "397046924",
+      "numero": "1330928",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 100,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397038585",
+      "numero": "1330927",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "ADRIANO A MARTINS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 38,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397015165",
+      "numero": "1330926",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "ALISSON FIUZA DE OLIVEIRA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 575,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396997564",
+      "numero": "1330925",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "RAFAEL NUNES CARNEIRO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 405,
+      "itens": 6,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396977057",
+      "numero": "1330924",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 260,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396976330",
+      "numero": "1330923",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "50.091.279 PEDRO IGOR MACIEL CARNEIRO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 361,
+      "itens": 5,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "396963131",
       "numero": "1330922",

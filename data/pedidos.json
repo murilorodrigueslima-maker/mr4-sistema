@@ -1,5 +1,114 @@
 {
-  "atualizado_em": "2026-09-08T05:25:32",
-  "total": 0,
-  "pedidos": []
+  "atualizado_em": "2026-09-08T10:59:28",
+  "total": 9,
+  "pedidos": [
+    {
+      "id": "396963131",
+      "numero": "1330922",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "FRANCISCO NATHANAEL ALVES DO NASCIMENTO 05637903344",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 131,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396961795",
+      "numero": "1330921",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "J. A. DE CARVALHO PECAS E ACESSORIOS AUTOMOTORES",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 1388.8,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396960372",
+      "numero": "1330920",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "MIGUEL FERREIRA DA SILVA NETO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 33.14,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396956118",
+      "numero": "1330919",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "Jadiel viana Ramos",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 258,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396937368",
+      "numero": "1330918",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "W. SOUZA CUNHA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 15.74,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396927408",
+      "numero": "1330917",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "LUCAS A C PONTES ACESSORIOS",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 222.91,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396926773",
+      "numero": "1330916",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "SINEY FREIRE SILVA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 539.52,
+      "itens": 13,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396919501",
+      "numero": "1330915",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "ANTONIO CESAR GOMES DE SOUZA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 58.43,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "396917073",
+      "numero": "1330914",
+      "data": "2026-09-08",
+      "hora": "",
+      "cliente": "40.769.826 DANIEL DE ARAUJO LEAO",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 560,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    }
+  ]
 }

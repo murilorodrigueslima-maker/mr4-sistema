@@ -417,13 +417,16 @@ onAuthStateChanged(auth, async user => {
     }
     // FAIL CLOSED: gestores precisam ter doc users/{uid} com role='gestor'.
     // Se não tiver, acesso é negado (evita acesso indevido via conta sem perfil).
-    if (perfSnap.exists() && perfSnap.data().role !== 'gestor') {
+    // FAIL CLOSED: sem doc users/{uid} com role=gestor e ativo=true → nega acesso
+    if (!perfSnap.exists() || !perfSnap.data().ativo || perfSnap.data().role !== 'gestor') {
       document.getElementById('loadingScreen').innerHTML =
         '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
       return;
     }
   } catch(e) {
     console.warn('[Auth] Erro ao verificar perfil:', e);
+    window.location.href = '../login.html';
+    return;
   }
   window._userEmail = user.email || '';
   document.getElementById('loadingScreen').style.display='none';

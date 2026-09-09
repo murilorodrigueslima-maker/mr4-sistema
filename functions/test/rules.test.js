@@ -187,3 +187,64 @@ test('I — funcionario cria justificativa com status=pendente (aprovada pelo ge
     })
   );
 });
+
+// ─── Teste J: funcionario NÃO pode criar espelho (create=gestor only) ─────────
+test('J — funcionario não pode criar espelho (only gestor can create)', async () => {
+  const db = testEnv.authenticatedContext(UID_FUNC).firestore();
+  await assertFails(
+    db.collection('espelhos').doc('esp-func').set({
+      funcId:   FUNC_ID,
+      mes:      '2026-09',
+      assinado: false,
+    })
+  );
+});
+
+// ─── Teste K: funcionario pode assinar espelho (update campos permitidos) ─────
+test('K — funcionario pode atualizar espelho com campos de assinatura', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection('espelhos').doc('esp-assinar').set({
+      funcId: FUNC_ID, mes: '2026-09', assinado: false,
+    });
+  });
+  const db = testEnv.authenticatedContext(UID_FUNC).firestore();
+  await assertSucceeds(
+    db.collection('espelhos').doc('esp-assinar').update({
+      assinado:     true,
+      assinaturaImg:'data:image/png;base64,abc',
+      assinadoEm:   '2026-09-09T12:00:00.000Z',
+      assinadoPor:  'Func Teste',
+    })
+  );
+});
+
+// ─── Teste L: funcionario NÃO pode atualizar espelho com campos fora do set ───
+test('L — funcionario não pode alterar espelho além dos campos de assinatura', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection('espelhos').doc('esp-restrito').set({
+      funcId: FUNC_ID, mes: '2026-09', assinado: false,
+    });
+  });
+  const db = testEnv.authenticatedContext(UID_FUNC).firestore();
+  // Tentativa de alterar campo 'mes' (não permitido)
+  await assertFails(
+    db.collection('espelhos').doc('esp-restrito').update({
+      assinado: true,
+      mes:      '2026-08',
+    })
+  );
+});
+
+// ─── Teste M: funcionario NÃO pode criar justificativa com lancadoPorGestor=true
+test('M — funcionario não pode criar justificativa com lancadoPorGestor=true', async () => {
+  const db = testEnv.authenticatedContext(UID_FUNC).firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-gestor-flag').set({
+      funcId:           FUNC_ID,
+      data:             '2026-09-01',
+      motivo:           'Fraude de flag',
+      status:           'pendente',
+      lancadoPorGestor: true,
+    })
+  );
+});

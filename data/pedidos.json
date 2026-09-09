@@ -1,7 +1,91 @@
 {
-  "atualizado_em": "2026-09-09T05:28:11",
-  "total": 21,
+  "atualizado_em": "2026-09-09T11:01:45",
+  "total": 28,
   "pedidos": [
+    {
+      "id": "397252376",
+      "numero": "1330941",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "52.011.584 PEDRO DE OLIVEIRA ARAUJO",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 3587.42,
+      "itens": 27,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397236270",
+      "numero": "1330940",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "IMPACTUS EVENTOS LOCACOES E EMPRRENDIMENTOS LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 1163.39,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397233961",
+      "numero": "1330939",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "AURICELIO CAR LTDA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 80.46,
+      "itens": 3,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397230228",
+      "numero": "1330938",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "Ronald da silva Araujo",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 677.9,
+      "itens": 2,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397218182",
+      "numero": "1330937",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "RM ACESSORIOS AUTOMOTIVOS LTDA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 2425.27,
+      "itens": 8,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397217394",
+      "numero": "1330936",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "49.374.661 FRANCISCO HELSING ABRANTES SOUSA",
+      "vendedor": "fabiana andrade da silva",
+      "valor": 545.64,
+      "itens": 4,
+      "status_gc": "",
+      "cidade": ""
+    },
+    {
+      "id": "397213654",
+      "numero": "1330935",
+      "data": "2026-09-09",
+      "hora": "",
+      "cliente": "JULIANO ALBUQUERQUE DA SILVA",
+      "vendedor": "ADEMIR LOPES FURTADO",
+      "valor": 25.24,
+      "itens": 1,
+      "status_gc": "",
+      "cidade": ""
+    },
     {
       "id": "397139517",
       "numero": "1330934",

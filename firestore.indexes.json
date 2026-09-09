@@ -1,0 +1,14 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "registros",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "funcId", "order": "ASCENDING" },
+        { "fieldPath": "data",   "order": "ASCENDING" },
+        { "fieldPath": "hora",   "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

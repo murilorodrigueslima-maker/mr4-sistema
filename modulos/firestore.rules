@@ -1,0 +1,234 @@
+// firestore.rules — MR4 Ponto Digital
+// Versão: 2026-09-08
+//
+// ANTES DE PUBLICAR EM PRODUÇÃO:
+//   1. Execute os testes A-T no emulador (functions/test/).
+//   2. Crie docs users/{uid} com role='gestor', ativo=true para os gestores existentes.
+//      Sem isso, gestores serão barrados pela regra FAIL CLOSED abaixo.
+//   3. Teste no Rules Playground do Firebase Console antes de aplicar.
+//
+// Perfis:
+//   gestor      — acesso total (requer doc users/{uid} com role='gestor' e ativo=true)
+//   funcionario — acesso limitado ao próprio funcId
+//
+// Criação de registros de ponto:
+//   Funcionários NÃO podem criar registros diretamente.
+//   Toda criação é feita pela Cloud Function registrarPonto (Admin SDK).
+//   Gestores podem criar registros manualmente (lançamento).
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Funções auxiliares ─────────────────────────────────────────────────────
+
+    function isAuthed() {
+      return request.auth != null;
+    }
+
+    function meuPerfil() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // FAIL CLOSED: exige doc users/{uid} com role='gestor' E ativo=true.
+    // Qualquer usuário sem este doc é tratado como não-gestor.
+    // (Anterior: !exists(...) = gestor — VULNERABILIDADE REMOVIDA)
+    function isGestor() {
+      return isAuthed() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        meuPerfil().role == 'gestor' &&
+        meuPerfil().ativo == true;
+    }
+
+    // Funcionário ativo: autenticado, role='funcionario', ativo=true
+    function isFuncionario() {
+      return isAuthed() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        meuPerfil().role == 'funcionario' &&
+        meuPerfil().ativo == true;
+    }
+
+    // Retorna o funcionarioId vinculado ao UID do funcionário logado
+    function meuFuncId() {
+      return meuPerfil().funcionarioId;
+    }
+
+    // ── Coleção: users ─────────────────────────────────────────────────────────
+
+    match /users/{uid} {
+      allow read: if isAuthed() && (request.auth.uid == uid || isGestor());
+      allow write: if isGestor();
+    }
+
+    // ── Coleção: funcionarios ──────────────────────────────────────────────────
+
+    match /funcionarios/{funcId} {
+      allow read:  if isGestor() || (isFuncionario() && funcId == meuFuncId());
+      allow write: if isGestor();
+    }
+
+    // ── Coleção: registros ─────────────────────────────────────────────────────
+    // Funcionários NÃO podem criar registros diretamente.
+    // Criação ocorre via Cloud Function registrarPonto (Admin SDK).
+    // Gestores podem criar, editar e deletar (lançamento manual, correções).
+
+    match /registros/{regId} {
+      allow read:             if isGestor() || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create, update, delete: if isGestor();
+    }
+
+    // ── Coleção: justificativas ────────────────────────────────────────────────
+
+    match /justificativas/{justifId} {
+      allow read:   if isGestor() || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create: if isGestor() || (
+        isFuncionario() &&
+        request.resource.data.funcId == meuFuncId() &&
+        request.resource.data.status == 'pendente' &&
+        request.resource.data.lancadoPorGestor == false
+      );
+      allow update, delete: if isGestor();
+    }
+
+    // ── Coleção: creditos_jornada ──────────────────────────────────────────────
+
+    match /creditos_jornada/{creditoId} {
+      allow read:  if isGestor() || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow write: if isGestor();
+    }
+
+    // ── Coleção: espelhos ──────────────────────────────────────────────────────
+
+    match /espelhos/{espelhoId} {
+      allow read:   if isGestor() || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create: if isGestor();
+      allow update: if isGestor() || (
+        isFuncionario() &&
+        resource.data.funcId == meuFuncId() &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['assinado','assinaturaImg','assinadoEm','assinadoPor'])
+      );
+      allow delete: if isGestor();
+    }
+
+    // ── Coleção: avaliacoes ────────────────────────────────────────────────────
+
+    match /avaliacoes/{avalId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: sistema_usuarios ──────────────────────────────────────────────
+    // Perfis de acesso ao sistema administrativo (modulos/permissoes por gestor).
+    // Funcionários nunca têm docs aqui; mesmo assim a regra é explícita.
+
+    match /sistema_usuarios/{uid} {
+      allow read: if isAuthed() && (request.auth.uid == uid || isGestor());
+      allow write: if isGestor();
+    }
+
+    // ── Coleção: produto_equivalentes ──────────────────────────────────────────
+
+    match /produto_equivalentes/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: demandas ──────────────────────────────────────────────────────
+
+    match /demandas/{demandaId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: painel_config ─────────────────────────────────────────────────
+    // Configurações do painel — leitura e escrita restritas a gestores.
+
+    match /painel_config/{configId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: compras_config ────────────────────────────────────────────────
+    // Configurações do módulo de compras (settings, fornecedores, mapeamento).
+    // Apenas gestores — nenhum acesso de funcionários ou usuários sem perfil.
+
+    match /compras_config/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
+    // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
+    // Rules garantem o mínimo: acesso restrito a gestores.
+
+    match /expedicao_pedidos/{pedidoId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleções: marketing ────────────────────────────────────────────────────
+    // Conteúdos de pipeline, ideias e legendas do módulo de marketing.
+
+    match /marketing_conteudos/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    match /marketing_ideias/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    match /marketing_legendas/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: garantias ─────────────────────────────────────────────────────
+    // Registros de garantia de produtos. Acesso exclusivo de gestores.
+
+    match /garantias/{garantiaId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: fornecedores_custo ────────────────────────────────────────────
+    // Tabela de fornecedores com percentuais de custo.
+    // Usada em calculadora-custo.html (read/write) e garantia.html (read).
+
+    match /fornecedores_custo/{fornecedorId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: clientes ──────────────────────────────────────────────────────
+    // CRM — cadastro de clientes. Pipeline, notas, histórico de contato.
+
+    match /clientes/{clienteId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: conversas (e subcoleção msgs) ─────────────────────────────────
+    // Histórico de conversas do CRM por telefone.
+    // conversas/{phone} — documento raiz (metadados, se existir).
+    // conversas/{phone}/msgs/{msgId} — mensagens da conversa.
+
+    match /conversas/{phone} {
+      allow read, write: if isGestor();
+      match /msgs/{msgId} {
+        allow read, write: if isGestor();
+      }
+    }
+
+    // ── Coleção: conversas_resumo ──────────────────────────────────────────────
+    // Resumos de conversas para exibição no painel de inbox.
+
+    match /conversas_resumo/{phone} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: chat_status ───────────────────────────────────────────────────
+    // Status de conexão do WhatsApp por número de telefone.
+
+    match /chat_status/{phone} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Tudo mais: negado por padrão ───────────────────────────────────────────
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+  }
+}

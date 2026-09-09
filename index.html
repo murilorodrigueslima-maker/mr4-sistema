@@ -352,6 +352,20 @@
       return;
     }
 
+    // FAIL CLOSED: verifica role antes de mostrar o sistema administrativo
+    try {
+      const rSnap = await getDoc(doc(db, 'users', user.uid));
+      if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+        await signOut(auth);
+        window.location.href = './login.html';
+        return;
+      }
+    } catch(e) {
+      await signOut(auth);
+      window.location.href = './login.html';
+      return;
+    }
+
     // Busca perfil no Firestore
     let perfil = { nome: user.displayName || user.email.split('@')[0], cargo: 'Usuário', modulos: ['catalogo'] };
 

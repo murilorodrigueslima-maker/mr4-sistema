@@ -270,6 +270,13 @@ const db   = getFirestore(app);
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
+  // FAIL CLOSED: role check antes de qualquer acesso
+  try {
+    const rSnap = await getDoc(doc(db, 'users', user.uid));
+    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+      window.location.href = '../login.html'; return;
+    }
+  } catch(e) { window.location.href = '../login.html'; return; }
   let ok = false;
   try {
     const s = await getDoc(doc(db, 'sistema_usuarios', user.uid));
@@ -277,7 +284,7 @@ onAuthStateChanged(auth, async user => {
       const d = s.data();
       ok = d.admin || (d.modulos || []).includes('estoque') || (d.modulos || []).includes('equivalentes');
     }
-  } catch(e) { ok = true; }
+  } catch(e) { ok = false; }
   if (!ok) { window.location.href = '../index.html'; return; }
 
   // Expõe instâncias para o script principal

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MR4 — Acesso do Funcionário</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Barlow',sans-serif;background:#0A0A0A;color:#F5F5F5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.card{background:#1A1A1A;border:1px solid #333;border-radius:16px;padding:2rem 1.75rem;width:100%;max-width:360px;}
+.logo{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:700;letter-spacing:1px;text-align:center;margin-bottom:.5rem;}
+.logo span{color:#FF6B1A;}
+.subtitulo{font-size:12px;color:#888;text-align:center;margin-bottom:2rem;text-transform:uppercase;letter-spacing:1px;}
+.campo{margin-bottom:1rem;}
+.campo label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:.4rem;}
+.campo input{width:100%;padding:.75rem 1rem;background:#2A2A2A;border:1px solid #444;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.95rem;color:#F5F5F5;outline:none;transition:border-color .2s;}
+.campo input:focus{border-color:#FF6B1A;}
+.btn{width:100%;padding:.85rem;background:#FF6B1A;color:white;border:none;border-radius:8px;font-family:'Barlow',sans-serif;font-size:.95rem;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:background .2s;margin-top:.5rem;}
+.btn:hover{background:#e85d0f;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.erro{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;color:#EF4444;font-size:.82rem;font-weight:500;padding:.6rem 1rem;margin-bottom:1rem;display:none;}
+.erro.show{display:block;}
+.aviso{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:.7rem 1rem;font-size:.78rem;color:#F59E0B;margin-top:1.5rem;text-align:center;}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rodape{text-align:center;margin-top:1.5rem;font-size:.7rem;color:#555;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span>MR4</span> PONTO</div>
+  <p class="subtitulo">Acesso do funcionário</p>
+
+  <div class="erro" id="msgErro"></div>
+
+  <div class="campo">
+    <label for="email">E-mail</label>
+    <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+  </div>
+  <div class="campo">
+    <label for="senha">Senha</label>
+    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
+  </div>
+
+  <button class="btn" id="btnEntrar" onclick="fazerLogin()">ENTRAR</button>
+
+  <div class="aviso">Conta criada pelo gestor.<br>Em caso de problemas, contate a administração.</div>
+  <div class="rodape">MR4 Distribuidora &copy; 2026 — Acesso restrito</div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+};
+
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+
+onAuthStateChanged(auth, user => {
+  if (user) window.location.href = 'ponto-func.html';
+});
+
+window.fazerLogin = async function() {
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value;
+  const btn   = document.getElementById('btnEntrar');
+  const erro  = document.getElementById('msgErro');
+
+  erro.classList.remove('show');
+  if (!email || !senha) { mostrarErro('Preencha e-mail e senha.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Entrando...';
+
+  try {
+    await signInWithEmailAndPassword(auth, email, senha);
+    window.location.href = 'ponto-func.html';
+  } catch(e) {
+    const msgs = {
+      'auth/user-not-found':    'Usuário não encontrado.',
+      'auth/wrong-password':    'Senha incorreta.',
+      'auth/invalid-email':     'E-mail inválido.',
+      'auth/too-many-requests': 'Muitas tentativas. Aguarde e tente novamente.',
+      'auth/invalid-credential':'E-mail ou senha incorretos.',
+    };
+    mostrarErro(msgs[e.code] || 'Erro ao entrar. Tente novamente.');
+    btn.disabled = false;
+    btn.textContent = 'ENTRAR';
+  }
+};
+
+function mostrarErro(msg) {
+  const el = document.getElementById('msgErro');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') window.fazerLogin(); });
+</script>
+</body>
+</html>

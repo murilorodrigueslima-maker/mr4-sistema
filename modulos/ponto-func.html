@@ -127,19 +127,16 @@ canvas#canvasFoto{display:none;}
   <div class="spinner"></div>
 </div>
 
-<!-- Seleção de funcionário (quando não tem ?f= na URL) -->
-<div id="tela-selec">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
-  <div class="selec-titulo">Quem é você?</div>
-  <div class="selec-sub">Selecione seu nome para bater o ponto</div>
-  <div class="func-btn-lista" id="lista-func-selec"></div>
-</div>
+<!-- (seleção de funcionário removida — identidade via Firebase Auth) -->
 
 <!-- App do funcionário -->
 <div class="func-app" id="func-app">
   <div class="func-topbar">
-    <div class="func-topbar-logo">MR4 PONTO</div>
-    <div class="func-topbar-user"><strong id="func-nome-top">—</strong>Ponto digital</div>
+    <div class="func-topbar-logo">MR4 PONTO<span style="font-size:9px;font-weight:400;opacity:.6;margin-left:6px;letter-spacing:.5px;vertical-align:middle;">v2026.09.09-sec</span></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="func-topbar-user"><strong id="func-nome-top">—</strong>Ponto digital</div>
+      <button onclick="window._signOut&&window._signOut()" title="Sair" style="background:rgba(255,255,255,.12);border:none;border-radius:6px;color:white;padding:5px 8px;font-size:12px;cursor:pointer;font-family:'Barlow',sans-serif;">Sair</button>
+    </div>
   </div>
   <div class="func-body">
     <!-- ABA PONTO -->
@@ -169,8 +166,19 @@ canvas#canvasFoto{display:none;}
           <button class="btn-capturar" id="btn-capturar" onclick="capturarFoto()" disabled>Verificando...</button>
         </div>
       </div>
+      <!-- GPS bloqueado -->
+      <div id="est-gps-bloqueado" style="display:none;">
+        <div class="aviso-erro"><strong>Localização bloqueada</strong><span id="gps-erro-msg">Você está fora do raio permitido.</span></div>
+        <button class="btn-laranja" onclick="tentarNovamenteLoc()">Atualizar localização</button>
+      </div>
+      <!-- Câmera/facial bloqueado -->
+      <div id="est-cam-erro" style="display:none;">
+        <div class="aviso-erro"><strong>Verificação facial falhou</strong><span id="cam-erro-msg">Câmera não disponível.</span></div>
+        <button class="btn-laranja" onclick="voltarDeErroCamera()">Tentar novamente</button>
+      </div>
+      <!-- Rosto não reconhecido -->
       <div id="est-bloqueado" style="display:none;">
-        <div class="aviso-erro"><strong>Acesso negado</strong>Rosto não reconhecido.</div>
+        <div class="aviso-erro"><strong>Acesso negado</strong>Rosto não reconhecido. Contate o gestor se o problema persistir.</div>
         <button class="btn-laranja" onclick="voltarAguardando()">Tentar novamente</button>
       </div>
       <div id="est-proc" style="display:none;"><div class="msg-estado"><span class="loading-spin"></span>Salvando...</div></div>
@@ -273,50 +281,138 @@ canvas#canvasFoto{display:none;}
   </div>
 </div>
 
-<!-- Firebase (sem Auth — acesso público) -->
+<!-- Firebase Auth — identidade derivada do UID autenticado, nunca escolhida pelo usuário -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
-const app = initializeApp({
+const FIREBASE_CONFIG = {
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
   authDomain:"mr4-ponto.firebaseapp.com",
   projectId:"mr4-ponto",
   storageBucket:"mr4-ponto.firebasestorage.app",
   messagingSenderId:"848211361584",
   appId:"1:848211361584:web:2732e1893122f4a23452f5"
+};
+
+const app       = initializeApp(FIREBASE_CONFIG);
+const auth      = getAuth(app);
+const db        = getFirestore(app);
+const functions = getFunctions(app, 'southamerica-east1');
+
+// Estado de autenticação — somente leitura para o script clássico
+window._authUid    = null;
+window._funcAtivo  = null; // definido pelo Auth, nunca pelo usuário
+
+// Sair — redireciona para login do funcionário
+window._signOut = () => signOut(auth).then(() => { window.location.href = 'ponto-login-func.html'; });
+
+// ── API Firestore controlada ────────────────────────────────────────────────
+// Leituras (sem validação extra — Firestore Rules protegem no servidor)
+window._fbGetAll = async (c) => {
+  const s = await getDocs(collection(db, c));
+  return s.docs.map(d => ({id: d.id, ...d.data()}));
+};
+window._fbGetOne = async (c, id) => {
+  const s = await getDoc(doc(db, c, id));
+  return s.exists() ? {id: s.id, ...s.data()} : null;
+};
+
+// Registro de ponto via Cloud Function (server-side: uid, hora, GPS, sequência)
+// Funcionário NÃO grava diretamente em registros — regra FAIL CLOSED nas Firestore Rules.
+window._registrarPonto = httpsCallable(functions, 'registrarPonto');
+
+// Escrita genérica própria — valida funcId quando presente, injeta authUid
+window._fbSetOwn = async function(colName, id, data) {
+  if (!window._authUid || !window._funcAtivo) throw new Error('Não autenticado');
+  if (data.funcId && data.funcId !== window._funcAtivo.id) throw new Error('PERMISSION_DENIED: funcId inválido');
+  data.authUid = window._authUid;
+  await setDoc(doc(db, colName, id), data, {merge: true});
+};
+
+// ── Auth state ──────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = 'ponto-login-func.html'; return; }
+  window._authUid = user.uid;
+
+  try {
+    // Resolver identidade: users/{uid} → funcionarioId
+    const userSnap = await getDoc(doc(db, 'users', user.uid));
+    if (!userSnap.exists()) {
+      document.getElementById('loadingScreen').innerHTML =
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Conta não vinculada a nenhum funcionário.<br>Contate o gestor.<br><br>' +
+        '<button onclick="window._signOut&&window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
+      return;
+    }
+    const up = userSnap.data();
+    if (!up.ativo) {
+      document.getElementById('loadingScreen').innerHTML =
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Conta inativa.<br>Contate o gestor.</div>';
+      return;
+    }
+    if (up.role !== 'funcionario') {
+      // Gestor/admin tentando usar o app do funcionário — redirecionar para painel
+      window.location.href = '../modulos/ponto.html';
+      return;
+    }
+
+    // Carregar dados do funcionário
+    const funcSnap = await getDoc(doc(db, 'funcionarios', up.funcionarioId));
+    if (!funcSnap.exists()) {
+      document.getElementById('loadingScreen').innerHTML =
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Funcionário não encontrado.<br>Contate o gestor.</div>';
+      return;
+    }
+
+    window._funcAtivo = {id: funcSnap.id, ...funcSnap.data()};
+    window.dispatchEvent(new Event('authReady'));
+
+  } catch(e) {
+    console.error('[Auth] Erro ao inicializar:', e);
+    document.getElementById('loadingScreen').innerHTML =
+      '<div style="padding:2rem;text-align:center;color:#EF4444;font-size:14px;">Erro ao carregar dados.<br>Verifique sua conexão.<br><br>' +
+      '<button onclick="location.reload()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-family:Barlow,sans-serif;">Tentar novamente</button></div>';
+  }
 });
-const db = getFirestore(app);
-window._db=db; window._col=collection; window._doc=doc;
-window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
-window._deleteDoc=deleteDoc;
-window._firebaseReady=true;
-window.dispatchEvent(new Event('firebaseReady'));
 </script>
 
+<script src="ponto-regras.js"></script>
+
 <script>
-const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200, JORNADA=8, FACE_THRESHOLD=0.6;
-const JORNADA_SABADO_MIN=210; // 08:30 às 12:00 = 3h30
+const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200, FACE_THRESHOLD=0.6;
+// JORNADA_SABADO_MIN vem de ponto-regras.js
 let funcAtivo=null, streamCam=null, locAtual=null;
-let notaAv=0, fotoNova=null, faceDetectionInterval=null, rostoVerificado=false;
+let fotoNova=null, faceDetectionInterval=null, rostoVerificado=false;
 let fotoCapturadaBase64=null, modelsCarregados=false, facialScoreGlobal=null;
 let justifAtualId=null, espelhoAtualFuncId=null;
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
-function db(){return window._db;}
-function col(n){return window._col(db(),n);}
-function docRef(n,id){return window._doc(db(),n,id);}
-async function fbGet(c){const s=await window._getDocs(col(c));return s.docs.map(d=>({id:d.id,...d.data()}));}
-async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});}
+// Leituras via API controlada do módulo de auth
+async function fbGet(c){return window._fbGetAll(c);}
+// Escritas: registros via Cloud Function (server-side); demais via _fbSetOwn
+async function fbSet(c,id,data){
+  return window._fbSetOwn(c,id,data);
+}
 
+// toMin, fmtMin, calcTotal, jornadaParaData, JORNADA_SABADO_MIN vêm de ponto-regras.js
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function hoje(){return new Date().toISOString().slice(0,10);}
-function mesAtual(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
-function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
-function fmtMin(m){if(m===null||m===undefined)return'—';const s=m<0?'-':'';const a=Math.abs(Math.round(m));return s+Math.floor(a/60)+'h'+String(a%60).padStart(2,'0');}
+
+// Data e hora operacionais no fuso America/Fortaleza (UTC-3 fixo — sem horário de verão)
+function _fortalezaParts(){
+  const agora=new Date();
+  const parts=new Intl.DateTimeFormat('pt-BR',{
+    timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit',
+    hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false
+  }).formatToParts(agora);
+  return Object.fromEntries(parts.map(p=>[p.type,p.value]));
+}
+function hoje(){const p=_fortalezaParts();return `${p.year}-${p.month}-${p.day}`;}
+function hojeHora(){const p=_fortalezaParts();return `${p.hour}:${p.minute}:${p.second}`;}
+function mesAtual(){const p=_fortalezaParts();return `${p.year}-${p.month}`;}
 function fmtData(d){if(!d)return'—';const[y,mo,dd]=d.split('-');return `${dd}/${mo}/${y}`;}
 function distM(la1,lo1,la2,lo2){const R=6371000;const dL=(la2-la1)*Math.PI/180;const dO=(lo2-lo1)*Math.PI/180;const a=Math.sin(dL/2)**2+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dO/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
-function calcTotal(e,sa,ra,s){if(!e||!s)return null;let t=toMin(s)-toMin(e);if(sa&&ra)t-=(toMin(ra)-toMin(sa));return t;}
 function notif(msg,tipo='verde'){const el=document.getElementById('notif');el.textContent=msg;el.className='notif '+tipo;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
 function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
 
@@ -353,47 +449,19 @@ async function verificarRosto(refs){
   }catch{return null;}
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────────
-async function init(){
-  const params=new URLSearchParams(window.location.search);
-  const fid=params.get('f');
-  if(fid){
-    const snap=await window._getDoc(docRef('funcionarios',fid));
-    if(snap.exists()){iniciarAppFunc({id:snap.id,...snap.data()});return;}
-  }
-  // sem ID — mostra lista
-  await mostrarSelecFuncionario();
-}
-
-async function mostrarSelecFuncionario(){
-  document.getElementById('loadingScreen').style.display='none';
-  const funcs=await fbGet('funcionarios');
-  if(!funcs.length){
-    document.getElementById('tela-selec').style.display='flex';
-    document.getElementById('lista-func-selec').innerHTML='<p style="color:var(--cinza-texto);font-size:14px;text-align:center;">Nenhum funcionário cadastrado.<br>Acesse o painel do gestor.</p>';
-    return;
-  }
-  document.getElementById('lista-func-selec').innerHTML=funcs.map(f=>`
-    <div class="func-btn-item" onclick="iniciarAppFunc({id:'${f.id}',nome:'${f.nome.replace(/'/g,"\\'")}',cargo:'${(f.cargo||'').replace(/'/g,"\\'")}',foto:'${f.foto||''}',jornada:'${f.jornada||8}'})">
-      <div class="func-btn-avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div>
-      <div><div class="func-btn-nome">${f.nome}</div><div class="func-btn-cargo">${f.cargo||''}</div></div>
-    </div>`).join('');
-  document.getElementById('tela-selec').style.display='flex';
-}
-
-function iniciarAppFunc(func){
-  funcAtivo=func;
-  document.getElementById('tela-selec').style.display='none';
+// ── Init — identidade definida pelo Firebase Auth, não pelo usuário ───────────
+function iniciarApp(){
+  funcAtivo=window._funcAtivo;
+  if(!funcAtivo)return;
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('func-app').style.display='flex';
-  document.getElementById('func-nome-top').textContent=func.nome.split(' ')[0];
+  document.getElementById('func-nome-top').textContent=funcAtivo.nome.split(' ')[0];
   iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();carregarModelos();
   document.getElementById('justif-data').value=hoje();
   document.getElementById('justif-anexo').addEventListener('change',e=>{
     const f=e.target.files[0];document.getElementById('justif-anexo-nome').textContent=f?f.name:'';
   });
 }
-window.iniciarAppFunc=iniciarAppFunc;
 
 function iniciarRelogio(){
   function tick(){
@@ -430,6 +498,22 @@ async function iniciarBatida(){
   const prox=await proxPonto();
   if(!prox){notif('Ponto do dia completo!');return;}
   if(!funcAtivo.foto){notif('Cadastre sua foto antes de bater ponto','vermelho');return;}
+  // GPS bloqueante: PRESENCIAL exige localização dentro do raio
+  if((funcAtivo.modalidade||'PRESENCIAL')==='PRESENCIAL'){
+    if(locAtual===null){
+      document.getElementById('gps-erro-msg').textContent='Localização GPS ainda não obtida. Certifique-se de permitir o acesso à localização e tente novamente.';
+      document.getElementById('est-aguardando').style.display='none';
+      document.getElementById('est-gps-bloqueado').style.display='block';
+      return;
+    }
+    const dist=distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG);
+    if(dist>RAIO){
+      document.getElementById('gps-erro-msg').textContent=`Você está a ${Math.round(dist)}m da empresa (raio permitido: ${RAIO}m). Aproxime-se para bater o ponto.`;
+      document.getElementById('est-aguardando').style.display='none';
+      document.getElementById('est-gps-bloqueado').style.display='block';
+      return;
+    }
+  }
   document.getElementById('btn-bater').className='btn-ponto-grande '+(prox.classe||'');
   document.getElementById('lbl-prox').textContent=prox.label;
   document.getElementById('est-aguardando').style.display='none';
@@ -443,7 +527,12 @@ async function iniciarBatida(){
     streamCam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
     document.getElementById('video-cam').srcObject=streamCam;
     await carregarModelos();iniciarDeteccaoFacial();
-  }catch{cancelarCam();await finalizarBatida(null,prox,null);}
+  }catch(e){
+    // FAIL CLOSED: câmera negada ou falhou → mostra tela de erro, ponto NÃO é registrado
+    cancelarCam();
+    document.getElementById('cam-erro-msg').textContent='Câmera não pôde ser acessada: '+(e.message||'permissão negada')+'. O ponto não foi registrado.';
+    document.getElementById('est-cam-erro').style.display='block';
+  }
 }
 window.iniciarBatida=iniciarBatida;
 
@@ -451,11 +540,12 @@ async function iniciarDeteccaoFacial(){
   let descRef=null;
   try{descRef=await obterDescritorDaFoto(funcAtivo.foto);}catch{}
   if(!descRef){
-    document.getElementById('cam-status').textContent='Referência sem rosto. Capture assim mesmo.';
-    document.getElementById('face-guide').className='face-guide detectado';
-    document.getElementById('btn-capturar').disabled=false;
-    document.getElementById('btn-capturar').textContent='Registrar ponto';
-    rostoVerificado=true;return;
+    // FAIL CLOSED: foto de referência sem rosto detectável → bloqueia ponto
+    pararCamera();
+    document.getElementById('est-camera').style.display='none';
+    document.getElementById('cam-erro-msg').textContent='Foto de perfil não possui rosto válido. Contate seu gestor para atualizar a foto de referência.';
+    document.getElementById('est-cam-erro').style.display='block';
+    return;
   }
   let tentativas=0;
   faceDetectionInterval=setInterval(async()=>{
@@ -487,40 +577,61 @@ function capturarFoto(){
   if(!fotoCapturadaBase64)capturarFotoCanvas();
   pararCamera();
   document.getElementById('est-camera').style.display='none';document.getElementById('est-proc').style.display='block';
-  proxPonto().then(prox=>finalizarBatida(fotoCapturadaBase64,prox,facialScoreGlobal||100));
+  finalizarBatida(fotoCapturadaBase64,facialScoreGlobal);
 }
 window.capturarFoto=capturarFoto;
 
 function pararCamera(){if(faceDetectionInterval){clearInterval(faceDetectionInterval);faceDetectionInterval=null;}if(streamCam){streamCam.getTracks().forEach(t=>t.stop());streamCam=null;}}
 function cancelarCam(){pararCamera();document.getElementById('est-camera').style.display='none';document.getElementById('est-aguardando').style.display='block';}
 function voltarAguardando(){document.getElementById('est-bloqueado').style.display='none';document.getElementById('est-aguardando').style.display='block';}
+function tentarNovamenteLoc(){
+  document.getElementById('est-gps-bloqueado').style.display='none';
+  document.getElementById('est-aguardando').style.display='block';
+  locAtual=null;obterLoc();
+}
+function voltarDeErroCamera(){
+  document.getElementById('est-cam-erro').style.display='none';
+  document.getElementById('est-aguardando').style.display='block';
+}
 window.cancelarCam=cancelarCam;window.voltarAguardando=voltarAguardando;
+window.tentarNovamenteLoc=tentarNovamenteLoc;window.voltarDeErroCamera=voltarDeErroCamera;
 
-async function finalizarBatida(foto,prox,score){
-  if(!prox)return;
-  const dentroRaio=locAtual?distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG)<=RAIO:null;
-  const id=uid();
-  const reg={id,funcId:funcAtivo.id,funcNome:funcAtivo.nome,data:hoje(),hora:new Date().toTimeString().slice(0,8),tipo:prox.tipo,tipoLabel:prox.label,lat:locAtual?.lat||null,lng:locAtual?.lng||null,dentroRaio,foto:foto||null,facialScore:score,criadoEm:new Date().toISOString()};
+async function finalizarBatida(foto,score){
+  // Chama Cloud Function — server valida uid, hora, GPS, sequência
+  // horaCliente é enviada apenas para auditoria de desvio de relógio
+  const payload={
+    lat:         locAtual?.lat ?? null,
+    lng:         locAtual?.lng ?? null,
+    horaCliente: hojeHora(),
+    facialScore: score,   // auditoria apenas — não é barreira de segurança
+    foto:        foto||null,
+  };
   try{
-    await fbSet('registros',id,reg);
+    const result=await window._registrarPonto(payload);
+    const reg=result.data;
     document.getElementById('est-proc').style.display='none';
-    mostrarComp(reg,dentroRaio,score);renderHistDia();renderBancoFunc();
-  }catch{
-    document.getElementById('est-proc').style.display='none';document.getElementById('est-aguardando').style.display='block';notif('Erro ao salvar.','vermelho');
+    mostrarComp(reg,reg.dentroRaio,score);renderHistDia();renderBancoFunc();
+  }catch(e){
+    document.getElementById('est-proc').style.display='none';
+    document.getElementById('est-aguardando').style.display='block';
+    // Erros amigáveis — sem stack trace para o usuário
+    const msg=e?.details?.message||e?.message||'Erro ao salvar ponto.';
+    notif(msg,'vermelho');
   }
 }
 
 function mostrarComp(reg,dentroRaio,score){
   const locTxt=dentroRaio===true?'Dentro do raio':dentroRaio===false?'Fora do raio':'Não obtida';
   const locClass=dentroRaio===true?'verde':'warn';const fb=facialBadge(score);
+  const horaExib=(reg.hora||'').slice(0,5)||'—';
   document.getElementById('comp-content').innerHTML=`
     <div class="comp-titulo">✓ Ponto registrado</div>
-    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${reg.funcNome}</span></div>
-    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel}</span></div>
-    <div class="comp-row"><span class="comp-label">Horário</span><span class="comp-val">${reg.hora.slice(0,5)}</span></div>
+    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${funcAtivo.nome}</span></div>
+    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel||reg.tipo||'—'}</span></div>
+    <div class="comp-row"><span class="comp-label">Horário (servidor)</span><span class="comp-val">${horaExib}</span></div>
     <div class="comp-row"><span class="comp-label">Localização</span><span class="comp-val ${locClass}">${locTxt}</span></div>
     <div class="comp-row"><span class="comp-label">Facial</span><span class="comp-val" style="color:${fb.cor}">${fb.txt}</span></div>
-    ${reg.foto?`<div style="margin-top:10px;"><img src="${reg.foto}" style="width:100%;border-radius:8px;max-height:140px;object-fit:cover;"></div>`:''}`;
+    ${fotoCapturadaBase64?`<div style="margin-top:10px;"><img src="${fotoCapturadaBase64}" style="width:100%;border-radius:8px;max-height:140px;object-fit:cover;"></div>`:''}`;
   document.getElementById('est-comp').style.display='block';
 }
 
@@ -563,16 +674,11 @@ async function renderBancoFunc(){
   const mes=sel?sel.value:mesAtual();
   const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));
   const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
-  const dias={};regs.forEach(r=>{if(!dias[r.data])dias[r.data]={};dias[r.data][r.tipo]=r.hora;});
-  let trabMin=0;Object.values(dias).forEach(d=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t)trabMin+=t;});
-  credF.forEach(c=>trabMin+=c.minutos||0);
-  const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
-  const diasTrab=Object.keys(dias).length+diasComCredito.length;
-  const jornaDia=(parseFloat(funcAtivo.jornada)||8)*60;
-  const esperMin=diasTrab*jornaDia;const saldo=trabMin-esperMin;
+  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
+  const pendenciasCardFunc=pendencias.length>0?'<div class="banco-card" style="border-color:var(--amarelo);"><div style="color:var(--amarelo);font-weight:600;font-size:13px;">⚠ '+pendencias.length+' dia'+(pendencias.length>1?'s':'')+(pendencias.length>1?' com ponto incompleto':' com ponto incompleto')+'</div><div style="font-size:12px;color:var(--cinza-texto);margin-top:4px;">'+pendencias.map(p=>fmtData(p.data)).join(' · ')+' — Regularize com seu gestor.</div></div>':'';
   document.getElementById('banco-func').innerHTML=`
     <div class="banco-card"><div><div class="banco-label">Trabalhado no mês</div><div class="banco-valor">${fmtMin(trabMin)}</div></div><div style="text-align:right"><div class="banco-label">Saldo banco</div><div class="banco-valor" style="color:${saldo>=0?'var(--verde)':'var(--vermelho)'}">${saldo>=0?'+':''}${fmtMin(saldo)}</div></div></div>
-    <div class="banco-card"><div><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div><div style="text-align:right"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div></div>`;
+    <div class="banco-card"><div><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div><div style="text-align:right"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div></div>${pendenciasCardFunc}`;
 }
 
 // ── Justificativas ────────────────────────────────────────────────────────────
@@ -691,7 +797,7 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
   const regsDoMes=regs.filter(r=>r.funcId===funcId&&r.data.startsWith(mes));
   const justifDoMes=justifs.filter(j=>j.funcId===funcId&&j.data.startsWith(mes)&&j.status==='aprovado');
   const creditosFuncMes=creditos.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
-  const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
+  const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
   const hojeStr=hoje();
   let totalTrabMin=0,totalEsperadoMin=0;
   const nomesDia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
@@ -708,14 +814,15 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
     const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
     let total=calcTotal(e,sa,ra,s);
     const justifCredita=justifD&&!TIPOS_SEM_CREDITO.includes(justifD.motivo);
-    if(total===null&&(creditoD||justifCredita))total=jornadaDia;
-    if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
-    const saldo=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;
+    if(total===null&&(creditoD||justifCredita))total=creditoD&&creditoD.minutos!=null?creditoD.minutos:jornadaDia;
+    const ehIncompleto=!ehDomingo&&!ehFuturo&&regsD.length>0&&total===null;
+    if(!ehDomingo&&!ehFuturo&&!ehIncompleto){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
+    const saldo=(!ehDomingo&&!ehFuturo&&!ehIncompleto&&total!==null)?total-jornadaDia:null;
     let totalLabel='—';
     if(!ehDomingo){
       if(total!==null)totalLabel=fmtMin(total);
       else if(ehFuturo)totalLabel='—';
-      else if(e)totalLabel='Incompleto';
+      else if(ehIncompleto)totalLabel='Incompleto';
       else totalLabel='Falta';
     }
     let ocorrencia='';if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
@@ -810,9 +917,8 @@ window.mudarAba=mudarAba;
 function fecharModal(id){document.getElementById(id).classList.remove('aberto');}
 window.fecharModal=fecharModal;
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-window.addEventListener('firebaseReady',init);
-window.addEventListener('DOMContentLoaded',()=>{if(window._firebaseReady)init();});
+// ── Start — aguarda identidade resolvida pelo Firebase Auth ───────────────────
+window.addEventListener('authReady',iniciarApp);
 </script>
 </body>
 </html>

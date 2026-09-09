@@ -106,10 +106,10 @@ async function registrarPontoHandler(request) {
 
   // 8. Sequência + gravação em transação
   const registrosRef = db.collection('registros');
-  const regId        = registrosRef.doc().id;  // ID gerado server-side
 
-  let tipoRegistro = null;
-  let tipoLabel    = null;
+  let tipoRegistro    = null;
+  let tipoLabel       = null;
+  let deterministicId = null; // funcId_data_tipo — garante unicidade atômica
 
   await db.runTransaction(async (tx) => {
     // 8a. Registros de hoje — sem orderBy (sort em memória; não exige índice na transação)
@@ -131,15 +131,26 @@ async function registrarPontoHandler(request) {
     const ultimo = regsHoje[regsHoje.length - 1];
 
     // 8b. Próximo tipo na sequência
-    if (!ultimo)                          tipoRegistro = 'entrada';
-    else if (ultimo.tipo === 'entrada')   tipoRegistro = 'saida_almoco';
+    if (!ultimo)                               tipoRegistro = 'entrada';
+    else if (ultimo.tipo === 'entrada')        tipoRegistro = 'saida_almoco';
     else if (ultimo.tipo === 'saida_almoco')   tipoRegistro = 'retorno_almoco';
     else if (ultimo.tipo === 'retorno_almoco') tipoRegistro = 'saida';
     else throw new HttpsError('failed-precondition', 'Ponto do dia já completo.');
 
-    tipoLabel = LABEL_PONTO[tipoRegistro];
+    tipoLabel       = LABEL_PONTO[tipoRegistro];
+    // ID determinístico: garante que dois commits simultâneos para o mesmo tipo
+    // conflitem atomicamente — Firestore aborta e faz retry; no retry o doc já existe.
+    deterministicId = funcId + '_' + data + '_' + tipoRegistro;
 
-    // 8c. Cooldown (anti-race condition / anti-duplo-clique)
+    // 8c. Unicidade atômica — lê o doc determinístico para registrá-lo no read-set
+    //     da transação. Se outra transação concorrente já o criou, o Firestore vai
+    //     abortar esta e reexecutar; na reexecução o exists() vai ser true → already-exists.
+    const dupSnap = await tx.get(registrosRef.doc(deterministicId));
+    if (dupSnap.exists) {
+      throw new HttpsError('already-exists', 'Este tipo de ponto já foi registrado para esta data.');
+    }
+
+    // 8d. Cooldown (anti-duplo-clique em rede lenta — segunda camada de proteção)
     if (ultimo) {
       const criadoEm = ultimo.criadoEm instanceof admin.firestore.Timestamp
         ? ultimo.criadoEm.toMillis()
@@ -149,9 +160,9 @@ async function registrarPontoHandler(request) {
       }
     }
 
-    // 8d. Grava dentro da transação
-    tx.set(registrosRef.doc(regId), {
-      id:          regId,
+    // 8e. Grava com ID determinístico dentro da transação
+    tx.set(registrosRef.doc(deterministicId), {
+      id:          deterministicId,
       funcId,                                              // SERVIDOR
       funcNome:    func.nome || '',                        // SERVIDOR
       authUid:     uid,                                    // SERVIDOR
@@ -174,7 +185,7 @@ async function registrarPontoHandler(request) {
   });
 
   return {
-    ok: true, id: regId, tipo: tipoRegistro, tipoLabel, data, hora, dentroRaio, modalidade,
+    ok: true, id: deterministicId, tipo: tipoRegistro, tipoLabel, data, hora, dentroRaio, modalidade,
   };
 }
 

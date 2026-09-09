@@ -162,3 +162,82 @@ test('T — cooldown: registro > 10 s atrás permite nova batida', () => {
   const deveria_bloquear = (agora - criadoHa15s) < COOLDOWN_MS;
   expect(deveria_bloquear).toBe(false);
 });
+
+// ─── Testes U–Z: ID determinístico e unicidade por tipo/dia ──────────────────
+
+// Extrai a lógica de geração do ID determinístico (espelha o index.js)
+function gerarDeterministicId(funcId, data, tipo) {
+  return funcId + '_' + data + '_' + tipo;
+}
+
+// Simula a verificação de duplicidade (espelha o bloco da transação)
+function verificarDuplicidade(docsExistentes, funcId, data, tipo) {
+  const deterministicId = gerarDeterministicId(funcId, data, tipo);
+  return docsExistentes.some(d => d.id === deterministicId);
+}
+
+test('U — gerarDeterministicId produz formato funcId_data_tipo', () => {
+  expect(gerarDeterministicId('mndxb7vpqjnm', '2026-09-09', 'entrada'))
+    .toBe('mndxb7vpqjnm_2026-09-09_entrada');
+  expect(gerarDeterministicId('func-e2e-001', '2026-01-15', 'saida_almoco'))
+    .toBe('func-e2e-001_2026-01-15_saida_almoco');
+  expect(gerarDeterministicId('abc', '2026-12-31', 'retorno_almoco'))
+    .toBe('abc_2026-12-31_retorno_almoco');
+  expect(gerarDeterministicId('xyz', '2026-06-01', 'saida'))
+    .toBe('xyz_2026-06-01_saida');
+});
+
+test('V — IDs de tipos diferentes são distintos para mesmo funcId/data', () => {
+  const funcId = 'func-001';
+  const data   = '2026-09-09';
+  const ids = ['entrada', 'saida_almoco', 'retorno_almoco', 'saida']
+    .map(tipo => gerarDeterministicId(funcId, data, tipo));
+  const uniq = new Set(ids);
+  expect(uniq.size).toBe(4);
+});
+
+test('W — IDs são distintos para funcionários diferentes no mesmo dia/tipo', () => {
+  const data = '2026-09-09';
+  const tipo = 'entrada';
+  const id1 = gerarDeterministicId('func-001', data, tipo);
+  const id2 = gerarDeterministicId('func-002', data, tipo);
+  expect(id1).not.toBe(id2);
+});
+
+test('X — verificarDuplicidade detecta ID existente (bloqueia segunda ENTRADA)', () => {
+  const funcId = 'func-001';
+  const data   = '2026-09-09';
+  const tipo   = 'entrada';
+  const deterministicId = gerarDeterministicId(funcId, data, tipo);
+  // Simula doc já gravado na coleção
+  const docsExistentes = [{ id: deterministicId, tipo, funcId, data }];
+  expect(verificarDuplicidade(docsExistentes, funcId, data, tipo)).toBe(true);
+});
+
+test('Y — verificarDuplicidade NÃO bloqueia tipo diferente no mesmo dia', () => {
+  const funcId = 'func-001';
+  const data   = '2026-09-09';
+  // Apenas entrada existe
+  const docsExistentes = [{ id: gerarDeterministicId(funcId, data, 'entrada') }];
+  // Tentar saida_almoco → não deve bloquear
+  expect(verificarDuplicidade(docsExistentes, funcId, data, 'saida_almoco')).toBe(false);
+});
+
+test('Z — verificarDuplicidade NÃO bloqueia mesmo tipo em datas diferentes', () => {
+  const funcId = 'func-001';
+  const tipo   = 'entrada';
+  const docsExistentes = [{ id: gerarDeterministicId(funcId, '2026-09-08', tipo) }];
+  // Data diferente → não bloqueia
+  expect(verificarDuplicidade(docsExistentes, funcId, '2026-09-09', tipo)).toBe(false);
+});
+
+test('Z2 — registros históricos com ID legado (auto-gerado) coexistem sem conflito', () => {
+  // IDs antigos não têm formato determinístico → nunca conflitam com novos
+  const legacyIds = ['abc123', 'xyz789', 'ms1k2n3p4q5r', 'lp9jn8mn7o6p'];
+  legacyIds.forEach(legacyId => {
+    // Um ID legado nunca coincide com o padrão funcId_data_tipo
+    // porque funcIds são alphanumeric sem underscore e date tem underscores como separador
+    const deterministicId = gerarDeterministicId('func-001', '2026-09-09', 'entrada');
+    expect(legacyId).not.toBe(deterministicId);
+  });
+});

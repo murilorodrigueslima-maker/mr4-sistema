@@ -699,23 +699,37 @@ async function abrirJustifGestor(id){
 }
 window.abrirJustifGestor=abrirJustifGestor;
 
+let _respondendoJustif=false;
 async function responderJustificativa(status){
-  const obs=document.getElementById('justif-obs-gestor').value.trim();
-  await fbSet('justificativas',justifAtualId,{status,obsGestor:obs,respondidoEm:new Date().toISOString()});
-  if(status==='aprovado'){
-    const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
-    const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
-    if(j.tipoPonto&&j.horarioPonto){
-      const todosRegs=await fbGet('registros');
-      const regOrig=todosRegs.find(r=>r.funcId===j.funcId&&r.data===j.data&&r.tipo===j.tipoPonto&&!r.lancadoPorJustificativa);
-      if(regOrig)await fbDel('registros',regOrig.id);
-      const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
-      const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida corrigida e lançada automaticamente!','verde');
-    }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornadaParaData(j.data,jornMin),j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
+  if(_respondendoJustif)return;
+  _respondendoJustif=true;
+  const btns=document.querySelectorAll('#modal-justif-gestor .btn-aprovar,#modal-justif-gestor .btn-rejeitar');
+  btns.forEach(b=>b.disabled=true);
+  try{
+    const obs=document.getElementById('justif-obs-gestor').value.trim();
+    await fbSet('justificativas',justifAtualId,{status,obsGestor:obs,respondidoEm:new Date().toISOString()});
+    if(status==='aprovado'){
+      const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
+      const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
+      if(j.tipoPonto&&j.horarioPonto){
+        const todosRegs=await fbGet('registros');
+        // Remove TODOS os registros existentes do mesmo tipo/dia (inclui correções anteriores)
+        // para garantir exatamente um registro por tipo por dia após a correção.
+        const regsExistentes=todosRegs.filter(r=>r.funcId===j.funcId&&r.data===j.data&&r.tipo===j.tipoPonto);
+        for(const reg of regsExistentes)await fbDel('registros',reg.id);
+        const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
+        const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida corrigida e lançada automaticamente!','verde');
+      }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornadaParaData(j.data,jornMin),j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
+    }
+    fecharModal('modal-justif-gestor');
+    if(status!=='aprovado')notif('Justificativa rejeitada.','vermelho');
+    renderJustificativas();
+  }catch(e){
+    notif('Erro ao responder justificativa. Tente novamente.','vermelho');
+    btns.forEach(b=>b.disabled=false);
+  }finally{
+    _respondendoJustif=false;
   }
-  fecharModal('modal-justif-gestor');
-  if(status!=='aprovado')notif('Justificativa rejeitada.','vermelho');
-  renderJustificativas();
 }
 window.responderJustificativa=responderJustificativa;
 

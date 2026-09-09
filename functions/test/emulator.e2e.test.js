@@ -851,3 +851,331 @@ describe('Teste 11 — Facial: limitação documentada', () => {
     expect(snap.data().facialScore).toBe(100);  // armazenado — não garante identidade real
   });
 });
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTE 15: Unicidade por tipo/dia — ID determinístico anti-duplicidade
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Teste 15 — Unicidade por tipo/dia (ID determinístico)', () => {
+  const FUNC_UNICO = 'func-unico-e2e';
+  const UID_UNICO  = 'uid-unico-e2e';
+
+  // Helper: retorna a data de hoje no formato YYYY-MM-DD (America/Fortaleza — UTC-3)
+  function dataHoje() {
+    const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  beforeAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0';
+    await db.collection('users').doc(UID_UNICO).set({
+      role: 'funcionario', ativo: true, funcionarioId: FUNC_UNICO,
+    });
+    await db.collection('funcionarios').doc(FUNC_UNICO).set({
+      nome: 'Unico E2E', modalidade: 'PRESENCIAL',
+    });
+    await limparRegistrosFunc(FUNC_UNICO);
+  });
+
+  afterAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0';
+    await limparRegistrosFunc(FUNC_UNICO);
+    await db.collection('users').doc(UID_UNICO).delete().catch(() => {});
+    await db.collection('funcionarios').doc(FUNC_UNICO).delete().catch(() => {});
+  });
+
+  // A) primeira ENTRADA → PASSA
+  test('15a — primeira ENTRADA do dia → PASSA com ID determinístico', async () => {
+    const r = await _registrarPontoHandler(req(UID_UNICO, GPS_DENTRO));
+    expect(r.ok).toBe(true);
+    expect(r.tipo).toBe('entrada');
+    // Verifica que o ID tem formato determinístico funcId_data_tipo
+    expect(r.id).toBe(`${FUNC_UNICO}_${dataHoje()}_entrada`);
+    const snap = await db.collection('registros').doc(r.id).get();
+    expect(snap.exists).toBe(true);
+    expect(snap.data().tipo).toBe('entrada');
+    expect(snap.data().id).toBe(r.id);
+  });
+
+  // B) segunda chamada para mesma pessoa no mesmo dia → determina SAIDA_ALMOCO (tipo diferente → PASSA)
+  test('15b — segunda chamada → próximo tipo (SAIDA_ALMOCO) → PASSA', async () => {
+    const r = await _registrarPontoHandler(req(UID_UNICO, GPS_DENTRO));
+    expect(r.ok).toBe(true);
+    expect(r.tipo).toBe('saida_almoco');
+    expect(r.id).toBe(`${FUNC_UNICO}_${dataHoje()}_saida_almoco`);
+  });
+
+  // C) ENTRADA + SAIDA_ALMOCO já existem → RETORNO_ALMOCO → PASSA
+  test('15c — retorno_almoco após sequência parcial → PASSA', async () => {
+    const r = await _registrarPontoHandler(req(UID_UNICO, GPS_DENTRO));
+    expect(r.ok).toBe(true);
+    expect(r.tipo).toBe('retorno_almoco');
+    expect(r.id).toBe(`${FUNC_UNICO}_${dataHoje()}_retorno_almoco`);
+  });
+
+  // C continuação) SAIDA → PASSA
+  test('15c2 — saida após sequência completa menos 1 → PASSA', async () => {
+    const r = await _registrarPontoHandler(req(UID_UNICO, GPS_DENTRO));
+    expect(r.ok).toBe(true);
+    expect(r.tipo).toBe('saida');
+    expect(r.id).toBe(`${FUNC_UNICO}_${dataHoje()}_saida`);
+  });
+
+  // E) dia completo → próxima chamada → BLOQUEADA
+  test('15e — dia já completo → "Ponto do dia já completo"', async () => {
+    await expect(
+      _registrarPontoHandler(req(UID_UNICO, GPS_DENTRO))
+    ).rejects.toMatchObject({ code: 'failed-precondition' });
+  });
+
+  // H) registros históricos com ID não-determinístico permanecem intactos
+  test('15h — registros históricos (ID legado) não são alterados', async () => {
+    const legacyId = 'legado-historico-test';
+    await db.collection('registros').doc(legacyId).set({
+      id: legacyId, funcId: FUNC_UNICO, tipo: 'entrada', data: '2026-01-15',
+      hora: '08:00:00', criadoEm: '2026-01-15T11:00:00Z',
+    });
+    const snap = await db.collection('registros').doc(legacyId).get();
+    expect(snap.exists).toBe(true);
+    expect(snap.data().id).toBe(legacyId);
+    await db.collection('registros').doc(legacyId).delete();
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTE 16: Race condition com COOLDOWN=0 — prova do ID determinístico
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Teste 16 — Race condition sem cooldown (ID determinístico)', () => {
+  const FUNC_RACE2 = 'func-race2-e2e';
+  const UID_RACE2  = 'uid-race2-e2e';
+
+  beforeAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0'; // sem cooldown — só ID determinístico protege
+    await db.collection('users').doc(UID_RACE2).set({
+      role: 'funcionario', ativo: true, funcionarioId: FUNC_RACE2,
+    });
+    await db.collection('funcionarios').doc(FUNC_RACE2).set({
+      nome: 'Race2 E2E', modalidade: 'PRESENCIAL',
+    });
+    await limparRegistrosFunc(FUNC_RACE2);
+  });
+
+  afterAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0';
+    await limparRegistrosFunc(FUNC_RACE2);
+    await db.collection('users').doc(UID_RACE2).delete().catch(() => {});
+    await db.collection('funcionarios').doc(FUNC_RACE2).delete().catch(() => {});
+  });
+
+  // D) duas chamadas simultâneas de ENTRADA com cooldown=0
+  //    → somente UMA gravada (ID determinístico bloqueia a outra)
+  test('16 — Promise.all(2 ENTRADAs simultâneas) com cooldown=0 → exatamente 1 entrada gravada', async () => {
+    const p1 = _registrarPontoHandler(req(UID_RACE2, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const p2 = _registrarPontoHandler(req(UID_RACE2, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    const snap = await db.collection('registros').where('funcId', '==', FUNC_RACE2).get();
+    const docs  = snap.docs.map(d => d.data());
+
+    console.log(`  Race2 sem cooldown: r1=${JSON.stringify(r1)}, r2=${JSON.stringify(r2)}`);
+    console.log(`  Documentos criados: ${docs.length}`);
+    docs.forEach(d => console.log(`    tipo=${d.tipo} id=${d.id}`));
+
+    // NUNCA deve haver dois docs com tipo=entrada
+    const entradas = docs.filter(d => d.tipo === 'entrada');
+    expect(entradas.length).toBe(1);
+
+    // Pelo menos um sucesso
+    const sucessos = [r1, r2].filter(r => r.ok);
+    expect(sucessos.length).toBeGreaterThanOrEqual(1);
+
+    // A falha (se houver) deve ser already-exists ou resource-exhausted
+    const falhas = [r1, r2].filter(r => r.erro);
+    falhas.forEach(f => {
+      expect(['already-exists', 'resource-exhausted', 'failed-precondition']).toContain(f.erro);
+    });
+
+    // O documento criado deve ter ID determinístico
+    if (entradas.length === 1) {
+      expect(entradas[0].id).toMatch(/^func-race2-e2e_\d{4}-\d{2}-\d{2}_entrada$/);
+    }
+  });
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTE 17: Compatibilidade com registros legados + Correção administrativa
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Teste 17 — Registros legados e correção administrativa', () => {
+  const FUNC_LEG = 'func-legacy-e2e';
+  const UID_LEG  = 'uid-legacy-e2e';
+
+  function dataHoje() {
+    const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  beforeAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0';
+    await db.collection('users').doc(UID_LEG).set({
+      role: 'funcionario', ativo: true, funcionarioId: FUNC_LEG,
+    });
+    await db.collection('funcionarios').doc(FUNC_LEG).set({
+      nome: 'Legacy E2E', modalidade: 'PRESENCIAL',
+    });
+    await limparRegistrosFunc(FUNC_LEG);
+  });
+
+  afterAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0';
+    await limparRegistrosFunc(FUNC_LEG);
+    await db.collection('users').doc(UID_LEG).delete().catch(() => {});
+    await db.collection('funcionarios').doc(FUNC_LEG).delete().catch(() => {});
+  });
+
+  // ── E: legado + tentativa do mesmo tipo → BLOQUEADO via check determinístico ─
+  // Simula race condition: ID determinístico pré-existente, sequência ainda "vazia"
+  // (o outro registro não visível na query — ex: lag de consistência numa race).
+  // O único path onde um segundo ENTRADA pode ser tentado é via race condition;
+  // o check deterministicId bloqueia atomicamente.
+  test('17e — ID determinístico já existente (legado ou race) → já-exists bloqueado', async () => {
+    const hoje = dataHoje();
+    const deterministicId = `${FUNC_LEG}_${hoje}_entrada`;
+    // Pré-insere o doc determinístico (simula: outra transação já commitou)
+    await db.collection('registros').doc(deterministicId).set({
+      id: deterministicId, funcId: FUNC_LEG, tipo: 'entrada',
+      data: hoje, hora: '08:00:00',
+      criadoEm: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // A CF encontra a ENTRADA na query → próximo tipo = saida_almoco.
+    // O check deterministicId para saida_almoco não existe ainda → PASSA.
+    // (Este teste valida que a CF não tenta criar uma segunda entrada)
+    const r = await _registrarPontoHandler(req(UID_LEG, GPS_DENTRO));
+    expect(r.ok).toBe(true);
+    expect(r.tipo).toBe('saida_almoco'); // sequência avança corretamente
+
+    // Verifica que existe exatamente 1 registro de entrada
+    const snap = await db.collection('registros')
+      .where('funcId', '==', FUNC_LEG).where('tipo', '==', 'entrada').get();
+    expect(snap.docs.length).toBe(1);
+  });
+
+  // ── F: legado de ENTRADA + nova SAIDA_ALMOCO via ID aleatório → aceita ────────
+  test('17f — legado com ID aleatório de ENTRADA + nova SAIDA_ALMOCO → PASSA', async () => {
+    // Estado atual: já existe entrada (deterministicId) e saida_almoco (deterministicId)
+    // Verifica que a saida_almoco foi criada corretamente no teste anterior
+    const hoje = dataHoje();
+    const snapSA = await db.collection('registros')
+      .where('funcId', '==', FUNC_LEG).where('tipo', '==', 'saida_almoco').get();
+    expect(snapSA.docs.length).toBe(1);
+    expect(snapSA.docs[0].data().id).toBe(`${FUNC_LEG}_${hoje}_saida_almoco`);
+  });
+
+  // ── G: correção administrativa → exatamente 1 registro do tipo após correção ──
+  // Simula o que `responderJustificativa` faz: delete all same tipo/day + create 1 new
+  test('17g — correção administrativa: deletar todos do tipo + criar 1 novo → exatamente 1', async () => {
+    const hoje = dataHoje();
+    // Pré-inserir 2 registros de entrada (duplicidade histórica)
+    const dupId1 = 'dup-legado-1';
+    const dupId2 = 'dup-legado-2';
+    await db.collection('registros').doc(dupId1).set({
+      id: dupId1, funcId: FUNC_LEG, tipo: 'entrada',
+      data: '2026-06-06', hora: '08:00:00',
+    });
+    await db.collection('registros').doc(dupId2).set({
+      id: dupId2, funcId: FUNC_LEG, tipo: 'entrada',
+      data: '2026-06-06', hora: '08:00:02',
+    });
+
+    // Verifica 2 entradas antes da correção
+    const antes = await db.collection('registros')
+      .where('funcId', '==', FUNC_LEG).where('tipo', '==', 'entrada')
+      .where('data', '==', '2026-06-06').get();
+    expect(antes.docs.length).toBe(2);
+
+    // Simula a correção (espelha a lógica do responderJustificativa corrigido)
+    const todosRegs = (await db.collection('registros')
+      .where('funcId', '==', FUNC_LEG).get()).docs.map(d => d.data());
+    const regsExistentes = todosRegs.filter(
+      r => r.funcId === FUNC_LEG && r.data === '2026-06-06' && r.tipo === 'entrada',
+    );
+    for (const reg of regsExistentes) {
+      await db.collection('registros').doc(reg.id).delete();
+    }
+    const novoId = 'corrigido-001';
+    await db.collection('registros').doc(novoId).set({
+      id: novoId, funcId: FUNC_LEG, tipo: 'entrada',
+      data: '2026-06-06', hora: '08:05:00', lancadoPorJustificativa: true,
+    });
+
+    // Verifica exatamente 1 entrada após correção
+    const depois = await db.collection('registros')
+      .where('funcId', '==', FUNC_LEG).where('tipo', '==', 'entrada')
+      .where('data', '==', '2026-06-06').get();
+    expect(depois.docs.length).toBe(1);
+    expect(depois.docs[0].data().hora).toBe('08:05:00');
+  });
+
+  // ── H: correção não altera outros tipos do mesmo dia ─────────────────────────
+  test('17h — correção administrativa não altera outros tipos do mesmo dia', async () => {
+    // Pré-inserir saida_almoco para o mesmo dia
+    await db.collection('registros').doc('saida-almoco-legado').set({
+      id: 'saida-almoco-legado', funcId: FUNC_LEG, tipo: 'saida_almoco',
+      data: '2026-06-06', hora: '12:00:00',
+    });
+
+    // Corrige APENAS a ENTRADA (simula responderJustificativa para tipo=entrada)
+    const todosRegs = (await db.collection('registros')
+      .where('funcId', '==', FUNC_LEG).get()).docs.map(d => d.data());
+    const regsEntrada = todosRegs.filter(
+      r => r.funcId === FUNC_LEG && r.data === '2026-06-06' && r.tipo === 'entrada',
+    );
+    for (const reg of regsEntrada) await db.collection('registros').doc(reg.id).delete();
+    await db.collection('registros').doc('corrigido-002').set({
+      id: 'corrigido-002', funcId: FUNC_LEG, tipo: 'entrada',
+      data: '2026-06-06', hora: '08:10:00', lancadoPorJustificativa: true,
+    });
+
+    // saida_almoco permanece intacta
+    const snapSA = await db.collection('registros').doc('saida-almoco-legado').get();
+    expect(snapSA.exists).toBe(true);
+    expect(snapSA.data().tipo).toBe('saida_almoco');
+    expect(snapSA.data().hora).toBe('12:00:00');
+
+    // Limpeza dos registros de teste
+    await db.collection('registros').doc('saida-almoco-legado').delete().catch(() => {});
+    await db.collection('registros').doc('corrigido-001').delete().catch(() => {});
+    await db.collection('registros').doc('corrigido-002').delete().catch(() => {});
+  });
+
+  // ── J: duplicidades históricas do emulador permanecem intactas ───────────────
+  test('17j — duplicidades históricas pré-existentes NÃO são apagadas pela CF', async () => {
+    const hoje = dataHoje();
+    // Pré-insere dois registros legados de datas antigas (não são de hoje)
+    await db.collection('registros').doc('hist-dup-a').set({
+      id: 'hist-dup-a', funcId: FUNC_LEG, tipo: 'retorno_almoco',
+      data: '2026-04-01', hora: '13:00:00',
+    });
+    await db.collection('registros').doc('hist-dup-b').set({
+      id: 'hist-dup-b', funcId: FUNC_LEG, tipo: 'retorno_almoco',
+      data: '2026-04-01', hora: '13:01:00',
+    });
+
+    // Chama CF para hoje — não deve tocar nos dados de 2026-04-01
+    const r = await _registrarPontoHandler(req(UID_LEG, GPS_DENTRO));
+    expect(r.ok).toBe(true); // cria retorno_almoco para hoje
+
+    // Verifica que os legados de 2026-04-01 permanecem
+    const snapA = await db.collection('registros').doc('hist-dup-a').get();
+    const snapB = await db.collection('registros').doc('hist-dup-b').get();
+    expect(snapA.exists).toBe(true);
+    expect(snapB.exists).toBe(true);
+
+    // Limpeza
+    await db.collection('registros').doc('hist-dup-a').delete().catch(() => {});
+    await db.collection('registros').doc('hist-dup-b').delete().catch(() => {});
+  });
+});

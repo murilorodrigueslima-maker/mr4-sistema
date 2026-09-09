@@ -132,7 +132,7 @@ canvas#canvasFoto{display:none;}
 <!-- App do funcionário -->
 <div class="func-app" id="func-app">
   <div class="func-topbar">
-    <div class="func-topbar-logo">MR4 PONTO<span style="font-size:9px;font-weight:400;opacity:.6;margin-left:6px;letter-spacing:.5px;vertical-align:middle;">v2026.09.09-sec</span></div>
+    <div class="func-topbar-logo">MR4 PONTO<span style="font-size:9px;font-weight:400;opacity:.6;margin-left:6px;letter-spacing:.5px;vertical-align:middle;">v2026.09.09-sec2</span></div>
     <div style="display:flex;align-items:center;gap:10px;">
       <div class="func-topbar-user"><strong id="func-nome-top">—</strong>Ponto digital</div>
       <button onclick="window._signOut&&window._signOut()" title="Sair" style="background:rgba(255,255,255,.12);border:none;border-radius:6px;color:white;padding:5px 8px;font-size:12px;cursor:pointer;font-family:'Barlow',sans-serif;">Sair</button>
@@ -285,7 +285,7 @@ canvas#canvasFoto{display:none;}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const FIREBASE_CONFIG = {
@@ -311,8 +311,9 @@ window._signOut = () => signOut(auth).then(() => { window.location.href = 'ponto
 
 // ── API Firestore controlada ────────────────────────────────────────────────
 // Leituras (sem validação extra — Firestore Rules protegem no servidor)
-window._fbGetAll = async (c) => {
-  const s = await getDocs(collection(db, c));
+window._fbGetAll = async (c, funcId) => {
+  const q = query(collection(db, c), where('funcId', '==', funcId));
+  const s = await getDocs(q);
   return s.docs.map(d => ({id: d.id, ...d.data()}));
 };
 window._fbGetOne = async (c, id) => {
@@ -390,7 +391,7 @@ let justifAtualId=null, espelhoAtualFuncId=null;
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
 // Leituras via API controlada do módulo de auth
-async function fbGet(c){return window._fbGetAll(c);}
+async function fbGet(c, fid){return window._fbGetAll(c, fid !== undefined ? fid : (funcAtivo && funcAtivo.id));}
 // Escritas: registros via Cloud Function (server-side); demais via _fbSetOwn
 async function fbSet(c,id,data){
   return window._fbSetOwn(c,id,data);
@@ -698,7 +699,7 @@ async function enviarJustificativa(){
   if(anexoFile){if(anexoFile.size>5*1024*1024){notif('Arquivo muito grande (máx 5MB)','vermelho');return;}anexoBase64=await new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(anexoFile);});anexoNome=anexoFile.name;anexoTipo=anexoFile.type;}
   const motivo=tipoOcorr==='ponto_nao_batido'?`Ponto não batido — ${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[batida]} às ${horarioBatida}`:tipoOcorr;
   const id=uid();
-  await fbSet('justificativas',id,{id,funcId:funcAtivo.id,funcNome:funcAtivo.nome,data,motivo,descricao:desc,tipoPonto:tipoOcorr==='ponto_nao_batido'?batida:null,horarioPonto:horarioBatida||null,anexo:anexoBase64||null,anexoNome:anexoNome||null,anexoTipo:anexoTipo||null,status:'pendente',criadoEm:new Date().toISOString()});
+  await fbSet('justificativas',id,{id,funcId:funcAtivo.id,funcNome:funcAtivo.nome,data,motivo,descricao:desc,tipoPonto:tipoOcorr==='ponto_nao_batido'?batida:null,horarioPonto:horarioBatida||null,anexo:anexoBase64||null,anexoNome:anexoNome||null,anexoTipo:anexoTipo||null,status:'pendente',lancadoPorGestor:false,criadoEm:new Date().toISOString()});
   document.getElementById('justif-data').value=hoje();document.getElementById('justif-tipo-ocorr').value='';document.getElementById('justif-desc').value='';document.getElementById('justif-anexo').value='';document.getElementById('justif-anexo-nome').textContent='';document.getElementById('campos-ponto-nao-batido').style.display='none';
   notif('Justificativa enviada! Aguarde aprovação.');renderJustifFunc();
 }
@@ -732,13 +733,14 @@ async function verMinhaFolha(){
   try{
     const espelhos=await fbGet('espelhos');
     const espExist=espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes);
-    const espId=espExist?espExist.id:uid();
     const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel);
     let btnAssin='';
     if(espExist&&espExist.assinado){
       btnAssin=`<div style="margin-top:10px;text-align:center;padding:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:13px;color:var(--verde);">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
+    } else if(espExist){
+      btnAssin=`<div style="margin-top:10px;"><button class="btn-laranja" onclick="abrirAssinar('${espExist.id}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
     } else {
-      btnAssin=`<div style="margin-top:10px;"><button class="btn-laranja" onclick="abrirAssinar('${espId}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
+      btnAssin=`<div class="aviso" style="margin-top:10px;">Espelho ainda não gerado pelo gestor para este mês. Solicite ao gestor que gere o espelho.</div>`;
     }
     cont.innerHTML=html+btnAssin;
   }catch(err){
@@ -768,7 +770,7 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
   // garante que o registro existe no Firestore antes de assinar
   const espelhos=await fbGet('espelhos');
   const exist=espelhos.find(e=>e.id===espelhoId);
-  if(!exist)await fbSet('espelhos',espelhoId,{id:espelhoId,funcId,mes,mesLabel,assinado:false,criadoEm:new Date().toISOString()});
+  if(!exist){notif('Espelho não encontrado. Solicite ao gestor.','vermelho');return;}
   document.getElementById('assinar-info').textContent='Revise seu espelho de ponto e assine abaixo para confirmar.';
   document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>';
   document.getElementById('modal-assinar').classList.add('aberto');
@@ -787,9 +789,9 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
   // Usa funcAtivo já carregado — evita buscar coleção funcionarios
   const func=funcAtivo;
   if(!func)return'<div style="font-size:12px;color:var(--cinza-texto);">Dados do funcionário não encontrados.</div>';
-  const regs=await fbGet('registros');
-  const justifs=await fbGet('justificativas');
-  const creditos=await fbGet('creditos_jornada');
+  const regs=await fbGet('registros', funcId);
+  const justifs=await fbGet('justificativas', funcId);
+  const creditos=await fbGet('creditos_jornada', funcId);
   const [ano,mesNum]=mes.split('-').map(Number);
   const diasNoMes=new Date(ano,mesNum,0).getDate();
   const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];

@@ -338,6 +338,14 @@ window._auth2SignOut = ()             => auth2.signOut();
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
 
+  // FAIL CLOSED: role check antes de verificar permissão de admin
+  try {
+    const rSnap = await getDoc(doc(db, 'users', user.uid));
+    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+      window.location.href = '../login.html'; return;
+    }
+  } catch(e) { window.location.href = '../login.html'; return; }
+
   // Verifica admin
   try {
     const snap = await getDoc(doc(db, 'sistema_usuarios', user.uid));

@@ -118,6 +118,113 @@ service cloud.firestore {
       allow read, write: if isGestor();
     }
 
+    // ── Coleção: sistema_usuarios ──────────────────────────────────────────────
+    // Perfis de acesso ao sistema administrativo (modulos/permissoes por gestor).
+    // Funcionários nunca têm docs aqui; mesmo assim a regra é explícita.
+
+    match /sistema_usuarios/{uid} {
+      allow read: if isAuthed() && (request.auth.uid == uid || isGestor());
+      allow write: if isGestor();
+    }
+
+    // ── Coleção: produto_equivalentes ──────────────────────────────────────────
+
+    match /produto_equivalentes/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: demandas ──────────────────────────────────────────────────────
+
+    match /demandas/{demandaId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: painel_config ─────────────────────────────────────────────────
+    // Configurações do painel — leitura e escrita restritas a gestores.
+
+    match /painel_config/{configId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: compras_config ────────────────────────────────────────────────
+    // Configurações do módulo de compras (settings, fornecedores, mapeamento).
+    // Apenas gestores — nenhum acesso de funcionários ou usuários sem perfil.
+
+    match /compras_config/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
+    // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
+    // Rules garantem o mínimo: acesso restrito a gestores.
+
+    match /expedicao_pedidos/{pedidoId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleções: marketing ────────────────────────────────────────────────────
+    // Conteúdos de pipeline, ideias e legendas do módulo de marketing.
+
+    match /marketing_conteudos/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    match /marketing_ideias/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    match /marketing_legendas/{docId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: garantias ─────────────────────────────────────────────────────
+    // Registros de garantia de produtos. Acesso exclusivo de gestores.
+
+    match /garantias/{garantiaId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: fornecedores_custo ────────────────────────────────────────────
+    // Tabela de fornecedores com percentuais de custo.
+    // Usada em calculadora-custo.html (read/write) e garantia.html (read).
+
+    match /fornecedores_custo/{fornecedorId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: clientes ──────────────────────────────────────────────────────
+    // CRM — cadastro de clientes. Pipeline, notas, histórico de contato.
+
+    match /clientes/{clienteId} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: conversas (e subcoleção msgs) ─────────────────────────────────
+    // Histórico de conversas do CRM por telefone.
+    // conversas/{phone} — documento raiz (metadados, se existir).
+    // conversas/{phone}/msgs/{msgId} — mensagens da conversa.
+
+    match /conversas/{phone} {
+      allow read, write: if isGestor();
+      match /msgs/{msgId} {
+        allow read, write: if isGestor();
+      }
+    }
+
+    // ── Coleção: conversas_resumo ──────────────────────────────────────────────
+    // Resumos de conversas para exibição no painel de inbox.
+
+    match /conversas_resumo/{phone} {
+      allow read, write: if isGestor();
+    }
+
+    // ── Coleção: chat_status ───────────────────────────────────────────────────
+    // Status de conexão do WhatsApp por número de telefone.
+
+    match /chat_status/{phone} {
+      allow read, write: if isGestor();
+    }
+
     // ── Tudo mais: negado por padrão ───────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

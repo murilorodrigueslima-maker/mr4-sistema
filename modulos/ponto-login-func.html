@@ -52,6 +52,7 @@ body{font-family:'Barlow',sans-serif;background:#0A0A0A;color:#F5F5F5;min-height
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, getDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -64,10 +65,27 @@ const FIREBASE_CONFIG = {
 
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
+const db  = getFirestore(app);
 
-onAuthStateChanged(auth, user => {
-  if (user) window.location.href = 'ponto-func.html';
-});
+async function verificarRoleERedirecionarSeFunc(user) {
+  if (!user) return;
+  try {
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (snap.exists() && snap.data().role === 'funcionario' && snap.data().ativo) {
+      window.location.href = 'ponto-func.html';
+    } else if (snap.exists() && snap.data().role === 'gestor') {
+      mostrarErro('Este acesso é exclusivo dos funcionários. Gestores devem usar o painel principal.');
+    } else if (!snap.exists()) {
+      mostrarErro('Conta não vinculada. Contate o gestor.');
+    } else {
+      mostrarErro('Conta inativa ou sem permissão. Contate o gestor.');
+    }
+  } catch(e) {
+    // Erro de rede: permanece na tela de login silenciosamente
+  }
+}
+
+onAuthStateChanged(auth, verificarRoleERedirecionarSeFunc);
 
 window.fazerLogin = async function() {
   const email = document.getElementById('email').value.trim();
@@ -82,8 +100,11 @@ window.fazerLogin = async function() {
   btn.innerHTML = '<span class="spinner"></span>Entrando...';
 
   try {
-    await signInWithEmailAndPassword(auth, email, senha);
-    window.location.href = 'ponto-func.html';
+    const cred = await signInWithEmailAndPassword(auth, email, senha);
+    await verificarRoleERedirecionarSeFunc(cred.user);
+    // Se chegou aqui sem redirecionar (ex: gestor), restaura o botão
+    btn.disabled = false;
+    btn.textContent = 'ENTRAR';
   } catch(e) {
     const msgs = {
       'auth/user-not-found':    'Usuário não encontrado.',

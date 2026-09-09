@@ -474,9 +474,17 @@ db   = getFirestore(app);
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
 
+  // FAIL CLOSED: verifica role antes de mostrar dados de compras
+  try {
+    const rSnap = await getDoc(doc(db, 'users', user.uid));
+    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+      await signOut(auth); window.location.href = '../login.html'; return;
+    }
+  } catch(e) { await signOut(auth); window.location.href = '../login.html'; return; }
+
   const nome = user.displayName || user.email.split('@')[0];
   document.getElementById('userName').textContent  = nome;
-  document.getElementById('userRole').textContent  = 'Usuário';
+  document.getElementById('userRole').textContent  = 'Gestor';
   document.getElementById('userAvatar').textContent = nome[0].toUpperCase();
 
   setProgress(10, 'Carregando configurações...');

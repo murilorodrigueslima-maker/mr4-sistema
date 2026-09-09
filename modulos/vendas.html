@@ -825,6 +825,14 @@
       return;
     }
 
+    // FAIL CLOSED: verifica role antes de mostrar dados de vendas
+    try {
+      const rSnap = await getDoc(doc(db, 'users', user.uid));
+      if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+        await signOut(auth); window.location.href = '../login.html'; return;
+      }
+    } catch(e) { await signOut(auth); window.location.href = '../login.html'; return; }
+
     // Load user profile
     let perfil = { nome: user.displayName || user.email.split('@')[0], cargo: 'Usuário' };
     try {

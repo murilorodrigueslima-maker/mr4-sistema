@@ -319,6 +319,14 @@ const PRIO_LABEL = { baixa:'Baixa', normal:'Normal', alta:'Alta', urgente:'Urgen
 onAuthStateChanged(auth, async u => {
   if(!u){ window.location.href='../login.html'; return; }
 
+  // FAIL CLOSED: verifica role antes de mostrar demandas
+  try {
+    const rSnap = await getDoc(doc(db, 'users', u.uid));
+    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+      window.location.href='../login.html'; return;
+    }
+  } catch(e) { window.location.href='../login.html'; return; }
+
   // Busca perfil
   let nome = u.displayName || u.email.split('@')[0];
   let isAdmin = false;

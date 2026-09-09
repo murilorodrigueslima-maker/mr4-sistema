@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-08T23:09:53",
+  "atualizado_em": "2026-09-09T05:28:12",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -203,27 +203,30 @@
       "vencimento": "2026-09-07",
       "dias_atraso": 2,
       "tipo": "Pagar"
-    }
-  ],
-  "contas_vencendo": [
+    },
     {
       "nome": "GELJORS ACESSORIOS E PECAS AUTOMOTIVAS LTDA",
       "valor": 1663.97,
       "vencimento": "2026-09-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 1225.4,
       "vencimento": "2026-09-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
     },
     {
       "nome": "GALTECOM INDUSTRIA COMERCIO E IMPORTACAO LTDA",
       "valor": 818.45,
       "vencimento": "2026-09-08",
+      "dias_atraso": 1,
       "tipo": "Pagar"
-    },
+    }
+  ],
+  "contas_vencendo": [
     {
       "nome": "A K COMERCIO E IMPORTACAO LTDA",
       "valor": 1644,
@@ -389,7 +392,7 @@
   ],
   "fluxo_caixa": [],
   "inadimplencia_pct": 0,
-  "total_vencido": 54082.13,
+  "total_vencido": 57789.95,
   "total_a_receber": 0,
   "total_a_pagar": 29385.949999999997
 }

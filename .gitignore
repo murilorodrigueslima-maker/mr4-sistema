@@ -1,0 +1,20 @@
+# node_modules — regenerável via npm install
+functions/node_modules/
+
+# JDK portátil e arquivo compactado — não versionados
+.tools/
+
+# Logs do emulador e depuração
+*.log
+firestore-debug.log
+
+# Arquivos internos de sessão de trabalho
+BOOTSTRAP.md
+RELATORIO_FASE2.md
+
+# Dados sincronizados automaticamente pelo GitHub Actions
+data/
+
+# Editor / sistema
+.DS_Store
+.claude/

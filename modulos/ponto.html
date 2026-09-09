@@ -176,6 +176,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
     <div class="nav-item" onclick="mudarSecao('espelho',this)">Espelho de ponto</div>
     <div class="nav-item" onclick="mudarSecao('funcionarios',this)">Funcionários</div>
     <div class="nav-item" onclick="mudarSecao('links',this)">Links</div>
+    <div class="nav-item" onclick="mudarSecao('contas',this)">Contas</div>
   </div>
   <div class="dash-body">
 
@@ -278,6 +279,14 @@ tr:hover td{background:rgba(255,107,26,.04);}
       <div id="lista-links"></div>
     </div>
 
+    <div class="dash-secao" id="sec-contas">
+      <div class="secao-header">
+        <div class="secao-titulo" style="margin:0">Contas de acesso — Funcionários</div>
+      </div>
+      <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;">Crie contas Firebase Auth para que os funcionários acessem o aplicativo com e-mail e senha.</p>
+      <div id="lista-contas"><div class="vazio">Carregando...</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -314,6 +323,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
       <div class="form-campo"><label>Admissão</label><input type="date" id="f-admissao"></div>
       <div class="form-campo"><label>Salário (R$)</label><input type="number" id="f-salario" min="0" step="0.01"></div>
       <div class="form-campo full"><label>Jornada</label><select id="f-jornada"><option value="8">8h/dia — 44h/semana</option><option value="6">6h/dia — 30h/semana</option></select></div>
+      <div class="form-campo full"><label>Modalidade de trabalho</label><select id="f-modalidade"><option value="PRESENCIAL">Presencial (GPS obrigatório no app)</option><option value="HOME_OFFICE">Home Office (sem restrição de GPS)</option></select></div>
       <div class="form-campo full"><label>Observações</label><textarea id="f-obs"></textarea></div>
       <div class="form-campo full" id="campo-perfil-func" style="display:none;border-top:1px solid var(--cinza-borda);padding-top:12px;margin-top:4px;">
         <label style="color:var(--laranja);">Acesso ao sistema</label>
@@ -369,9 +379,10 @@ tr:hover td{background:rgba(255,107,26,.04);}
 
 <!-- Firebase Auth Guard -->
 <script type="module">
-import { initializeApp }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -382,18 +393,38 @@ const firebaseConfig = {
   appId:"1:848211361584:web:2732e1893122f4a23452f5"
 };
 
-const app  = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const app       = initializeApp(firebaseConfig);
+const auth      = getAuth(app);
+const db        = getFirestore(app);
+const functions = getFunctions(app, 'southamerica-east1');
 
 window._db=db; window._col=collection; window._doc=doc;
 window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
-window._deleteDoc=deleteDoc;
+window._deleteDoc=deleteDoc; window._serverTimestamp=serverTimestamp;
 window._signOut = () => signOut(auth);
 
-window._userEmail='';window._monitorFuncId=null;
-onAuthStateChanged(auth, user => {
+// Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
+window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
+
+window._userEmail=''; window._monitorFuncId=null;
+onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href='../login.html'; return; }
+  // Funcionários autenticados são redirecionados para a tela deles
+  try {
+    const perfSnap = await getDoc(doc(db, 'users', user.uid));
+    if (perfSnap.exists() && perfSnap.data().role === 'funcionario') {
+      window.location.href = 'ponto-func.html'; return;
+    }
+    // FAIL CLOSED: gestores precisam ter doc users/{uid} com role='gestor'.
+    // Se não tiver, acesso é negado (evita acesso indevido via conta sem perfil).
+    if (perfSnap.exists() && perfSnap.data().role !== 'gestor') {
+      document.getElementById('loadingScreen').innerHTML =
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
+      return;
+    }
+  } catch(e) {
+    console.warn('[Auth] Erro ao verificar perfil:', e);
+  }
   window._userEmail = user.email || '';
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dashboard').style.display='flex';
@@ -401,6 +432,8 @@ onAuthStateChanged(auth, user => {
   window.dispatchEvent(new Event('firebaseReady'));
 });
 </script>
+
+<script src="ponto-regras.js"></script>
 
 <script>
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -434,11 +467,8 @@ window.mudarMes=mudarMes;
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function hoje(){return new Date().toISOString().slice(0,10);}
 function mesAtual(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
-function toMin(t){if(!t)return null;const[h,m]=t.split(':').map(Number);return h*60+m;}
-function fmtMin(m){if(m===null||m===undefined)return'—';const s=m<0?'-':'';const a=Math.abs(Math.round(m));return s+Math.floor(a/60)+'h'+String(a%60).padStart(2,'0');}
 function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
 function fmtData(d){if(!d)return'—';const[y,m,dd]=d.split('-');return `${dd}/${m}/${y}`;}
-function calcTotal(e,sa,ra,s){if(!e||!s)return null;let t=toMin(s)-toMin(e);if(sa&&ra)t-=(toMin(ra)-toMin(sa));return t;}
 function notif(msg,tipo='verde'){const el=document.getElementById('notif');el.textContent=msg;el.className='notif '+tipo;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
 
 function facialBadge(score){
@@ -523,7 +553,7 @@ async function renderRegistros(){
     const total=calcTotal(e,sa,ra,s);
     const func=funcs.find(f=>f.id===funcId);
     const jornMin=(parseFloat(func?.jornada)||8)*60;
-    const saldo=total!==null?total-jornMin:null;
+    const saldo=total!==null?total-jornadaParaData(data,jornMin):null;
     const fotoReg=regs.find(r=>r.foto);
     const dentroRaio=regs.some(r=>r.dentroRaio===true)?true:regs.some(r=>r.dentroRaio===false)?false:null;
     const scores=regs.map(r=>r.facialScore).filter(s=>s!=null);
@@ -541,18 +571,11 @@ async function renderBanco(){
   const cards=funcs.map(f=>{
     const regsF=regs.filter(r=>r.funcId===f.id&&r.data.startsWith(mesAtual()));
     const credF=creditos.filter(c=>c.funcId===f.id&&c.data.startsWith(mesAtual()));
-    const dias={};regsF.forEach(r=>{if(!dias[r.data])dias[r.data]={};if(!dias[r.data][r.tipo]||r.lancadoPorJustificativa)dias[r.data][r.tipo]=r.hora;});
-    const jornMin=(parseFloat(f.jornada)||8)*60;
-    let trabMin=0,esperMin=0;
-    Object.entries(dias).forEach(([data,d])=>{const t=calcTotal(d.entrada?.slice(0,5),d.saida_almoco?.slice(0,5),d.retorno_almoco?.slice(0,5),d.saida?.slice(0,5));if(t!==null&&t!==undefined){trabMin+=t;esperMin+=jornadaParaData(data,jornMin);}});
-    credF.forEach(c=>trabMin+=c.minutos||0);
-    const diasComCredito=credF.map(c=>c.data).filter(d=>!dias[d]);
-    const diasTrab=Object.keys(dias).length+diasComCredito.length;
-    diasComCredito.forEach(data=>{ esperMin+=jornadaParaData(data,jornMin); });
-    const saldo=trabMin-esperMin;
+    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,mesAtual(),hoje());
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
-    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div></div>`;
+    const pendenciasTag=pendencias.length>0?'<div style="color:var(--amarelo);font-size:12px;margin-top:8px;border-top:1px solid rgba(255,200,0,.2);padding-top:6px;">⚠ '+pendencias.length+' pendência'+(pendencias.length>1?'s':'')+': '+pendencias.map(p=>fmtData(p.data)).join(', ')+'</div>':'';
+    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div>${pendenciasTag}</div>`;
   }).join('');
   document.getElementById('banco-cards').innerHTML=cards;
   document.getElementById('metrics-banco').innerHTML=`<div class="metric-card"><div class="metric-label">Funcionários</div><div class="metric-valor">${funcs.length}</div></div><div class="metric-card"><div class="metric-label">Registros</div><div class="metric-valor">${regs.length}</div></div><div class="metric-card"><div class="metric-label">Extras acum.</div><div class="metric-valor verde">+${fmtMin(totalPos)}</div></div><div class="metric-card"><div class="metric-label">Débitos acum.</div><div class="metric-valor vermelho">${fmtMin(totalNeg)}</div></div>`;
@@ -693,17 +716,14 @@ async function responderJustificativa(status){
 }
 window.responderJustificativa=responderJustificativa;
 
-// Retorna os minutos de jornada corretos para a data (sábado = 3h30, demais = jornMin)
-function jornadaParaData(data,jornMin){
-  const d=new Date(data+'T12:00:00');
-  return d.getDay()===6?210:jornMin; // 210 min = 3h30 (08:30–12:00)
-}
-
 async function creditarJornada(funcId,funcNome,data,jornMin,motivo){
-  const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
+  // Home Office: modalidade de trabalho, não abono. Ponto é a fonte de verdade; não criar crédito.
+  const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
   if(tiposSemCredito.includes(motivo))return;
+  // Folga compensatória: minutos=0 → trabMin não sobe; esperMin sobe → saldo cai.
+  const minutos=motivo==='Folga compensatória'?0:jornMin;
   const id='cred_'+funcId+'_'+data;
-  await fbSet('creditos_jornada',id,{id,funcId,funcNome,data,minutos:jornMin,motivo,criadoEm:new Date().toISOString()});
+  await fbSet('creditos_jornada',id,{id,funcId,funcNome,data,minutos,motivo,criadoEm:new Date().toISOString()});
 }
 
 // ── Espelho ───────────────────────────────────────────────────────────────────
@@ -735,14 +755,17 @@ async function gerarEspelho(){
     let total=calcTotal(e,sa,ra,s);
     const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
     // Crédito por justificativa aprovada (atestado, feriado, home office, etc.)
-    const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar'];
+    const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
     const justifCredita=justifD&&justifD.status==='aprovado'&&!TIPOS_SEM_CREDITO.includes(justifD.motivo);
-    if(total===null&&(creditoD||justifCredita))total=jornadaDia;
-    if(!ehDomingo&&!ehFuturo){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
-    const saldoDia=(!ehDomingo&&!ehFuturo&&total!==null)?total-jornadaDia:null;
-    const temCreditoSemPonto=!!(creditoD||justifCredita)&&total!==null&&regsD.length===0;
+    // Usa creditoD.minutos como total (0 para folga comp → saldo negativo). Fallback = jornadaDia para justifCredita sem crédito.
+    if(total===null&&(creditoD||justifCredita))total=creditoD&&creditoD.minutos!=null?creditoD.minutos:jornadaDia;
+    // Ponto incompleto: tem registro mas calcTotal=null → pendente, não consolida saldo
+    const ehIncompleto=!ehDomingo&&!ehFuturo&&regsD.length>0&&total===null;
+    if(!ehDomingo&&!ehFuturo&&!ehIncompleto){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
+    const saldoDia=(!ehDomingo&&!ehFuturo&&!ehIncompleto&&total!==null)?total-jornadaDia:null;
+    const temCreditoSemPonto=!!(creditoD||justifCredita)&&total!=null&&total>0&&regsD.length===0;
     let totalLabel='—';
-    if(!ehDomingo){if(temCreditoSemPonto)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(e)totalLabel='Incompleto';else totalLabel='Falta';}
+    if(!ehDomingo){if(temCreditoSemPonto)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(ehIncompleto)totalLabel='Incompleto';else totalLabel='Falta';}
     let ocorrencia=null;if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
     linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:temCreditoSemPonto});
   }
@@ -812,8 +835,8 @@ async function abrirModalFunc(id){
   document.getElementById('modal-func-titulo').textContent=id?'Editar funcionário':'Novo funcionário';
   // mostra seção de perfil só para quem não é monitor
   document.getElementById('campo-perfil-func').style.display=window._monitorFuncId?'none':'';
-  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';document.getElementById('f-email').value=f.email||'';document.getElementById('f-perfil').value=f.perfil||'';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
-  else{['f-nome','f-cpf','f-rg','f-nasc','f-tel','f-end','f-cargo','f-admissao','f-salario','f-obs','f-email'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-perfil').value='';document.getElementById('foto-preview').innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;document.getElementById('foto-status').textContent='Nenhuma foto cadastrada';document.getElementById('foto-status').style.color='var(--cinza-texto)';}
+  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';document.getElementById('f-email').value=f.email||'';document.getElementById('f-perfil').value=f.perfil||'';document.getElementById('f-modalidade').value=f.modalidade||'PRESENCIAL';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
+  else{['f-nome','f-cpf','f-rg','f-nasc','f-tel','f-end','f-cargo','f-admissao','f-salario','f-obs','f-email'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-perfil').value='';document.getElementById('f-modalidade').value='PRESENCIAL';document.getElementById('foto-preview').innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;document.getElementById('foto-status').textContent='Nenhuma foto cadastrada';document.getElementById('foto-status').style.color='var(--cinza-texto)';}
   document.getElementById('modal-func').classList.add('aberto');
 }
 window.abrirModalFunc=abrirModalFunc;
@@ -845,7 +868,7 @@ window.capturarFotoCadastro=capturarFotoCadastro;
 async function salvarFuncionario(){
   const nome=document.getElementById('f-nome').value.trim();if(!nome){notif('Nome é obrigatório','vermelho');return;}
   const id=editFuncId||uid();
-  const data={nome,cpf:document.getElementById('f-cpf').value,rg:document.getElementById('f-rg').value,nascimento:document.getElementById('f-nasc').value,telefone:document.getElementById('f-tel').value,endereco:document.getElementById('f-end').value,cargo:document.getElementById('f-cargo').value,admissao:document.getElementById('f-admissao').value,salario:document.getElementById('f-salario').value,jornada:document.getElementById('f-jornada').value,obs:document.getElementById('f-obs').value,atualizadoEm:new Date().toISOString()};
+  const data={nome,cpf:document.getElementById('f-cpf').value,rg:document.getElementById('f-rg').value,nascimento:document.getElementById('f-nasc').value,telefone:document.getElementById('f-tel').value,endereco:document.getElementById('f-end').value,cargo:document.getElementById('f-cargo').value,admissao:document.getElementById('f-admissao').value,salario:document.getElementById('f-salario').value,jornada:document.getElementById('f-jornada').value,modalidade:document.getElementById('f-modalidade').value||'PRESENCIAL',obs:document.getElementById('f-obs').value,atualizadoEm:new Date().toISOString()};
   if(!window._monitorFuncId){data.email=(document.getElementById('f-email').value||'').trim().toLowerCase();data.perfil=document.getElementById('f-perfil').value||'';}
   if(fotoNova)data.foto=fotoNova;if(!editFuncId)data.criadoEm=new Date().toISOString();
   await fbSet('funcionarios',id,data);fotoNova=null;editFuncId=null;fecharModal('modal-func');renderFuncionarios();notif('Funcionário salvo!');
@@ -875,6 +898,52 @@ async function salvarAvaliacao(){
 }
 window.salvarAvaliacao=salvarAvaliacao;
 
+// ── Contas de acesso ──────────────────────────────────────────────────────────
+async function renderContas(){
+  const el=document.getElementById('lista-contas');
+  el.innerHTML='<div class="vazio">Carregando...</div>';
+  const funcs=await fbGet('funcionarios');
+  let users=[];try{users=await fbGet('users');}catch{}
+  if(!funcs.length){el.innerHTML='<div class="vazio">Nenhum funcionário cadastrado.</div>';return;}
+  const userMap={};users.forEach(u=>{if(u.funcionarioId)userMap[u.funcionarioId]=u;});
+  el.innerHTML=funcs.map(f=>{
+    const u=userMap[f.id];
+    const statusHtml=u
+      ?`<span class="badge aprovado">Conta ativa</span><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">${u.email||''}</div>`
+      :'<span class="badge pendente">Sem conta</span>';
+    const btnHtml=!u?`<div style="margin-top:6px;"><button class="btn-acao success" onclick="criarContaFunc('${f.id}','${f.nome.replace(/'/g,"\\'")}')">Criar conta</button></div>`:'';
+    return `<div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div class="func-cell"><div class="avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''} · ${f.modalidade||'PRESENCIAL'}</div></div></div>
+      <div style="text-align:right;">${statusHtml}${btnHtml}</div></div>`;
+  }).join('');
+}
+window.renderContas=renderContas;
+
+async function criarContaFunc(funcId,funcNome){
+  const email=prompt(`E-mail para ${funcNome}:`);
+  if(!email)return;
+  const senha=prompt('Senha inicial (mínimo 6 caracteres):');
+  if(!senha||senha.length<6){notif('Senha muito curta (mínimo 6 caracteres)','vermelho');return;}
+  notif('Criando conta...');
+  try{
+    // Cloud Function criarContaFuncionario — Admin SDK server-side
+    const result=await window._criarContaFuncionario({
+      email:email.trim().toLowerCase(),senha,funcId,funcNome
+    });
+    if(result.data&&result.data.ok){
+      notif(`Conta criada para ${funcNome}!`);
+      delete _fbCache['users'];renderContas();
+    }else{
+      notif('Erro ao criar conta. Tente novamente.','vermelho');
+    }
+  }catch(e){
+    // Erros amigáveis da CF — sem stack trace
+    const msg=e?.details?.message||e?.message||'Erro ao criar conta.';
+    notif(msg,'vermelho');
+  }
+}
+window.criarContaFunc=criarContaFunc;
+
 // ── Navegação ─────────────────────────────────────────────────────────────────
 function mudarSecao(id,el){
   document.querySelectorAll('.dash-secao').forEach(s=>s.classList.remove('ativa'));
@@ -887,6 +956,7 @@ function mudarSecao(id,el){
   if(id==='espelho'){document.getElementById('esp-mes').value=mesAtual();renderFuncionarios();}
   if(id==='funcionarios')renderFuncionarios();
   if(id==='links')renderLinks();
+  if(id==='contas')renderContas();
 }
 window.mudarSecao=mudarSecao;
 

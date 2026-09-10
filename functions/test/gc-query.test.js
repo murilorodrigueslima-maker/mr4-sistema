@@ -288,3 +288,207 @@ test('F17 — funcionário → permission-denied', async () => {
     'permission-denied'
   );
 });
+
+// ── F18 — preco_custo = NaN → invalid-argument ────────────────────────────────
+test('F18 — preco_custo NaN → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '123', preco_custo: NaN },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F19 — preco_custo = string → invalid-argument ─────────────────────────────
+test('F19 — preco_custo string ("abc") → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '123', preco_custo: 'abc' },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F20 — preco_venda = string → invalid-argument (presente e inválido = rejeita tudo) ──
+test('F20 — preco_venda string → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '42', preco_custo: 50, preco_venda: 'invalido' },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F21 — sem credenciais GC (env vazio) → internal ──────────────────────────
+test('F21 — env GC_ACCESS_TOKEN ausente → internal', async () => {
+  const savedToken  = process.env.GC_ACCESS_TOKEN;
+  const savedSecret = process.env.GC_SECRET_ACCESS_TOKEN;
+  delete process.env.GC_ACCESS_TOKEN;
+  delete process.env.GC_SECRET_ACCESS_TOKEN;
+
+  try {
+    await expectError(
+      _gcQueryHandler(req(UID_GESTOR_CALC, { operacao: 'LISTAR_PRODUTOS', dados: { limite: 10 } })),
+      'internal'
+    );
+  } finally {
+    process.env.GC_ACCESS_TOKEN        = savedToken;
+    process.env.GC_SECRET_ACCESS_TOKEN = savedSecret;
+  }
+});
+
+// ── F22 — PESQUISAR_CLIENTES: DTO não contém CPF/CNPJ ────────────────────────
+test('F22 — PESQUISAR_CLIENTES DTO exclui CPF e CNPJ', async () => {
+  const GC_CLIENTE_COMPLETO = {
+    data: [{
+      id: 99, nome: 'João Silva', cidade: 'Fortaleza', telefone: '(85)99999-0000',
+      cpf: '000.000.000-00', cnpj: '00.000.000/0001-00', email: 'joao@example.com',
+      endereco: 'Rua A, 123', limite_credito: 5000,
+    }],
+    meta: { pagina_atual: 1, total_paginas: 1, total_registros: 1 },
+  };
+  mockFetchImpl = () => Promise.resolve({
+    ok: true, status: 200,
+    json: async () => GC_CLIENTE_COMPLETO,
+    text: async () => JSON.stringify(GC_CLIENTE_COMPLETO),
+  });
+
+  const result = await _gcQueryHandler(req(UID_GESTOR_CALC, {
+    operacao: 'PESQUISAR_CLIENTES',
+    dados: { busca: 'João', limite: 5 },
+  }));
+
+  expect(Array.isArray(result.data)).toBe(true);
+  expect(result.data.length).toBe(1);
+  const cliente = result.data[0];
+  // Campos proibidos não devem existir no DTO
+  expect(cliente).not.toHaveProperty('cpf');
+  expect(cliente).not.toHaveProperty('cnpj');
+  expect(cliente).not.toHaveProperty('email');
+  expect(cliente).not.toHaveProperty('endereco');
+  expect(cliente).not.toHaveProperty('limite_credito');
+  // Campos permitidos presentes
+  expect(cliente).toHaveProperty('id');
+  expect(cliente).toHaveProperty('nome');
+  expect(cliente).toHaveProperty('cidade');
+  expect(cliente).toHaveProperty('telefone');
+});
+
+// ── F24 — preco_custo Infinity → invalid-argument ─────────────────────────────
+test('F24 — preco_custo Infinity → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '123', preco_custo: Infinity },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F25 — preco_venda NaN → invalid-argument ──────────────────────────────────
+test('F25 — preco_venda NaN → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '123', preco_custo: 50, preco_venda: NaN },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F26 — preco_venda Infinity → invalid-argument ─────────────────────────────
+test('F26 — preco_venda Infinity → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '123', preco_custo: 50, preco_venda: Infinity },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F27 — preco_venda negativo → invalid-argument ─────────────────────────────
+test('F27 — preco_venda negativo → invalid-argument', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '123', preco_custo: 50, preco_venda: -10 },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── F28 — preco_venda ausente → ALLOWED (campo opcional) ─────────────────────
+test('F28 — preco_venda ausente → ALLOWED, retorna { ok: true }', async () => {
+  const gcCalls = [];
+  mockFetchImpl = (url, opts) => {
+    gcCalls.push({ url, method: opts?.method });
+    if (!opts || opts.method !== 'PUT') {
+      return Promise.resolve({ ok: true, status: 200, json: async () => GC_RESP_ITEM, text: async () => '{}' });
+    }
+    return Promise.resolve({ ok: true, status: 200, json: async () => ({}), text: async () => '{}' });
+  };
+
+  const result = await _gcQueryHandler(req(UID_GESTOR_CALC, {
+    operacao: 'ATUALIZAR_PRECO',
+    dados: { produtoId: '42', preco_custo: 55 },
+  }));
+  expect(result).toEqual({ ok: true });
+  // Deve ter feito o PUT ao GC (sem preco_venda no body)
+  const put = gcCalls.find(c => c.method === 'PUT');
+  expect(put).toBeDefined();
+});
+
+// ── F29 — atualização parcial bloqueada (custo válido + venda inválido) ────────
+// Operação inteira deve falhar; nenhum PUT deve chegar ao GestãoClick.
+test('F29 — custo válido + venda inválida → rejeita tudo, zero PUTs no GC', async () => {
+  const gcCalls = [];
+  mockFetchImpl = (url, opts) => {
+    gcCalls.push({ url, method: opts?.method });
+    return Promise.resolve({ ok: true, status: 200, json: async () => ({}), text: async () => '{}' });
+  };
+
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '42', preco_custo: 55, preco_venda: 'invalido' },
+    })),
+    'invalid-argument'
+  );
+  // A validação joga antes de qualquer chamada HTTP
+  const puts = gcCalls.filter(c => c.method === 'PUT');
+  expect(puts.length).toBe(0);
+  // Nenhuma chamada ao GC deve ter ocorrido (nem GET de preço anterior)
+  expect(gcCalls.length).toBe(0);
+});
+
+// ── F23 — PESQUISAR_CLIENTES: sanitização do parâmetro busca ─────────────────
+// Caracteres fora do charset permitido devem ser removidos antes de enviar à GC.
+test('F23 — busca com caracteres especiais é sanitizada antes de enviar à GC', async () => {
+  const urlsChamadas = [];
+  mockFetchImpl = (url, opts) => {
+    urlsChamadas.push(url);
+    return Promise.resolve({
+      ok: true, status: 200,
+      json: async () => ({ data: [], meta: { pagina_atual: 1, total_paginas: 1, total_registros: 0 } }),
+      text: async () => '{}',
+    });
+  };
+
+  await _gcQueryHandler(req(UID_GESTOR_CALC, {
+    operacao: 'PESQUISAR_CLIENTES',
+    dados: { busca: 'João<script>alert(1)</script>', limite: 5 },
+  }));
+
+  expect(urlsChamadas.length).toBeGreaterThan(0);
+  const url = urlsChamadas[0];
+  // A URL não deve conter as tags ou caracteres de script
+  expect(url).not.toContain('<script>');
+  expect(url).not.toContain('</script>');
+  expect(url).not.toContain('alert(1)');
+  // Deve conter a parte válida do nome sanitizado
+  expect(url).toContain('nome=Jo%C3%A3o');
+});

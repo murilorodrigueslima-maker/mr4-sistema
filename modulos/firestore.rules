@@ -272,11 +272,10 @@ service cloud.firestore {
 
     // ── Coleção: display_metrics ───────────────────────────────────────────────
     // Métricas para o painel de TV. Escrita APENAS via Admin SDK (sync).
-    // Leitura: role=display (TV), gestor, ou qualquer auth (bridge S2 para painel anônimo).
-    // S3: restringir de volta a isDisplay() || isGestor() após migração completa.
+    // Leitura: role=display (TV) ou gestor. Browser sem users/{uid}+role=display → DENIED.
 
     match /display_metrics/{docId} {
-      allow read:  if isDisplay() || isGestor() || request.auth != null;
+      allow read:  if isDisplay() || isGestor();
       allow write: if false;
     }
 

@@ -485,8 +485,7 @@ body{
 <!-- Firebase + App -->
 <script type="module">
 import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc }
+import { getFirestore, doc, getDoc, setDoc, onSnapshot }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const _app = initializeApp({
@@ -494,11 +493,11 @@ const _app = initializeApp({
   projectId:"mr4-ponto",storageBucket:"mr4-ponto.firebasestorage.app",
   messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
 });
-const _auth = getAuth(_app);
-const _db   = getFirestore(_app);
+const _db = getFirestore(_app);
 const CFG_DOC = doc(_db, 'painel_config', 'default');
-const DM_DOC  = doc(_db, 'display_metrics', 'latest');
-const REFRESH_SECS = 300; // 5 minutos (display_metrics atualizado a cada 2h, refresh mais frequente não custa)
+
+const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+const REFRESH_SECS = 7200; // 2 horas
 
 /* ── ESTADO ── */
 let CFG = {
@@ -566,11 +565,22 @@ function iniciarCountdown() {
   }, 1000);
 }
 
-/* ── CONFIG — localStorage fallback (painel anônimo não lê painel_config) ── */
+/* ── CONFIG — Firestore + localStorage fallback ── */
 const LS_CFG = 'mr4_painel_cfg';
+const LS_PIN = 'mr4_painel_pin_ts';
+const PIN_CORRETO = '887490';
+const PIN_DIAS = 30; // lembra por 30 dias
 
 async function carregarConfig() {
-  // Auth anônima não tem acesso a painel_config — usa localStorage
+  try {
+    const snap = await getDoc(CFG_DOC);
+    if(snap.exists()) {
+      CFG = snap.data();
+      localStorage.setItem(LS_CFG, JSON.stringify(CFG)); // atualiza cache local
+      return;
+    }
+  } catch(e) { console.warn('Firestore config:', e); }
+  // fallback localStorage
   try {
     const raw = localStorage.getItem(LS_CFG);
     if(raw) CFG = JSON.parse(raw);
@@ -601,12 +611,18 @@ window.salvarConfig = async function() {
   }
 };
 
-/* ── PIN — modal de configuração (guarda de UI, não auth) ── */
-let pinBuffer = '';
-// pinPage removida — stubs para evitar erro em onclick remanescente no HTML
-window.pinDigitPage = function() {};
-window.pinDelPage   = function() {};
+/* ── PIN ── */
+let pinBuffer  = '';  // config modal
+let pinBufPage = '';  // página inteira
 
+function pinDesbloqueado() {
+  const ts = parseInt(localStorage.getItem(LS_PIN)||'0');
+  return Date.now() - ts < PIN_DIAS * 86400000;
+}
+
+function salvarPinTs() { localStorage.setItem(LS_PIN, Date.now()); }
+
+/* — dots do modal de config — */
 function atualizarDots(erro) {
   for(let i=0;i<6;i++){
     const d = document.getElementById('pd'+i);
@@ -628,9 +644,15 @@ window.pinDel = function() {
   document.getElementById('pinError').textContent = '';
 };
 function verificarPinConfig() {
-  // PIN de UI — apenas abre o modal de config (não é autenticação)
-  fecharPin();
-  abrirConfigDireto();
+  if(pinBuffer === PIN_CORRETO) {
+    salvarPinTs();
+    fecharPin();
+    abrirConfigDireto();
+  } else {
+    atualizarDots(true);
+    document.getElementById('pinError').textContent = 'PIN incorreto.';
+    setTimeout(()=>{ pinBuffer=''; atualizarDots(false); document.getElementById('pinError').textContent=''; }, 1200);
+  }
 }
 window.fecharPin = function() {
   document.getElementById('pinOverlay').classList.remove('open');
@@ -639,30 +661,95 @@ window.fecharPin = function() {
   document.getElementById('pinError').textContent = '';
 };
 
-/* ── FETCH display_metrics — leitura anônima do Firestore ── */
+/* — dots da página inteira — */
+function atualizarDotsPage(erro) {
+  for(let i=0;i<6;i++){
+    const d = document.getElementById('pp'+i);
+    if(!d) return;
+    d.classList.toggle('filled', i < pinBufPage.length && !erro);
+    d.classList.toggle('error', erro);
+  }
+}
+window.pinDigitPage = function(n) {
+  if(pinBufPage.length >= 6) return;
+  pinBufPage += n;
+  atualizarDotsPage(false);
+  document.getElementById('pinErrorPage').textContent = '';
+  if(pinBufPage.length === 6) verificarPinPage();
+};
+window.pinDelPage = function() {
+  pinBufPage = pinBufPage.slice(0,-1);
+  atualizarDotsPage(false);
+  document.getElementById('pinErrorPage').textContent = '';
+};
+function verificarPinPage() {
+  if(pinBufPage === PIN_CORRETO) {
+    salvarPinTs();
+    document.getElementById('pinPage').style.display = 'none';
+    mostrarPainel();
+  } else {
+    atualizarDotsPage(true);
+    document.getElementById('pinErrorPage').textContent = 'PIN incorreto. Tente novamente.';
+    setTimeout(()=>{ pinBufPage=''; atualizarDotsPage(false); document.getElementById('pinErrorPage').textContent=''; }, 1200);
+  }
+}
+
+/* ── FETCH GestãoClick ── */
+async function fetchVendas(dataInicio, dataFim) {
+  let todos=[], pagina=1;
+  while(true) {
+    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+    const url = `${WORKER}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
+    const r = await fetch(url);
+    const json = await r.json();
+    const data = json.data || [];
+    todos = todos.concat(data);
+    const meta = json.meta || {};
+    if(pagina >= (Number(meta.total_paginas)||1)) break;
+    pagina++;
+  }
+  return todos;
+}
+
+function nomeMatch(nomeGC, nomeConfig) {
+  const a = (nomeGC||'').toLowerCase().trim();
+  const b = (nomeConfig||'').toLowerCase().trim();
+  if(!a||!b) return false;
+  // match exato ou match de primeira palavra ou contém
+  return a===b || a.startsWith(b.split(' ')[0]) || b.startsWith(a.split(' ')[0]) || a.includes(b.split(' ')[0]);
+}
+
 async function buscarDados() {
   try {
-    const snap = await getDoc(DM_DOC);
-    if(!snap.exists()) { renderDemoData(); return; }
-    const dm = snap.data();
+    const hojeStr = hoje();
+    const mesStr  = mesAtual();
+    const inicioMes = mesStr+'-01';
 
-    // Mapeia vendedores do display_metrics para o formato dados[]
-    const vends = Array.isArray(dm.vendedores) ? dm.vendedores : [];
-    dados = vends.map(v => ({
-      nome:        v.nome        || '—',
-      meta:        0,            // meta individual não disponível via display_metrics
-      totalMes:    v.total_mes   || 0,
-      totalHoje:   v.total_hoje  || 0,
-      pedidosMes:  v.pedidos_mes || 0,
-      pedidosHoje: v.pedidos_hoje|| 0,
-      ticketMes:   v.ticket_mes  || 0,
-      ticketHoje:  v.ticket_hoje || 0,
-    }));
-    // Garante ao menos 2 entradas para renderPainel()
-    while(dados.length < 2) dados.push({ nome:'—', meta:0, totalMes:0, totalHoje:0, pedidosMes:0, pedidosHoje:0, ticketMes:0, ticketHoje:0 });
+    // Busca vendas do mês inteiro
+    const todasMes = await fetchVendas(inicioMes, hojeStr);
 
-    // Meta da equipe vinda do display_metrics
-    CFG.meta_equipe = dm.meta_mes || CFG.meta_equipe || 0;
+    // Filtra apenas Concretizados (situacao_id = 3952593)
+    const concretizados = todasMes.filter(p => String(p.situacao_id) === '3952593');
+
+    // Para cada vendedor calcula métricas
+    dados = CFG.vendedores.map(v => {
+      const vendasV = concretizados.filter(p =>
+        nomeMatch(p.nome_vendedor||p.vendedor||p.nome_usuario||'', v.nome)
+      );
+      const vendasHoje = vendasV.filter(p => {
+        const d = (p.data||p.data_venda||p.data_pedido||'').slice(0,10);
+        return d === hojeStr;
+      });
+
+      const totalMes  = vendasV.reduce((s,p)=>s+Number(p.valor_total||p.total||p.valor||0),0);
+      const totalHoje = vendasHoje.reduce((s,p)=>s+Number(p.valor_total||p.total||p.valor||0),0);
+      const pedidosMes  = vendasV.length;
+      const pedidosHoje = vendasHoje.length;
+      const ticketMes   = pedidosMes  ? totalMes/pedidosMes   : 0;
+      const ticketHoje  = pedidosHoje ? totalHoje/pedidosHoje : 0;
+
+      return { nome:v.nome, meta:v.meta, totalMes, totalHoje, pedidosMes, pedidosHoje, ticketMes, ticketHoje };
+    });
 
     const agora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
     const el = document.getElementById('lastUpdate');
@@ -788,7 +875,11 @@ function renderPainel() {
 
 /* ── CONFIG MODAL ── */
 window.abrirConfig = function() {
-  abrirConfigDireto();
+  if(pinDesbloqueado()) { abrirConfigDireto(); return; }
+  pinBuffer = '';
+  atualizarDots(false);
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinOverlay').classList.add('open');
 };
 
 function abrirConfigDireto() {
@@ -828,18 +919,31 @@ async function mostrarPainel() {
 }
 
 async function init() {
-  try {
-    await signInAnonymously(_auth);
-  } catch(e) {
-    console.warn('Anonymous auth falhou:', e.message);
-  }
   await carregarConfig();
   document.getElementById('splash').style.display = 'none';
-  document.getElementById('pinPage').style.display = 'none';
-  await mostrarPainel();
+  if(pinDesbloqueado()) {
+    await mostrarPainel();
+  } else {
+    document.getElementById('pinPage').style.display = 'flex';
+  }
 }
 
 init();
+
+/* ── LISTENER TEMPO REAL — atualiza metas sem recarregar ── */
+let _primeiraLeitura = true;
+onSnapshot(CFG_DOC, snap => {
+  if(!snap.exists()) return;
+  if(_primeiraLeitura){ _primeiraLeitura = false; return; } // ignora leitura inicial (já carregada no init)
+  const nova = snap.data();
+  const mudou = JSON.stringify(nova) !== JSON.stringify(CFG);
+  if(!mudou) return;
+  CFG = nova;
+  localStorage.setItem(LS_CFG, JSON.stringify(CFG));
+  // Se o painel já está visível, re-renderiza com as novas metas
+  if(dados[0] && dados[1]) renderPainel();
+  toast('🔄 Metas atualizadas!', 'ok');
+}, err => console.warn('onSnapshot:', err));
 </script>
 </body>
 </html>

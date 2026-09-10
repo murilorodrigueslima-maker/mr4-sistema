@@ -510,15 +510,22 @@ async function gcQueryHandler(request) {
   }
 
   // 8. Para ATUALIZAR_PRECO: validar payload de escrita
+  // Aceita SOMENTE number finito >= 0. Strings, NaN, Infinity, negativos, null,
+  // arrays e objetos são todos rejeitados — sem coerção silenciosa.
   let gcBody = undefined;
   if (operacao === 'ATUALIZAR_PRECO') {
-    const precoCusto = parseFloat(dados.preco_custo);
-    const precoVenda = dados.preco_venda !== undefined ? parseFloat(dados.preco_venda) : undefined;
-    if (isNaN(precoCusto) || precoCusto < 0) {
-      throw new HttpsError('invalid-argument', 'preco_custo inválido.');
+    const precoCusto = dados.preco_custo;
+    if (typeof precoCusto !== 'number' || !isFinite(precoCusto) || precoCusto < 0) {
+      throw new HttpsError('invalid-argument', 'preco_custo inválido: deve ser number finito não negativo.');
     }
     gcBody = { preco_custo: Math.round(precoCusto * 100) / 100 };
-    if (precoVenda !== undefined && !isNaN(precoVenda) && precoVenda >= 0) {
+
+    // preco_venda é opcional: ausente → OK; presente e inválido → rejeita tudo
+    if (dados.preco_venda !== undefined) {
+      const precoVenda = dados.preco_venda;
+      if (typeof precoVenda !== 'number' || !isFinite(precoVenda) || precoVenda < 0) {
+        throw new HttpsError('invalid-argument', 'preco_venda inválido: deve ser number finito não negativo.');
+      }
       gcBody.preco_venda = Math.round(precoVenda * 100) / 100;
     }
   }

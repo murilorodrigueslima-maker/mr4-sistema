@@ -231,7 +231,7 @@ service cloud.firestore {
 
     // ── Coleção: fornecedores_custo ────────────────────────────────────────────
     // Tabela de fornecedores com percentuais de custo.
-    // Usada em calculadora-custo.html (read/write) e garantia.html (read).
+    // Usada em garantia.html (read). Calculadora de Custo removida.
 
     match /fornecedores_custo/{fornecedorId} {
       allow read, write: if isGestor();
@@ -280,7 +280,8 @@ service cloud.firestore {
     }
 
     // ── Coleção: gc_audit ─────────────────────────────────────────────────────
-    // Log de auditoria de operações de escrita no GestãoClick (ATUALIZAR_PRECO).
+    // Log de auditoria de operações de escrita no GestãoClick.
+    // ATUALIZAR_PRECO removida (Calculadora de Custo eliminada). Coleção mantida para histórico.
     // Escrita APENAS via Admin SDK (gcQuery server-side). Leitura apenas gestor.
 
     match /gc_audit/{docId} {

@@ -268,13 +268,12 @@ async function criarContaFuncionarioHandler(request) {
 // são permitidos.
 //
 // Operações disponíveis:
-//   LISTAR_PRODUTOS        → GET /produtos    (compras, estoque, garantia, calculadora)
-//   CONSULTAR_PRODUTO      → GET /produtos/:id (garantia, calculadora)
+//   LISTAR_PRODUTOS        → GET /produtos    (compras, estoque, garantia)
+//   CONSULTAR_PRODUTO      → GET /produtos/:id (garantia, compras)
 //   LISTAR_VENDAS          → GET /vendas      (vendas, compras, expedicao)
 //   LISTAR_PAGAMENTOS      → GET /pagamentos  (compras)
 //   LISTAR_RECEBIMENTOS    → GET /recebimentos (compras)
-//   PESQUISAR_CLIENTES     → GET /clientes    (garantia)
-//   ATUALIZAR_PRECO        → PUT /produtos/:id (calculadora) — ESCRITA, requer módulo exclusivo
+//   PESQUISAR_CLIENTES     → GET /clientes    (garantia, clientes)
 //
 // Cada operação tem:
 //   - Autenticação Firebase obrigatória
@@ -295,7 +294,7 @@ const GC_BASE_URL = 'https://api.gestaoclick.com';
 // Mapa de operações permitidas: chave → configuração
 const GC_OPERACOES = {
   LISTAR_PRODUTOS: {
-    modulo:  ['compras', 'estoque', 'garantia', 'calculadora'],
+    modulo:  ['compras', 'estoque', 'garantia'],
     metodo:  'GET',
     path:    () => '/produtos',
     params:  (dados) => {
@@ -314,7 +313,7 @@ const GC_OPERACOES = {
     }),
   },
   CONSULTAR_PRODUTO: {
-    modulo:  ['garantia', 'calculadora', 'compras'],
+    modulo:  ['garantia', 'compras'],
     metodo:  'GET',
     path:    (dados) => `/produtos/${encodeURIComponent(String(dados.produtoId))}`,
     params:  () => '',
@@ -422,14 +421,6 @@ const GC_OPERACOES = {
       telefone: item.telefone || '',
     }),
   },
-  ATUALIZAR_PRECO: {
-    modulo:  ['calculadora'],
-    metodo:  'PUT',
-    path:    (dados) => `/produtos/${encodeURIComponent(String(dados.produtoId))}`,
-    params:  () => '',
-    // Para escrita, o DTO é o payload enviado ao GC — validado rigorosamente
-    dto:     null, // veja lógica de escrita abaixo
-  },
 };
 
 async function gcQueryHandler(request) {
@@ -500,53 +491,7 @@ async function gcQueryHandler(request) {
   const params  = config.params(dados);
   const gcUrl   = `${GC_BASE_URL}${path}${params ? '?' + params : ''}`;
 
-  // 7b. Para ATUALIZAR_PRECO: validar campos enviados (whitelist estrita de escrita)
-  if (operacao === 'ATUALIZAR_PRECO') {
-    const CAMPOS_PERMITIDOS_ESCRITA = new Set(['produtoId', 'preco_custo', 'preco_venda']);
-    const extras = Object.keys(dados).filter(k => !CAMPOS_PERMITIDOS_ESCRITA.has(k));
-    if (extras.length > 0) {
-      throw new HttpsError('invalid-argument', `Campos não permitidos em escrita: ${extras.join(', ')}.`);
-    }
-    if (!dados.produtoId) {
-      throw new HttpsError('invalid-argument', 'produtoId é obrigatório para ATUALIZAR_PRECO.');
-    }
-  }
-
-  // 8. Para ATUALIZAR_PRECO: validar payload de escrita
-  // Aceita SOMENTE number finito >= 0. Strings, NaN, Infinity, negativos, null,
-  // arrays e objetos são todos rejeitados — sem coerção silenciosa.
-  let gcBody = undefined;
-  if (operacao === 'ATUALIZAR_PRECO') {
-    const precoCusto = dados.preco_custo;
-    if (typeof precoCusto !== 'number' || !isFinite(precoCusto) || precoCusto < 0) {
-      throw new HttpsError('invalid-argument', 'preco_custo inválido: deve ser number finito não negativo.');
-    }
-    gcBody = { preco_custo: Math.round(precoCusto * 100) / 100 };
-
-    // preco_venda é opcional: ausente → OK; presente e inválido → rejeita tudo
-    if (dados.preco_venda !== undefined) {
-      const precoVenda = dados.preco_venda;
-      if (typeof precoVenda !== 'number' || !isFinite(precoVenda) || precoVenda < 0) {
-        throw new HttpsError('invalid-argument', 'preco_venda inválido: deve ser number finito não negativo.');
-      }
-      gcBody.preco_venda = Math.round(precoVenda * 100) / 100;
-    }
-  }
-
   // 9. Chamar GestãoClick
-  // Para ATUALIZAR_PRECO: busca preço anterior (best-effort) para audit log
-  let precoAnterior = null;
-  if (operacao === 'ATUALIZAR_PRECO') {
-    try {
-      const prevResp = await fetch(`${GC_BASE_URL}${config.path(dados)}`, {
-        headers: { 'access-token': accessToken, 'secret-access-token': secretToken, 'Content-Type': 'application/json' },
-      });
-      if (prevResp.ok) {
-        const prev = await prevResp.json();
-        precoAnterior = { preco_custo: prev.preco_custo ?? null, preco_venda: prev.preco_venda ?? null };
-      }
-    } catch (_) { /* não bloqueia — auditoria best-effort */ }
-  }
 
   let gcResp;
   try {
@@ -557,7 +502,6 @@ async function gcQueryHandler(request) {
         'secret-access-token': secretToken,
         'Content-Type':        'application/json',
       },
-      ...(gcBody ? { body: JSON.stringify(gcBody) } : {}),
     });
   } catch (e) {
     throw new HttpsError('unavailable', 'Erro de rede ao chamar GestãoClick: ' + e.message);
@@ -571,22 +515,6 @@ async function gcQueryHandler(request) {
   const rawJson = await gcResp.json();
 
   // 10. Aplicar DTO mínimo — nunca retornar raw ao browser
-  if (operacao === 'ATUALIZAR_PRECO') {
-    // Audit log server-side (Admin SDK, nunca acessível pelo cliente)
-    await db.collection('gc_audit').add({
-      actor_uid:            uid,
-      timestamp:            admin.firestore.FieldValue.serverTimestamp(),
-      operation:            'ATUALIZAR_PRECO',
-      product_id:           String(dados.produtoId),
-      preco_custo_novo:     gcBody.preco_custo,
-      preco_venda_novo:     gcBody.preco_venda ?? null,
-      preco_custo_anterior: precoAnterior?.preco_custo ?? null,
-      preco_venda_anterior: precoAnterior?.preco_venda ?? null,
-      resultado:            'ok',
-    }).catch(() => {});
-    return { ok: true };
-  }
-
   // Resposta paginada ou item único
   if (rawJson.data && Array.isArray(rawJson.data)) {
     return {

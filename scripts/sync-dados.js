@@ -20,9 +20,11 @@ if (!ACCESS_TOKEN || !SECRET_TOKEN) {
 }
 
 // ── FIREBASE ADMIN (opcional) ─────────────────────────────────────────────────
-// Autentica via Application Default Credentials (WIF/OIDC no GitHub Actions).
-// Fallback: FIREBASE_SERVICE_ACCOUNT (JSON puro) para execução local.
-// Se nenhum disponível: sync continua em modo JSON-only (sem Firestore).
+// Prioridade de autenticação:
+//   1. GCP_ACCESS_TOKEN  — token temporário WIF/OIDC (GitHub Actions)
+//   2. FIREBASE_SERVICE_ACCOUNT — JSON da service account (execução local)
+//   3. ADC padrão (gcloud application-default login local)
+// Se nenhum disponível: sync continua em modo JSON-only.
 let _adminDb = null;
 
 function initFirestore() {
@@ -30,14 +32,23 @@ function initFirestore() {
   try {
     const admin = require('firebase-admin');
     if (!admin.apps.length) {
+      const gcpToken = process.env.GCP_ACCESS_TOKEN;
       const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
-      if (sa) {
-        // Modo legado: chave JSON explícita (execução local com SA key)
-        admin.initializeApp({ credential: admin.credential.cert(JSON.parse(sa)) });
+      let credential;
+      if (gcpToken) {
+        // Token de acesso temporário do WIF — válido por 1h, sem chave privada
+        credential = {
+          getAccessToken: () => Promise.resolve({
+            accessToken: gcpToken,
+            expirationTime: Date.now() + 3500 * 1000,
+          }),
+        };
+      } else if (sa) {
+        credential = admin.credential.cert(JSON.parse(sa));
       } else {
-        // Modo preferencial: ADC — WIF/OIDC via GitHub Actions ou gcloud local
-        admin.initializeApp({ projectId: PROJECT_ID });
+        credential = admin.credential.applicationDefault();
       }
+      admin.initializeApp({ credential, projectId: PROJECT_ID });
     }
     _adminDb = admin.firestore();
     return _adminDb;

@@ -22,10 +22,12 @@ jobs:
           node-version: '20'
 
       - name: Autenticar no Google Cloud (OIDC/WIF)
+        id: auth
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: 'projects/848211361584/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
           service_account: 'mr4-sync@mr4-ponto.iam.gserviceaccount.com'
+          token_format: 'access_token'
 
       - name: Instalar dependências do sync
         run: npm install --prefix scripts --omit=dev --no-audit --no-fund
@@ -34,6 +36,7 @@ jobs:
         env:
           GC_ACCESS_TOKEN:        ${{ secrets.GC_ACCESS_TOKEN }}
           GC_SECRET_ACCESS_TOKEN: ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
+          GCP_ACCESS_TOKEN:       ${{ steps.auth.outputs.access_token }}
         run: node scripts/sync-dados.js
 
       - name: Commit e push dos dados

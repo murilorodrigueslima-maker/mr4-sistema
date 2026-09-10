@@ -6,23 +6,26 @@
  * Testa o handler _gcQueryHandler diretamente contra o emulador Firestore/Auth.
  * fetch() é mockado para nunca chamar o GestãoClick de verdade.
  *
- * Cenários obrigatórios (S2 spec §12):
+ * Cenários obrigatórios:
  *   F01 — sem Firebase Auth → DENIED (unauthenticated)
  *   F02 — token inválido (auth null) → DENIED
  *   F03 — usuário inexistente (sem users/{uid}) → DENIED
  *   F04 — ativo=false → DENIED
  *   F05 — gestor sem módulo → DENIED
- *   F06 — módulo correto → ALLOWED
+ *   F06 — módulo garantia → LISTAR_PRODUTOS ALLOWED
  *   F07 — operação inexistente → DENIED
  *   F08 — parâmetro fora do limite (limite > 200) → DENIED
  *   F09 — pagina fora do limite → DENIED
  *   F10 — produtoId inválido (não numérico) → DENIED
  *   F11 — tentativa de controlar endpoint (via dados.endpoint) → ignorado (não vaza)
  *   F12 — tentativa de controlar método HTTP (via dados.method) → ignorado
- *   F13 — campos extras em ATUALIZAR_PRECO → DENIED
- *   F14 — ATUALIZAR_PRECO sem módulo calculadora → DENIED
- *   F15 — ATUALIZAR_PRECO com módulo calculadora → ALLOWED
- *   F16 — preco_custo negativo → DENIED
+ *   F17 — funcionário não acessa gcQuery → DENIED
+ *   F21 — sem credenciais GC (env vazio) → internal
+ *   F22 — PESQUISAR_CLIENTES: DTO não contém CPF/CNPJ
+ *   F23 — PESQUISAR_CLIENTES: sanitização do parâmetro busca
+ *   FN1 — ATUALIZAR_PRECO não existe mais → invalid-argument (operação desconhecida)
+ *   FN2 — somente módulo calculadora → LISTAR_PRODUTOS permission-denied
+ *   FN3 — somente módulo calculadora → CONSULTAR_PRODUTO permission-denied
  *
  * Executar:
  *   cd functions && npm test -- --testPathPattern=gc-query
@@ -46,17 +49,16 @@ const { _gcQueryHandler } = require('../index');
 const { HttpsError }      = require('firebase-functions/v2/https');
 
 // ── UIDs de teste ─────────────────────────────────────────────────────────────
-const UID_GESTOR_CALC    = 'uid-gc-gestor-calculadora';
-const UID_GESTOR_SEM_MOD = 'uid-gc-gestor-sem-modulo';
-const UID_INATIVO        = 'uid-gc-gestor-inativo';
-const UID_SEM_PERFIL     = 'uid-gc-sem-perfil';
-const UID_FUNC           = 'uid-gc-funcionario';
+const UID_GESTOR_CALC    = 'uid-gc-gestor-calc';       // gestor ativo, módulos: garantia+compras+expedicao
+const UID_GESTOR_SEM_MOD = 'uid-gc-gestor-sem-modulo'; // gestor ativo, módulos: []
+const UID_INATIVO        = 'uid-gc-gestor-inativo';    // gestor inativo
+const UID_SEM_PERFIL     = 'uid-gc-sem-perfil';        // sem documento em users/
+const UID_FUNC           = 'uid-gc-funcionario';       // role=funcionario
+const UID_SOMENTE_CALC   = 'uid-gc-somente-calc';      // gestor ativo, módulos: ['calculadora'] apenas
 
 // ── Mock fetch global ─────────────────────────────────────────────────────────
 // Resposta padrão GC: lista vazia, meta pagina 1/1
 const GC_RESP_LIST = { data: [], meta: { pagina_atual: 1, total_paginas: 1, total_registros: 0 } };
-const GC_RESP_ITEM = { id: 42, nome: 'Produto X', codigo: 'PX001', preco_venda: 100, preco_custo: 60, estoque_atual: 5 };
-const GC_RESP_OK   = {};
 
 let mockFetchImpl = null;
 
@@ -74,16 +76,21 @@ beforeAll(async () => {
   });
 
   // Seed emulador
-  await db.collection('users').doc(UID_GESTOR_CALC).set({ role: 'gestor', ativo: true, nome: 'Gestor Calc' });
-  await db.collection('sistema_usuarios').doc(UID_GESTOR_CALC).set({ modulos: ['calculadora', 'garantia', 'compras', 'expedicao'], admin: false });
+  await db.collection('users').doc(UID_GESTOR_CALC).set({ role: 'gestor', ativo: true, nome: 'Gestor Geral' });
+  await db.collection('sistema_usuarios').doc(UID_GESTOR_CALC).set({ modulos: ['garantia', 'compras', 'expedicao'], admin: false });
 
   await db.collection('users').doc(UID_GESTOR_SEM_MOD).set({ role: 'gestor', ativo: true, nome: 'Gestor Sem Mod' });
   await db.collection('sistema_usuarios').doc(UID_GESTOR_SEM_MOD).set({ modulos: [], admin: false });
 
   await db.collection('users').doc(UID_INATIVO).set({ role: 'gestor', ativo: false, nome: 'Gestor Inativo' });
-  await db.collection('sistema_usuarios').doc(UID_INATIVO).set({ modulos: ['calculadora'], admin: false });
+  await db.collection('sistema_usuarios').doc(UID_INATIVO).set({ modulos: ['garantia'], admin: false });
 
   await db.collection('users').doc(UID_FUNC).set({ role: 'funcionario', ativo: true, nome: 'Func GC' });
+
+  // UID_SOMENTE_CALC: gestor ativo mas apenas com módulo 'calculadora' (removido do sistema)
+  await db.collection('users').doc(UID_SOMENTE_CALC).set({ role: 'gestor', ativo: true, nome: 'Gestor Somente Calc' });
+  await db.collection('sistema_usuarios').doc(UID_SOMENTE_CALC).set({ modulos: ['calculadora'], admin: false });
+
   // UID_SEM_PERFIL — sem documento em users/
 });
 
@@ -100,9 +107,6 @@ afterEach(() => {
 function req(uid, data = {}) { return { auth: { uid, token: {} }, data }; }
 function reqSemAuth(data = {}) { return { auth: null, data }; }
 
-async function expectDenied(promise, code) {
-  await expect(promise).rejects.toMatchObject({ code: code || expect.stringContaining('') });
-}
 async function expectError(promise, codeExpected) {
   try {
     await promise;
@@ -153,8 +157,8 @@ test('F05 — gestor sem módulo → permission-denied', async () => {
   );
 });
 
-// ── F06 — módulo correto → ALLOWED ───────────────────────────────────────────
-test('F06 — módulo calculadora → LISTAR_PRODUTOS ALLOWED', async () => {
+// ── F06 — módulo garantia → LISTAR_PRODUTOS ALLOWED ─────────────────────────
+test('F06 — módulo garantia → LISTAR_PRODUTOS ALLOWED', async () => {
   const result = await _gcQueryHandler(req(UID_GESTOR_CALC, { operacao: 'LISTAR_PRODUTOS', dados: { limite: 10 } }));
   expect(result).toHaveProperty('data');
   expect(Array.isArray(result.data)).toBe(true);
@@ -229,96 +233,11 @@ test('F12 — method arbitrário em dados ignorado; GC chamado com método fixo'
   expect(methods.every(m => m === 'GET')).toBe(true);
 });
 
-// ── F13 — campos extras em ATUALIZAR_PRECO ────────────────────────────────────
-test('F13 — campo extra em ATUALIZAR_PRECO → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: 10, campo_malicioso: 'hack' },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F14 — ATUALIZAR_PRECO sem módulo calculadora ──────────────────────────────
-test('F14 — ATUALIZAR_PRECO com gestor sem módulo calculadora → permission-denied', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_SEM_MOD, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: 10 },
-    })),
-    'permission-denied'
-  );
-});
-
-// ── F15 — ATUALIZAR_PRECO com módulo correto → ALLOWED ───────────────────────
-test('F15 — ATUALIZAR_PRECO com calculadora → ALLOWED (retorna { ok: true })', async () => {
-  mockFetchImpl = (url, opts) => {
-    if (!opts || opts.method !== 'PUT') {
-      // Requisição de preço anterior (GET)
-      return Promise.resolve({ ok: true, status: 200, json: async () => GC_RESP_ITEM, text: async () => '{}' });
-    }
-    // Requisição de atualização (PUT)
-    return Promise.resolve({ ok: true, status: 200, json: async () => ({}), text: async () => '{}' });
-  };
-
-  const result = await _gcQueryHandler(req(UID_GESTOR_CALC, {
-    operacao: 'ATUALIZAR_PRECO',
-    dados: { produtoId: '42', preco_custo: 55.00, preco_venda: 110.00 },
-  }));
-
-  expect(result).toEqual({ ok: true });
-});
-
-// ── F16 — preco_custo negativo ────────────────────────────────────────────────
-test('F16 — preco_custo negativo → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: -5 },
-    })),
-    'invalid-argument'
-  );
-});
-
 // ── F17 — funcionário não acessa gcQuery ─────────────────────────────────────
 test('F17 — funcionário → permission-denied', async () => {
   await expectError(
     _gcQueryHandler(req(UID_FUNC, { operacao: 'LISTAR_PRODUTOS' })),
     'permission-denied'
-  );
-});
-
-// ── F18 — preco_custo = NaN → invalid-argument ────────────────────────────────
-test('F18 — preco_custo NaN → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: NaN },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F19 — preco_custo = string → invalid-argument ─────────────────────────────
-test('F19 — preco_custo string ("abc") → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: 'abc' },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F20 — preco_venda = string → invalid-argument (presente e inválido = rejeita tudo) ──
-test('F20 — preco_venda string → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '42', preco_custo: 50, preco_venda: 'invalido' },
-    })),
-    'invalid-argument'
   );
 });
 
@@ -377,94 +296,6 @@ test('F22 — PESQUISAR_CLIENTES DTO exclui CPF e CNPJ', async () => {
   expect(cliente).toHaveProperty('telefone');
 });
 
-// ── F24 — preco_custo Infinity → invalid-argument ─────────────────────────────
-test('F24 — preco_custo Infinity → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: Infinity },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F25 — preco_venda NaN → invalid-argument ──────────────────────────────────
-test('F25 — preco_venda NaN → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: 50, preco_venda: NaN },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F26 — preco_venda Infinity → invalid-argument ─────────────────────────────
-test('F26 — preco_venda Infinity → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: 50, preco_venda: Infinity },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F27 — preco_venda negativo → invalid-argument ─────────────────────────────
-test('F27 — preco_venda negativo → invalid-argument', async () => {
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '123', preco_custo: 50, preco_venda: -10 },
-    })),
-    'invalid-argument'
-  );
-});
-
-// ── F28 — preco_venda ausente → ALLOWED (campo opcional) ─────────────────────
-test('F28 — preco_venda ausente → ALLOWED, retorna { ok: true }', async () => {
-  const gcCalls = [];
-  mockFetchImpl = (url, opts) => {
-    gcCalls.push({ url, method: opts?.method });
-    if (!opts || opts.method !== 'PUT') {
-      return Promise.resolve({ ok: true, status: 200, json: async () => GC_RESP_ITEM, text: async () => '{}' });
-    }
-    return Promise.resolve({ ok: true, status: 200, json: async () => ({}), text: async () => '{}' });
-  };
-
-  const result = await _gcQueryHandler(req(UID_GESTOR_CALC, {
-    operacao: 'ATUALIZAR_PRECO',
-    dados: { produtoId: '42', preco_custo: 55 },
-  }));
-  expect(result).toEqual({ ok: true });
-  // Deve ter feito o PUT ao GC (sem preco_venda no body)
-  const put = gcCalls.find(c => c.method === 'PUT');
-  expect(put).toBeDefined();
-});
-
-// ── F29 — atualização parcial bloqueada (custo válido + venda inválido) ────────
-// Operação inteira deve falhar; nenhum PUT deve chegar ao GestãoClick.
-test('F29 — custo válido + venda inválida → rejeita tudo, zero PUTs no GC', async () => {
-  const gcCalls = [];
-  mockFetchImpl = (url, opts) => {
-    gcCalls.push({ url, method: opts?.method });
-    return Promise.resolve({ ok: true, status: 200, json: async () => ({}), text: async () => '{}' });
-  };
-
-  await expectError(
-    _gcQueryHandler(req(UID_GESTOR_CALC, {
-      operacao: 'ATUALIZAR_PRECO',
-      dados: { produtoId: '42', preco_custo: 55, preco_venda: 'invalido' },
-    })),
-    'invalid-argument'
-  );
-  // A validação joga antes de qualquer chamada HTTP
-  const puts = gcCalls.filter(c => c.method === 'PUT');
-  expect(puts.length).toBe(0);
-  // Nenhuma chamada ao GC deve ter ocorrido (nem GET de preço anterior)
-  expect(gcCalls.length).toBe(0);
-});
-
 // ── F23 — PESQUISAR_CLIENTES: sanitização do parâmetro busca ─────────────────
 // Caracteres fora do charset permitido devem ser removidos antes de enviar à GC.
 test('F23 — busca com caracteres especiais é sanitizada antes de enviar à GC', async () => {
@@ -491,4 +322,37 @@ test('F23 — busca com caracteres especiais é sanitizada antes de enviar à GC
   expect(url).not.toContain('alert(1)');
   // Deve conter a parte válida do nome sanitizado
   expect(url).toContain('nome=Jo%C3%A3o');
+});
+
+// ── FN1 — ATUALIZAR_PRECO removida da whitelist ───────────────────────────────
+// Após remoção da Calculadora de Custo, ATUALIZAR_PRECO não existe mais.
+// Qualquer chamada deve retornar invalid-argument (operação desconhecida).
+test('FN1 — ATUALIZAR_PRECO → operação desconhecida (invalid-argument)', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_GESTOR_CALC, {
+      operacao: 'ATUALIZAR_PRECO',
+      dados: { produtoId: '1', preco_custo: 10 },
+    })),
+    'invalid-argument'
+  );
+});
+
+// ── FN2 — módulo calculadora não autoriza LISTAR_PRODUTOS ─────────────────────
+// 'calculadora' foi removido da lista de módulos autorizados para LISTAR_PRODUTOS.
+// Um usuário com somente esse módulo deve receber permission-denied.
+test('FN2 — somente módulo calculadora → LISTAR_PRODUTOS permission-denied', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_SOMENTE_CALC, { operacao: 'LISTAR_PRODUTOS', dados: { limite: 10 } })),
+    'permission-denied'
+  );
+});
+
+// ── FN3 — módulo calculadora não autoriza CONSULTAR_PRODUTO ───────────────────
+// 'calculadora' foi removido da lista de módulos autorizados para CONSULTAR_PRODUTO.
+// Um usuário com somente esse módulo deve receber permission-denied.
+test('FN3 — somente módulo calculadora → CONSULTAR_PRODUTO permission-denied', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_SOMENTE_CALC, { operacao: 'CONSULTAR_PRODUTO', dados: { produtoId: '42' } })),
+    'permission-denied'
+  );
 });

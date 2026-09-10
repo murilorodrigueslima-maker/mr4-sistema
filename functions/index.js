@@ -345,13 +345,13 @@ const GC_OPERACOES = {
       const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
       return {
         id:          item.id,
-        numero:      item.numero      || '',
+        numero:      String(item.codigo || item.numero || item.id || ''),
         data:        (item.data || item.data_venda || item.data_pedido || '').slice(0, 10),
         hora:        horaMatch ? horaMatch[1] : '',
-        cliente:     item.cliente     ? { nome: item.cliente.nome || '' } : {},
+        cliente:     item.nome_cliente  || item.razao_social || '',
         valor:       item.valor_total || 0,
         status:      item.status      || '',
-        vendedor:    item.vendedor    ? { nome: item.vendedor.nome || '' } : {},
+        vendedor:    item.nome_vendedor || item.nome_usuario  || '',
         situacao_id: item.situacao_id || '',
         cidade:      item.cidade_cliente || item.cidade || '',
         itens:       Array.isArray(item.produtos) ? item.produtos.length : Number(item.quantidade_produtos || 0),

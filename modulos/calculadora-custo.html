@@ -881,6 +881,8 @@
                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, collection, doc, getDocs, setDoc, deleteDoc, getDoc }
                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFunctions, httpsCallable }
+                                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
   /* ── Firebase ── */
   const app  = initializeApp({
@@ -893,8 +895,7 @@
   });
   const auth = getAuth(app);
   const db   = getFirestore(app);
-
-  const WORKER_URL = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+  const _gcQuery = httpsCallable(getFunctions(app, 'southamerica-east1'), 'gcQuery');
 
   /* ── State ── */
   let fornecedores = [];       // { id, nome, pct_nota, margem_padrao }
@@ -1284,18 +1285,8 @@
     document.getElementById('gcUpdateHint').textContent = '';
 
     try {
-      const params = encodeURIComponent('nome=' + term + '&limite=15');
-      const url    = `${WORKER_URL}?endpoint=/produtos&params=${params}`;
-      const res    = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data   = await res.json();
-
-      /* GestãoClick returns data.data or data.registros or array */
-      let items = [];
-      if (Array.isArray(data))            items = data;
-      else if (Array.isArray(data.data))  items = data.data;
-      else if (Array.isArray(data.registros)) items = data.registros;
-      else if (data.objeto && Array.isArray(data.objeto)) items = data.objeto;
+      const r = await _gcQuery({ operacao: 'LISTAR_PRODUTOS', dados: { nome: term, limite: 15 } });
+      const items = Array.isArray(r.data?.data) ? r.data.data : [];
 
       gcProducts = items;
 
@@ -1307,9 +1298,9 @@
 
       const list = document.getElementById('gcResultsList');
       list.innerHTML = items.map((p, i) => {
-        const nome   = p.nome || p.descricao || p.description || '(sem nome)';
-        const codigo = p.codigo || p.code || p.sku || '—';
-        const custo  = p.preco_custo || p.custo || p.cost || 0;
+        const nome   = p.nome  || '(sem nome)';
+        const codigo = p.codigo || '—';
+        const custo  = p.preco_custo || 0;
         return `
           <div class="search-result-item" onclick="selecionarProduto(${i})">
             <div>
@@ -1344,9 +1335,9 @@
     const unitario = parseBr(document.getElementById('calcUnitario').value);
     const venda    = parseBr(document.getElementById('calcVenda').value);
 
-    const nome   = p.nome || p.descricao || p.description || '(sem nome)';
-    const codigo = p.codigo || p.code || p.sku || '—';
-    const custo  = p.preco_custo || p.custo || p.cost || 0;
+    const nome   = p.nome  || '(sem nome)';
+    const codigo = p.codigo || '—';
+    const custo  = p.preco_custo || 0;
 
     document.getElementById('gcSelectedName').textContent  = nome;
     document.getElementById('gcSelectedMeta').textContent  =
@@ -1373,34 +1364,24 @@
 
     if (isNaN(unitario)) { toast('Custo unitário inválido. Verifique a calculadora.', 'error'); return; }
 
-    const prodId   = gcSelected.id || gcSelected.codigo || gcSelected.code;
-    if (!prodId)   { toast('Produto sem ID identificável.', 'error'); return; }
+    const prodId = gcSelected.id;
+    if (!prodId) { toast('Produto sem ID identificável.', 'error'); return; }
 
     const btn = document.getElementById('gcUpdateBtn');
     btn.disabled = true;
     btn.innerHTML = '<span class="inline-spinner"></span> Atualizando...';
 
-    const payload = { preco_custo: parseFloat(unitario.toFixed(2)) };
-    if (!isNaN(venda)) payload.preco_venda = parseFloat(venda.toFixed(2));
+    const dados = { produtoId: String(prodId), preco_custo: parseFloat(unitario.toFixed(2)) };
+    if (!isNaN(venda)) dados.preco_venda = parseFloat(venda.toFixed(2));
 
     try {
-      const res = await fetch(`${WORKER_URL}?endpoint=/produtos/${prodId}&method=PUT`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload)
-      });
-
-      if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`HTTP ${res.status}: ${body.slice(0, 120)}`);
-      }
+      await _gcQuery({ operacao: 'ATUALIZAR_PRECO', dados });
 
       toast('Custo atualizado com sucesso no GestãoClick!', 'success');
-      /* refresh displayed old price */
       document.getElementById('gcOldPrice').textContent = brl(unitario);
       gcSelected.preco_custo = unitario;
     } catch (e) {
-      toast('Erro ao atualizar: ' + e.message, 'error');
+      toast('Erro ao atualizar: ' + (e.message || 'verifique sua conexão'), 'error');
     } finally {
       btn.disabled = false;
       btn.innerHTML = '✅ Atualizar Custo no GestãoClick';

@@ -213,8 +213,11 @@ async function syncVendas() {
   const mesStr  = inicioMes();
 
   let fatHoje = 0, fatSemana = 0, fatMes = 0;
-  const vendedorMap = {};
+  const vendedorMap    = {};  // para vendas.json (todos os status)
+  const vendedorMapDM  = {};  // para display_metrics (Concretizados = situacao_id 3952593)
   const diaMap = {};
+
+  const SITUACAO_CONCRETIZADO = '3952593';
 
   vendas.forEach(p => {
     const data  = (p.data || p.data_venda || p.data_pedido || '').slice(0,10);
@@ -231,6 +234,17 @@ async function syncVendas() {
 
     if (!diaMap[data]) diaMap[data] = 0;
     diaMap[data] += valor;
+
+    // display_metrics — apenas Concretizados
+    if (String(p.situacao_id) === SITUACAO_CONCRETIZADO || String(p.situacao) === SITUACAO_CONCRETIZADO) {
+      if (!vendedorMapDM[vend]) vendedorMapDM[vend] = { nome: vend, total_mes: 0, total_hoje: 0, pedidos_mes: 0, pedidos_hoje: 0 };
+      vendedorMapDM[vend].total_mes    += valor;
+      vendedorMapDM[vend].pedidos_mes  += 1;
+      if (data === hojStr) {
+        vendedorMapDM[vend].total_hoje   += valor;
+        vendedorMapDM[vend].pedidos_hoje += 1;
+      }
+    }
   });
 
   const ultimos7 = [];
@@ -261,6 +275,27 @@ async function syncVendas() {
 
   fs.writeFileSync(path.join(DATA_DIR, 'vendas.json'), JSON.stringify(dadosVendas, null, 2));
   console.log(`✅ Vendas: hoje R$ ${fatHoje.toFixed(2)} | mês R$ ${fatMes.toFixed(2)}`);
+
+  // display_metrics — painel de TV (bridge S2; exige apenas auth anônima para ler)
+  const dmVendedores = Object.values(vendedorMapDM)
+    .sort((a,b) => b.total_mes - a.total_mes)
+    .map(v => ({
+      ...v,
+      ticket_mes:   v.pedidos_mes  > 0 ? v.total_mes  / v.pedidos_mes  : 0,
+      ticket_hoje:  v.pedidos_hoje > 0 ? v.total_hoje / v.pedidos_hoje : 0,
+    }));
+  const dmDoc = {
+    atualizado_em: dataISO(),
+    mes:           mesStr,
+    meta_mes:      META_MES,
+    faturamento_mes: fatMes,
+    pct_meta:      META_MES > 0 ? Math.round((fatMes / META_MES) * 1000) / 10 : 0,
+    vendedores:    dmVendedores,
+  };
+  const dmOk = await firestoreSet('display_metrics', 'latest', dmDoc);
+  if (dmOk) {
+    console.log(`✅ display_metrics: ${dmVendedores.length} vendedores | mês R$ ${fatMes.toFixed(2)}`);
+  }
 }
 
 // ── ESTOQUE ──────────────────────────────────────────────────────────────────

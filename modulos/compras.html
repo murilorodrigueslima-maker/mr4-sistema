@@ -435,9 +435,7 @@
 import { initializeApp }                         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-// ── CONSTANTS ────────────────────────────────────────────────────────────────
-const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
+import { getFunctions, httpsCallable }           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -470,6 +468,7 @@ let allVelItems    = []; // for mapeamento tab
 app  = initializeApp(FIREBASE_CONFIG);
 auth = getAuth(app);
 db   = getFirestore(app);
+const _gcQuery = httpsCallable(getFunctions(app, 'southamerica-east1'), 'gcQuery');
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
@@ -603,26 +602,18 @@ async function salvarMapeamentoId(prodId, fornNome) {
   } catch(e) { console.error('Erro ao salvar mapeamento:', e); }
 }
 
-// ── GC FETCH ─────────────────────────────────────────────────────────────────
-async function gcFetch(endpoint, paramsStr = '') {
-  const url = `${WORKER}?endpoint=${encodeURIComponent(endpoint)}&params=${encodeURIComponent(paramsStr)}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(30000) });
-  if (!r.ok) throw new Error(`Worker ${r.status}`);
-  return r.json();
-}
-
-async function gcFetchAll(endpoint, extra = '', onProgress = null) {
+// ── GC QUERY ─────────────────────────────────────────────────────────────────
+async function gcQueryAll(operacao, dadosBase = {}, onProgress = null) {
   const items = [];
   let page = 1;
   while (true) {
-    const params = `pagina=${page}&itens=100${extra ? '&' + extra : ''}`;
-    const data = await gcFetch(endpoint, params);
-    const batch = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+    const r = await _gcQuery({ operacao, dados: { ...dadosBase, pagina: page, limite: 100 } });
+    const batch = Array.isArray(r.data?.data) ? r.data.data : [];
     items.push(...batch);
     if (onProgress) onProgress(items.length);
     if (batch.length < 100) break;
     page++;
-    if (page > 50) break; // safety cap
+    if (page > 50) break;
   }
   return items;
 }
@@ -662,23 +653,23 @@ async function rodarAgente(forceRefresh = false) {
     // ── 1. Produtos ──────────────────────────────────────────────────────
     if (!cacheStock || forceRefresh) {
       setProgress(25, 'Carregando produtos...');
-      const prods = await gcFetchAll('/produtos', '', c => setProgress(25, `Produtos: ${c} carregados...`));
+      const prods = await gcQueryAll('LISTAR_PRODUTOS', {}, c => setProgress(25, `Produtos: ${c} carregados...`));
       cacheStock = {};
       for (const p of prods) {
-        const id = String(p.id || p.produto_id || '');
+        const id = String(p.id || '');
         if (!id) continue;
-        cacheStock[id] = { nome: p.nome || p.descricao || id, estoque: Number(p.estoque) || 0, codigo: p.codigo_interno || '' };
+        cacheStock[id] = { nome: p.nome || id, estoque: Number(p.estoque_atual) || 0, codigo: p.codigo || '' };
       }
     }
 
     // ── 2. Vendas 90 dias ────────────────────────────────────────────────
     if (!cacheVelocidade || forceRefresh) {
-      const dataFim   = today();
-      const dataIni   = addDays(dataFim, -90);
-      const extraP    = `data_inicio=${dataIni}&data_fim=${dataFim}`;
+      const dataFim = today();
+      const dataIni = addDays(dataFim, -90);
       setProgress(40, `Carregando vendas (${fmtDate(dataIni)} → ${fmtDate(dataFim)})...`);
 
-      const vendas = await gcFetchAll('/vendas', extraP, c => setProgress(40, `Vendas: ${c} registros...`));
+      const vendas = await gcQueryAll('LISTAR_VENDAS', { data_inicio: dataIni, data_fim: dataFim },
+        c => setProgress(40, `Vendas: ${c} registros...`));
 
       cacheVelocidade = {};
       allVelItems = [];
@@ -686,25 +677,22 @@ async function rodarAgente(forceRefresh = false) {
       for (const venda of vendas) {
         const itens = Array.isArray(venda.produtos) ? venda.produtos : [];
         for (const item of itens) {
-          const p = item?.produto || item || {};
-          const id = String(p.produto_id || p.id || '');
-          if (!id || id === 'null') continue;
-          const qtd   = Number(p.quantidade    || p.qtd)       || 0;
-          const custo = Number(p.valor_custo   || p.custo)     || 0;
-          const venda = Number(p.valor_venda   || p.preco_venda || p.preco) || 0;
-          const nome  = p.nome_produto || p.nome || cacheStock[id]?.nome || '';
+          const id = String(item.id || '');
+          if (!id || id === 'null' || id === '') continue;
+          const qtd   = Number(item.quantidade)  || 0;
+          const custo = Number(item.valor_custo) || 0;
+          const rec   = Number(item.valor_venda) || 0;
+          const nome  = item.nome || cacheStock[id]?.nome || '';
           if (!cacheVelocidade[id]) cacheVelocidade[id] = { qtd: 0, custo_total: 0, rec_total: 0, nome };
           cacheVelocidade[id].qtd         += qtd;
           cacheVelocidade[id].custo_total += qtd * custo;
-          cacheVelocidade[id].rec_total   += qtd * venda;
+          cacheVelocidade[id].rec_total   += qtd * rec;
           if (nome && !cacheVelocidade[id].nome) cacheVelocidade[id].nome = nome;
         }
       }
 
-      // Calcular curva ABC por receita dos 90 dias
       cacheABC = calcABC(cacheVelocidade);
 
-      // Build allVelItems for mapeamento tab
       allVelItems = Object.entries(cacheVelocidade)
         .map(([id, v]) => ({
           id,
@@ -719,11 +707,11 @@ async function rodarAgente(forceRefresh = false) {
 
     // ── 3. Pagamentos ────────────────────────────────────────────────────
     setProgress(65, 'Carregando contas a pagar...');
-    const pagamentos = await gcFetchAll('/pagamentos', '', c => setProgress(65, `Pagamentos: ${c}...`));
+    const pagamentos = await gcQueryAll('LISTAR_PAGAMENTOS', {}, c => setProgress(65, `Pagamentos: ${c}...`));
 
     // ── 4. Recebimentos ──────────────────────────────────────────────────
     setProgress(80, 'Carregando contas a receber...');
-    const recebimentos = await gcFetchAll('/recebimentos', '', c => setProgress(80, `Recebimentos: ${c}...`));
+    const recebimentos = await gcQueryAll('LISTAR_RECEBIMENTOS', {}, c => setProgress(80, `Recebimentos: ${c}...`));
 
     setProgress(90, 'Calculando sugestão...');
 

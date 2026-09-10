@@ -301,14 +301,16 @@ const GC_OPERACOES = {
     params:  (dados) => {
       const p = new URLSearchParams({ limite: String(dados.limite || 100) });
       if (dados.pagina) p.set('pagina', String(dados.pagina));
+      if (dados.nome)       p.set('nome',       String(dados.nome).replace(/[^a-zA-Z0-9À-ÿ\s./-]/g, '').slice(0, 80));
       if (dados.referencia) p.set('referencia', String(dados.referencia).slice(0, 50));
       return p.toString();
     },
     dto:     (item) => ({
-      id:         item.id,
-      codigo:     item.codigo || item.referencia || '',
-      nome:       item.nome   || '',
-      fabricante: item.fabricante || item.marca || '',
+      id:            item.id,
+      codigo:        item.codigo     || item.referencia || '',
+      nome:          item.nome       || '',
+      fabricante:    item.fabricante || item.marca      || '',
+      estoque_atual: Number(item.estoque_atual ?? item.estoque ?? 0),
     }),
   },
   CONSULTAR_PRODUTO: {
@@ -323,6 +325,7 @@ const GC_OPERACOES = {
       preco_venda:  item.preco_venda  || 0,
       preco_custo:  item.preco_custo  || 0,
       estoque_atual: item.estoque_atual || 0,
+      fornecedor:   item.fornecedor || item.marca || item.fabricante || '',
     }),
   },
   LISTAR_VENDAS: {
@@ -337,15 +340,30 @@ const GC_OPERACOES = {
       if (dados.status)         p.set('status',          String(dados.status).slice(0, 30));
       return p.toString();
     },
-    dto:     (item) => ({
-      id:        item.id,
-      numero:    item.numero   || '',
-      data:      item.data     || '',
-      cliente:   item.cliente  ? { nome: item.cliente.nome || '' } : {},
-      valor:     item.valor_total || 0,
-      status:    item.status   || '',
-      vendedor:  item.vendedor ? { nome: item.vendedor.nome || '' } : {},
-    }),
+    dto:     (item) => {
+      const dataHora = item.data_hora || item.data_criacao || item.created_at || '';
+      const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
+      return {
+        id:          item.id,
+        numero:      item.numero      || '',
+        data:        (item.data || item.data_venda || item.data_pedido || '').slice(0, 10),
+        hora:        horaMatch ? horaMatch[1] : '',
+        cliente:     item.cliente     ? { nome: item.cliente.nome || '' } : {},
+        valor:       item.valor_total || 0,
+        status:      item.status      || '',
+        vendedor:    item.vendedor    ? { nome: item.vendedor.nome || '' } : {},
+        situacao_id: item.situacao_id || '',
+        cidade:      item.cidade_cliente || item.cidade || '',
+        itens:       Array.isArray(item.produtos) ? item.produtos.length : Number(item.quantidade_produtos || 0),
+        produtos:    Array.isArray(item.produtos) ? item.produtos.map(p => ({
+          id:          String(p.produto_id || p.id || ''),
+          nome:        p.nome_produto || p.nome     || '',
+          quantidade:  Number(p.quantidade || p.qtd) || 0,
+          valor_custo: Number(p.valor_custo || p.custo) || 0,
+          valor_venda: Number(p.valor_venda || p.preco_venda || p.preco) || 0,
+        })) : [],
+      };
+    },
   },
   LISTAR_PAGAMENTOS: {
     modulo:  ['compras'],
@@ -357,11 +375,12 @@ const GC_OPERACOES = {
       return p.toString();
     },
     dto:     (item) => ({
-      id:         item.id,
-      valor:      item.valor        || 0,
-      vencimento: item.vencimento   || '',
-      situacao:   item.situacao     || '',
-      fornecedor: item.fornecedor ? { nome: item.fornecedor.nome || '' } : {},
+      id:              item.id,
+      valor:           item.valor            || 0,
+      data_vencimento: item.data_vencimento  || item.vencimento || '',
+      liquidado:       item.liquidado        ?? 0,
+      situacao:        item.situacao         || '',
+      fornecedor:      item.fornecedor ? { nome: item.fornecedor.nome || '' } : {},
     }),
   },
   LISTAR_RECEBIMENTOS: {
@@ -374,11 +393,12 @@ const GC_OPERACOES = {
       return p.toString();
     },
     dto:     (item) => ({
-      id:         item.id,
-      valor:      item.valor        || 0,
-      vencimento: item.vencimento   || '',
-      situacao:   item.situacao     || '',
-      cliente:    item.cliente ? { nome: item.cliente.nome || '' } : {},
+      id:              item.id,
+      valor:           item.valor            || 0,
+      data_vencimento: item.data_vencimento  || item.vencimento || '',
+      liquidado:       item.liquidado        ?? 0,
+      situacao:        item.situacao         || '',
+      cliente:         item.cliente ? { nome: item.cliente.nome || '' } : {},
     }),
   },
   PESQUISAR_CLIENTES: {
@@ -435,6 +455,20 @@ async function gcQueryHandler(request) {
     throw new HttpsError('invalid-argument', `Operação desconhecida: "${operacao}". Operações permitidas: ${Object.keys(GC_OPERACOES).join(', ')}`);
   }
 
+  // 4b. Limites de paginação (proteção contra abuso)
+  if (dados.limite !== undefined) {
+    const lim = Number(dados.limite);
+    if (!Number.isInteger(lim) || lim < 1 || lim > 200) {
+      throw new HttpsError('invalid-argument', '"limite" deve ser inteiro entre 1 e 200.');
+    }
+  }
+  if (dados.pagina !== undefined) {
+    const pag = Number(dados.pagina);
+    if (!Number.isInteger(pag) || pag < 1 || pag > 200) {
+      throw new HttpsError('invalid-argument', '"pagina" deve ser inteiro entre 1 e 200.');
+    }
+  }
+
   // 5. Verificar módulo server-side (lê sistema_usuarios/{uid})
   const sysDoc     = await db.collection('sistema_usuarios').doc(uid).get();
   const modulosUser = sysDoc.exists ? (sysDoc.data().modulos || []) : [];
@@ -463,6 +497,18 @@ async function gcQueryHandler(request) {
   const params  = config.params(dados);
   const gcUrl   = `${GC_BASE_URL}${path}${params ? '?' + params : ''}`;
 
+  // 7b. Para ATUALIZAR_PRECO: validar campos enviados (whitelist estrita de escrita)
+  if (operacao === 'ATUALIZAR_PRECO') {
+    const CAMPOS_PERMITIDOS_ESCRITA = new Set(['produtoId', 'preco_custo', 'preco_venda']);
+    const extras = Object.keys(dados).filter(k => !CAMPOS_PERMITIDOS_ESCRITA.has(k));
+    if (extras.length > 0) {
+      throw new HttpsError('invalid-argument', `Campos não permitidos em escrita: ${extras.join(', ')}.`);
+    }
+    if (!dados.produtoId) {
+      throw new HttpsError('invalid-argument', 'produtoId é obrigatório para ATUALIZAR_PRECO.');
+    }
+  }
+
   // 8. Para ATUALIZAR_PRECO: validar payload de escrita
   let gcBody = undefined;
   if (operacao === 'ATUALIZAR_PRECO') {
@@ -478,6 +524,20 @@ async function gcQueryHandler(request) {
   }
 
   // 9. Chamar GestãoClick
+  // Para ATUALIZAR_PRECO: busca preço anterior (best-effort) para audit log
+  let precoAnterior = null;
+  if (operacao === 'ATUALIZAR_PRECO') {
+    try {
+      const prevResp = await fetch(`${GC_BASE_URL}${config.path(dados)}`, {
+        headers: { 'access-token': accessToken, 'secret-access-token': secretToken, 'Content-Type': 'application/json' },
+      });
+      if (prevResp.ok) {
+        const prev = await prevResp.json();
+        precoAnterior = { preco_custo: prev.preco_custo ?? null, preco_venda: prev.preco_venda ?? null };
+      }
+    } catch (_) { /* não bloqueia — auditoria best-effort */ }
+  }
+
   let gcResp;
   try {
     gcResp = await fetch(gcUrl, {
@@ -502,6 +562,18 @@ async function gcQueryHandler(request) {
 
   // 10. Aplicar DTO mínimo — nunca retornar raw ao browser
   if (operacao === 'ATUALIZAR_PRECO') {
+    // Audit log server-side (Admin SDK, nunca acessível pelo cliente)
+    await db.collection('gc_audit').add({
+      actor_uid:            uid,
+      timestamp:            admin.firestore.FieldValue.serverTimestamp(),
+      operation:            'ATUALIZAR_PRECO',
+      product_id:           String(dados.produtoId),
+      preco_custo_novo:     gcBody.preco_custo,
+      preco_venda_novo:     gcBody.preco_venda ?? null,
+      preco_custo_anterior: precoAnterior?.preco_custo ?? null,
+      preco_venda_anterior: precoAnterior?.preco_venda ?? null,
+      resultado:            'ok',
+    }).catch(() => {});
     return { ok: true };
   }
 
@@ -526,10 +598,10 @@ async function gcQueryHandler(request) {
 exports.registrarPonto          = onCall({ region: REGION }, registrarPontoHandler);
 exports.criarContaFuncionario   = onCall({ region: REGION }, criarContaFuncionarioHandler);
 
-// STATUS S0: gcQuery presente mas NÃO exportado para produção.
-// Descomente as duas linhas abaixo em S2 após testes passarem.
-// exports.gcQuery              = onCall({ region: REGION }, gcQueryHandler);
-// exports._gcQueryHandler      = gcQueryHandler;
+// S2: gcQuery exportado para produção.
+// Credenciais GC via Secret Manager (definidas com firebase functions:secrets:set).
+exports.gcQuery         = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, gcQueryHandler);
+exports._gcQueryHandler = gcQueryHandler;
 
 // Handlers exportados para testes diretos (sem onCall wrapper)
 exports._registrarPontoHandler        = registrarPontoHandler;

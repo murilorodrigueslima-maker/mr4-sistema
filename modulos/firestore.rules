@@ -272,11 +272,20 @@ service cloud.firestore {
 
     // ── Coleção: display_metrics ───────────────────────────────────────────────
     // Métricas para o painel de TV. Escrita APENAS via Admin SDK (sync).
-    // Leitura: role=display (TV) ou gestor (para validação).
-    // Adicionada em S0 — collection criada no sync em S3.
+    // Leitura: role=display (TV), gestor, ou qualquer auth (bridge S2 para painel anônimo).
+    // S3: restringir de volta a isDisplay() || isGestor() após migração completa.
 
     match /display_metrics/{docId} {
-      allow read:  if isDisplay() || isGestor();
+      allow read:  if isDisplay() || isGestor() || request.auth != null;
+      allow write: if false;
+    }
+
+    // ── Coleção: gc_audit ─────────────────────────────────────────────────────
+    // Log de auditoria de operações de escrita no GestãoClick (ATUALIZAR_PRECO).
+    // Escrita APENAS via Admin SDK (gcQuery server-side). Leitura apenas gestor.
+
+    match /gc_audit/{docId} {
+      allow read:  if isGestor();
       allow write: if false;
     }
 

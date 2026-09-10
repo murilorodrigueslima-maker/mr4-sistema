@@ -355,13 +355,16 @@ const GC_OPERACOES = {
         situacao_id: item.situacao_id || '',
         cidade:      item.cidade_cliente || item.cidade || '',
         itens:       Array.isArray(item.produtos) ? item.produtos.length : Number(item.quantidade_produtos || 0),
-        produtos:    Array.isArray(item.produtos) ? item.produtos.map(p => ({
-          id:          String(p.produto_id || p.id || ''),
-          nome:        p.nome_produto || p.nome     || '',
-          quantidade:  Number(p.quantidade || p.qtd) || 0,
-          valor_custo: Number(p.valor_custo || p.custo) || 0,
-          valor_venda: Number(p.valor_venda || p.preco_venda || p.preco) || 0,
-        })) : [],
+        produtos:    Array.isArray(item.produtos) ? item.produtos.map(raw => {
+          const p = raw.produto || raw;
+          return {
+            id:          String(p.produto_id || p.id || ''),
+            nome:        p.nome_produto || p.nome     || '',
+            quantidade:  Number(p.quantidade || p.qtd) || 0,
+            valor_custo: Number(p.valor_custo || p.custo) || 0,
+            valor_venda: Number(p.valor_venda || p.preco_venda || p.preco) || 0,
+          };
+        }) : [],
       };
     },
   },

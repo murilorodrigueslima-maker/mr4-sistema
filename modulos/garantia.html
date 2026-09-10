@@ -454,6 +454,7 @@ const app  = initializeApp({
 });
 const auth=getAuth(app), db=getFirestore(app);
 const _gcQuery = httpsCallable(getFunctions(app,'southamerica-east1'), 'gcQuery');
+window._gcQuery = _gcQuery;
 window._db=db;
 window._col=(n)=>collection(db,n);
 window._doc=(n,id)=>doc(db,n,id);
@@ -887,14 +888,14 @@ async function gcGetClientes(q){
   try{
     const r = await _gcQuery({ operacao:'PESQUISAR_CLIENTES', dados:{ busca:q, limite:15 } });
     return gcExtrairLista(r.data);
-  }catch{ return []; }
+  }catch(err){ console.error('[garantia] gcGetClientes:', err?.code || err?.message || 'erro'); return []; }
 }
 
 async function gcGetProdutos(q){
   try{
     const r = await _gcQuery({ operacao:'LISTAR_PRODUTOS', dados:{ nome:q, limite:15 } });
     return gcExtrairLista(r.data);
-  }catch{ return []; }
+  }catch(err){ console.error('[garantia] gcGetProdutos:', err?.code || err?.message || 'erro'); return []; }
 }
 
 function renderAcList(listEl, items, onSelect){

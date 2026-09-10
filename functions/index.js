@@ -610,15 +610,20 @@ async function syncPainelDisplayHandler() {
   // Nomes dos vendedores: lidos de painel_config/default (somente leitura).
   // Fallback para os nomes padrão caso o documento não exista.
   const DEFAULT_VENDEDORES = ['Ademir', 'Fabiana'];
-  let vendedores = DEFAULT_VENDEDORES;
+  let vendedores  = DEFAULT_VENDEDORES;
+  let metaPorNome = {};  // nome → meta mensal (R$) — copiada de painel_config, atualiza a cada 30 min
+  let metaEquipe  = 0;
   try {
     const cfgSnap = await db.collection('painel_config').doc('default').get();
     if (cfgSnap.exists) {
-      const cfg   = cfgSnap.data();
-      const nomes = Array.isArray(cfg.vendedores)
-        ? cfg.vendedores.map(v => v.nome).filter(Boolean)
-        : [];
-      if (nomes.length > 0) vendedores = nomes;
+      const cfg = cfgSnap.data();
+      if (Array.isArray(cfg.vendedores)) {
+        const validos = cfg.vendedores.filter(v => v.nome);
+        const nomes   = validos.map(v => v.nome);
+        if (nomes.length > 0) vendedores = nomes;
+        validos.forEach(v => { metaPorNome[v.nome] = Number(v.meta) || 0; });
+      }
+      metaEquipe = Number(cfg.meta_equipe) || 0;
     }
   } catch (_) { /* usa defaults */ }
 
@@ -650,7 +655,8 @@ async function syncPainelDisplayHandler() {
     const pedidosHoje = vendasHoje.length;
     return {
       nome,
-      totalMes,  totalHoje,
+      meta:       metaPorNome[nome] || 0,
+      totalMes,   totalHoje,
       pedidosMes, pedidosHoje,
       ticketMes:  pedidosMes  ? totalMes  / pedidosMes  : 0,
       ticketHoje: pedidosHoje ? totalHoje / pedidosHoje : 0,
@@ -673,6 +679,9 @@ async function syncPainelDisplayHandler() {
     periodo:      { inicioMes, fim: hojeStr },
     equipe,
     vendedores:   metricsVendedores,
+    // Somente os campos de config estritamente necessários para o painel display.
+    // Alterações em painel_config levam até 30 min para refletir na TV.
+    configuracao: { metaEquipe },
   });
 }
 

@@ -262,7 +262,7 @@ body{
 .btn-cfg-save{padding:.6rem 1.6rem;border:none;border-radius:9px;background:var(--orange);color:#fff;font-size:.83rem;font-weight:700;cursor:pointer;font-family:inherit;transition:background .12s}
 .btn-cfg-save:hover{background:var(--orange-dk)}
 
-/* ── LOADING / PIN PAGE ── */
+/* ── LOADING ── */
 #splash{
   position:fixed;inset:0;background:var(--bg);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;z-index:999;
@@ -271,18 +271,17 @@ body{
 .spin{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* PIN de página inteira */
-#pinPage{
+/* ── LOGIN PAGE ── */
+#loginPage{
   position:fixed;inset:0;background:var(--bg);
   display:none;flex-direction:column;align-items:center;justify-content:center;
   gap:.5rem;z-index:998;
 }
-#pinPage img{height:48px;margin-bottom:1rem;filter:brightness(1.1)}
-#pinPage .pin-page-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:.2rem}
-#pinPage .pin-page-sub{font-size:.78rem;color:var(--sub);margin-bottom:1.2rem}
-#pinPage .pin-dots{margin-bottom:.5rem}
-#pinPage .pin-error{margin-bottom:.75rem}
-#pinPage .pin-grid{width:280px}
+#loginPage img{height:48px;margin-bottom:1rem;filter:brightness(1.1)}
+.login-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:.2rem}
+.login-sub{font-size:.78rem;color:var(--sub);margin-bottom:1.2rem}
+.login-form{display:flex;flex-direction:column;gap:.75rem;width:280px}
+#loginBtn{width:100%;padding:.7rem;font-size:.88rem;cursor:pointer}
 
 /* ── TOAST ── */
 .toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.4rem}
@@ -306,33 +305,16 @@ body{
 </head>
 <body>
 
-<!-- PIN página inteira -->
-<div id="pinPage">
+<!-- Login -->
+<div id="loginPage">
   <img src="./assets/logo.png" alt="MR4">
-  <div class="pin-page-title">🔒 Painel Comercial</div>
-  <div class="pin-page-sub">Digite o PIN para acessar</div>
-  <div class="pin-dots" id="pinDotsPage">
-    <div class="pin-dot" id="pp0"></div>
-    <div class="pin-dot" id="pp1"></div>
-    <div class="pin-dot" id="pp2"></div>
-    <div class="pin-dot" id="pp3"></div>
-    <div class="pin-dot" id="pp4"></div>
-    <div class="pin-dot" id="pp5"></div>
-  </div>
-  <div class="pin-error" id="pinErrorPage"></div>
-  <div class="pin-grid">
-    <button class="pin-key" onclick="pinDigitPage('1')">1</button>
-    <button class="pin-key" onclick="pinDigitPage('2')">2</button>
-    <button class="pin-key" onclick="pinDigitPage('3')">3</button>
-    <button class="pin-key" onclick="pinDigitPage('4')">4</button>
-    <button class="pin-key" onclick="pinDigitPage('5')">5</button>
-    <button class="pin-key" onclick="pinDigitPage('6')">6</button>
-    <button class="pin-key" onclick="pinDigitPage('7')">7</button>
-    <button class="pin-key" onclick="pinDigitPage('8')">8</button>
-    <button class="pin-key" onclick="pinDigitPage('9')">9</button>
-    <button class="pin-key del" onclick="pinDelPage()">⌫</button>
-    <button class="pin-key" onclick="pinDigitPage('0')">0</button>
-    <button class="pin-key del" style="opacity:.2;cursor:default"></button>
+  <div class="login-title">📊 Painel Comercial</div>
+  <div class="login-sub">Faça login para acessar</div>
+  <div class="login-form">
+    <input class="cfg-input" id="loginEmail" type="email" placeholder="Email" autocomplete="email">
+    <input class="cfg-input" id="loginSenha" type="password" placeholder="Senha" autocomplete="current-password">
+    <div class="pin-error" id="loginError"></div>
+    <button class="btn-cfg-save" id="loginBtn" onclick="fazerLogin()">Entrar</button>
   </div>
 </div>
 
@@ -352,7 +334,7 @@ body{
     <div class="hd-clock" id="clock">--:--:--</div>
     <div class="hd-date" id="dateStr">—</div>
   </div>
-  <button class="btn-icon" onclick="abrirConfig()" title="Configurações">⚙️ Config</button>
+  <button class="btn-icon" onclick="fazerLogout()" title="Sair">⏻ Sair</button>
 </header>
 
 <!-- Team bar -->
@@ -396,130 +378,41 @@ body{
 
 <!-- Footer -->
 <footer class="footer" id="mainFooter" style="display:none">
-  <div class="refresh-info" onclick="forcarAtualizacao()" title="Clique para atualizar agora" style="cursor:pointer">
+  <div class="refresh-info">
     <span class="refresh-dot"></span>
-    <span id="refreshTxt">Atualizando em 5:00</span>
+    <span id="refreshTxt">Ao vivo · atualização automática</span>
   </div>
   <div class="footer-sep"></div>
   <span id="lastUpdate" style="color:var(--dim)"></span>
   <button class="btn-fs" onclick="toggleFS()">⛶ Tela cheia</button>
 </footer>
 
-<!-- Modal PIN -->
-<div class="modal-overlay" id="pinOverlay">
-  <div class="modal pin-modal">
-    <div class="pin-title">🔒 Configurações</div>
-    <div class="pin-sub">Digite o PIN para continuar</div>
-    <div class="pin-dots" id="pinDots">
-      <div class="pin-dot" id="pd0"></div>
-      <div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div>
-      <div class="pin-dot" id="pd3"></div>
-      <div class="pin-dot" id="pd4"></div>
-      <div class="pin-dot" id="pd5"></div>
-    </div>
-    <div class="pin-error" id="pinError"></div>
-    <div class="pin-grid">
-      <button class="pin-key" onclick="pinDigit('1')">1</button>
-      <button class="pin-key" onclick="pinDigit('2')">2</button>
-      <button class="pin-key" onclick="pinDigit('3')">3</button>
-      <button class="pin-key" onclick="pinDigit('4')">4</button>
-      <button class="pin-key" onclick="pinDigit('5')">5</button>
-      <button class="pin-key" onclick="pinDigit('6')">6</button>
-      <button class="pin-key" onclick="pinDigit('7')">7</button>
-      <button class="pin-key" onclick="pinDigit('8')">8</button>
-      <button class="pin-key" onclick="pinDigit('9')">9</button>
-      <button class="pin-key del" onclick="pinDel()">⌫</button>
-      <button class="pin-key" onclick="pinDigit('0')">0</button>
-      <button class="pin-key del" onclick="fecharPin()">✕</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal Config -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <div class="modal-title">⚙️ Configurar Painel</div>
-
-    <div class="cfg-section">Vendedor 1</div>
-    <div class="cfg-row">
-      <div>
-        <div class="cfg-label">Nome</div>
-        <input class="cfg-input" id="cfgN0" placeholder="Nome do vendedor">
-      </div>
-      <div>
-        <div class="cfg-label">Meta mensal (R$)</div>
-        <input class="cfg-input" id="cfgM0" type="number" placeholder="Ex: 50000">
-      </div>
-    </div>
-
-    <div class="cfg-section">Vendedor 2</div>
-    <div class="cfg-row">
-      <div>
-        <div class="cfg-label">Nome</div>
-        <input class="cfg-input" id="cfgN1" placeholder="Nome do vendedor">
-      </div>
-      <div>
-        <div class="cfg-label">Meta mensal (R$)</div>
-        <input class="cfg-input" id="cfgM1" type="number" placeholder="Ex: 50000">
-      </div>
-    </div>
-
-    <div class="cfg-section">Equipe</div>
-    <div class="cfg-row">
-      <div class="cfg-full">
-        <div class="cfg-label">Meta mensal da equipe (R$) — deixe em branco para somar as metas individuais</div>
-        <input class="cfg-input" id="cfgMequipe" type="number" placeholder="Ex: 100000">
-      </div>
-    </div>
-
-    <div class="modal-foot">
-      <button class="btn-cfg-cancel" onclick="fecharConfig()">Cancelar</button>
-      <button class="btn-cfg-save" onclick="salvarConfig()">💾 Salvar</button>
-    </div>
-  </div>
-</div>
 
 <div class="toast-wrap" id="toastWrap"></div>
 
 <!-- Firebase + App -->
 <script type="module">
-import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, onSnapshot }
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut,
+  browserLocalPersistence, setPersistence,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, onSnapshot }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-const _app = initializeApp({
-  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
-  projectId:"mr4-ponto",storageBucket:"mr4-ponto.firebasestorage.app",
-  messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
+const _app  = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5",
 });
-const _db = getFirestore(_app);
-const CFG_DOC = doc(_db, 'painel_config', 'default');
-
-const WORKER = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
-const REFRESH_SECS = 7200; // 2 horas
-
-/* ── ESTADO ── */
-let CFG = {
-  vendedores: [
-    { nome: 'Ademir',   meta: 50000 },
-    { nome: 'Fabiana',  meta: 50000 },
-  ],
-  meta_equipe: 0,
-};
-let dados = [ null, null ]; // dados de cada vendedor
-let countdownSecs = REFRESH_SECS;
-let countdownTimer = null;
+const _auth = getAuth(_app);
+const _db   = getFirestore(_app);
 
 /* ── UTILS ── */
 const brl = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
-const fmt2 = v => Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-
-function mesAtual() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-}
-function hoje() { return new Date().toISOString().slice(0,10); }
 
 function corMeta(pct) {
   if(pct >= 100) return 'green';
@@ -547,267 +440,52 @@ function tickClock() {
 setInterval(tickClock, 1000);
 tickClock();
 
-/* ── COUNTDOWN ── */
-function iniciarCountdown() {
-  clearInterval(countdownTimer);
-  countdownSecs = REFRESH_SECS;
-  countdownTimer = setInterval(async () => {
-    countdownSecs--;
-    const m = Math.floor(countdownSecs/60);
-    const s = countdownSecs % 60;
-    const el = document.getElementById('refreshTxt');
-    if(el) el.textContent = `Atualizando em ${m}:${String(s).padStart(2,'0')}`;
-    if(countdownSecs <= 0) {
-      if(el) el.textContent = '↻ Atualizando...';
-      await buscarDados();
-      iniciarCountdown();
-    }
-  }, 1000);
-}
-
-/* ── CONFIG — Firestore + localStorage fallback ── */
-const LS_CFG = 'mr4_painel_cfg';
-const LS_PIN = 'mr4_painel_pin_ts';
-const PIN_CORRETO = '887490';
-const PIN_DIAS = 30; // lembra por 30 dias
-
-async function carregarConfig() {
-  try {
-    const snap = await getDoc(CFG_DOC);
-    if(snap.exists()) {
-      CFG = snap.data();
-      localStorage.setItem(LS_CFG, JSON.stringify(CFG)); // atualiza cache local
-      return;
-    }
-  } catch(e) { console.warn('Firestore config:', e); }
-  // fallback localStorage
-  try {
-    const raw = localStorage.getItem(LS_CFG);
-    if(raw) CFG = JSON.parse(raw);
-  } catch(e) {}
-}
-
-window.salvarConfig = async function() {
-  const v0 = document.getElementById('cfgN0').value.trim();
-  const v1 = document.getElementById('cfgN1').value.trim();
-  const m0 = parseFloat(document.getElementById('cfgM0').value)||0;
-  const m1 = parseFloat(document.getElementById('cfgM1').value)||0;
-  const me = parseFloat(document.getElementById('cfgMequipe').value)||0;
-  if(!v0||!v1){ toast('Preencha os nomes dos vendedores.','err'); return; }
-  CFG = { vendedores:[{nome:v0,meta:m0},{nome:v1,meta:m1}], meta_equipe:me };
-  // Salva no Firestore (sincroniza com todos os dispositivos)
-  try {
-    await setDoc(CFG_DOC, CFG);
-    localStorage.setItem(LS_CFG, JSON.stringify(CFG));
-    toast('Configuração salva!','ok');
-    fecharConfig();
-    buscarDados();
-  } catch(e) {
-    console.error('salvarConfig Firestore:', e);
-    localStorage.setItem(LS_CFG, JSON.stringify(CFG));
-    toast('Salvo localmente (Firestore indisponível)','ok');
-    fecharConfig();
-    buscarDados();
-  }
+/* ── FULLSCREEN ── */
+window.toggleFS = function() {
+  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+  else document.exitFullscreen();
 };
+document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();toggleFS();} });
 
-/* ── PIN ── */
-let pinBuffer  = '';  // config modal
-let pinBufPage = '';  // página inteira
+/* ── RENDER ── */
+function renderPainel(data) {
+  const vendedores = data.vendedores || [];
+  const equipe     = data.equipe     || {};
+  const cfg        = data.configuracao || {};
 
-function pinDesbloqueado() {
-  const ts = parseInt(localStorage.getItem(LS_PIN)||'0');
-  return Date.now() - ts < PIN_DIAS * 86400000;
-}
+  if(vendedores.length < 2) return;
 
-function salvarPinTs() { localStorage.setItem(LS_PIN, Date.now()); }
-
-/* — dots do modal de config — */
-function atualizarDots(erro) {
-  for(let i=0;i<6;i++){
-    const d = document.getElementById('pd'+i);
-    if(!d) return;
-    d.classList.toggle('filled', i < pinBuffer.length && !erro);
-    d.classList.toggle('error', erro);
-  }
-}
-window.pinDigit = function(n) {
-  if(pinBuffer.length >= 6) return;
-  pinBuffer += n;
-  atualizarDots(false);
-  document.getElementById('pinError').textContent = '';
-  if(pinBuffer.length === 6) verificarPinConfig();
-};
-window.pinDel = function() {
-  pinBuffer = pinBuffer.slice(0,-1);
-  atualizarDots(false);
-  document.getElementById('pinError').textContent = '';
-};
-function verificarPinConfig() {
-  if(pinBuffer === PIN_CORRETO) {
-    salvarPinTs();
-    fecharPin();
-    abrirConfigDireto();
-  } else {
-    atualizarDots(true);
-    document.getElementById('pinError').textContent = 'PIN incorreto.';
-    setTimeout(()=>{ pinBuffer=''; atualizarDots(false); document.getElementById('pinError').textContent=''; }, 1200);
-  }
-}
-window.fecharPin = function() {
-  document.getElementById('pinOverlay').classList.remove('open');
-  pinBuffer = '';
-  atualizarDots(false);
-  document.getElementById('pinError').textContent = '';
-};
-
-/* — dots da página inteira — */
-function atualizarDotsPage(erro) {
-  for(let i=0;i<6;i++){
-    const d = document.getElementById('pp'+i);
-    if(!d) return;
-    d.classList.toggle('filled', i < pinBufPage.length && !erro);
-    d.classList.toggle('error', erro);
-  }
-}
-window.pinDigitPage = function(n) {
-  if(pinBufPage.length >= 6) return;
-  pinBufPage += n;
-  atualizarDotsPage(false);
-  document.getElementById('pinErrorPage').textContent = '';
-  if(pinBufPage.length === 6) verificarPinPage();
-};
-window.pinDelPage = function() {
-  pinBufPage = pinBufPage.slice(0,-1);
-  atualizarDotsPage(false);
-  document.getElementById('pinErrorPage').textContent = '';
-};
-function verificarPinPage() {
-  if(pinBufPage === PIN_CORRETO) {
-    salvarPinTs();
-    document.getElementById('pinPage').style.display = 'none';
-    mostrarPainel();
-  } else {
-    atualizarDotsPage(true);
-    document.getElementById('pinErrorPage').textContent = 'PIN incorreto. Tente novamente.';
-    setTimeout(()=>{ pinBufPage=''; atualizarDotsPage(false); document.getElementById('pinErrorPage').textContent=''; }, 1200);
-  }
-}
-
-/* ── FETCH GestãoClick ── */
-async function fetchVendas(dataInicio, dataFim) {
-  let todos=[], pagina=1;
-  while(true) {
-    const params = `pagina=${pagina}&limite=100&data_inicio=${dataInicio}&data_fim=${dataFim}`;
-    const url = `${WORKER}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
-    const r = await fetch(url);
-    const json = await r.json();
-    const data = json.data || [];
-    todos = todos.concat(data);
-    const meta = json.meta || {};
-    if(pagina >= (Number(meta.total_paginas)||1)) break;
-    pagina++;
-  }
-  return todos;
-}
-
-function nomeMatch(nomeGC, nomeConfig) {
-  const a = (nomeGC||'').toLowerCase().trim();
-  const b = (nomeConfig||'').toLowerCase().trim();
-  if(!a||!b) return false;
-  // match exato ou match de primeira palavra ou contém
-  return a===b || a.startsWith(b.split(' ')[0]) || b.startsWith(a.split(' ')[0]) || a.includes(b.split(' ')[0]);
-}
-
-async function buscarDados() {
-  try {
-    const hojeStr = hoje();
-    const mesStr  = mesAtual();
-    const inicioMes = mesStr+'-01';
-
-    // Busca vendas do mês inteiro
-    const todasMes = await fetchVendas(inicioMes, hojeStr);
-
-    // Filtra apenas Concretizados (situacao_id = 3952593)
-    const concretizados = todasMes.filter(p => String(p.situacao_id) === '3952593');
-
-    // Para cada vendedor calcula métricas
-    dados = CFG.vendedores.map(v => {
-      const vendasV = concretizados.filter(p =>
-        nomeMatch(p.nome_vendedor||p.vendedor||p.nome_usuario||'', v.nome)
-      );
-      const vendasHoje = vendasV.filter(p => {
-        const d = (p.data||p.data_venda||p.data_pedido||'').slice(0,10);
-        return d === hojeStr;
-      });
-
-      const totalMes  = vendasV.reduce((s,p)=>s+Number(p.valor_total||p.total||p.valor||0),0);
-      const totalHoje = vendasHoje.reduce((s,p)=>s+Number(p.valor_total||p.total||p.valor||0),0);
-      const pedidosMes  = vendasV.length;
-      const pedidosHoje = vendasHoje.length;
-      const ticketMes   = pedidosMes  ? totalMes/pedidosMes   : 0;
-      const ticketHoje  = pedidosHoje ? totalHoje/pedidosHoje : 0;
-
-      return { nome:v.nome, meta:v.meta, totalMes, totalHoje, pedidosMes, pedidosHoje, ticketMes, ticketHoje };
-    });
-
-    const agora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    const el = document.getElementById('lastUpdate');
-    if(el) el.textContent = `Atualizado às ${agora}`;
-
-    renderPainel();
-  } catch(e) {
-    console.error('buscarDados:', e);
-    renderDemoData();
-  }
-}
-
-/* ── RENDER DEMO (sem API) ── */
-function renderDemoData() {
-  dados = CFG.vendedores.map((v,i) => ({
-    nome:v.nome, meta:v.meta,
-    totalMes:  i===0 ? 38450 : 24800,
-    totalHoje: i===0 ? 4200  : 1850,
-    pedidosMes:  i===0 ? 47 : 32,
-    pedidosHoje: i===0 ? 6  : 3,
-    ticketMes:   i===0 ? 818 : 775,
-    ticketHoje:  i===0 ? 700 : 617,
-  }));
-  renderPainel();
-}
-
-/* ── RENDER PAINEL ── */
-function renderPainel() {
-  if(!dados[0]||!dados[1]) return;
-
-  // Ranking (quem faturou mais no mês)
-  const ranked = [...dados].map((d,i)=>({...d,idx:i})).sort((a,b)=>b.totalMes-a.totalMes);
-
-  // Team totals
-  const teamHoje = dados.reduce((s,d)=>s+(d.totalHoje||0),0);
-  const teamMes  = dados.reduce((s,d)=>s+(d.totalMes||0),0);
-  const teamPeds = dados.reduce((s,d)=>s+(d.pedidosHoje||0),0);
-  const metaEq   = CFG.meta_equipe || dados.reduce((s,d)=>s+(d.meta||0),0);
+  const ranked  = [...vendedores].map((d,i)=>({...d,idx:i})).sort((a,b)=>b.totalMes-a.totalMes);
+  const metaEq  = cfg.metaEquipe || vendedores.reduce((s,v)=>s+(v.meta||0),0);
+  const teamHoje = equipe.totalHoje   || 0;
+  const teamMes  = equipe.totalMes    || 0;
+  const teamPeds = equipe.pedidosHoje || 0;
   const pctEq    = metaEq ? Math.min((teamMes/metaEq)*100,100) : 0;
   const corEq    = corMeta(pctEq);
   const restEq   = Math.max(metaEq - teamMes, 0);
 
-  document.getElementById('tbHoje').textContent   = brl(teamHoje);
-  document.getElementById('tbMes').textContent    = brl(teamMes);
-  document.getElementById('tbPedidos').textContent= teamPeds;
-  document.getElementById('tbMetaVal').textContent= brl(metaEq);
-  document.getElementById('tbMetaPct').textContent= pctEq.toFixed(1).replace('.',',')+' %';
-  document.getElementById('tbMetaPct').className  = `meta-pct ${corEq}`;
-  document.getElementById('tbMetaBar').style.width= pctEq+'%';
-  document.getElementById('tbMetaBar').className  = `meta-bar-fill ${corEq}`;
+  document.getElementById('tbHoje').textContent    = brl(teamHoje);
+  document.getElementById('tbMes').textContent     = brl(teamMes);
+  document.getElementById('tbPedidos').textContent = teamPeds;
+  document.getElementById('tbMetaVal').textContent = brl(metaEq);
+  document.getElementById('tbMetaPct').textContent = pctEq.toFixed(1).replace('.',',')+' %';
+  document.getElementById('tbMetaPct').className   = `meta-pct ${corEq}`;
+  document.getElementById('tbMetaBar').style.width = pctEq+'%';
+  document.getElementById('tbMetaBar').className   = `meta-bar-fill ${corEq}`;
   document.getElementById('tbMetaRest').textContent= restEq>0?`Faltam ${brl(restEq)}`:'✅ Meta batida!';
 
-  // Render cada card
+  if(data.atualizadoEm) {
+    const ts = data.atualizadoEm.toDate ? data.atualizadoEm.toDate() : new Date(data.atualizadoEm);
+    const el = document.getElementById('lastUpdate');
+    if(el) el.textContent = `Atualizado às ${ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+  }
+
   ranked.forEach((d, rankIdx) => {
     const rank  = rankIdx+1;
-    const pct   = d.meta ? Math.min((d.totalMes/d.meta)*100,100) : 0;
+    const meta  = d.meta || 0;
+    const pct   = meta ? Math.min((d.totalMes/meta)*100,100) : 0;
     const cor   = corMeta(pct);
-    const rest  = Math.max(d.meta-d.totalMes,0);
+    const rest  = Math.max(meta-d.totalMes,0);
     const badge = rank===1?'🥇':'🥈';
     const inicial = (d.nome||'?')[0].toUpperCase();
 
@@ -839,7 +517,7 @@ function renderPainel() {
           <span class="month-val">${brl(d.totalMes)}</span>
         </div>
         <div class="month-row" style="margin-top:-.2rem;margin-bottom:.55rem">
-          <span class="month-goal">Meta: ${brl(d.meta)}</span>
+          <span class="month-goal">Meta: ${brl(meta)}</span>
           <span class="month-goal">${rest>0?`Faltam ${brl(rest)}`:'✅ Meta batida!'}</span>
         </div>
         <div class="progress-bg">
@@ -868,82 +546,123 @@ function renderPainel() {
     `;
 
     const card = document.getElementById('card'+d.idx);
-    card.innerHTML = html;
-    card.className = `seller-card rank-${rank}${pct>=100?' meta-ok':''}`;
+    if(card) {
+      card.innerHTML = html;
+      card.className = `seller-card rank-${rank}${pct>=100?' meta-ok':''}`;
+    }
   });
 }
 
-/* ── CONFIG MODAL ── */
-window.abrirConfig = function() {
-  if(pinDesbloqueado()) { abrirConfigDireto(); return; }
-  pinBuffer = '';
-  atualizarDots(false);
-  document.getElementById('pinError').textContent = '';
-  document.getElementById('pinOverlay').classList.add('open');
-};
+/* ── AUTH / DATA ── */
+let _unsubSnapshot = null;
 
-function abrirConfigDireto() {
-  document.getElementById('cfgN0').value = CFG.vendedores[0]?.nome||'';
-  document.getElementById('cfgM0').value = CFG.vendedores[0]?.meta||'';
-  document.getElementById('cfgN1').value = CFG.vendedores[1]?.nome||'';
-  document.getElementById('cfgM1').value = CFG.vendedores[1]?.meta||'';
-  document.getElementById('cfgMequipe').value = CFG.meta_equipe||'';
-  document.getElementById('modalOverlay').classList.add('open');
-};
-window.fecharConfig = function() {
-  document.getElementById('modalOverlay').classList.remove('open');
-};
-document.getElementById('modalOverlay').addEventListener('click',e=>{
-  if(e.target===document.getElementById('modalOverlay')) fecharConfig();
-});
-
-/* ── FULLSCREEN ── */
-window.toggleFS = function() {
-  if(!document.fullscreenElement) document.documentElement.requestFullscreen();
-  else document.exitFullscreen();
-};
-document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();toggleFS();} });
-
-/* ── INIT ── */
-window.forcarAtualizacao = async function() {
-  const el = document.getElementById('refreshTxt');
-  if(el) el.textContent = '↻ Atualizando...';
-  await buscarDados();
-  iniciarCountdown();
-};
-
-async function mostrarPainel() {
-  ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>document.getElementById(id).style.display='');
-  await buscarDados();
-  iniciarCountdown();
+function ocultarPainel() {
+  ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display='none';
+  });
 }
 
-async function init() {
-  await carregarConfig();
-  document.getElementById('splash').style.display = 'none';
-  if(pinDesbloqueado()) {
-    await mostrarPainel();
-  } else {
-    document.getElementById('pinPage').style.display = 'flex';
+function mostrarPainel() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('splash').style.display    = 'none';
+  ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.style.display='';
+  });
+
+  if(_unsubSnapshot) { _unsubSnapshot(); _unsubSnapshot = null; }
+
+  _unsubSnapshot = onSnapshot(
+    doc(_db,'display_metrics','painel_comercial'),
+    snap => {
+      if(!snap.exists()) {
+        const el = document.getElementById('lastUpdate');
+        if(el) el.textContent = 'Aguardando dados...';
+        return;
+      }
+      renderPainel(snap.data());
+    },
+    err => {
+      console.error('onSnapshot:', err);
+      toast('Erro ao receber dados: '+err.message,'err');
+    }
+  );
+}
+
+function mostrarLogin(msg) {
+  document.getElementById('splash').style.display    = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginError').textContent  = msg || '';
+  ocultarPainel();
+  if(_unsubSnapshot) { _unsubSnapshot(); _unsubSnapshot = null; }
+}
+
+window.fazerLogin = async function() {
+  const emailEl = document.getElementById('loginEmail');
+  const senhaEl = document.getElementById('loginSenha');
+  const errEl   = document.getElementById('loginError');
+  const btnEl   = document.getElementById('loginBtn');
+  errEl.textContent = '';
+  const email = emailEl.value.trim();
+  const senha = senhaEl.value;
+  if(!email||!senha){ errEl.textContent='Preencha email e senha.'; return; }
+  btnEl.disabled = true;
+  btnEl.textContent = 'Entrando...';
+  try {
+    await signInWithEmailAndPassword(_auth, email, senha);
+    // onAuthStateChanged cuida do resto
+  } catch(e) {
+    errEl.textContent = 'Email ou senha inválidos.';
+    btnEl.disabled = false;
+    btnEl.textContent = 'Entrar';
+  }
+};
+
+document.getElementById('loginSenha').addEventListener('keydown', e => {
+  if(e.key==='Enter') window.fazerLogin();
+});
+
+window.fazerLogout = async function() {
+  await signOut(_auth);
+};
+
+async function verificarPerfil(uid) {
+  try {
+    const snap = await getDoc(doc(_db,'users',uid));
+    if(!snap.exists()) return false;
+    const d = snap.data();
+    return d.role === 'display' && d.ativo === true;
+  } catch(e) {
+    console.error('verificarPerfil:', e);
+    return false;
   }
 }
 
-init();
+/* ── INIT ── */
+(async () => {
+  try { await setPersistence(_auth, browserLocalPersistence); } catch(e) { console.warn('persistence:', e); }
 
-/* ── LISTENER TEMPO REAL — atualiza metas sem recarregar ── */
-let _primeiraLeitura = true;
-onSnapshot(CFG_DOC, snap => {
-  if(!snap.exists()) return;
-  if(_primeiraLeitura){ _primeiraLeitura = false; return; } // ignora leitura inicial (já carregada no init)
-  const nova = snap.data();
-  const mudou = JSON.stringify(nova) !== JSON.stringify(CFG);
-  if(!mudou) return;
-  CFG = nova;
-  localStorage.setItem(LS_CFG, JSON.stringify(CFG));
-  // Se o painel já está visível, re-renderiza com as novas metas
-  if(dados[0] && dados[1]) renderPainel();
-  toast('🔄 Metas atualizadas!', 'ok');
-}, err => console.warn('onSnapshot:', err));
+  onAuthStateChanged(_auth, async user => {
+    if(!user) {
+      mostrarLogin('');
+      return;
+    }
+
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('splash').style.display    = 'flex';
+    ocultarPainel();
+
+    const autorizado = await verificarPerfil(user.uid);
+    if(!autorizado) {
+      await signOut(_auth);
+      mostrarLogin('Conta sem permissão de acesso ao painel.');
+      return;
+    }
+
+    mostrarPainel();
+  });
+})();
 </script>
 </body>
 </html>

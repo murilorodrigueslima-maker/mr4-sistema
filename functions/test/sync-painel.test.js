@@ -348,10 +348,14 @@ test('SP14 — documento gravado não contém dados sensíveis ou payload bruto'
   expect(docStr).not.toContain('email');
   expect(doc).not.toHaveProperty('vendas');     // sem array de vendas individuais
   expect(doc.vendedores[0]).not.toHaveProperty('cpf');
-  expect(doc.vendedores[0]).not.toHaveProperty('meta');      // metas fora nesta etapa
+  // meta por vendedor é campo de config (não dado sensível) — incluída desde Etapa 3
+  expect(typeof doc.vendedores[0].meta).toBe('number');
   expect(doc.vendedores[0]).not.toHaveProperty('pctMeta');
-  expect(doc.equipe).not.toHaveProperty('meta');
+  expect(doc.equipe).not.toHaveProperty('meta');     // metaEquipe fica em configuracao, não em equipe
   expect(doc.equipe).not.toHaveProperty('pctMeta');
+  // configuracao copiada de painel_config (somente campos mínimos do display)
+  expect(doc).toHaveProperty('configuracao');
+  expect(typeof doc.configuracao.metaEquipe).toBe('number');
 });
 
 // ── SP15 — paginação: busca múltiplas páginas ─────────────────────────────────

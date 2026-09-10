@@ -1,5 +1,6 @@
 # node_modules — regenerável via npm install
 functions/node_modules/
+scripts/node_modules/
 
 # JDK portátil e arquivo compactado — não versionados
 .tools/

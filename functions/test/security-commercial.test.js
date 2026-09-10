@@ -40,12 +40,14 @@ const PROJECT_ID  = 'mr4-ponto';
 const RULES_PATH  = resolve(__dirname, '../../modulos/firestore.rules');
 
 // ── UIDs de teste ──────────────────────────────────────────────────────────────
-const UID_GESTOR_SEM_MODULOS = 'uid-sec-gestor-nenhum-modulo';
+const UID_GESTOR_SEM_MODULOS  = 'uid-sec-gestor-nenhum-modulo';
 const UID_GESTOR_COM_CLIENTES = 'uid-sec-gestor-modulo-clientes';
-const UID_FUNC               = 'uid-sec-funcionario';
-const UID_SEM_PERFIL         = 'uid-sec-sem-perfil';
-const UID_DISPLAY            = 'uid-sec-display';
-const FUNC_ID                = 'func-sec-001';
+const UID_GESTOR_FINANCEIRO   = 'uid-sec-gestor-modulo-financeiro';
+const UID_GESTOR_EXPEDICAO    = 'uid-sec-gestor-modulo-expedicao';
+const UID_FUNC                = 'uid-sec-funcionario';
+const UID_SEM_PERFIL          = 'uid-sec-sem-perfil';
+const UID_DISPLAY             = 'uid-sec-display';
+const FUNC_ID                 = 'func-sec-001';
 
 let testEnv;
 
@@ -71,6 +73,20 @@ const SEED = async (db) => {
     nome: 'Funcionario Teste', cargo: 'Vendedor', modalidade: 'PRESENCIAL',
   });
 
+  await db.collection('users').doc(UID_GESTOR_FINANCEIRO).set({
+    role: 'gestor', ativo: true, nome: 'Gestor Financeiro',
+  });
+  await db.collection('sistema_usuarios').doc(UID_GESTOR_FINANCEIRO).set({
+    modulos: ['financeiro'], admin: false,
+  });
+
+  await db.collection('users').doc(UID_GESTOR_EXPEDICAO).set({
+    role: 'gestor', ativo: true, nome: 'Gestor Expedicao',
+  });
+  await db.collection('sistema_usuarios').doc(UID_GESTOR_EXPEDICAO).set({
+    modulos: ['expedicao'], admin: false,
+  });
+
   // display — só tem users/{uid}, sem sistema_usuarios (não é gestor comercial)
   await db.collection('users').doc(UID_DISPLAY).set({
     role: 'display', ativo: true, nome: 'TV Painel',
@@ -91,6 +107,22 @@ const SEED = async (db) => {
   });
   await db.collection('display_metrics').doc('latest').set({
     meta_mes: 200000, faturamento_mes: 45169, pct_meta: 22.6,
+  });
+
+  // S1: dados de exemplo para financeiro_cache e pedidos_cache
+  await db.collection('financeiro_cache').doc('latest').set({
+    atualizado_em: '2026-09-09T11:00:00',
+    total_vencido: 57741.02, total_a_pagar: 29385.95, total_a_receber: 0,
+    inadimplencia_pct: 0, fluxo_caixa: [], contas_vencidas: [], contas_vencendo: [],
+    _meta: { lancamentosTotal: 59, sincronizadoEm: '2026-09-09T11:00:00' },
+  });
+  await db.collection('pedidos_cache').doc('latest').set({
+    atualizado_em: '2026-09-09T11:00:00',
+    total: 3,
+    pedidos: [
+      { numero: '1', data: '2026-09-09', cliente: 'PEDRO ARAUJO', vendedor: 'ADEMIR', valor: 500, itens: 2 },
+    ],
+    _meta: { pedidosTotal: 3, sincronizadoEm: '2026-09-09T11:00:00' },
   });
 };
 
@@ -270,6 +302,86 @@ describe('Seção D — role=display + display_metrics (regra ativa desde S0)', 
   test('[S3] role=display NÃO pode ler garantias', async () => {
     await assertFails(
       db(UID_DISPLAY).collection('garantias').get()
+    );
+  });
+});
+
+// ── SEÇÃO E — financeiro_cache + pedidos_cache (S1) ──────────────────────────
+// Verifica as regras adicionadas em S1:
+//   financeiro_cache → temModulo('financeiro')
+//   pedidos_cache    → temModulo('expedicao')
+//
+describe('Seção E — [S1] financeiro_cache + pedidos_cache protegidos', () => {
+
+  // E1 — financeiro_cache: acesso correto
+  test('[S1] E1a — gestor com módulo=financeiro PODE ler financeiro_cache', async () => {
+    await assertSucceeds(
+      db(UID_GESTOR_FINANCEIRO).collection('financeiro_cache').doc('latest').get()
+    );
+  });
+
+  // E2 — financeiro_cache: negações
+  test('[S1] E2a — gestor SEM módulo NÃO lê financeiro_cache', async () => {
+    await assertFails(
+      db(UID_GESTOR_SEM_MODULOS).collection('financeiro_cache').doc('latest').get()
+    );
+  });
+
+  test('[S1] E2b — gestor com módulo=expedicao NÃO lê financeiro_cache', async () => {
+    await assertFails(
+      db(UID_GESTOR_EXPEDICAO).collection('financeiro_cache').doc('latest').get()
+    );
+  });
+
+  test('[S1] E2c — funcionário NÃO lê financeiro_cache', async () => {
+    await assertFails(
+      db(UID_FUNC).collection('financeiro_cache').doc('latest').get()
+    );
+  });
+
+  test('[S1] E2d — não-autenticado NÃO lê financeiro_cache', async () => {
+    await assertFails(db(null).collection('financeiro_cache').doc('latest').get());
+  });
+
+  test('[S1] E2e — ninguém escreve em financeiro_cache (somente Admin SDK)', async () => {
+    await assertFails(
+      db(UID_GESTOR_FINANCEIRO).collection('financeiro_cache').doc('latest').set({ total_vencido: 0 })
+    );
+  });
+
+  // E3 — pedidos_cache: acesso correto
+  test('[S1] E3a — gestor com módulo=expedicao PODE ler pedidos_cache', async () => {
+    await assertSucceeds(
+      db(UID_GESTOR_EXPEDICAO).collection('pedidos_cache').doc('latest').get()
+    );
+  });
+
+  // E4 — pedidos_cache: negações
+  test('[S1] E4a — gestor SEM módulo NÃO lê pedidos_cache', async () => {
+    await assertFails(
+      db(UID_GESTOR_SEM_MODULOS).collection('pedidos_cache').doc('latest').get()
+    );
+  });
+
+  test('[S1] E4b — gestor com módulo=financeiro NÃO lê pedidos_cache', async () => {
+    await assertFails(
+      db(UID_GESTOR_FINANCEIRO).collection('pedidos_cache').doc('latest').get()
+    );
+  });
+
+  test('[S1] E4c — funcionário NÃO lê pedidos_cache', async () => {
+    await assertFails(
+      db(UID_FUNC).collection('pedidos_cache').doc('latest').get()
+    );
+  });
+
+  test('[S1] E4d — não-autenticado NÃO lê pedidos_cache', async () => {
+    await assertFails(db(null).collection('pedidos_cache').doc('latest').get());
+  });
+
+  test('[S1] E4e — ninguém escreve em pedidos_cache (somente Admin SDK)', async () => {
+    await assertFails(
+      db(UID_GESTOR_EXPEDICAO).collection('pedidos_cache').doc('latest').set({ total: 0 })
     );
   });
 });

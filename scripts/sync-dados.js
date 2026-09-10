@@ -19,41 +19,33 @@ if (!ACCESS_TOKEN || !SECRET_TOKEN) {
   process.exit(1);
 }
 
-// ── FIREBASE ADMIN (opcional) ─────────────────────────────────────────────────
-// Prioridade de autenticação:
-//   1. GCP_ACCESS_TOKEN  — token temporário WIF/OIDC (GitHub Actions)
-//   2. FIREBASE_SERVICE_ACCOUNT — JSON da service account (execução local)
-//   3. ADC padrão (gcloud application-default login local)
+// ── FIRESTORE (opcional) ──────────────────────────────────────────────────────
+// Usa @google-cloud/firestore que suporta nativamente:
+//   - GOOGLE_APPLICATION_CREDENTIALS com arquivo external_account (WIF/OIDC)
+//   - FIREBASE_SERVICE_ACCOUNT (JSON da SA, fallback local)
+//   - ADC padrão (gcloud application-default)
 // Se nenhum disponível: sync continua em modo JSON-only.
-let _adminDb = null;
+let _db = null;
 
 function initFirestore() {
-  if (_adminDb) return _adminDb;
+  if (_db) return _db;
   try {
-    const admin = require('firebase-admin');
-    if (!admin.apps.length) {
-      const gcpToken = process.env.GCP_ACCESS_TOKEN;
-      const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
-      let credential;
-      if (gcpToken) {
-        // Token de acesso temporário do WIF — válido por 1h, sem chave privada
-        credential = {
-          getAccessToken: () => Promise.resolve({
-            accessToken: gcpToken,
-            expirationTime: Date.now() + 3500 * 1000,
-          }),
-        };
-      } else if (sa) {
-        credential = admin.credential.cert(JSON.parse(sa));
-      } else {
-        credential = admin.credential.applicationDefault();
-      }
-      admin.initializeApp({ credential, projectId: PROJECT_ID });
+    const { Firestore } = require('@google-cloud/firestore');
+    const opts = { projectId: PROJECT_ID };
+    const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
+    if (sa) {
+      // Fallback local: chave JSON explícita
+      const { GoogleAuth } = require('google-auth-library');
+      opts.auth = new GoogleAuth({
+        credentials: JSON.parse(sa),
+        scopes: ['https://www.googleapis.com/auth/datastore'],
+      });
     }
-    _adminDb = admin.firestore();
-    return _adminDb;
+    // Sem SA: usa GOOGLE_APPLICATION_CREDENTIALS (WIF/ADC) automaticamente
+    _db = new Firestore(opts);
+    return _db;
   } catch(e) {
-    console.warn('⚠️  Firebase Admin falhou ao inicializar:', e.message);
+    console.warn('⚠️  Firestore falhou ao inicializar:', e.message);
     return null;
   }
 }

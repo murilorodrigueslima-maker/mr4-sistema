@@ -3,6 +3,6 @@
   "private": true,
   "description": "Dependências do script de sincronização GestãoClick → Firestore",
   "dependencies": {
-    "firebase-admin": "^12.4.0"
+    "@google-cloud/firestore": "^7.0.0"
   }
 }

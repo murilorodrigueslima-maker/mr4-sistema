@@ -15,6 +15,7 @@
  */
 
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const admin = require('firebase-admin');
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 
@@ -531,6 +532,150 @@ async function gcQueryHandler(request) {
   return { data: config.dto(rawJson) };
 }
 
+// ── Handler: syncPainelDisplay ────────────────────────────────────────────────
+//
+// S3 — Etapa 2: sincroniza métricas de vendas do GestãoClick para
+// display_metrics/painel_comercial no Firestore.
+//
+// Regras reproduzidas fielmente a partir de painel-comercial.html:
+//   - Período: 1º do mês corrente até hoje (America/Fortaleza)
+//   - Filtro: situacao_id === '3952593' (Concretizados)
+//   - Identificação de vendedor: nomeMatchPainel() (case-insensitive, match parcial)
+//   - Campos de valor: valor_total || total || valor
+//   - Campos de data:  data || data_venda || data_pedido
+//   - Paginação: automática (limite=100 por página)
+//
+// NÃO grava: clientes, CPF/CNPJ, produtos, endereços, IDs de vendas, metas ou pctMeta.
+// Escrita via Admin SDK — regra "allow write: if false" no Firestore protege contra
+// escrita pelo navegador.
+
+const SITUACAO_CONCRETIZADO = '3952593';
+
+// Reproduz exatamente a lógica de nomeMatch() do painel-comercial.html
+function nomeMatchPainel(nomeGC, nomeConfig) {
+  const a = (nomeGC    || '').toLowerCase().trim();
+  const b = (nomeConfig || '').toLowerCase().trim();
+  if (!a || !b) return false;
+  return a === b
+    || a.startsWith(b.split(' ')[0])
+    || b.startsWith(a.split(' ')[0])
+    || a.includes(b.split(' ')[0]);
+}
+
+// Busca todas as vendas do período com paginação automática.
+// Reproduz fetchVendas() do painel-comercial.html (pagina até totalPaginas).
+async function fetchTodasVendasGC(accessToken, secretToken, dataInicio, dataFim) {
+  const headers = {
+    'access-token':        accessToken,
+    'secret-access-token': secretToken,
+    'Content-Type':        'application/json',
+  };
+  let todos = [], pagina = 1;
+  while (true) {
+    const params = new URLSearchParams({
+      pagina:      String(pagina),
+      limite:      '100',
+      data_inicio: dataInicio,
+      data_fim:    dataFim,
+    });
+    const resp = await fetch(`${GC_BASE_URL}/vendas?${params}`, { method: 'GET', headers });
+    if (!resp.ok) {
+      const txt = await resp.text();
+      throw new Error(`GestãoClick /vendas retornou ${resp.status}: ${txt.slice(0, 200)}`);
+    }
+    const json  = await resp.json();
+    const data  = Array.isArray(json.data) ? json.data : [];
+    todos       = todos.concat(data);
+    const total = Number(json.meta?.total_paginas || 1);
+    if (pagina >= total) break;
+    pagina++;
+  }
+  return todos;
+}
+
+async function syncPainelDisplayHandler() {
+  const docRef = db.collection('display_metrics').doc('painel_comercial');
+
+  // Prevenção de execuções sobrepostas: pula se já foi atualizado há menos de 25 min.
+  // O onSchedule garante não sobreposição em condições normais; esta guarda cobre
+  // execuções manuais acidentais ou re-tentativas automáticas do Cloud Scheduler.
+  const existing = await docRef.get();
+  if (existing.exists) {
+    const ts = existing.data().atualizadoEm;
+    if (ts && typeof ts.toDate === 'function') {
+      if (Date.now() - ts.toDate().getTime() < 25 * 60 * 1000) return;
+    }
+  }
+
+  // Nomes dos vendedores: lidos de painel_config/default (somente leitura).
+  // Fallback para os nomes padrão caso o documento não exista.
+  const DEFAULT_VENDEDORES = ['Ademir', 'Fabiana'];
+  let vendedores = DEFAULT_VENDEDORES;
+  try {
+    const cfgSnap = await db.collection('painel_config').doc('default').get();
+    if (cfgSnap.exists) {
+      const cfg   = cfgSnap.data();
+      const nomes = Array.isArray(cfg.vendedores)
+        ? cfg.vendedores.map(v => v.nome).filter(Boolean)
+        : [];
+      if (nomes.length > 0) vendedores = nomes;
+    }
+  } catch (_) { /* usa defaults */ }
+
+  // Período em America/Fortaleza (UTC-3 fixo) — mesma referência usada em todo o sistema.
+  const { data: hojeStr } = fortalezaAgora();
+  const [ano, mes]        = hojeStr.split('-');
+  const inicioMes         = `${ano}-${mes}-01`;
+
+  // Credenciais do Secret Manager (nunca expostas ao cliente)
+  const accessToken = process.env.GC_ACCESS_TOKEN;
+  const secretToken = process.env.GC_SECRET_ACCESS_TOKEN;
+  if (!accessToken || !secretToken) throw new Error('Credenciais GC não configuradas.');
+
+  // Busca e filtro
+  const todasVendas    = await fetchTodasVendasGC(accessToken, secretToken, inicioMes, hojeStr);
+  const concretizadas  = todasVendas.filter(v => String(v.situacao_id) === SITUACAO_CONCRETIZADO);
+
+  // Métricas por vendedor (lógica idêntica ao painel-comercial.html)
+  const metricsVendedores = vendedores.map(nome => {
+    const vendasV    = concretizadas.filter(v =>
+      nomeMatchPainel(v.nome_vendedor || v.vendedor || v.nome_usuario || '', nome)
+    );
+    const vendasHoje = vendasV.filter(v =>
+      (v.data || v.data_venda || v.data_pedido || '').slice(0, 10) === hojeStr
+    );
+    const totalMes    = vendasV.reduce(   (s, v) => s + Number(v.valor_total || v.total || v.valor || 0), 0);
+    const totalHoje   = vendasHoje.reduce((s, v) => s + Number(v.valor_total || v.total || v.valor || 0), 0);
+    const pedidosMes  = vendasV.length;
+    const pedidosHoje = vendasHoje.length;
+    return {
+      nome,
+      totalMes,  totalHoje,
+      pedidosMes, pedidosHoje,
+      ticketMes:  pedidosMes  ? totalMes  / pedidosMes  : 0,
+      ticketHoje: pedidosHoje ? totalHoje / pedidosHoje : 0,
+    };
+  });
+
+  // Totais da equipe (somatório dos vendedores)
+  const equipe = {
+    totalHoje:   metricsVendedores.reduce((s, v) => s + v.totalHoje,   0),
+    totalMes:    metricsVendedores.reduce((s, v) => s + v.totalMes,    0),
+    pedidosHoje: metricsVendedores.reduce((s, v) => s + v.pedidosHoje, 0),
+    pedidosMes:  metricsVendedores.reduce((s, v) => s + v.pedidosMes,  0),
+  };
+  equipe.ticketHoje = equipe.pedidosHoje ? equipe.totalHoje / equipe.pedidosHoje : 0;
+  equipe.ticketMes  = equipe.pedidosMes  ? equipe.totalMes  / equipe.pedidosMes  : 0;
+
+  // Grava via Admin SDK — o navegador não pode escrever (allow write: if false nas Rules)
+  await docRef.set({
+    atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
+    periodo:      { inicioMes, fim: hojeStr },
+    equipe,
+    vendedores:   metricsVendedores,
+  });
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 exports.registrarPonto          = onCall({ region: REGION }, registrarPontoHandler);
@@ -541,6 +686,18 @@ exports.criarContaFuncionario   = onCall({ region: REGION }, criarContaFuncionar
 exports.gcQuery         = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, gcQueryHandler);
 exports._gcQueryHandler = gcQueryHandler;
 
+// S3 — Etapa 2: sincronização agendada do Painel Comercial.
+// Executa a cada 30 minutos; usa os mesmos secrets GC já configurados no Secret Manager.
+exports.syncPainelDisplay = onSchedule({
+  schedule:        'every 30 minutes',
+  region:          REGION,
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+  timeoutSeconds:  120,
+}, syncPainelDisplayHandler);
+
 // Handlers exportados para testes diretos (sem onCall wrapper)
 exports._registrarPontoHandler        = registrarPontoHandler;
 exports._criarContaFuncionarioHandler = criarContaFuncionarioHandler;
+exports._syncPainelDisplayHandler     = syncPainelDisplayHandler;
+exports._nomeMatchPainel              = nomeMatchPainel;
+exports._fetchTodasVendasGC           = fetchTodasVendasGC;

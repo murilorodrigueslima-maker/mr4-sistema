@@ -1,5 +1,5 @@
 {
-  "atualizado_em": "2026-09-10T10:38:31",
+  "atualizado_em": "2026-09-10T10:42:31",
   "contas_vencidas": [
     {
       "nome": "EMPRESTIMO BRADESCO",
@@ -374,6 +374,12 @@
     {
       "nome": "MR4 COMERCIO DE PECAS E ACESSORIOS AUTOMOTIVOS LTDA",
       "valor": 5699,
+      "vencimento": "2026-09-15",
+      "tipo": "Pagar"
+    },
+    {
+      "nome": "ALIMETAÇÃO MAIS REFEIÇÃO",
+      "valor": 105.12,
       "vencimento": "2026-09-15",
       "tipo": "Pagar"
     },

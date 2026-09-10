@@ -20,21 +20,24 @@ if (!ACCESS_TOKEN || !SECRET_TOKEN) {
 }
 
 // ── FIREBASE ADMIN (opcional) ─────────────────────────────────────────────────
-// Requer: FIREBASE_SERVICE_ACCOUNT (JSON do service account, sem encoding).
-// Se ausente ou inválido: sync continua em modo JSON-only (sem Firestore).
+// Autentica via Application Default Credentials (WIF/OIDC no GitHub Actions).
+// Fallback: FIREBASE_SERVICE_ACCOUNT (JSON puro) para execução local.
+// Se nenhum disponível: sync continua em modo JSON-only (sem Firestore).
 let _adminDb = null;
 
 function initFirestore() {
   if (_adminDb) return _adminDb;
-  const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
-  if (!sa) {
-    console.warn('⚠️  FIREBASE_SERVICE_ACCOUNT ausente — escrita Firestore desativada');
-    return null;
-  }
   try {
     const admin = require('firebase-admin');
     if (!admin.apps.length) {
-      admin.initializeApp({ credential: admin.credential.cert(JSON.parse(sa)) });
+      const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
+      if (sa) {
+        // Modo legado: chave JSON explícita (execução local com SA key)
+        admin.initializeApp({ credential: admin.credential.cert(JSON.parse(sa)) });
+      } else {
+        // Modo preferencial: ADC — WIF/OIDC via GitHub Actions ou gcloud local
+        admin.initializeApp({ projectId: PROJECT_ID });
+      }
     }
     _adminDb = admin.firestore();
     return _adminDb;

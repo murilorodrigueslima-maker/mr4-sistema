@@ -444,6 +444,8 @@ import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/fire
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const app  = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
@@ -451,6 +453,7 @@ const app  = initializeApp({
   messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
 });
 const auth=getAuth(app), db=getFirestore(app);
+const _gcQuery = httpsCallable(getFunctions(app,'southamerica-east1'), 'gcQuery');
 window._db=db;
 window._col=(n)=>collection(db,n);
 window._doc=(n,id)=>doc(db,n,id);
@@ -870,36 +873,27 @@ window.fecharModal=function(id){document.getElementById(id).classList.remove('sh
 });
 
 // ── AUTOCOMPLETE GESTÃOCLICK ─────────────────────────────────────────────────
-const GC_URL = 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev';
 
 function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function gcExtrairLista(d){
-  if(Array.isArray(d))              return d;
-  if(Array.isArray(d.data))         return d.data;
-  if(Array.isArray(d.registros))    return d.registros;
-  if(Array.isArray(d.objeto))       return d.objeto;
-  if(Array.isArray(d.clientes))     return d.clientes;
-  if(Array.isArray(d.produtos))     return d.produtos;
+  if(Array.isArray(d))      return d;
+  if(Array.isArray(d.data)) return d.data;
   return [];
 }
 
 async function gcGetClientes(q){
   try{
-    const params = encodeURIComponent('nome='+q+'&limite=15');
-    const r = await fetch(`${GC_URL}?endpoint=/clientes&params=${params}`);
-    if(!r.ok) return [];
-    return gcExtrairLista(await r.json());
+    const r = await _gcQuery({ operacao:'PESQUISAR_CLIENTES', dados:{ busca:q, limite:15 } });
+    return gcExtrairLista(r.data);
   }catch{ return []; }
 }
 
 async function gcGetProdutos(q){
   try{
-    const params = encodeURIComponent('nome='+q+'&limite=15');
-    const r = await fetch(`${GC_URL}?endpoint=/produtos&params=${params}`);
-    if(!r.ok) return [];
-    return gcExtrairLista(await r.json());
+    const r = await _gcQuery({ operacao:'LISTAR_PRODUTOS', dados:{ nome:q, limite:15 } });
+    return gcExtrairLista(r.data);
   }catch{ return []; }
 }
 
@@ -938,14 +932,13 @@ function initAcCliente(){
     list.classList.add('show');
     const raw = await gcGetClientes(q);
     const items = raw.map(c=>({
-      _nome: c.nome || c.razao_social || c.fantasia || '',
-      _sub : c.cnpj_cpf || c.cpf_cnpj || c.documento || '',
+      _nome: c.nome || '',
+      _sub : c.cidade || '',
       _raw : c
     }));
     renderAcList(list, items, c=>{
-      inp.value = c.nome || c.razao_social || '';
-      const tel = c.telefone || c.celular || c.fone || '';
-      if(tel) document.getElementById('g-cliTel').value = tel;
+      inp.value = c.nome || '';
+      if(c.telefone) document.getElementById('g-cliTel').value = c.telefone;
     });
   }, 380));
 
@@ -956,13 +949,8 @@ function initAcCliente(){
 
 async function gcGetProdutoDetalhe(id){
   try{
-    const r = await fetch(`${GC_URL}?endpoint=/produtos/${id}`);
-    if(!r.ok) return null;
-    const d = await r.json();
-    if(d && typeof d === 'object' && !Array.isArray(d)){
-      return d.produto || d.data || d.objeto || (d.id ? d : null);
-    }
-    return null;
+    const r = await _gcQuery({ operacao:'CONSULTAR_PRODUTO', dados:{ produtoId:String(id) } });
+    return r.data?.data || null;
   }catch{ return null; }
 }
 
@@ -983,8 +971,8 @@ function initAcProduto(inputId, codId, listId, fillValor){
     // Renderiza dropdown manualmente para ter acesso ao índice no mousedown async
     list.innerHTML = raw.map((p,i)=>`
       <div class="ac-item" data-i="${i}">
-        <div class="ac-item-nome">${escHtml(p.nome||p.descricao||p.description||'')}</div>
-        ${(p.codigo_interno||p.codigo_barra)?`<div class="ac-item-sub">${escHtml(p.codigo_interno||p.codigo_barra)}</div>`:''}
+        <div class="ac-item-nome">${escHtml(p.nome||'')}</div>
+        ${p.codigo?`<div class="ac-item-sub">${escHtml(p.codigo)}</div>`:''}
       </div>`).join('');
     list.querySelectorAll('.ac-item').forEach(el=>{
       el.addEventListener('mousedown', async ev=>{
@@ -992,29 +980,23 @@ function initAcProduto(inputId, codId, listId, fillValor){
         const p = _rawItems[+el.dataset.i];
         if(!p) return;
         list.classList.remove('show');
-        inp.value = p.nome || p.descricao || '';
+        inp.value = p.nome || '';
 
-        // Busca detalhe para pegar atributos (fornecedor)
+        // Busca detalhe para pegar fornecedor e código completo
         const detalhe = p.id ? await gcGetProdutoDetalhe(p.id) : null;
         const prod = detalhe || p;
 
-        // Código: GestãoClick usa codigo_interno ou codigo_barra
-        const cod = prod.codigo_interno || prod.codigo_barra
-                 || p.codigo_interno    || p.codigo_barra || '';
+        // Código: campo 'codigo' no DTO
+        const cod = prod?.codigo || p.codigo || '';
         if(codId) document.getElementById(codId).value = cod;
 
         if(fillValor){
-          // Preço: GestãoClick usa valor_venda
-          const preco = prod.valor_venda || prod.valor_custo || p.valor_venda || p.valor_custo || 0;
+          // Preço via DTO (preco_venda / preco_custo)
+          const preco = prod?.preco_venda || prod?.preco_custo || p.preco_venda || p.preco_custo || 0;
           if(preco) document.getElementById('g-valor').value = Number(preco).toFixed(2);
 
-          // Fornecedor: tenta campo direto ou dentro de atributos[]
-          let forn = prod.fornecedor || prod.marca || prod.fabricante || '';
-          if(!forn && Array.isArray(prod.atributos)){
-            const af = prod.atributos.find(a=>
-              /fornec|supplier|fabri|marca/i.test(a.nome||a.name||a.chave||''));
-            if(af) forn = af.valor || af.value || '';
-          }
+          // Fornecedor via DTO
+          const forn = prod?.fornecedor || p.fornecedor || '';
           if(forn) document.getElementById('g-fornec').value = forn;
         }
       });

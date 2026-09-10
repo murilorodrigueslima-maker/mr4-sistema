@@ -303,6 +303,7 @@ header{
 import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const app  = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
@@ -310,6 +311,7 @@ const app  = initializeApp({
   messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
 });
 const auth=getAuth(app), db=getFirestore(app);
+window._gcQuery = httpsCallable(getFunctions(app,'southamerica-east1'),'gcQuery');
 
 // Expõe helpers para o script regular
 window._fsGetAll = async (colName) => {
@@ -348,10 +350,7 @@ onAuthStateChanged(auth, async user => {
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const CFG={
-  // Worker Cloudflare — proxy direto para GestãoClick (sem atraso)
-  worker_url: 'https://gc-proxy-mr4.murilorodrigues-lima.workers.dev',
-
-  api_url:'../data/pedidos.json',  // fallback quando worker_url estiver vazio
+  api_url:'../data/pedidos.json',  // fallback final legado
   intervalo:15,          // 15 segundos entre syncs
   alerta_horas:2,
 };
@@ -463,17 +462,17 @@ window.iniciarPainel = async function(){
 };
 
 // ── FETCH ─────────────────────────────────────────────────────────────────────
-// Busca pedidos: via Worker Cloudflare (direto, sem atraso) ou pedidos.json (fallback)
+// Busca pedidos: gcQuery (primário) → pedidos_cache Firestore (fallback S1)
 async function fetchPedidos(){
   try{
     let pedidosRaw = [];
 
-    if(CFG.worker_url){
-      // ── Modo Worker: chama GestãoClick diretamente via proxy ──
-      pedidosRaw = await fetchViaWorker();
-    } else {
-      // ── Modo fallback: lê pedidos_cache/latest do Firestore (S1) ──
-      // Requer temModulo('expedicao') — protegido pelas Firestore Rules.
+    try{
+      // ── Modo primário: gcQuery autenticado ──
+      pedidosRaw = await fetchViaGcQuery();
+    } catch(gcErr){
+      console.warn('gcQuery indisponível, tentando pedidos_cache:', gcErr.message);
+      // ── Fallback: pedidos_cache/latest do Firestore (S1) ──
       try {
         const snap = await window._fsGetOne('pedidos_cache', 'latest');
         if (snap && Array.isArray(snap.pedidos)) {
@@ -482,11 +481,8 @@ async function fetchPedidos(){
           throw new Error('pedidos_cache/latest não encontrado ou vazio');
         }
       } catch(fsErr) {
-        console.warn('pedidos_cache indisponível, usando JSON legado:', fsErr.message);
-        // Fallback final: JSON público (mantido durante janela de migração S1)
-        const r    = await fetch(CFG.api_url+'?v='+Date.now());
-        const json = await r.json();
-        pedidosRaw = json.pedidos || [];
+        console.warn('pedidos_cache indisponível:', fsErr.message);
+        pedidosRaw = [];
       }
     }
 
@@ -532,8 +528,8 @@ async function fetchPedidos(){
   }
 }
 
-// Busca os últimos 2 dias de vendas direto no GestãoClick via Worker
-async function fetchViaWorker(){
+// Busca os últimos 2 dias de vendas via gcQuery autenticado
+async function fetchViaGcQuery(){
   function diasAtras(n){
     const d=new Date(); d.setDate(d.getDate()-n);
     return d.toISOString().slice(0,10);
@@ -543,33 +539,25 @@ async function fetchViaWorker(){
 
   let todos=[], pagina=1;
   while(true){
-    const params = `pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${fim}`;
-    const url    = `${CFG.worker_url}?endpoint=/vendas&params=${encodeURIComponent(params)}`;
-    const r      = await fetch(url);
-    const json   = await r.json();
-    const data   = json.data || [];
-    todos        = todos.concat(data);
-    const meta   = json.meta || {};
+    const r    = await window._gcQuery({ operacao:'LISTAR_VENDAS', dados:{ data_inicio:inicio, data_fim:fim, pagina, limite:100 } });
+    const batch = Array.isArray(r.data?.data) ? r.data.data : [];
+    todos = todos.concat(batch);
+    const meta = r.data?.meta || {};
     if(pagina >= (Number(meta.total_paginas)||1)) break;
     pagina++;
   }
 
-  // Normaliza campos (igual ao sync-dados.js)
-  return todos.map(p=>{
-    const dataHora  = p.data_hora || p.data_criacao || p.created_at || p.data_pedido || '';
-    const dataBase  = (p.data || p.data_venda || p.data_pedido || '').slice(0,10);
-    const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
-    return {
-      numero:  String(p.codigo || p.numero || p.codigo_venda || p.id || ''),
-      data:    dataBase,
-      hora:    horaMatch ? horaMatch[1] : '',
-      cliente: p.nome_cliente  || p.cliente  || p.razao_social || '—',
-      vendedor:p.nome_vendedor || p.vendedor || p.nome_usuario  || '—',
-      valor:   Number(p.valor_total || p.total || p.valor || 0),
-      itens:   Number(p.quantidade_produtos || (p.produtos||[]).length || 0),
-      cidade:  p.cidade_cliente || p.cidade || '',
-    };
-  });
+  // DTO já normalizado pelo servidor
+  return todos.map(v=>({
+    numero:  v.numero || String(v.id || ''),
+    data:    v.data   || hoje(),
+    hora:    v.hora   || '',
+    cliente: v.cliente?.nome || '—',
+    vendedor:v.vendedor?.nome || '—',
+    valor:   Number(v.valor || 0),
+    itens:   Number(v.itens || 0),
+    cidade:  v.cidade || '',
+  }));
 }
 
 // ── AÇÕES ─────────────────────────────────────────────────────────────────────

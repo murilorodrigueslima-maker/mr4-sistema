@@ -1,5 +1,9 @@
 // sync-dados.js — Sincroniza vendas, estoque e financeiro do GestãoClick
-// Roda via GitHub Actions a cada 30 min
+// Roda via GitHub Actions a cada 2 horas
+//
+// S1: financeiro_cache e pedidos_cache escritos no Firestore (Admin SDK).
+//     Dual write: JSON continua sendo gerado durante a janela de migração.
+//     Remove os arquivos JSON após validação em produção (S1 fase 2).
 const fs   = require('fs');
 const path = require('path');
 const https = require('https');
@@ -8,12 +12,63 @@ const ACCESS_TOKEN  = process.env.GC_ACCESS_TOKEN;
 const SECRET_TOKEN  = process.env.GC_SECRET_ACCESS_TOKEN;
 const API_BASE      = 'https://api.gestaoclick.com';
 const DATA_DIR      = path.join(__dirname, '..', 'data');
+const PROJECT_ID    = 'mr4-ponto';
 
 if (!ACCESS_TOKEN || !SECRET_TOKEN) {
   console.error('❌ Tokens GestãoClick não configurados');
   process.exit(1);
 }
 
+// ── FIREBASE ADMIN (opcional) ─────────────────────────────────────────────────
+// Requer: FIREBASE_SERVICE_ACCOUNT (JSON do service account, sem encoding).
+// Se ausente ou inválido: sync continua em modo JSON-only (sem Firestore).
+let _adminDb = null;
+
+function initFirestore() {
+  if (_adminDb) return _adminDb;
+  const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!sa) {
+    console.warn('⚠️  FIREBASE_SERVICE_ACCOUNT ausente — escrita Firestore desativada');
+    return null;
+  }
+  try {
+    const admin = require('firebase-admin');
+    if (!admin.apps.length) {
+      admin.initializeApp({ credential: admin.credential.cert(JSON.parse(sa)) });
+    }
+    _adminDb = admin.firestore();
+    return _adminDb;
+  } catch(e) {
+    console.warn('⚠️  Firebase Admin falhou ao inicializar:', e.message);
+    return null;
+  }
+}
+
+async function firestoreGet(colecao, docId) {
+  const db = initFirestore();
+  if (!db) return null;
+  try {
+    const snap = await db.collection(colecao).doc(docId).get();
+    return snap.exists ? snap.data() : null;
+  } catch(e) {
+    console.warn(`⚠️  Firestore.get(${colecao}/${docId}):`, e.message);
+    return null;
+  }
+}
+
+async function firestoreSet(colecao, docId, dados) {
+  const db = initFirestore();
+  if (!db) return false;
+  try {
+    await db.collection(colecao).doc(docId).set(dados);
+    return true;
+  } catch(e) {
+    console.warn(`⚠️  Firestore.set(${colecao}/${docId}):`, e.message);
+    return false;
+  }
+}
+
+// ── GC FETCH COM RETRY ────────────────────────────────────────────────────────
 function fetchGC(endpoint) {
   return new Promise((resolve, reject) => {
     const url = `${API_BASE}${endpoint}`;
@@ -35,6 +90,58 @@ function fetchGC(endpoint) {
   });
 }
 
+function aguardar(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+// Retry com backoff exponencial (2s, 4s).
+// Regra: se GC retornar erro/timeout/JSON inválido → não sobrescreve last cache válido.
+async function chamarGCComRetry(endpoint, maxTentativas = 3) {
+  let ultimoErro;
+  for (let t = 1; t <= maxTentativas; t++) {
+    try {
+      return await fetchGC(endpoint);
+    } catch(e) {
+      ultimoErro = e;
+      if (t < maxTentativas) {
+        const espera = t * 2000;
+        console.log(`  ↩  GC retry (${t}/${maxTentativas}) ${espera/1000}s: ${e.message}`);
+        await aguardar(espera);
+      }
+    }
+  }
+  throw ultimoErro;
+}
+
+// ── SANITIZAÇÃO DE DADOS PESSOAIS ─────────────────────────────────────────────
+// Remove número de cadastro (CPF parcial / registro comercial) que precede o nome
+// do cliente. Ex: "52.011.584 PEDRO DE OLIVEIRA ARAUJO" → "PEDRO DE OLIVEIRA ARAUJO"
+// LGPD Art. 6º: minimização de dados expostos no Firestore.
+function sanitizarCliente(nome) {
+  if (!nome || nome === '—') return nome || '—';
+  // Padrão: 2-14 dígitos/pontos/barras/hífens seguidos de espaço + nome
+  return nome.replace(/^[\d.\/\-]{5,}\s+/, '').trim() || nome;
+}
+
+// ── DETECÇÃO DE ANOMALIA ──────────────────────────────────────────────────────
+// Retorna true se a detecção identificar dados suspeitos e o cache Firestore deve
+// ser PRESERVADO (não sobrescrito).
+// Regra: NÃO sobrescrever o último cache válido se GC retornar dados suspeitos.
+function detectarAnomalia(nome, totalNovo, totalAnterior, limiteQuedaPct = 0.70) {
+  if (totalAnterior === null || totalAnterior === 0) return false; // sem referência
+  if (totalNovo === 0 && totalAnterior > 5) {
+    console.warn(`🚨 ANOMALIA ${nome}: novo=0 vs anterior=${totalAnterior} — preservando cache`);
+    return true;
+  }
+  const queda = (totalAnterior - totalNovo) / totalAnterior;
+  if (queda > limiteQuedaPct) {
+    console.warn(`🚨 ANOMALIA ${nome}: queda de ${(queda*100).toFixed(0)}% (${totalAnterior}→${totalNovo}) — preservando cache`);
+    return true;
+  }
+  return false;
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
 function brl(v) {
   return Number(v || 0).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
 }
@@ -80,11 +187,10 @@ async function syncVendas() {
 
   let vendas = [];
   try {
-    // Endpoint correto: /vendas com data_inicio e data_fim
     const inicio = diasAtras(30);
     let pagina = 1;
     while (true) {
-      const r = await fetchGC(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
+      const r = await chamarGCComRetry(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
       const data = r.data || [];
       vendas = vendas.concat(data);
       const meta = r.meta || {};
@@ -96,7 +202,6 @@ async function syncVendas() {
     console.log('⚠️ Erro ao buscar vendas:', e.message);
   }
 
-  // Calcula faturamento
   const hojStr  = hoje();
   const semStr  = inicioSemana();
   const mesStr  = inicioMes();
@@ -122,7 +227,6 @@ async function syncVendas() {
     diaMap[data] += valor;
   });
 
-  // Últimos 7 dias
   const ultimos7 = [];
   for (let i = 6; i >= 0; i--) {
     const d = diasAtras(i);
@@ -161,7 +265,7 @@ async function syncEstoque() {
   try {
     let pagina = 1;
     while (true) {
-      const r = await fetchGC(`/produtos?pagina=${pagina}&limite=100&ativo=1`);
+      const r = await chamarGCComRetry(`/produtos?pagina=${pagina}&limite=100&ativo=1`);
       const data = r.data || [];
       produtos = produtos.concat(data);
       const meta = r.meta || {};
@@ -221,15 +325,14 @@ async function syncEstoque() {
 // ── FINANCEIRO ───────────────────────────────────────────────────────────────
 async function syncFinanceiro() {
   console.log('💰 Sincronizando financeiro...');
-  // Endpoint correto: /pagamentos filtrado por entidade (I=entrada, O=saída)
   let lancamentos = [];
 
   try {
     const inicio = diasAtras(60);
-    const fim    = diasAtras(-30); // 30 dias à frente
+    const fim    = diasAtras(-30);
     let pagina = 1;
     while (true) {
-      const r = await fetchGC(`/pagamentos?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${fim}`);
+      const r = await chamarGCComRetry(`/pagamentos?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${fim}`);
       const data = r.data || [];
       lancamentos = lancamentos.concat(data);
       const meta = r.meta || {};
@@ -239,6 +342,9 @@ async function syncFinanceiro() {
     console.log(`  → ${lancamentos.length} lançamentos encontrados`);
   } catch(e) {
     console.log('⚠️ Erro ao buscar pagamentos:', e.message);
+    // GC falhou: não sobrescreve o cache Firestore (preservar último válido)
+    console.log('  ↩ Mantendo financeiro_cache/latest inalterado');
+    return;
   }
 
   const hojStr = hoje();
@@ -247,7 +353,6 @@ async function syncFinanceiro() {
   let totalVencido = 0, totalPagar = 0, totalReceber = 0;
   const vencidas = [], vencendo = [];
 
-  // entidade='I' = entrada (contas a receber), 'O' = saída (contas a pagar)
   lancamentos.forEach(c => {
     const venc      = (c.data_vencimento || '').slice(0,10);
     const valor     = Number(c.valor || 0);
@@ -256,7 +361,7 @@ async function syncFinanceiro() {
     const entidade  = c.entidade || '';
     const tipo      = entidade === 'I' ? 'Receber' : 'Pagar';
 
-    if (liquidado) return; // ignora já pagos
+    if (liquidado) return;
 
     if (entidade === 'O') totalPagar    += valor;
     if (entidade === 'I') totalReceber  += valor;
@@ -275,18 +380,48 @@ async function syncFinanceiro() {
     : 0;
 
   const financeiro = {
-    atualizado_em:    dataISO(),
-    contas_vencidas:  vencidas.sort((a,b) => b.dias_atraso - a.dias_atraso),
-    contas_vencendo:  vencendo.sort((a,b) => a.vencimento.localeCompare(b.vencimento)),
-    fluxo_caixa:      [],
+    atualizado_em:     dataISO(),
+    contas_vencidas:   vencidas.sort((a,b) => b.dias_atraso - a.dias_atraso),
+    contas_vencendo:   vencendo.sort((a,b) => a.vencimento.localeCompare(b.vencimento)),
+    fluxo_caixa:       [],
     inadimplencia_pct: Number(inadimplencia),
-    total_vencido:    totalVencido,
-    total_a_receber:  totalReceber,
-    total_a_pagar:    totalPagar,
+    total_vencido:     totalVencido,
+    total_a_receber:   totalReceber,
+    total_a_pagar:     totalPagar,
   };
 
+  // ── Detecção de anomalia ──────────────────────────────────────────────────
+  const ultimo = await firestoreGet('financeiro_cache', 'latest');
+  const totalAnterior = ultimo ? (ultimo._meta?.lancamentosTotal ?? null) : null;
+  const anomalia = detectarAnomalia('financeiro', lancamentos.length, totalAnterior, 0.70);
+
+  if (anomalia) {
+    // GC retornou quantidade drasticamente menor — NÃO sobrescrever Firestore
+    console.log('  ↩ financeiro_cache/latest preservado (anomalia detectada)');
+    // Ainda escreve JSON para diagnóstico (dual write preserva histórico local)
+    fs.writeFileSync(path.join(DATA_DIR, 'financeiro.json'), JSON.stringify(financeiro, null, 2));
+    console.log(`⚠️  Financeiro JSON atualizado (Firestore preservado): vencido ${brl(totalVencido)}`);
+    return;
+  }
+
+  // ── Escrita Firestore ─────────────────────────────────────────────────────
+  const docFirestore = {
+    ...financeiro,
+    _meta: {
+      lancamentosTotal: lancamentos.length,
+      sincronizadoEm:   dataISO(),
+    },
+  };
+  const ok = await firestoreSet('financeiro_cache', 'latest', docFirestore);
+
+  // ── Dual write: JSON (janela de migração S1) ──────────────────────────────
   fs.writeFileSync(path.join(DATA_DIR, 'financeiro.json'), JSON.stringify(financeiro, null, 2));
-  console.log(`✅ Financeiro: vencido R$ ${totalVencido.toFixed(2)} | a receber R$ ${totalReceber.toFixed(2)}`);
+
+  if (ok) {
+    console.log(`✅ Financeiro: Firestore + JSON | vencido ${brl(totalVencido)} | a receber ${brl(totalReceber)}`);
+  } else {
+    console.log(`✅ Financeiro: JSON apenas (Firestore indisponível) | vencido ${brl(totalVencido)}`);
+  }
 }
 
 // ── PEDIDOS (Expedição) ───────────────────────────────────────────────────────
@@ -295,10 +430,10 @@ async function syncPedidos() {
   let vendas = [];
 
   try {
-    const inicio = diasAtras(2); // hoje + ontem (expedição é operacional)
+    const inicio = diasAtras(2);
     let pagina = 1;
     while (true) {
-      const r = await fetchGC(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
+      const r = await chamarGCComRetry(`/vendas?pagina=${pagina}&limite=100&data_inicio=${inicio}&data_fim=${hoje()}`);
       const data = r.data || [];
       vendas = vendas.concat(data);
       const meta = r.meta || {};
@@ -308,13 +443,13 @@ async function syncPedidos() {
     console.log(`  → ${vendas.length} pedidos encontrados`);
   } catch(e) {
     console.log('⚠️ Erro ao buscar pedidos:', e.message);
+    console.log('  ↩ Mantendo pedidos_cache/latest inalterado');
+    return;
   }
 
   const pedidos = vendas.map(p => {
-    // Tenta extrair hora exata do pedido (vários nomes de campo possíveis)
     const dataHora = p.data_hora || p.data_criacao || p.created_at || p.data_pedido || '';
     const dataBase = (p.data || p.data_venda || p.data_pedido || '').slice(0, 10);
-    // Extrai HH:MM se disponível no campo datetime
     const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
     const hora = horaMatch ? horaMatch[1] : '';
 
@@ -323,7 +458,8 @@ async function syncPedidos() {
       numero:    String(p.codigo || p.numero || p.codigo_venda || p.id || ''),
       data:      dataBase,
       hora:      hora,
-      cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',
+      // sanitizarCliente remove número de cadastro antes do nome (LGPD Art. 6º)
+      cliente:   sanitizarCliente(p.nome_cliente || p.cliente || p.razao_social || '—'),
       vendedor:  p.nome_vendedor || p.vendedor || p.nome_usuario || '—',
       valor:     Number(p.valor_total || p.total || p.valor || 0),
       itens:     Number(p.quantidade_produtos || (p.produtos || []).length || 0),
@@ -340,8 +476,58 @@ async function syncPedidos() {
     pedidos,
   };
 
-  fs.writeFileSync(path.join(DATA_DIR, 'pedidos.json'), JSON.stringify(out, null, 2));
-  console.log(`✅ Pedidos: ${pedidos.length} registros salvos`);
+  // ── Detecção de anomalia ──────────────────────────────────────────────────
+  const ultimo = await firestoreGet('pedidos_cache', 'latest');
+  const totalAnterior = ultimo ? (ultimo._meta?.pedidosTotal ?? null) : null;
+  const anomalia = detectarAnomalia('pedidos', pedidos.length, totalAnterior, 0.80);
+
+  if (anomalia) {
+    console.log('  ↩ pedidos_cache/latest preservado (anomalia detectada)');
+    fs.writeFileSync(path.join(DATA_DIR, 'pedidos.json'), JSON.stringify(out, null, 2));
+    console.log(`⚠️  Pedidos JSON atualizado (Firestore preservado): ${pedidos.length} registros`);
+    return;
+  }
+
+  // ── Escrita Firestore ─────────────────────────────────────────────────────
+  const docFirestore = {
+    ...out,
+    _meta: {
+      pedidosTotal:   pedidos.length,
+      sincronizadoEm: dataISO(),
+    },
+  };
+  const ok = await firestoreSet('pedidos_cache', 'latest', docFirestore);
+
+  // ── Dual write: JSON (janela de migração S1) ──────────────────────────────
+  // O JSON guarda o cliente RAW (sem sanitizar) para comparação manual.
+  // Após remoção do JSON, a versão sanitizada fica apenas no Firestore.
+  const outJson = {
+    ...out,
+    pedidos: vendas.map(p => {
+      const dataHora = p.data_hora || p.data_criacao || p.created_at || p.data_pedido || '';
+      const dataBase = (p.data || p.data_venda || p.data_pedido || '').slice(0, 10);
+      const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
+      return {
+        id:        String(p.id || ''),
+        numero:    String(p.codigo || p.numero || p.codigo_venda || p.id || ''),
+        data:      dataBase,
+        hora:      horaMatch ? horaMatch[1] : '',
+        cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',
+        vendedor:  p.nome_vendedor || p.vendedor || p.nome_usuario || '—',
+        valor:     Number(p.valor_total || p.total || p.valor || 0),
+        itens:     Number(p.quantidade_produtos || (p.produtos || []).length || 0),
+        status_gc: p.status || p.situacao || '',
+        cidade:    p.cidade_cliente || p.cidade || '',
+      };
+    }).sort((a, b) => b.data.localeCompare(a.data) || b.numero.localeCompare(a.numero)),
+  };
+  fs.writeFileSync(path.join(DATA_DIR, 'pedidos.json'), JSON.stringify(outJson, null, 2));
+
+  if (ok) {
+    console.log(`✅ Pedidos: Firestore (sanitizado) + JSON (raw) | ${pedidos.length} registros`);
+  } else {
+    console.log(`✅ Pedidos: JSON apenas (Firestore indisponível) | ${pedidos.length} registros`);
+  }
 }
 
 // ── CATÁLOGO DE PRODUTOS (para busca local por nome e código) ─────────────────
@@ -351,7 +537,7 @@ async function syncCatalogoProdutos() {
   try {
     let pagina = 1;
     while (true) {
-      const r = await fetchGC(`/produtos?pagina=${pagina}&limite=100&ativo=1`);
+      const r = await chamarGCComRetry(`/produtos?pagina=${pagina}&limite=100&ativo=1`);
       const data = r.data || [];
       produtos = produtos.concat(data);
       const meta = r.meta || {};
@@ -362,7 +548,6 @@ async function syncCatalogoProdutos() {
     console.log('⚠️ Erro ao buscar catálogo:', e.message);
   }
 
-  // Salva apenas os campos necessários para busca (arquivo leve)
   const catalogo = produtos.map(p => ({
     id:        p.id,
     codigo:    p.codigo_interno || p.codigo || '',

@@ -658,7 +658,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, getDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, getDoc, doc, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -871,13 +871,16 @@
     };
 
     try {
-      const resp = await fetch('../data/financeiro.json', { cache: 'no-cache' });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const raw = await resp.json();
+      // S1: lê do Firestore (financeiro_cache/latest) — protegido por temModulo('financeiro')
+      const snap = await getDoc(doc(db, 'financeiro_cache', 'latest'));
+      if (!snap.exists()) throw new Error('financeiro_cache/latest não encontrado');
+      const snapData = snap.data();
+      const { _meta, ...raw } = snapData; // remove campo interno _meta
       data = Object.assign(data, raw);
     } catch (err) {
-      console.warn('financeiro.json não encontrado ou inválido:', err.message);
+      console.warn('financeiro_cache indisponível:', err.message);
       document.getElementById('lastUpdate').textContent = 'Dados não disponíveis';
+      // Módulo financeiro não liberado para este gestor, ou sync ainda não rodou.
     }
 
     // KPIs

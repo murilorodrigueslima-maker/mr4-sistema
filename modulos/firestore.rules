@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-09-09 (S0: adicionadas funções auxiliares isDisplay + temModulo)
+// Versão: 2026-09-09 (S1: financeiro_cache + pedidos_cache protegidos por temModulo)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -277,6 +277,27 @@ service cloud.firestore {
 
     match /display_metrics/{docId} {
       allow read:  if isDisplay() || isGestor();
+      allow write: if false;
+    }
+
+    // ── Coleção: financeiro_cache ──────────────────────────────────────────────
+    // Cache financeiro (contas vencidas/vencendo). Escrita APENAS via Admin SDK.
+    // Substitui data/financeiro.json (público) — adicionada em S1.
+    // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
+
+    match /financeiro_cache/{docId} {
+      allow read:  if temModulo('financeiro');
+      allow write: if false;
+    }
+
+    // ── Coleção: pedidos_cache ─────────────────────────────────────────────────
+    // Cache de pedidos para expedição. Escrita APENAS via Admin SDK.
+    // Substitui data/pedidos.json (público) — adicionada em S1.
+    // Dados sanitizados (CPF/cadastro removidos) antes da escrita no sync.
+    // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
+
+    match /pedidos_cache/{docId} {
+      allow read:  if temModulo('expedicao');
       allow write: if false;
     }
 

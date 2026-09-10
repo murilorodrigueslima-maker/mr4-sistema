@@ -1,0 +1,8 @@
+{
+  "name": "mr4-sync",
+  "private": true,
+  "description": "Dependências do script de sincronização GestãoClick → Firestore",
+  "dependencies": {
+    "firebase-admin": "^12.4.0"
+  }
+}

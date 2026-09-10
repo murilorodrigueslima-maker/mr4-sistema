@@ -472,10 +472,22 @@ async function fetchPedidos(){
       // ── Modo Worker: chama GestãoClick diretamente via proxy ──
       pedidosRaw = await fetchViaWorker();
     } else {
-      // ── Modo fallback: lê pedidos.json (atualizado pelo GitHub Actions) ──
-      const r    = await fetch(CFG.api_url+'?v='+Date.now());
-      const json = await r.json();
-      pedidosRaw = json.pedidos || [];
+      // ── Modo fallback: lê pedidos_cache/latest do Firestore (S1) ──
+      // Requer temModulo('expedicao') — protegido pelas Firestore Rules.
+      try {
+        const snap = await window._fsGetOne('pedidos_cache', 'latest');
+        if (snap && Array.isArray(snap.pedidos)) {
+          pedidosRaw = snap.pedidos;
+        } else {
+          throw new Error('pedidos_cache/latest não encontrado ou vazio');
+        }
+      } catch(fsErr) {
+        console.warn('pedidos_cache indisponível, usando JSON legado:', fsErr.message);
+        // Fallback final: JSON público (mantido durante janela de migração S1)
+        const r    = await fetch(CFG.api_url+'?v='+Date.now());
+        const json = await r.json();
+        pedidosRaw = json.pedidos || [];
+      }
     }
 
     const nums = new Set(Object.keys(S.pedidos));

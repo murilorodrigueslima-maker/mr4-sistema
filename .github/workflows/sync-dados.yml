@@ -20,10 +20,14 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Instalar dependências do sync
+        run: npm install --prefix scripts --omit=dev --no-audit --no-fund
+
       - name: Executar sync
         env:
-          GC_ACCESS_TOKEN:        ${{ secrets.GC_ACCESS_TOKEN }}
-          GC_SECRET_ACCESS_TOKEN: ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
+          GC_ACCESS_TOKEN:           ${{ secrets.GC_ACCESS_TOKEN }}
+          GC_SECRET_ACCESS_TOKEN:    ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT:  ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: node scripts/sync-dados.js
 
       - name: Commit e push dos dados

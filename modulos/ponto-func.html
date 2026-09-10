@@ -392,6 +392,7 @@ let funcAtivo=null, streamCam=null, locAtual=null;
 let fotoNova=null, faceDetectionInterval=null, rostoVerificado=false;
 let fotoCapturadaBase64=null, modelsCarregados=false, facialScoreGlobal=null;
 let justifAtualId=null, espelhoAtualFuncId=null;
+let batidaEmProgresso=false; // guard: evita duplo-toque em btn-bater
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
 // Leituras via API controlada do módulo de auth
@@ -470,8 +471,10 @@ function iniciarApp(){
 
 function iniciarRelogio(){
   function tick(){
-    const n=new Date();document.getElementById('func-hora').textContent=n.toTimeString().slice(0,5);
+    const p=_fortalezaParts();
+    document.getElementById('func-hora').textContent=p.hour+':'+p.minute;
     const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    const n=new Date();
     document.getElementById('func-data-str').textContent=`${dias[n.getDay()]}, ${n.getDate()} de ${meses[n.getMonth()]}`;
   }
   tick();setInterval(tick,1000);
@@ -500,9 +503,11 @@ async function proxPonto(){
 }
 
 async function iniciarBatida(){
+  if(batidaEmProgresso)return;
+  batidaEmProgresso=true;
   const prox=await proxPonto();
-  if(!prox){notif('Ponto do dia completo!');return;}
-  if(!funcAtivo.foto){notif('Cadastre sua foto antes de bater ponto','vermelho');return;}
+  if(!prox){notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
+  if(!funcAtivo.foto){notif('Cadastre sua foto antes de bater ponto','vermelho');batidaEmProgresso=false;return;}
   // GPS bloqueante: PRESENCIAL exige localização dentro do raio
   if((funcAtivo.modalidade||'PRESENCIAL')==='PRESENCIAL'){
     if(locAtual===null){
@@ -587,14 +592,16 @@ function capturarFoto(){
 window.capturarFoto=capturarFoto;
 
 function pararCamera(){if(faceDetectionInterval){clearInterval(faceDetectionInterval);faceDetectionInterval=null;}if(streamCam){streamCam.getTracks().forEach(t=>t.stop());streamCam=null;}}
-function cancelarCam(){pararCamera();document.getElementById('est-camera').style.display='none';document.getElementById('est-aguardando').style.display='block';}
-function voltarAguardando(){document.getElementById('est-bloqueado').style.display='none';document.getElementById('est-aguardando').style.display='block';}
+function cancelarCam(){pararCamera();batidaEmProgresso=false;document.getElementById('est-camera').style.display='none';document.getElementById('est-aguardando').style.display='block';}
+function voltarAguardando(){batidaEmProgresso=false;document.getElementById('est-bloqueado').style.display='none';document.getElementById('est-aguardando').style.display='block';}
 function tentarNovamenteLoc(){
+  batidaEmProgresso=false;
   document.getElementById('est-gps-bloqueado').style.display='none';
   document.getElementById('est-aguardando').style.display='block';
   locAtual=null;obterLoc();
 }
 function voltarDeErroCamera(){
+  batidaEmProgresso=false;
   document.getElementById('est-cam-erro').style.display='none';
   document.getElementById('est-aguardando').style.display='block';
 }
@@ -641,6 +648,7 @@ function mostrarComp(reg,dentroRaio,score){
 }
 
 async function voltarPonto(){
+  batidaEmProgresso=false;
   document.getElementById('est-comp').style.display='none';document.getElementById('est-aguardando').style.display='block';obterLoc();
   const prox=await proxPonto();const btn=document.getElementById('btn-bater');
   if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}

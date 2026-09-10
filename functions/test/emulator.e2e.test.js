@@ -1179,3 +1179,131 @@ describe('Teste 17 — Registros legados e correção administrativa', () => {
     await db.collection('registros').doc('hist-dup-b').delete().catch(() => {});
   });
 });
+
+// ═════════════════════════════════════════════════════════════════════════════
+// TESTE 18: Concorrência por etapa da sequência (cooldown produção = 10 s)
+// Requisito: 2 chamadas simultâneas jamais avançam dois tipos de uma vez.
+// Usa cooldown=10000 (produção) — a segunda chamada deve ser bloqueada.
+// ═════════════════════════════════════════════════════════════════════════════
+
+describe('Teste 18 — Concorrência por etapa da sequência', () => {
+  const FUNC_C = 'func-conc18-e2e';
+  const UID_C  = 'uid-conc18-e2e';
+
+  // Retorna data de hoje (America/Fortaleza, UTC-3)
+  function dataHoje18() {
+    const d = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // Semeia registros antigos com horas crescentes para sort determinístico.
+  // criadoEm=0 (numérico) → tratado como 0 pelo handler → não dispara cooldown.
+  const HORAS_SEED = { entrada: '08:00:00', saida_almoco: '12:00:00', retorno_almoco: '13:00:00' };
+  async function seedParcial(tipos) {
+    await limparRegistrosFunc(FUNC_C);
+    const hoje = dataHoje18();
+    for (const tipo of tipos) {
+      const hora = HORAS_SEED[tipo] || '08:00:00';
+      await db.collection('registros').doc(`${FUNC_C}_${hoje}_${tipo}`).set({
+        id: `${FUNC_C}_${hoje}_${tipo}`,
+        funcId: FUNC_C, tipo, data: hoje, hora,
+        criadoEm: 0, // numérico → handler converte para 0 → sem bloqueio de cooldown
+      });
+    }
+  }
+
+  beforeAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '10000'; // cooldown produção
+    await db.collection('users').doc(UID_C).set({
+      role: 'funcionario', ativo: true, funcionarioId: FUNC_C,
+    });
+    await db.collection('funcionarios').doc(FUNC_C).set({
+      nome: 'Conc18 E2E', modalidade: 'PRESENCIAL',
+    });
+  });
+
+  afterAll(async () => {
+    process.env.PONTO_COOLDOWN_MS = '0';
+    await limparRegistrosFunc(FUNC_C);
+    await db.collection('users').doc(UID_C).delete().catch(() => {});
+    await db.collection('funcionarios').doc(FUNC_C).delete().catch(() => {});
+  });
+
+  test('18a — sem batida + 2 simultâneas → exatamente 1 entrada, sem saida_almoco', async () => {
+    process.env.PONTO_COOLDOWN_MS = '10000';
+    await limparRegistrosFunc(FUNC_C);
+
+    const p1 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const p2 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    const snap = await db.collection('registros').where('funcId', '==', FUNC_C).get();
+    const docs  = snap.docs.map(d => d.data());
+    const entradas      = docs.filter(d => d.tipo === 'entrada');
+    const saidas_almoco = docs.filter(d => d.tipo === 'saida_almoco');
+
+    console.log(`  18a: r1=${JSON.stringify(r1)}, r2=${JSON.stringify(r2)}, docs=${docs.length}`);
+
+    expect(entradas.length).toBe(1);       // exatamente 1 entrada
+    expect(saidas_almoco.length).toBe(0);  // NÃO pode existir saida_almoco
+    expect(docs.length).toBe(1);           // exatamente 1 registro total
+  });
+
+  test('18b — entrada existe + 2 simultâneas → exatamente 1 saida_almoco, sem retorno_almoco', async () => {
+    process.env.PONTO_COOLDOWN_MS = '10000';
+    await seedParcial(['entrada']);
+
+    const p1 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const p2 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    const snap = await db.collection('registros').where('funcId', '==', FUNC_C).get();
+    const docs           = snap.docs.map(d => d.data());
+    const saidas_almoco  = docs.filter(d => d.tipo === 'saida_almoco');
+    const retornos       = docs.filter(d => d.tipo === 'retorno_almoco');
+
+    console.log(`  18b: r1=${JSON.stringify(r1)}, r2=${JSON.stringify(r2)}, docs=${docs.length}`);
+
+    expect(saidas_almoco.length).toBe(1);  // exatamente 1 saida_almoco
+    expect(retornos.length).toBe(0);       // NÃO pode existir retorno_almoco
+    expect(docs.length).toBe(2);           // entrada (seed) + saida_almoco = 2 total
+  });
+
+  test('18c — entrada+saida_almoco + 2 simultâneas → exatamente 1 retorno_almoco, sem saida', async () => {
+    process.env.PONTO_COOLDOWN_MS = '10000';
+    await seedParcial(['entrada', 'saida_almoco']);
+
+    const p1 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const p2 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    const snap = await db.collection('registros').where('funcId', '==', FUNC_C).get();
+    const docs     = snap.docs.map(d => d.data());
+    const retornos = docs.filter(d => d.tipo === 'retorno_almoco');
+    const saidas   = docs.filter(d => d.tipo === 'saida');
+
+    console.log(`  18c: r1=${JSON.stringify(r1)}, r2=${JSON.stringify(r2)}, docs=${docs.length}`);
+
+    expect(retornos.length).toBe(1);   // exatamente 1 retorno_almoco
+    expect(saidas.length).toBe(0);     // NÃO pode existir saida
+    expect(docs.length).toBe(3);       // 2 do seed + 1 novo = 3
+  });
+
+  test('18d — entrada+saida_almoco+retorno + 2 simultâneas → exatamente 1 saida, sem 5ª marcação', async () => {
+    process.env.PONTO_COOLDOWN_MS = '10000';
+    await seedParcial(['entrada', 'saida_almoco', 'retorno_almoco']);
+
+    const p1 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const p2 = _registrarPontoHandler(req(UID_C, GPS_DENTRO)).catch(e => ({ erro: e.code }));
+    const [r1, r2] = await Promise.all([p1, p2]);
+
+    const snap = await db.collection('registros').where('funcId', '==', FUNC_C).get();
+    const docs  = snap.docs.map(d => d.data());
+    const saidas = docs.filter(d => d.tipo === 'saida');
+
+    console.log(`  18d: r1=${JSON.stringify(r1)}, r2=${JSON.stringify(r2)}, docs=${docs.length}`);
+
+    expect(saidas.length).toBe(1);    // exatamente 1 saida final
+    expect(docs.length).toBe(4);      // 3 do seed + 1 saida = 4 (sem 5ª marcação)
+  });
+});

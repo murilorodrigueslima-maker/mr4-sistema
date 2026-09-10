@@ -259,10 +259,277 @@ async function criarContaFuncionarioHandler(request) {
   return { ok: true, uid: newUser.uid };
 }
 
+// ── Handler: gcQuery ─────────────────────────────────────────────────────────
+//
+// NÃO É UM PROXY ABERTO.
+// Aceita apenas operações conhecidas (whitelist estrita).
+// O cliente informa QUAL operação quer executar — o servidor define
+// exatamente qual endpoint do GestãoClick é chamado e quais parâmetros
+// são permitidos.
+//
+// Operações disponíveis:
+//   LISTAR_PRODUTOS        → GET /produtos    (compras, estoque, garantia, calculadora)
+//   CONSULTAR_PRODUTO      → GET /produtos/:id (garantia, calculadora)
+//   LISTAR_VENDAS          → GET /vendas      (vendas, compras, expedicao)
+//   LISTAR_PAGAMENTOS      → GET /pagamentos  (compras)
+//   LISTAR_RECEBIMENTOS    → GET /recebimentos (compras)
+//   PESQUISAR_CLIENTES     → GET /clientes    (garantia)
+//   ATUALIZAR_PRECO        → PUT /produtos/:id (calculadora) — ESCRITA, requer módulo exclusivo
+//
+// Cada operação tem:
+//   - Autenticação Firebase obrigatória
+//   - Role de gestor verificada server-side (lê users/{uid})
+//   - Módulo verificado server-side (lê sistema_usuarios/{uid})
+//   - Parâmetros do cliente validados e sanitizados
+//   - DTO mínimo retornado ao cliente (apenas campos necessários)
+//
+// STATUS S0: STUB — não deployado. Lógica de negócio presente para revisão.
+//            Credenciais GC virão de process.env (definidas na CF config).
+//            Implementação real: S2.
+//
+// ATENÇÃO: NÃO modificar registrarPontoHandler nem criarContaFuncionarioHandler.
+//          Este handler é completamente independente.
+
+const GC_BASE_URL = 'https://api.gestaoclick.com';
+
+// Mapa de operações permitidas: chave → configuração
+const GC_OPERACOES = {
+  LISTAR_PRODUTOS: {
+    modulo:  ['compras', 'estoque', 'garantia', 'calculadora'],
+    metodo:  'GET',
+    path:    () => '/produtos',
+    params:  (dados) => {
+      const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      if (dados.pagina) p.set('pagina', String(dados.pagina));
+      if (dados.referencia) p.set('referencia', String(dados.referencia).slice(0, 50));
+      return p.toString();
+    },
+    dto:     (item) => ({
+      id:         item.id,
+      codigo:     item.codigo || item.referencia || '',
+      nome:       item.nome   || '',
+      fabricante: item.fabricante || item.marca || '',
+    }),
+  },
+  CONSULTAR_PRODUTO: {
+    modulo:  ['garantia', 'calculadora', 'compras'],
+    metodo:  'GET',
+    path:    (dados) => `/produtos/${encodeURIComponent(String(dados.produtoId))}`,
+    params:  () => '',
+    dto:     (item) => ({
+      id:           item.id,
+      codigo:       item.codigo   || '',
+      nome:         item.nome     || '',
+      preco_venda:  item.preco_venda  || 0,
+      preco_custo:  item.preco_custo  || 0,
+      estoque_atual: item.estoque_atual || 0,
+    }),
+  },
+  LISTAR_VENDAS: {
+    modulo:  ['vendas', 'compras', 'expedicao'],
+    metodo:  'GET',
+    path:    () => '/vendas',
+    params:  (dados) => {
+      const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      if (dados.pagina)         p.set('pagina',          String(dados.pagina));
+      if (dados.data_inicio)    p.set('data_inicio',     String(dados.data_inicio).slice(0, 10));
+      if (dados.data_fim)       p.set('data_fim',        String(dados.data_fim).slice(0, 10));
+      if (dados.status)         p.set('status',          String(dados.status).slice(0, 30));
+      return p.toString();
+    },
+    dto:     (item) => ({
+      id:        item.id,
+      numero:    item.numero   || '',
+      data:      item.data     || '',
+      cliente:   item.cliente  ? { nome: item.cliente.nome || '' } : {},
+      valor:     item.valor_total || 0,
+      status:    item.status   || '',
+      vendedor:  item.vendedor ? { nome: item.vendedor.nome || '' } : {},
+    }),
+  },
+  LISTAR_PAGAMENTOS: {
+    modulo:  ['compras'],
+    metodo:  'GET',
+    path:    () => '/pagamentos',
+    params:  (dados) => {
+      const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      if (dados.pagina) p.set('pagina', String(dados.pagina));
+      return p.toString();
+    },
+    dto:     (item) => ({
+      id:         item.id,
+      valor:      item.valor        || 0,
+      vencimento: item.vencimento   || '',
+      situacao:   item.situacao     || '',
+      fornecedor: item.fornecedor ? { nome: item.fornecedor.nome || '' } : {},
+    }),
+  },
+  LISTAR_RECEBIMENTOS: {
+    modulo:  ['compras'],
+    metodo:  'GET',
+    path:    () => '/recebimentos',
+    params:  (dados) => {
+      const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      if (dados.pagina) p.set('pagina', String(dados.pagina));
+      return p.toString();
+    },
+    dto:     (item) => ({
+      id:         item.id,
+      valor:      item.valor        || 0,
+      vencimento: item.vencimento   || '',
+      situacao:   item.situacao     || '',
+      cliente:    item.cliente ? { nome: item.cliente.nome || '' } : {},
+    }),
+  },
+  PESQUISAR_CLIENTES: {
+    modulo:  ['garantia', 'clientes'],
+    metodo:  'GET',
+    path:    () => '/clientes',
+    params:  (dados) => {
+      const p = new URLSearchParams({ limite: String(dados.limite || 20) });
+      // Aceita apenas busca textual — nunca passa o termo sem sanitizar
+      if (dados.busca) p.set('nome', String(dados.busca).replace(/[^a-zA-Z0-9À-ÿ\s./-]/g, '').slice(0, 80));
+      return p.toString();
+    },
+    // DTO mínimo: sem CPF, sem CNPJ, sem dados financeiros do cliente
+    dto:     (item) => ({
+      id:       item.id,
+      nome:     item.nome     || '',
+      cidade:   item.cidade   || '',
+      telefone: item.telefone || '',
+    }),
+  },
+  ATUALIZAR_PRECO: {
+    modulo:  ['calculadora'],
+    metodo:  'PUT',
+    path:    (dados) => `/produtos/${encodeURIComponent(String(dados.produtoId))}`,
+    params:  () => '',
+    // Para escrita, o DTO é o payload enviado ao GC — validado rigorosamente
+    dto:     null, // veja lógica de escrita abaixo
+  },
+};
+
+async function gcQueryHandler(request) {
+  // 1. Autenticação obrigatória
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Faça login para acessar dados do GestãoClick.');
+  }
+  const uid = request.auth.uid;
+
+  // 2. Verificar gestor — FAIL CLOSED (lê users/{uid})
+  const userDoc = await db.collection('users').doc(uid).get();
+  const perfil  = userDoc.exists ? userDoc.data() : null;
+  if (!perfil || perfil.role !== 'gestor' || !perfil.ativo) {
+    throw new HttpsError('permission-denied', 'Acesso negado. Somente gestores ativos podem consultar o GestãoClick.');
+  }
+
+  // 3. Payload do cliente
+  const { operacao, dados = {} } = request.data || {};
+  if (!operacao || typeof operacao !== 'string') {
+    throw new HttpsError('invalid-argument', 'Campo "operacao" ausente ou inválido.');
+  }
+
+  // 4. Whitelist de operações
+  const config = GC_OPERACOES[operacao];
+  if (!config) {
+    throw new HttpsError('invalid-argument', `Operação desconhecida: "${operacao}". Operações permitidas: ${Object.keys(GC_OPERACOES).join(', ')}`);
+  }
+
+  // 5. Verificar módulo server-side (lê sistema_usuarios/{uid})
+  const sysDoc     = await db.collection('sistema_usuarios').doc(uid).get();
+  const modulosUser = sysDoc.exists ? (sysDoc.data().modulos || []) : [];
+  const temModulo  = config.modulo.some(m => modulosUser.includes(m));
+  if (!temModulo) {
+    throw new HttpsError('permission-denied', `Módulo não autorizado. Necessário: ${config.modulo.join(' ou ')}.`);
+  }
+
+  // 6. Verificar credenciais GC (via env da CF — nunca no browser)
+  const accessToken  = process.env.GC_ACCESS_TOKEN;
+  const secretToken  = process.env.GC_SECRET_ACCESS_TOKEN;
+  if (!accessToken || !secretToken) {
+    throw new HttpsError('internal', 'Credenciais GestãoClick não configuradas.');
+  }
+
+  // 7. Montar URL — servidor define o path e valida os params
+  let produtoId = null;
+  if (dados.produtoId !== undefined) {
+    produtoId = String(dados.produtoId);
+    if (!/^\d+$/.test(produtoId)) {
+      throw new HttpsError('invalid-argument', 'produtoId deve ser numérico.');
+    }
+  }
+
+  const path    = config.path(dados);
+  const params  = config.params(dados);
+  const gcUrl   = `${GC_BASE_URL}${path}${params ? '?' + params : ''}`;
+
+  // 8. Para ATUALIZAR_PRECO: validar payload de escrita
+  let gcBody = undefined;
+  if (operacao === 'ATUALIZAR_PRECO') {
+    const precoCusto = parseFloat(dados.preco_custo);
+    const precoVenda = dados.preco_venda !== undefined ? parseFloat(dados.preco_venda) : undefined;
+    if (isNaN(precoCusto) || precoCusto < 0) {
+      throw new HttpsError('invalid-argument', 'preco_custo inválido.');
+    }
+    gcBody = { preco_custo: Math.round(precoCusto * 100) / 100 };
+    if (precoVenda !== undefined && !isNaN(precoVenda) && precoVenda >= 0) {
+      gcBody.preco_venda = Math.round(precoVenda * 100) / 100;
+    }
+  }
+
+  // 9. Chamar GestãoClick
+  let gcResp;
+  try {
+    gcResp = await fetch(gcUrl, {
+      method:  config.metodo,
+      headers: {
+        'access-token':        accessToken,
+        'secret-access-token': secretToken,
+        'Content-Type':        'application/json',
+      },
+      ...(gcBody ? { body: JSON.stringify(gcBody) } : {}),
+    });
+  } catch (e) {
+    throw new HttpsError('unavailable', 'Erro de rede ao chamar GestãoClick: ' + e.message);
+  }
+
+  if (!gcResp.ok) {
+    const txt = await gcResp.text();
+    throw new HttpsError('unavailable', `GestãoClick retornou ${gcResp.status}: ${txt.slice(0, 200)}`);
+  }
+
+  const rawJson = await gcResp.json();
+
+  // 10. Aplicar DTO mínimo — nunca retornar raw ao browser
+  if (operacao === 'ATUALIZAR_PRECO') {
+    return { ok: true };
+  }
+
+  // Resposta paginada ou item único
+  if (rawJson.data && Array.isArray(rawJson.data)) {
+    return {
+      data:     rawJson.data.map(config.dto),
+      meta:     {
+        pagina_atual:   rawJson.meta?.pagina_atual   || 1,
+        total_paginas:  rawJson.meta?.total_paginas  || 1,
+        total_registros: rawJson.meta?.total_registros || rawJson.data.length,
+      },
+    };
+  }
+
+  // Item único
+  return { data: config.dto(rawJson) };
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 exports.registrarPonto          = onCall({ region: REGION }, registrarPontoHandler);
 exports.criarContaFuncionario   = onCall({ region: REGION }, criarContaFuncionarioHandler);
+
+// STATUS S0: gcQuery presente mas NÃO exportado para produção.
+// Descomente as duas linhas abaixo em S2 após testes passarem.
+// exports.gcQuery              = onCall({ region: REGION }, gcQueryHandler);
+// exports._gcQueryHandler      = gcQueryHandler;
 
 // Handlers exportados para testes diretos (sem onCall wrapper)
 exports._registrarPontoHandler        = registrarPontoHandler;

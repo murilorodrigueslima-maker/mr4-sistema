@@ -404,9 +404,6 @@ async function syncFinanceiro() {
   if (anomalia) {
     // GC retornou quantidade drasticamente menor — NÃO sobrescrever Firestore
     console.log('  ↩ financeiro_cache/latest preservado (anomalia detectada)');
-    // Ainda escreve JSON para diagnóstico (dual write preserva histórico local)
-    fs.writeFileSync(path.join(DATA_DIR, 'financeiro.json'), JSON.stringify(financeiro, null, 2));
-    console.log(`⚠️  Financeiro JSON atualizado (Firestore preservado): vencido ${brl(totalVencido)}`);
     return;
   }
 
@@ -420,13 +417,10 @@ async function syncFinanceiro() {
   };
   const ok = await firestoreSet('financeiro_cache', 'latest', docFirestore);
 
-  // ── Dual write: JSON (janela de migração S1) ──────────────────────────────
-  fs.writeFileSync(path.join(DATA_DIR, 'financeiro.json'), JSON.stringify(financeiro, null, 2));
-
   if (ok) {
-    console.log(`✅ Financeiro: Firestore + JSON | vencido ${brl(totalVencido)} | a receber ${brl(totalReceber)}`);
+    console.log(`✅ Financeiro: Firestore | vencido ${brl(totalVencido)} | a receber ${brl(totalReceber)}`);
   } else {
-    console.log(`✅ Financeiro: JSON apenas (Firestore indisponível) | vencido ${brl(totalVencido)}`);
+    console.log(`⚠️  Financeiro: Firestore indisponível | vencido ${brl(totalVencido)}`);
   }
 }
 
@@ -489,8 +483,6 @@ async function syncPedidos() {
 
   if (anomalia) {
     console.log('  ↩ pedidos_cache/latest preservado (anomalia detectada)');
-    fs.writeFileSync(path.join(DATA_DIR, 'pedidos.json'), JSON.stringify(out, null, 2));
-    console.log(`⚠️  Pedidos JSON atualizado (Firestore preservado): ${pedidos.length} registros`);
     return;
   }
 
@@ -504,35 +496,10 @@ async function syncPedidos() {
   };
   const ok = await firestoreSet('pedidos_cache', 'latest', docFirestore);
 
-  // ── Dual write: JSON (janela de migração S1) ──────────────────────────────
-  // O JSON guarda o cliente RAW (sem sanitizar) para comparação manual.
-  // Após remoção do JSON, a versão sanitizada fica apenas no Firestore.
-  const outJson = {
-    ...out,
-    pedidos: vendas.map(p => {
-      const dataHora = p.data_hora || p.data_criacao || p.created_at || p.data_pedido || '';
-      const dataBase = (p.data || p.data_venda || p.data_pedido || '').slice(0, 10);
-      const horaMatch = dataHora.match(/(\d{2}:\d{2})/);
-      return {
-        id:        String(p.id || ''),
-        numero:    String(p.codigo || p.numero || p.codigo_venda || p.id || ''),
-        data:      dataBase,
-        hora:      horaMatch ? horaMatch[1] : '',
-        cliente:   p.nome_cliente || p.cliente || p.razao_social || '—',
-        vendedor:  p.nome_vendedor || p.vendedor || p.nome_usuario || '—',
-        valor:     Number(p.valor_total || p.total || p.valor || 0),
-        itens:     Number(p.quantidade_produtos || (p.produtos || []).length || 0),
-        status_gc: p.status || p.situacao || '',
-        cidade:    p.cidade_cliente || p.cidade || '',
-      };
-    }).sort((a, b) => b.data.localeCompare(a.data) || b.numero.localeCompare(a.numero)),
-  };
-  fs.writeFileSync(path.join(DATA_DIR, 'pedidos.json'), JSON.stringify(outJson, null, 2));
-
   if (ok) {
-    console.log(`✅ Pedidos: Firestore (sanitizado) + JSON (raw) | ${pedidos.length} registros`);
+    console.log(`✅ Pedidos: Firestore (sanitizado) | ${pedidos.length} registros`);
   } else {
-    console.log(`✅ Pedidos: JSON apenas (Firestore indisponível) | ${pedidos.length} registros`);
+    console.log(`⚠️  Pedidos: Firestore indisponível | ${pedidos.length} registros`);
   }
 }
 

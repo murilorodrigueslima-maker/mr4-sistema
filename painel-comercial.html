@@ -634,7 +634,7 @@ async function verificarPerfil(uid) {
   const snap = await getDoc(doc(_db,'users',uid));
   if(!snap.exists()) return false;
   const d = snap.data();
-  return d.role === 'display' && d.ativo === true;
+  return (d.role === 'display' || d.role === 'gestor') && d.ativo === true;
 }
 
 /* ── INIT ── */

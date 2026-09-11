@@ -381,7 +381,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
@@ -401,6 +401,7 @@ const functions = getFunctions(app, 'southamerica-east1');
 window._db=db; window._col=collection; window._doc=doc;
 window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
 window._deleteDoc=deleteDoc; window._serverTimestamp=serverTimestamp;
+window._writeBatch=()=>writeBatch(db);
 window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
@@ -429,6 +430,7 @@ onAuthStateChanged(auth, async user => {
     return;
   }
   window._userEmail = user.email || '';
+  window._userUid   = user.uid   || '';
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dashboard').style.display='flex';
   window._firebaseReady=true;
@@ -468,8 +470,8 @@ function mudarMes(inputId,delta){
 window.mudarMes=mudarMes;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
-function hoje(){return new Date().toISOString().slice(0,10);}
-function mesAtual(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;}
+function hoje(){const fmt=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit'});const p=Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;}
+function mesAtual(){const fmt=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit'});const p=Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));return `${p.year}-${p.month}`;}
 function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
 function fmtData(d){if(!d)return'—';const[y,m,dd]=d.split('-');return `${dd}/${m}/${y}`;}
 function notif(msg,tipo='verde'){const el=document.getElementById('notif');el.textContent=msg;el.className='notif '+tipo;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
@@ -707,22 +709,41 @@ async function responderJustificativa(status){
   btns.forEach(b=>b.disabled=true);
   try{
     const obs=document.getElementById('justif-obs-gestor').value.trim();
-    await fbSet('justificativas',justifAtualId,{status,obsGestor:obs,respondidoEm:new Date().toISOString()});
+    const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
+    const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
+    const auditFields={
+      status,obsGestor:obs,
+      respondidoPorUid:window._userUid||'',
+      respondidoPorEmail:window._userEmail||'',
+      respondidoEm:window._serverTimestamp()
+    };
+    const batch=window._writeBatch();
+    // Update justificativa atomically with all downstream writes
+    batch.update(docRef('justificativas',justifAtualId),auditFields);
     if(status==='aprovado'){
-      const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
-      const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
       if(j.tipoPonto&&j.horarioPonto){
         const todosRegs=await fbGet('registros');
         // Remove TODOS os registros existentes do mesmo tipo/dia (inclui correções anteriores)
         // para garantir exatamente um registro por tipo por dia após a correção.
         const regsExistentes=todosRegs.filter(r=>r.funcId===j.funcId&&r.data===j.data&&r.tipo===j.tipoPonto);
-        for(const reg of regsExistentes)await fbDel('registros',reg.id);
+        for(const reg of regsExistentes)batch.delete(docRef('registros',reg.id));
         const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
-        const regId=uid();await fbSet('registros',regId,{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});notif('Batida corrigida e lançada automaticamente!','verde');
-      }else{const jornMin=(parseFloat(func?.jornada)||8)*60;await creditarJornada(j.funcId,j.funcNome,j.data,jornadaParaData(j.data,jornMin),j.motivo);notif('Justificativa aprovada — jornada creditada!','verde');}
+        const regId=uid();
+        batch.set(docRef('registros',regId),{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});
+      }else{
+        const jornMin=(parseFloat(func?.jornada)||8)*60;
+        const minutos=j.motivo==='Folga compensatória'?0:jornadaParaData(j.data,jornMin);
+        const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
+        if(!tiposSemCredito.includes(j.motivo)){
+          const credId='cred_'+j.funcId+'_'+j.data;
+          batch.set(docRef('creditos_jornada',credId),{id:credId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,minutos,motivo:j.motivo,criadoEm:new Date().toISOString()});
+        }
+      }
     }
+    await batch.commit();
     fecharModal('modal-justif-gestor');
-    if(status!=='aprovado')notif('Justificativa rejeitada.','vermelho');
+    if(status==='aprovado')notif(j.tipoPonto?'Batida corrigida e lançada automaticamente!':'Justificativa aprovada — jornada creditada!','verde');
+    else notif('Justificativa rejeitada.','vermelho');
     renderJustificativas();
   }catch(e){
     notif('Erro ao responder justificativa. Tente novamente.','vermelho');

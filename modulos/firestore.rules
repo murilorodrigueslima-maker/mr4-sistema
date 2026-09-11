@@ -133,7 +133,26 @@ service cloud.firestore {
         request.resource.data.status == 'pendente' &&
         request.resource.data.lancadoPorGestor == false
       );
-      allow update, delete: if isGestor();
+      // Identidade: quando gravados, respondidoPorUid/Email devem corresponder ao caller.
+      // Server timestamp: respondidoEm deve ser avaliado no momento do servidor (request.time).
+      // Imutabilidade: após a resposta, esses três campos não podem ser alterados nem removidos.
+      allow update: if isGestor() &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorUid']) ||
+         request.resource.data.respondidoPorUid == request.auth.uid) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorEmail']) ||
+         request.resource.data.respondidoPorEmail == request.auth.token.email) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoEm']) ||
+         request.resource.data.respondidoEm == request.time) &&
+        (!('respondidoPorUid'   in resource.data) ||
+         ('respondidoPorUid'   in request.resource.data &&
+          resource.data.respondidoPorUid   == request.resource.data.respondidoPorUid)) &&
+        (!('respondidoPorEmail' in resource.data) ||
+         ('respondidoPorEmail' in request.resource.data &&
+          resource.data.respondidoPorEmail == request.resource.data.respondidoPorEmail)) &&
+        (!('respondidoEm'       in resource.data) ||
+         ('respondidoEm'       in request.resource.data &&
+          resource.data.respondidoEm       == request.resource.data.respondidoEm));
+      allow delete: if isGestor();
     }
 
     // ── Coleção: creditos_jornada ──────────────────────────────────────────────

@@ -744,8 +744,8 @@ async function verMinhaFolha(){
   cont.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);padding:6px 0;">Carregando...</div>';
   try{
     const espelhos=await fbGet('espelhos');
-    const espExist=espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes);
-    const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel);
+    const espExist=espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes&&!e.invalidado)||espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes);
+    const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel,espExist);
     let btnAssin='';
     if(espExist&&espExist.assinado){
       btnAssin=`<div style="margin-top:10px;text-align:center;padding:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:13px;color:var(--verde);">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
@@ -788,7 +788,7 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
   document.getElementById('modal-assinar').classList.add('aberto');
   setTimeout(iniciarCanvas,100);
   try{
-    const html=await gerarEspelhoFuncHTML(funcId,mes,mesLabel);
+    const html=await gerarEspelhoFuncHTML(funcId,mes,mesLabel,exist);
     document.getElementById('espelho-para-assinar').innerHTML=html;
   }catch(err){
     console.error('Erro ao gerar espelho:',err);
@@ -797,60 +797,33 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
 }
 window.abrirAssinar=abrirAssinar;
 
-async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
-  // Usa funcAtivo já carregado — evita buscar coleção funcionarios
+async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
   const func=funcAtivo;
   if(!func)return'<div style="font-size:12px;color:var(--cinza-texto);">Dados do funcionário não encontrados.</div>';
-  const regs=await fbGet('registros', funcId);
-  const justifs=await fbGet('justificativas', funcId);
-  const creditos=await fbGet('creditos_jornada', funcId);
   const [ano,mesNum]=mes.split('-').map(Number);
-  const diasNoMes=new Date(ano,mesNum,0).getDate();
   const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];
-  const jornMin=(parseFloat(func.jornada)||8)*60;
-  const regsDoMes=regs.filter(r=>r.funcId===funcId&&r.data.startsWith(mes));
-  const justifDoMes=justifs.filter(j=>j.funcId===funcId&&j.data.startsWith(mes)&&j.status==='aprovado');
-  const creditosFuncMes=creditos.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
-  const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
-  const hojeStr=hoje();
-  let totalTrabMin=0,totalEsperadoMin=0;
-  const nomesDia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  let rows='';
-  for(let d=1;d<=diasNoMes;d++){
-    const dataStr=`${ano}-${String(mesNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const diaSemana=new Date(ano,mesNum-1,d).getDay();
-    const ehSabado=diaSemana===6,ehDomingo=diaSemana===0,ehFuturo=dataStr>hojeStr;
-    const regsD=regsDoMes.filter(r=>r.data===dataStr);
-    const justifD=justifDoMes.find(j=>j.data===dataStr);
-    const creditoD=creditosFuncMes.find(c=>c.data===dataStr);
-    const get=tipo=>{const j=regsD.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
-    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
-    const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
-    let total=calcTotal(e,sa,ra,s);
-    const justifCredita=justifD&&!TIPOS_SEM_CREDITO.includes(justifD.motivo);
-    if(total===null&&(creditoD||justifCredita))total=creditoD&&creditoD.minutos!=null?creditoD.minutos:jornadaDia;
-    const ehIncompleto=!ehDomingo&&!ehFuturo&&regsD.length>0&&total===null;
-    if(!ehDomingo&&!ehFuturo&&!ehIncompleto){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
-    const saldo=(!ehDomingo&&!ehFuturo&&!ehIncompleto&&total!==null)?total-jornadaDia:null;
-    let totalLabel='—';
-    if(!ehDomingo){
-      if(total!==null)totalLabel=fmtMin(total);
-      else if(ehFuturo)totalLabel='—';
-      else if(ehIncompleto)totalLabel='Incompleto';
-      else totalLabel='Falta';
-    }
-    let ocorrencia='';if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
-    const bgColor=(ehSabado||ehDomingo)?'background:#eeeeee;':(creditoD||justifCredita)&&!e?'background:#f0fff4;':justifD?'background:#fff8e1;':'';
-    const totalColor=totalLabel==='Falta'?'color:#c0392b;font-weight:600;':totalLabel==='Incompleto'?'color:#e67e22;font-weight:600;':'color:#111;';
-    const saldoColor=saldo>0?'color:#1a7a3a;font-weight:600;':saldo<0?'color:#c0392b;font-weight:600;':'color:#111;';
-    rows+=`<tr style="${bgColor}"><td style="color:#111;font-weight:600;"><strong>${d}</strong> ${nomesDia[diaSemana]}</td><td style="color:#111;">${e||'—'}</td><td style="color:#111;">${sa||'—'}</td><td style="color:#111;">${ra||'—'}</td><td style="color:#111;">${s||'—'}</td><td style="${totalColor}">${totalLabel}</td><td style="${saldoColor}">${saldo!==null?(saldo>=0?'+':'')+fmtMin(saldo):'—'}</td><td style="color:#555;font-size:10px;">${ocorrencia}</td></tr>`;
+
+  let snap;
+  if(espDoc&&espDoc.snapshot){
+    // Snapshot imutável: renderizar exatamente o que foi gerado/assinado.
+    snap=espDoc.snapshot;
+  }else{
+    // Legado (espelhos sem snapshot) ou geração dinâmica para pré-visualização.
+    const regs=await fbGet('registros',funcId);
+    const justifs=await fbGet('justificativas',funcId);
+    const creditos=await fbGet('creditos_jornada',funcId);
+    snap=buildEspelhoSnapshot(func,regs,creditos,justifs,mes,hoje());
+    snap.geradoEm=null; // legado: não gravar geradoEm
   }
-  const saldoTotal=totalTrabMin-totalEsperadoMin;
+
+  const rows=renderEspelhoRowsHTML(snap);
+  const saldoTotal=snap.totais.saldo;
   return `<div style="background:white;color:#111;padding:1rem;border-radius:8px;font-family:'Barlow',sans-serif;font-size:11px;border:1px solid #ddd;overflow-x:auto;">
     <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">
       <div style="font-size:13px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div>
       <div style="font-size:15px;font-weight:700;">Espelho de Ponto — ${nomeMes}/${ano}</div>
       <div style="font-size:11px;color:#555;">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div>
+      ${snap.geradoEm?`<div style="font-size:10px;color:#888;margin-top:2px;">Gerado em ${new Date(snap.geradoEm).toLocaleString('pt-BR')}</div>`:''}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:480px;">
       <thead><tr style="background:#333;color:white;">
@@ -866,7 +839,7 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel){
       <tbody>${rows}</tbody>
       <tfoot><tr style="background:#222;">
         <td colspan="5" style="color:white;font-weight:700;padding:6px;">TOTAIS DO MÊS</td>
-        <td style="color:white;font-weight:700;padding:6px;">${fmtMin(totalTrabMin)}</td>
+        <td style="color:white;font-weight:700;padding:6px;">${fmtMin(snap.totais.trabMin)}</td>
         <td style="color:${saldoTotal>=0?'#4ade80':'#f87171'};font-weight:700;padding:6px;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td>
         <td></td>
       </tr></tfoot>
@@ -913,9 +886,15 @@ async function confirmarAssinatura(){
   if(!assinaturaCanvas){notif('Erro na assinatura','vermelho');return;}
   const assinaturaImg=assinaturaCanvas.toDataURL('image/png');
   // Assinatura: usa setDoc direto (sem _fbSetOwn) para NÃO injetar authUid.
-  // A Rule de espelhos permite update apenas com hasOnly(['assinado','assinaturaImg','assinadoEm','assinadoPor']).
+  // Futuras Rules de espelhos permitirão update apenas com
+  // hasOnly(['assinado','assinaturaImg','assinadoEm','assinadoPor','status']).
+  //
+  // LIMITAÇÃO: a finalização de v1 (revisaoEmAndamento→false, substituido→true)
+  // exige permissão de gestor e NÃO é feita aqui.
+  // Deverá ser implementada via Cloud Function (onUpdate trigger) ou ação explícita
+  // do gestor em ponto.html. Enquanto isso, v1 continua com revisaoEmAndamento:true.
   await setDoc(doc(db, 'espelhos', espelhoAtualFuncId), {
-    assinado: true, assinaturaImg,
+    assinado: true, assinaturaImg, status: 'assinado',
     assinadoEm: new Date().toISOString(),
     assinadoPor: funcAtivo.nome
   }, {merge: true});

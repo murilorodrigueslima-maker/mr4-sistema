@@ -76,6 +76,11 @@ function cred(data, minutos) {
   return { data, minutos };
 }
 
+/** Monta crédito de jornada com motivo (para testes de férias, feriado, folga, atestado). */
+function credMot(data, minutos, motivo) {
+  return { data, minutos, motivo };
+}
+
 // ─── SANIDADE: verificar dias da semana assumidos ─────────────────────────────
 
 test('SANIDADE — 2026-09-05 é sábado', () => {
@@ -115,9 +120,9 @@ describe('toMin', () => {
 });
 
 describe('calcTotal', () => {
-  test('A-1 — entrada + saída sem almoço', () => {
-    // 08:00 → 17:00 = 9h = 540 min
-    expect(calcTotal('08:00', null, null, '17:00')).toBe(540);
+  test('A-1 — entrada + saída sem almoço e intervalo > 6h: null (DEC-1 almoço obrigatório)', () => {
+    // tS−tE = 540 > 360 e almoço ausente → PENDENTE (NOVA REGRA DEC-1)
+    expect(calcTotal('08:00', null, null, '17:00')).toBeNull();
   });
 
   test('A-2 — jornada completa com almoço', () => {
@@ -134,17 +139,16 @@ describe('calcTotal', () => {
     expect(calcTotal('08:00', '12:00', '12:30', '17:00')).toBe(510);
   });
 
-  test('A-5 — almoço parcial: só saida_almoco (sem retorno) — COMPORTAMENTO ATUAL: sem desconto', () => {
-    // if (sa && ra) → falso → almoço NÃO é descontado mesmo com sa preenchido
-    // NOTA: pode ser bug de regra de negócio — infla total trabalhado
+  test('A-5 — almoço parcial: só saida_almoco sem retorno (>6h): null (DEC-1)', () => {
+    // tS−tE=540>360 e ra ausente → almoço incompleto → PENDENTE (NOVA REGRA DEC-1)
     const total = calcTotal('08:00', '12:00', null, '17:00');
-    expect(total).toBe(540); // retorna 9h, não 8h
+    expect(total).toBeNull();
   });
 
-  test('A-6 — almoço parcial: só retorno_almoco (sem saída almoço) — COMPORTAMENTO ATUAL: sem desconto', () => {
-    // if (sa && ra) → falso → almoço NÃO é descontado
+  test('A-6 — almoço parcial: só retorno_almoco sem saída_almoco (>6h): null (DEC-1)', () => {
+    // tS−tE=540>360 e sa ausente → almoço incompleto → PENDENTE (NOVA REGRA DEC-1)
     const total = calcTotal('08:00', null, '13:00', '17:00');
-    expect(total).toBe(540); // retorna 9h, não 8h
+    expect(total).toBeNull();
   });
 
   test('A-7 — sem entrada retorna null', () => {
@@ -162,12 +166,10 @@ describe('calcTotal', () => {
     expect(calcTotal(null, null, null, null)).toBeNull();
   });
 
-  test('A-10 — virada de meia-noite produz total negativo (comportamento atual — sem suporte a turno noturno)', () => {
-    // 23:00 → 07:00 (dia seguinte): implementação não detecta virada
-    // toMin('07:00') - toMin('23:00') = 420 - 1380 = -960
-    // NOTA: bug de regra de negócio — o sistema não suporta jornada noturna cruzando meia-noite
+  test('A-10 — virada de meia-noite retorna null (DEC-12)', () => {
+    // saída(07:00) < entrada(23:00) → cruzamento de meia-noite → PENDENTE (NOVA REGRA DEC-12)
     const total = calcTotal('23:00', null, null, '07:00');
-    expect(total).toBe(-960);
+    expect(total).toBeNull();
   });
 });
 
@@ -193,22 +195,22 @@ describe('calcBancoMes — jornada normal', () => {
     expect(r.saldo).toBe(0);
   });
 
-  test('B-3 — trabalhou acima da jornada (hora extra) → saldo positivo', () => {
-    // 08:00 → 18:00 sem almoço = 600 min; jornada 8h = 480
-    const regs = regsDia(TER, { entrada: '08:00', saida: '18:00' });
+  test('B-3 — trabalhou acima da jornada com almoço (hora extra) → saldo positivo', () => {
+    // 08:00 → 18:00 com almoço 12:00–13:00 = 9h líquido; jornada 8h = saldo +1h
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '18:00' });
     const r = calcBancoMes(func8h, regs, [], MES, TER);
-    expect(r.trabMin).toBe(600);
+    expect(r.trabMin).toBe(540); // 10h−1h almoço = 9h
     expect(r.esperMin).toBe(480);
-    expect(r.saldo).toBe(120); // +2h
+    expect(r.saldo).toBe(60); // +1h
   });
 
-  test('B-4 — trabalhou abaixo da jornada → saldo negativo', () => {
-    // 08:00 → 15:00 sem almoço = 420 min; jornada 8h = 480
-    const regs = regsDia(TER, { entrada: '08:00', saida: '15:00' });
+  test('B-4 — trabalhou abaixo da jornada (≤6h, sem almoço válido) → saldo negativo', () => {
+    // 08:00 → 14:00 sem almoço = 6h; tS−tE=360 ≤ 360 → almoço não obrigatório
+    const regs = regsDia(TER, { entrada: '08:00', saida: '14:00' });
     const r = calcBancoMes(func8h, regs, [], MES, TER);
-    expect(r.trabMin).toBe(420);
+    expect(r.trabMin).toBe(360);
     expect(r.esperMin).toBe(480);
-    expect(r.saldo).toBe(-60); // -1h
+    expect(r.saldo).toBe(-120); // -2h
   });
 
   test('B-5 — múltiplos dias acumulam trabMin corretamente', () => {
@@ -225,15 +227,15 @@ describe('calcBancoMes — jornada normal', () => {
   });
 
   test('B-6 — saldo acumula corretamente entre dias positivos e negativos', () => {
-    // TER: +2h (hora extra), QUA: -1h (saiu cedo)
+    // TER: +1h (hora extra com almoço), QUA: -2h (saiu cedo, ≤6h)
     const regs = [
-      ...regsDia(TER, { entrada: '08:00', saida: '18:00' }),        // 600 trab
-      ...regsDia(QUA, { entrada: '08:00', saida: '15:00' }),        // 420 trab
+      ...regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '18:00' }), // 540 trab
+      ...regsDia(QUA, { entrada: '08:00', saida: '14:00' }), // 360 trab (6h, ≤360 → sem almoço obrigatório)
     ];
     const r = calcBancoMes(func8h, regs, [], MES, QUA);
-    expect(r.trabMin).toBe(1020);  // 600 + 420
+    expect(r.trabMin).toBe(900);   // 540 + 360
     expect(r.esperMin).toBe(960);  // 480 + 480
-    expect(r.saldo).toBe(60);     // +1h líquido
+    expect(r.saldo).toBe(-60);     // -1h líquido
   });
 });
 
@@ -308,17 +310,18 @@ describe('calcBancoMes — domingo', () => {
     expect(rDom.saldo).toBe(rSab.saldo);
   });
 
-  test('D-2 — registros em domingo são ignorados pelo engine', () => {
+  test('D-2 — domingo com ponto completo contribui para saldo positivo (DEC-7 NOVA REGRA)', () => {
+    // NOVA REGRA DEC-7: domingo com ponto → jornadaDia=0, saldo = +t (todo trabalho positivo)
     const semDom = calcBancoMes(func8h, [], [], MES, DOM);
-    // Adicionar registros de ponto completo no domingo
     const comDom = calcBancoMes(func8h,
       regsDia(DOM, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' }),
       [], MES, DOM
     );
-    // Resultados devem ser idênticos
-    expect(comDom.trabMin).toBe(semDom.trabMin);
-    expect(comDom.esperMin).toBe(semDom.esperMin);
-    expect(comDom.diasTrab).toBe(semDom.diasTrab);
+    // t = 540−60 = 480; jornadaDia = 0 → saldo delta = +480
+    expect(comDom.trabMin - semDom.trabMin).toBe(480);
+    expect(comDom.esperMin - semDom.esperMin).toBe(0); // jornadaDia=0
+    expect(comDom.saldo - semDom.saldo).toBe(480);
+    expect(comDom.diasTrab - semDom.diasTrab).toBe(1);
   });
 
   test('D-3 — crédito em domingo é ignorado', () => {
@@ -537,12 +540,12 @@ describe('calcBancoMes — Home Office', () => {
     expect(r.saldo).toBe(0);
   });
 
-  test('I-2 — HO com hora extra = saldo positivo como qualquer dia', () => {
-    // 08:00 → 18:30 sem almoço = 630 min
-    const regs = regsDia(TER, { entrada: '08:00', saida: '18:30' });
+  test('I-2 — HO com hora extra e almoço = saldo positivo', () => {
+    // 08:00 → 18:30 com almoço 1h = 9h30 líquido; tS−tE>360 → almoço obrigatório (DEC-1)
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '18:30' });
     const r = calcBancoMes(func8h, regs, [], MES, TER);
-    expect(r.trabMin).toBe(630);
-    expect(r.saldo).toBe(630 - 480); // +150 min = +2h30
+    expect(r.trabMin).toBe(570); // 10h30−1h = 9h30 = 570 min
+    expect(r.saldo).toBe(570 - 480); // +90 min = +1h30
   });
 
   test('I-3 — HO sem crédito especial: apenas ponto conta', () => {
@@ -561,47 +564,47 @@ describe('calcBancoMes — Home Office', () => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 describe('calcBancoMes — múltiplos dias combinados', () => {
-  // Semana de 09-01 (Ter) a 09-07 (Seg)
-  // TER: completo 8h exatas         → trab=480, esper=480
-  // QUA: hora extra (+2h)           → trab=600, esper=480
-  // QUI: falta injustificada        → trab=0,   esper=480
-  // SEX: ponto incompleto (s/saída) → PENDENTE (0/0)
-  // SAB: crédito feriado (210)      → trab=210, esper=210
-  // DOM: ignorado                   → 0/0
-  // SEG: ponto 6h30 (sem almoço)    → trab=390, esper=480
+  // Semana de 09-01 (Ter) a 09-07 (Seg) — todos os pontos respeitam DEC-1 (almoço quando >6h)
+  // TER: completo 8h c/ almoço       → trab=480, esper=480
+  // QUA: hora extra +1h c/ almoço   → trab=540, esper=480
+  // QUI: falta injustificada         → trab=0,   esper=480
+  // SEX: ponto incompleto (s/saída)  → PENDENTE (0/0)
+  // SAB: crédito abono (210)         → trab=210, esper=210
+  // DOM: ponto 8h c/ almoço (DEC-7) → trab=480, esper=0 (jornadaDia=0)
+  // SEG: ponto 6h (≤360, sem almoço) → trab=360, esper=480
 
   const regsSeq = [
     ...regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' }),
-    ...regsDia(QUA, { entrada: '08:00', saida: '18:00' }), // 600 min
+    ...regsDia(QUA, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '18:00' }), // 9h c/ almoço
     // QUI: sem registros (falta)
     ...regsDia(SEX, { entrada: '08:00' }), // incompleto
     // SAB: crédito via creditos array
-    ...regsDia(DOM, { entrada: '08:00', saida: '17:00' }), // domingo — deve ser ignorado
-    ...regsDia(SEG, { entrada: '08:00', saida: '14:30' }), // 6h30 = 390 min
+    ...regsDia(DOM, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' }), // domingo c/ ponto
+    ...regsDia(SEG, { entrada: '08:00', saida: '14:00' }), // 6h (360 ≤ 360 → sem almoço obrigatório)
   ];
   const credSeq = [cred(SAB, 210)];
 
   test('J-1 — trabMin total acumula corretamente', () => {
     const r = calcBancoMes(func8h, regsSeq, credSeq, MES, SEG);
-    // 480 (TER) + 600 (QUA) + 0 (QUI-falta) + 0 (SEX-incompleto) + 210 (SAB-cred) + 0 (DOM) + 390 (SEG)
-    expect(r.trabMin).toBe(480 + 600 + 0 + 0 + 210 + 0 + 390); // 1680
+    // 480(TER) + 540(QUA) + 0(QUI-falta) + 0(SEX-pendente) + 210(SAB-cred) + 480(DOM) + 360(SEG)
+    expect(r.trabMin).toBe(480 + 540 + 0 + 0 + 210 + 480 + 360); // 2070
   });
 
   test('J-2 — esperMin total acumula corretamente', () => {
     const r = calcBancoMes(func8h, regsSeq, credSeq, MES, SEG);
-    // 480(TER) + 480(QUA) + 480(QUI-falta) + 0(SEX-incompleto) + 210(SAB-cred) + 0(DOM) + 480(SEG)
+    // 480(TER) + 480(QUA) + 480(QUI-falta) + 0(SEX-pendente) + 210(SAB) + 0(DOM,jornada=0) + 480(SEG)
     expect(r.esperMin).toBe(480 + 480 + 480 + 0 + 210 + 0 + 480); // 2130
   });
 
   test('J-3 — saldo final combinado', () => {
     const r = calcBancoMes(func8h, regsSeq, credSeq, MES, SEG);
-    expect(r.saldo).toBe(1680 - 2130); // -450 min = -7h30
+    expect(r.saldo).toBe(2070 - 2130); // -60 min = -1h
   });
 
-  test('J-4 — diasTrab conta apenas dias com ponto completo ou crédito > 0', () => {
+  test('J-4 — diasTrab conta dias com ponto completo ou crédito > 0', () => {
     const r = calcBancoMes(func8h, regsSeq, credSeq, MES, SEG);
-    // TER (completo), QUA (completo), SAB (crédito 210>0), SEG (completo) = 4
-    expect(r.diasTrab).toBe(4);
+    // TER(1) + QUA(1) + SAB-cred(1) + DOM(1) + SEG(1) = 5
+    expect(r.diasTrab).toBe(5);
   });
 
   test('J-5 — pendências contém apenas o dia incompleto', () => {
@@ -634,10 +637,11 @@ describe('calcBancoMes — limites de data', () => {
   });
 
   test('K-3 — primeiro dia do mês é processado', () => {
-    // TER = 2026-09-01 = primeiro dia do mês
-    const regs = regsDia(TER, { entrada: '08:00', saida: '17:00' });
+    // TER = 2026-09-01 = primeiro dia do mês; com almoço para respeitar DEC-1
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
     const r = calcBancoMes(func8h, regs, [], MES, TER);
-    expect(r.trabMin).toBe(540); // 9h sem almoço
+    expect(r.trabMin).toBe(480); // 8h com almoço
+    expect(r.diasTrab).toBe(1);
   });
 
   test('K-4 — crédito de dia futuro não entra', () => {
@@ -754,5 +758,377 @@ describe('fmtMin', () => {
   test('FM-3 — null/undefined retorna "—"', () => {
     expect(fmtMin(null)).toBe('—');
     expect(fmtMin(undefined)).toBe('—');
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ETAPA 3 — Testes para as 14 Decisões de Negócio Aprovadas
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── getTipoCredito ────────────────────────────────────────────────────────────
+// NOVA FUNÇÃO — ainda não existe em ponto-regras.js; todos estes testes falharão
+// até a implementação da ETAPA B.
+
+describe('getTipoCredito — classificação de créditos', () => {
+  test('TipoCredito-1 — Férias retorna "ferias"', () => {
+    expect(ctx.getTipoCredito('Férias')).toBe('ferias');
+  });
+
+  test('TipoCredito-2 — Feriado nacional retorna "feriado"', () => {
+    expect(ctx.getTipoCredito('Feriado nacional')).toBe('feriado');
+  });
+
+  test('TipoCredito-3 — Feriado estadual retorna "feriado"', () => {
+    expect(ctx.getTipoCredito('Feriado estadual')).toBe('feriado');
+  });
+
+  test('TipoCredito-4 — Feriado municipal retorna "feriado"', () => {
+    expect(ctx.getTipoCredito('Feriado municipal')).toBe('feriado');
+  });
+
+  test('TipoCredito-5 — Folga compensatória retorna "folga_comp"', () => {
+    expect(ctx.getTipoCredito('Folga compensatória')).toBe('folga_comp');
+  });
+
+  test('TipoCredito-6 — undefined/null retorna "abono"', () => {
+    expect(ctx.getTipoCredito(undefined)).toBe('abono');
+    expect(ctx.getTipoCredito(null)).toBe('abono');
+  });
+
+  test('TipoCredito-7 — outros motivos (atestado, licença, falta justificada) retornam "abono"', () => {
+    expect(ctx.getTipoCredito('Atestado médico')).toBe('abono');
+    expect(ctx.getTipoCredito('Licença maternidade')).toBe('abono');
+    expect(ctx.getTipoCredito('Falta justificada')).toBe('abono');
+  });
+});
+
+// ─── DEC-1: Almoço obrigatório ─────────────────────────────────────────────────
+// Regra: se (saída − entrada) > 360 E (sa ou ra ausentes) → calcTotal retorna null
+// Sábado (210 min) e jornada 6h (360 min) são isentos.
+
+describe('DEC-1 — Almoço obrigatório', () => {
+  test('DEC-1-1 — sábado (tS−tE=210, ≤360): sem almoço é válido', () => {
+    expect(calcTotal('08:00', null, null, '11:30')).toBe(210);
+  });
+
+  test('DEC-1-2 — jornada 6h (tS−tE=360, exatamente ≤360): sem almoço é válido', () => {
+    expect(calcTotal('08:00', null, null, '14:00')).toBe(360);
+  });
+
+  test('DEC-1-3 — jornada 8h com almoço completo: válido (540−60=480)', () => {
+    expect(calcTotal('08:00', '12:00', '13:00', '17:00')).toBe(480);
+  });
+
+  test('DEC-1-4 — jornada 8h SEM almoço (tS−tE=540>360, !sa !ra): PENDENTE → null', () => {
+    // NOVA REGRA: atualmente retorna 540; deve retornar null após implementação
+    expect(calcTotal('08:00', null, null, '17:00')).toBeNull();
+  });
+
+  test('DEC-1-5 — só saida_almoco sem retorno (tS−tE>360): PENDENTE → null', () => {
+    // NOVA REGRA: atualmente retorna 540; deve retornar null após implementação
+    expect(calcTotal('08:00', '12:00', null, '17:00')).toBeNull();
+  });
+
+  test('DEC-1-6 — só retorno_almoco sem saída_almoco (tS−tE>360): PENDENTE → null', () => {
+    // NOVA REGRA: atualmente retorna 540; deve retornar null após implementação
+    expect(calcTotal('08:00', null, '13:00', '17:00')).toBeNull();
+  });
+
+  test('DEC-1-7 — calcBancoMes: dia útil sem almoço (8h) gera PONTO_INCOMPLETO', () => {
+    const regs = regsDia(TER, { entrada: '08:00', saida: '17:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, TER);
+    expect(r.pendencias.some(p => p.data === TER && p.tipo === 'PONTO_INCOMPLETO')).toBe(true);
+  });
+});
+
+// ─── DEC-11: Sequência inválida de horários ────────────────────────────────────
+// Regra: quando todos os 4 campos presentes, exige entrada<sa<ra<saída.
+// Sequência violada → null.
+
+describe('DEC-11 — Sequência inválida de horários', () => {
+  test('DEC-11-1 — sa > ra (almoço invertido): null', () => {
+    // NOVA REGRA: sa=13:00 > ra=12:00 → inválido → null
+    expect(calcTotal('08:00', '13:00', '12:00', '17:00')).toBeNull();
+  });
+
+  test('DEC-11-2 — sa < entrada: null', () => {
+    // NOVA REGRA: sa=07:00 < entrada=08:00 → inválido → null
+    expect(calcTotal('08:00', '07:00', '13:00', '17:00')).toBeNull();
+  });
+
+  test('DEC-11-3 — ra > saída: null', () => {
+    // NOVA REGRA: ra=18:00 > saída=17:00 → inválido → null
+    expect(calcTotal('08:00', '12:00', '18:00', '17:00')).toBeNull();
+  });
+
+  test('DEC-11-4 — sequência válida não é afetada', () => {
+    expect(calcTotal('08:00', '12:00', '13:00', '17:00')).toBe(480);
+  });
+
+  test('DEC-11-5 — saida_almoco == retorno_almoco (almoço de 0 min): null', () => {
+    // sa=ra → sequência violada (sa não é estritamente menor que ra)
+    expect(calcTotal('08:00', '12:00', '12:00', '17:00')).toBeNull();
+  });
+});
+
+// ─── DEC-12: Cruzamento de meia-noite ─────────────────────────────────────────
+// Regra: se saída < entrada → PENDENTE (null). Turno noturno não suportado.
+
+describe('DEC-12 — Cruzamento de meia-noite', () => {
+  test('DEC-12-1 — saída < entrada (virada de dia): calcTotal retorna null', () => {
+    // NOVA REGRA: atualmente retorna -960 (bug documentado em A-10); deve retornar null
+    expect(calcTotal('23:00', null, null, '07:00')).toBeNull();
+  });
+
+  test('DEC-12-2 — calcBancoMes: ponto com meia-noite gera PONTO_INCOMPLETO', () => {
+    const regs = regsDia(TER, { entrada: '23:00', saida: '07:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, TER);
+    expect(r.pendencias.some(p => p.data === TER && p.tipo === 'PONTO_INCOMPLETO')).toBe(true);
+  });
+});
+
+// ─── DEC-7: Domingo trabalhado ─────────────────────────────────────────────────
+// Regra: domingo sem ponto → saldo=0 (ignorado). Domingo com ponto → esperMin=0,
+// todas horas trabalhadas = saldo positivo. Domingo com ponto incompleto → PENDENTE.
+
+describe('DEC-7 — Domingo trabalhado', () => {
+  test('DEC-7-1 — domingo sem ponto não altera trabMin/esperMin/saldo vs sábado', () => {
+    // calcBancoMes até SAB vs até DOM: DOM sem ponto não deve mudar nada
+    const rSab = calcBancoMes(func8h, [], [], MES, SAB);
+    const rDom = calcBancoMes(func8h, [], [], MES, DOM);
+    expect(rDom.trabMin).toBe(rSab.trabMin);
+    expect(rDom.esperMin).toBe(rSab.esperMin);
+    expect(rDom.saldo).toBe(rSab.saldo);
+  });
+
+  test('DEC-7-2 — domingo com ponto completo: delta trabMin=+360, esperMin=0, saldo=+360', () => {
+    // NOVA REGRA DEC-7: DOM ponto contribui; jornadaDia=0 → todo trabalho = saldo positivo
+    const rSab = calcBancoMes(func8h, [], [], MES, SAB);
+    const regs = regsDia(DOM, { entrada: '08:00', saida: '14:00' }); // 6h, tS-tE=360 <= 360
+    const rDom = calcBancoMes(func8h, regs, [], MES, DOM);
+    expect(rDom.trabMin  - rSab.trabMin).toBe(360);
+    expect(rDom.esperMin - rSab.esperMin).toBe(0);
+    expect(rDom.saldo    - rSab.saldo).toBe(360);
+  });
+
+  test('DEC-7-3 — domingo com ponto incompleto (só entrada): PONTO_INCOMPLETO', () => {
+    // NOVA REGRA: domingo incompleto → PENDENTE
+    const regs = regsDia(DOM, { entrada: '08:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, DOM);
+    expect(r.pendencias.some(p => p.data === DOM && p.tipo === 'PONTO_INCOMPLETO')).toBe(true);
+  });
+
+  test('DEC-7-4 — domingo com crédito mas sem ponto: crédito ignorado (mesmo total que sem crédito)', () => {
+    // Sem ponto em domingo → continue, crédito em DOM não é processado
+    const rSemCred = calcBancoMes(func8h, [], [], MES, DOM);
+    const rComCred = calcBancoMes(func8h, [], [credMot(DOM, 480, 'Férias')], MES, DOM);
+    expect(rComCred.saldo).toBe(rSemCred.saldo);
+    expect(rComCred.esperMin).toBe(rSemCred.esperMin);
+    expect(rComCred.trabMin).toBe(rSemCred.trabMin);
+  });
+});
+
+// ─── DEC-8: Feriado trabalhado ─────────────────────────────────────────────────
+// Regra: crédito feriado + horas trabalhadas = saldo positivo.
+// Sem ponto → saldo=0 (jornada abonada). Com ponto → saldo = t (horas trabalhadas).
+
+describe('DEC-8 — Feriado trabalhado', () => {
+  test('DEC-8-1 — feriado sem ponto: saldo=0 (crédito cobre jornada)', () => {
+    // Comportamento atual já correto para branch 2 (sem ponto)
+    const r = calcBancoMes(func8h, [], [credMot(TER, 480, 'Feriado nacional')], MES, TER);
+    expect(r.trabMin).toBe(480);
+    expect(r.esperMin).toBe(480);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('DEC-8-2 — feriado com ponto parcial (4h): saldo = +240', () => {
+    // NOVA REGRA: trabMin = t(240) + crédito(480) = 720; esperMin=480; saldo=+240
+    // Atualmente branch 1 ignora o crédito → saldo = 240−480 = −240
+    const regs = regsDia(TER, { entrada: '08:00', saida: '12:00' });
+    const r = calcBancoMes(func8h, regs, [credMot(TER, 480, 'Feriado nacional')], MES, TER);
+    expect(r.esperMin).toBe(480);
+    expect(r.trabMin).toBe(720);
+    expect(r.saldo).toBe(240);
+  });
+
+  test('DEC-8-3 — feriado com ponto completo 8h (com almoço): saldo = +480', () => {
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(func8h, regs, [credMot(TER, 480, 'Feriado nacional')], MES, TER);
+    expect(r.saldo).toBe(480);
+  });
+
+  test('DEC-8-4 — feriado estadual e municipal seguem mesma regra', () => {
+    const r1 = calcBancoMes(func8h, [], [credMot(TER, 480, 'Feriado estadual')], MES, TER);
+    const r2 = calcBancoMes(func8h, [], [credMot(TER, 480, 'Feriado municipal')], MES, TER);
+    expect(r1.saldo).toBe(0);
+    expect(r2.saldo).toBe(0);
+  });
+});
+
+// ─── DEC-9: Atestado + ponto ───────────────────────────────────────────────────
+// Regra: abono = max(0, jornadaDia − t); trabMin += t + abono; saldo nunca inflado.
+
+describe('DEC-9 — Atestado com ponto (abono = max(0, jornada − trabalhado))', () => {
+  test('DEC-9-1 — atestado sem ponto: crédito cobre jornada, saldo=0', () => {
+    // Comportamento já correto (branch 2: minutos=480, esperMin=480)
+    const r = calcBancoMes(func8h, [], [cred(TER, 480)], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('DEC-9-2 — atestado com ponto parcial (3h): abono cobre diferença, saldo=0', () => {
+    // NOVA REGRA: abono=max(0,480−180)=300; trabMin=480; esperMin=480; saldo=0
+    // Atualmente: branch 1 ignora crédito; trabMin=180; saldo=−300
+    const regs = regsDia(TER, { entrada: '08:00', saida: '11:00' });
+    const r = calcBancoMes(func8h, regs, [cred(TER, 480)], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('DEC-9-3 — atestado com ponto completo 8h: abono=0, saldo=0', () => {
+    // abono=max(0,480−480)=0; trabMin=480; saldo=0
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(func8h, regs, [cred(TER, 480)], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('DEC-9-4 — atestado com ponto parcial em dia com crédito maior que jornada: abono não excede diferença', () => {
+    // func6h (jornadaDia=360), ponto 4h (240min), crédito 360min
+    // abono=max(0,360−240)=120; trabMin=240+120=360; esperMin=360; saldo=0
+    const regs = regsDia(TER, { entrada: '08:00', saida: '12:00' }); // 4h, tS−tE=240≤360 → válido sem almoço
+    const r = calcBancoMes(func6h, regs, [cred(TER, 360)], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+});
+
+// ─── DEC-10: Férias ────────────────────────────────────────────────────────────
+// Regra: sempre saldo=0 (trabMin=esperMin=jornadaDia), independente de ponto.
+
+describe('DEC-10 — Férias (saldo sempre zero)', () => {
+  test('DEC-10-1 — férias dia útil sem ponto: saldo=0', () => {
+    const r = calcBancoMes(func8h, [], [credMot(TER, 480, 'Férias')], MES, TER);
+    expect(r.trabMin).toBe(480);
+    expect(r.esperMin).toBe(480);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('DEC-10-2 — férias sábado: delta saldo=0 para o dia (neutro)', () => {
+    // Delta: saldo(até SAB com férias) − saldo(até SEX) deve ser 0 (férias não debita)
+    const rSexta = calcBancoMes(func8h, [], [], MES, SEX);
+    const rSabFerias = calcBancoMes(func8h, [], [credMot(SAB, 210, 'Férias')], MES, SAB);
+    expect(rSabFerias.saldo - rSexta.saldo).toBe(0);
+  });
+
+  test('DEC-10-3 — férias domingo (sem ponto): não altera totais vs sábado', () => {
+    // DOM sem ponto: continue; crédito férias em DOM é ignorado
+    const rSab = calcBancoMes(func8h, [], [], MES, SAB);
+    const rDom = calcBancoMes(func8h, [], [credMot(DOM, 480, 'Férias')], MES, DOM);
+    expect(rDom.saldo).toBe(rSab.saldo);
+    expect(rDom.esperMin).toBe(rSab.esperMin);
+  });
+
+  test('DEC-10-4 — férias com ponto parcial (4h): saldo forçado para 0', () => {
+    // NOVA REGRA: mesmo com ponto parcial no dia de férias → saldo=0
+    // Atualmente: branch 1 roda (crédito ignorado), saldo=240−480=−240
+    const regs = regsDia(TER, { entrada: '08:00', saida: '12:00' }); // 4h sem almoço (≤360, válido)
+    const r = calcBancoMes(func8h, regs, [credMot(TER, 480, 'Férias')], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+});
+
+// ─── DEC-4: Folga compensatória ────────────────────────────────────────────────
+// Regra: saque do banco → debita jornadaDia (8h útil, 3h30 sábado).
+
+describe('DEC-4 — Folga compensatória (saldo = −jornadaDia)', () => {
+  test('DEC-4-1 — folga comp dia útil: saldo = −480', () => {
+    const r = calcBancoMes(func8h, [], [credMot(TER, 0, 'Folga compensatória')], MES, TER);
+    expect(r.saldo).toBe(-480);
+  });
+
+  test('DEC-4-2 — folga comp sábado debita 210 (delta vs sexta)', () => {
+    // Delta: saldo(até SAB com folga) − saldo(até SEX) = −210 (débito do sábado)
+    const rSexta = calcBancoMes(func8h, [], [], MES, SEX);
+    const rSabFolga = calcBancoMes(func8h, [], [credMot(SAB, 0, 'Folga compensatória')], MES, SAB);
+    expect(rSabFolga.saldo - rSexta.saldo).toBe(-210);
+  });
+});
+
+// ─── DEC-2: Home Office ────────────────────────────────────────────────────────
+// Regra: sem crédito automático. Sem ponto → déficit. Ponto incompleto → PENDENTE.
+// Ponto completo com almoço → saldo normal.
+
+describe('DEC-2 — Home Office', () => {
+  test('DEC-2-1 — HO sem ponto (tratado como falta): saldo = −480', () => {
+    // HO não gera crédito (tiposSemCredito); branch "falta" roda → saldo=−jornada
+    const r = calcBancoMes(func8h, [], [], MES, TER);
+    expect(r.saldo).toBe(-480);
+  });
+
+  test('DEC-2-2 — HO com ponto incompleto (só entrada): PONTO_INCOMPLETO', () => {
+    const regs = regsDia(TER, { entrada: '08:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, TER);
+    expect(r.pendencias.some(p => p.data === TER && p.tipo === 'PONTO_INCOMPLETO')).toBe(true);
+  });
+
+  test('DEC-2-3 — HO com ponto 8h sem almoço: PONTO_INCOMPLETO (regra almoço)', () => {
+    // NOVA REGRA: >6h sem almoço → PENDENTE mesmo em Home Office
+    const regs = regsDia(TER, { entrada: '08:00', saida: '17:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, TER);
+    expect(r.pendencias.some(p => p.data === TER && p.tipo === 'PONTO_INCOMPLETO')).toBe(true);
+  });
+
+  test('DEC-2-4 — HO com ponto completo e almoço: saldo normal', () => {
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, TER);
+    expect(r.saldo).toBe(0);
+    expect(r.pendencias).toHaveLength(0);
+  });
+});
+
+// ─── DEC-14: podeAssinarEspelho ────────────────────────────────────────────────
+// NOVA FUNÇÃO — não existe em ponto-regras.js ainda; todos estes testes falharão
+// até a implementação da ETAPA B.
+
+describe('DEC-14 — podeAssinarEspelho', () => {
+  test('DEC-14-1 — sem pendências nem justificativas pendentes: pode assinar', () => {
+    const r = ctx.podeAssinarEspelho([], [], MES);
+    expect(r.pode).toBe(true);
+    expect(r.motivo).toBeNull();
+  });
+
+  test('DEC-14-2 — PONTO_INCOMPLETO no período: não pode assinar', () => {
+    const pendencias = [{ data: TER, tipo: 'PONTO_INCOMPLETO' }];
+    const r = ctx.podeAssinarEspelho(pendencias, [], MES);
+    expect(r.pode).toBe(false);
+    expect(r.motivo).toBeTruthy();
+  });
+
+  test('DEC-14-3 — justificativa status=pendente no período: não pode assinar', () => {
+    const justifs = [{ data: TER, status: 'pendente', funcId: 'f1' }];
+    const r = ctx.podeAssinarEspelho([], justifs, MES);
+    expect(r.pode).toBe(false);
+    expect(r.motivo).toBeTruthy();
+  });
+
+  test('DEC-14-4 — justificativa status=aprovada no período: pode assinar', () => {
+    const justifs = [{ data: TER, status: 'aprovada', funcId: 'f1' }];
+    const r = ctx.podeAssinarEspelho([], justifs, MES);
+    expect(r.pode).toBe(true);
+  });
+
+  test('DEC-14-5 — justificativa pendente fora do mês avaliado: pode assinar', () => {
+    const justifs = [{ data: '2026-08-15', status: 'pendente', funcId: 'f1' }];
+    const r = ctx.podeAssinarEspelho([], justifs, MES);
+    expect(r.pode).toBe(true);
+  });
+
+  test('DEC-14-6 — saldo negativo (sem pendências): não bloqueia assinatura', () => {
+    // Saldo negativo não gera pendências — pode assinar
+    const r = ctx.podeAssinarEspelho([], [], MES);
+    expect(r.pode).toBe(true);
+  });
+
+  test('DEC-14-7 — falta resolvida (justif aprovada) não bloqueia', () => {
+    const justifs = [{ data: TER, status: 'aprovada', funcId: 'f1' }];
+    const r = ctx.podeAssinarEspelho([], justifs, MES);
+    expect(r.pode).toBe(true);
   });
 });

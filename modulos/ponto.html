@@ -765,63 +765,126 @@ async function creditarJornada(funcId,funcNome,data,jornMin,motivo){
 }
 
 // ── Espelho ───────────────────────────────────────────────────────────────────
+async function hashStr(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 async function gerarEspelho(){
   const funcId=document.getElementById('esp-func').value,mes=document.getElementById('esp-mes').value;
   if(!funcId||!mes){notif('Selecione funcionário e mês','vermelho');return;}
   const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===funcId);if(!func)return;
-  const regs=await fbGet('registros');const justifs=await fbGet('justificativas');
+  const regs=await fbGet('registros');
+  const justifs=await fbGet('justificativas');
+  const creditosTodos=await fbGet('creditos_jornada');
   const regsDoMes=regs.filter(r=>r.funcId===funcId&&r.data.startsWith(mes));
+  const creditosFuncMes=creditosTodos.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
   const justifDoMes=justifs.filter(j=>j.funcId===funcId&&j.data.startsWith(mes)&&j.status==='aprovado');
   const [ano,mesNum]=mes.split('-').map(Number);
-  const diasNoMes=new Date(ano,mesNum,0).getDate();
   const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];
-  const jornMin=(parseFloat(func.jornada)||8)*60;let totalTrabMin=0,totalEsperadoMin=0;
-  const creditosDoMes=await fbGet('creditos_jornada');
-  const creditosFuncMes=creditosDoMes.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));
-  const JORNADA_SABADO_MIN=210; // 08:30 às 12:00 = 3h30
-  const hojeStr=hoje();const linhas=[];
-  for(let d=1;d<=diasNoMes;d++){
-    const dataStr=`${ano}-${String(mesNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const diaSemana=new Date(ano,mesNum-1,d).getDay();
-    const nomesDia=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    const ehSabado=diaSemana===6,ehDomingo=diaSemana===0,ehFimSemana=ehSabado||ehDomingo,ehFuturo=dataStr>hojeStr;
-    const regsD=regsDoMes.filter(r=>r.data===dataStr);
-    const justifD=justifDoMes.find(j=>j.data===dataStr);
-    const creditoD=creditosFuncMes.find(c=>c.data===dataStr);
-    const get=tipo=>{const j=regsD.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regsD.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
-    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
-    let total=calcTotal(e,sa,ra,s);
-    const jornadaDia=ehSabado?JORNADA_SABADO_MIN:jornMin;
-    // Crédito por justificativa aprovada (atestado, feriado, home office, etc.)
-    const TIPOS_SEM_CREDITO=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
-    const justifCredita=justifD&&justifD.status==='aprovado'&&!TIPOS_SEM_CREDITO.includes(justifD.motivo);
-    // Usa creditoD.minutos como total (0 para folga comp → saldo negativo). Fallback = jornadaDia para justifCredita sem crédito.
-    if(total===null&&(creditoD||justifCredita))total=creditoD&&creditoD.minutos!=null?creditoD.minutos:jornadaDia;
-    // Ponto incompleto: tem registro mas calcTotal=null → pendente, não consolida saldo
-    const ehIncompleto=!ehDomingo&&!ehFuturo&&regsD.length>0&&total===null;
-    if(!ehDomingo&&!ehFuturo&&!ehIncompleto){totalEsperadoMin+=jornadaDia;if(total!==null)totalTrabMin+=total;}
-    const saldoDia=(!ehDomingo&&!ehFuturo&&!ehIncompleto&&total!==null)?total-jornadaDia:null;
-    const temCreditoSemPonto=!!(creditoD||justifCredita)&&total!=null&&total>0&&regsD.length===0;
-    let totalLabel='—';
-    if(!ehDomingo){if(temCreditoSemPonto)totalLabel=fmtMin(total);else if(total!==null)totalLabel=fmtMin(total);else if(ehFuturo)totalLabel='—';else if(ehIncompleto)totalLabel='Incompleto';else totalLabel='Falta';}
-    let ocorrencia=null;if(justifD)ocorrencia=justifD.motivo;else if(creditoD&&regsD.length===0)ocorrencia=creditoD.motivo;
-    linhas.push({data:dataStr,diaN:d,diaSem:nomesDia[diaSemana],ehFimSemana,ehFuturo,entrada:e,sAlmoco:sa,retorno:ra,saida:s,total,totalLabel,saldoDia,justif:ocorrencia,temCredito:temCreditoSemPonto});
-  }
-  const saldoTotal=totalTrabMin-totalEsperadoMin;
-  const espelhos=await fbGet('espelhos');const espExist=espelhos.find(e=>e.funcId===funcId&&e.mes===mes);
-  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div></div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${linhas.map(l=>{const bgColor=l.ehFimSemana?'background:#eeeeee;':l.temCredito&&!l.entrada?'background:#f0fff4;':l.justif?'background:#fff8e1;':'';const totalColor=l.totalLabel==='Falta'?'color:#c0392b;font-weight:600;':l.totalLabel==='Incompleto'?'color:#e67e22;font-weight:600;':'color:#111;';const saldoColor=l.saldoDia>0?'color:#1a7a3a;font-weight:600;':l.saldoDia<0?'color:#c0392b;font-weight:600;':'color:#111;';const ocorrenciaColor=l.temCredito&&!l.entrada?'color:#1a7a3a;':'color:#c0392b;';return `<tr style="${bgColor}"><td style="color:#111;font-weight:600;"><strong>${l.diaN}</strong> ${l.diaSem}</td><td style="color:#111;">${l.entrada||'—'}</td><td style="color:#111;">${l.sAlmoco||'—'}</td><td style="color:#111;">${l.retorno||'—'}</td><td style="color:#111;">${l.saida||'—'}</td><td style="${totalColor}">${l.totalLabel}</td><td style="${saldoColor}">${l.saldoDia!==null?(l.saldoDia>=0?'+':'')+fmtMin(l.saldoDia):'—'}</td><td style="${ocorrenciaColor}font-size:10px;">${l.justif||''}</td></tr>`;}).join('')}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(totalTrabMin)}</td><td style="color:${saldoTotal>=0?'#4ade80':'#f87171'};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${espExist.assinaturaImg}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${func.nome}<br>${espExist?.assinado?'Assinado em '+fmtData(espExist.assinadoEm?.slice(0,10)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
+  const hojeStr=hoje();
+
+  // buildEspelhoSnapshot usa os mesmos primitivos do motor de cálculo.
+  const snap=buildEspelhoSnapshot(func,regsDoMes,creditosFuncMes,justifDoMes,mes,hojeStr);
+  snap.geradoEm=new Date().toISOString();
+  snap.funcId=funcId;
+  window._espelhoSnapshot=snap;
+
+  const espelhos=await fbGet('espelhos');
+  const espExist=espelhos.find(e=>e.funcId===funcId&&e.mes===mes&&!e.invalidado)
+               ||espelhos.find(e=>e.funcId===funcId&&e.mes===mes);
   const espId=espExist?.id||uid();
+  const rows=renderEspelhoRowsHTML(snap);
+  const saldoTotal=snap.totais.saldo;
+  const saldoColor=saldoTotal>=0?'#4ade80':'#f87171';
+  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div></div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snap.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${espExist.assinaturaImg}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${func.nome}<br>${espExist?.assinado?'Assinado em '+fmtData(espExist.assinadoEm?.slice(0,10)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
   const statusAssin=espExist?.assinado?`<span class="badge assinado">✓ Assinado por ${espExist.assinadoPor}</span>`:`<span class="badge aguardando">Aguardando assinatura</span>`;
-  document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button><button class="btn-ghost" onclick="enviarParaAssinar('${espId}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button></div>${espelhoHTML}`;
+  const btnAcao=espExist?.assinado
+    ?`<button class="btn-ghost" style="border-color:#e67e22;color:#e67e22;" onclick="iniciarRevisaoPeriodo('${funcId}','${mes}')">Revisar Período (Gestor)</button>`
+    :`<button class="btn-ghost" onclick="enviarParaAssinar('${espId}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button>`;
+  document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button>${btnAcao}</div>${espelhoHTML}`;
 }
 window.gerarEspelho=gerarEspelho;
 
 async function enviarParaAssinar(espId,funcId,mes,mesLabel){
-  const espelhos=await fbGet('espelhos');const exist=espelhos.find(e=>e.id===espId);
-  if(!exist)await fbSet('espelhos',espId,{id:espId,funcId,mes,mesLabel,assinado:false,criadoEm:new Date().toISOString()});
-  notif('Espelho disponível para assinatura no app do funcionário!');
+  const snap=window._espelhoSnapshot;
+  if(!snap){notif('Gere o espelho antes de enviar','vermelho');return;}
+  const canonical=canonicalizarSnapshot(snap);
+  const hashSnap=await hashStr(canonical);
+  const agora=new Date().toISOString();
+
+  const espelhos=await fbGet('espelhos');
+  // versão ativa = não invalidada; fallback inclui legados sem o campo
+  const ativas=espelhos.filter(e=>e.funcId===funcId&&e.mes===mes&&!e.invalidado);
+  const espExist=ativas.sort((a,b)=>(b.versao||1)-(a.versao||1))[0]
+               ||espelhos.find(e=>e.funcId===funcId&&e.mes===mes);
+
+  if(!espExist){
+    // Primeira versão
+    const newId=espId||uid();
+    await fbSet('espelhos',newId,{
+      id:newId,funcId,mes,mesLabel,
+      versao:1,versaoAnteriorId:null,versaoSucessoraId:null,
+      invalidado:false,invalidadoEm:null,motivoInvalidacao:null,
+      geradoEm:snap.geradoEm,geradoPor:'Gestor',
+      snapshot:snap,hashSnapshot:hashSnap,
+      assinado:false,assinadoEm:null,assinadoPor:null,assinaturaImg:null,
+      criadoEm:agora,
+    });
+    notif('Espelho v1 disponível para assinatura!');
+  }else if(!espExist.assinado){
+    // Atualiza snapshot da versão corrente (ainda não assinada)
+    await fbSet('espelhos',espExist.id,{
+      snapshot:snap,hashSnapshot:hashSnap,
+      geradoEm:snap.geradoEm,geradoPor:'Gestor',mesLabel,
+    });
+    notif('Espelho atualizado e disponível para assinatura!');
+  }else{
+    // Espelho já assinado — o fluxo normal não cria revisões.
+    // Use "Revisar Período (Gestor)" para iniciar uma revisão com motivo.
+    notif('Espelho já assinado. Para revisar, clique em "Revisar Período (Gestor)".','laranja');
+  }
 }
 window.enviarParaAssinar=enviarParaAssinar;
+
+// ── Revisão de período (somente gestor) ──────────────────────────────────────
+// Cria v2 não assinada e registra metadados de sucessão em v1.
+// v1 é preservada integralmente; apenas versaoSucessoraId e invalidado são adicionados.
+async function iniciarRevisaoPeriodo(funcId,mes){
+  const snap=window._espelhoSnapshot;
+  if(!snap){notif('Gere o espelho antes de revisar','vermelho');return;}
+
+  const motivo=prompt('Motivo da revisão de período (obrigatório):');
+  if(!motivo||!motivo.trim()){notif('Motivo da revisão é obrigatório.','vermelho');return;}
+
+  const espelhos=await fbGet('espelhos');
+  const ativas=espelhos.filter(e=>e.funcId===funcId&&e.mes===mes&&!e.invalidado);
+  const espExist=ativas.sort((a,b)=>(b.versao||1)-(a.versao||1))[0]
+               ||espelhos.find(e=>e.funcId===funcId&&e.mes===mes);
+
+  if(!espExist||!espExist.assinado){
+    notif('Nenhum espelho assinado encontrado para esse período.','vermelho');return;
+  }
+
+  const canonical=canonicalizarSnapshot(snap);
+  const hashSnap=await hashStr(canonical);
+  const agora=new Date().toISOString();
+  const novoId=uid();
+
+  const resultado=calcRevisaoPeriodo(espExist,novoId,snap,hashSnap,motivo,agora);
+  if(!resultado){notif('Erro ao calcular revisão. Verifique os dados.','vermelho');return;}
+
+  // Operação atômica: criar v2 e atualizar v1 numa única transação.
+  // Se qualquer escrita falhar, nenhuma persiste.
+  const batch=window._writeBatch();
+  batch.set(docRef('espelhos',novoId),resultado.v2Doc);
+  batch.update(docRef('espelhos',espExist.id),resultado.v1Update);
+  await batch.commit();
+  delete _fbCache['espelhos'];
+  notif(`Revisão v${resultado.v2Doc.versao} criada. Aguardando assinatura do funcionário.`,'laranja');
+}
+window.iniciarRevisaoPeriodo=iniciarRevisaoPeriodo;
+
 
 function exportarEspelhoPDF(){
   const el=document.getElementById('espelho-html');if(!el){notif('Gere o espelho primeiro','vermelho');return;}

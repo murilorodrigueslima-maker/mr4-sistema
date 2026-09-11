@@ -15,15 +15,11 @@ const FIREBASE_CONFIG = {
 };
 
 const MODULOS = [
-  { id: 'vendas',     nome: 'Painel de Vendas', icon: '📊', url: './vendas.html'     },
-  { id: 'estoque',    nome: 'Estoque',           icon: '🗄️', url: './estoque.html'    },
-  { id: 'financeiro', nome: 'Financeiro',        icon: '💰', url: './financeiro.html' },
-  { id: 'catalogo',   nome: 'Catálogo',          icon: '📦', url: 'https://catalogo.mr4distribuidora.com.br' },
-  { id: 'expedicao',  nome: 'Expedição',         icon: '🚚', url: './expedicao.html'  },
-  { id: 'ponto',      nome: 'Ponto',             icon: '📍', url: './ponto.html'      },
-  { id: 'marketing',  nome: 'Marketing',         icon: '📢', url: './marketing.html'  },
-  { id: 'garantia',   nome: 'Garantia',          icon: '🛡️', url: './garantia.html'   },
-  { id: 'admin',      nome: 'Administração',     icon: '⚙️', url: './admin.html'      },
+  { id: 'catalogo',  nome: 'Catálogo',      icon: '📦', url: 'https://catalogo.mr4distribuidora.com.br' },
+  { id: 'expedicao', nome: 'Expedição',     icon: '🚚', url: './expedicao.html'  },
+  { id: 'ponto',     nome: 'Ponto',         icon: '📍', url: './ponto.html'      },
+  { id: 'garantia',  nome: 'Garantia',      icon: '🛡️', url: './garantia.html'   },
+  { id: 'admin',     nome: 'Administração', icon: '⚙️', url: './admin.html'      },
 ];
 
 const app  = initializeApp(FIREBASE_CONFIG);

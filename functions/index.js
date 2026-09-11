@@ -307,7 +307,7 @@ const GC_OPERACOES = {
     },
     dto:     (item) => ({
       id:            item.id,
-      codigo:        item.codigo     || item.referencia || '',
+      codigo:        item.codigo_interno || item.codigo || item.referencia || '',
       nome:          item.nome       || '',
       fabricante:    item.fabricante || item.marca      || '',
       estoque_atual: Number(item.estoque_atual ?? item.estoque ?? 0),

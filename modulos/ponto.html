@@ -736,7 +736,7 @@ async function responderJustificativa(status){
         const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
         if(!tiposSemCredito.includes(j.motivo)){
           const credId='cred_'+j.funcId+'_'+j.data;
-          batch.set(docRef('creditos_jornada',credId),{id:credId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,minutos,motivo:j.motivo,criadoEm:new Date().toISOString()});
+          batch.set(docRef('creditos_jornada',credId),{id:credId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,minutos,motivo:j.motivo,criadoEm:new Date().toISOString()},{merge:true});
         }
       }
     }

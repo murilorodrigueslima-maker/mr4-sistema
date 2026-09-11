@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * Testes A–I: Firestore Rules no emulador
+ * Testes A–W: Firestore Rules no emulador
  *
  * Pré-requisito:
  *   firebase emulators:start --only firestore,auth
@@ -19,6 +19,7 @@ const {
   assertFails,
   assertSucceeds,
 } = require('@firebase/rules-unit-testing');
+const { serverTimestamp, deleteField } = require('@firebase/firestore');
 const { readFileSync } = require('fs');
 const { resolve } = require('path');
 
@@ -29,9 +30,54 @@ let testEnv;
 
 // UIDs e dados de teste
 const UID_GESTOR    = 'uid-gestor-test';
+const UID_GESTOR_2  = 'uid-gestor2-test';
 const UID_FUNC      = 'uid-func-test';
 const UID_ANONIMO   = 'uid-anonimo-test';
 const FUNC_ID       = 'func-test-001';
+// Emails usados como token.email nos contextos autenticados
+const EMAIL_GESTOR   = 'gestor@test.com';
+const EMAIL_GESTOR_2 = 'gestor2@test.com';
+
+// Contextos com token.email injetado (necessário para validação nas Rules)
+const ctxGestor  = () => testEnv.authenticatedContext(UID_GESTOR,   { email: EMAIL_GESTOR   });
+const ctxGestor2 = () => testEnv.authenticatedContext(UID_GESTOR_2, { email: EMAIL_GESTOR_2 });
+const ctxFunc    = () => testEnv.authenticatedContext(UID_FUNC);
+
+async function seedBase(db) {
+  await db.collection('users').doc(UID_GESTOR).set({
+    role: 'gestor', ativo: true, nome: 'Gestor Teste',
+  });
+  await db.collection('users').doc(UID_GESTOR_2).set({
+    role: 'gestor', ativo: true, nome: 'Gestor Dois',
+  });
+  await db.collection('users').doc(UID_FUNC).set({
+    role: 'funcionario', ativo: true, funcionarioId: FUNC_ID, nome: 'Func Teste',
+  });
+  await db.collection('funcionarios').doc(FUNC_ID).set({
+    nome: 'Func Teste', cargo: 'Vendedor', modalidade: 'PRESENCIAL',
+  });
+}
+
+async function seedJustifPendente(db, id = 'justif-auditoria') {
+  await db.collection('justificativas').doc(id).set({
+    id, funcId: FUNC_ID, funcNome: 'Func Teste',
+    data: '2026-09-01', motivo: 'Atestado médico',
+    status: 'pendente', lancadoPorGestor: false,
+    criadoEm: '2026-09-01T08:00:00.000Z',
+  });
+}
+
+async function seedJustifRespondida(db, id = 'justif-respondida') {
+  await db.collection('justificativas').doc(id).set({
+    id, funcId: FUNC_ID, funcNome: 'Func Teste',
+    data: '2026-09-01', motivo: 'Atestado médico',
+    status: 'aprovado', lancadoPorGestor: false,
+    criadoEm: '2026-09-01T08:00:00.000Z',
+    respondidoPorUid:   UID_GESTOR,
+    respondidoPorEmail: EMAIL_GESTOR,
+    respondidoEm:       new Date('2026-09-01T10:00:00Z'),
+  });
+}
 
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
@@ -43,18 +89,8 @@ beforeAll(async () => {
     },
   });
 
-  // Seed: criar documentos base sem passar pelas Rules (Admin SDK do emulador)
   await testEnv.withSecurityRulesDisabled(async ctx => {
-    const db = ctx.firestore();
-    await db.collection('users').doc(UID_GESTOR).set({
-      role: 'gestor', ativo: true, nome: 'Gestor Teste',
-    });
-    await db.collection('users').doc(UID_FUNC).set({
-      role: 'funcionario', ativo: true, funcionarioId: FUNC_ID, nome: 'Func Teste',
-    });
-    await db.collection('funcionarios').doc(FUNC_ID).set({
-      nome: 'Func Teste', cargo: 'Vendedor', modalidade: 'PRESENCIAL',
-    });
+    await seedBase(ctx.firestore());
   });
 });
 
@@ -64,18 +100,8 @@ afterAll(async () => {
 
 afterEach(async () => {
   await testEnv.clearFirestore();
-  // Re-seed após cada limpeza
   await testEnv.withSecurityRulesDisabled(async ctx => {
-    const db = ctx.firestore();
-    await db.collection('users').doc(UID_GESTOR).set({
-      role: 'gestor', ativo: true, nome: 'Gestor Teste',
-    });
-    await db.collection('users').doc(UID_FUNC).set({
-      role: 'funcionario', ativo: true, funcionarioId: FUNC_ID, nome: 'Func Teste',
-    });
-    await db.collection('funcionarios').doc(FUNC_ID).set({
-      nome: 'Func Teste', cargo: 'Vendedor', modalidade: 'PRESENCIAL',
-    });
+    await seedBase(ctx.firestore());
   });
 });
 
@@ -247,4 +273,169 @@ test('M — funcionario não pode criar justificativa com lancadoPorGestor=true'
       lancadoPorGestor: true,
     })
   );
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Testes N–W: Auditoria de justificativas e semântica de merge (Etapa 2)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Teste N: gestor aprova com próprio UID/email → permitido ─────────────────
+test('N — gestor aprova justificativa com próprio UID e email → permitido', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore());
+  });
+  const db = ctxGestor().firestore();
+  await assertSucceeds(
+    db.collection('justificativas').doc('justif-auditoria').update({
+      status:             'aprovado',
+      obsGestor:          '',
+      respondidoPorUid:   UID_GESTOR,
+      respondidoPorEmail: EMAIL_GESTOR,
+      respondidoEm:       serverTimestamp(),
+    })
+  );
+});
+
+// ─── Teste O: gestor tenta usar UID de outro gestor → negado ──────────────────
+test('O — gestor tenta usar respondidoPorUid de outro gestor → negado', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore());
+  });
+  const db = ctxGestor().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-auditoria').update({
+      status:             'aprovado',
+      respondidoPorUid:   UID_GESTOR_2,   // UID de OUTRO gestor
+      respondidoPorEmail: EMAIL_GESTOR,
+      respondidoEm:       serverTimestamp(),
+    })
+  );
+});
+
+// ─── Teste P: gestor tenta usar email de outro gestor → negado ────────────────
+test('P — gestor tenta usar respondidoPorEmail de outro gestor → negado', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore());
+  });
+  const db = ctxGestor().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-auditoria').update({
+      status:             'aprovado',
+      respondidoPorUid:   UID_GESTOR,
+      respondidoPorEmail: EMAIL_GESTOR_2, // email de OUTRO gestor
+      respondidoEm:       serverTimestamp(),
+    })
+  );
+});
+
+// ─── Teste Q: gestor tenta gravar timestamp arbitrário → negado ───────────────
+test('Q — gestor tenta gravar timestamp de cliente em respondidoEm → negado', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore());
+  });
+  const db = ctxGestor().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-auditoria').update({
+      status:             'aprovado',
+      respondidoPorUid:   UID_GESTOR,
+      respondidoPorEmail: EMAIL_GESTOR,
+      respondidoEm:       new Date('2020-01-01T00:00:00Z'),  // timestamp arbitrário
+    })
+  );
+});
+
+// ─── Teste R: gestor tenta alterar respondidoPorUid depois da resposta → negado
+test('R — gestor não pode alterar respondidoPorUid após resposta (imutabilidade)', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifRespondida(ctx.firestore());
+  });
+  const db = ctxGestor2().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-respondida').update({
+      respondidoPorUid:   UID_GESTOR_2,  // tenta trocar o autor da decisão
+      respondidoPorEmail: EMAIL_GESTOR_2,
+      respondidoEm:       serverTimestamp(),
+    })
+  );
+});
+
+// ─── Teste S: gestor tenta remover campos de auditoria → negado ───────────────
+test('S — gestor não pode remover respondidoPorUid via FieldValue.delete()', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifRespondida(ctx.firestore());
+  });
+  const db = ctxGestor().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-respondida').update({
+      respondidoPorUid: deleteField(),
+    })
+  );
+});
+
+// ─── Teste T: funcionário tenta aprovar justificativa → negado ────────────────
+test('T — funcionario não pode atualizar justificativa (update=gestor only)', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore());
+  });
+  const db = ctxFunc().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-auditoria').update({
+      status: 'aprovado',
+    })
+  );
+});
+
+// ─── Teste U: criação legítima de justificativa pelo funcionário continua ok ──
+test('U — funcionario cria justificativa pendente (fluxo legítimo preservado)', async () => {
+  const db = ctxFunc().firestore();
+  await assertSucceeds(
+    db.collection('justificativas').doc('justif-nova-func').set({
+      funcId:           FUNC_ID,
+      data:             '2026-09-02',
+      motivo:           'Consulta médica',
+      status:           'pendente',
+      lancadoPorGestor: false,
+    })
+  );
+});
+
+// ─── Teste V: update legítimo sem campos de auditoria continua funcionando ────
+test('V — gestor pode atualizar obsGestor sem tocar campos de auditoria', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore());
+  });
+  const db = ctxGestor().firestore();
+  await assertSucceeds(
+    db.collection('justificativas').doc('justif-auditoria').update({
+      obsGestor: 'Gestor adicionou nota sem responder ainda',
+    })
+  );
+});
+
+// ─── Teste W: merge — campo extra em creditos_jornada preservado ──────────────
+test('W — batch.set(merge:true) preserva campo extra preexistente em creditos_jornada', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection('creditos_jornada').doc('cred-merge-test').set({
+      id: 'cred-merge-test', funcId: FUNC_ID, funcNome: 'Func Teste',
+      data: '2026-09-01', minutos: 480, motivo: 'Atestado',
+      criadoEm: '2026-09-01T08:00:00.000Z',
+      observacao: 'campo-extra-preexistente',
+    });
+  });
+
+  const db = ctxGestor().firestore();
+  const batch = db.batch();
+  batch.set(
+    db.collection('creditos_jornada').doc('cred-merge-test'),
+    { id:'cred-merge-test', funcId:FUNC_ID, funcNome:'Func Teste',
+      data:'2026-09-01', minutos:480, motivo:'Atestado',
+      criadoEm: new Date().toISOString() },
+    { merge: true }
+  );
+  await assertSucceeds(batch.commit());
+
+  // Lê com gestor (tem acesso de leitura) para verificar o campo extra
+  const dbRead = ctxGestor().firestore();
+  const snap = await dbRead.collection('creditos_jornada').doc('cred-merge-test').get();
+  expect(snap.data().observacao).toBe('campo-extra-preexistente');
 });

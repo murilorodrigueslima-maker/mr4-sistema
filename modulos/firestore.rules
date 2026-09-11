@@ -152,7 +152,7 @@ service cloud.firestore {
         (!('respondidoEm'       in resource.data) ||
          ('respondidoEm'       in request.resource.data &&
           resource.data.respondidoEm       == request.resource.data.respondidoEm));
-      allow delete: if isGestor();
+      allow delete: if isGestor() && resource.data.status == 'pendente';
     }
 
     // ── Coleção: creditos_jornada ──────────────────────────────────────────────

@@ -439,3 +439,55 @@ test('W — batch.set(merge:true) preserva campo extra preexistente em creditos_
   const snap = await dbRead.collection('creditos_jornada').doc('cred-merge-test').get();
   expect(snap.data().observacao).toBe('campo-extra-preexistente');
 });
+
+// ─── Teste X: gestor exclui justificativa pendente → PERMITIDO ────────────────
+test('X — gestor exclui justificativa pendente (permitido)', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore(), 'justif-del-pendente');
+  });
+  const db = ctxGestor().firestore();
+  await assertSucceeds(
+    db.collection('justificativas').doc('justif-del-pendente').delete()
+  );
+});
+
+// ─── Teste Y: gestor tenta excluir justificativa aprovada → NEGADO ───────────
+test('Y — gestor tenta excluir justificativa aprovada (negado)', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifRespondida(ctx.firestore(), 'justif-del-aprovada');
+  });
+  const db = ctxGestor().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-del-aprovada').delete()
+  );
+});
+
+// ─── Teste Z: gestor tenta excluir justificativa rejeitada → NEGADO ──────────
+test('Z — gestor tenta excluir justificativa rejeitada (negado)', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection('justificativas').doc('justif-del-rejeitada').set({
+      id: 'justif-del-rejeitada', funcId: FUNC_ID, funcNome: 'Func Teste',
+      data: '2026-09-01', motivo: 'Atestado médico',
+      status: 'rejeitado', lancadoPorGestor: false,
+      criadoEm: '2026-09-01T08:00:00.000Z',
+      respondidoPorUid:   UID_GESTOR,
+      respondidoPorEmail: EMAIL_GESTOR,
+      respondidoEm:       new Date('2026-09-01T10:00:00Z'),
+    });
+  });
+  const db = ctxGestor().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-del-rejeitada').delete()
+  );
+});
+
+// ─── Teste AA: funcionário tenta excluir justificativa pendente → NEGADO ──────
+test('AA — funcionario tenta excluir justificativa pendente (negado)', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await seedJustifPendente(ctx.firestore(), 'justif-del-func');
+  });
+  const db = ctxFunc().firestore();
+  await assertFails(
+    db.collection('justificativas').doc('justif-del-func').delete()
+  );
+});

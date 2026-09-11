@@ -554,7 +554,8 @@ function renderPainel(data) {
 }
 
 /* ── AUTH / DATA ── */
-let _unsubSnapshot = null;
+let _unsubSnapshot  = null;
+let _signOutMessage = null; // mensagem a exibir após signOut explícito
 
 function ocultarPainel() {
   ['mainHeader','teamBar','mainGrid','mainFooter'].forEach(id=>{
@@ -591,6 +592,8 @@ function mostrarPainel() {
 }
 
 function mostrarLogin(msg) {
+  const btnEl = document.getElementById('loginBtn');
+  if(btnEl) { btnEl.disabled = false; btnEl.textContent = 'Entrar'; }
   document.getElementById('splash').style.display    = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('loginError').textContent  = msg || '';
@@ -640,7 +643,10 @@ async function verificarPerfil(uid) {
 
   onAuthStateChanged(_auth, async user => {
     if(!user) {
-      mostrarLogin('');
+      // Lê e limpa a mensagem agendada pelo signOut explícito (se houver)
+      const msg = _signOutMessage;
+      _signOutMessage = null;
+      mostrarLogin(msg || '');
       return;
     }
 
@@ -652,14 +658,15 @@ async function verificarPerfil(uid) {
     try {
       autorizado = await verificarPerfil(user.uid);
     } catch(e) {
-      console.error('Erro ao verificar perfil (rede?):', e);
+      console.error('verificarPerfil erro:', e);
       document.getElementById('splash').style.display = 'none';
       mostrarLogin('Erro de conexão. Recarregue a página.');
       return;
     }
     if(!autorizado) {
+      // Define a mensagem ANTES do signOut — handler null irá consumi-la
+      _signOutMessage = 'Conta sem permissão de acesso ao painel.';
       await signOut(_auth);
-      mostrarLogin('Conta sem permissão de acesso ao painel.');
       return;
     }
 

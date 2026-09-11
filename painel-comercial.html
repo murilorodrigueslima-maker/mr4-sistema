@@ -628,15 +628,10 @@ window.fazerLogout = async function() {
 };
 
 async function verificarPerfil(uid) {
-  try {
-    const snap = await getDoc(doc(_db,'users',uid));
-    if(!snap.exists()) return false;
-    const d = snap.data();
-    return d.role === 'display' && d.ativo === true;
-  } catch(e) {
-    console.error('verificarPerfil:', e);
-    return false;
-  }
+  const snap = await getDoc(doc(_db,'users',uid));
+  if(!snap.exists()) return false;
+  const d = snap.data();
+  return d.role === 'display' && d.ativo === true;
 }
 
 /* ── INIT ── */
@@ -653,7 +648,15 @@ async function verificarPerfil(uid) {
     document.getElementById('splash').style.display    = 'flex';
     ocultarPainel();
 
-    const autorizado = await verificarPerfil(user.uid);
+    let autorizado;
+    try {
+      autorizado = await verificarPerfil(user.uid);
+    } catch(e) {
+      console.error('Erro ao verificar perfil (rede?):', e);
+      document.getElementById('splash').style.display = 'none';
+      mostrarLogin('Erro de conexão. Recarregue a página.');
+      return;
+    }
     if(!autorizado) {
       await signOut(_auth);
       mostrarLogin('Conta sem permissão de acesso ao painel.');

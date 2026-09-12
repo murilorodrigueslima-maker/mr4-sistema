@@ -788,7 +788,7 @@ exports.syncPainelDisplay = onSchedule({
 }, syncPainelDisplayHandler);
 
 exports.concluirRevisaoEspelho = onDocumentUpdated(
-  { document: 'espelhos/{espelhoId}', region: REGION },
+  { document: 'espelhos/{espelhoId}', region: REGION, retry: true },
   concluirRevisaoEspelhoHandler,
 );
 

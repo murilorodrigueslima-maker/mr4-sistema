@@ -234,12 +234,14 @@ test('K — funcionario pode atualizar espelho com campos de assinatura', async 
     });
   });
   const db = testEnv.authenticatedContext(UID_FUNC).firestore();
+  // assinadoEm deve ser serverTimestamp() — validado pelas Rules via request.time
   await assertSucceeds(
     db.collection('espelhos').doc('esp-assinar').update({
       assinado:     true,
       assinaturaImg:'data:image/png;base64,abc',
-      assinadoEm:   '2026-09-09T12:00:00.000Z',
+      assinadoEm:   serverTimestamp(),
       assinadoPor:  'Func Teste',
+      status:       'assinado',
     })
   );
 });

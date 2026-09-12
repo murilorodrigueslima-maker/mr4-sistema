@@ -521,26 +521,152 @@ describe('Versionamento — semântica revisão', () => {
 
 });
 
-// ── Regras de Firestore que serão necessárias (documentação, não testes ativos)
-// ─────────────────────────────────────────────────────────────────────────────
-// PENDENTE ATÉ PRÓXIMA ETAPA (alterar Rules requer autorização explícita):
-//
-// 1. Funcionário: só pode fazer update com hasOnly(['assinado','assinaturaImg','assinadoEm','assinadoPor'])
-//    → snapshot e hashSnapshot são imutáveis para o funcionário
-//
-// 2. Gestor pode criar/atualizar snapshot APENAS se espDoc.assinado !== true
-//    → espelho assinado não pode ter snapshot sobrescrito nem pelo gestor
-//
-// 3. Invalidação: gestor pode setar {invalidado, invalidadoEm, motivoInvalidacao, versaoSucessoraId}
-//    mas NÃO pode alterar snapshot, hashSnapshot, assinado, assinaturaImg de uma versão assinada
-//
-// 4. Ninguém (incluindo gestor) pode setar assinado=false em versão já assinada
-//
-// 5. versao só pode aumentar (gestor não pode decrementar versão)
-//
-// Estes testes ficarão PENDENTES até que firestore.rules seja atualizado.
-// Exemplo do que seria testado com Firebase Emulator:
-//   - funcionario tenta update {snapshot: {...}} → DENIED
-//   - funcionario tenta update {assinaturaImg: '...'} → ALLOWED
-//   - gestor tenta update snapshot em espelho assinado → DENIED
-//   - gestor cria versão 2 corretamente → ALLOWED
+// ── A-G (auditoria): lógica completa do trigger concluirRevisaoEspelho ───────
+// Usa _validateConcluirRevisao exportada de index.js (função pura, sem Firestore).
+
+const { podeAssinarEspelho } = ctx;  // função pura de ponto-regras.js
+
+// Importa a função de validação pura do handler (sem init do Firebase Admin)
+process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+process.env.GCLOUD_PROJECT          = process.env.GCLOUD_PROJECT          || 'mr4-ponto';
+const { _validateConcluirRevisao: validate } = require('../index.js');
+
+function makeV1(overrides = {}) {
+  return Object.assign({
+    funcId: 'f1', mes: '2026-05',
+    versaoSucessoraId: 'esp-v2',
+    revisaoEmAndamento: true,
+    substituido: false,
+  }, overrides);
+}
+
+function makeAfter(overrides = {}) {
+  return Object.assign({
+    assinado: true,
+    versaoAnteriorId: 'esp-v1',
+    funcId: 'f1',
+    mes: '2026-05',
+    status: 'assinado',
+  }, overrides);
+}
+
+describe('A-G (auditoria trigger): validateConcluirRevisao — lógica completa', () => {
+
+  test('A. funcId diferentes → não conclui', () => {
+    const v1 = makeV1({ funcId: 'f-outro' });
+    expect(validate({ assinado: false }, makeAfter(), v1, 'esp-v2')).toBe('funcId-mismatch');
+  });
+
+  test('B. mes diferente → não conclui', () => {
+    const v1 = makeV1({ mes: '2026-04' });
+    expect(validate({ assinado: false }, makeAfter(), v1, 'esp-v2')).toBe('mes-mismatch');
+  });
+
+  test('C. v1 sem revisaoEmAndamento → não conclui', () => {
+    const v1 = makeV1({ revisaoEmAndamento: false });
+    expect(validate({ assinado: false }, makeAfter(), v1, 'esp-v2')).toBe('v1-not-in-revision');
+  });
+
+  test('D. v1 não aponta para esta v2 → não conclui', () => {
+    const v1 = makeV1({ versaoSucessoraId: 'esp-outro' });
+    expect(validate({ assinado: false }, makeAfter(), v1, 'esp-v2')).toBe('cross-ref-mismatch');
+  });
+
+  test('E. v2 com status incompatível (não assinado) → não conclui', () => {
+    const after = makeAfter({ status: 'aguardando_assinatura' });
+    expect(validate({ assinado: false }, after, makeV1(), 'esp-v2')).toBe('invalid-v2-status');
+  });
+
+  test('F. evento repetido (re-trigger) → idempotente', () => {
+    const v1 = makeV1({ substituido: true, revisaoEmAndamento: false });
+    expect(validate({ assinado: false }, makeAfter(), v1, 'esp-v2')).toBe('idempotent');
+  });
+
+  test('G. v1Update toca apenas os 3 campos de conclusão', () => {
+    const agora   = HOJE + 'T17:00:00.000Z';
+    const { v1Update } = calcConcluirRevisao('esp-v1', 'esp-v2', 'João', 'img', agora);
+    // Campos alterados pelo trigger
+    expect(v1Update.revisaoEmAndamento).toBe(false);
+    expect(v1Update.substituido).toBe(true);
+    expect(v1Update.substituidoEm).toBeDefined();
+    // Campos que NÃO devem ser tocados
+    expect(v1Update.assinado).toBeUndefined();
+    expect(v1Update.snapshot).toBeUndefined();
+    expect(v1Update.hashSnapshot).toBeUndefined();
+    expect(v1Update.assinaturaImg).toBeUndefined();
+    expect(v1Update.assinadoEm).toBeUndefined();
+    expect(v1Update.assinadoPor).toBeUndefined();
+    expect(v1Update.funcId).toBeUndefined();
+    expect(v1Update.mes).toBeUndefined();
+    expect(v1Update.versao).toBeUndefined();
+    expect(v1Update.versaoAnteriorId).toBeUndefined();
+  });
+
+  // Casos de noop base (gatilhos sem I/O)
+  test('noop: assinado permanece false', () => {
+    expect(validate({ assinado: false }, makeAfter({ assinado: false }), makeV1(), 'esp-v2'))
+      .toBe('noop-assinado');
+  });
+
+  test('noop: assinado já era true antes (re-trigger trivial)', () => {
+    expect(validate({ assinado: true }, makeAfter({ assinado: true }), makeV1(), 'esp-v2'))
+      .toBe('noop-assinado');
+  });
+
+  test('noop: versaoAnteriorId ausente (v1 original sem revisão)', () => {
+    const after = makeAfter({ versaoAnteriorId: null });
+    expect(validate({ assinado: false }, after, null, 'esp-v2'))
+      .toBe('noop-no-versaoAnteriorId');
+  });
+
+  test('ok: transição válida completa → ok', () => {
+    expect(validate({ assinado: false }, makeAfter(), makeV1(), 'esp-v2')).toBe('ok');
+  });
+
+});
+
+// ── S-W: podeAssinarEspelho + fluxo de assinatura ────────────────────────────
+
+describe('S-W: podeAssinarEspelho e fluxo de assinatura', () => {
+
+  const MES_SIGN = '2026-05';
+
+  test('S. podeAssinarEspelho: pontos incompletos bloqueiam assinatura', () => {
+    const pendencias = [{ data: '2026-05-04', tipo: 'PONTO_INCOMPLETO' }];
+    const resultado  = podeAssinarEspelho(pendencias, [], MES_SIGN);
+    expect(resultado.pode).toBe(false);
+    expect(resultado.motivo).toMatch(/incompleto/i);
+  });
+
+  test('T. podeAssinarEspelho: justificativa pendente no período bloqueia assinatura', () => {
+    const justifs = [{ data: '2026-05-10', status: 'pendente', funcId: 'f1' }];
+    const resultado = podeAssinarEspelho([], justifs, MES_SIGN);
+    expect(resultado.pode).toBe(false);
+    expect(resultado.motivo).toMatch(/justificativa/i);
+  });
+
+  test('U. podeAssinarEspelho: sem pendências e sem justif pendentes → pode assinar', () => {
+    // Justificativa aprovada no período — não bloqueia
+    const justifs = [{ data: '2026-05-10', status: 'aprovado', funcId: 'f1' }];
+    const resultado = podeAssinarEspelho([], justifs, MES_SIGN);
+    expect(resultado.pode).toBe(true);
+    expect(resultado.motivo).toBeNull();
+  });
+
+  test('V. podeAssinarEspelho: justificativa pendente de outro mês não bloqueia', () => {
+    const justifs = [{ data: '2026-04-10', status: 'pendente', funcId: 'f1' }];
+    const resultado = podeAssinarEspelho([], justifs, MES_SIGN);
+    expect(resultado.pode).toBe(true);
+  });
+
+  test('W. calcConcluirRevisao produz v2Update com assinado:true e status:assinado', () => {
+    const agora = HOJE + 'T16:00:00.000Z';
+    const { v2Update } = calcConcluirRevisao('esp-v1', 'esp-v2', 'Maria', 'data:image/png;base64,SIG', agora);
+    expect(v2Update.assinado).toBe(true);
+    expect(v2Update.status).toBe('assinado');
+    expect(v2Update.assinadoPor).toBe('Maria');
+    expect(v2Update.assinadoEm).toBe(agora);
+    expect(v2Update.assinaturaImg).toBe('data:image/png;base64,SIG');
+  });
+
+});

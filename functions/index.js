@@ -14,8 +14,9 @@
  * NÃO PUBLICAR EM PRODUÇÃO sem passar pelos testes A-T no emulador.
  */
 
-const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { onSchedule }        = require('firebase-functions/v2/scheduler');
+const { onCall, HttpsError }  = require('firebase-functions/v2/https');
+const { onSchedule }          = require('firebase-functions/v2/scheduler');
+const { onDocumentUpdated }   = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 
@@ -685,6 +686,88 @@ async function syncPainelDisplayHandler() {
   });
 }
 
+// ── Handler: concluirRevisaoEspelho ───────────────────────────────────────────
+//
+// Trigger Firestore: dispara quando um documento em espelhos/{espelhoId} é
+// atualizado. Finaliza v1 atomicamente após a assinatura de v2.
+//
+// Fluxo:
+//   1. v2 é assinada pelo funcionário (browser): assinado false→true
+//   2. Este trigger detecta a mudança e localiza v1 via v2.versaoAnteriorId
+//   3. Valida cross-reference e estado de v1
+//   4. Atualiza v1: revisaoEmAndamento=false, substituido=true, substituidoEm=now
+//
+// Idempotência: se v1 já está com substituido=true + revisaoEmAndamento=false, retorna sem ação.
+// Admin SDK: bypass das Rules — necessário pois funcionário não pode atualizar v1.
+
+// Função pura de validação — sem efeitos colaterais, testável diretamente.
+// Retorna: 'ok' | 'noop-assinado' | 'noop-no-versaoAnteriorId' | 'invalid-v2-status'
+//        | 'v1-not-found' | 'idempotent' | 'funcId-mismatch' | 'mes-mismatch'
+//        | 'cross-ref-mismatch' | 'v1-not-in-revision'
+function validateConcluirRevisao(before, after, v1, v2Id) {
+  // 1. Transição assinado: false → true
+  if (!after.assinado || before.assinado) return 'noop-assinado';
+  // 2. É uma revisão (possui versaoAnteriorId)
+  if (!after.versaoAnteriorId) return 'noop-no-versaoAnteriorId';
+  // 3. Status de v2 consistente (se presente, deve ser 'assinado')
+  if (after.status !== undefined && after.status !== 'assinado') return 'invalid-v2-status';
+  // 4. v1 existe
+  if (!v1) return 'v1-not-found';
+  // 5. Idempotência: v1 já finalizada
+  if (v1.substituido === true && v1.revisaoEmAndamento === false) return 'idempotent';
+  // 6. Mesmo funcionário
+  if (v1.funcId !== after.funcId) return 'funcId-mismatch';
+  // 7. Mesmo período
+  if (v1.mes !== after.mes) return 'mes-mismatch';
+  // 8. Cross-reference: v1 aponta para esta v2
+  if (v1.versaoSucessoraId !== v2Id) return 'cross-ref-mismatch';
+  // 9. v1 está em revisão aberta
+  if (!v1.revisaoEmAndamento) return 'v1-not-in-revision';
+  return 'ok';
+}
+
+async function concluirRevisaoEspelhoHandler(event) {
+  const after     = event.data.after.data();
+  const before    = event.data.before.data();
+  const espelhoId = event.params.espelhoId;
+
+  // Gatilho antecipado sem I/O: descarta casos que não precisam de DB
+  if (!after.assinado || before.assinado) return;
+  const v1Id = after.versaoAnteriorId;
+  if (!v1Id) return;
+
+  if (after.status !== undefined && after.status !== 'assinado') {
+    console.error(`concluirRevisao: v2.status inválido '${after.status}'. Abortando.`);
+    return;
+  }
+
+  const v1Ref  = db.collection('espelhos').doc(v1Id);
+  const v1Snap = await v1Ref.get();
+  const v1     = v1Snap.exists ? v1Snap.data() : null;
+
+  const result = validateConcluirRevisao(before, after, v1, espelhoId);
+
+  if (result === 'idempotent') {
+    console.log(`concluirRevisao: v1 ${v1Id} já finalizada (idempotente).`);
+    return;
+  }
+  if (result !== 'ok') {
+    const isWarn = result === 'v1-not-in-revision';
+    console[isWarn ? 'warn' : 'error'](
+      `concluirRevisao: abortando (${result}) v2=${espelhoId} v1Id=${v1Id}`
+    );
+    return;
+  }
+
+  await v1Ref.update({
+    revisaoEmAndamento: false,
+    substituido:        true,
+    substituidoEm:      admin.firestore.FieldValue.serverTimestamp(),
+  });
+
+  console.log(`concluirRevisao: v1 ${v1Id} finalizada (v2=${espelhoId}).`);
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 exports.registrarPonto          = onCall({ region: REGION }, registrarPontoHandler);
@@ -704,9 +787,16 @@ exports.syncPainelDisplay = onSchedule({
   timeoutSeconds:  120,
 }, syncPainelDisplayHandler);
 
-// Handlers exportados para testes diretos (sem onCall wrapper)
-exports._registrarPontoHandler        = registrarPontoHandler;
-exports._criarContaFuncionarioHandler = criarContaFuncionarioHandler;
-exports._syncPainelDisplayHandler     = syncPainelDisplayHandler;
-exports._nomeMatchPainel              = nomeMatchPainel;
-exports._fetchTodasVendasGC           = fetchTodasVendasGC;
+exports.concluirRevisaoEspelho = onDocumentUpdated(
+  { document: 'espelhos/{espelhoId}', region: REGION },
+  concluirRevisaoEspelhoHandler,
+);
+
+// Handlers exportados para testes diretos (sem onCall/trigger wrapper)
+exports._registrarPontoHandler             = registrarPontoHandler;
+exports._criarContaFuncionarioHandler      = criarContaFuncionarioHandler;
+exports._syncPainelDisplayHandler          = syncPainelDisplayHandler;
+exports._nomeMatchPainel                   = nomeMatchPainel;
+exports._fetchTodasVendasGC                = fetchTodasVendasGC;
+exports._concluirRevisaoEspelhoHandler     = concluirRevisaoEspelhoHandler;
+exports._validateConcluirRevisao           = validateConcluirRevisao;

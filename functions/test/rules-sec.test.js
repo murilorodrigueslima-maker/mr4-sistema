@@ -15,6 +15,7 @@ const {
   assertFails,
   assertSucceeds,
 } = require('@firebase/rules-unit-testing');
+const { serverTimestamp } = require('@firebase/firestore');
 const { readFileSync } = require('fs');
 const { resolve }      = require('path');
 
@@ -557,13 +558,14 @@ describe('assinatura de espelho — Rule hasOnly([...4 campos])', () => {
     });
   });
 
-  test('E1 — funcionário assina o próprio espelho (4 campos exatos) → PASS', async () => {
+  test('E1 — funcionário assina o próprio espelho com serverTimestamp → PASS', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC).firestore();
     await assertSucceeds(db.collection('espelhos').doc(ESP_PROPRIO).update({
-      assinado: true,
-      assinaturaImg: 'data:image/png;base64,ABC',
-      assinadoEm: '2026-09-09T14:00:00.000Z',
-      assinadoPor: 'Func Sec',
+      assinado:     true,
+      assinaturaImg:'data:image/png;base64,ABC',
+      assinadoEm:   serverTimestamp(),
+      assinadoPor:  'Func Sec',
+      status:       'assinado',
     }));
   });
 

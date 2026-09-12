@@ -285,7 +285,7 @@ canvas#canvasFoto{display:none;}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const FIREBASE_CONFIG = {
@@ -779,10 +779,26 @@ async function renderEspelhosFunc(){
 
 async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
   espelhoAtualFuncId=espelhoId;
-  // garante que o registro existe no Firestore antes de assinar
   const espelhos=await fbGet('espelhos');
   const exist=espelhos.find(e=>e.id===espelhoId);
   if(!exist){notif('Espelho não encontrado. Solicite ao gestor.','vermelho');return;}
+
+  // Verificar pré-condições antes de abrir o modal de assinatura
+  try{
+    const [regs,credF,justifs]=await Promise.all([
+      fbGet('registros'),
+      fbGet('creditos_jornada'),
+      fbGet('justificativas'),
+    ]);
+    const {pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
+    const resultado=podeAssinarEspelho(pendencias,justifs,mes);
+    if(!resultado.pode){notif(resultado.motivo,'vermelho');return;}
+  }catch(err){
+    console.error('Erro ao verificar pré-condições de assinatura:',err);
+    notif('Erro ao verificar condições. Tente novamente.','vermelho');
+    return;
+  }
+
   document.getElementById('assinar-info').textContent='Revise seu espelho de ponto e assine abaixo para confirmar.';
   document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>';
   document.getElementById('modal-assinar').classList.add('aberto');
@@ -895,7 +911,7 @@ async function confirmarAssinatura(){
   // do gestor em ponto.html. Enquanto isso, v1 continua com revisaoEmAndamento:true.
   await setDoc(doc(db, 'espelhos', espelhoAtualFuncId), {
     assinado: true, assinaturaImg, status: 'assinado',
-    assinadoEm: new Date().toISOString(),
+    assinadoEm: serverTimestamp(),  // serverTimestamp validado pelas Rules (request.time)
     assinadoPor: funcAtivo.nome
   }, {merge: true});
   fecharModal('modal-assinar');notif('Espelho assinado com sucesso!');renderEspelhosFunc();

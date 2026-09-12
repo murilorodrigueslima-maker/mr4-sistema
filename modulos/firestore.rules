@@ -165,15 +165,42 @@ service cloud.firestore {
     // ── Coleção: espelhos ──────────────────────────────────────────────────────
 
     match /espelhos/{espelhoId} {
-      allow read:   if isGestor() || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create: if isGestor();
-      allow update: if isGestor() || (
-        isFuncionario() &&
+      allow read: if isGestor() || (isFuncionario() && resource.data.funcId == meuFuncId());
+
+      // Gestor cria: espelho sempre nasce não-assinado.
+      allow create: if isGestor() && request.resource.data.assinado == false;
+
+      // Gestor atualiza:
+      //   Campos estruturais (funcId, mes, versao, versaoAnteriorId) são imutáveis após create.
+      //   Espelho não-assinado: snapshot/hash/status/revisão podem ser atualizados.
+      //   Espelho assinado: snapshot, hash e campos de assinatura são imutáveis.
+      //   Finalização de v1 (revisaoEmAndamento/substituido) é feita pela Cloud Function (Admin SDK).
+      allow update: if isGestor() &&
+        !request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['funcId', 'mes', 'versao', 'versaoAnteriorId']) &&
+        (
+          !resource.data.assinado ||
+          !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['snapshot', 'hashSnapshot', 'assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor'])
+        );
+
+      // Funcionário assina espelho próprio:
+      //   - Somente espelhos não-assinados (transição false → true).
+      //   - assinadoEm deve ser serverTimestamp() — não aceitamos timestamp do cliente.
+      //   - Se status for enviado, deve ser 'assinado'.
+      //   - Somente os 5 campos de assinatura podem ser alterados.
+      allow update: if isFuncionario() &&
         resource.data.funcId == meuFuncId() &&
+        !resource.data.assinado &&
+        request.resource.data.assinado == true &&
+        request.resource.data.assinadoEm == request.time &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['assinado','assinaturaImg','assinadoEm','assinadoPor'])
-      );
-      allow delete: if isGestor();
+          .hasOnly(['assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor', 'status']) &&
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) ||
+          request.resource.data.status == 'assinado');
+
+      // Gestor exclui: apenas espelhos não assinados.
+      allow delete: if isGestor() && !resource.data.assinado;
     }
 
     // ── Coleção: avaliacoes ────────────────────────────────────────────────────

@@ -132,6 +132,13 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
   th,td{padding:.65rem .75rem}
   .search-box{width:100%}
 }
+@media(max-width:480px){
+  .table-card{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .table-card table{min-width:580px}
+}
+
+.btn-primary:focus-visible,.btn-secondary:focus-visible,.btn-danger:focus-visible,
+.btn-icon:focus-visible,.btn-back:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 </style>
 </head>
 <body>

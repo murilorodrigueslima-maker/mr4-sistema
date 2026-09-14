@@ -3074,6 +3074,13 @@ window.baixarBackup = function(idx) {
   a.download = `backup-clientes-${b.data}.json`;
   a.click();
 };
+// ── A11Y: teclado para .sidebar-item estáticos (Enter/Espaço) ─────────────────
+document.querySelectorAll('.sidebar-item[onclick]').forEach(el => {
+  el.setAttribute('tabindex', '0');
+  el.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); el.click(); }
+  });
+});
 // ──────────────────────────────────────────────────────────────────────────────
 </script>
 </body>

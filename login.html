@@ -5,173 +5,282 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MR4 Distribuidora — Login</title>
 <link rel="icon" type="image/png" href="./assets/logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Tokens (mesmo sistema da home) ───────────────────────────────────── */
+:root {
+  --blue:        #1a73e8;
+  --blue-hover:  #1557b0;
+  --blue-ring:   rgba(26,115,232,.18);
+  --red:         #d93025;
+  --red-light:   #fce8e6;
+  --red-border:  rgba(217,48,37,.25);
+  --bg:          #f5f5f5;
+  --surface:     #ffffff;
+  --text:        #202124;
+  --text2:       #5f6368;
+  --border:      #dadce0;
+  --radius:      10px;
+}
 
-  :root {
-    --orange: #FF6B1A;
-    --orange-dark: #e85d0f;
-    --bg: #F3F4F6;
-    --white: #FFFFFF;
-    --text: #1A1A2E;
-    --muted: #6B7280;
-    --border: #E5E7EB;
-    --error: #EF4444;
-    --radius: 12px;
-  }
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-  }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  -webkit-font-smoothing: antialiased;
+}
 
+/* ── Material Symbols ──────────────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  user-select: none;
+}
+
+/* ── Card ──────────────────────────────────────────────────────────────── */
+.login-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 36px 32px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* ── Cabeçalho ─────────────────────────────────────────────────────────── */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.logo-img {
+  height: 36px;
+  object-fit: contain;
+}
+
+.card-titles { text-align: center; }
+
+.card-title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.3px;
+}
+
+.card-sub {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+
+/* ── Erro ──────────────────────────────────────────────────────────────── */
+.msg-erro {
+  background: var(--red-light);
+  border: 1px solid var(--red-border);
+  border-radius: 8px;
+  color: var(--red);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: none;
+  line-height: 1.45;
+}
+
+.msg-erro.show { display: block; }
+
+/* ── Campos ────────────────────────────────────────────────────────────── */
+.field {
+  margin-bottom: 14px;
+}
+
+label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color .15s, box-shadow .15s;
+  outline: none;
+}
+
+input::placeholder { color: var(--text2); opacity: .7; }
+
+input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-ring);
+}
+
+/* Senha com ícone */
+.senha-wrap {
+  position: relative;
+}
+
+.senha-wrap input { padding-right: 44px; }
+
+.toggle-senha {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text2);
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color .12s, background .12s;
+  line-height: 1;
+}
+
+.toggle-senha:hover {
+  color: var(--blue);
+  background: var(--blue-ring);
+}
+
+.toggle-senha:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.toggle-senha .material-symbols-outlined { font-size: 18px; }
+
+/* ── Botão ─────────────────────────────────────────────────────────────── */
+.btn-entrar {
+  width: 100%;
+  padding: 12px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  cursor: pointer;
+  transition: background .15s, box-shadow .15s, transform .1s;
+  margin-top: 6px;
+}
+
+.btn-entrar:hover {
+  background: var(--blue-hover);
+  box-shadow: 0 2px 10px rgba(26,115,232,.3);
+}
+
+.btn-entrar:active  { transform: scale(.98); }
+.btn-entrar:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-entrar:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+/* Loading dots (preservado — JS manipula este HTML) */
+.loading-dots span {
+  display: inline-block;
+  animation: dot 1.4s infinite;
+  font-size: 1.2rem;
+}
+.loading-dots span:nth-child(2) { animation-delay: .2s; }
+.loading-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+/* ── Rodapé ────────────────────────────────────────────────────────────── */
+.rodape {
+  text-align: center;
+  margin-top: 22px;
+  font-size: 11.5px;
+  color: var(--text2);
+  letter-spacing: .1px;
+}
+
+/* ── Responsivo ─────────────────────────────────────────────────────────── */
+@media (max-width: 440px) {
   .login-card {
-    background: var(--white);
-    border-radius: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,.05), 0 20px 40px rgba(0,0,0,.08);
-    padding: 2.5rem 2rem;
-    width: 100%;
-    max-width: 420px;
+    padding: 32px 20px 24px;
+    border-radius: 14px;
   }
+  .card-title { font-size: 17px; }
+}
 
-  .logo-wrap {
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-
-  .logo-wrap img {
-    height: 56px;
-    object-fit: contain;
-  }
-
-  .login-title {
-    font-size: .75rem;
-    font-weight: 600;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    text-align: center;
-    margin-bottom: 1.75rem;
-  }
-
-  .field {
-    margin-bottom: 1rem;
-  }
-
-  label {
-    display: block;
-    font-size: .78rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: .4rem;
-    letter-spacing: .3px;
-  }
-
-  input {
-    width: 100%;
-    padding: .75rem 1rem;
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius);
-    font-family: 'Inter', sans-serif;
-    font-size: .93rem;
-    color: var(--text);
-    background: var(--white);
-    transition: border-color .2s, box-shadow .2s;
-    outline: none;
-  }
-
-  input:focus {
-    border-color: var(--orange);
-    box-shadow: 0 0 0 3px rgba(255,107,26,.12);
-  }
-
-  .senha-wrap {
-    position: relative;
-  }
-
-  .senha-wrap input { padding-right: 3rem; }
-
-  .toggle-senha {
-    position: absolute;
-    right: .85rem;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--muted);
-    font-size: 1.1rem;
-    padding: .25rem;
-    line-height: 1;
-  }
-
-  .toggle-senha:hover { color: var(--orange); }
-
-  .btn-entrar {
-    width: 100%;
-    padding: .85rem;
-    background: var(--orange);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius);
-    font-family: 'Inter', sans-serif;
-    font-size: .95rem;
-    font-weight: 700;
-    letter-spacing: .5px;
-    cursor: pointer;
-    transition: background .2s, transform .1s, box-shadow .2s;
-    margin-top: .5rem;
-  }
-
-  .btn-entrar:hover { background: var(--orange-dark); box-shadow: 0 4px 12px rgba(255,107,26,.3); }
-  .btn-entrar:active { transform: scale(.98); }
-  .btn-entrar:disabled { opacity: .65; cursor: not-allowed; transform: none; }
-
-  .msg-erro {
-    background: rgba(239,68,68,.08);
-    border: 1px solid rgba(239,68,68,.25);
-    border-radius: 8px;
-    color: var(--error);
-    font-size: .82rem;
-    font-weight: 500;
-    padding: .65rem 1rem;
-    margin-bottom: 1rem;
-    display: none;
-  }
-
-  .msg-erro.show { display: block; }
-
-  .rodape {
-    text-align: center;
-    margin-top: 2rem;
-    font-size: .72rem;
-    color: var(--muted);
-  }
-
-  .loading-dots span {
-    display: inline-block;
-    animation: dot 1.4s infinite;
-    font-size: 1.2rem;
-  }
-  .loading-dots span:nth-child(2) { animation-delay: .2s; }
-  .loading-dots span:nth-child(3) { animation-delay: .4s; }
-  @keyframes dot { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+@media (prefers-reduced-motion: reduce) {
+  .btn-entrar, input { transition: none; }
+}
 </style>
 </head>
 <body>
 
 <div class="login-card">
-  <div class="logo-wrap">
-    <img src="./assets/logo.png" alt="MR4 Distribuidora">
-  </div>
 
-  <p class="login-title">Acesso ao Sistema</p>
+  <div class="card-header">
+    <div class="brand-row">
+      <span class="brand-mark">MR4</span>
+      <img class="logo-img" src="./assets/logo.png" alt="MR4 Distribuidora">
+    </div>
+    <div class="card-titles">
+      <h1 class="card-title">Acesse sua conta</h1>
+      <p class="card-sub">Sistema de Gestão MR4</p>
+    </div>
+  </div>
 
   <div class="msg-erro" id="msgErro"></div>
 
@@ -184,13 +293,16 @@
     <label for="senha">Senha</label>
     <div class="senha-wrap">
       <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password">
-      <button class="toggle-senha" onclick="toggleSenha()" type="button" title="Mostrar/ocultar senha">👁</button>
+      <button class="toggle-senha" onclick="toggleSenha()" type="button" title="Mostrar/ocultar senha" aria-label="Mostrar ou ocultar senha">
+        <span class="material-symbols-outlined" id="eyeIcon">visibility</span>
+      </button>
     </div>
   </div>
 
   <button class="btn-entrar" id="btnEntrar" onclick="fazerLogin()">ENTRAR</button>
 
   <div class="rodape">MR4 Distribuidora &copy; 2026 &mdash; Acesso restrito</div>
+
 </div>
 
 <!-- Firebase -->
@@ -249,8 +361,15 @@
   };
 
   window.toggleSenha = function() {
-    const inp = document.getElementById('senha');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
+    const inp  = document.getElementById('senha');
+    const icon = document.getElementById('eyeIcon');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      if (icon) icon.textContent = 'visibility_off';
+    } else {
+      inp.type = 'password';
+      if (icon) icon.textContent = 'visibility';
+    }
   };
 
   function mostrarErro(msg) {

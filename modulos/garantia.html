@@ -114,7 +114,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .hist-filtros{display:flex;gap:.5rem;margin-bottom:1.25rem;flex-wrap:wrap}
 .filtro-btn{padding:.3rem .8rem;border:1.5px solid var(--border);border-radius:99px;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;background:none;color:var(--muted);transition:all .15s}
 .filtro-btn.ativo{background:var(--orange);border-color:var(--orange);color:#fff}
-.hist-tabela{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.hist-tabela{background:var(--white);border:1px solid var(--border);border-radius:12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse}
 th{padding:.7rem 1rem;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);border-bottom:1px solid var(--border);text-align:left;background:#FAFAFA}
 td{padding:.8rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;vertical-align:middle}
@@ -176,6 +176,10 @@ tr:hover td{background:#FAFAFA}
 
 @media(max-width:900px){.kanban{grid-template-columns:repeat(4,minmax(150px,1fr))}}
 @media(max-width:640px){.secao{padding:1rem}.kanban{grid-template-columns:repeat(3,minmax(140px,1fr))}.form-row{grid-template-columns:1fr}.stats-row{flex-wrap:wrap}}
+@media(max-width:480px){.hist-tabela table{min-width:620px}.secao{padding:.75rem}}
+
+.btn-primary:focus-visible,.btn-sec:focus-visible,.btn-danger:focus-visible,.btn-xs:focus-visible,.filtro-btn:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.tab:focus-visible{outline:2px solid var(--orange);outline-offset:-2px;border-radius:8px}
 
 /* ── RECIBO ── */
 .recibo{font-family:'Inter',sans-serif;color:#111;background:#fff;max-width:620px;margin:0 auto}

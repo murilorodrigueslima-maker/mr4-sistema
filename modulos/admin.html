@@ -141,6 +141,20 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
 
 .btn-primary:focus-visible,.btn-secondary:focus-visible,.btn-danger:focus-visible,
 .btn-icon:focus-visible,.btn-back:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+
+/* ── SEÇÃO ACESSO AO PONTO ───────────────────────────────────────────────── */
+.section-divider{margin:2.5rem 0 1.75rem;border-top:2px solid var(--border)}
+.ponto-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .6rem;border-radius:99px;font-size:.68rem;font-weight:700}
+.ponto-ativo{background:var(--green-bg);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.ponto-sem-conta{background:rgba(227,116,0,.07);color:var(--yellow);border:1px solid rgba(227,116,0,.25)}
+.ponto-desativado{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.btn-sm{padding:.38rem .85rem;font-size:.76rem;font-weight:700;border-radius:7px;cursor:pointer;font-family:inherit;transition:all .15s;border:1.5px solid;white-space:nowrap}
+.btn-sm-primary{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn-sm-primary:hover:not(:disabled){background:var(--orange-dk)}
+.btn-sm-secondary{background:none;color:var(--muted);border-color:var(--border)}
+.btn-sm-secondary:hover:not(:disabled){border-color:var(--orange);color:var(--orange)}
+.btn-sm:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
 </style>
 </head>
 <body>
@@ -212,6 +226,39 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
         </thead>
         <tbody id="tbodyUsuarios">
           <tr class="empty-row"><td colspan="5">Carregando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- ── SEÇÃO: ACESSO AO PONTO ──────────────────────────────────────────── -->
+  <div class="section-divider"></div>
+
+  <div class="page-header">
+    <div>
+      <h2 class="page-title">Acesso ao Ponto</h2>
+      <p class="page-sub">Gerencie o acesso dos funcionários ao sistema de ponto digital</p>
+    </div>
+    <button class="btn-secondary" id="btnAtualizarPonto" onclick="carregarFuncionariosPonto()">↻ Atualizar</button>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <span class="table-head-title">Funcionários do ponto</span>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Funcionário</th>
+            <th>Acesso ao ponto</th>
+            <th>E-mail de acesso</th>
+            <th style="text-align:right">Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyPonto">
+          <tr class="empty-row"><td colspan="4">Carregando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -305,16 +352,31 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
   </div>
 </div>
 
+<!-- ── MODAL CONFIRMAR AÇÃO DE PONTO ── -->
+<div class="overlay" id="pontoModalOverlay">
+  <div class="modal confirm-modal">
+    <div class="confirm-icon" id="pontoModalIcon">📧</div>
+    <div class="modal-title" id="pontoModalTitulo">Confirmar ação</div>
+    <p class="confirm-msg" id="pontoModalMsg"></p>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="fecharPontoModal()">Cancelar</button>
+      <button class="btn-primary" id="pontoModalConfirm" onclick="executarAcaoPonto()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toasts -->
 <div class="toast-wrap" id="toastWrap"></div>
 
 <!-- Firebase Auth + Firestore -->
 <script type="module">
 import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword }
+import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword, sendPasswordResetEmail }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable }
+                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
   apiKey:            "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -343,6 +405,10 @@ window._deleteDoc = (ref)       => deleteDoc(ref);
 window._signOut      = ()             => signOut(auth);
 window._createUser   = (email, senha) => createUserWithEmailAndPassword(auth2, email, senha);
 window._auth2SignOut = ()             => auth2.signOut();
+
+const _functions = getFunctions(app, 'southamerica-east1');
+window._sendPasswordReset = (email) => sendPasswordResetEmail(auth, email);
+window._chamarCF          = (name)  => httpsCallable(_functions, name);
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
@@ -640,7 +706,171 @@ function toast(msg, err=false) {
 // ── Init ─────────────────────────────────────────────────────────────────────
 window.addEventListener('firebaseReady', () => {
   carregarUsuarios();
+  carregarFuncionariosPonto();
 });
+
+// ── SEÇÃO: ACESSO AO PONTO ────────────────────────────────────────────────────
+
+let todaFuncionarios  = [];
+let usersMapPonto     = {};  // funcId → users/{uid} doc data
+let pontoAcaoPendente = null;
+
+async function carregarFuncionariosPonto() {
+  const tbody = document.getElementById('tbodyPonto');
+  tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Carregando…</td></tr>';
+
+  try {
+    const [funcSnap, usersSnap] = await Promise.all([
+      window._getDocs(window._col('funcionarios')),
+      window._getDocs(window._col('users')),
+    ]);
+
+    todaFuncionarios = funcSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    todaFuncionarios.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+    usersMapPonto = {};
+    usersSnap.docs.forEach(d => {
+      const data = d.data();
+      if (data.role === 'funcionario' && data.funcionarioId) {
+        usersMapPonto[data.funcionarioId] = { uid: d.id, ...data };
+      }
+    });
+
+    renderTabelaPonto();
+  } catch(e) {
+    toast('Erro ao carregar funcionários do ponto: ' + e.message, true);
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Erro ao carregar. Tente novamente.</td></tr>';
+  }
+}
+
+function renderTabelaPonto() {
+  const tbody = document.getElementById('tbodyPonto');
+
+  if (!todaFuncionarios.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhum funcionário cadastrado em "funcionarios"</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = todaFuncionarios.map(f => {
+    const user     = usersMapPonto[f.id];
+    const iniciais = ((f.nome || '?').trim().substring(0, 2)).toUpperCase();
+    const email    = user?.email || f.email || '—';
+
+    let statusHtml, acoesHtml;
+
+    if (!user) {
+      statusHtml = `<span class="ponto-badge ponto-sem-conta"><span class="status-dot"></span>Sem conta</span>`;
+      acoesHtml  = f.email
+        ? `<button class="btn-sm btn-sm-primary" id="btn-criar-${f.id}" onclick="pedirConfirmacaoCriar('${f.id}')">Criar acesso ao ponto</button>`
+        : `<span style="font-size:.72rem;color:var(--muted)">Sem e-mail no cadastro</span>`;
+    } else if (user.ativo) {
+      statusHtml = `<span class="ponto-badge ponto-ativo"><span class="status-dot"></span>Ativo</span>`;
+      acoesHtml  = `<button class="btn-sm btn-sm-secondary" id="btn-reset-${f.id}" onclick="pedirConfirmacaoReset('${f.id}')">↻ Redefinir senha</button>`;
+    } else {
+      statusHtml = `<span class="ponto-badge ponto-desativado"><span class="status-dot"></span>Conta desativada</span>`;
+      acoesHtml  = `<span style="font-size:.72rem;color:var(--muted)">ativo=false em users/${user.uid}</span>`;
+    }
+
+    return `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <div class="avatar">${iniciais}</div>
+            <div>
+              <div class="user-name">${f.nome || '—'}</div>
+              <div class="user-email">ID: ${f.id}</div>
+            </div>
+          </div>
+        </td>
+        <td>${statusHtml}</td>
+        <td style="font-size:.8rem;color:var(--muted)">${email}</td>
+        <td><div class="actions-cell">${acoesHtml}</div></td>
+      </tr>`;
+  }).join('');
+}
+
+window.pedirConfirmacaoReset = function(funcId) {
+  const f    = todaFuncionarios.find(x => x.id === funcId);
+  const user = usersMapPonto[funcId];
+  const email = user?.email || f?.email || '';
+  const nome  = f?.nome || funcId;
+
+  pontoAcaoPendente = { tipo: 'reset', funcId, email, nome };
+  document.getElementById('pontoModalIcon').textContent   = '📧';
+  document.getElementById('pontoModalTitulo').textContent = 'Redefinir senha';
+  document.getElementById('pontoModalMsg').innerHTML      =
+    `Enviar um e-mail de redefinição de senha para:<br>
+     <strong>${nome}</strong><br>
+     <span style="font-size:.85rem;color:var(--muted)">${email}</span><br><br>
+     <small style="color:var(--muted)">O funcionário receberá um link para definir uma nova senha. O link expira em 1 hora.</small>`;
+  document.getElementById('pontoModalConfirm').textContent = 'Enviar';
+  document.getElementById('pontoModalOverlay').classList.add('show');
+};
+
+window.pedirConfirmacaoCriar = function(funcId) {
+  const f    = todaFuncionarios.find(x => x.id === funcId);
+  const email = f?.email || '';
+  const nome  = f?.nome  || funcId;
+
+  pontoAcaoPendente = { tipo: 'criar', funcId, email, nome };
+  document.getElementById('pontoModalIcon').textContent   = '🔑';
+  document.getElementById('pontoModalTitulo').textContent = 'Criar acesso ao ponto';
+  document.getElementById('pontoModalMsg').innerHTML      =
+    `Criar conta de acesso para:<br>
+     <strong>${nome}</strong><br>
+     <span style="font-size:.85rem;color:var(--muted)">${email}</span><br><br>
+     <small style="color:var(--muted)">Um e-mail será enviado ao funcionário para que ele mesmo defina a senha.<br>
+     Nenhuma senha será exibida ou armazenada.</small>`;
+  document.getElementById('pontoModalConfirm').textContent = 'Criar e enviar e-mail';
+  document.getElementById('pontoModalOverlay').classList.add('show');
+};
+
+window.fecharPontoModal = function() {
+  document.getElementById('pontoModalOverlay').classList.remove('show');
+  pontoAcaoPendente = null;
+};
+
+window.executarAcaoPonto = async function() {
+  if (!pontoAcaoPendente) return;
+  const { tipo, funcId, email, nome } = pontoAcaoPendente;
+  const btn = document.getElementById('pontoModalConfirm');
+  btn.disabled    = true;
+  btn.textContent = 'Aguarde…';
+
+  try {
+    if (tipo === 'reset') {
+      await window._sendPasswordReset(email);
+      fecharPontoModal();
+      toast(`✅ E-mail enviado. ${nome} deve abrir o e-mail mais recente para definir uma nova senha.`);
+
+    } else {
+      // Senha temporária forte — nunca exibida, nunca armazenada, nunca logada.
+      // Imediatamente supersedida pelo reset enviado a seguir.
+      const senhaTemp = gerarSenhaTemp();
+      const cf = window._chamarCF('criarContaFuncionario');
+      await cf({ email, senha: senhaTemp, funcId, funcNome: nome });
+      await window._sendPasswordReset(email);
+      fecharPontoModal();
+      toast(`✅ Conta criada! E-mail enviado para ${nome}. O funcionário deve definir a senha pelo link recebido.`);
+      await carregarFuncionariosPonto();
+    }
+  } catch(e) {
+    btn.disabled    = false;
+    btn.textContent = tipo === 'reset' ? 'Enviar' : 'Criar e enviar e-mail';
+    const msgErro =
+      e.code === 'functions/already-exists'    ? 'Este funcionário já possui uma conta. Atualize a lista.' :
+      e.code === 'functions/permission-denied' ? 'Permissão negada. Verifique se está logado como gestor.' :
+      e.message || 'Erro desconhecido.';
+    toast('Erro: ' + msgErro, true);
+  }
+};
+
+function gerarSenhaTemp() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%';
+  const arr   = new Uint8Array(24);
+  crypto.getRandomValues(arr);
+  return [...arr].map(b => chars[b % chars.length]).join('');
+}
 
 // Fechar modais ao clicar fora
 document.getElementById('modalOverlay').addEventListener('click', e => {
@@ -648,6 +878,9 @@ document.getElementById('modalOverlay').addEventListener('click', e => {
 });
 document.getElementById('delOverlay').addEventListener('click', e => {
   if (e.target === e.currentTarget) fecharDelModal();
+});
+document.getElementById('pontoModalOverlay').addEventListener('click', e => {
+  if (e.target === e.currentTarget) fecharPontoModal();
 });
 </script>
 

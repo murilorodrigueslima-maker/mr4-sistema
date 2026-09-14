@@ -5,263 +5,461 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MR4 Distribuidora — Sistema</title>
 <link rel="icon" type="image/png" href="./assets/logo.png">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Tokens ─────────────────────────────────────────────────────────────── */
+:root {
+  --blue:        #1a73e8;
+  --blue-light:  #e8f0fe;
+  --blue-dk:     #1557b0;
+  --green:       #0d904f;
+  --green-light: #e6f4ea;
+  --green-dk:    #137333;
+  --orange:      #e37400;
+  --orange-light:#fef3e2;
+  --red:         #d93025;
+  --red-light:   #fce8e6;
+  --red-dk:      #b31412;
+  --gray:        #5f6368;
+  --gray-light:  #f1f3f4;
 
-  :root {
-    --orange:   #FF6B1A;
-    --orange-dk:#e85d0f;
-    --bg:       #F3F4F6;
-    --white:    #FFFFFF;
-    --text:     #1A1A2E;
-    --muted:    #6B7280;
-    --border:   #E5E7EB;
-    --green:    #10B981;
-    --yellow:   #F59E0B;
-    --red:      #EF4444;
-    --sidebar-w:240px;
-  }
+  --bg:          #f5f5f5;
+  --surface:     #ffffff;
+  --text:        #202124;
+  --text2:       #5f6368;
+  --border:      #dadce0;
 
-  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+  --sidebar-w:   220px;
+  --header-h:    56px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+}
 
-  /* ── SIDEBAR ── */
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Material Symbols base ──────────────────────────────────────────────── */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  display: inline-block;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+/* ── Loading ────────────────────────────────────────────────────────────── */
+#loadingScreen {
+  position: fixed;
+  inset: 0;
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  flex-direction: column;
+  gap: 16px;
+}
+
+#loadingScreen img { height: 48px; object-fit: contain; }
+
+.spinner {
+  width: 28px; height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .5px;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -.2px;
+}
+
+/* Nav */
+.sidebar-nav {
+  flex: 1;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
+}
+
+.nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 10px 12px 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text2);
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-item .material-symbols-outlined {
+  font-size: 18px;
+  opacity: .8;
+}
+
+.nav-item:hover {
+  background: var(--gray-light);
+  color: var(--text);
+}
+
+.nav-item:hover .material-symbols-outlined { opacity: 1; }
+
+.nav-item:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: -2px;
+}
+
+.nav-item.locked {
+  opacity: .4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* User at bottom */
+.sidebar-user {
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.user-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-info { flex: 1; min-width: 0; }
+
+.user-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-logout {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text2);
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: background .12s, color .12s;
+  flex-shrink: 0;
+}
+
+.btn-logout:hover { background: var(--red-light); color: var(--red); }
+.btn-logout:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.btn-logout .material-symbols-outlined { font-size: 18px; }
+
+/* ── Main ───────────────────────────────────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  padding: 32px;
+  min-height: 100vh;
+}
+
+.page-header { margin-bottom: 28px; }
+
+.page-greeting {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.4px;
+}
+
+.page-date {
+  font-size: 13px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+
+/* ── Module grid ────────────────────────────────────────────────────────── */
+.modulos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* ── Module card ────────────────────────────────────────────────────────── */
+.modulo-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s, box-shadow .15s, transform .12s;
+}
+
+.modulo-card:hover {
+  border-color: var(--card-color, var(--blue));
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+  transform: translateY(-1px);
+}
+
+.modulo-card:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.modulo-card.locked {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.modulo-icon-tile {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--card-light, var(--blue-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modulo-icon-tile .material-symbols-outlined {
+  font-size: 22px;
+  color: var(--card-color, var(--blue));
+}
+
+.modulo-nome {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -.2px;
+}
+
+.modulo-desc {
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.modulo-acesso {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--card-color, var(--blue));
+  margin-top: auto;
+}
+
+.modulo-acesso .material-symbols-outlined { font-size: 14px; }
+
+/* ── Mobile topbar ──────────────────────────────────────────────────────── */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+  padding: 0 12px;
+  gap: 10px;
+  z-index: 110;
+}
+
+.btn-burger {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+  transition: background .12s;
+  flex-shrink: 0;
+}
+
+.btn-burger:hover { background: var(--gray-light); color: var(--text); }
+.btn-burger .material-symbols-outlined { font-size: 22px; }
+
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  text-decoration: none;
+}
+
+.user-avatar-sm {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Drawer overlay ─────────────────────────────────────────────────────── */
+.drawer-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 105;
+  cursor: pointer;
+}
+
+.drawer-overlay.open { display: block; }
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .modulos-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 900px) {
+  .modulos-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
   .sidebar {
-    width: var(--sidebar-w);
-    background: var(--white);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    z-index: 100;
-    overflow-y: auto;
+    display: none;
+    width: 260px;
+    box-shadow: 4px 0 24px rgba(0,0,0,.12);
+    z-index: 120;
   }
 
-  .sidebar-logo {
-    padding: 1.5rem 1.25rem 1rem;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    display: block;
-    text-decoration: none;
-  }
+  .sidebar.drawer-open { display: flex; }
 
-  .sidebar-logo img { height: 36px; object-fit: contain; }
+  .mobile-topbar { display: flex; }
 
-  .sidebar-user {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-  }
-
-  .user-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: var(--orange);
-    color: #fff;
-    font-weight: 700;
-    font-size: .9rem;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-
-  .user-info { flex: 1; min-width: 0; }
-  .user-name { font-size: .82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .user-role { font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-
-  .sidebar-nav { flex: 1; padding: .75rem 0; }
-
-  .nav-section {
-    font-size: .62rem;
-    font-weight: 700;
-    color: var(--muted);
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    padding: .75rem 1.25rem .3rem;
-  }
-
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-    padding: .6rem 1.25rem;
-    font-size: .84rem;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .15s;
-    text-decoration: none;
-    border-left: 3px solid transparent;
-    margin: .1rem 0;
-  }
-
-  .nav-item:hover { background: var(--bg); color: var(--text); }
-  .nav-item.active { background: rgba(255,107,26,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
-  .nav-item.locked { opacity: .4; cursor: not-allowed; pointer-events: none; }
-
-  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
-
-  .sidebar-footer {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border);
-  }
-
-  .btn-sair {
-    width: 100%;
-    padding: .6rem;
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    background: none;
-    font-family: 'Inter', sans-serif;
-    font-size: .8rem;
-    font-weight: 600;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all .15s;
-  }
-
-  .btn-sair:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.05); }
-
-  /* ── MAIN ── */
   .main {
-    margin-left: var(--sidebar-w);
-    flex: 1;
-    padding: 2rem;
-    min-height: 100vh;
+    margin-left: 0;
+    padding: calc(var(--header-h) + 20px) 16px 24px;
   }
 
-  .page-header {
-    margin-bottom: 2rem;
-  }
-
-  .page-title {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -.3px;
-  }
-
-  .page-sub {
-    font-size: .85rem;
-    color: var(--muted);
-    margin-top: .25rem;
-  }
-
-  /* ── MÓDULOS GRID ── */
   .modulos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
   }
 
-  .modulo-card {
-    background: var(--white);
-    border-radius: 16px;
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    cursor: pointer;
-    transition: all .2s;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    gap: .75rem;
-    position: relative;
-    overflow: hidden;
-  }
+  .modulo-card { padding: 16px; }
+}
 
-  .modulo-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 3px;
-    background: var(--orange);
-    opacity: 0;
-    transition: opacity .2s;
-  }
+@media (max-width: 420px) {
+  .modulos-grid { grid-template-columns: 1fr; }
+}
 
-  .modulo-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.09); transform: translateY(-2px); border-color: rgba(255,107,26,.2); }
-  .modulo-card:hover::before { opacity: 1; }
-
-  .modulo-card.locked {
-    opacity: .5;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
-
-  .modulo-card.locked::after {
-    content: '🔒';
-    position: absolute;
-    top: 1rem; right: 1rem;
-    font-size: 1rem;
-  }
-
-  .modulo-icon {
-    font-size: 2rem;
-    line-height: 1;
-  }
-
-  .modulo-nome {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -.2px;
-  }
-
-  .modulo-desc {
-    font-size: .78rem;
-    color: var(--muted);
-    line-height: 1.5;
-    flex: 1;
-  }
-
-  .modulo-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .75rem;
-    font-weight: 700;
-    color: var(--orange);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin-top: auto;
-  }
-
-  /* ── LOADING ── */
-  #loadingScreen {
-    position: fixed; inset: 0;
-    background: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  #loadingScreen img { height: 48px; object-fit: contain; }
-
-  .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--orange);
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── RESPONSIVE ── */
-  @media(max-width: 768px) {
-    .sidebar { width: 100%; height: auto; position: relative; border-right: none; border-bottom: 1px solid var(--border); }
-    .main { margin-left: 0; }
-    body { flex-direction: column; }
-    .sidebar-nav { display: flex; overflow-x: auto; padding: .5rem; }
-    .nav-section { display: none; }
-    .nav-item { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; }
-    .nav-item.active { border-left-color: transparent; border-bottom-color: var(--orange); }
-  }
+@media (prefers-reduced-motion: reduce) {
+  .modulo-card { transition: none; }
+  .spinner { animation-duration: 1.5s; }
+}
 </style>
 </head>
 <body>
@@ -272,11 +470,32 @@
   <div class="spinner"></div>
 </div>
 
+<!-- Mobile topbar -->
+<div class="mobile-topbar" id="mobileTopbar">
+  <button class="btn-burger" onclick="abrirDrawer()" aria-label="Abrir menu">
+    <span class="material-symbols-outlined">menu</span>
+  </button>
+  <a class="mobile-brand" href="./index.html">
+    <span class="brand-mark">MR4</span>
+    <span class="brand-name">Gestão</span>
+  </a>
+  <div class="user-avatar-sm" id="mobileUserAvatar">?</div>
+</div>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="fecharDrawer()"></div>
+
 <!-- Sidebar -->
 <aside class="sidebar" id="sidebar" style="display:none">
-  <a class="sidebar-logo" href="./index.html" title="Página inicial">
-    <img src="./assets/logo.png" alt="MR4 Distribuidora">
+  <a class="sidebar-brand" href="./index.html" title="Página inicial">
+    <span class="brand-mark">MR4</span>
+    <span class="brand-name">Gestão</span>
   </a>
+
+  <nav class="sidebar-nav" id="sidebarNav">
+    <div class="nav-section-label">Módulos</div>
+    <!-- gerado por JS -->
+  </nav>
 
   <div class="sidebar-user">
     <div class="user-avatar" id="userAvatar">?</div>
@@ -284,23 +503,17 @@
       <div class="user-name" id="userName">Carregando...</div>
       <div class="user-role" id="userRole">—</div>
     </div>
-  </div>
-
-  <nav class="sidebar-nav" id="sidebarNav">
-    <div class="nav-section">Módulos</div>
-    <!-- gerado por JS -->
-  </nav>
-
-  <div class="sidebar-footer">
-    <button class="btn-sair" onclick="sair()">↩ Sair do sistema</button>
+    <button class="btn-logout" onclick="sair()" title="Sair do sistema" aria-label="Sair do sistema">
+      <span class="material-symbols-outlined">logout</span>
+    </button>
   </div>
 </aside>
 
 <!-- Conteúdo principal -->
 <main class="main" id="mainContent" style="display:none">
   <div class="page-header">
-    <h1 class="page-title" id="bemVindo">Bem-vindo!</h1>
-    <p class="page-sub">Selecione um módulo para começar</p>
+    <h1 class="page-greeting" id="bemVindo">Bem-vindo!</h1>
+    <p class="page-date" id="pageDate"></p>
   </div>
 
   <div class="modulos-grid" id="modulosGrid">
@@ -327,16 +540,16 @@
   const auth = getAuth(app);
   const db   = getFirestore(app);
 
-  // Definição dos módulos
+  // Definição dos módulos — IDs, nomes, descrições e URLs preservados exatamente
   const MODULOS = [
-    { id: 'catalogo',        nome: 'Catálogo',          icon: '📦', desc: 'Produtos, preços e pedidos B2B.',                                                   url: 'https://catalogo.mr4distribuidora.com.br' },
-    { id: 'expedicao',       nome: 'Expedição',         icon: '🚚', desc: 'Controle de pedidos, envios e entregas.',                                           url: './modulos/expedicao.html'  },
-    { id: 'ponto',           nome: 'Ponto',             icon: '📍', desc: 'Registro e controle de ponto dos funcionários.',                                    url: './modulos/ponto.html'      },
-    { id: 'garantia',        nome: 'Garantia',          icon: '🛡️', desc: 'Gestão de garantias e acompanhamento de processos.',                               url: './modulos/garantia.html'   },
-    { id: 'clientes',        nome: 'CRM Clientes',      icon: '👥', desc: 'Histórico, contatos, anotações e garantias por cliente.',                          url: './modulos/clientes.html'   },
-    { id: 'admin',           nome: 'Administração',     icon: '⚙️', desc: 'Usuários, permissões e configurações do sistema.',                                  url: './modulos/admin.html'      },
-    { id: 'compras',         nome: 'Agente de Compras', icon: '🛒', desc: 'Sugestão automática de pedidos por velocidade de venda, estoque e caixa disponível.', url: './modulos/compras.html' },
-    { id: 'painel-comercial',nome: 'Painel Comercial',  icon: '📺', desc: 'Ranking e metas da equipe de vendas para TV.',                                      url: './painel-comercial.html'   },
+    { id: 'catalogo',         nome: 'Catálogo',          msIcon: 'inventory_2',     color: '#1a73e8', colorLight: '#e8f0fe', desc: 'Produtos, preços e pedidos B2B.',                                                       url: 'https://catalogo.mr4distribuidora.com.br' },
+    { id: 'expedicao',        nome: 'Expedição',          msIcon: 'local_shipping',  color: '#0d904f', colorLight: '#e6f4ea', desc: 'Controle de pedidos, envios e entregas.',                                               url: './modulos/expedicao.html'  },
+    { id: 'ponto',            nome: 'Ponto',              msIcon: 'schedule',        color: '#e37400', colorLight: '#fef3e2', desc: 'Registro e controle de ponto dos funcionários.',                                        url: './modulos/ponto.html'      },
+    { id: 'garantia',         nome: 'Garantia',           msIcon: 'verified_user',   color: '#d93025', colorLight: '#fce8e6', desc: 'Gestão de garantias e acompanhamento de processos.',                                   url: './modulos/garantia.html'   },
+    { id: 'clientes',         nome: 'CRM Clientes',       msIcon: 'group',           color: '#1557b0', colorLight: '#e8f0fe', desc: 'Histórico, contatos, anotações e garantias por cliente.',                              url: './modulos/clientes.html'   },
+    { id: 'admin',            nome: 'Administração',      msIcon: 'manage_accounts', color: '#5f6368', colorLight: '#f1f3f4', desc: 'Usuários, permissões e configurações do sistema.',                                      url: './modulos/admin.html'      },
+    { id: 'compras',          nome: 'Agente de Compras',  msIcon: 'shopping_cart',   color: '#137333', colorLight: '#e6f4ea', desc: 'Sugestão automática de pedidos por velocidade de venda, estoque e caixa disponível.',  url: './modulos/compras.html'    },
+    { id: 'painel-comercial', nome: 'Painel Comercial',   msIcon: 'bar_chart',       color: '#b31412', colorLight: '#fce8e6', desc: 'Ranking e metas da equipe de vendas para TV.',                                          url: './painel-comercial.html'   },
   ];
 
   onAuthStateChanged(auth, async user => {
@@ -382,26 +595,42 @@
   });
 
   function renderizar(perfil, email) {
-    // Header
     const primeiroNome = perfil.nome.split(' ')[0];
-    document.getElementById('userName').textContent    = perfil.nome;
-    document.getElementById('userRole').textContent    = perfil.cargo;
-    document.getElementById('userAvatar').textContent  = primeiroNome[0].toUpperCase();
-    document.getElementById('bemVindo').textContent    = `Olá, ${primeiroNome}! 👋`;
+
+    // Greeting com horário
+    const hora = new Date().getHours();
+    const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
+    document.getElementById('bemVindo').textContent = `${saudacao}, ${primeiroNome}!`;
+
+    // Data por extenso
+    const dias   = ['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+    const meses  = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+    const agora  = new Date();
+    document.getElementById('pageDate').textContent =
+      `${dias[agora.getDay()]}, ${agora.getDate()} de ${meses[agora.getMonth()]} de ${agora.getFullYear()}`;
+
+    // Perfil na sidebar
+    const inicial = primeiroNome[0].toUpperCase();
+    document.getElementById('userName').textContent        = perfil.nome;
+    document.getElementById('userRole').textContent        = perfil.cargo;
+    document.getElementById('userAvatar').textContent      = inicial;
+    document.getElementById('mobileUserAvatar').textContent = inicial;
 
     const isAdmin = perfil.modulos.length === MODULOS.length; // admin vê tudo
 
     // Sidebar nav — admin vê todos (bloqueados com cadeado), funcionário só os seus
     const nav = document.getElementById('sidebarNav');
-    nav.innerHTML = '<div class="nav-section">Módulos</div>';
+    nav.innerHTML = '<div class="nav-section-label">Módulos</div>';
     MODULOS.forEach(m => {
       const temAcesso = perfil.modulos.includes(m.id);
-      if(!temAcesso && !isAdmin) return; // esconde da sidebar se não tem acesso
+      if (!temAcesso && !isAdmin) return;
       const a = document.createElement('a');
       a.className = 'nav-item' + (temAcesso ? '' : ' locked');
       a.href = temAcesso ? m.url : '#';
-      if(temAcesso && m.url.startsWith('http')) a.target = '_blank';
-      a.innerHTML = `<span class="nav-icon">${m.icon}</span> ${m.nome}`;
+      if (temAcesso && m.url.startsWith('http')) a.target = '_blank';
+      a.style.setProperty('--item-color', m.color);
+      a.style.setProperty('--item-light', m.colorLight);
+      a.innerHTML = `<span class="material-symbols-outlined" style="color:${m.color}">${m.msIcon}</span>${m.nome}`;
       nav.appendChild(a);
     });
 
@@ -410,18 +639,22 @@
     grid.innerHTML = '';
     MODULOS.forEach(m => {
       const temAcesso = perfil.modulos.includes(m.id);
-      if(!temAcesso && !isAdmin) return; // esconde do grid se não tem acesso
-      const card = document.createElement('a');
-      card.className = 'modulo-card' + (temAcesso ? '' : ' locked');
-      card.href = temAcesso ? m.url : '#';
-      if(temAcesso && m.url.startsWith('http')) card.target = '_blank';
-      card.innerHTML = `
-        <div class="modulo-icon">${m.icon}</div>
+      if (!temAcesso && !isAdmin) return;
+      const a = document.createElement('a');
+      a.className = 'modulo-card' + (temAcesso ? '' : ' locked');
+      a.href = temAcesso ? m.url : '#';
+      if (temAcesso && m.url.startsWith('http')) a.target = '_blank';
+      a.style.setProperty('--card-color', m.color);
+      a.style.setProperty('--card-light', m.colorLight);
+      a.innerHTML = `
+        <div class="modulo-icon-tile">
+          <span class="material-symbols-outlined">${m.msIcon}</span>
+        </div>
         <div class="modulo-nome">${m.nome}</div>
         <div class="modulo-desc">${m.desc}</div>
-        ${temAcesso ? '<div class="modulo-btn">Acessar →</div>' : ''}
+        ${temAcesso ? '<div class="modulo-acesso">Acessar <span class="material-symbols-outlined">arrow_forward</span></div>' : ''}
       `;
-      grid.appendChild(card);
+      grid.appendChild(a);
     });
   }
 
@@ -429,6 +662,20 @@
     await signOut(auth);
     window.location.href = './login.html';
   };
+</script>
+
+<!-- Drawer mobile -->
+<script>
+  function abrirDrawer() {
+    document.getElementById('sidebar').classList.add('drawer-open');
+    document.getElementById('drawerOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function fecharDrawer() {
+    document.getElementById('sidebar').classList.remove('drawer-open');
+    document.getElementById('drawerOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
 </script>
 
 </body>

@@ -9,11 +9,11 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --orange:#FF6B1A; --orange-dk:#e85d0f;
-  --bg:#F3F4F6; --white:#FFFFFF;
-  --text:#1A1A2E; --muted:#6B7280;
-  --border:#E5E7EB; --border-dk:#D1D5DB;
-  --green:#10B981; --yellow:#F59E0B; --red:#EF4444; --blue:#3B82F6;
+  --orange:#1a73e8; --orange-dk:#1557b0;
+  --bg:#f5f5f5; --white:#FFFFFF;
+  --text:#202124; --muted:#5f6368;
+  --border:#dadce0; --border-dk:#c6c9ce;
+  --green:#0d904f; --yellow:#e37400; --red:#d93025; --blue:#1a73e8;
   --red-bg:rgba(239,68,68,.06); --green-bg:rgba(16,185,129,.06);
 }
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
@@ -63,14 +63,14 @@ tr:hover td{background:#FAFAFA}
 .user-name{font-weight:600;font-size:.84rem}
 .user-email{font-size:.72rem;color:var(--muted);margin-top:.1rem}
 .cargo-badge{display:inline-block;padding:.25rem .65rem;border-radius:99px;font-size:.7rem;font-weight:700;background:var(--bg);color:var(--muted);border:1px solid var(--border)}
-.cargo-badge.admin{background:rgba(255,107,26,.1);color:var(--orange);border-color:rgba(255,107,26,.25)}
+.cargo-badge.admin{background:rgba(26,115,232,.08);color:var(--orange);border-color:rgba(26,115,232,.22)}
 .cargo-badge.gerente{background:rgba(59,130,246,.08);color:var(--blue);border-color:rgba(59,130,246,.2)}
 .modulos-list{display:flex;flex-wrap:wrap;gap:.3rem}
 .mod-chip{display:inline-block;padding:.18rem .5rem;border-radius:5px;font-size:.65rem;font-weight:600;background:var(--bg);color:var(--muted);border:1px solid var(--border)}
 .mod-chip.on{background:rgba(16,185,129,.09);color:var(--green);border-color:rgba(16,185,129,.22)}
-.mod-chip.admin-all{background:rgba(255,107,26,.09);color:var(--orange);border-color:rgba(255,107,26,.22)}
+.mod-chip.admin-all{background:rgba(26,115,232,.07);color:var(--orange);border-color:rgba(26,115,232,.2)}
 .btn-icon{width:32px;height:32px;border-radius:7px;border:1.5px solid var(--border);background:none;cursor:pointer;font-size:.95rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
-.btn-icon:hover{border-color:var(--orange);background:rgba(255,107,26,.07)}
+.btn-icon:hover{border-color:var(--orange);background:rgba(26,115,232,.06)}
 .btn-icon.del:hover{border-color:var(--red);background:var(--red-bg)}
 .actions-cell{display:flex;gap:.4rem;justify-content:flex-end}
 .status-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.22rem .6rem;border-radius:99px;font-size:.68rem;font-weight:700}
@@ -96,7 +96,7 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
 .mod-toggle:hover{border-color:var(--orange)}
 .mod-toggle.checked{border-color:var(--green);background:var(--green-bg);color:#0d9068;font-weight:600}
 .mod-toggle input{display:none}
-.mod-toggle.admin-on{border-color:var(--orange);background:rgba(255,107,26,.06);color:var(--orange);cursor:default;opacity:.8}
+.mod-toggle.admin-on{border-color:var(--orange);background:rgba(26,115,232,.05);color:var(--orange);cursor:default;opacity:.8}
 .admin-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;margin-bottom:1rem}
 .admin-toggle-label{font-size:.84rem;font-weight:600}
 .admin-toggle-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem}

@@ -196,6 +196,13 @@
     .page-header { flex-direction: column; align-items: flex-start; }
   }
   @media (max-width: 480px) { .kpi-row { grid-template-columns: 1fr; } }
+  @media (max-width: 480px) {
+    .content-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .content-card table { min-width: 540px; }
+  }
+  .btn:focus-visible, .btn-primary:focus-visible, .btn-ghost:focus-visible,
+  .btn-sm:focus-visible, .btn-danger:focus-visible, .btn-sair:focus-visible,
+  .nav-item:focus-visible, .tab-btn:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
 </style>
 </head>
 <body>

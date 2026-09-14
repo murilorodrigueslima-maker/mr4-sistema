@@ -280,7 +280,7 @@ body{
 #loginPage img{height:48px;margin-bottom:1rem;filter:brightness(1.1)}
 .login-title{font-size:1.1rem;font-weight:800;color:var(--text);margin-bottom:.2rem}
 .login-sub{font-size:.78rem;color:var(--sub);margin-bottom:1.2rem}
-.login-form{display:flex;flex-direction:column;gap:.75rem;width:280px}
+.login-form{display:flex;flex-direction:column;gap:.75rem;width:min(280px,100%)}
 #loginBtn{width:100%;padding:.7rem;font-size:.88rem;cursor:pointer}
 
 /* ── TOAST ── */
@@ -301,6 +301,10 @@ body{
 .no-data{text-align:center;opacity:.3;font-size:.85rem;padding:2rem 0}
 
 @media(max-width:900px){.main{grid-template-columns:1fr}}
+
+.btn-icon:focus-visible,.btn-fs:focus-visible,.btn-cfg-save:focus-visible,
+.btn-cfg-cancel:focus-visible,.pin-key:focus-visible{outline:2px solid var(--orange);outline-offset:2px}
+.cfg-input:focus-visible{outline:2px solid var(--orange);outline-offset:0}
 </style>
 </head>
 <body>

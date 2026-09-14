@@ -9,10 +9,10 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --orange:#FF6B1A;--orange-dk:#e85d0f;--orange-lt:rgba(255,107,26,.08);
-  --bg:#F7F7F5;--white:#FFFFFF;--text:#1A1A1A;--muted:#9CA3AF;
-  --border:#EBEBEB;--border-dk:#D1D5DB;
-  --green:#10B981;--yellow:#F59E0B;--red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;
+  --orange:#1a73e8;--orange-dk:#1557b0;--orange-lt:rgba(26,115,232,.08);
+  --bg:#f5f5f5;--white:#FFFFFF;--text:#202124;--muted:#5f6368;
+  --border:#dadce0;--border-dk:#c6c9ce;
+  --green:#0d904f;--yellow:#e37400;--red:#d93025;--blue:#1a73e8;--purple:#7950d2;
   --sidebar-w:230px;--detail-w:360px;
 }
 html,body{height:100%;overflow:hidden}
@@ -59,7 +59,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 /* Sidebar — grade de modos (Clientes / WhatsApp / Pipeline / Painel) */
 .sidebar-modes{padding:.6rem .8rem;display:grid;grid-template-columns:1fr 1fr;gap:.3rem}
 .sidebar-mode-btn{padding:.5rem .4rem;border-radius:9px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:none;color:var(--muted);transition:all .15s;text-align:center;font-family:'Inter',sans-serif}
-.sidebar-mode-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);box-shadow:0 2px 8px rgba(255,107,26,.3)}
+.sidebar-mode-btn.active{background:var(--orange);color:#fff;border-color:var(--orange);box-shadow:0 2px 8px rgba(26,115,232,.25)}
 .sidebar-mode-btn:hover:not(.active){background:var(--bg);color:var(--text)}
 /* Sidebar — seção urgência */
 .sidebar-urgencia{background:linear-gradient(135deg,rgba(239,68,68,.04),rgba(245,158,11,.04));border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:.5rem 0}
@@ -69,7 +69,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .sidebar-item:hover{background:var(--bg);color:var(--text)}
 .sidebar-item.active{background:var(--orange-lt);color:var(--orange);font-weight:600}
 .sidebar-item-count{font-size:.67rem;font-weight:700;background:var(--bg);padding:.1rem .42rem;border-radius:20px;color:var(--muted)}
-.sidebar-item.active .sidebar-item-count{background:rgba(255,107,26,.15);color:var(--orange)}
+.sidebar-item.active .sidebar-item-count{background:rgba(26,115,232,.12);color:var(--orange)}
 .sidebar-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .sidebar-footer{margin-top:auto;padding:.75rem .85rem;border-top:1px solid var(--border)}
 
@@ -149,7 +149,7 @@ select.filter-sel:focus{border-color:var(--orange)}
 .detail-top{padding:1.1rem 1.1rem .85rem;border-bottom:1px solid var(--border);flex-shrink:0}
 .detail-close{position:absolute;top:.85rem;right:.85rem;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:7px;transition:all .12s}
 .detail-close:hover{background:var(--bg);color:var(--text)}
-.detail-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#ffb380);color:#fff;font-weight:800;font-size:1.25rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 3px 12px rgba(255,107,26,.25)}
+.detail-avatar{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--orange),#6ba3f5);color:#fff;font-weight:800;font-size:1.25rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;box-shadow:0 3px 12px rgba(26,115,232,.22)}
 .detail-nome{font-size:1rem;font-weight:800;color:var(--text);line-height:1.2}
 .detail-sub{font-size:.72rem;color:var(--muted);margin-top:.2rem}
 .detail-contact-row{display:flex;gap:.75rem;margin-top:.85rem;flex-wrap:wrap}
@@ -364,7 +364,7 @@ select.filter-sel:focus{border-color:var(--orange)}
 .venda-data{font-size:.65rem;color:var(--muted);flex-shrink:0}
 .venda-del{background:none;border:none;cursor:pointer;color:var(--muted);font-size:.72rem;opacity:.45;transition:opacity .12s;padding:.1rem}
 .venda-del:hover{opacity:1;color:var(--red)}
-.venda-total{background:var(--orange-lt);border:1.5px solid rgba(255,107,26,.25);border-radius:10px;padding:.7rem .9rem;margin-bottom:.85rem;display:flex;align-items:center;justify-content:space-between}
+.venda-total{background:var(--orange-lt);border:1.5px solid rgba(26,115,232,.2);border-radius:10px;padding:.7rem .9rem;margin-bottom:.85rem;display:flex;align-items:center;justify-content:space-between}
 .venda-total-label{font-size:.73rem;font-weight:600;color:var(--orange)}
 .venda-total-val{font-size:1.02rem;font-weight:800;color:var(--orange)}
 /* ── FOLLOW-UP ── */
@@ -378,7 +378,7 @@ select.filter-sel:focus{border-color:var(--orange)}
 #detAvatarImg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;opacity:0;transition:opacity .3s}
 #detAvatarImg.loaded{opacity:1}
 /* ── TAGS PERSONALIZADAS ── */
-.custom-tag-del{background:none;border:none;cursor:pointer;color:rgba(255,107,26,.55);font-size:.6rem;padding:0 .12rem .05rem;margin-left:.2rem;line-height:1;vertical-align:middle}
+.custom-tag-del{background:none;border:none;cursor:pointer;color:rgba(26,115,232,.55);font-size:.6rem;padding:0 .12rem .05rem;margin-left:.2rem;line-height:1;vertical-align:middle}
 .custom-tag-del:hover{color:var(--red)}
 /* QR Code modal */
 .qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
@@ -742,7 +742,7 @@ select.filter-sel:focus{border-color:var(--orange)}
             <div id="importHistoricoStatus" style="font-size:.78rem;color:#6B7280;min-height:1.2em"></div>
             <div style="display:flex;gap:.5rem;justify-content:flex-end">
               <button onclick="document.getElementById('importHistoricoOverlay').style.display='none'" style="padding:.5rem 1rem;border:1.5px solid #E5E7EB;border-radius:8px;background:none;cursor:pointer;font-size:.8rem;color:#6B7280">Cancelar</button>
-              <button onclick="executarImportHistorico()" style="padding:.5rem 1.25rem;background:#FF6B1A;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:700">Importar</button>
+              <button onclick="executarImportHistorico()" style="padding:.5rem 1.25rem;background:#1a73e8;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.8rem;font-weight:700">Importar</button>
             </div>
           </div>
         </div>
@@ -989,7 +989,7 @@ function atualizarContadores() {
     if(uf) estadosMap[uf] = (estadosMap[uf]||0) + 1;
   });
   const estadosOrdenados = Object.entries(estadosMap).sort((a,b)=>b[1]-a[1]);
-  const estadoCores = ['#FF6B1A','#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899'];
+  const estadoCores = ['#1a73e8','#0d904f','#1557b0','#7950d2','#e37400','#d93025','#EC4899'];
   const sidebarEstados = document.getElementById('sidebarEstados');
   if(sidebarEstados) {
     sidebarEstados.innerHTML = estadosOrdenados.map(([uf, cnt], i) => `
@@ -2321,7 +2321,7 @@ function renderPainelCRM() {
     const ranking = Object.entries(estadosMap).sort((a,b)=>b[1]-a[1]);
     if(!ranking.length) return '';
     const max = ranking[0][1];
-    const cores = ['#FF6B1A','#10B981','#3B82F6','#8B5CF6','#F59E0B','#EF4444','#EC4899'];
+    const cores = ['#1a73e8','#0d904f','#1557b0','#7950d2','#e37400','#d93025','#EC4899'];
     return `
     <div class="painel-block" style="margin-bottom:1rem">
       <div class="painel-section-title">

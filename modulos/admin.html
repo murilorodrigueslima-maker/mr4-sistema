@@ -470,8 +470,8 @@ function renderTabela(lista) {
         <td>${statusHtml}</td>
         <td>
           <div class="actions-cell">
-            <button class="btn-icon" title="Editar" onclick="abrirModalEditar('${u.uid}')">✏️</button>
-            <button class="btn-icon del" title="Remover" onclick="abrirDelModal('${u.uid}')">🗑️</button>
+            <button class="btn-icon" title="Editar" aria-label="Editar usuário" onclick="abrirModalEditar('${u.uid}')">✏️</button>
+            <button class="btn-icon del" title="Remover" aria-label="Remover usuário" onclick="abrirDelModal('${u.uid}')">🗑️</button>
           </div>
         </td>
       </tr>`;

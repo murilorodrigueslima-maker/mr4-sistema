@@ -1141,6 +1141,14 @@ window.imprimirRecibo=function(){
 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 window.addEventListener('firebaseReady', ()=>{ carregar(); initAutocompletes(); carregarFornecedores(); });
+
+// ── A11Y: teclado para .tab (Enter/Espaço) ────────────────────────────────────
+document.querySelectorAll('.tab').forEach(t => {
+  t.setAttribute('tabindex', '0');
+  t.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); t.click(); }
+  });
+});
 </script>
 
 </body>

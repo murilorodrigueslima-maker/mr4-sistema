@@ -10,21 +10,21 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --orange:    #FF6B1A;
-    --orange-dk: #e85d0f;
-    --bg:        #F3F4F6;
+    --orange:    #1a73e8;
+    --orange-dk: #1557b0;
+    --bg:        #f5f5f5;
     --white:     #FFFFFF;
-    --text:      #1A1A2E;
-    --muted:     #6B7280;
-    --border:    #E5E7EB;
-    --green:     #10B981;
-    --green-bg:  #D1FAE5;
-    --yellow:    #F59E0B;
-    --yellow-bg: #FEF3C7;
-    --red:       #EF4444;
-    --red-bg:    #FEE2E2;
-    --blue:      #6366F1;
-    --blue-bg:   #EEF2FF;
+    --text:      #202124;
+    --muted:     #5f6368;
+    --border:    #dadce0;
+    --green:     #0d904f;
+    --green-bg:  #e6f4ea;
+    --yellow:    #e37400;
+    --yellow-bg: #fef3d0;
+    --red:       #d93025;
+    --red-bg:    #fce8e6;
+    --blue:      #1a73e8;
+    --blue-bg:   #e8f0fe;
     --sidebar-w: 240px;
   }
 
@@ -62,7 +62,7 @@
   .nav-section { font-size: .62rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; padding: .75rem 1.25rem .3rem; }
   .nav-item { display: flex; align-items: center; gap: .65rem; padding: .6rem 1.25rem; font-size: .84rem; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .15s; text-decoration: none; border-left: 3px solid transparent; margin: .1rem 0; }
   .nav-item:hover { background: var(--bg); color: var(--text); }
-  .nav-item.active { background: rgba(255,107,26,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
+  .nav-item.active { background: rgba(26,115,232,.07); color: var(--orange); border-left-color: var(--orange); font-weight: 600; }
   .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
   .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
   .btn-sair { width: 100%; padding: .6rem; border: 1.5px solid var(--border); border-radius: 8px; background: none; font-family: 'Inter', sans-serif; font-size: .8rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all .15s; }
@@ -130,7 +130,7 @@
   /* ── BADGES ── */
   .badge { display: inline-flex; align-items: center; padding: .2rem .55rem; border-radius: 20px; font-size: .7rem; font-weight: 700; letter-spacing: .3px; white-space: nowrap; }
   .badge-red    { background: var(--red-bg);    color: var(--red); }
-  .badge-orange { background: #FEF0E7;          color: var(--orange-dk); }
+  .badge-orange { background: #e8f0fe;          color: var(--orange-dk); }
   .badge-yellow { background: var(--yellow-bg); color: #92400E; }
   .badge-green  { background: var(--green-bg);  color: #065F46; }
   .badge-blue   { background: var(--blue-bg);   color: #3730A3; }

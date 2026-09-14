@@ -603,9 +603,9 @@ function linhaTabela(g){
     <td><span style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</span></td>
     <td>${gcBadge}</td>
     <td><div style="display:flex;gap:.3rem">
-      <button class="btn-xs" title="Recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
-      <button class="btn-xs" title="Editar" onclick="editarGarantia('${g.id}')">✏️</button>
-      <button class="btn-xs" title="Avançar etapa" onclick="abrirModalEtapa('${g.id}')">→</button>
+      <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
+      <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${g.id}')">✏️</button>
+      <button class="btn-xs" title="Avançar etapa" aria-label="Avançar etapa" onclick="abrirModalEtapa('${g.id}')">→</button>
     </div></td>
   </tr>`;
 }
@@ -634,8 +634,8 @@ function renderKoluna(e){
             <span class="card-dias${dias>7?' urgente':''}">${dias}d</span>
             <div class="card-acoes" onclick="event.stopPropagation()">
               ${gcTag}
-              <button class="btn-xs" title="Recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
-              <button class="btn-xs" title="Editar" onclick="editarGarantia('${g.id}')">✏️</button>
+              <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
+              <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${g.id}')">✏️</button>
             </div>
           </div>
         </div>`;
@@ -706,9 +706,9 @@ function renderHistorico(){
       <td>${gcBadge}</td>
       <td style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</td>
       <td><div style="display:flex;gap:.3rem">
-        <button class="btn-xs" title="Recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
-        <button class="btn-xs" onclick="editarGarantia('${g.id}')">✏️</button>
-        <button class="btn-xs del" onclick="excluirGarantia('${g.id}')">🗑</button>
+        <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
+        <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${g.id}')">✏️</button>
+        <button class="btn-xs del" title="Excluir" aria-label="Excluir garantia" onclick="excluirGarantia('${g.id}')">🗑</button>
       </div></td>
     </tr>`;
   }).join('');

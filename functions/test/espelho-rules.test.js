@@ -62,6 +62,10 @@ async function seedUsers(db) {
   await db.collection('users').doc(UID_FUNC_ALT).set({
     role: 'funcionario', ativo: true, funcionarioId: FUNC_ID_ALT,
   });
+  // S2: temModulo('ponto') exige sistema_usuarios com admin=true ou modulos=['ponto'].
+  await db.collection('sistema_usuarios').doc(UID_GESTOR).set({
+    admin: false, modulos: ['ponto'],
+  });
 }
 
 beforeAll(async () => {

@@ -118,7 +118,7 @@ body{
 /* ── Body ────────────────────────────────────────────────────────────────── */
 .func-body{
   flex:1;
-  padding:16px 16px 80px;
+  padding:16px 16px calc(80px + env(safe-area-inset-bottom));
   overflow-y:auto;
 }
 
@@ -126,7 +126,7 @@ body{
 .clock-card{
   background:var(--primary);
   border-radius:var(--radius-lg);
-  padding:28px 20px 24px;
+  padding:18px 20px 16px;
   text-align:center;
   margin-bottom:12px;
   position:relative;
@@ -134,24 +134,24 @@ body{
 }
 .clock-card::before{
   content:'';position:absolute;top:-40px;right:-40px;
-  width:160px;height:160px;border-radius:50%;
+  width:140px;height:140px;border-radius:50%;
   background:rgba(255,255,255,.06);pointer-events:none;
 }
 .func-hora{
-  font-size:60px;font-weight:800;
+  font-size:56px;font-weight:800;
   color:white;line-height:1;
   letter-spacing:-2px;font-variant-numeric:tabular-nums;
 }
 .func-data-str{
-  font-size:13px;color:rgba(255,255,255,.75);
-  margin-top:6px;font-weight:500;text-transform:capitalize;
+  font-size:12px;color:rgba(255,255,255,.72);
+  margin-top:4px;font-weight:500;text-transform:capitalize;
 }
 .clock-next-label{
-  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  color:rgba(255,255,255,.55);margin-top:20px;margin-bottom:4px;
+  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.52);margin-top:14px;margin-bottom:3px;
 }
 .clock-next-tipo{
-  font-size:17px;font-weight:700;color:white;
+  font-size:15px;font-weight:700;color:white;
 }
 
 /* ── GPS pill ────────────────────────────────────────────────────────────── */
@@ -288,33 +288,34 @@ body{
   background:var(--surface);
   border:1px solid var(--border);
   border-radius:var(--radius);
-  padding:4px 0;
+  padding:2px 0;
   margin-bottom:12px;
   box-shadow:var(--shadow-sm);
 }
 .batida-row{
-  display:flex;align-items:center;gap:12px;
-  padding:12px 16px;
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;
   position:relative;
 }
 .batida-row+.batida-row{border-top:1px solid var(--border);}
 .batida-hora{
-  font-size:15px;font-weight:700;color:var(--text);
-  min-width:44px;font-variant-numeric:tabular-nums;
+  font-size:14px;font-weight:700;color:var(--text);
+  min-width:40px;font-variant-numeric:tabular-nums;
 }
-.batida-hora.vazio{color:var(--text-muted);font-weight:500;}
+.batida-hora.vazio{color:var(--text-muted);font-weight:400;}
+/* Indicador de timeline — pequeno círculo 22px */
 .batida-icon{
-  width:32px;height:32px;border-radius:50%;
+  width:22px;height:22px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   flex-shrink:0;
 }
-.batida-icon.entrada{background:var(--success-bg);}
-.batida-icon.saida_almoco{background:var(--warning-bg);}
-.batida-icon.retorno_almoco{background:var(--info-bg);}
-.batida-icon.saida{background:var(--danger-bg);}
-.batida-icon.vazio{background:var(--surface-2);border:1.5px dashed var(--border);}
+.batida-icon.entrada{background:var(--success);color:white;}
+.batida-icon.saida_almoco{background:#d97706;color:white;}
+.batida-icon.retorno_almoco{background:var(--info);color:white;}
+.batida-icon.saida{background:var(--danger);color:white;}
+.batida-icon.vazio{background:transparent;border:1.5px dashed var(--border);}
 .batida-tipo{font-size:13px;font-weight:500;color:var(--text-2);flex:1;}
-.batida-tipo.vazio{color:var(--text-muted);}
+.batida-tipo.vazio{color:var(--text-muted);font-weight:400;}
 .jornada-status{
   margin-bottom:12px;
   display:flex;align-items:center;gap:8px;
@@ -600,6 +601,7 @@ body{
   display:flex;
   box-shadow:0 -4px 12px rgba(0,0,0,.05);
   z-index:20;
+  padding-bottom:env(safe-area-inset-bottom);
 }
 .func-tab{
   flex:1;padding:10px 4px 12px;
@@ -1217,11 +1219,12 @@ const BATIDAS_DEF=[
   {tipo:'saida',        label:'Saída',             cor:'saida'},
 ];
 
+/* Ícones: check branco 12px — adequado ao círculo 22px */
 const ICONS={
-  entrada:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"><polyline points="5 12 12 5 19 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>',
-  saida_almoco:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
-  retorno_almoco:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>',
-  saida:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  entrada:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  saida_almoco:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  retorno_almoco:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  saida:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
 };
 
 async function renderHistDia(){

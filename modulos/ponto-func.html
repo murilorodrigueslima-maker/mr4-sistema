@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MR4 — Ponto Digital</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
@@ -34,18 +33,6 @@ body{font-family:'Barlow',sans-serif;background:var(--preto);color:var(--branco)
 .btn-ponto-grande.retorno{border-color:var(--verde);background:rgba(34,197,94,.1);}
 .btn-ponto-grande.saida{border-color:var(--vermelho);background:rgba(239,68,68,.1);}
 .btn-ponto-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
-.camera-area{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:12px;overflow:hidden;margin-bottom:1rem;position:relative;}
-.camera-video{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transform:scaleX(-1);}
-.camera-overlay{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;}
-.face-guide{width:160px;height:160px;border-radius:50%;border:3px solid rgba(255,255,255,.4);}
-.face-guide.detectando{border-color:var(--amarelo);animation:blink .8s infinite;}
-.face-guide.detectado{border-color:var(--verde);}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
-.camera-status{padding:8px 12px;font-size:12px;text-align:center;color:var(--cinza-texto);background:var(--cinza-medio);}
-.camera-controles{padding:12px;display:flex;gap:10px;}
-.btn-capturar{flex:1;background:var(--laranja);color:white;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
-.btn-capturar:disabled{opacity:.4;cursor:not-allowed;}
-.btn-cancelar-cam{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:11px 14px;font-size:14px;font-family:'Barlow',sans-serif;cursor:pointer;}
 .loc-info{display:flex;align-items:center;gap:8px;background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:13px;}
 .loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .loc-dot.ok{background:var(--verde);}
@@ -81,7 +68,6 @@ body{font-family:'Barlow',sans-serif;background:var(--preto);color:var(--branco)
 .notif{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 18px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
 .notif.verde{border-color:var(--verde);color:var(--verde);}
 .notif.vermelho{border-color:var(--vermelho);color:var(--vermelho);}
-canvas#canvasFoto{display:none;}
 .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
 .badge.pendente{background:rgba(245,158,11,.2);color:var(--amarelo);}
 .badge.aprovado{background:rgba(34,197,94,.15);color:var(--verde);}
@@ -120,7 +106,6 @@ canvas#canvasFoto{display:none;}
 <body>
 
 <div class="notif" id="notif"></div>
-<canvas id="canvasFoto"></canvas>
 
 <div id="loadingScreen">
   <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
@@ -154,32 +139,10 @@ canvas#canvasFoto{display:none;}
         </div>
         <div class="loc-info"><div class="loc-dot loading" id="loc-dot"></div><span id="loc-txt">Obtendo localização...</span></div>
       </div>
-      <div id="est-camera" style="display:none;">
-        <div class="aviso">Posicione seu rosto no círculo</div>
-        <div class="camera-area">
-          <video id="video-cam" class="camera-video" autoplay playsinline muted></video>
-          <div class="camera-overlay"><div class="face-guide" id="face-guide"></div></div>
-        </div>
-        <div class="camera-status" id="cam-status">Aguardando rosto...</div>
-        <div class="camera-controles">
-          <button class="btn-cancelar-cam" onclick="cancelarCam()">Cancelar</button>
-          <button class="btn-capturar" id="btn-capturar" onclick="capturarFoto()" disabled>Verificando...</button>
-        </div>
-      </div>
       <!-- GPS bloqueado -->
       <div id="est-gps-bloqueado" style="display:none;">
         <div class="aviso-erro"><strong>Localização bloqueada</strong><span id="gps-erro-msg">Você está fora do raio permitido.</span></div>
         <button class="btn-laranja" onclick="tentarNovamenteLoc()">Atualizar localização</button>
-      </div>
-      <!-- Câmera/facial bloqueado -->
-      <div id="est-cam-erro" style="display:none;">
-        <div class="aviso-erro"><strong>Verificação facial falhou</strong><span id="cam-erro-msg">Câmera não disponível.</span></div>
-        <button class="btn-laranja" onclick="voltarDeErroCamera()">Tentar novamente</button>
-      </div>
-      <!-- Rosto não reconhecido -->
-      <div id="est-bloqueado" style="display:none;">
-        <div class="aviso-erro"><strong>Acesso negado</strong>Rosto não reconhecido. Contate o gestor se o problema persistir.</div>
-        <button class="btn-laranja" onclick="voltarAguardando()">Tentar novamente</button>
       </div>
       <div id="est-proc" style="display:none;"><div class="msg-estado"><span class="loading-spin"></span>Salvando...</div></div>
       <div id="est-comp" style="display:none;"><div class="comprovante" id="comp-content"></div><button class="btn-laranja" onclick="voltarPonto()">OK</button></div>
@@ -386,11 +349,9 @@ onAuthStateChanged(auth, async user => {
 <script src="ponto-regras.js"></script>
 
 <script>
-const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200, FACE_THRESHOLD=0.6;
+const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200;
 // JORNADA_SABADO_MIN vem de ponto-regras.js
-let funcAtivo=null, streamCam=null, locAtual=null;
-let fotoNova=null, faceDetectionInterval=null, rostoVerificado=false;
-let fotoCapturadaBase64=null, modelsCarregados=false, facialScoreGlobal=null;
+let funcAtivo=null, locAtual=null;
 let justifAtualId=null, espelhoAtualFuncId=null;
 let batidaEmProgresso=false; // guard: evita duplo-toque em btn-bater
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
@@ -422,39 +383,6 @@ function distM(la1,lo1,la2,lo2){const R=6371000;const dL=(la2-la1)*Math.PI/180;c
 function notif(msg,tipo='verde'){const el=document.getElementById('notif');el.textContent=msg;el.className='notif '+tipo;el.style.display='block';setTimeout(()=>el.style.display='none',3000);}
 function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
 
-function facialBadge(score){
-  if(score===false||score===0)return{txt:'Bloqueada',cor:'var(--vermelho)'};
-  if(score===null||score===undefined)return{txt:'—',cor:'var(--cinza-texto)'};
-  if(score>=70)return{txt:'Validada '+score+'%',cor:'var(--verde)'};
-  return{txt:'Suspeita '+score+'%',cor:'var(--amarelo)'};
-}
-
-// ── Face API ──────────────────────────────────────────────────────────────────
-async function carregarModelos(){
-  if(modelsCarregados)return true;
-  try{
-    const U='https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
-    await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(U),faceapi.nets.faceRecognitionNet.loadFromUri(U)]);
-    modelsCarregados=true;return true;
-  }catch{return false;}
-}
-async function obterDescritorDaFoto(src){
-  return new Promise(res=>{
-    const img=new Image();img.crossOrigin='anonymous';
-    img.onload=async()=>{try{const d=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions()).withFaceDescriptor();res(d?d.descriptor:null);}catch{res(null);}};
-    img.onerror=()=>res(null);img.src=src;
-  });
-}
-async function verificarRosto(refs){
-  const video=document.getElementById('video-cam');if(!video||!video.readyState)return null;
-  try{
-    const det=await faceapi.detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({inputSize:160,scoreThreshold:0.4})).withFaceDescriptor();
-    if(!det)return null;
-    let min=Infinity;for(const d of refs){const dist=faceapi.euclideanDistance(det.descriptor,d);if(dist<min)min=dist;}
-    return{descriptor:det.descriptor,distancia:min,reconhecido:min<FACE_THRESHOLD};
-  }catch{return null;}
-}
-
 // ── Init — identidade definida pelo Firebase Auth, não pelo usuário ───────────
 function iniciarApp(){
   funcAtivo=window._funcAtivo;
@@ -462,7 +390,7 @@ function iniciarApp(){
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('func-app').style.display='flex';
   document.getElementById('func-nome-top').textContent=funcAtivo.nome.split(' ')[0];
-  iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();carregarModelos();
+  iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();
   document.getElementById('justif-data').value=hoje();
   document.getElementById('justif-anexo').addEventListener('change',e=>{
     const f=e.target.files[0];document.getElementById('justif-anexo-nome').textContent=f?f.name:'';
@@ -507,7 +435,6 @@ async function iniciarBatida(){
   batidaEmProgresso=true;
   const prox=await proxPonto();
   if(!prox){notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
-  if(!funcAtivo.foto){notif('Cadastre sua foto antes de bater ponto','vermelho');batidaEmProgresso=false;return;}
   // GPS bloqueante: PRESENCIAL exige localização dentro do raio
   if((funcAtivo.modalidade||'PRESENCIAL')==='PRESENCIAL'){
     if(locAtual===null){
@@ -529,123 +456,53 @@ async function iniciarBatida(){
   document.getElementById('btn-bater').className='btn-ponto-grande '+(prox.classe||'');
   document.getElementById('lbl-prox').textContent=prox.label;
   document.getElementById('est-aguardando').style.display='none';
-  document.getElementById('est-camera').style.display='block';
-  rostoVerificado=false;fotoCapturadaBase64=null;facialScoreGlobal=null;
-  document.getElementById('btn-capturar').disabled=true;
-  document.getElementById('btn-capturar').textContent='Verificando...';
-  document.getElementById('face-guide').className='face-guide detectando';
-  document.getElementById('cam-status').textContent='Aguardando rosto...';
-  try{
-    streamCam=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false});
-    document.getElementById('video-cam').srcObject=streamCam;
-    await carregarModelos();iniciarDeteccaoFacial();
-  }catch(e){
-    // FAIL CLOSED: câmera negada ou falhou → mostra tela de erro, ponto NÃO é registrado
-    cancelarCam();
-    document.getElementById('cam-erro-msg').textContent='Câmera não pôde ser acessada: '+(e.message||'permissão negada')+'. O ponto não foi registrado.';
-    document.getElementById('est-cam-erro').style.display='block';
-  }
+  document.getElementById('est-proc').style.display='block';
+  finalizarBatida();
 }
 window.iniciarBatida=iniciarBatida;
 
-async function iniciarDeteccaoFacial(){
-  let descRef=null;
-  try{descRef=await obterDescritorDaFoto(funcAtivo.foto);}catch{}
-  if(!descRef){
-    // FAIL CLOSED: foto de referência sem rosto detectável → bloqueia ponto
-    pararCamera();
-    document.getElementById('est-camera').style.display='none';
-    document.getElementById('cam-erro-msg').textContent='Foto de perfil não possui rosto válido. Contate seu gestor para atualizar a foto de referência.';
-    document.getElementById('est-cam-erro').style.display='block';
-    return;
-  }
-  let tentativas=0;
-  faceDetectionInterval=setInterval(async()=>{
-    if(rostoVerificado)return;tentativas++;
-    const r=await verificarRosto([descRef]);
-    if(!r){document.getElementById('cam-status').textContent='Nenhum rosto detectado.';document.getElementById('face-guide').className='face-guide detectando';return;}
-    if(r.reconhecido){
-      clearInterval(faceDetectionInterval);rostoVerificado=true;facialScoreGlobal=Math.round((1-r.distancia)*100);
-      document.getElementById('face-guide').className='face-guide detectado';
-      document.getElementById('cam-status').textContent=`Identidade confirmada (${facialScoreGlobal}%)`;
-      document.getElementById('btn-capturar').disabled=false;document.getElementById('btn-capturar').textContent='Registrar ponto';
-      capturarFotoCanvas();
-    }else if(tentativas>5){
-      clearInterval(faceDetectionInterval);pararCamera();
-      document.getElementById('est-camera').style.display='none';document.getElementById('est-bloqueado').style.display='block';
-    }else{const pct=Math.round((1-r.distancia)*100);document.getElementById('cam-status').textContent=`Verificando... (${pct}%)`;}
-  },700);
-}
-
-function capturarFotoCanvas(){
-  const video=document.getElementById('video-cam'),canvas=document.getElementById('canvasFoto');
-  canvas.width=video.videoWidth||320;canvas.height=video.videoHeight||240;
-  const ctx=canvas.getContext('2d');ctx.scale(-1,1);ctx.drawImage(video,-canvas.width,0);
-  fotoCapturadaBase64=canvas.toDataURL('image/jpeg',0.5);
-}
-
-function capturarFoto(){
-  if(!rostoVerificado){notif('Aguarde a verificação','vermelho');return;}
-  if(!fotoCapturadaBase64)capturarFotoCanvas();
-  pararCamera();
-  document.getElementById('est-camera').style.display='none';document.getElementById('est-proc').style.display='block';
-  finalizarBatida(fotoCapturadaBase64,facialScoreGlobal);
-}
-window.capturarFoto=capturarFoto;
-
-function pararCamera(){if(faceDetectionInterval){clearInterval(faceDetectionInterval);faceDetectionInterval=null;}if(streamCam){streamCam.getTracks().forEach(t=>t.stop());streamCam=null;}}
-function cancelarCam(){pararCamera();batidaEmProgresso=false;document.getElementById('est-camera').style.display='none';document.getElementById('est-aguardando').style.display='block';}
-function voltarAguardando(){batidaEmProgresso=false;document.getElementById('est-bloqueado').style.display='none';document.getElementById('est-aguardando').style.display='block';}
 function tentarNovamenteLoc(){
   batidaEmProgresso=false;
   document.getElementById('est-gps-bloqueado').style.display='none';
   document.getElementById('est-aguardando').style.display='block';
   locAtual=null;obterLoc();
 }
-function voltarDeErroCamera(){
-  batidaEmProgresso=false;
-  document.getElementById('est-cam-erro').style.display='none';
-  document.getElementById('est-aguardando').style.display='block';
-}
-window.cancelarCam=cancelarCam;window.voltarAguardando=voltarAguardando;
-window.tentarNovamenteLoc=tentarNovamenteLoc;window.voltarDeErroCamera=voltarDeErroCamera;
+window.tentarNovamenteLoc=tentarNovamenteLoc;
 
-async function finalizarBatida(foto,score){
+async function finalizarBatida(){
   // Chama Cloud Function — server valida uid, hora, GPS, sequência
   // horaCliente é enviada apenas para auditoria de desvio de relógio
   const payload={
     lat:         locAtual?.lat ?? null,
     lng:         locAtual?.lng ?? null,
     horaCliente: hojeHora(),
-    facialScore: score,   // auditoria apenas — não é barreira de segurança
-    foto:        foto||null,
+    facialScore: null,
+    foto:        null,
   };
   try{
     const result=await window._registrarPonto(payload);
     const reg=result.data;
     document.getElementById('est-proc').style.display='none';
-    mostrarComp(reg,reg.dentroRaio,score);renderHistDia();renderBancoFunc();
+    mostrarComp(reg,reg.dentroRaio);renderHistDia();renderBancoFunc();
   }catch(e){
     document.getElementById('est-proc').style.display='none';
     document.getElementById('est-aguardando').style.display='block';
-    // Erros amigáveis — sem stack trace para o usuário
     const msg=e?.details?.message||e?.message||'Erro ao salvar ponto.';
     notif(msg,'vermelho');
+    batidaEmProgresso=false;
   }
 }
 
-function mostrarComp(reg,dentroRaio,score){
+function mostrarComp(reg,dentroRaio){
   const locTxt=dentroRaio===true?'Dentro do raio':dentroRaio===false?'Fora do raio':'Não obtida';
-  const locClass=dentroRaio===true?'verde':'warn';const fb=facialBadge(score);
+  const locClass=dentroRaio===true?'verde':'warn';
   const horaExib=(reg.hora||'').slice(0,5)||'—';
   document.getElementById('comp-content').innerHTML=`
     <div class="comp-titulo">✓ Ponto registrado</div>
     <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${funcAtivo.nome}</span></div>
     <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel||reg.tipo||'—'}</span></div>
     <div class="comp-row"><span class="comp-label">Horário (servidor)</span><span class="comp-val">${horaExib}</span></div>
-    <div class="comp-row"><span class="comp-label">Localização</span><span class="comp-val ${locClass}">${locTxt}</span></div>
-    <div class="comp-row"><span class="comp-label">Facial</span><span class="comp-val" style="color:${fb.cor}">${fb.txt}</span></div>
-    ${fotoCapturadaBase64?`<div style="margin-top:10px;"><img src="${fotoCapturadaBase64}" style="width:100%;border-radius:8px;max-height:140px;object-fit:cover;"></div>`:''}`;
+    <div class="comp-row"><span class="comp-label">Localização</span><span class="comp-val ${locClass}">${locTxt}</span></div>`;
   document.getElementById('est-comp').style.display='block';
 }
 
@@ -664,7 +521,7 @@ async function renderHistDia(){
   const cores={entrada:'#22C55E',saida_almoco:'#F59E0B',retorno_almoco:'#60A5FA',saida:'#EF4444'};
   const el=document.getElementById('hist-dia');
   if(!regs.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum registro ainda.</div>';return;}
-  el.innerHTML=regs.map(r=>`<div class="hist-item"><div class="hist-dot" style="background:${cores[r.tipo]||'#888'}"></div><div class="hist-hora">${r.hora.slice(0,5)}</div><div class="hist-tipo">${r.tipoLabel}</div>${r.facialScore>=70?'<span style="font-size:10px;color:var(--verde)">✓</span>':r.facialScore>=50?'<span style="font-size:10px;color:var(--amarelo)">⚠</span>':''}</div>`).join('');
+  el.innerHTML=regs.map(r=>`<div class="hist-item"><div class="hist-dot" style="background:${cores[r.tipo]||'#888'}"></div><div class="hist-hora">${r.hora.slice(0,5)}</div><div class="hist-tipo">${r.tipoLabel}</div></div>`).join('');
   const prox=await proxPonto();const btn=document.getElementById('btn-bater');
   if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}
   else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}

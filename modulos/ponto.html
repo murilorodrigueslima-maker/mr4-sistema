@@ -4,129 +4,182 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ponto — MR4</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
-:root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
+/* ── Tokens ── */
+:root{
+  /* Primary — blue replaces orange; legacy names kept for JS-generated HTML */
+  --laranja:#1a73e8;--laranja-escuro:#1557b0;
+  /* Backgrounds */
+  --preto:#f1f5f9;--cinza-escuro:#ffffff;--cinza-medio:#f8fafc;
+  /* Borders & text */
+  --cinza-borda:#e2e8f0;--cinza-texto:#64748b;--branco:#0f172a;
+  /* Semantic */
+  --verde:#16a34a;--vermelho:#dc2626;--amarelo:#d97706;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Barlow',sans-serif;background:var(--preto);color:var(--branco);min-height:100vh;}
-#loadingScreen{position:fixed;inset:0;background:var(--preto);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:999;}
-.spinner{width:32px;height:32px;border:3px solid #333;border-top-color:var(--laranja);border-radius:50%;animation:spin .7s linear infinite;}
+body{font-family:'Inter',sans-serif;background:var(--preto);color:var(--branco);min-height:100vh;}
+
+/* ── Loading ── */
+#loadingScreen{position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:999;}
+.spinner{width:28px;height:28px;border:2.5px solid var(--cinza-borda);border-top-color:var(--laranja);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Layout ── */
 #dashboard{display:none;flex-direction:column;min-height:100vh;}
-.topbar{background:var(--cinza-escuro);border-bottom:1px solid var(--cinza-borda);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.topbar-nome{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;}
-.topbar-nome span{color:var(--laranja);}
-.topbar-right{display:flex;align-items:center;gap:12px;}
+
+/* ── Topbar ── */
+.topbar{background:#fff;border-bottom:1px solid var(--cinza-borda);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:12px;}
+.topbar-brand{display:flex;align-items:center;gap:10px;}
+.topbar-system{font-size:13px;font-weight:500;color:var(--cinza-texto);}
+.topbar-divider{width:1px;height:16px;background:var(--cinza-borda);}
+.topbar-nome{font-size:15px;font-weight:700;color:var(--branco);}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .topbar-data{font-size:12px;color:var(--cinza-texto);}
-.btn-voltar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.topbar-user{font-size:12px;color:var(--cinza-texto);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.btn-voltar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:5px 11px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;transition:border-color .15s,color .15s;}
 .btn-voltar:hover{border-color:var(--laranja);color:var(--laranja);}
-.btn-sair{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-sair{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:5px 11px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;transition:border-color .15s,color .15s;}
 .btn-sair:hover{border-color:var(--vermelho);color:var(--vermelho);}
-.sync-badge{font-size:11px;color:var(--verde);display:flex;align-items:center;gap:4px;}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--verde);animation:pulse 2s infinite;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.notif-badge{background:var(--vermelho);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;}
-.dash-nav{background:var(--cinza-escuro);border-bottom:1px solid var(--cinza-borda);display:flex;padding:0 1.5rem;gap:2px;overflow-x:auto;flex-shrink:0;}
-.nav-item{padding:12px 16px;font-size:13px;font-weight:500;color:var(--cinza-texto);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:6px;}
-.nav-item.ativo{color:var(--laranja);border-bottom-color:var(--laranja);}
-.nav-item:hover{color:var(--branco);}
-.dash-body{flex:1;overflow-y:auto;padding:1.5rem;}
+
+/* ── Nav ── */
+.dash-nav{background:#fff;border-bottom:1px solid var(--cinza-borda);display:flex;align-items:stretch;padding:0 1.5rem;gap:0;overflow-x:auto;flex-shrink:0;scrollbar-width:none;}
+.dash-nav::-webkit-scrollbar{display:none;}
+.nav-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--cinza-texto);padding:0 6px 0 14px;display:flex;align-items:center;white-space:nowrap;opacity:.6;flex-shrink:0;pointer-events:none;}
+.nav-group-label:first-child{padding-left:0;}
+.nav-sep{width:1px;height:16px;background:var(--cinza-borda);margin:auto 6px;flex-shrink:0;}
+.nav-item{padding:16px 11px;font-size:13px;font-weight:500;color:var(--cinza-texto);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:color .12s;margin-bottom:-1px;flex-shrink:0;}
+.nav-item.ativo{color:var(--laranja);border-bottom-color:var(--laranja);font-weight:600;}
+.nav-item:hover:not(.ativo){color:var(--branco);}
+.notif-badge{background:var(--vermelho);color:#fff;border-radius:99px;min-width:16px;height:16px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;}
+
+/* ── Body ── */
+.dash-body{flex:1;overflow-y:auto;padding:1.5rem;max-width:1440px;width:100%;margin:0 auto;}
 .dash-secao{display:none;}
 .dash-secao.ativa{display:block;}
-.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem;}
-.metric-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:16px;}
-.metric-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:8px;}
-.metric-valor{font-size:28px;font-weight:700;font-family:'Barlow Condensed',sans-serif;}
+
+/* ── Metrics grid (banco) ── */
+.metrics-grid{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;}
+.metric-card{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:14px 18px;min-width:120px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.metric-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--cinza-texto);margin-bottom:4px;}
+.metric-valor{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;}
 .metric-valor.verde{color:var(--verde);}
 .metric-valor.vermelho{color:var(--vermelho);}
-.metric-valor.laranja{color:var(--laranja);}
-.secao-titulo{font-size:14px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:12px;}
+.metric-valor.laranja{color:var(--amarelo);}
+
+/* ── Section layout ── */
+.secao-titulo{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--cinza-texto);margin-bottom:10px;}
 .secao-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px;}
-.tabela-wrap{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;overflow:hidden;margin-bottom:1.5rem;overflow-x:auto;}
+
+/* ── Tables ── */
+.tabela-wrap{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;overflow:hidden;margin-bottom:1.5rem;overflow-x:auto;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px;}
-th{padding:12px 16px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza-texto);border-bottom:1px solid var(--cinza-borda);}
-td{padding:12px 16px;border-bottom:1px solid #222;color:var(--branco);}
+th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza-texto);border-bottom:1px solid var(--cinza-borda);background:var(--cinza-medio);}
+td{padding:11px 14px;border-bottom:1px solid var(--cinza-borda);color:var(--branco);}
 tr:last-child td{border-bottom:none;}
-tr:hover td{background:rgba(255,107,26,.04);}
-.vazio{text-align:center;padding:2rem;color:var(--cinza-texto);font-size:14px;}
-.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
-.badge.presente{background:rgba(34,197,94,.15);color:var(--verde);}
-.badge.ausente{background:rgba(239,68,68,.15);color:var(--vermelho);}
-.badge.atrasou{background:rgba(245,158,11,.15);color:var(--amarelo);}
-.badge.extra{background:rgba(34,197,94,.15);color:var(--verde);}
-.badge.debito{background:rgba(239,68,68,.15);color:var(--vermelho);}
-.badge.dentro{background:rgba(34,197,94,.15);color:var(--verde);}
-.badge.fora{background:rgba(245,158,11,.15);color:var(--amarelo);}
-.badge.pendente{background:rgba(245,158,11,.2);color:var(--amarelo);}
-.badge.aprovado{background:rgba(34,197,94,.15);color:var(--verde);}
-.badge.rejeitado{background:rgba(239,68,68,.15);color:var(--vermelho);}
-.badge.assinado{background:rgba(34,197,94,.15);color:var(--verde);}
-.badge.aguardando{background:rgba(245,158,11,.15);color:var(--amarelo);}
-.avatar{width:32px;height:32px;border-radius:50%;background:var(--laranja-escuro);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;overflow:hidden;flex-shrink:0;}
+tr:hover td{background:rgba(26,115,232,.04);}
+.vazio{text-align:center;padding:2.5rem;color:var(--cinza-texto);font-size:14px;}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;letter-spacing:.01em;}
+.badge.presente{background:rgba(22,163,74,.12);color:#16a34a;}
+.badge.ausente{background:rgba(220,38,38,.1);color:#dc2626;}
+.badge.atrasou{background:rgba(217,119,6,.12);color:#d97706;}
+.badge.extra{background:rgba(22,163,74,.12);color:#16a34a;}
+.badge.debito{background:rgba(220,38,38,.1);color:#dc2626;}
+.badge.dentro{background:rgba(22,163,74,.12);color:#16a34a;}
+.badge.fora{background:rgba(217,119,6,.12);color:#d97706;}
+.badge.pendente{background:rgba(217,119,6,.12);color:#d97706;}
+.badge.aprovado{background:rgba(22,163,74,.12);color:#16a34a;}
+.badge.rejeitado{background:rgba(220,38,38,.1);color:#dc2626;}
+.badge.assinado{background:rgba(22,163,74,.12);color:#16a34a;}
+.badge.aguardando{background:rgba(217,119,6,.12);color:#d97706;}
+
+/* ── Avatars ── */
+.avatar{width:32px;height:32px;border-radius:50%;background:#dbeafe;color:#1557b0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;overflow:hidden;flex-shrink:0;}
 .avatar img{width:100%;height:100%;object-fit:cover;}
 .func-cell{display:flex;align-items:center;gap:10px;}
 .func-cell-info .nome{font-size:13px;font-weight:500;}
 .func-cell-info .cargo{font-size:11px;color:var(--cinza-texto);}
-.btn-acao{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:5px 10px;font-size:11px;font-family:'Barlow',sans-serif;cursor:pointer;}
+
+/* ── Buttons ── */
+.btn-acao{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:4px 10px;font-size:11px;font-family:'Inter',sans-serif;cursor:pointer;transition:border-color .12s,color .12s;}
 .btn-acao:hover{border-color:var(--laranja);color:var(--laranja);}
 .btn-acao.danger:hover{border-color:var(--vermelho);color:var(--vermelho);}
 .btn-acao.success{border-color:var(--verde);color:var(--verde);}
-.btn-novo{background:var(--laranja);color:white;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-novo{background:var(--laranja);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s;}
 .btn-novo:hover{background:var(--laranja-escuro);}
-.btn-ghost{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:8px 14px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-ghost{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:7px 13px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;transition:border-color .12s,color .12s;}
 .btn-ghost:hover{border-color:var(--laranja);color:var(--laranja);}
-.barra-wrap{background:#333;border-radius:99px;height:5px;margin-top:5px;}
-.barra{height:5px;border-radius:99px;}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:1rem;}
+.barra-wrap{background:var(--cinza-borda);border-radius:99px;height:4px;margin-top:6px;}
+.barra{height:4px;border-radius:99px;}
+
+/* ── Notification toast ── */
+.notif{position:fixed;bottom:1.25rem;left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 18px;font-size:13px;z-index:300;display:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.08);}
+.notif.verde{border-color:var(--verde);color:var(--verde);}
+.notif.vermelho{border-color:var(--vermelho);color:var(--vermelho);}
+
+/* ── Modals ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:100;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px);}
 .modal-overlay.aberto{display:flex;}
-.modal{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-.modal-titulo{font-size:17px;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;}
-.modal-fechar{background:transparent;border:none;color:var(--cinza-texto);font-size:20px;cursor:pointer;}
+.modal{background:#fff;border:1px solid var(--cinza-borda);border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.12);}
+.modal-titulo{font-size:16px;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;color:var(--branco);}
+.modal-fechar{background:transparent;border:none;color:var(--cinza-texto);font-size:22px;cursor:pointer;line-height:1;padding:0 2px;}
 .modal-fechar:hover{color:var(--branco);}
+
+/* ── Forms ── */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .form-grid .full{grid-column:1/-1;}
 .form-campo{display:flex;flex-direction:column;gap:5px;}
-.form-campo label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);}
-.form-campo input,.form-campo select,.form-campo textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;}
+.form-campo label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--cinza-texto);}
+.form-campo input,.form-campo select,.form-campo textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:9px 12px;font-size:14px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;transition:border-color .15s;}
 .form-campo input:focus,.form-campo select:focus,.form-campo textarea:focus{outline:none;border-color:var(--laranja);}
-.form-campo select option{background:var(--cinza-escuro);}
+.form-campo select option{background:#fff;}
 .form-campo textarea{resize:vertical;min-height:80px;}
 .foto-upload{border:2px dashed var(--cinza-borda);border-radius:10px;padding:1.5rem;text-align:center;cursor:pointer;margin-bottom:1rem;}
 .foto-preview{width:80px;height:80px;border-radius:50%;margin:0 auto 8px;overflow:hidden;background:var(--cinza-medio);display:flex;align-items:center;justify-content:center;}
 .foto-preview img{width:100%;height:100%;object-fit:cover;}
 .modal-footer{display:flex;gap:10px;margin-top:1.25rem;justify-content:flex-end;}
-.btn-cancelar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px 18px;font-size:14px;font-family:'Barlow',sans-serif;cursor:pointer;}
-.btn-salvar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
+.btn-cancelar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:9px 18px;font-size:14px;font-family:'Inter',sans-serif;cursor:pointer;}
+.btn-salvar{background:var(--laranja);color:#fff;border:none;border-radius:8px;padding:9px 22px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;}
 .btn-salvar:hover{background:var(--laranja-escuro);}
-.btn-aprovar{background:var(--verde);color:white;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
-.btn-rejeitar{background:var(--vermelho);color:white;border:none;border-radius:8px;padding:10px 18px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
-.ficha{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:12px;padding:1.5rem;margin-bottom:1rem;}
-.ficha-header{display:flex;align-items:center;gap:16px;margin-bottom:1rem;}
-.ficha-avatar{width:64px;height:64px;border-radius:50%;background:var(--laranja-escuro);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;overflow:hidden;flex-shrink:0;}
+.btn-aprovar{background:var(--verde);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;}
+.btn-rejeitar{background:var(--vermelho);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;}
+
+/* ── Cards funcionários ── */
+.ficha{background:#fff;border:1px solid var(--cinza-borda);border-radius:12px;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,.04);}
+.ficha-header{display:flex;align-items:center;gap:14px;margin-bottom:1rem;}
+.ficha-avatar{width:52px;height:52px;border-radius:50%;background:#dbeafe;color:#1557b0;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;overflow:hidden;flex-shrink:0;}
 .ficha-avatar img{width:100%;height:100%;object-fit:cover;}
-.ficha-nome{font-size:18px;font-weight:700;}
-.ficha-cargo{font-size:13px;color:var(--cinza-texto);margin-top:2px;}
-.ficha-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:1rem;}
-.ficha-campo{background:var(--cinza-medio);border-radius:8px;padding:10px 12px;}
-.ficha-campo .fc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:4px;}
-.ficha-campo .fc-valor{font-size:14px;}
+.ficha-nome{font-size:17px;font-weight:700;}
+.ficha-cargo{font-size:12px;color:var(--cinza-texto);margin-top:2px;}
+.ficha-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:1rem;}
+.ficha-campo{background:var(--cinza-medio);border-radius:8px;padding:9px 12px;}
+.ficha-campo .fc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:3px;}
+.ficha-campo .fc-valor{font-size:14px;font-weight:500;}
 .ficha-acoes{display:flex;gap:8px;flex-wrap:wrap;}
 .estrelas{display:flex;gap:4px;}
-.estrela{font-size:20px;cursor:pointer;color:#444;}
-.estrela.ativa{color:var(--laranja);}
-.obs-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:1rem;}
-.obs-card textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:80px;resize:vertical;margin-bottom:8px;}
-.link-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.estrela{font-size:20px;cursor:pointer;color:var(--cinza-borda);}
+.estrela.ativa{color:var(--amarelo);}
+.obs-card{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:1rem;}
+.obs-card textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;min-height:80px;resize:vertical;margin-bottom:8px;}
+
+/* ── Links section ── */
+.link-card{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,.03);}
 .link-url{font-size:12px;color:var(--laranja);word-break:break-all;flex:1;}
-.btn-copiar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:6px 12px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;flex-shrink:0;}
+.btn-copiar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:6px;padding:5px 12px;font-size:12px;font-family:'Inter',sans-serif;cursor:pointer;flex-shrink:0;transition:border-color .12s,color .12s;}
 .btn-copiar:hover{border-color:var(--laranja);color:var(--laranja);}
-.justif-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;}
+
+/* ── Justificativas ── */
+.justif-card{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.03);}
 .justif-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;}
 .justif-nome{font-size:14px;font-weight:600;}
 .justif-info{font-size:12px;color:var(--cinza-texto);margin-bottom:8px;}
 .justif-motivo{font-size:13px;color:var(--branco);margin-bottom:8px;padding:8px 10px;background:var(--cinza-medio);border-radius:7px;}
-.espelho-preview{background:white;color:#111;padding:1.5rem;border-radius:10px;font-family:'Barlow',sans-serif;font-size:12px;margin-bottom:1rem;border:1px solid #ddd;}
+
+/* ── Espelho (PDF printable — stays white/dark) ── */
+.espelho-preview{background:white;color:#111;padding:1.5rem;border-radius:10px;font-family:'Arial',sans-serif;font-size:12px;margin-bottom:1rem;border:1px solid #ddd;}
 .espelho-header{text-align:center;margin-bottom:1rem;padding-bottom:1rem;border-bottom:2px solid #333;}
 .espelho-titulo{font-size:18px;font-weight:700;margin-bottom:4px;}
 .espelho-sub{font-size:13px;color:#555;}
@@ -139,11 +192,25 @@ tr:hover td{background:rgba(255,107,26,.04);}
 .assin-linha{border-bottom:1px solid #333;margin-bottom:6px;height:40px;}
 .assin-label{font-size:11px;color:#555;}
 .assinatura-area{border:2px dashed var(--cinza-borda);border-radius:10px;background:var(--cinza-medio);cursor:crosshair;display:block;touch-action:none;}
-.espelho-func-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-.notif{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 18px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
-.notif.verde{border-color:var(--verde);color:var(--verde);}
-.notif.vermelho{border-color:var(--vermelho);color:var(--vermelho);}
-@media(max-width:480px){.dash-body{padding:1rem;}.topbar{padding:0 1rem;}.form-grid{grid-template-columns:1fr;}.form-grid .full{grid-column:1;}}
+.espelho-func-card{background:#fff;border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+
+/* ── Skeleton ── */
+.skel{border-radius:6px;background:linear-gradient(90deg,var(--cinza-medio) 25%,var(--cinza-borda) 50%,var(--cinza-medio) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+
+/* ── Responsive ── */
+@media(max-width:768px){
+  .topbar-user{display:none;}
+  .nav-group-label{display:none;}
+  .nav-sep{display:none;}
+  .dash-body{padding:1rem;}
+  .topbar{padding:0 1rem;}
+}
+@media(max-width:480px){
+  .form-grid{grid-template-columns:1fr;}
+  .form-grid .full{grid-column:1;}
+  .metrics-grid{flex-wrap:wrap;}
+}
 </style>
 </head>
 <body>
@@ -151,29 +218,39 @@ tr:hover td{background:rgba(255,107,26,.04);}
 <div class="notif" id="notif"></div>
 
 <div id="loadingScreen">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#1a73e8" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/></svg>
+    <div style="font-family:'Inter',sans-serif;font-size:17px;font-weight:700;color:#0f172a;">MR4 <span style="color:#1a73e8;">Ponto</span></div>
+  </div>
   <div class="spinner"></div>
 </div>
 
 <div id="dashboard">
   <div class="topbar">
-    <div style="display:flex;align-items:center;gap:10px;">
-      <svg width="28" height="28" viewBox="0 0 44 44" fill="none"><path d="M8 32 Q4 22 8 14 L14 10 Q18 8 22 8 Q26 8 30 10 L36 14 Q40 22 36 32 L30 36 Q26 38 22 38 Q18 38 14 36 Z" stroke="#FF6B1A" stroke-width="2" fill="none"/><path d="M10 26 L16 20 L22 24 L28 18 L34 22" stroke="#FF6B1A" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="16" r="3" fill="#FF6B1A"/></svg>
-      <div class="topbar-nome"><span>MR4</span> PONTO</div>
+    <div class="topbar-brand">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#1a73e8" stroke-width="2"/><path d="M12 6v6l4 2" stroke="#1a73e8" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="topbar-system">MR4 Gestão</div>
+      <div class="topbar-divider"></div>
+      <div class="topbar-nome">Ponto</div>
     </div>
     <div class="topbar-right">
-      <div class="sync-badge"><div class="sync-dot"></div>Firebase</div>
       <div class="topbar-data" id="topbar-data"></div>
+      <div class="topbar-user" id="topbar-user"></div>
       <a href="../index.html" class="btn-voltar">← Sistema</a>
       <button class="btn-sair" onclick="sair()">Sair</button>
     </div>
   </div>
   <div class="dash-nav">
-    <div class="nav-item ativo" onclick="mudarSecao('hoje',this)">Hoje</div>
+    <span class="nav-group-label">Operação</span>
+    <div class="nav-item ativo" onclick="mudarSecao('hoje',this)">Visão Geral</div>
     <div class="nav-item" onclick="mudarSecao('registros',this)">Registros</div>
-    <div class="nav-item" onclick="mudarSecao('banco',this)">Banco de horas</div>
     <div class="nav-item" onclick="mudarSecao('justificativas',this)">Justificativas <span class="notif-badge" id="badge-justif" style="display:none">0</span></div>
-    <div class="nav-item" onclick="mudarSecao('espelho',this)">Espelho de ponto</div>
+    <div class="nav-sep"></div>
+    <span class="nav-group-label">Gestão</span>
+    <div class="nav-item" onclick="mudarSecao('banco',this)">Banco de Horas</div>
+    <div class="nav-item" onclick="mudarSecao('espelho',this)">Espelhos</div>
+    <div class="nav-sep"></div>
+    <span class="nav-group-label">Administração</span>
     <div class="nav-item" onclick="mudarSecao('funcionarios',this)">Funcionários</div>
     <div class="nav-item" onclick="mudarSecao('links',this)">Links</div>
     <div class="nav-item" onclick="mudarSecao('contas',this)">Contas</div>
@@ -181,44 +258,52 @@ tr:hover td{background:rgba(255,107,26,.04);}
   <div class="dash-body">
 
     <div class="dash-secao ativa" id="sec-hoje">
+      <div class="secao-header" style="margin-bottom:1rem;">
+        <div>
+          <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;">Ponto</div>
+          <div style="font-size:13px;color:var(--cinza-texto);margin-top:2px;">Visão geral da equipe hoje</div>
+        </div>
+      </div>
       <div class="metrics-grid" id="metrics-hoje"></div>
-      <div class="secao-titulo">Status hoje</div>
-      <div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Status</th></tr></thead><tbody id="tbody-hoje"><tr><td colspan="7" class="vazio">Carregando...</td></tr></tbody></table></div>
+      <div class="secao-titulo">Status da equipe</div>
+      <div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Entrada</th><th>S. Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Status</th></tr></thead><tbody id="tbody-hoje"><tr><td colspan="7" class="vazio">Carregando...</td></tr></tbody></table></div>
       <div class="secao-titulo">Últimas batidas</div>
       <div id="ultimas-batidas"></div>
     </div>
 
     <div class="dash-secao" id="sec-registros">
       <div class="secao-header">
-        <div class="secao-titulo" style="margin:0">Registros</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select id="fil-func-reg" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;"><option value="">Todos</option></select>
+        <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;">Registros</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="fil-func-reg" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;"><option value="">Todos</option></select>
           <div style="display:flex;align-items:center;gap:4px;">
-            <button class="btn-ghost" onclick="mudarMes('fil-mes',-1)" style="padding:7px 10px;font-size:14px;">◀</button>
-            <input type="month" id="fil-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
-            <button class="btn-ghost" onclick="mudarMes('fil-mes',1)" style="padding:7px 10px;font-size:14px;">▶</button>
+            <button class="btn-ghost" onclick="mudarMes('fil-mes',-1)" style="padding:6px 10px;font-size:14px;">◀</button>
+            <input type="month" id="fil-mes" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;">
+            <button class="btn-ghost" onclick="mudarMes('fil-mes',1)" style="padding:6px 10px;font-size:14px;">▶</button>
           </div>
-          <button class="btn-ghost" onclick="renderRegistros()">Filtrar</button>
+          <button class="btn-novo" onclick="renderRegistros()">Filtrar</button>
         </div>
       </div><br>
       <div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Data</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>GPS</th><th>Facial</th><th>Foto</th></tr></thead><tbody id="tbody-registros"><tr><td colspan="11" class="vazio">Nenhum registro.</td></tr></tbody></table></div>
     </div>
 
     <div class="dash-secao" id="sec-banco">
+      <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;margin-bottom:1rem;">Banco de Horas</div>
       <div class="metrics-grid" id="metrics-banco"></div>
       <div id="banco-cards"></div>
     </div>
 
     <div class="dash-secao" id="sec-justificativas">
+      <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;margin-bottom:1rem;">Justificativas</div>
       <div class="ficha" style="margin-bottom:1.5rem;">
         <div class="secao-titulo">Lançar ocorrência (gestor)</div>
-        <div id="monitor-aviso" style="display:none;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:7px;padding:9px 14px;font-size:12px;color:var(--amarelo);margin-bottom:12px;">👁 Modo monitor — você pode acompanhar o ponto de todos, mas não pode lançar ocorrências para você mesmo.</div>
+        <div id="monitor-aviso" style="display:none;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:7px;padding:9px 14px;font-size:12px;color:var(--amarelo);margin-bottom:12px;">👁 Modo monitor — você pode acompanhar o ponto de todos, mas não pode lançar ocorrências para você mesmo.</div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
-          <div class="form-campo"><label>Funcionário</label><select id="gest-func" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"><option value="">Selecione...</option></select></div>
-          <div class="form-campo"><label id="gest-data-label">Data</label><input type="date" id="gest-data" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
-          <div class="form-campo" id="campo-data-fim" style="display:none;"><label>Data fim</label><input type="date" id="gest-data-fim" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+          <div class="form-campo"><label>Funcionário</label><select id="gest-func" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;"><option value="">Selecione...</option></select></div>
+          <div class="form-campo"><label id="gest-data-label">Data</label><input type="date" id="gest-data" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;"></div>
+          <div class="form-campo" id="campo-data-fim" style="display:none;"><label>Data fim</label><input type="date" id="gest-data-fim" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;"></div>
           <div class="form-campo"><label>Tipo de ocorrência</label>
-            <select id="gest-tipo" onchange="onTipoChange(this.value)" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;">
+            <select id="gest-tipo" onchange="onTipoChange(this.value)" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;">
               <option value="">Selecione...</option>
               <optgroup label="Férias"><option value="Férias">🏖️ Férias (período)</option></optgroup>
               <optgroup label="Feriados"><option value="Feriado nacional">Feriado nacional</option><option value="Feriado estadual">Feriado estadual (Ceará)</option><option value="Feriado municipal">Feriado municipal (Fortaleza)</option></optgroup>
@@ -229,7 +314,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
             </select>
           </div>
         </div>
-        <div class="form-campo" style="margin-bottom:12px;"><label>Observação</label><input type="text" id="gest-obs" placeholder="Detalhes adicionais (opcional)" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
+        <div class="form-campo" style="margin-bottom:12px;"><label>Observação</label><input type="text" id="gest-obs" placeholder="Detalhes adicionais (opcional)" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;"></div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn-novo" onclick="lancarOcorrenciaGestor()">Lançar ocorrência</button>
           <button class="btn-ghost" onclick="abrirFeriados2026()">Ver feriados 2026 — Fortaleza</button>
@@ -237,8 +322,8 @@ tr:hover td{background:rgba(255,107,26,.04);}
         <div id="gest-info" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div>
       </div>
       <div class="secao-header">
-        <div class="secao-titulo" style="margin:0">Histórico de ocorrências</div>
-        <select id="fil-justif" onchange="renderJustificativas()" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
+        <div style="font-size:16px;font-weight:600;color:var(--branco);">Histórico de ocorrências</div>
+        <select id="fil-justif" onchange="renderJustificativas()" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;">
           <option value="pendente">Pendentes (funcionário)</option>
           <option value="todos">Todas</option>
           <option value="aprovado">Aprovadas</option>
@@ -251,13 +336,13 @@ tr:hover td{background:rgba(255,107,26,.04);}
 
     <div class="dash-secao" id="sec-espelho">
       <div class="secao-header">
-        <div class="secao-titulo" style="margin:0">Espelho de ponto mensal</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <select id="esp-func" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;"><option value="">Selecione funcionário</option></select>
+        <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;">Espelho de ponto</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="esp-func" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;"><option value="">Selecione funcionário</option></select>
           <div style="display:flex;align-items:center;gap:4px;">
-            <button class="btn-ghost" onclick="mudarMes('esp-mes',-1)" style="padding:7px 10px;font-size:14px;">◀</button>
-            <input type="month" id="esp-mes" style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Barlow',sans-serif;">
-            <button class="btn-ghost" onclick="mudarMes('esp-mes',1)" style="padding:7px 10px;font-size:14px;">▶</button>
+            <button class="btn-ghost" onclick="mudarMes('esp-mes',-1)" style="padding:6px 10px;font-size:14px;">◀</button>
+            <input type="month" id="esp-mes" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;">
+            <button class="btn-ghost" onclick="mudarMes('esp-mes',1)" style="padding:6px 10px;font-size:14px;">▶</button>
           </div>
           <button class="btn-novo" onclick="gerarEspelho()">Gerar espelho</button>
         </div>
@@ -267,23 +352,21 @@ tr:hover td{background:rgba(255,107,26,.04);}
 
     <div class="dash-secao" id="sec-funcionarios">
       <div class="secao-header">
-        <div class="secao-titulo" style="margin:0">Funcionários</div>
+        <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;">Funcionários</div>
         <button class="btn-novo" onclick="abrirModalFunc()">+ Novo funcionário</button>
       </div><br>
       <div id="lista-funcionarios"><div class="vazio">Carregando...</div></div>
     </div>
 
     <div class="dash-secao" id="sec-links">
-      <div class="secao-titulo">Links de acesso para funcionários</div>
-      <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;">Envie o link para o funcionário acessar a tela de ponto no celular.</p>
+      <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;margin-bottom:4px;">Links de acesso</div>
+      <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:1.25rem;">Envie o link para o funcionário acessar a tela de ponto no celular.</p>
       <div id="lista-links"></div>
     </div>
 
     <div class="dash-secao" id="sec-contas">
-      <div class="secao-header">
-        <div class="secao-titulo" style="margin:0">Contas de acesso — Funcionários</div>
-      </div>
-      <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;">Crie contas Firebase Auth para que os funcionários acessem o aplicativo com e-mail e senha.</p>
+      <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;margin-bottom:4px;">Contas de acesso</div>
+      <p style="font-size:13px;color:var(--cinza-texto);margin-bottom:1.25rem;">Crie contas Firebase Auth para que os funcionários acessem o aplicativo com e-mail e senha.</p>
       <div id="lista-contas"><div class="vazio">Carregando...</div></div>
     </div>
 
@@ -294,22 +377,22 @@ tr:hover td{background:rgba(255,107,26,.04);}
 <div class="modal-overlay" id="modal-func">
   <div class="modal">
     <div class="modal-titulo"><span id="modal-func-titulo">Novo funcionário</span><button class="modal-fechar" onclick="fecharModal('modal-func')">×</button></div>
-    <div style="background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--laranja);margin-bottom:1rem;">Foto do funcionário (opcional)</div>
+    <div style="background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--laranja);margin-bottom:1rem;">Foto do funcionário (opcional)</div>
     <div style="text-align:center;margin-bottom:12px;">
       <div class="foto-preview" id="foto-preview" style="width:100px;height:100px;margin:0 auto 10px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
       <div id="foto-status" style="font-size:12px;color:var(--cinza-texto);">Nenhuma foto cadastrada</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;">
-      <button type="button" onclick="abrirCameraFoto()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;">Tirar foto agora</button>
-      <button type="button" onclick="document.getElementById('inp-foto').click()" style="background:transparent;color:var(--cinza-texto);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;">Enviar arquivo</button>
+      <button type="button" onclick="abrirCameraFoto()" style="background:var(--laranja);color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">Tirar foto agora</button>
+      <button type="button" onclick="document.getElementById('inp-foto').click()" style="background:transparent;color:var(--cinza-texto);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">Enviar arquivo</button>
     </div>
     <input type="file" id="inp-foto" accept="image/*" style="display:none" onchange="previewFoto(this)">
     <div id="cam-cadastro" style="display:none;background:var(--cinza-medio);border-radius:12px;overflow:hidden;margin-bottom:1rem;">
       <div style="position:relative;"><video id="video-cadastro" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;transform:scaleX(-1);" autoplay playsinline muted></video><div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;"><div style="width:140px;height:140px;border-radius:50%;border:3px solid rgba(255,255,255,.6);"></div></div></div>
       <div style="padding:10px;font-size:12px;text-align:center;color:var(--cinza-texto);">Centralize o rosto no círculo</div>
       <div style="display:flex;gap:8px;padding:0 10px 10px;">
-        <button type="button" onclick="fecharCameraFoto()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:9px;font-size:13px;font-family:'Barlow',sans-serif;cursor:pointer;">Cancelar</button>
-        <button type="button" onclick="capturarFotoCadastro()" style="flex:2;background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;">Capturar foto</button>
+        <button type="button" onclick="fecharCameraFoto()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:9px;font-size:13px;font-family:'Inter',sans-serif;cursor:pointer;">Cancelar</button>
+        <button type="button" onclick="capturarFotoCadastro()" style="flex:2;background:var(--laranja);color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;">Capturar foto</button>
       </div>
     </div>
     <div class="form-grid">
@@ -328,8 +411,8 @@ tr:hover td{background:rgba(255,107,26,.04);}
       <div class="form-campo full" id="campo-perfil-func" style="display:none;border-top:1px solid var(--cinza-borda);padding-top:12px;margin-top:4px;">
         <label style="color:var(--laranja);">Acesso ao sistema</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px;">
-          <div><label style="font-size:11px;color:var(--cinza-texto);">Email de login</label><input type="email" id="f-email" placeholder="email@exemplo.com" style="width:100%;padding:8px 10px;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;color:var(--branco);font-size:13px;"></div>
-          <div><label style="font-size:11px;color:var(--cinza-texto);">Perfil</label><select id="f-perfil" style="width:100%;padding:8px 10px;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;color:var(--branco);font-size:13px;"><option value="">Padrão (só bate ponto)</option><option value="monitor">Monitor (vê todas as folhas)</option></select></div>
+          <div><label style="font-size:11px;color:var(--cinza-texto);">Email de login</label><input type="email" id="f-email" placeholder="email@exemplo.com" style="width:100%;padding:8px 10px;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;color:var(--branco);font-size:13px;font-family:'Inter',sans-serif;"></div>
+          <div><label style="font-size:11px;color:var(--cinza-texto);">Perfil</label><select id="f-perfil" style="width:100%;padding:8px 10px;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;color:var(--branco);font-size:13px;font-family:'Inter',sans-serif;"><option value="">Padrão (só bate ponto)</option><option value="monitor">Monitor (vê todas as folhas)</option></select></div>
         </div>
       </div>
     </div>
@@ -345,9 +428,9 @@ tr:hover td{background:rgba(255,107,26,.04);}
     <div class="secao-titulo" style="margin-top:1rem;">Avaliação</div>
     <div class="obs-card">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><span style="font-size:13px;color:var(--cinza-texto);">Nota:</span><div class="estrelas" id="estrelas-av"></div></div>
-      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Metas</label><input type="text" id="inp-metas" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;"></div>
-      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Observações</label><textarea id="inp-obs-av" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:70px;resize:vertical;"></textarea></div>
-      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Advertências</label><textarea id="inp-adv" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:60px;resize:vertical;"></textarea></div>
+      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Metas</label><input type="text" id="inp-metas" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;"></div>
+      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Observações</label><textarea id="inp-obs-av" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;min-height:70px;resize:vertical;"></textarea></div>
+      <div style="margin-bottom:8px;"><label style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--cinza-texto);display:block;margin-bottom:5px;">Advertências</label><textarea id="inp-adv" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;min-height:60px;resize:vertical;"></textarea></div>
       <button class="btn-salvar" style="width:100%" onclick="salvarAvaliacao()">Salvar avaliação</button>
     </div>
     <div class="modal-footer"><button class="btn-cancelar" onclick="fecharModal('modal-ficha')">Fechar</button></div>
@@ -359,7 +442,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
   <div class="modal">
     <div class="modal-titulo"><span>Analisar justificativa</span><button class="modal-fechar" onclick="fecharModal('modal-justif-gestor')">×</button></div>
     <div id="justif-detalhe"></div>
-    <div class="form-campo" style="margin-bottom:1rem;"><label>Observação do gestor (opcional)</label><textarea id="justif-obs-gestor" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;min-height:80px;resize:vertical;"></textarea></div>
+    <div class="form-campo" style="margin-bottom:1rem;"><label>Observação do gestor (opcional)</label><textarea id="justif-obs-gestor" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;min-height:80px;resize:vertical;"></textarea></div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="fecharModal('modal-justif-gestor')">Cancelar</button>
       <button class="btn-rejeitar" onclick="responderJustificativa('rejeitado')">Rejeitar</button>
@@ -421,7 +504,7 @@ onAuthStateChanged(auth, async user => {
     // FAIL CLOSED: sem doc users/{uid} com role=gestor e ativo=true → nega acesso
     if (!perfSnap.exists() || !perfSnap.data().ativo || perfSnap.data().role !== 'gestor') {
       document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Inter,sans-serif;">Sair</button></div>';
       return;
     }
     // MÓDULO PONTO: gestor precisa ter módulo 'ponto' liberado em sistema_usuarios.
@@ -431,7 +514,7 @@ onAuthStateChanged(auth, async user => {
     const temAcessoPonto = sysData && (sysData.admin === true || (sysData.modulos || []).includes('ponto'));
     if (!temAcessoPonto) {
       document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Módulo Ponto não liberado.<br>Contate o administrador.<br><button onclick="window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Módulo Ponto não liberado.<br>Contate o administrador.<br><button onclick="window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Inter,sans-serif;">Sair</button></div>';
       return;
     }
   } catch(e) {
@@ -519,6 +602,7 @@ window.sair=sair;
 function atualizarData(){
   const n=new Date();const dias=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   document.getElementById('topbar-data').textContent=`${dias[n.getDay()]}, ${n.getDate()} ${meses[n.getMonth()]}`;
+  const uel=document.getElementById('topbar-user');if(uel&&window._userEmail)uel.textContent=window._userEmail;
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
@@ -611,7 +695,7 @@ async function renderBanco(){
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
     const pendenciasTag=pendencias.length>0?'<div style="color:var(--amarelo);font-size:12px;margin-top:8px;border-top:1px solid rgba(255,200,0,.2);padding-top:6px;">⚠ '+pendencias.length+' pendência'+(pendencias.length>1?'s':'')+': '+pendencias.map(p=>fmtData(p.data)).join(', ')+'</div>':'';
-    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div>${pendenciasTag}</div>`;
+    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}" style="font-size:13px;padding:4px 12px;">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'var(--verde)':'var(--vermelho)'};"></div></div>${pendenciasTag}</div>`;
   }).join('');
   document.getElementById('banco-cards').innerHTML=cards;
   aplicarLazyFotos(document.getElementById('banco-cards'));
@@ -624,7 +708,7 @@ const FERIADOS_2026=[{data:'2026-01-01',nome:'Ano Novo',tipo:'Feriado nacional'}
 function abrirFeriados2026(){
   const lista=FERIADOS_2026.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--cinza-borda);font-size:13px;gap:10px;"><div><span style="font-weight:600;">${fmtData(f.data)}</span><span style="color:var(--cinza-texto);margin-left:8px;">${f.nome}</span></div><span class="badge ${f.tipo.includes('nacional')?'presente':f.tipo.includes('estadual')?'atrasou':'pendente'}" style="font-size:10px;">${f.tipo.replace('Feriado ','')}</span></div>`).join('');
   document.getElementById('foto-reg-img').style.display='none';
-  document.getElementById('modal-foto-reg').querySelector('.modal').innerHTML=`<div class="modal-titulo"><span>Feriados 2026 — Fortaleza/CE</span><button class="modal-fechar" onclick="fecharFeriados()">×</button></div><div style="font-size:12px;color:var(--cinza-texto);margin-bottom:12px;">Selecione funcionário e clique em "Aplicar para todos".</div><div style="max-height:400px;overflow-y:auto;">${lista}</div><div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;"><select id="feriado-func-sel" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;"><option value="todos">Todos os funcionários</option></select><button class="btn-novo" onclick="aplicarFeriados2026()">Aplicar todos feriados</button></div><div id="feriados-status" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div><div class="modal-footer"><button class="btn-cancelar" onclick="fecharFeriados()">Fechar</button></div>`;
+  document.getElementById('modal-foto-reg').querySelector('.modal').innerHTML=`<div class="modal-titulo"><span>Feriados 2026 — Fortaleza/CE</span><button class="modal-fechar" onclick="fecharFeriados()">×</button></div><div style="font-size:12px;color:var(--cinza-texto);margin-bottom:12px;">Selecione funcionário e clique em "Aplicar para todos".</div><div style="max-height:400px;overflow-y:auto;">${lista}</div><div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;"><select id="feriado-func-sel" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;"><option value="todos">Todos os funcionários</option></select><button class="btn-novo" onclick="aplicarFeriados2026()">Aplicar todos feriados</button></div><div id="feriados-status" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div><div class="modal-footer"><button class="btn-cancelar" onclick="fecharFeriados()">Fechar</button></div>`;
   fbGet('funcionarios').then(funcs=>{const sel=document.getElementById('feriado-func-sel');funcs.forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.nome}</option>`);});
   document.getElementById('modal-foto-reg').classList.add('aberto');
 }
@@ -726,7 +810,7 @@ let justifAtualId=null;
 async function abrirJustifGestor(id){
   justifAtualId=id;
   const snap=await window._getDoc(docRef('justificativas',id));const j=snap.data();
-  const pontoInfo=j.tipoPonto?`<div style="background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);border-radius:7px;padding:10px;margin-top:8px;"><div style="font-size:12px;color:var(--laranja);font-weight:600;margin-bottom:4px;">Ponto não batido — lançamento automático</div><div style="font-size:13px;">Batida: <strong>${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[j.tipoPonto]}</strong></div><div style="font-size:13px;">Horário: <strong>${j.horarioPonto}</strong></div><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">Ao aprovar, esta batida será lançada automaticamente.</div></div>`:'';
+  const pontoInfo=j.tipoPonto?`<div style="background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:7px;padding:10px;margin-top:8px;"><div style="font-size:12px;color:var(--laranja);font-weight:600;margin-bottom:4px;">Ponto não batido — lançamento automático</div><div style="font-size:13px;">Batida: <strong>${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[j.tipoPonto]}</strong></div><div style="font-size:13px;">Horário: <strong>${j.horarioPonto}</strong></div><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">Ao aprovar, esta batida será lançada automaticamente.</div></div>`:'';
   document.getElementById('justif-detalhe').innerHTML=`<div style="background:var(--cinza-medio);border-radius:8px;padding:12px;margin-bottom:1rem;"><div style="font-size:15px;font-weight:600;margin-bottom:4px;">${j.funcNome}</div><div style="font-size:13px;color:var(--cinza-texto);margin-bottom:6px;">${fmtData(j.data)} · ${j.motivo}</div>${j.descricao?`<div style="font-size:13px;">${j.descricao}</div>`:''}${pontoInfo}${j.anexoNome?`<div style="margin-top:8px;"><button class="btn-acao" onclick="verAnexo('${id}')">📎 Ver ${j.anexoNome}</button></div>`:''}</div>`;
   document.getElementById('justif-obs-gestor').value='';
   document.getElementById('modal-justif-gestor').classList.add('aberto');
@@ -829,10 +913,10 @@ async function gerarEspelho(){
   const rows=renderEspelhoRowsHTML(snap);
   const saldoTotal=snap.totais.saldo;
   const saldoColor=saldoTotal>=0?'#4ade80':'#f87171';
-  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div></div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snap.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${espExist.assinaturaImg}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${func.nome}<br>${espExist?.assinado?'Assinado em '+fmtData(espExist.assinadoEm?.slice(0,10)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
+  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div></div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snap.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${espExist.assinaturaImg}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${func.nome}<br>${espExist?.assinado?'Assinado em '+fmtData(espExist.assinadoEm?.slice(0,10)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
   const statusAssin=espExist?.assinado?`<span class="badge assinado">✓ Assinado por ${espExist.assinadoPor}</span>`:`<span class="badge aguardando">Aguardando assinatura</span>`;
   const btnAcao=espExist?.assinado
-    ?`<button class="btn-ghost" style="border-color:#e67e22;color:#e67e22;" onclick="iniciarRevisaoPeriodo('${funcId}','${mes}')">Revisar Período (Gestor)</button>`
+    ?`<button class="btn-ghost" style="border-color:#1a73e8;color:#1a73e8;" onclick="iniciarRevisaoPeriodo('${funcId}','${mes}')">Revisar Período (Gestor)</button>`
     :`<button class="btn-ghost" onclick="enviarParaAssinar('${espId}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button>`;
   document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button>${btnAcao}</div>${espelhoHTML}`;
 }

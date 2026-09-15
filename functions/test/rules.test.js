@@ -238,6 +238,8 @@ test('K — funcionario pode atualizar espelho com campos de assinatura', async 
   await testEnv.withSecurityRulesDisabled(async ctx => {
     await ctx.firestore().collection('espelhos').doc('esp-assinar').set({
       funcId: FUNC_ID, mes: '2026-09', assinado: false,
+      snapshot: { engineVersao: '3.0.0', dias: [], totais: {} },
+      hashSnapshot: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
     });
   });
   const db = testEnv.authenticatedContext(UID_FUNC).firestore();

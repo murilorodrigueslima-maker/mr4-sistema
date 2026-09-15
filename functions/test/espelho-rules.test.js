@@ -45,6 +45,19 @@ const ESP_UNSIGNED = {
   versao: 1, versaoAnteriorId: null,
   snapshot: null, hashSnapshot: null,
 };
+
+// Espelho com snapshot/hash — necessário para assinatura após Rule S2b
+const SNAP_VALIDO = {
+  engineVersao: '3.0.0', funcId: FUNC_ID, mes: '2026-09',
+  funcionario: { nome: 'Func Teste', cargo: '', jornada: 8 },
+  dias: [], totais: { trabMin: 0, esperMin: 0, saldo: 0, diasTrab: 0 },
+};
+const ESP_UNSIGNED_COM_SNAPSHOT = {
+  funcId: FUNC_ID, mes: '2026-09', assinado: false,
+  versao: 1, versaoAnteriorId: null,
+  snapshot: SNAP_VALIDO,
+  hashSnapshot: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
+};
 const ESP_SIGNED = {
   funcId: FUNC_ID, mes: '2026-09', assinado: true,
   versao: 1, versaoAnteriorId: null,
@@ -168,12 +181,29 @@ test('G — gestor atualiza campos de revisão em espelho assinado → ALLOWED',
 // H-K: Update pelo funcionário (signing)
 // ═══════════════════════════════════════════════════════════════════════════
 
-test('H — funcionario assina espelho com 5 campos permitidos + serverTimestamp → ALLOWED', async () => {
+// E4 — funcionário assina espelho próprio válido (com snapshot/hash) → ALLOWED
+test('H/E4 — funcionario assina espelho com snapshot+hash + 5 campos → ALLOWED', async () => {
   await testEnv.withSecurityRulesDisabled(async ctx => {
-    await ctx.firestore().collection('espelhos').doc('esp-assinar').set(ESP_UNSIGNED);
+    await ctx.firestore().collection('espelhos').doc('esp-assinar').set(ESP_UNSIGNED_COM_SNAPSHOT);
   });
   await assertSucceeds(
     ctxFunc().firestore().collection('espelhos').doc('esp-assinar').update({
+      assinado:     true,
+      assinaturaImg:'data:image/png;base64,SIG',
+      assinadoEm:   serverTimestamp(),
+      assinadoPor:  'Func Teste',
+      status:       'assinado',
+    })
+  );
+});
+
+// E5 — funcionário NÃO pode assinar espelho sem snapshot (Rule S2b) → DENIED
+test('E5 — funcionario NÃO pode assinar espelho sem snapshot → DENIED', async () => {
+  await testEnv.withSecurityRulesDisabled(async ctx => {
+    await ctx.firestore().collection('espelhos').doc('esp-sem-snap').set(ESP_UNSIGNED);
+  });
+  await assertFails(
+    ctxFunc().firestore().collection('espelhos').doc('esp-sem-snap').update({
       assinado:     true,
       assinaturaImg:'data:image/png;base64,SIG',
       assinadoEm:   serverTimestamp(),

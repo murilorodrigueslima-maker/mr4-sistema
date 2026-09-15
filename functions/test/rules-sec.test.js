@@ -551,6 +551,8 @@ describe('assinatura de espelho — Rule hasOnly([...4 campos])', () => {
       const db = ctx.firestore();
       await db.collection('espelhos').doc(ESP_PROPRIO).set({
         funcId: FUNC_ID, mes: '2026-09', assinado: false, horas: '160h',
+        snapshot: { engineVersao: '3.0.0', dias: [], totais: {} },
+        hashSnapshot: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
       });
       await db.collection('espelhos').doc(ESP_ALHEIO).set({
         funcId: FUNC_ID2, mes: '2026-09', assinado: false, horas: '160h',

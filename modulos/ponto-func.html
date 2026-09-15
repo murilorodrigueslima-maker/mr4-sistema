@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MR4 — Ponto Digital</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -356,11 +355,19 @@ let justifAtualId=null, espelhoAtualFuncId=null;
 let batidaEmProgresso=false; // guard: evita duplo-toque em btn-bater
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
-// Leituras via API controlada do módulo de auth
-async function fbGet(c, fid){return window._fbGetAll(c, fid !== undefined ? fid : (funcAtivo && funcAtivo.id));}
+// Cache de leitura — TTL 30s. Invalidado explicitamente após cada escrita na coleção.
+const _funcCache={};const _FUNC_CACHE_TTL=30000;
+async function fbGet(c,fid){
+  const now=Date.now();
+  if(_funcCache[c]&&(now-_funcCache[c].ts)<_FUNC_CACHE_TTL)return _funcCache[c].data;
+  const data=await window._fbGetAll(c,fid!==undefined?fid:(funcAtivo&&funcAtivo.id));
+  _funcCache[c]={data,ts:now};
+  return data;
+}
 // Escritas: registros via Cloud Function (server-side); demais via _fbSetOwn
 async function fbSet(c,id,data){
-  return window._fbSetOwn(c,id,data);
+  await window._fbSetOwn(c,id,data);
+  delete _funcCache[c]; // invalida cache da coleção modificada
 }
 
 // toMin, fmtMin, calcTotal, jornadaParaData, JORNADA_SABADO_MIN vêm de ponto-regras.js
@@ -419,9 +426,9 @@ function obterLoc(){
   },()=>{txt.textContent='Localização não obtida';dot.className='loc-dot warn';});
 }
 
-async function proxPonto(){
-  const regs=await fbGet('registros');
-  const regHoje=regs.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
+async function proxPonto(regsAll){
+  if(!regsAll)regsAll=await fbGet('registros');
+  const regHoje=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const ult=regHoje[regHoje.length-1];
   if(!ult)return{tipo:'entrada',label:'Entrada',classe:''};
   if(ult.tipo==='entrada')return{tipo:'saida_almoco',label:'Saída almoço',classe:'saida-almoco'};
@@ -482,6 +489,7 @@ async function finalizarBatida(){
   try{
     const result=await window._registrarPonto(payload);
     const reg=result.data;
+    delete _funcCache['registros']; // novo registro — invalida cache antes de renderizar
     document.getElementById('est-proc').style.display='none';
     mostrarComp(reg,reg.dentroRaio);renderHistDia();renderBancoFunc();
   }catch(e){
@@ -517,12 +525,13 @@ window.voltarPonto=voltarPonto;
 
 async function renderHistDia(){
   if(!funcAtivo)return;
-  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
+  const regsAll=await fbGet('registros'); // uma única leitura; reutilizada por proxPonto
+  const regs=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const cores={entrada:'#22C55E',saida_almoco:'#F59E0B',retorno_almoco:'#60A5FA',saida:'#EF4444'};
   const el=document.getElementById('hist-dia');
   if(!regs.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum registro ainda.</div>';return;}
   el.innerHTML=regs.map(r=>`<div class="hist-item"><div class="hist-dot" style="background:${cores[r.tipo]||'#888'}"></div><div class="hist-hora">${r.hora.slice(0,5)}</div><div class="hist-tipo">${r.tipoLabel}</div></div>`).join('');
-  const prox=await proxPonto();const btn=document.getElementById('btn-bater');
+  const prox=await proxPonto(regsAll);const btn=document.getElementById('btn-bater'); // zero segundo getDocs
   if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}
   else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}
 }
@@ -773,7 +782,7 @@ async function confirmarAssinatura(){
     assinadoEm: serverTimestamp(),  // serverTimestamp validado pelas Rules (request.time)
     assinadoPor: funcAtivo.nome
   }, {merge: true});
-  fecharModal('modal-assinar');notif('Espelho assinado com sucesso!');renderEspelhosFunc();
+  fecharModal('modal-assinar');notif('Espelho assinado com sucesso!');delete _funcCache['espelhos'];renderEspelhosFunc();
 }
 window.confirmarAssinatura=confirmarAssinatura;
 

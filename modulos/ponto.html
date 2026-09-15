@@ -614,7 +614,8 @@ async function atualizarBadgeJustif(){
 }
 
 async function renderHoje(){
-  const funcs=await fbGet('funcionarios');const regs=await fbGet('registros');
+  const funcsAll=await fbGet('funcionarios');const regs=await fbGet('registros');
+  const funcs=funcsAll.filter(f=>f.controleBancoHoras!==false);
   const regsHoje=regs.filter(r=>r.data===hoje());
   let presentes=0,ausentes=0,atrasados=0;
   funcs.forEach(f=>{
@@ -641,7 +642,7 @@ async function renderHoje(){
   }).join('');
   aplicarLazyFotos(document.getElementById('tbody-hoje'));
   const ultimas=[...regs].sort((a,b)=>a.criadoEm>b.criadoEm?-1:1).slice(0,5);
-  document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th><th>Facial</th><th>Foto</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${r.funcNome}</td><td>${r.tipoLabel}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span class="badge ${facialBadge(r.facialScore).cls}" style="color:${facialBadge(r.facialScore).cor}">${facialBadge(r.facialScore).txt}</span></td><td>${r.foto?`<button class="btn-acao" onclick="verFoto('${r.id}')">Ver</button>`:'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
+  document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${r.funcNome}</td><td>${r.tipoLabel}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
 }
 
 async function verFoto(regId){
@@ -694,8 +695,8 @@ async function renderBanco(){
     const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hoje());
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
-    const pendenciasTag=pendencias.length>0?'<div style="color:var(--amarelo);font-size:12px;margin-top:8px;border-top:1px solid rgba(255,200,0,.2);padding-top:6px;">⚠ '+pendencias.length+' pendência'+(pendencias.length>1?'s':'')+': '+pendencias.map(p=>fmtData(p.data)).join(', ')+'</div>':'';
-    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}" style="font-size:13px;padding:4px 12px;">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'var(--verde)':'var(--vermelho)'};"></div></div>${pendenciasTag}</div>`;
+    const pendenciasTitle=pendencias.length?pendencias.map(p=>fmtData(p.data)).join(', '):'';
+    return `<div class="ficha" style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><div class="ficha-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.nome}</div><div style="font-size:11px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}" style="font-size:12px;padding:3px 10px;flex-shrink:0;">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:flex;gap:0;margin-bottom:6px;"><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Trabalhado</div><div style="font-size:13px;font-weight:600;">${fmtMin(trabMin)}</div></div><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Esperado</div><div style="font-size:13px;font-weight:600;">${fmtMin(esperMin)}</div></div><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Dias</div><div style="font-size:13px;font-weight:600;">${diasTrab}</div></div><div style="flex:1;" title="${pendenciasTitle}"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Pendências</div><div style="font-size:13px;font-weight:600;${pendencias.length?'color:var(--amarelo);':''}">${pendencias.length}${pendencias.length?' ⚠':''}</div></div></div><div class="barra-wrap" style="height:5px;margin-bottom:0;"><div class="barra" style="width:${pct}%;background:${saldo>=0?'var(--verde)':'var(--vermelho)'};"></div></div></div>`;
   }).join('');
   document.getElementById('banco-cards').innerHTML=cards;
   aplicarLazyFotos(document.getElementById('banco-cards'));

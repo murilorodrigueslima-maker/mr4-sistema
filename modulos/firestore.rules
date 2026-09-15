@@ -102,6 +102,21 @@ service cloud.firestore {
          get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.modulos.hasAny([modulo]));
     }
 
+    // Proteção dos campos de integração GestãoClick (adicionado em S1 Fase 1).
+    // Esses campos são metadados de vinculação: somente Admin SDK pode criá-los
+    // ou modificá-los. O frontend (mesmo gestor autenticado) não pode tocá-los.
+    // BILLING: não lê nenhum documento — apenas inspeciona request/resource.data.
+    //          Custo zero adicional por operação.
+    function gcFieldsIntact() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['gestaoClickId', 'gestaoClickLinkedAt', 'gestaoClickLinkMethod']);
+    }
+
+    function noGcFieldsOnCreate() {
+      return !request.resource.data.keys()
+        .hasAny(['gestaoClickId', 'gestaoClickLinkedAt', 'gestaoClickLinkMethod']);
+    }
+
     // ── Coleção: users ─────────────────────────────────────────────────────────
 
     match /users/{uid} {
@@ -291,9 +306,17 @@ service cloud.firestore {
 
     // ── Coleção: clientes ──────────────────────────────────────────────────────
     // CRM — cadastro de clientes. Pipeline, notas, histórico de contato.
+    //
+    // Campos protegidos contra write pelo frontend (S1 Fase 1):
+    //   gestaoClickId, gestaoClickLinkedAt, gestaoClickLinkMethod
+    //   Apenas Admin SDK pode criar/modificar esses campos.
+    //   O Admin SDK ignora Rules — proteção só afeta chamadas de cliente.
 
     match /clientes/{clienteId} {
-      allow read, write: if isGestor();
+      allow read:   if isGestor();
+      allow create: if isGestor() && noGcFieldsOnCreate();
+      allow update: if isGestor() && gcFieldsIntact();
+      allow delete: if isGestor();
     }
 
     // ── Coleção: conversas (e subcoleção msgs) ─────────────────────────────────

@@ -350,6 +350,7 @@ const GC_OPERACOES = {
         data:        (item.data || item.data_venda || item.data_pedido || '').slice(0, 10),
         hora:        horaMatch ? horaMatch[1] : '',
         cliente:     item.nome_cliente  || item.razao_social || '',
+        cliente_id:  String(item.cliente_id || ''),
         valor:       item.valor_total || 0,
         status:      item.status      || '',
         vendedor:    item.nome_vendedor || item.nome_usuario  || '',

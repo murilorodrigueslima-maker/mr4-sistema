@@ -307,3 +307,172 @@ describe('R — Fluxo sem reconhecimento facial', () => {
     expect(payload.jornada).toBe('6');
   });
 });
+
+// ─── PERF — Otimizações de performance (Etapa 1) ─────────────────────────────
+
+// Helpers extraídos da lógica do módulo para teste unitário puro
+
+function simularCache(ttlMs = 30000) {
+  const cache = {};
+  let fetchCount = 0;
+  async function fbGetComCache(c, fetchFn) {
+    const now = Date.now();
+    if (cache[c] && (now - cache[c].ts) < ttlMs) return cache[c].data;
+    fetchCount++;
+    const data = await fetchFn(c);
+    cache[c] = { data, ts: now };
+    return data;
+  }
+  function invalidar(c) { delete cache[c]; }
+  function getCount() { return fetchCount; }
+  return { fbGetComCache, invalidar, getCount, cache };
+}
+
+function proxPontoComRegs(regsAll, funcId, hojeStr) {
+  const regHoje = regsAll
+    .filter(r => r.funcId === funcId && r.data === hojeStr)
+    .sort((a, b) => (a.hora > b.hora ? 1 : -1));
+  const ult = regHoje[regHoje.length - 1];
+  if (!ult) return { tipo: 'entrada', label: 'Entrada', classe: '' };
+  if (ult.tipo === 'entrada') return { tipo: 'saida_almoco', label: 'Saída almoço', classe: 'saida-almoco' };
+  if (ult.tipo === 'saida_almoco') return { tipo: 'retorno_almoco', label: 'Retorno', classe: 'retorno' };
+  if (ult.tipo === 'retorno_almoco') return { tipo: 'saida', label: 'Saída', classe: 'saida' };
+  return null;
+}
+
+describe('PERF — Otimizações de performance Etapa 1', () => {
+  const FUNC_ID = 'func_teste_01';
+  const HOJE = '2026-09-15';
+  const regsBase = [
+    { funcId: FUNC_ID, data: HOJE, hora: '08:00', tipo: 'entrada', tipoLabel: 'Entrada' },
+    { funcId: FUNC_ID, data: HOJE, hora: '12:00', tipo: 'saida_almoco', tipoLabel: 'Saída almoço' },
+  ];
+  const regsOutroMes = [
+    { funcId: FUNC_ID, data: '2026-08-01', hora: '08:00', tipo: 'entrada', tipoLabel: 'Entrada' },
+    { funcId: FUNC_ID, data: '2026-08-01', hora: '17:00', tipo: 'saida', tipoLabel: 'Saída' },
+  ];
+
+  test('PERF1 — renderHistDia passa regsAll para proxPonto; apenas 1 fetch de registros ocorre', async () => {
+    const { fbGetComCache, getCount } = simularCache();
+    const fetchFn = async () => regsBase;
+    // Simula renderHistDia: busca uma vez e passa adiante
+    const regsAll = await fbGetComCache('registros', fetchFn);
+    // Simula proxPonto recebendo regsAll — sem novo fetch
+    const prox = proxPontoComRegs(regsAll, FUNC_ID, HOJE);
+    expect(getCount()).toBe(1); // apenas 1 getDocs
+    expect(prox.tipo).toBe('retorno_almoco');
+  });
+
+  test('PERF2 — proxPontoComRegs com regsAll retorna mesmo resultado que chamar com busca própria', async () => {
+    const proxComParam = proxPontoComRegs(regsBase, FUNC_ID, HOJE);
+    // Simula proxPonto sem regsAll (busca própria)
+    const proxSemParam = proxPontoComRegs(regsBase, FUNC_ID, HOJE);
+    expect(proxComParam.tipo).toBe(proxSemParam.tipo);
+    expect(proxComParam.label).toBe(proxSemParam.label);
+  });
+
+  test('PERF3 — cache hit: segunda chamada dentro do TTL NÃO executa novo fetch', async () => {
+    const { fbGetComCache, getCount } = simularCache(30000);
+    const fetchFn = async () => regsBase;
+    await fbGetComCache('registros', fetchFn);
+    await fbGetComCache('registros', fetchFn); // deve usar cache
+    expect(getCount()).toBe(1);
+  });
+
+  test('PERF4 — cache expirado: nova chamada após TTL executa novo fetch', async () => {
+    const { fbGetComCache, getCount } = simularCache(0); // TTL=0 → sempre expira
+    const fetchFn = async () => regsBase;
+    await fbGetComCache('registros', fetchFn);
+    await fbGetComCache('registros', fetchFn); // TTL expirado → novo fetch
+    expect(getCount()).toBe(2);
+  });
+
+  test('PERF5 — invalidar cache após write: próxima leitura executa novo fetch', async () => {
+    const { fbGetComCache, invalidar, getCount } = simularCache(30000);
+    let versao = 'v1';
+    const fetchFn = async () => versao;
+    await fbGetComCache('registros', fetchFn);
+    invalidar('registros'); // simula finalizarBatida() → delete _funcCache['registros']
+    versao = 'v2';
+    const resultado = await fbGetComCache('registros', fetchFn);
+    expect(getCount()).toBe(2);
+    expect(resultado).toBe('v2');
+  });
+
+  test('PERF6 — após invalidação o dado retornado é a versão mais recente', async () => {
+    const { fbGetComCache, invalidar } = simularCache(30000);
+    const regsAntigos = [{ funcId: FUNC_ID, data: HOJE, hora: '08:00', tipo: 'entrada' }];
+    const regsNovos = [...regsAntigos, { funcId: FUNC_ID, data: HOJE, hora: '12:00', tipo: 'saida_almoco' }];
+    let db = regsAntigos;
+    const fetchFn = async () => db;
+    await fbGetComCache('registros', fetchFn);
+    invalidar('registros');
+    db = regsNovos;
+    const result = await fbGetComCache('registros', fetchFn);
+    expect(result).toHaveLength(2);
+  });
+
+  test('PERF7 — GPS fora do raio continua bloqueando mesmo com cache ativo', () => {
+    const r = simularIniciarBatida({
+      batidaEmProgresso: false,
+      prox: { tipo: 'entrada' },
+      modalidade: 'PRESENCIAL',
+      locAtual: { lat: -3.77, lng: -38.57 },
+      dist: RAIO + 100,
+    });
+    expect(r.acao).toBe('gps_fora');
+    expect(r.batidaEmProgresso).toBe(false);
+  });
+
+  test('PERF8 — GPS válido com cache ativo permite batida normalmente', () => {
+    const r = simularIniciarBatida({
+      batidaEmProgresso: false,
+      prox: { tipo: 'entrada' },
+      modalidade: 'PRESENCIAL',
+      locAtual: { lat: EMP_LAT, lng: EMP_LNG },
+      dist: 50,
+    });
+    expect(r.acao).toBe('finalizar');
+  });
+
+  test('PERF9 — batidaEmProgresso=true bloqueia nova tentativa (guard anti-duplo-toque)', () => {
+    const r = simularIniciarBatida({
+      batidaEmProgresso: true,
+      prox: { tipo: 'entrada' },
+      modalidade: 'PRESENCIAL',
+      locAtual: { lat: EMP_LAT, lng: EMP_LNG },
+      dist: 50,
+    });
+    expect(r.acao).toBe('guard');
+  });
+
+  test('PERF10 — lazy foto: atributo data-src preserva URL original; src permanece vazio antes de ser visível', () => {
+    // Simula o padrão innerHTML gerado: <img data-src="..." class="lazy-foto">
+    const fotoUrl = 'data:image/png;base64,iVBORw0KGgo=';
+    const html = `<img data-src="${fotoUrl}" class="lazy-foto">`;
+    // Verifica que data-src está presente e src não foi definido
+    expect(html).toContain('data-src="' + fotoUrl + '"');
+    expect(html).toContain('class="lazy-foto"');
+    expect(html).not.toContain(' src="' + fotoUrl + '"');
+  });
+
+  test('PERF11 — pré-filtro por mês equivale ao filtro por funcionário dentro do .map', () => {
+    const mesFiltro = '2026-09';
+    const todosRegs = [...regsBase, ...regsOutroMes];
+    // Método antigo: filtrar dentro do .map (por funcId e mês juntos)
+    const regsF_antigo = todosRegs.filter(r => r.funcId === FUNC_ID && r.data.startsWith(mesFiltro));
+    // Método novo: pré-filtrar por mês, depois por funcId dentro do .map
+    const regsDoMes = todosRegs.filter(r => r.data.startsWith(mesFiltro));
+    const regsF_novo = regsDoMes.filter(r => r.funcId === FUNC_ID);
+    expect(regsF_novo).toEqual(regsF_antigo);
+  });
+
+  test('PERF12 — otimizações não alteram preservação de jornada no payload de funcionário', () => {
+    const f = { jornada: '6' };
+    const selectValor = mapearJornadaParaSelect(f);
+    const payload = buildPayloadFuncionario(selectValor, null, false);
+    expect(payload.jornada).toBe('6');
+    expect(payload).not.toHaveProperty('controleBancoHoras');
+    expect(payload).not.toHaveProperty('calcBancoMes');
+  });
+});

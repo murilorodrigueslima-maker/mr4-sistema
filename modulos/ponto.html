@@ -493,6 +493,22 @@ function facialBadge(score){
   return{txt:'Suspeita '+score+'%',cls:'atrasou',cor:'var(--amarelo)'};
 }
 
+// Lazy loading de fotos base64 — carrega só quando visível no viewport
+function aplicarLazyFotos(container){
+  const imgs=(container||document).querySelectorAll('img.lazy-foto[data-src]');
+  if(!imgs.length)return;
+  if('IntersectionObserver' in window){
+    const obs=new IntersectionObserver((entries,observer)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){const img=entry.target;img.src=img.dataset.src;img.removeAttribute('data-src');observer.unobserve(img);}
+      });
+    },{rootMargin:'200px'});
+    imgs.forEach(img=>obs.observe(img));
+  }else{
+    imgs.forEach(img=>{img.src=img.dataset.src;img.removeAttribute('data-src');});
+  }
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────────────
 async function sair(){
   if(window._signOut) await window._signOut();
@@ -537,8 +553,9 @@ async function renderHoje(){
     const atrasou=e&&toMin(e)>toMin('08:05');
     const status=rf.length===0?'ausente':atrasou?'atrasou':'presente';
     const labels={presente:'Presente',ausente:'Ausente',atrasou:'Atrasou'};
-    return `<tr><td><div class="func-cell"><div class="avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''}</div></div></div></td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td><span class="badge ${status}">${labels[status]}</span></td></tr>`;
+    return `<tr><td><div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''}</div></div></div></td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td><span class="badge ${status}">${labels[status]}</span></td></tr>`;
   }).join('');
+  aplicarLazyFotos(document.getElementById('tbody-hoje'));
   const ultimas=[...regs].sort((a,b)=>a.criadoEm>b.criadoEm?-1:1).slice(0,5);
   document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th><th>Facial</th><th>Foto</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${r.funcNome}</td><td>${r.tipoLabel}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span class="badge ${facialBadge(r.facialScore).cls}" style="color:${facialBadge(r.facialScore).cor}">${facialBadge(r.facialScore).txt}</span></td><td>${r.foto?`<button class="btn-acao" onclick="verFoto('${r.id}')">Ver</button>`:'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
 }
@@ -584,16 +601,20 @@ async function renderBanco(){
   if(!funcs.length){document.getElementById('banco-cards').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Nenhum funcionário.</div>';document.getElementById('metrics-banco').innerHTML='';return;}
   let totalPos=0,totalNeg=0;
   const funcsAtivas=funcs.filter(f=>f.controleBancoHoras!==false);
+  const _mesFiltro=mesAtual(); // pré-filtra por mês uma vez só, fora do loop
+  const _regsDoMes=regs.filter(r=>r.data.startsWith(_mesFiltro));
+  const _credDoMes=creditos.filter(c=>c.data.startsWith(_mesFiltro));
   const cards=funcsAtivas.map(f=>{
-    const regsF=regs.filter(r=>r.funcId===f.id&&r.data.startsWith(mesAtual()));
-    const credF=creditos.filter(c=>c.funcId===f.id&&c.data.startsWith(mesAtual()));
-    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,mesAtual(),hoje());
+    const regsF=_regsDoMes.filter(r=>r.funcId===f.id);
+    const credF=_credDoMes.filter(c=>c.funcId===f.id);
+    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hoje());
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
     const pendenciasTag=pendencias.length>0?'<div style="color:var(--amarelo);font-size:12px;margin-top:8px;border-top:1px solid rgba(255,200,0,.2);padding-top:6px;">⚠ '+pendencias.length+' pendência'+(pendencias.length>1?'s':'')+': '+pendencias.map(p=>fmtData(p.data)).join(', ')+'</div>':'';
-    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div>${pendenciasTag}</div>`;
+    return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div>${pendenciasTag}</div>`;
   }).join('');
   document.getElementById('banco-cards').innerHTML=cards;
+  aplicarLazyFotos(document.getElementById('banco-cards'));
   document.getElementById('metrics-banco').innerHTML=`<div class="metric-card"><div class="metric-label">Funcionários</div><div class="metric-valor">${funcsAtivas.length}</div></div><div class="metric-card"><div class="metric-label">Registros</div><div class="metric-valor">${regs.length}</div></div><div class="metric-card"><div class="metric-label">Extras acum.</div><div class="metric-valor verde">+${fmtMin(totalPos)}</div></div><div class="metric-card"><div class="metric-label">Débitos acum.</div><div class="metric-valor vermelho">${fmtMin(totalNeg)}</div></div>`;
 }
 
@@ -914,8 +935,9 @@ async function renderFuncionarios(){
   document.getElementById('lista-funcionarios').innerHTML=funcs.map(f=>{
     const av=avals.find(a=>a.id===f.id);const estrelas=av?.nota?'★'.repeat(av.nota)+'☆'.repeat(5-av.nota):'☆☆☆☆☆';
     const temFoto=f.foto?`<span style="font-size:11px;color:var(--verde);">✓ Foto</span>`:`<span style="font-size:11px;color:var(--vermelho);">⚠ Sem foto</span>`;
-    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div class="ficha-nome">${f.nome}</div><div class="ficha-cargo">${f.cargo||'Sem cargo'} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${f.cpf||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${f.telefone||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${f.jornada||8}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${f.endereco||'—'}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${f.id}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${f.id}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${f.id}')">Remover</button></div></div>`;
+    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div class="ficha-nome">${f.nome}</div><div class="ficha-cargo">${f.cargo||'Sem cargo'} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${f.cpf||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${f.telefone||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${f.jornada||8}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${f.endereco||'—'}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${f.id}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${f.id}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${f.id}')">Remover</button></div></div>`;
   }).join('');
+  aplicarLazyFotos(document.getElementById('lista-funcionarios'));
   // detecta perfil monitor pelo email do usuário logado
   const monitor=funcs.find(f=>f.email&&f.email.toLowerCase()===window._userEmail.toLowerCase()&&f.perfil==='monitor');
   window._monitorFuncId=monitor?monitor.id:null;
@@ -1027,9 +1049,10 @@ async function renderContas(){
       :'<span class="badge pendente">Sem conta</span>';
     const btnHtml=!u?`<div style="margin-top:6px;"><button class="btn-acao success" onclick="criarContaFunc('${f.id}','${f.nome.replace(/'/g,"\\'")}')">Criar conta</button></div>`:'';
     return `<div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-      <div class="func-cell"><div class="avatar">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''} · ${f.modalidade||'PRESENCIAL'}</div></div></div>
+      <div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''} · ${f.modalidade||'PRESENCIAL'}</div></div></div>
       <div style="text-align:right;">${statusHtml}${btnHtml}</div></div>`;
   }).join('');
+  aplicarLazyFotos(el);
 }
 window.renderContas=renderContas;
 

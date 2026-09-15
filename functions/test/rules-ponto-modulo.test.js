@@ -104,9 +104,11 @@ async function seedAll(db) {
     funcId: FUNC_ID_ADMIN, data: '2026-09-01', tipo: 'entrada', hora: '08:00:00',
   });
 
-  // espelhos para assinatura
+  // espelhos para assinatura (S2b: snapshot+hash obrigatórios antes de assinar)
   await db.collection('espelhos').doc('esp-ponto').set({
     funcId: FUNC_ID_PONTO, mes: '2026-09', assinado: false,
+    snapshot: { engineVersao: '3.0.0', dias: [], totais: {} },
+    hashSnapshot: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
   });
 
   // justificativas para leitura do próprio funcionário
@@ -336,6 +338,8 @@ describe('PM-7: assinatura de espelho pelo funcionário → ALLOW (regra isFunci
     await testEnv.withSecurityRulesDisabled(async ctx => {
       await ctx.firestore().collection('espelhos').doc('esp-sem').set({
         funcId: FUNC_ID_SEM, mes: '2026-09', assinado: false,
+        snapshot: { engineVersao: '3.0.0', dias: [], totais: {} },
+        hashSnapshot: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',
       });
     });
     const db = testEnv.authenticatedContext(UID_FUNC_SEM).firestore();

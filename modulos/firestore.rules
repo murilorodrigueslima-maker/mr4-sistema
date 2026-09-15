@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-09-14 (S2: módulo ponto aplicado nas coleções administrativas de ponto)
+// Versão: 2026-09-14 (S2b: espelho — assinatura requer snapshot e hash)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -190,11 +190,14 @@ service cloud.firestore {
       // Funcionário assina espelho próprio:
       //   - Somente espelhos não-assinados (transição false → true).
       //   - assinadoEm deve ser serverTimestamp() — não aceitamos timestamp do cliente.
+      //   - Espelho deve ter snapshot e hash antes de poder ser assinado.
       //   - Se status for enviado, deve ser 'assinado'.
       //   - Somente os 5 campos de assinatura podem ser alterados.
       allow update: if isFuncionario() &&
         resource.data.funcId == meuFuncId() &&
         !resource.data.assinado &&
+        resource.data.snapshot != null &&
+        resource.data.hashSnapshot != null &&
         request.resource.data.assinado == true &&
         request.resource.data.assinadoEm == request.time &&
         request.resource.data.diff(resource.data).affectedKeys()

@@ -1132,3 +1132,254 @@ describe('DEC-14 — podeAssinarEspelho', () => {
     expect(r.pode).toBe(true);
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERIODIZAÇÃO — inicioBancoHoras, afastamentoBanco, controleBancoHoras
+// Decisões de negócio aprovadas em 2026-09-14:
+//   ADEMIR    inicioBancoHoras='2026-05-02'
+//   FABIANA   inicioBancoHoras='2026-05-02'
+//   CAMILA    inicioBancoHoras='2026-08-05'
+//   GUTEMBERGUE inicioBancoHoras='2026-09-15' (marco zero)
+//   SWYANNE   afastamentoBanco={tipo:'licenca_maternidade', inicio:TBD, fim:null}
+//   MURILO    controleBancoHoras=false
+//   FUNC_TESTE_001 controleBancoHoras=false
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Constantes auxiliares para os testes de periodização
+// Setembro de 2026 — datas já definidas no topo do arquivo (MES, SEG, TER, ...)
+// Adicionamos datas específicas para o marco de Gutemberg:
+const GUT_MARCO    = '2026-09-15'; // terça — primeiro dia do novo banco
+const GUT_ANTES    = '2026-09-14'; // segunda — último dia FORA do banco novo
+const MES_MAIO     = '2026-05';
+const MAIO_01      = '2026-05-01'; // sexta — DIA ANTES do início de ADEMIR/FABIANA
+const MAIO_02      = '2026-05-02'; // sábado — primeiro dia do banco de ADEMIR/FABIANA
+const MAIO_03      = '2026-05-04'; // segunda (primeiro útil do banco)
+
+const funcGut  = { jornada: '8', inicioBancoHoras: GUT_MARCO };
+const funcAdm  = { jornada: '8', inicioBancoHoras: '2026-05-02' };
+const funcMuri = { jornada: '8', controleBancoHoras: false };
+const funcTst  = { jornada: '8', controleBancoHoras: false };
+
+describe('PERIODIZAÇÃO — controleBancoHoras=false', () => {
+  test('P-1 — controleBancoHoras=false retorna zeros imediatos (sem calcular dias)', () => {
+    // MURILO e FUNC_TESTE_001 não participam do banco
+    const r = calcBancoMes(funcMuri, [], [], MES, TER);
+    expect(r.trabMin).toBe(0);
+    expect(r.esperMin).toBe(0);
+    expect(r.saldo).toBe(0);
+    expect(r.diasTrab).toBe(0);
+    expect(r.pendencias).toHaveLength(0);
+  });
+
+  test('P-2 — controleBancoHoras=false mesmo com registros não gera saldo', () => {
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(funcTst, regs, [], MES, TER);
+    expect(r.saldo).toBe(0);
+    expect(r.trabMin).toBe(0);
+  });
+
+  test('P-3 — controleBancoHoras não definido: comportamento normal (backward compatible)', () => {
+    // Funcionários sem o campo (todos os atuais) continuam funcionando exatamente como antes
+    const regs = regsDia(TER, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(func8h, regs, [], MES, TER);
+    expect(r.saldo).toBe(0);
+    expect(r.trabMin).toBe(480);
+  });
+});
+
+describe('PERIODIZAÇÃO — inicioBancoHoras: dias antes do marco', () => {
+  test('P-4 — dia anterior ao inicioBancoHoras: ignorado completamente, saldo=0, NÃO é falta', () => {
+    // Gutemberg: 2026-09-14 (segunda) = ANTES do marco 2026-09-15
+    // Sem registro no dia anterior → não deve gerar falta; saldo=0
+    const r = calcBancoMes(funcGut, [], [], MES, GUT_ANTES);
+    expect(r.saldo).toBe(0);
+    expect(r.esperMin).toBe(0);
+    expect(r.trabMin).toBe(0);
+    expect(r.pendencias).toHaveLength(0);
+  });
+
+  test('P-5 — dia anterior ao marco com registro: ignorado completamente', () => {
+    // Mesmo que Gutemberg tivesse batido ponto em 14/09, esse dia não entra no novo banco
+    const regs = regsDia(GUT_ANTES, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(funcGut, regs, [], MES, GUT_ANTES);
+    expect(r.saldo).toBe(0);
+    expect(r.trabMin).toBe(0);
+    expect(r.diasTrab).toBe(0);
+  });
+
+  test('P-6 — todos os dias até 14/09 ignorados; saldo inicial = 0', () => {
+    // Gutemberg: calcular setembro inteiro até dia 14 com marco=15 → tudo ignorado
+    const r = calcBancoMes(funcGut, [], [], MES, GUT_ANTES);
+    expect(r.saldo).toBe(0);
+    expect(r.esperMin).toBe(0);
+    expect(r.pendencias).toHaveLength(0);
+  });
+});
+
+describe('PERIODIZAÇÃO — inicioBancoHoras: marco dia de início', () => {
+  test('P-7 — dia exato do inicioBancoHoras é processado normalmente', () => {
+    // Gutemberg: 2026-09-15 (terça) — primeiro dia do novo banco
+    // Sem registro → falta normal (esperMin = 480, saldo = -480)
+    const r = calcBancoMes(funcGut, [], [], MES, GUT_MARCO);
+    expect(r.esperMin).toBe(480);
+    expect(r.trabMin).toBe(0);
+    expect(r.saldo).toBe(-480);
+  });
+
+  test('P-8 — dia do marco com registro completo: saldo calculado normalmente', () => {
+    const regs = regsDia(GUT_MARCO, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(funcGut, regs, [], MES, GUT_MARCO);
+    expect(r.trabMin).toBe(480);
+    expect(r.esperMin).toBe(480);
+    expect(r.saldo).toBe(0);
+    expect(r.diasTrab).toBe(1);
+  });
+
+  test('P-9 — histórico anterior ao marco existe mas não contamina o saldo novo', () => {
+    // Simulação: Gutemberg tem registros em 14/09 (antes) e 15/09 (no marco)
+    // Só 15/09 deve contar
+    const regsAntes  = regsDia(GUT_ANTES,  { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const regsMarco  = regsDia(GUT_MARCO, { entrada: '08:00', saida_almoco: '12:00', retorno_almoco: '13:00', saida: '17:00' });
+    const r = calcBancoMes(funcGut, [...regsAntes, ...regsMarco], [], MES, GUT_MARCO);
+    expect(r.trabMin).toBe(480);   // só 15/09
+    expect(r.esperMin).toBe(480);  // só 15/09
+    expect(r.saldo).toBe(0);
+    expect(r.diasTrab).toBe(1);    // só 1 dia (15/09)
+  });
+
+  test('P-10 — dias antes do marco NÃO geram PONTO_INCOMPLETO mesmo com batida parcial', () => {
+    // Se existir um registro incompleto antes do marco, não deve gerar pendência
+    const regs = regsDia(GUT_ANTES, { entrada: '08:00' }); // incompleto em 14/09
+    const r = calcBancoMes(funcGut, regs, [], MES, GUT_ANTES);
+    expect(r.pendencias).toHaveLength(0);
+    expect(r.saldo).toBe(0);
+  });
+});
+
+describe('PERIODIZAÇÃO — inicioBancoHoras: ADEMIR/FABIANA desde 02/05/2026', () => {
+  test('P-11 — dia 01/05/2026 (sexta) antes do início: ignorado, não é falta', () => {
+    // ADEMIR com inicioBancoHoras='2026-05-02': dia 01/05 não conta
+    const r = calcBancoMes(funcAdm, [], [], MES_MAIO, MAIO_01);
+    expect(r.saldo).toBe(0);
+    expect(r.esperMin).toBe(0);
+    expect(r.pendencias).toHaveLength(0);
+  });
+
+  test('P-12 — dia 02/05/2026 (sábado) = primeiro dia do banco: conta com jornadaDia=210', () => {
+    // ADEMIR: 02/05 é sábado; sem registro → falta de 210 min
+    const r = calcBancoMes(funcAdm, [], [], MES_MAIO, MAIO_02);
+    expect(r.esperMin).toBe(210); // sábado sem ponto = 210 min de débito
+    expect(r.saldo).toBe(-210);
+  });
+});
+
+describe('PERIODIZAÇÃO — afastamentoBanco (SWYANNE em licença-maternidade)', () => {
+  // Usamos datas genéricas para testar a lógica; a data real será informada pelo proprietário.
+  const AFAS_INICIO = '2026-07-10'; // data hipotética para testes
+  const AFAS_FIM    = null;         // sem data de retorno definida
+  const funcSwy = {
+    jornada: '8',
+    controleBancoHoras: true,
+    inicioBancoHoras: '2026-05-02',
+    afastamentoBanco: { tipo: 'licenca_maternidade', inicio: AFAS_INICIO, fim: AFAS_FIM },
+  };
+  const MES_JUL = '2026-07';
+  const JUL_09  = '2026-07-09'; // quinta — dia ANTES do afastamento
+  const JUL_10  = '2026-07-10'; // sexta — primeiro dia do afastamento
+  const JUL_11  = '2026-07-11'; // sábado — dentro do afastamento
+  const JUL_31  = '2026-07-31'; // sexta — dentro do afastamento (sem fim definido)
+
+  test('P-13 — dia antes do afastamento: processa normalmente (falta se sem registro)', () => {
+    const r = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_09);
+    // Dias 07-07(ter) a 07-09(qui) sem registro = faltas normais; sábado 04/07 = +210 esper
+    expect(r.esperMin).toBeGreaterThan(0);
+    expect(r.saldo).toBeLessThan(0);
+  });
+
+  test('P-14 — primeiro dia do afastamento: ignorado, não gera falta', () => {
+    // Delta: calcular até JUL_09 vs JUL_10 — afastamento começa em JUL_10
+    const rAntes = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_09);
+    const rDepois = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_10);
+    // JUL_10 está no afastamento → ignorado → rDepois deve ser IGUAL a rAntes
+    expect(rDepois.esperMin).toBe(rAntes.esperMin);
+    expect(rDepois.trabMin).toBe(rAntes.trabMin);
+    expect(rDepois.saldo).toBe(rAntes.saldo);
+  });
+
+  test('P-15 — sábado dentro do afastamento: ignorado (não gera falta de 210)', () => {
+    const rAntes = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_09);
+    const rSab   = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_11);
+    // JUL_11 = sábado dentro do afastamento → ignorado; totais não mudam
+    expect(rSab.esperMin).toBe(rAntes.esperMin);
+    expect(rSab.saldo).toBe(rAntes.saldo);
+  });
+
+  test('P-16 — dias dentro do afastamento sem data de fim: todos ignorados', () => {
+    // Calcular até JUL_31 com afastamento a partir de JUL_10 sem fim
+    const r = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_31);
+    const rSemAfas = calcBancoMes({ jornada: '8', inicioBancoHoras: '2026-05-02' }, [], [], MES_JUL, JUL_31);
+    // Com afastamento, saldo deve ser MENOR negativo (menos faltas acumuladas)
+    expect(r.saldo).toBeGreaterThan(rSemAfas.saldo);
+    // Dias 07-07..07-09 (3 dias úteis) devem gerar faltas; JUL_10 em diante ignorado
+    const rAntes = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_09);
+    expect(r.esperMin).toBe(rAntes.esperMin);
+    expect(r.saldo).toBe(rAntes.saldo);
+  });
+
+  test('P-17 — afastamento com fim definido: dias após o fim voltam a calcular', () => {
+    const AFAS_FIM_DEF = '2026-07-14'; // quarta
+    const JUL_15 = '2026-07-15'; // quinta — após o fim
+    const funcComFim = { ...funcSwy, afastamentoBanco: { tipo: 'licenca_maternidade', inicio: AFAS_INICIO, fim: AFAS_FIM_DEF } };
+    const rSemFim  = calcBancoMes(funcSwy, [], [], MES_JUL, JUL_15);
+    const rComFim  = calcBancoMes(funcComFim, [], [], MES_JUL, JUL_15);
+    // Com fim=14/07, dia 15/07 volta a calcular → saldo mais negativo
+    expect(rComFim.saldo).toBeLessThan(rSemFim.saldo);
+    // Adicionalmente: sem fim, JUL_15 é ignorado; com fim, JUL_15 é falta
+    expect(rComFim.esperMin).toBeGreaterThan(rSemFim.esperMin);
+  });
+});
+
+describe('PERIODIZAÇÃO — regressão: regras anteriores preservadas', () => {
+  test('P-18 — PENDENTE: impacto zero preservado com inicioBancoHoras', () => {
+    const regs = regsDia(TER, { entrada: '08:00' }); // incompleto
+    const r = calcBancoMes(funcAdm, regs, [], MES, TER);
+    expect(r.pendencias).toHaveLength(1);
+    expect(r.pendencias[0]).toEqual({ data: TER, tipo: 'PONTO_INCOMPLETO' });
+    expect(r.saldo).toBe(0);
+  });
+
+  test('P-19 — sábado ainda usa 210 min de jornada', () => {
+    const rSex = calcBancoMes(funcAdm, [], [], MES, SEX);
+    const rSab = calcBancoMes(funcAdm, [], [], MES, SAB);
+    expect(rSab.esperMin - rSex.esperMin).toBe(210);
+  });
+
+  test('P-20 — domingo trabalhado ainda gera saldo positivo', () => {
+    const rSab = calcBancoMes(funcAdm, [], [], MES, SAB);
+    const regs = regsDia(DOM, { entrada: '08:00', saida: '14:00' });
+    const rDom = calcBancoMes(funcAdm, regs, [], MES, DOM);
+    expect(rDom.saldo - rSab.saldo).toBe(360);
+    expect(rDom.esperMin - rSab.esperMin).toBe(0); // jornadaDia=0 em domingo
+  });
+
+  test('P-21 — feriado com crédito: saldo=0 (regra DEC-8 preservada)', () => {
+    const r = calcBancoMes(funcAdm, [], [credMot(TER, 480, 'Feriado nacional')], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('P-22 — atestado com ponto parcial: saldo=0 (regra DEC-9 preservada)', () => {
+    const regs = regsDia(TER, { entrada: '08:00', saida: '11:00' }); // 3h
+    const r = calcBancoMes(funcAdm, regs, [cred(TER, 480)], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('P-23 — férias: saldo=0 (regra DEC-10 preservada)', () => {
+    const r = calcBancoMes(funcAdm, [], [credMot(TER, 480, 'Férias')], MES, TER);
+    expect(r.saldo).toBe(0);
+  });
+
+  test('P-24 — folga compensatória: débito de jornadaDia (regra DEC-4 preservada)', () => {
+    const r = calcBancoMes(funcAdm, [], [credMot(TER, 0, 'Folga compensatória')], MES, TER);
+    expect(r.saldo).toBe(-480);
+  });
+});

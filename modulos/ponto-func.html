@@ -514,6 +514,7 @@ async function iniciarBatida(){
       document.getElementById('gps-erro-msg').textContent='Localização GPS ainda não obtida. Certifique-se de permitir o acesso à localização e tente novamente.';
       document.getElementById('est-aguardando').style.display='none';
       document.getElementById('est-gps-bloqueado').style.display='block';
+      batidaEmProgresso=false;
       return;
     }
     const dist=distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG);
@@ -521,6 +522,7 @@ async function iniciarBatida(){
       document.getElementById('gps-erro-msg').textContent=`Você está a ${Math.round(dist)}m da empresa (raio permitido: ${RAIO}m). Aproxime-se para bater o ponto.`;
       document.getElementById('est-aguardando').style.display='none';
       document.getElementById('est-gps-bloqueado').style.display='block';
+      batidaEmProgresso=false;
       return;
     }
   }

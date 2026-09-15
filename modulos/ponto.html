@@ -424,6 +424,16 @@ onAuthStateChanged(auth, async user => {
         '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
       return;
     }
+    // MÓDULO PONTO: gestor precisa ter módulo 'ponto' liberado em sistema_usuarios.
+    // admin=true concede acesso irrestrito (compatível com admin.html).
+    const sysSnap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+    const sysData = sysSnap.exists() ? sysSnap.data() : null;
+    const temAcessoPonto = sysData && (sysData.admin === true || (sysData.modulos || []).includes('ponto'));
+    if (!temAcessoPonto) {
+      document.getElementById('loadingScreen').innerHTML =
+        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Módulo Ponto não liberado.<br>Contate o administrador.<br><button onclick="window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
+      return;
+    }
   } catch(e) {
     console.warn('[Auth] Erro ao verificar perfil:', e);
     window.location.href = '../login.html';

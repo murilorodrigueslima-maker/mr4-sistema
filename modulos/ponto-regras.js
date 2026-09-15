@@ -134,6 +134,17 @@ function buildDiasFromRegistros(registros) {
 //   SEQUÊNCIA INVÁLIDA   = calcTotal retorna null → PONTO_INCOMPLETO.
 //   MEIA-NOITE           = saída < entrada → calcTotal null → PONTO_INCOMPLETO.
 function calcBancoMes(funcionario, registros, creditos, mes, hojeStr) {
+  // PERIODIZAÇÃO: controleBancoHoras=false → funcionário não participa do banco.
+  if (funcionario.controleBancoHoras === false) {
+    return { trabMin: 0, esperMin: 0, saldo: 0, diasTrab: 0, pendencias: [] };
+  }
+
+  // inicioBancoHoras: 'YYYY-MM-DD' — dias anteriores são ignorados completamente.
+  const inicioBanco = funcionario.inicioBancoHoras || null;
+  // afastamentoBanco: { tipo, inicio:'YYYY-MM-DD', fim:'YYYY-MM-DD'|null }
+  // Dias dentro do período são ignorados — não geram falta.
+  const afastamento = funcionario.afastamentoBanco || null;
+
   const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
   const [ano, mesNum] = mes.split('-').map(Number);
   const diasNoMes = new Date(ano, mesNum, 0).getDate();
@@ -150,6 +161,14 @@ function calcBancoMes(funcionario, registros, creditos, mes, hojeStr) {
     const diaSemana = new Date(ano, mesNum - 1, d).getDay();
     const diaRegs = diasMap[dataStr];
     const creditoD = creditoMap[dataStr];
+
+    // PERIODIZAÇÃO: antes do início do controle → ignorado completamente (sem falta, sem débito).
+    if (inicioBanco && dataStr < inicioBanco) continue;
+
+    // AFASTAMENTO: dentro do período de afastamento → ignorado completamente (sem falta).
+    if (afastamento && afastamento.inicio &&
+        dataStr >= afastamento.inicio &&
+        (!afastamento.fim || dataStr <= afastamento.fim)) continue;
 
     // DEC-7: domingo sem ponto = ignorado (sem falta)
     if (diaSemana === 0 && !diaRegs) continue;

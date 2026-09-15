@@ -573,7 +573,8 @@ async function renderBanco(){
   const funcs=await fbGet('funcionarios');const regs=await fbGet('registros');const creditos=await fbGet('creditos_jornada');
   if(!funcs.length){document.getElementById('banco-cards').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Nenhum funcionário.</div>';document.getElementById('metrics-banco').innerHTML='';return;}
   let totalPos=0,totalNeg=0;
-  const cards=funcs.map(f=>{
+  const funcsAtivas=funcs.filter(f=>f.controleBancoHoras!==false);
+  const cards=funcsAtivas.map(f=>{
     const regsF=regs.filter(r=>r.funcId===f.id&&r.data.startsWith(mesAtual()));
     const credF=creditos.filter(c=>c.funcId===f.id&&c.data.startsWith(mesAtual()));
     const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,mesAtual(),hoje());
@@ -583,7 +584,7 @@ async function renderBanco(){
     return `<div class="ficha"><div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;"><div class="ficha-avatar" style="width:48px;height:48px;font-size:16px;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;"><div style="font-size:16px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px;"><div class="ficha-campo"><div class="fc-label">Trabalhado</div><div class="fc-valor">${fmtMin(trabMin)}</div></div><div class="ficha-campo"><div class="fc-label">Esperado</div><div class="fc-valor">${fmtMin(esperMin)}</div></div><div class="ficha-campo"><div class="fc-label">Dias</div><div class="fc-valor">${diasTrab}</div></div></div><div class="barra-wrap"><div class="barra" style="width:${pct}%;background:${saldo>=0?'#22C55E':'#EF4444'};"></div></div>${pendenciasTag}</div>`;
   }).join('');
   document.getElementById('banco-cards').innerHTML=cards;
-  document.getElementById('metrics-banco').innerHTML=`<div class="metric-card"><div class="metric-label">Funcionários</div><div class="metric-valor">${funcs.length}</div></div><div class="metric-card"><div class="metric-label">Registros</div><div class="metric-valor">${regs.length}</div></div><div class="metric-card"><div class="metric-label">Extras acum.</div><div class="metric-valor verde">+${fmtMin(totalPos)}</div></div><div class="metric-card"><div class="metric-label">Débitos acum.</div><div class="metric-valor vermelho">${fmtMin(totalNeg)}</div></div>`;
+  document.getElementById('metrics-banco').innerHTML=`<div class="metric-card"><div class="metric-label">Funcionários</div><div class="metric-valor">${funcsAtivas.length}</div></div><div class="metric-card"><div class="metric-label">Registros</div><div class="metric-valor">${regs.length}</div></div><div class="metric-card"><div class="metric-label">Extras acum.</div><div class="metric-valor verde">+${fmtMin(totalPos)}</div></div><div class="metric-card"><div class="metric-label">Débitos acum.</div><div class="metric-valor vermelho">${fmtMin(totalNeg)}</div></div>`;
 }
 
 // ── Feriados 2026 ─────────────────────────────────────────────────────────────

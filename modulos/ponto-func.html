@@ -4,240 +4,897 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>MR4 — Ponto Digital</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Barlow',sans-serif;background:var(--preto);color:var(--branco);min-height:100vh;}
+/* ── Tokens ──────────────────────────────────────────────────────────────── */
+:root{
+  --primary:#1a73e8;
+  --primary-dark:#1558b0;
+  --primary-light:#e8f0fe;
+  --success:#16a34a;
+  --success-bg:#dcfce7;
+  --warning:#b45309;
+  --warning-bg:#fef3c7;
+  --danger:#dc2626;
+  --danger-bg:#fee2e2;
+  --info:#0284c7;
+  --info-bg:#e0f2fe;
+  --bg:#f1f5f9;
+  --surface:#ffffff;
+  --surface-2:#f8fafc;
+  --text:#0f172a;
+  --text-2:#334155;
+  --text-muted:#64748b;
+  --border:#e2e8f0;
+  --border-focus:#1a73e8;
+  --radius-sm:8px;
+  --radius:12px;
+  --radius-lg:16px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);
+}
 
-/* Loading */
-#loadingScreen{position:fixed;inset:0;background:var(--preto);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;z-index:999;}
-.spinner{width:32px;height:32px;border:3px solid #333;border-top-color:var(--laranja);border-radius:50%;animation:spin .7s linear infinite;}
+/* ── Reset ───────────────────────────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Loading ─────────────────────────────────────────────────────────────── */
+#loadingScreen{
+  position:fixed;inset:0;
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:1.25rem;z-index:999;
+}
+.spinner{
+  width:32px;height:32px;
+  border:3px solid var(--border);
+  border-top-color:var(--primary);
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* App */
-.func-app{display:none;flex-direction:column;min-height:100vh;max-width:420px;margin:0 auto;}
-.func-topbar{background:var(--laranja);padding:16px 20px 14px;display:flex;align-items:center;justify-content:space-between;}
-.func-topbar-logo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:white;}
-.func-topbar-user{font-size:12px;color:rgba(255,255,255,.85);text-align:right;}
-.func-topbar-user strong{display:block;font-size:13px;color:white;}
-.func-body{flex:1;padding:1.5rem 1.25rem;overflow-y:auto;}
-.func-relogio{text-align:center;margin-bottom:1.5rem;}
-.func-hora{font-family:'Barlow Condensed',sans-serif;font-size:52px;font-weight:700;line-height:1;}
-.func-data{font-size:13px;color:var(--cinza-texto);margin-top:4px;}
-.btn-ponto-wrap{display:flex;justify-content:center;margin-bottom:1.5rem;}
-.btn-ponto-grande{width:130px;height:130px;border-radius:50%;border:3px solid var(--laranja);background:rgba(255,107,26,.1);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:6px;transition:all .2s;}
-.btn-ponto-grande:hover{background:rgba(255,107,26,.2);transform:scale(.97);}
-.btn-ponto-grande.saida-almoco{border-color:var(--amarelo);background:rgba(245,158,11,.1);}
-.btn-ponto-grande.retorno{border-color:var(--verde);background:rgba(34,197,94,.1);}
-.btn-ponto-grande.saida{border-color:var(--vermelho);background:rgba(239,68,68,.1);}
-.btn-ponto-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
-.loc-info{display:flex;align-items:center;gap:8px;background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;margin-bottom:1rem;font-size:13px;}
+/* ── App shell ───────────────────────────────────────────────────────────── */
+.func-app{
+  display:none;flex-direction:column;
+  min-height:100vh;max-width:430px;
+  margin:0 auto;position:relative;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.func-header{
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  padding:12px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:10;
+  box-shadow:var(--shadow-sm);
+}
+.func-header-brand{
+  display:flex;align-items:center;gap:8px;
+}
+.func-header-logo{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  color:white;font-size:13px;font-weight:800;letter-spacing:-.5px;
+  flex-shrink:0;
+}
+.func-header-title{
+  font-size:14px;font-weight:700;color:var(--text);letter-spacing:-.2px;
+}
+.func-header-title span{color:var(--primary);}
+.func-header-user{
+  display:flex;align-items:center;gap:10px;
+}
+.func-header-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--primary-light);
+  color:var(--primary);
+  font-size:12px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;flex-shrink:0;
+}
+.func-header-avatar img{width:100%;height:100%;object-fit:cover;}
+.func-header-info{text-align:right;}
+.func-header-nome{font-size:13px;font-weight:600;color:var(--text);}
+.func-header-nome-id{display:none;} /* id mantido para JS */
+.func-header-cargo{font-size:11px;color:var(--text-muted);}
+.btn-sair{
+  background:transparent;border:1px solid var(--border);
+  border-radius:var(--radius-sm);color:var(--text-muted);
+  padding:6px 12px;font-size:12px;font-weight:500;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:all .15s;
+}
+.btn-sair:hover{border-color:var(--danger);color:var(--danger);}
+
+/* ── Body ────────────────────────────────────────────────────────────────── */
+.func-body{
+  flex:1;
+  padding:16px 16px 80px;
+  overflow-y:auto;
+}
+
+/* ── Clock card ──────────────────────────────────────────────────────────── */
+.clock-card{
+  background:var(--primary);
+  border-radius:var(--radius-lg);
+  padding:28px 20px 24px;
+  text-align:center;
+  margin-bottom:12px;
+  position:relative;
+  overflow:hidden;
+}
+.clock-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(255,255,255,.06);pointer-events:none;
+}
+.func-hora{
+  font-size:60px;font-weight:800;
+  color:white;line-height:1;
+  letter-spacing:-2px;font-variant-numeric:tabular-nums;
+}
+.func-data-str{
+  font-size:13px;color:rgba(255,255,255,.75);
+  margin-top:6px;font-weight:500;text-transform:capitalize;
+}
+.clock-next-label{
+  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.55);margin-top:20px;margin-bottom:4px;
+}
+.clock-next-tipo{
+  font-size:17px;font-weight:700;color:white;
+}
+
+/* ── GPS pill ────────────────────────────────────────────────────────────── */
+.gps-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:99px;
+  padding:8px 14px;
+  font-size:13px;font-weight:500;
+  color:var(--text-2);
+  margin-bottom:12px;
+  width:fit-content;
+  margin-left:auto;margin-right:auto;
+  box-shadow:var(--shadow-sm);
+}
 .loc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.loc-dot.ok{background:var(--verde);}
-.loc-dot.warn{background:var(--amarelo);}
-.loc-dot.loading{background:var(--cinza-texto);}
-.comprovante{background:var(--cinza-escuro);border:1px solid var(--laranja);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
-.comp-titulo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--laranja);margin-bottom:12px;}
-.comp-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #2a2a2a;font-size:13px;}
-.comp-row:last-child{border-bottom:none;}
-.comp-label{color:var(--cinza-texto);}
-.comp-val{font-weight:600;}
-.comp-val.verde{color:var(--verde);}
-.comp-val.warn{color:var(--amarelo);}
-.hist-titulo{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);margin-bottom:10px;}
-.hist-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #1a1a1a;}
-.hist-item:last-child{border-bottom:none;}
-.hist-hora{font-size:13px;font-weight:600;min-width:44px;}
-.hist-tipo{font-size:13px;color:var(--cinza-texto);flex:1;}
-.hist-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.banco-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:14px;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;}
-.banco-label{font-size:12px;color:var(--cinza-texto);margin-bottom:4px;}
-.banco-valor{font-size:20px;font-weight:700;font-family:'Barlow Condensed',sans-serif;}
-.func-tabs{display:flex;background:var(--cinza-escuro);border-top:1px solid var(--cinza-borda);}
-.func-tab{flex:1;padding:10px 4px;text-align:center;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--cinza-texto);cursor:pointer;border-top:2px solid transparent;}
-.func-tab.ativo{color:var(--laranja);border-top-color:var(--laranja);}
+.loc-dot.ok{background:var(--success);}
+.loc-dot.warn{background:var(--warning);}
+.loc-dot.loading{background:var(--text-muted);animation:pulse 1.2s ease-in-out infinite;}
+.loc-dot.erro{background:var(--danger);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* ── Botão principal ─────────────────────────────────────────────────────── */
+.btn-ponto-wrap{margin-bottom:16px;}
+.btn-ponto-grande{
+  width:100%;
+  min-height:56px;
+  border-radius:var(--radius);
+  border:none;
+  background:var(--primary);
+  color:white;
+  font-size:16px;font-weight:700;
+  font-family:'Inter',sans-serif;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 4px 14px rgba(26,115,232,.35);
+  transition:all .2s;
+  letter-spacing:-.1px;
+}
+.btn-ponto-grande:hover:not(:disabled){
+  background:var(--primary-dark);
+  transform:translateY(-1px);
+  box-shadow:0 6px 18px rgba(26,115,232,.4);
+}
+.btn-ponto-grande:active:not(:disabled){transform:translateY(0);}
+.btn-ponto-grande:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-ponto-grande.saida-almoco{background:#d97706;box-shadow:0 4px 14px rgba(217,119,6,.35);}
+.btn-ponto-grande.saida-almoco:hover:not(:disabled){background:#b45309;}
+.btn-ponto-grande.retorno{background:var(--success);box-shadow:0 4px 14px rgba(22,163,74,.35);}
+.btn-ponto-grande.retorno:hover:not(:disabled){background:#15803d;}
+.btn-ponto-grande.saida{background:var(--danger);box-shadow:0 4px 14px rgba(220,38,38,.35);}
+.btn-ponto-grande.saida:hover:not(:disabled){background:#b91c1c;}
+.btn-ponto-label{font-size:16px;font-weight:700;}
+.loading-spin{
+  display:inline-block;width:18px;height:18px;
+  border:2.5px solid rgba(255,255,255,.35);
+  border-top-color:white;border-radius:50%;
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+
+/* ── GPS bloqueado ───────────────────────────────────────────────────────── */
+.aviso-erro{
+  background:var(--danger-bg);
+  border:1px solid rgba(220,38,38,.2);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+  text-align:center;
+}
+.aviso-erro strong{display:block;font-size:15px;font-weight:700;color:var(--danger);margin-bottom:4px;}
+.aviso-erro span{font-size:13px;color:#7f1d1d;}
+.btn-retry{
+  width:100%;min-height:48px;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:var(--radius);
+  color:var(--text-2);font-size:14px;font-weight:600;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:12px;
+  transition:all .15s;
+}
+.btn-retry:hover{border-color:var(--primary);color:var(--primary);}
+
+/* ── Processing ──────────────────────────────────────────────────────────── */
+.msg-estado{
+  text-align:center;padding:28px 20px;
+  font-size:14px;font-weight:500;color:var(--text-muted);
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+
+/* ── Comprovante ─────────────────────────────────────────────────────────── */
+.comprovante{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  margin-bottom:12px;
+  box-shadow:var(--shadow-sm);
+}
+.comp-titulo{
+  background:var(--success-bg);
+  padding:12px 16px;
+  font-size:13px;font-weight:700;color:var(--success);
+  display:flex;align-items:center;gap:8px;
+}
+.comp-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:12px 16px;
+  border-top:1px solid var(--border);
+  font-size:14px;
+}
+.comp-label{color:var(--text-muted);font-size:13px;}
+.comp-val{font-weight:600;color:var(--text);}
+.comp-val.verde{color:var(--success);}
+.comp-val.warn{color:var(--warning);}
+.btn-ok{
+  width:100%;min-height:48px;
+  background:var(--primary);color:white;border:none;
+  border-radius:var(--radius);
+  font-size:15px;font-weight:700;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  margin-bottom:12px;
+  transition:background .15s;
+}
+.btn-ok:hover{background:var(--primary-dark);}
+
+/* ── Hoje / Timeline ─────────────────────────────────────────────────────── */
+.section-label{
+  font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--text-muted);margin-bottom:10px;
+}
+.hoje-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:4px 0;
+  margin-bottom:12px;
+  box-shadow:var(--shadow-sm);
+}
+.batida-row{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;
+  position:relative;
+}
+.batida-row+.batida-row{border-top:1px solid var(--border);}
+.batida-hora{
+  font-size:15px;font-weight:700;color:var(--text);
+  min-width:44px;font-variant-numeric:tabular-nums;
+}
+.batida-hora.vazio{color:var(--text-muted);font-weight:500;}
+.batida-icon{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.batida-icon.entrada{background:var(--success-bg);}
+.batida-icon.saida_almoco{background:var(--warning-bg);}
+.batida-icon.retorno_almoco{background:var(--info-bg);}
+.batida-icon.saida{background:var(--danger-bg);}
+.batida-icon.vazio{background:var(--surface-2);border:1.5px dashed var(--border);}
+.batida-tipo{font-size:13px;font-weight:500;color:var(--text-2);flex:1;}
+.batida-tipo.vazio{color:var(--text-muted);}
+.jornada-status{
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;
+}
+.jornada-status.em-andamento{color:var(--warning);}
+.jornada-status.finalizada{color:var(--success);}
+.jornada-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.jornada-status.em-andamento .jornada-status-dot{background:var(--warning);}
+.jornada-status.finalizada .jornada-status-dot{background:var(--success);}
+
+/* ── Banco ────────────────────────────────────────────────────────────────── */
+.banco-grid{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:10px;margin-bottom:10px;
+}
+.banco-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  box-shadow:var(--shadow-sm);
+}
+.banco-label{font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.04em;margin-bottom:4px;}
+.banco-valor{font-size:22px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-1px;}
+.banco-valor.positivo{color:var(--success);}
+.banco-valor.negativo{color:var(--danger);}
+.banco-aviso{
+  background:var(--warning-bg);
+  border:1px solid rgba(180,83,9,.2);
+  border-radius:var(--radius);
+  padding:12px 16px;
+  font-size:13px;font-weight:500;color:var(--warning);
+  margin-bottom:10px;
+}
+.banco-aviso strong{display:block;font-weight:700;margin-bottom:2px;}
+.sel-mes{
+  width:100%;background:var(--surface);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;
+  font-size:14px;color:var(--text);
+  font-family:'Inter',sans-serif;
+  margin-bottom:12px;
+  outline:none;
+}
+.sel-mes:focus{border-color:var(--primary);}
+
+/* ── Justificativas ──────────────────────────────────────────────────────── */
+.form-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow-sm);
+}
+.form-campo{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.form-campo:last-of-type{margin-bottom:0;}
+.form-campo label{
+  font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.06em;color:var(--text-muted);
+}
+.form-campo input,
+.form-campo select,
+.form-campo textarea{
+  background:var(--surface-2);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;
+  font-size:14px;color:var(--text);
+  font-family:'Inter',sans-serif;
+  width:100%;outline:none;
+  transition:border-color .15s;
+}
+.form-campo input:focus,
+.form-campo select:focus,
+.form-campo textarea:focus{border-color:var(--primary);}
+.form-campo textarea{resize:vertical;min-height:70px;}
+.info-box{
+  background:var(--primary-light);
+  border:1px solid rgba(26,115,232,.2);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;
+  font-size:12px;color:var(--primary-dark);
+  margin-bottom:12px;
+}
+.btn-primary{
+  width:100%;min-height:48px;
+  background:var(--primary);color:white;border:none;
+  border-radius:var(--radius);
+  font-size:15px;font-weight:700;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:background .15s;
+}
+.btn-primary:hover{background:var(--primary-dark);}
+.badge{
+  display:inline-flex;align-items:center;
+  padding:3px 10px;border-radius:99px;
+  font-size:11px;font-weight:600;
+}
+.badge.pendente{background:var(--warning-bg);color:var(--warning);}
+.badge.aprovado{background:var(--success-bg);color:var(--success);}
+.badge.rejeitado{background:var(--danger-bg);color:var(--danger);}
+.badge.assinado{background:var(--success-bg);color:var(--success);}
+.justif-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:8px;
+  box-shadow:var(--shadow-sm);
+}
+.justif-header{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:8px;margin-bottom:6px;
+}
+.justif-titulo{font-size:13px;font-weight:600;color:var(--text);}
+.justif-desc{font-size:12px;color:var(--text-muted);}
+.justif-gestor{font-size:12px;color:var(--warning);margin-top:4px;}
+.campos-ponto-box{
+  background:var(--primary-light);
+  border:1px solid rgba(26,115,232,.2);
+  border-radius:var(--radius-sm);
+  padding:12px;
+  margin-bottom:12px;
+}
+
+/* ── Espelho ─────────────────────────────────────────────────────────────── */
+.espelho-func-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:8px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;flex-wrap:wrap;
+  box-shadow:var(--shadow-sm);
+}
+.espelho-info-mes{font-size:14px;font-weight:700;color:var(--text);}
+.espelho-info-status{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.btn-assinar{
+  background:var(--primary);color:white;border:none;
+  border-radius:var(--radius-sm);
+  padding:8px 16px;font-size:13px;font-weight:600;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  white-space:nowrap;
+  transition:background .15s;
+}
+.btn-assinar:hover{background:var(--primary-dark);}
+.folha-box{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:12px;
+  box-shadow:var(--shadow-sm);
+}
+.folha-actions{display:flex;gap:8px;margin-bottom:12px;}
+.folha-actions select{
+  flex:1;background:var(--surface-2);
+  border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 12px;font-size:14px;color:var(--text);
+  font-family:'Inter',sans-serif;outline:none;
+}
+.folha-actions select:focus{border-color:var(--primary);}
+.btn-ver-folha{
+  background:var(--primary);color:white;border:none;
+  border-radius:var(--radius-sm);
+  padding:10px 18px;font-size:14px;font-weight:600;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:background .15s;
+}
+.btn-ver-folha:hover{background:var(--primary-dark);}
+.assinado-ok{
+  margin-top:10px;
+  background:var(--success-bg);
+  border:1px solid rgba(22,163,74,.2);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;
+  font-size:13px;color:var(--success);font-weight:600;
+  text-align:center;
+}
+.sem-espelho-aviso{
+  background:var(--warning-bg);
+  border:1px solid rgba(180,83,9,.2);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;
+  font-size:13px;color:var(--warning);
+  margin-top:10px;
+}
+
+/* ── Modal ────────────────────────────────────────────────────────────────── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(15,23,42,.6);
+  backdrop-filter:blur(2px);
+  z-index:100;align-items:flex-start;
+  justify-content:center;padding:1rem;
+  overflow-y:auto;
+}
+.modal-overlay.aberto{display:flex;}
+.modal{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  width:100%;max-width:520px;
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+  margin:auto;
+}
+.modal-titulo{
+  font-size:17px;font-weight:700;color:var(--text);
+  margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.modal-fechar{
+  background:transparent;border:none;
+  color:var(--text-muted);font-size:22px;cursor:pointer;
+  line-height:1;padding:2px 6px;border-radius:4px;
+}
+.modal-fechar:hover{background:var(--surface-2);color:var(--text);}
+.modal-footer{
+  display:flex;gap:10px;margin-top:20px;
+  justify-content:flex-end;flex-wrap:wrap;
+}
+.btn-cancelar{
+  background:transparent;
+  border:1.5px solid var(--border);
+  color:var(--text-muted);border-radius:var(--radius-sm);
+  padding:10px 18px;font-size:14px;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:all .15s;
+}
+.btn-cancelar:hover{border-color:var(--text-muted);color:var(--text);}
+.btn-download{
+  background:transparent;
+  border:1.5px solid var(--primary);
+  color:var(--primary);border-radius:var(--radius-sm);
+  padding:10px 18px;font-size:14px;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:all .15s;font-weight:600;
+}
+.btn-download:hover{background:var(--primary-light);}
+.btn-salvar{
+  background:var(--primary);color:white;border:none;
+  border-radius:var(--radius-sm);
+  padding:10px 22px;font-size:14px;font-weight:700;
+  font-family:'Inter',sans-serif;cursor:pointer;
+  transition:background .15s;
+}
+.btn-salvar:hover{background:var(--primary-dark);}
+.assinatura-area{
+  border:2px dashed var(--border);
+  border-radius:var(--radius);
+  background:var(--surface-2);
+  cursor:crosshair;display:block;touch-action:none;
+  width:100%;
+}
+.btn-limpar-ass{
+  width:100%;background:transparent;border:1.5px solid var(--border);
+  color:var(--text-muted);border-radius:var(--radius-sm);
+  padding:10px;font-family:'Inter',sans-serif;cursor:pointer;
+  font-size:13px;margin-top:8px;
+  transition:all .15s;
+}
+.btn-limpar-ass:hover{border-color:var(--text-muted);color:var(--text);}
+.modal-assinar-info{
+  font-size:13px;color:var(--text-muted);
+  margin-bottom:14px;
+}
+.canvas-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px;}
+
+/* ── Bottom nav ──────────────────────────────────────────────────────────── */
+.func-tabs{
+  position:fixed;bottom:0;left:50%;
+  transform:translateX(-50%);
+  width:100%;max-width:430px;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  display:flex;
+  box-shadow:0 -4px 12px rgba(0,0,0,.05);
+  z-index:20;
+}
+.func-tab{
+  flex:1;padding:10px 4px 12px;
+  text-align:center;
+  font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--text-muted);cursor:pointer;
+  border-top:2px solid transparent;
+  transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+}
+.func-tab svg{flex-shrink:0;}
+.func-tab.ativo{color:var(--primary);border-top-color:var(--primary);}
+.func-tab.ativo svg{stroke:var(--primary);}
+
+/* ── Abas ─────────────────────────────────────────────────────────────────── */
 .func-aba{display:none;}
 .func-aba.ativa{display:block;}
-.aviso{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--amarelo);margin-bottom:1rem;}
-.aviso-erro{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:14px;font-size:14px;color:var(--vermelho);margin-bottom:1rem;text-align:center;}
-.aviso-erro strong{display:block;font-size:16px;margin-bottom:4px;}
-.msg-estado{text-align:center;padding:1.5rem;font-size:14px;color:var(--cinza-texto);}
-.loading-spin{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
-.notif{position:fixed;bottom:1rem;left:50%;transform:translateX(-50%);background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:10px 18px;font-size:13px;z-index:200;display:none;white-space:nowrap;}
-.notif.verde{border-color:var(--verde);color:var(--verde);}
-.notif.vermelho{border-color:var(--vermelho);color:var(--vermelho);}
-.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600;}
-.badge.pendente{background:rgba(245,158,11,.2);color:var(--amarelo);}
-.badge.aprovado{background:rgba(34,197,94,.15);color:var(--verde);}
-.badge.rejeitado{background:rgba(239,68,68,.15);color:var(--vermelho);}
-.badge.assinado{background:rgba(34,197,94,.15);color:var(--verde);}
-.espelho-func-card{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-.assinatura-area{border:2px dashed var(--cinza-borda);border-radius:10px;background:var(--cinza-medio);cursor:crosshair;display:block;touch-action:none;}
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:100;align-items:center;justify-content:center;padding:1rem;}
-.modal-overlay.aberto{display:flex;}
-.modal{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:14px;padding:1.5rem;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
-.modal-titulo{font-size:17px;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;}
-.modal-fechar{background:transparent;border:none;color:var(--cinza-texto);font-size:20px;cursor:pointer;}
-.modal-footer{display:flex;gap:10px;margin-top:1.25rem;justify-content:flex-end;}
-.btn-cancelar{background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px 18px;font-size:14px;font-family:'Barlow',sans-serif;cursor:pointer;}
-.btn-salvar{background:var(--laranja);color:white;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
-.btn-laranja{width:100%;background:var(--laranja);color:white;border:none;border-radius:8px;padding:13px;font-size:15px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;}
-.btn-laranja:hover{background:var(--laranja-escuro);}
-.form-campo{display:flex;flex-direction:column;gap:5px;margin-bottom:10px;}
-.form-campo label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cinza-texto);}
-.form-campo input,.form-campo select,.form-campo textarea{background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;width:100%;}
-.form-campo textarea{resize:vertical;min-height:70px;}
 
-/* Tela de seleção */
-#tela-selec{display:none;min-height:100vh;align-items:center;justify-content:center;padding:2rem;flex-direction:column;gap:1rem;}
-.selec-titulo{font-size:20px;font-weight:700;margin-bottom:.5rem;text-align:center;}
-.selec-sub{font-size:14px;color:var(--cinza-texto);margin-bottom:1.5rem;text-align:center;}
-.func-btn-lista{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px;}
-.func-btn-item{background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:12px;padding:14px 16px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s;}
-.func-btn-item:hover{border-color:var(--laranja);background:rgba(255,107,26,.07);}
-.func-btn-avatar{width:40px;height:40px;border-radius:50%;background:var(--laranja-escuro);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;overflow:hidden;flex-shrink:0;}
-.func-btn-avatar img{width:100%;height:100%;object-fit:cover;}
-.func-btn-nome{font-size:14px;font-weight:600;}
-.func-btn-cargo{font-size:12px;color:var(--cinza-texto);}
+/* ── Toast notif ─────────────────────────────────────────────────────────── */
+.notif{
+  position:fixed;bottom:calc(62px + 1rem);
+  left:50%;transform:translateX(-50%);
+  background:var(--text);color:white;
+  border-radius:99px;
+  padding:10px 20px;
+  font-size:13px;font-weight:500;
+  z-index:200;display:none;white-space:nowrap;
+  box-shadow:var(--shadow);
+}
+.notif.verde{background:var(--success);}
+.notif.vermelho{background:var(--danger);}
+
+/* ── Aviso simples ────────────────────────────────────────────────────────── */
+.aviso{
+  background:var(--warning-bg);
+  border:1px solid rgba(180,83,9,.2);
+  border-radius:var(--radius-sm);
+  padding:10px 14px;
+  font-size:13px;color:var(--warning);
+  margin-bottom:12px;
+}
+.msg-vazio{
+  padding:24px;text-align:center;
+  font-size:13px;color:var(--text-muted);
+}
+
+/* ── Histórico mensal ────────────────────────────────────────────────────── */
+.hist-mes-label{
+  font-size:13px;font-weight:700;color:var(--text);
+  padding:12px 0 8px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:0;
+}
+.hist-dia-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:12px 14px;
+  margin-bottom:8px;
+  box-shadow:var(--shadow-sm);
+  font-size:13px;
+}
+.hist-dia-data{font-weight:700;color:var(--text);margin-bottom:6px;}
+.hist-dia-batidas{
+  display:flex;gap:16px;flex-wrap:wrap;
+  font-size:12px;color:var(--text-muted);
+}
+.hist-dia-batida{display:flex;align-items:center;gap:4px;}
+.hist-dia-batida span{font-variant-numeric:tabular-nums;}
+
+/* ── Responsivo até 360px ────────────────────────────────────────────────── */
+@media(max-width:380px){
+  .func-hora{font-size:50px;}
+  .banco-valor{font-size:19px;}
+  .func-tabs{max-width:100%;}
+  .func-app{max-width:100%;}
+}
+
+/* ── Sem scroll horizontal no body ──────────────────────────────────────── */
+html,body{overflow-x:hidden;}
 </style>
 </head>
 <body>
 
 <div class="notif" id="notif"></div>
 
+<!-- Loading -->
 <div id="loadingScreen">
-  <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;"><span style="color:#FF6B1A">MR4</span> PONTO</div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="width:36px;height:36px;border-radius:10px;background:#1a73e8;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:800;">MR</div>
+    <div style="font-size:16px;font-weight:700;color:#0f172a;">MR4 <span style="color:#1a73e8;">Ponto</span></div>
+  </div>
   <div class="spinner"></div>
 </div>
 
-<!-- (seleção de funcionário removida — identidade via Firebase Auth) -->
-
 <!-- App do funcionário -->
 <div class="func-app" id="func-app">
-  <div class="func-topbar">
-    <div class="func-topbar-logo">MR4 PONTO<span style="font-size:9px;font-weight:400;opacity:.6;margin-left:6px;letter-spacing:.5px;vertical-align:middle;">v2026.09.09-sec2</span></div>
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div class="func-topbar-user"><strong id="func-nome-top">—</strong>Ponto digital</div>
-      <button onclick="window._signOut&&window._signOut()" title="Sair" style="background:rgba(255,255,255,.12);border:none;border-radius:6px;color:white;padding:5px 8px;font-size:12px;cursor:pointer;font-family:'Barlow',sans-serif;">Sair</button>
+
+  <!-- Header -->
+  <div class="func-header">
+    <div class="func-header-brand">
+      <div class="func-header-logo">MR</div>
+      <div class="func-header-title">MR4 <span>Ponto</span></div>
+    </div>
+    <div class="func-header-user">
+      <div>
+        <div class="func-header-nome"><span id="func-nome-top">—</span></div>
+        <div class="func-header-cargo" id="func-cargo-top">Ponto digital</div>
+      </div>
+      <div class="func-header-avatar" id="func-avatar-header"></div>
+      <button onclick="window._signOut&&window._signOut()" class="btn-sair" aria-label="Sair">Sair</button>
     </div>
   </div>
+
+  <!-- Body -->
   <div class="func-body">
+
     <!-- ABA PONTO -->
     <div class="func-aba ativa" id="aba-ponto">
-      <div class="func-relogio">
+
+      <!-- Clock card -->
+      <div class="clock-card">
         <div class="func-hora" id="func-hora">00:00</div>
-        <div class="func-data" id="func-data-str">—</div>
+        <div class="func-data-str" id="func-data-str">—</div>
+        <div class="clock-next-label">Próxima batida</div>
+        <div class="clock-next-tipo" id="clock-next-tipo">—</div>
       </div>
+
+      <!-- Estado: aguardando -->
       <div id="est-aguardando">
-        <div class="btn-ponto-wrap">
-          <div class="btn-ponto-grande" id="btn-bater" onclick="iniciarBatida()">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="18" cy="18" r="14"/><polyline points="18 10 18 18 22 22"/></svg>
-            <div class="btn-ponto-label" id="lbl-prox">Entrada</div>
-          </div>
+        <!-- GPS -->
+        <div class="gps-pill">
+          <div class="loc-dot loading" id="loc-dot"></div>
+          <span id="loc-txt">Obtendo localização…</span>
         </div>
-        <div class="loc-info"><div class="loc-dot loading" id="loc-dot"></div><span id="loc-txt">Obtendo localização...</span></div>
+        <!-- Botão principal -->
+        <div class="btn-ponto-wrap">
+          <button class="btn-ponto-grande" id="btn-bater" onclick="iniciarBatida()" aria-label="Registrar ponto">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            <span class="btn-ponto-label" id="lbl-prox">Entrada</span>
+          </button>
+        </div>
       </div>
-      <!-- GPS bloqueado -->
+
+      <!-- Estado: GPS bloqueado -->
       <div id="est-gps-bloqueado" style="display:none;">
-        <div class="aviso-erro"><strong>Localização bloqueada</strong><span id="gps-erro-msg">Você está fora do raio permitido.</span></div>
-        <button class="btn-laranja" onclick="tentarNovamenteLoc()">Atualizar localização</button>
+        <div class="aviso-erro">
+          <strong>Localização bloqueada</strong>
+          <span id="gps-erro-msg">Você está fora do raio permitido.</span>
+        </div>
+        <button class="btn-retry" onclick="tentarNovamenteLoc()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+          Atualizar localização
+        </button>
       </div>
-      <div id="est-proc" style="display:none;"><div class="msg-estado"><span class="loading-spin"></span>Salvando...</div></div>
-      <div id="est-comp" style="display:none;"><div class="comprovante" id="comp-content"></div><button class="btn-laranja" onclick="voltarPonto()">OK</button></div>
-      <div style="margin-top:1.5rem;">
-        <div class="hist-titulo">Hoje</div>
-        <div id="hist-dia"><div style="font-size:13px;color:var(--cinza-texto);">Nenhum registro ainda.</div></div>
+
+      <!-- Estado: processando -->
+      <div id="est-proc" style="display:none;">
+        <button class="btn-ponto-grande" disabled aria-label="Registrando…">
+          <span class="loading-spin"></span>
+          <span>Registrando…</span>
+        </button>
       </div>
-    </div>
+
+      <!-- Estado: comprovante -->
+      <div id="est-comp" style="display:none;">
+        <div class="comprovante" id="comp-content"></div>
+        <button class="btn-ok" onclick="voltarPonto()">OK</button>
+      </div>
+
+      <!-- Batidas de hoje -->
+      <div class="section-label">Hoje</div>
+      <div id="hist-dia">
+        <div class="msg-vazio">Nenhum registro ainda.</div>
+      </div>
+
+    </div><!-- /aba-ponto -->
 
     <!-- ABA BANCO -->
     <div class="func-aba" id="aba-banco">
-      <select id="mes-banco" onchange="renderBancoFunc()" style="width:100%;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;font-size:14px;color:var(--branco);font-family:'Barlow',sans-serif;margin-bottom:12px;"></select>
+      <select id="mes-banco" class="sel-mes" onchange="renderBancoFunc()" aria-label="Selecionar mês"></select>
       <div id="banco-func"></div>
     </div>
 
     <!-- ABA JUSTIFICATIVAS -->
     <div class="func-aba" id="aba-justif">
-      <div style="margin-bottom:1rem;">
-        <div class="hist-titulo">Enviar justificativa</div>
-        <div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;">
-          <div class="form-campo"><label>Data da ocorrência</label><input type="date" id="justif-data"></div>
-          <div class="form-campo"><label>Tipo de ocorrência</label>
-            <select id="justif-tipo-ocorr" onchange="toggleCamposPonto()">
-              <option value="">Selecione...</option>
-              <option value="ponto_nao_batido">Ponto não batido</option>
-              <option value="Atestado médico">Atestado médico / Falta médica</option>
-              <option value="Falta justificada">Falta justificada</option>
-              <option value="Atraso justificado">Atraso justificado</option>
-              <option value="Saída antecipada">Saída antecipada</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div id="campos-ponto-nao-batido" style="display:none;">
-            <div style="background:rgba(255,107,26,.08);border:1px solid rgba(255,107,26,.3);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--laranja);">Informe qual batida não foi registrada e o horário correto</div>
-            <div class="form-campo"><label>Qual batida não foi registrada?</label>
+      <div class="section-label">Enviar justificativa</div>
+      <div class="form-card">
+        <div class="form-campo">
+          <label for="justif-data">Data da ocorrência</label>
+          <input type="date" id="justif-data">
+        </div>
+        <div class="form-campo">
+          <label for="justif-tipo-ocorr">Tipo de ocorrência</label>
+          <select id="justif-tipo-ocorr" onchange="toggleCamposPonto()">
+            <option value="">Selecione…</option>
+            <option value="ponto_nao_batido">Ponto não batido</option>
+            <option value="Atestado médico">Atestado médico / Falta médica</option>
+            <option value="Falta justificada">Falta justificada</option>
+            <option value="Atraso justificado">Atraso justificado</option>
+            <option value="Saída antecipada">Saída antecipada</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+        <div id="campos-ponto-nao-batido" style="display:none;">
+          <div class="campos-ponto-box">
+            <div class="info-box" style="margin-bottom:10px;">Informe qual batida não foi registrada e o horário correto.</div>
+            <div class="form-campo">
+              <label for="justif-batida">Qual batida não foi registrada?</label>
               <select id="justif-batida">
-                <option value="">Selecione...</option>
+                <option value="">Selecione…</option>
                 <option value="entrada">Entrada</option>
                 <option value="saida_almoco">Saída para almoço</option>
                 <option value="retorno_almoco">Retorno do almoço</option>
                 <option value="saida">Saída</option>
               </select>
             </div>
-            <div class="form-campo"><label>Horário que deveria ter batido</label><input type="time" id="justif-horario"></div>
+            <div class="form-campo">
+              <label for="justif-horario">Horário que deveria ter batido</label>
+              <input type="time" id="justif-horario">
+            </div>
           </div>
-          <div class="form-campo"><label>Motivo / descrição</label><textarea id="justif-desc" placeholder="Explique o motivo..."></textarea></div>
-          <div class="form-campo">
-            <label>Anexar atestado ou documento (PDF ou imagem)</label>
-            <input type="file" id="justif-anexo" accept=".pdf,image/*">
-            <div id="justif-anexo-nome" style="font-size:11px;color:var(--cinza-texto);margin-top:4px;"></div>
-          </div>
-          <button class="btn-laranja" onclick="enviarJustificativa()">Enviar justificativa</button>
         </div>
+        <div class="form-campo">
+          <label for="justif-desc">Motivo / descrição</label>
+          <textarea id="justif-desc" placeholder="Explique o motivo…"></textarea>
+        </div>
+        <div class="form-campo">
+          <label for="justif-anexo">Anexar atestado ou documento (PDF ou imagem)</label>
+          <input type="file" id="justif-anexo" accept=".pdf,image/*">
+          <div id="justif-anexo-nome" style="font-size:11px;color:var(--text-muted);margin-top:4px;"></div>
+        </div>
+        <button class="btn-primary" onclick="enviarJustificativa()">Enviar justificativa</button>
       </div>
-      <div>
-        <div class="hist-titulo">Minhas justificativas</div>
-        <div id="lista-justif-func"></div>
-      </div>
+
+      <div class="section-label">Minhas justificativas</div>
+      <div id="lista-justif-func"></div>
     </div>
 
     <!-- ABA ESPELHO -->
     <div class="func-aba" id="aba-espelho">
-      <div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:1rem;">
-        <div class="hist-titulo" style="margin-bottom:10px;">Ver minha folha</div>
-        <div style="display:flex;gap:8px;">
-          <select id="mes-espelho-func" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--branco);font-family:'Barlow',sans-serif;"></select>
-          <button onclick="verMinhaFolha()" style="background:var(--laranja);color:white;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:600;font-family:'Barlow',sans-serif;cursor:pointer;">Ver</button>
+      <div class="folha-box">
+        <div class="section-label">Ver minha folha de ponto</div>
+        <div class="folha-actions">
+          <select id="mes-espelho-func" aria-label="Selecionar mês do espelho"></select>
+          <button onclick="verMinhaFolha()" class="btn-ver-folha">Ver</button>
         </div>
-        <div id="minha-folha-container" style="margin-top:10px;overflow-x:auto;"></div>
+        <div id="minha-folha-container" style="overflow-x:auto;"></div>
       </div>
+      <div class="section-label">Espelhos para assinar</div>
       <div id="espelhos-func-lista"></div>
     </div>
-  </div>
+
+  </div><!-- /func-body -->
+
+  <!-- Bottom nav -->
   <div class="func-tabs">
-    <div class="func-tab ativo" onclick="mudarAba('ponto',this)">Ponto</div>
-    <div class="func-tab" onclick="mudarAba('banco',this)">Banco</div>
-    <div class="func-tab" onclick="mudarAba('justif',this)">Justificar</div>
-    <div class="func-tab" onclick="mudarAba('espelho',this)">Espelho</div>
+    <div class="func-tab ativo" onclick="mudarAba('ponto',this)" aria-label="Ponto">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+      Ponto
+    </div>
+    <div class="func-tab" onclick="mudarAba('banco',this)" aria-label="Banco de horas">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Banco
+    </div>
+    <div class="func-tab" onclick="mudarAba('justif',this)" aria-label="Justificativas">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Justificar
+    </div>
+    <div class="func-tab" onclick="mudarAba('espelho',this)" aria-label="Espelho de ponto">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Espelho
+    </div>
   </div>
-</div>
+
+</div><!-- /func-app -->
 
 <!-- MODAL ASSINATURA ESPELHO -->
-<div class="modal-overlay" id="modal-assinar" style="align-items:flex-start;padding-top:1rem;overflow-y:auto;">
-  <div class="modal" style="max-width:780px;width:100%;">
-    <div class="modal-titulo"><span>Assinar espelho de ponto</span><button class="modal-fechar" onclick="fecharModal('modal-assinar')">×</button></div>
-    <div id="assinar-info" style="font-size:13px;color:var(--cinza-texto);margin-bottom:1rem;"></div>
-    <!-- Espelho gerado dinamicamente -->
-    <div id="espelho-para-assinar" style="margin-bottom:1.25rem;min-height:60px;display:flex;align-items:center;justify-content:center;">
-      <div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>
+<div class="modal-overlay" id="modal-assinar" style="align-items:flex-start;padding-top:1rem;">
+  <div class="modal" style="max-width:780px;">
+    <div class="modal-titulo">
+      <span>Assinar espelho de ponto</span>
+      <button class="modal-fechar" onclick="fecharModal('modal-assinar')" aria-label="Fechar">×</button>
     </div>
-    <div style="font-size:12px;color:var(--cinza-texto);margin-bottom:6px;font-weight:600;">Assine no campo abaixo para confirmar:</div>
+    <div class="modal-assinar-info" id="assinar-info"></div>
+    <div id="espelho-para-assinar" style="margin-bottom:16px;min-height:60px;display:flex;align-items:center;justify-content:center;">
+      <div style="font-size:13px;color:var(--text-muted);">Carregando espelho…</div>
+    </div>
+    <div class="canvas-label">Assine no campo abaixo para confirmar:</div>
     <canvas id="canvas-assinatura" class="assinatura-area" width="440" height="150"></canvas>
-    <div style="display:flex;gap:8px;margin-top:8px;"><button onclick="limparAssinatura()" style="flex:1;background:transparent;border:1px solid var(--cinza-borda);color:var(--cinza-texto);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;cursor:pointer;">Limpar assinatura</button></div>
+    <button onclick="limparAssinatura()" class="btn-limpar-ass">Limpar assinatura</button>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="fecharModal('modal-assinar')">Cancelar</button>
-      <button class="btn-cancelar" onclick="exportarEspelhoPDF()" style="border-color:var(--laranja);color:var(--laranja);">⬇ Baixar PDF</button>
+      <button class="btn-download" onclick="exportarEspelhoPDF()">⬇ Baixar PDF</button>
       <button class="btn-salvar" onclick="confirmarAssinatura()">Confirmar assinatura</button>
     </div>
   </div>
@@ -305,22 +962,22 @@ onAuthStateChanged(auth, async user => {
     const userSnap = await getDoc(doc(db, 'users', user.uid));
     if (!userSnap.exists()) {
       document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Conta não vinculada a nenhum funcionário.<br>Contate o gestor.<br><br>' +
-        '<button onclick="window._signOut&&window._signOut()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-family:Barlow,sans-serif;">Sair</button></div>';
+        '<div style="padding:2rem;text-align:center;color:#64748b;font-size:14px;font-family:Inter,sans-serif;">Conta não vinculada a nenhum funcionário.<br>Contate o gestor.<br><br>' +
+        '<button onclick="window._signOut&&window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:10px;padding:12px 24px;cursor:pointer;font-family:Inter,sans-serif;font-size:14px;font-weight:600;">Sair</button></div>';
       return;
     }
     const up = userSnap.data();
     if (!up.ativo) {
       document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Conta inativa.<br>Contate o gestor.</div>';
+        '<div style="padding:2rem;text-align:center;color:#64748b;font-size:14px;font-family:Inter,sans-serif;">Conta inativa.<br>Contate o gestor.</div>';
       return;
     }
     if (up.role !== 'funcionario') {
       document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">' +
-        '<p style="font-size:15px;color:#FF6B1A;font-weight:600;margin-bottom:1rem;">Acesso restrito</p>' +
+        '<div style="padding:2rem;text-align:center;color:#64748b;font-size:14px;font-family:Inter,sans-serif;">' +
+        '<p style="font-size:15px;color:#1a73e8;font-weight:700;margin-bottom:1rem;">Acesso restrito</p>' +
         'Este módulo é destinado exclusivamente aos funcionários.<br>Gestores devem usar o painel de ponto.<br><br>' +
-        '<a href="../modulos/ponto.html" style="display:inline-block;background:#FF6B1A;color:white;border-radius:8px;padding:10px 20px;font-family:Barlow,sans-serif;text-decoration:none;font-weight:600;">Ir para Painel Gestor</a>' +
+        '<a href="../modulos/ponto.html" style="display:inline-block;background:#1a73e8;color:white;border-radius:10px;padding:12px 24px;font-family:Inter,sans-serif;text-decoration:none;font-weight:600;font-size:14px;">Ir para Painel Gestor</a>' +
         '</div>';
       return;
     }
@@ -329,7 +986,7 @@ onAuthStateChanged(auth, async user => {
     const funcSnap = await getDoc(doc(db, 'funcionarios', up.funcionarioId));
     if (!funcSnap.exists()) {
       document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Funcionário não encontrado.<br>Contate o gestor.</div>';
+        '<div style="padding:2rem;text-align:center;color:#64748b;font-size:14px;font-family:Inter,sans-serif;">Funcionário não encontrado.<br>Contate o gestor.</div>';
       return;
     }
 
@@ -339,8 +996,8 @@ onAuthStateChanged(auth, async user => {
   } catch(e) {
     console.error('[Auth] Erro ao inicializar:', e);
     document.getElementById('loadingScreen').innerHTML =
-      '<div style="padding:2rem;text-align:center;color:#EF4444;font-size:14px;">Erro ao carregar dados.<br>Verifique sua conexão.<br><br>' +
-      '<button onclick="location.reload()" style="background:#FF6B1A;color:white;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;font-family:Barlow,sans-serif;">Tentar novamente</button></div>';
+      '<div style="padding:2rem;text-align:center;color:#dc2626;font-size:14px;font-family:Inter,sans-serif;">Erro ao carregar dados.<br>Verifique sua conexão.<br><br>' +
+      '<button onclick="location.reload()" style="background:#1a73e8;color:white;border:none;border-radius:10px;padding:12px 24px;cursor:pointer;font-family:Inter,sans-serif;font-size:14px;font-weight:600;">Tentar novamente</button></div>';
   }
 });
 </script>
@@ -396,7 +1053,13 @@ function iniciarApp(){
   if(!funcAtivo)return;
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('func-app').style.display='flex';
-  document.getElementById('func-nome-top').textContent=funcAtivo.nome.split(' ')[0];
+  // Nome no header
+  document.getElementById('func-nome-top').textContent=funcAtivo.nome.split(' ').slice(0,2).join(' ');
+  if(funcAtivo.cargo)document.getElementById('func-cargo-top').textContent=funcAtivo.cargo;
+  // Avatar no header
+  const av=document.getElementById('func-avatar-header');
+  if(funcAtivo.foto){av.innerHTML=`<img src="${funcAtivo.foto}" alt="Foto de ${funcAtivo.nome}" loading="lazy">`;}
+  else{av.textContent=iniciais(funcAtivo.nome);}
   iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();
   document.getElementById('justif-data').value=hoje();
   document.getElementById('justif-anexo').addEventListener('change',e=>{
@@ -405,35 +1068,44 @@ function iniciarApp(){
 }
 
 function iniciarRelogio(){
+  const DIAS=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  const MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
   function tick(){
     const p=_fortalezaParts();
     document.getElementById('func-hora').textContent=p.hour+':'+p.minute;
-    const dias=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];const meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
     const n=new Date();
-    document.getElementById('func-data-str').textContent=`${dias[n.getDay()]}, ${n.getDate()} de ${meses[n.getMonth()]}`;
+    document.getElementById('func-data-str').textContent=`${DIAS[n.getDay()]}, ${n.getDate()} de ${MESES[n.getMonth()]}`;
   }
   tick();setInterval(tick,1000);
 }
 
 function obterLoc(){
   const dot=document.getElementById('loc-dot'),txt=document.getElementById('loc-txt');
-  if(!navigator.geolocation){txt.textContent='GPS não disponível';return;}
+  dot.className='loc-dot loading';txt.textContent='Obtendo localização…';
+  if(!navigator.geolocation){
+    dot.className='loc-dot erro';txt.textContent='GPS não disponível';return;
+  }
   navigator.geolocation.getCurrentPosition(pos=>{
     locAtual={lat:pos.coords.latitude,lng:pos.coords.longitude};
     const dist=Math.round(distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG));
-    if(dist<=RAIO){dot.className='loc-dot ok';txt.textContent=`Dentro do raio (${dist}m)`;}
-    else{dot.className='loc-dot warn';txt.textContent=`Fora do raio (${dist}m)`;}
-  },()=>{txt.textContent='Localização não obtida';dot.className='loc-dot warn';});
+    if(dist<=RAIO){
+      dot.className='loc-dot ok';txt.textContent=`Localização verificada (${dist}m)`;
+    }else{
+      dot.className='loc-dot warn';txt.textContent=`Fora da área permitida (${dist}m)`;
+    }
+  },()=>{
+    dot.className='loc-dot erro';txt.textContent='Localização não obtida';
+  });
 }
 
 async function proxPonto(regsAll){
   if(!regsAll)regsAll=await fbGet('registros');
   const regHoje=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const ult=regHoje[regHoje.length-1];
-  if(!ult)return{tipo:'entrada',label:'Entrada',classe:''};
-  if(ult.tipo==='entrada')return{tipo:'saida_almoco',label:'Saída almoço',classe:'saida-almoco'};
-  if(ult.tipo==='saida_almoco')return{tipo:'retorno_almoco',label:'Retorno',classe:'retorno'};
-  if(ult.tipo==='retorno_almoco')return{tipo:'saida',label:'Saída',classe:'saida'};
+  if(!ult)return{tipo:'entrada',label:'Registrar Entrada',classe:''};
+  if(ult.tipo==='entrada')return{tipo:'saida_almoco',label:'Registrar Saída Almoço',classe:'saida-almoco'};
+  if(ult.tipo==='saida_almoco')return{tipo:'retorno_almoco',label:'Registrar Retorno',classe:'retorno'};
+  if(ult.tipo==='retorno_almoco')return{tipo:'saida',label:'Registrar Saída',classe:'saida'};
   return null;
 }
 
@@ -460,8 +1132,7 @@ async function iniciarBatida(){
       return;
     }
   }
-  document.getElementById('btn-bater').className='btn-ponto-grande '+(prox.classe||'');
-  document.getElementById('lbl-prox').textContent=prox.label;
+  // Mudar botão para estado de processamento
   document.getElementById('est-aguardando').style.display='none';
   document.getElementById('est-proc').style.display='block';
   finalizarBatida();
@@ -506,7 +1177,10 @@ function mostrarComp(reg,dentroRaio){
   const locClass=dentroRaio===true?'verde':'warn';
   const horaExib=(reg.hora||'').slice(0,5)||'—';
   document.getElementById('comp-content').innerHTML=`
-    <div class="comp-titulo">✓ Ponto registrado</div>
+    <div class="comp-titulo">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+      Ponto registrado
+    </div>
     <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${funcAtivo.nome}</span></div>
     <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel||reg.tipo||'—'}</span></div>
     <div class="comp-row"><span class="comp-label">Horário (servidor)</span><span class="comp-val">${horaExib}</span></div>
@@ -516,24 +1190,84 @@ function mostrarComp(reg,dentroRaio){
 
 async function voltarPonto(){
   batidaEmProgresso=false;
-  document.getElementById('est-comp').style.display='none';document.getElementById('est-aguardando').style.display='block';obterLoc();
-  const prox=await proxPonto();const btn=document.getElementById('btn-bater');
-  if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}
-  else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}
+  document.getElementById('est-comp').style.display='none';
+  document.getElementById('est-aguardando').style.display='block';
+  obterLoc();
+  const prox=await proxPonto();
+  const btn=document.getElementById('btn-bater');
+  const lbl=document.getElementById('lbl-prox');
+  const ct=document.getElementById('clock-next-tipo');
+  if(!prox){
+    btn.disabled=true;btn.className='btn-ponto-grande';
+    lbl.textContent='Concluído';
+    if(ct)ct.textContent='Jornada finalizada ✓';
+  }else{
+    btn.disabled=false;btn.className='btn-ponto-grande '+(prox.classe||'');
+    lbl.textContent=prox.label;
+    if(ct)ct.textContent=prox.label;
+  }
 }
 window.voltarPonto=voltarPonto;
+
+// ── Batidas de hoje (timeline) ────────────────────────────────────────────────
+const BATIDAS_DEF=[
+  {tipo:'entrada',      label:'Entrada',           cor:'entrada'},
+  {tipo:'saida_almoco', label:'Saída para almoço', cor:'saida_almoco'},
+  {tipo:'retorno_almoco',label:'Retorno do almoço',cor:'retorno_almoco'},
+  {tipo:'saida',        label:'Saída',             cor:'saida'},
+];
+
+const ICONS={
+  entrada:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"><polyline points="5 12 12 5 19 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>',
+  saida_almoco:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.5" stroke-linecap="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+  retorno_almoco:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2.5" stroke-linecap="round"><polyline points="19 12 12 19 5 12"/><line x1="12" y1="5" x2="12" y2="19"/></svg>',
+  saida:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+};
 
 async function renderHistDia(){
   if(!funcAtivo)return;
   const regsAll=await fbGet('registros'); // uma única leitura; reutilizada por proxPonto
   const regs=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
-  const cores={entrada:'#22C55E',saida_almoco:'#F59E0B',retorno_almoco:'#60A5FA',saida:'#EF4444'};
   const el=document.getElementById('hist-dia');
-  if(!regs.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum registro ainda.</div>';return;}
-  el.innerHTML=regs.map(r=>`<div class="hist-item"><div class="hist-dot" style="background:${cores[r.tipo]||'#888'}"></div><div class="hist-hora">${r.hora.slice(0,5)}</div><div class="hist-tipo">${r.tipoLabel}</div></div>`).join('');
-  const prox=await proxPonto(regsAll);const btn=document.getElementById('btn-bater'); // zero segundo getDocs
-  if(!prox){btn.style.opacity='.4';document.getElementById('lbl-prox').textContent='Concluído';}
-  else{btn.style.opacity='1';btn.className='btn-ponto-grande '+(prox.classe||'');document.getElementById('lbl-prox').textContent=prox.label;}
+  // Monta mapa tipo → hora
+  const mapa={};regs.forEach(r=>{ if(!mapa[r.tipo])mapa[r.tipo]=r.hora.slice(0,5); });
+
+  const rows=BATIDAS_DEF.map(b=>{
+    const hora=mapa[b.tipo];
+    if(hora){
+      return `<div class="batida-row">
+        <div class="batida-hora">${hora}</div>
+        <div class="batida-icon ${b.cor}">${ICONS[b.tipo]||''}</div>
+        <div class="batida-tipo">${b.label}</div>
+      </div>`;
+    }else{
+      return `<div class="batida-row">
+        <div class="batida-hora vazio">—</div>
+        <div class="batida-icon vazio"></div>
+        <div class="batida-tipo vazio">${b.label}</div>
+      </div>`;
+    }
+  }).join('');
+
+  const prox=await proxPonto(regsAll); // zero nova consulta Firestore
+  const btn=document.getElementById('btn-bater');
+  const lbl=document.getElementById('lbl-prox');
+  const ct=document.getElementById('clock-next-tipo');
+
+  if(!prox){
+    btn.disabled=true;btn.className='btn-ponto-grande';
+    lbl.textContent='Concluído';
+    if(ct)ct.textContent='Jornada finalizada ✓';
+    el.innerHTML=`<div class="hoje-card">${rows}</div>
+      <div class="jornada-status finalizada"><div class="jornada-status-dot"></div>Jornada finalizada</div>`;
+  }else{
+    btn.disabled=false;btn.className='btn-ponto-grande '+(prox.classe||'');
+    lbl.textContent=prox.label;
+    if(ct)ct.textContent=prox.label;
+    const temBatidas=Object.keys(mapa).length>0;
+    el.innerHTML=`<div class="hoje-card">${rows}</div>`+
+      (temBatidas?'<div class="jornada-status em-andamento"><div class="jornada-status-dot"></div>Jornada em andamento</div>':'');
+  }
 }
 
 function popularMeses(selId,qtd){
@@ -556,10 +1290,19 @@ async function renderBancoFunc(){
   const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));
   const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
   const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
-  const pendenciasCardFunc=pendencias.length>0?'<div class="banco-card" style="border-color:var(--amarelo);"><div style="color:var(--amarelo);font-weight:600;font-size:13px;">⚠ '+pendencias.length+' dia'+(pendencias.length>1?'s':'')+(pendencias.length>1?' com ponto incompleto':' com ponto incompleto')+'</div><div style="font-size:12px;color:var(--cinza-texto);margin-top:4px;">'+pendencias.map(p=>fmtData(p.data)).join(' · ')+' — Regularize com seu gestor.</div></div>':'';
+  const saldoCls=saldo>=0?'positivo':'negativo';
+  const saldoStr=(saldo>=0?'+':'')+fmtMin(saldo);
+  let pendHtml='';
+  if(pendencias.length>0){
+    pendHtml=`<div class="banco-aviso"><strong>⚠ ${pendencias.length} dia${pendencias.length>1?'s':''} com ponto incompleto</strong>${pendencias.map(p=>fmtData(p.data)).join(' · ')} — Regularize com seu gestor.</div>`;
+  }
   document.getElementById('banco-func').innerHTML=`
-    <div class="banco-card"><div><div class="banco-label">Trabalhado no mês</div><div class="banco-valor">${fmtMin(trabMin)}</div></div><div style="text-align:right"><div class="banco-label">Saldo banco</div><div class="banco-valor" style="color:${saldo>=0?'var(--verde)':'var(--vermelho)'}">${saldo>=0?'+':''}${fmtMin(saldo)}</div></div></div>
-    <div class="banco-card"><div><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div><div style="text-align:right"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div></div>${pendenciasCardFunc}`;
+    <div class="banco-grid">
+      <div class="banco-item"><div class="banco-label">Trabalhado</div><div class="banco-valor">${fmtMin(trabMin)}</div></div>
+      <div class="banco-item"><div class="banco-label">Saldo banco</div><div class="banco-valor ${saldoCls}">${saldoStr}</div></div>
+      <div class="banco-item"><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div>
+      <div class="banco-item"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div>
+    </div>${pendHtml}`;
 }
 
 // ── Justificativas ────────────────────────────────────────────────────────────
@@ -589,15 +1332,15 @@ async function renderJustifFunc(){
   if(!funcAtivo)return;
   const justifs=(await fbGet('justificativas')).filter(j=>j.funcId===funcAtivo.id).sort((a,b)=>a.criadoEm>b.criadoEm?-1:1);
   const el=document.getElementById('lista-justif-func');
-  if(!justifs.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhuma justificativa enviada.</div>';return;}
+  if(!justifs.length){el.innerHTML='<div class="msg-vazio">Nenhuma justificativa enviada.</div>';return;}
   el.innerHTML=justifs.map(j=>`
-    <div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:12px;margin-bottom:8px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <span style="font-size:13px;font-weight:600;">${fmtData(j.data)} — ${j.motivo}</span>
+    <div class="justif-item">
+      <div class="justif-header">
+        <span class="justif-titulo">${fmtData(j.data)} — ${j.motivo}</span>
         <span class="badge ${j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado'}">${j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovada':'Rejeitada'}</span>
       </div>
-      ${j.descricao?`<div style="font-size:12px;color:var(--cinza-texto);">${j.descricao}</div>`:''}
-      ${j.obsGestor?`<div style="font-size:12px;color:var(--amarelo);margin-top:4px;">Gestor: ${j.obsGestor}</div>`:''}
+      ${j.descricao?`<div class="justif-desc">${j.descricao}</div>`:''}
+      ${j.obsGestor?`<div class="justif-gestor">Gestor: ${j.obsGestor}</div>`:''}
     </div>`).join('');
 }
 
@@ -609,22 +1352,22 @@ async function verMinhaFolha(){
   const [ano,mesNum]=mes.split('-').map(Number);
   const mesLabel=`${nomes[mesNum-1]}/${ano}`;
   const cont=document.getElementById('minha-folha-container');
-  cont.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);padding:6px 0;">Carregando...</div>';
+  cont.innerHTML='<div style="font-size:13px;color:var(--text-muted);padding:6px 0;">Carregando…</div>';
   try{
     const espelhos=await fbGet('espelhos');
     const espExist=espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes&&!e.invalidado)||espelhos.find(e=>e.funcId===funcAtivo.id&&e.mes===mes);
     const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel,espExist);
     let btnAssin='';
     if(espExist&&espExist.assinado){
-      btnAssin=`<div style="margin-top:10px;text-align:center;padding:10px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);border-radius:8px;font-size:13px;color:var(--verde);">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
-    } else if(espExist){
-      btnAssin=`<div style="margin-top:10px;"><button class="btn-laranja" onclick="abrirAssinar('${espExist.id}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
-    } else {
-      btnAssin=`<div class="aviso" style="margin-top:10px;">Espelho ainda não gerado pelo gestor para este mês. Solicite ao gestor que gere o espelho.</div>`;
+      btnAssin=`<div class="assinado-ok">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
+    }else if(espExist){
+      btnAssin=`<div style="margin-top:10px;"><button class="btn-primary" onclick="abrirAssinar('${espExist.id}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
+    }else{
+      btnAssin=`<div class="sem-espelho-aviso">Espelho ainda não gerado pelo gestor para este mês. Solicite ao gestor que gere o espelho.</div>`;
     }
     cont.innerHTML=html+btnAssin;
   }catch(err){
-    cont.innerHTML=`<div style="font-size:12px;color:var(--vermelho);">Erro ao carregar: ${err.message}</div>`;
+    cont.innerHTML=`<div style="font-size:12px;color:var(--danger);">Erro ao carregar: ${err.message}</div>`;
   }
 }
 window.verMinhaFolha=verMinhaFolha;
@@ -634,14 +1377,17 @@ async function renderEspelhosFunc(){
   popularMeses('mes-espelho-func',12);
   const espelhos=(await fbGet('espelhos')).filter(e=>e.funcId===funcAtivo.id).sort((a,b)=>a.mes>b.mes?-1:1);
   const el=document.getElementById('espelhos-func-lista');
-  if(!espelhos.length){el.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Nenhum espelho disponível.</div>';return;}
-  el.innerHTML=`<div class="hist-titulo">Espelhos para assinar</div>`+espelhos.map(e=>`
+  if(!espelhos.length){el.innerHTML='<div class="msg-vazio">Nenhum espelho disponível.</div>';return;}
+  el.innerHTML=espelhos.map(e=>`
     <div class="espelho-func-card">
       <div>
-        <div style="font-size:14px;font-weight:600;">${e.mesLabel||e.mes}</div>
-        <div style="font-size:12px;color:var(--cinza-texto);">${e.assinado?'Assinado em '+fmtData(e.assinadoEm?.slice(0,10)):'Aguardando sua assinatura'}</div>
+        <div class="espelho-info-mes">${e.mesLabel||e.mes}</div>
+        <div class="espelho-info-status">${e.assinado?'Assinado em '+fmtData(e.assinadoEm?.slice(0,10)):'Aguardando sua assinatura'}</div>
       </div>
-      ${e.assinado?`<span class="badge assinado">✓ Assinado</span>`:`<button class="btn-laranja" style="padding:8px 16px;font-size:13px;width:auto;" onclick="abrirAssinar('${e.id}','${e.funcId}','${e.mes}','${e.mesLabel||e.mes}')">Assinar</button>`}
+      ${e.assinado
+        ?`<span class="badge assinado">✓ Assinado</span>`
+        :`<button class="btn-assinar" onclick="abrirAssinar('${e.id}','${e.funcId}','${e.mes}','${e.mesLabel||e.mes}')">Assinar</button>`
+      }
     </div>`).join('');
 }
 
@@ -668,7 +1414,7 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
   }
 
   document.getElementById('assinar-info').textContent='Revise seu espelho de ponto e assine abaixo para confirmar.';
-  document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Carregando espelho...</div>';
+  document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:13px;color:var(--text-muted);">Carregando espelho…</div>';
   document.getElementById('modal-assinar').classList.add('aberto');
   setTimeout(iniciarCanvas,100);
   try{
@@ -676,14 +1422,14 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
     document.getElementById('espelho-para-assinar').innerHTML=html;
   }catch(err){
     console.error('Erro ao gerar espelho:',err);
-    document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:12px;color:#EF4444;">Erro ao carregar espelho: '+err.message+'</div>';
+    document.getElementById('espelho-para-assinar').innerHTML='<div style="font-size:12px;color:var(--danger);">Erro ao carregar espelho: '+err.message+'</div>';
   }
 }
 window.abrirAssinar=abrirAssinar;
 
 async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
   const func=funcAtivo;
-  if(!func)return'<div style="font-size:12px;color:var(--cinza-texto);">Dados do funcionário não encontrados.</div>';
+  if(!func)return'<div style="font-size:12px;color:var(--text-muted);">Dados do funcionário não encontrados.</div>';
   const [ano,mesNum]=mes.split('-').map(Number);
   const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];
 
@@ -702,26 +1448,26 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
 
   const rows=renderEspelhoRowsHTML(snap);
   const saldoTotal=snap.totais.saldo;
-  return `<div style="background:white;color:#111;padding:1rem;border-radius:8px;font-family:'Barlow',sans-serif;font-size:11px;border:1px solid #ddd;overflow-x:auto;">
+  return `<div style="background:white;color:#111;padding:1rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;border:1px solid #ddd;overflow-x:auto;">
     <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">
-      <div style="font-size:13px;font-weight:700;color:#FF6B1A;">MR4 DISTRIBUIDORA</div>
+      <div style="font-size:13px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div>
       <div style="font-size:15px;font-weight:700;">Espelho de Ponto — ${nomeMes}/${ano}</div>
       <div style="font-size:11px;color:#555;">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div>
       ${snap.geradoEm?`<div style="font-size:10px;color:#888;margin-top:2px;">Gerado em ${new Date(snap.geradoEm).toLocaleString('pt-BR')}</div>`:''}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:480px;">
-      <thead><tr style="background:#333;color:white;">
-        <th style="padding:5px 6px;text-align:left;border:1px solid #555;">Dia</th>
-        <th style="padding:5px 6px;border:1px solid #555;">Entrada</th>
-        <th style="padding:5px 6px;border:1px solid #555;">S.Almoço</th>
-        <th style="padding:5px 6px;border:1px solid #555;">Retorno</th>
-        <th style="padding:5px 6px;border:1px solid #555;">Saída</th>
-        <th style="padding:5px 6px;border:1px solid #555;">Total</th>
-        <th style="padding:5px 6px;border:1px solid #555;">Saldo</th>
-        <th style="padding:5px 6px;border:1px solid #555;">Ocorrência</th>
+      <thead><tr style="background:#1a73e8;color:white;">
+        <th style="padding:5px 6px;text-align:left;border:1px solid #3b82f6;">Dia</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">Entrada</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">S.Almoço</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">Retorno</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">Saída</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">Total</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">Saldo</th>
+        <th style="padding:5px 6px;border:1px solid #3b82f6;">Ocorrência</th>
       </tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr style="background:#222;">
+      <tfoot><tr style="background:#1e3a5f;">
         <td colspan="5" style="color:white;font-weight:700;padding:6px;">TOTAIS DO MÊS</td>
         <td style="color:white;font-weight:700;padding:6px;">${fmtMin(snap.totais.trabMin)}</td>
         <td style="color:${saldoTotal>=0?'#4ade80':'#f87171'};font-weight:700;padding:6px;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td>
@@ -732,29 +1478,33 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
 }
 
 function iniciarCanvas(){
-  assinaturaCanvas=document.getElementById('canvas-assinatura');assinaturaCtx=assinaturaCanvas.getContext('2d');
-  assinaturaCtx.fillStyle='#1A1A1A';assinaturaCtx.fillRect(0,0,assinaturaCanvas.width,assinaturaCanvas.height);
-  assinaturaCtx.strokeStyle='#FF6B1A';assinaturaCtx.lineWidth=2;assinaturaCtx.lineCap='round';
+  assinaturaCanvas=document.getElementById('canvas-assinatura');
+  assinaturaCtx=assinaturaCanvas.getContext('2d');
+  // Ajusta largura ao container
+  const cw=assinaturaCanvas.parentElement.clientWidth-48;
+  if(cw>0)assinaturaCanvas.width=Math.min(cw,640);
+  assinaturaCtx.fillStyle='#f8fafc';assinaturaCtx.fillRect(0,0,assinaturaCanvas.width,assinaturaCanvas.height);
+  assinaturaCtx.strokeStyle='#1a73e8';assinaturaCtx.lineWidth=2;assinaturaCtx.lineCap='round';
   const getPos=(e)=>{const r=assinaturaCanvas.getBoundingClientRect();const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*(assinaturaCanvas.width/r.width),y:(src.clientY-r.top)*(assinaturaCanvas.height/r.height)};};
   assinaturaCanvas.onmousedown=assinaturaCanvas.ontouchstart=(e)=>{e.preventDefault();desenhando=true;const p=getPos(e);assinaturaCtx.beginPath();assinaturaCtx.moveTo(p.x,p.y);};
   assinaturaCanvas.onmousemove=assinaturaCanvas.ontouchmove=(e)=>{e.preventDefault();if(!desenhando)return;const p=getPos(e);assinaturaCtx.lineTo(p.x,p.y);assinaturaCtx.stroke();};
   assinaturaCanvas.onmouseup=assinaturaCanvas.ontouchend=()=>{desenhando=false;};
 }
 
-function limparAssinatura(){if(!assinaturaCtx)return;assinaturaCtx.fillStyle='#1A1A1A';assinaturaCtx.fillRect(0,0,assinaturaCanvas.width,assinaturaCanvas.height);}
+function limparAssinatura(){if(!assinaturaCtx)return;assinaturaCtx.fillStyle='#f8fafc';assinaturaCtx.fillRect(0,0,assinaturaCanvas.width,assinaturaCanvas.height);}
 window.limparAssinatura=limparAssinatura;
 
 function exportarEspelhoPDF(){
   const el=document.getElementById('espelho-para-assinar');
-  if(!el||!el.querySelector('table')){notif('Espelho ainda carregando...','vermelho');return;}
+  if(!el||!el.querySelector('table')){notif('Espelho ainda carregando…','vermelho');return;}
   // Abre nova janela com o espelho e aciona impressão (salvar como PDF no iOS/Android)
   const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
     <style>
       body{font-family:Arial,sans-serif;font-size:11px;margin:10mm;}
       table{width:100%;border-collapse:collapse;}
-      th{background:#333;color:white;padding:6px 8px;text-align:left;border:1px solid #555;font-size:10px;}
+      th{background:#1a73e8;color:white;padding:6px 8px;text-align:left;border:1px solid #3b82f6;font-size:10px;}
       td{padding:5px 8px;border:1px solid #ccc;color:#111;}
-      tr:nth-child(even) td{background:#f5f5f5;}
+      tr:nth-child(even) td{background:#f8fafc;}
       @media print{body{margin:5mm;}}
     </style></head><body>
     ${el.innerHTML}

@@ -564,6 +564,8 @@ window.mudarMes=mudarMes;
 
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
 function hoje(){const fmt=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit',day:'2-digit'});const p=Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));return `${p.year}-${p.month}-${p.day}`;}
+function ontem(){const h=hoje();const[y,m,d]=h.split('-').map(Number);const date=new Date(Date.UTC(y,m-1,d-1,12,0,0));return `${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;}
+
 function mesAtual(){const fmt=new Intl.DateTimeFormat('pt-BR',{timeZone:'America/Fortaleza',year:'numeric',month:'2-digit'});const p=Object.fromEntries(fmt.formatToParts(new Date()).map(x=>[x.type,x.value]));return `${p.year}-${p.month}`;}
 function iniciais(n){if(!n)return'?';return n.trim().split(' ').slice(0,2).map(x=>x[0]).join('').toUpperCase();}
 function fmtData(d){if(!d)return'—';const[y,m,dd]=d.split('-');return `${dd}/${m}/${y}`;}
@@ -689,10 +691,12 @@ async function renderBanco(){
   const _mesFiltro=mesAtual(); // pré-filtra por mês uma vez só, fora do loop
   const _regsDoMes=regs.filter(r=>r.data.startsWith(_mesFiltro));
   const _credDoMes=creditos.filter(c=>c.data.startsWith(_mesFiltro));
+  const _hojeStr=hoje();const _ontemStr=ontem();const _ehMesAtual=_mesFiltro===mesAtual();const _regsHoje=_ehMesAtual?regs.filter(r=>r.data===_hojeStr):[];
   const cards=funcsAtivas.map(f=>{
     const regsF=_regsDoMes.filter(r=>r.funcId===f.id);
     const credF=_credDoMes.filter(c=>c.funcId===f.id);
-    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hoje());
+    let hojeParaBanco=_hojeStr;if(_ehMesAtual){const rHF=_regsHoje.filter(r=>r.funcId===f.id);const eH=(rHF.find(r=>r.tipo==='entrada'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='entrada'))?.hora?.slice(0,5);const saH=(rHF.find(r=>r.tipo==='saida_almoco'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='saida_almoco'))?.hora?.slice(0,5);const raH=(rHF.find(r=>r.tipo==='retorno_almoco'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='retorno_almoco'))?.hora?.slice(0,5);const sH=(rHF.find(r=>r.tipo==='saida'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='saida'))?.hora?.slice(0,5);if(calcTotal(eH,saH,raH,sH)===null)hojeParaBanco=_ontemStr;}
+    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hojeParaBanco);
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
     const pendenciasTitle=pendencias.length?pendencias.map(p=>fmtData(p.data)).join(', '):'';

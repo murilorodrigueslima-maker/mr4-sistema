@@ -909,7 +909,7 @@ window.exportarEspelhoPDF=exportarEspelhoPDF;
 // ── Funcionários ──────────────────────────────────────────────────────────────
 let editFuncId=null,fotoNova=null,notaAv=0,avalFuncId=null,streamCamCadastroLocal=null;
 let _faceModelsCarregados=false;
-async function _carregarModelosCadastro(){if(_faceModelsCarregados)return true;try{const U='https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights';await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(U),faceapi.nets.faceRecognitionNet.loadFromUri(U)]);_faceModelsCarregados=true;return true;}catch{return false;}}
+async function _carregarModelosCadastro(){if(_faceModelsCarregados)return true;try{const U='https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(U),faceapi.nets.faceRecognitionNet.loadFromUri(U)]);_faceModelsCarregados=true;return true;}catch{return false;}}
 async function _detectarRostoFoto(dataUri){return new Promise(res=>{const img=new Image();img.onload=async()=>{try{const d=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions()).withFaceDescriptor();res(d?true:false);}catch{res(false);}};img.onerror=()=>res(false);img.src=dataUri;});}
 
 async function renderFuncionarios(){

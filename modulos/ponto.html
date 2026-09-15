@@ -6,7 +6,6 @@
 <title>Ponto — MR4</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
 :root{--laranja:#FF6B1A;--laranja-escuro:#B33F00;--preto:#0A0A0A;--cinza-escuro:#1A1A1A;--cinza-medio:#2A2A2A;--cinza-borda:#333;--cinza-texto:#888;--branco:#F5F5F5;--verde:#22C55E;--vermelho:#EF4444;--amarelo:#F59E0B;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -295,7 +294,7 @@ tr:hover td{background:rgba(255,107,26,.04);}
 <div class="modal-overlay" id="modal-func">
   <div class="modal">
     <div class="modal-titulo"><span id="modal-func-titulo">Novo funcionário</span><button class="modal-fechar" onclick="fecharModal('modal-func')">×</button></div>
-    <div style="background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--laranja);margin-bottom:1rem;">A foto é obrigatória para reconhecimento facial</div>
+    <div style="background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--laranja);margin-bottom:1rem;">Foto do funcionário (opcional)</div>
     <div style="text-align:center;margin-bottom:12px;">
       <div class="foto-preview" id="foto-preview" style="width:100px;height:100px;margin:0 auto 10px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>
       <div id="foto-status" style="font-size:12px;color:var(--cinza-texto);">Nenhuma foto cadastrada</div>
@@ -908,9 +907,6 @@ window.exportarEspelhoPDF=exportarEspelhoPDF;
 
 // ── Funcionários ──────────────────────────────────────────────────────────────
 let editFuncId=null,fotoNova=null,notaAv=0,avalFuncId=null,streamCamCadastroLocal=null;
-let _faceModelsCarregados=false;
-async function _carregarModelosCadastro(){if(_faceModelsCarregados)return true;try{const U='https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(U),faceapi.nets.faceRecognitionNet.loadFromUri(U)]);_faceModelsCarregados=true;return true;}catch{return false;}}
-async function _detectarRostoFoto(dataUri){return new Promise(res=>{const img=new Image();img.onload=async()=>{try{const d=await faceapi.detectSingleFace(img,new faceapi.TinyFaceDetectorOptions()).withFaceDescriptor();res(d?true:false);}catch{res(false);}};img.onerror=()=>res(false);img.src=dataUri;});}
 
 async function renderFuncionarios(){
   const funcs=await fbGet('funcionarios');const avals=await fbGet('avaliacoes');
@@ -988,7 +984,7 @@ async function salvarFuncionario(){
   const id=editFuncId||uid();
   const data={nome,cpf:document.getElementById('f-cpf').value,rg:document.getElementById('f-rg').value,nascimento:document.getElementById('f-nasc').value,telefone:document.getElementById('f-tel').value,endereco:document.getElementById('f-end').value,cargo:document.getElementById('f-cargo').value,admissao:document.getElementById('f-admissao').value,salario:document.getElementById('f-salario').value,jornada:document.getElementById('f-jornada').value,modalidade:document.getElementById('f-modalidade').value||'PRESENCIAL',obs:document.getElementById('f-obs').value,atualizadoEm:new Date().toISOString()};
   if(!window._monitorFuncId){data.email=(document.getElementById('f-email').value||'').trim().toLowerCase();data.perfil=document.getElementById('f-perfil').value||'';}
-  if(fotoNova){if(!await _carregarModelosCadastro()){notif('Verificação facial indisponível. Verifique sua conexão e tente novamente.','vermelho');return;}if(!await _detectarRostoFoto(fotoNova)){notif('Não foi possível identificar um rosto nesta foto. Tire outra foto com o rosto centralizado, boa iluminação e sem outras pessoas na imagem.','vermelho');return;}data.foto=fotoNova;}if(!editFuncId)data.criadoEm=new Date().toISOString();
+  if(fotoNova){data.foto=fotoNova;}if(!editFuncId)data.criadoEm=new Date().toISOString();
   await fbSet('funcionarios',id,data);fotoNova=null;editFuncId=null;fecharModal('modal-func');renderFuncionarios();notif('Funcionário salvo!');
 }
 window.salvarFuncionario=salvarFuncionario;

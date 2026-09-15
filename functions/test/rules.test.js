@@ -56,6 +56,13 @@ async function seedBase(db) {
   await db.collection('funcionarios').doc(FUNC_ID).set({
     nome: 'Func Teste', cargo: 'Vendedor', modalidade: 'PRESENCIAL',
   });
+  // S2: temModulo('ponto') exige sistema_usuarios com modulos=['ponto'] ou admin=true.
+  await db.collection('sistema_usuarios').doc(UID_GESTOR).set({
+    admin: false, modulos: ['ponto'],
+  });
+  await db.collection('sistema_usuarios').doc(UID_GESTOR_2).set({
+    admin: false, modulos: ['ponto'],
+  });
 }
 
 async function seedJustifPendente(db, id = 'justif-auditoria') {

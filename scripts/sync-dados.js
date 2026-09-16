@@ -567,6 +567,133 @@ async function syncCatalogoProdutos() {
   console.log(`✅ Catálogo: ${catalogo.length} produtos salvos`);
 }
 
+// ── PERFIL360 INCREMENTAL ────────────────────────────────────────────────────
+// Executa em isolamento via Promise.allSettled — falha não afeta outros syncs.
+// Requer GOOGLE_APPLICATION_CREDENTIALS (WIF/OIDC) para acesso ao Firestore.
+async function syncPerfil360() {
+  console.log('🔄 Perfil360: iniciando incremental...');
+  try {
+    const {
+      runIncremental,
+      calcularDataReferencia,
+      SYNC_STATE_COLLECTION,
+      SYNC_STATE_DOC,
+      VENDAS_GC_COLLECTION,
+      PERFIS_360_COLLECTION,
+      buildCursorWithOverlap,
+      CURSOR_OVERLAP_SECS,
+    } = require('../functions/lib/sync360');
+
+    const db = initFirestore();
+    if (!db) {
+      console.log('⚠️  Perfil360: Firestore indisponível — pulando incremental');
+      return;
+    }
+
+    const https = require('https');
+    function gcReq360(path, params = {}) {
+      return new Promise((resolve, reject) => {
+        const qs  = new URLSearchParams({ ...params, limite: '100' }).toString();
+        const url = `https://api.gestaoclick.com${path}?${qs}`;
+        https.get(url, {
+          headers: {
+            'access-token':        ACCESS_TOKEN,
+            'secret-access-token': SECRET_TOKEN,
+            'Content-Type':        'application/json',
+          },
+        }, res => {
+          let body = '';
+          res.on('data', c => { body += c; });
+          res.on('end', () => {
+            try { resolve(JSON.parse(body)); }
+            catch (e) { reject(new Error('GC JSON: ' + e.message)); }
+          });
+        }).on('error', reject);
+      });
+    }
+
+    const gcFetchPage = async (endpoint, params) => {
+      const r = await gcReq360(endpoint, params);
+      return { data: Array.isArray(r.data) ? r.data : [], meta: r.meta || {} };
+    };
+
+    const firestoreGetClientes = async () => {
+      const snap = await db.collection('clientes')
+        .where('gestaoClickId', '!=', null).select('gestaoClickId').get();
+      return snap.docs
+        .map(d => ({ firestoreDocumentId: d.id, gestaoClickId: String(d.data().gestaoClickId || '') }))
+        .filter(c => c.gestaoClickId.trim());
+    };
+
+    const firestoreGetVendasByCliente = async (gcId) => {
+      const snap = await db.collection(VENDAS_GC_COLLECTION)
+        .where('cliente_id', '==', String(gcId)).get();
+      return snap.docs.map(d => d.data());
+    };
+
+    const firestoreGetVendaById = async (vendaId) => {
+      const doc = await db.collection(VENDAS_GC_COLLECTION).doc(String(vendaId)).get();
+      return doc.exists ? doc.data() : null;
+    };
+
+    const firestoreGetPerfil = async (clienteMr4Id) => {
+      const doc = await db.collection(PERFIS_360_COLLECTION).doc(clienteMr4Id).get();
+      return doc.exists ? doc.data() : null;
+    };
+
+    const firestoreGetSyncState = async () => {
+      const doc = await db.collection(SYNC_STATE_COLLECTION).doc(SYNC_STATE_DOC).get();
+      return doc.exists ? doc.data() : null;
+    };
+
+    const firestoreSetSyncState = async (data) => {
+      await db.collection(SYNC_STATE_COLLECTION).doc(SYNC_STATE_DOC).set(data, { merge: true });
+    };
+
+    const firestoreUpsertPerfil = async (clienteMr4Id, perfil) => {
+      await db.collection(PERFIS_360_COLLECTION).doc(clienteMr4Id).set(perfil);
+    };
+
+    const firestoreUpsertVendas = async (vendas) => {
+      if (!vendas.length) return;
+      const { BulkWriter } = db.constructor;
+      const writer = db.bulkWriter();
+      writer.onWriteError(err => {
+        console.error('  [Perfil360 BulkWriter]', err.documentRef.path, err.code);
+        return false;
+      });
+      for (const venda of vendas) {
+        writer.set(db.collection(VENDAS_GC_COLLECTION).doc(String(venda.id)), venda);
+      }
+      await writer.close();
+    };
+
+    const syncState = await firestoreGetSyncState();
+    if (!syncState || syncState.status !== 'READY') {
+      console.log(`⚠️  Perfil360: status=${syncState?.status || 'N/A'} — pulando (não READY)`);
+      return;
+    }
+
+    const result = await runIncremental({
+      gcFetchPage,
+      firestoreGetClientes,
+      firestoreGetVendasByCliente,
+      firestoreGetVendaById,
+      firestoreGetPerfil,
+      firestoreUpsertVendas,
+      firestoreUpsertPerfil,
+      firestoreGetSyncState,
+      firestoreSetSyncState,
+      dryRun:         false,
+      dataReferencia: calcularDataReferencia(),
+    });
+
+    console.log(`✅ Perfil360: ${result.modifiedVendas} vendas delta | ${result.creates}C/${result.updates}U perfis | cursor avançou=${result.cursorAdvanced}`);
+  } catch(e) {
+    console.error('❌ Perfil360 incremental falhou (isolado):', e.message);
+  }
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 (async () => {
   console.log(`🔄 Iniciando sync — ${agora()}`);
@@ -576,6 +703,7 @@ async function syncCatalogoProdutos() {
     syncFinanceiro(),
     syncPedidos(),
     syncCatalogoProdutos(),
+    syncPerfil360(),
   ]);
   console.log('🏁 Sync concluído!');
 })();

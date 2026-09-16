@@ -1,0 +1,51 @@
+name: Incremental Perfil360
+
+# Acionamento manual (workflow_dispatch) com parâmetro dry_run.
+# NÃO é automação recorrente — schedule/cron será adicionado via sync-dados.yml.
+# workflow_dispatch ONLY neste arquivo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'DRY_RUN=true (análise, zero writes) ou false (ciclo real)'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+jobs:
+  incremental:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # obrigatório para GitHub Actions OIDC → WIF
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Autenticar no Google Cloud (OIDC/WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/848211361584/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'mr4-sync@mr4-ponto.iam.gserviceaccount.com'
+
+      - name: Instalar dependências
+        run: npm install --prefix scripts --omit=dev --no-audit --no-fund
+
+      - name: Executar incremental Perfil360
+        run: node scripts/incremental360.js
+        env:
+          DRY_RUN:               ${{ inputs.dry_run }}
+          GC_ACCESS_TOKEN:       ${{ secrets.GC_ACCESS_TOKEN }}
+          GC_SECRET_ACCESS_TOKEN: ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}

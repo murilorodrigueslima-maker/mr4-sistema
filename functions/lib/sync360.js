@@ -309,10 +309,15 @@ async function runBootstrap({
  *   - Engine recalcula o perfil completo (primeiraCompra, frequência, etc.)
  *   - NÃO usa delta ingênuo — sempre recalcula do zero a partir do mirror
  *
+ * Mudança de cliente_id em venda existente:
+ *   - Ambos clientes (antigo e novo) são recalculados
+ *   - Requer firestoreGetVendaById para detectar o cliente anterior no mirror
+ *
  * @param {Object} adapters
  *   gcFetchPage                (endpoint, params) → {data[], meta}
  *   firestoreGetClientes       () → [{firestoreDocumentId, gestaoClickId}]
  *   firestoreGetVendasByCliente (gcId) → vendaMinima[]
+ *   firestoreGetVendaById      (vendaId) → vendaMinima | null  (opcional)
  *   firestoreGetPerfil         (clienteMr4Id) → perfilDoc | null
  *   firestoreUpsertVendas      (vendas[]) → void
  *   firestoreUpsertPerfil      (clienteMr4Id, doc) → void
@@ -325,6 +330,7 @@ async function runIncremental({
   gcFetchPage,
   firestoreGetClientes,
   firestoreGetVendasByCliente,
+  firestoreGetVendaById = async (_id) => null,
   firestoreGetPerfil,
   firestoreUpsertVendas,
   firestoreUpsertPerfil,
@@ -357,9 +363,21 @@ async function runIncremental({
   const produtosPorId = buildProdutosPorId(todosProdutos);
 
   // ── Etapa 2: Identify affected clients + recalculate ─────────────────────────
+  // Clientes afetados pelo novo cliente_id das vendas modificadas
   const affectedGcIds = new Set(
     modifiedVendas.map(v => String(v.cliente_id || '')).filter(Boolean)
   );
+
+  // Detectar mudança de cliente_id: se venda mudou de cliente, o cliente antigo
+  // também precisa ser recalculado (perdeu a venda do seu histórico).
+  for (const venda of modifiedVendas) {
+    const existingInMirror = await firestoreGetVendaById(String(venda.id));
+    if (existingInMirror
+        && existingInMirror.cliente_id
+        && String(existingInMirror.cliente_id) !== String(venda.cliente_id || '')) {
+      affectedGcIds.add(String(existingInMirror.cliente_id));
+    }
+  }
   const clientes = await firestoreGetClientes();
   const linkedAffected = clientes.filter(
     c => c.gestaoClickId && affectedGcIds.has(String(c.gestaoClickId))

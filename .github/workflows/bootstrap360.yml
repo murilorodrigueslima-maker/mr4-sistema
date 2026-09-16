@@ -4,7 +4,11 @@ name: Bootstrap Perfil360
 # Execute somente quando:
 #   1. Gate 1 estiver PASS
 #   2. Collections Firestore confirmadas ausentes (precheck)
-#   3. Firestore Rules deployadas
+#   3. Firestore Rules já deployadas manualmente (firebase deploy --only firestore:rules)
+#
+# NOTA: Deploy de rules removido deste workflow. A SA mr4-sync não tem
+# roles/firebaserules.admin. As rules devem ser deployadas previamente
+# com a conta admin: firebase deploy --only firestore:rules --project mr4-ponto
 
 on:
   workflow_dispatch:
@@ -37,15 +41,6 @@ jobs:
 
       - name: Gate 2 precheck — verificar coleções ausentes
         run: node scripts/precheck360.js
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-
-      - name: Deploy Firestore Rules
-        run: |
-          npx --yes firebase-tools@13 deploy \
-            --only firestore:rules \
-            --project mr4-ponto \
-            --non-interactive
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 

@@ -1,0 +1,58 @@
+name: Bootstrap Perfil360
+
+# Acionamento ÚNICO via workflow_dispatch — NÃO é automação recorrente.
+# Execute somente quando:
+#   1. Gate 1 estiver PASS
+#   2. Collections Firestore confirmadas ausentes (precheck)
+#   3. Firestore Rules deployadas
+
+on:
+  workflow_dispatch:
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write   # obrigatório para GitHub Actions OIDC → WIF
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Autenticar no Google Cloud (OIDC/WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/848211361584/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'mr4-sync@mr4-ponto.iam.gserviceaccount.com'
+
+      - name: Instalar dependências do bootstrap
+        run: npm install --prefix scripts --omit=dev --no-audit --no-fund
+
+      - name: Gate 2 precheck — verificar coleções ausentes
+        run: node scripts/precheck360.js
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Deploy Firestore Rules
+        run: |
+          npx --yes firebase-tools@13 deploy \
+            --only firestore:rules \
+            --project mr4-ponto \
+            --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Bootstrap Perfil360 (produção)
+        run: node scripts/bootstrap360.js
+        env:
+          DRY_RUN: 'false'
+          GC_ACCESS_TOKEN:        ${{ secrets.GC_ACCESS_TOKEN }}
+          GC_SECRET_ACCESS_TOKEN: ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}

@@ -385,6 +385,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── perfis_360 — leitura por gestor; escrita somente Admin SDK (sync CI/CD) ──
+    match /perfis_360/{clienteId} {
+      allow read: if isGestor();
+      allow write: if false;
+    }
+
+    // ── vendas_gc — espelho interno de vendas GC; sem acesso pelo frontend ───────
+    // Admin SDK (sync CI/CD) ignora Rules e escreve sem restrição.
+    match /vendas_gc/{vendaId} {
+      allow read, write: if false;
+    }
+
+    // ── sync_state — cursor e status do sync360; sem acesso pelo frontend ────────
+    match /sync_state/{docId} {
+      allow read, write: if false;
+    }
+
     // ── Tudo mais: negado por padrão ───────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

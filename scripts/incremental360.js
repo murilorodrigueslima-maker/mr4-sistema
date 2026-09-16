@@ -282,6 +282,7 @@ async function main() {
   console.log();
 
   if (DRY_RUN) {
+    console.log(`CURSOR_QUE_SERIA_PERSISTIDO = ${result.newCursor || 'N/A (delta vazio)'}`);
     console.log('FIRESTORE_WRITES = ZERO (DRY_RUN=true)');
     return;
   }

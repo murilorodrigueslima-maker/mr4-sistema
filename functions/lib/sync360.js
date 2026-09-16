@@ -355,7 +355,8 @@ async function runIncremental({
     : todasModificadas;
 
   if (modifiedVendas.length === 0) {
-    return { creates: 0, updates: 0, unchanged: 0, modifiedVendas: 0, cursorAdvanced: false };
+    // Sem delta: cursor mantém valor atual — nenhum modificado_em novo processado.
+    return { creates: 0, updates: 0, unchanged: 0, modifiedVendas: 0, newCursor: cursor, cursorAdvanced: false };
   }
 
   // Produtos UMA VEZ (não por cliente)
@@ -416,11 +417,21 @@ async function runIncremental({
     else                                   { unchanged++; }
   }
 
+  // ── Etapa 3 (pré-escrita): cursor candidato ──────────────────────────────────
+  // Calculado ANTES do dry-run check para que dry-run possa reportar o cursor
+  // que SERIA persistido. Semântica: max(modificado_em das vendas processadas).
+  // NÃO depende de profile_writes ou clientes_afetados — apenas de modifiedVendas.
+  const newCursor = modifiedVendas.reduce(
+    (max, v) => (v.modificado_em || '') > max ? (v.modificado_em || '') : max,
+    cursor || ''
+  );
+
   const result = {
     creates,
     updates,
     unchanged,
     modifiedVendas: modifiedVendas.length,
+    newCursor,        // cursor que SERIA/FOI persistido — disponível em dry-run
     cursorAdvanced: false,
     dryRun,
   };
@@ -435,10 +446,8 @@ async function runIncremental({
   }
 
   // ── Etapa 4: Cursor avança APÓS todos os writes ───────────────────────────────
-  const newCursor = modifiedVendas.reduce(
-    (max, v) => (v.modificado_em || '') > max ? (v.modificado_em || '') : max,
-    cursor || ''
-  );
+  // CLIENTES_AFETADOS = 0 e PROFILE_WRITES = 0 NÃO bloqueiam o cursor.
+  // Cursor só NÃO avança se qualquer adapter lançar exceção antes deste ponto.
   await firestoreSetSyncState({
     ...(syncState || {}),
     modifiedSinceCursor: newCursor,

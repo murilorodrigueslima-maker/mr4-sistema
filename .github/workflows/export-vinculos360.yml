@@ -1,0 +1,48 @@
+name: Export Vínculos GC (N21 — Read-Only)
+
+# Workflow temporário para N21 — exporta gestaoClickId dos clientes vinculados.
+# READ-ONLY: ZERO writes em Firestore, GestãoClick ou qualquer sistema.
+# Requer: WIF configurado (mesmo pool do bootstrap360).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  export-vinculos:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Autenticar no Google Cloud (OIDC/WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/848211361584/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'mr4-sync@mr4-ponto.iam.gserviceaccount.com'
+
+      - name: Instalar dependências
+        run: npm install --prefix scripts --omit=dev --no-audit --no-fund
+
+      - name: Exportar vínculos (read-only)
+        run: node scripts/export-vinculos360.js
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+      - name: Upload artifact (IDs técnicos, zero PII)
+        uses: actions/upload-artifact@v4
+        with:
+          name: vinculos-gc-n21
+          path: |
+            artifacts/vinculos-gc.json
+            artifacts/vinculos-gc-summary.txt
+          retention-days: 7

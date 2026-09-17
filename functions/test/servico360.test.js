@@ -70,10 +70,10 @@ describe('servicoAgenteComercial (N17)', () => {
     expect(resultado.trace.spans.length).toBeGreaterThan(0);
   });
 
-  test('SERV360-09: pipeline com nuncaComprou → oportunidade NUNCA_COMPROU', async () => {
+  test('SERV360-09: pipeline com nuncaComprou → oportunidade PROSPECT_VINCULADO (V1)', async () => {
     const resultado = await executarPipelineComercial(FIXTURE_NUNCA_COMPROU);
     const tipos = resultado.oportunidades.map(o => o.tipo);
-    expect(tipos).toContain('NUNCA_COMPROU');
+    expect(tipos).toContain('PROSPECT_VINCULADO');
     expect(resultado.auditoria.conformeGeral).toBe(true);
   });
 

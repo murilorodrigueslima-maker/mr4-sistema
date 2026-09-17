@@ -34,7 +34,7 @@
  * Este módulo protege a arquitetura para quando LLM real for conectado.
  */
 
-const VERSAO_GROUNDING = 'grounding-v1';
+const VERSAO_GROUNDING = 'grounding-v2';
 
 // ── Padrões suspeitos em campos de dados (G2) ──────────────────────────────────
 // Impede que dados do Perfil360 ganhem autoridade de instrução no prompt.
@@ -89,13 +89,14 @@ class DataInjectionError extends Error {
  * Valores em centavos (inteiros) para evitar drift de float.
  * null explícito significa "dado não disponível" — diferente de zero.
  *
- * @param {Object} perfil     — Perfil360
- * @param {Object} [score]    — resultado de calcularScore()
- * @param {Object} [tendencia] — resultado de calcularTendencia()
+ * @param {Object} perfil        — Perfil360
+ * @param {Object} [score]       — resultado de calcularScore()
+ * @param {Object} [tendencia]   — resultado de calcularTendencia()
  * @param {Object} [recorrencia] — resultado de calcularRecorrencia()
+ * @param {Object} [opcoes]      — { oportunidade, prioridade }
  * @returns {Object} — facts imutáveis
  */
-function buildGroundingFacts(perfil, score = null, tendencia = null, recorrencia = null) {
+function buildGroundingFacts(perfil, score = null, tendencia = null, recorrencia = null, opcoes = {}) {
   if (!perfil || typeof perfil !== 'object') {
     throw new Error('buildGroundingFacts: perfil inválido');
   }
@@ -103,6 +104,17 @@ function buildGroundingFacts(perfil, score = null, tendencia = null, recorrencia
   // Converte para centavos (inteiros) para comparação sem drift de float.
   // null permanece null — não inventar zero.
   const toCents = (v) => (v === null || v === undefined) ? null : Math.round(Number(v) * 100);
+
+  // Produtos e categorias: somente IDs/nomes conhecidos — usados para validar claims de texto
+  const produtosIds       = Array.isArray(perfil.produtosComprados)
+    ? perfil.produtosComprados.map(p => String(p.produtoId || p.id || '')).filter(Boolean)
+    : [];
+  const categoriasIds     = Array.isArray(perfil.categorias)
+    ? perfil.categorias.map(c => String(c.categoriaId || c.id || c || '')).filter(Boolean)
+    : [];
+
+  // Oportunidade determinística (opcional)
+  const oport = opcoes.oportunidade || null;
 
   return Object.freeze({
     // ── Identidade ──────────────────────────────────────────────────────────
@@ -112,7 +124,7 @@ function buildGroundingFacts(perfil, score = null, tendencia = null, recorrencia
     inativo120d:       perfil.inativo120d    ?? false,
 
     // ── Temporal ────────────────────────────────────────────────────────────
-    ultimaCompraEm:    perfil.ultimaCompraEm ?? null,     // YYYY-MM-DD ou null
+    ultimaCompraEm:    perfil.ultimaCompraEm ?? null,
     primeiraCompraEm:  perfil.primeiraCompraEm ?? null,
     diasSemComprar:    (perfil.nuncaComprou ? null : (perfil.diasSemComprar ?? null)),
     dataReferencia:    perfil.dataReferencia ?? null,
@@ -136,7 +148,7 @@ function buildGroundingFacts(perfil, score = null, tendencia = null, recorrencia
     diasEntreComprasMediana: perfil.diasEntreComprasMediana ?? null,
     ticketMedioCents:        toCents(perfil.ticketMedio),
 
-    // ── Score (informativo — não é fato do perfil, é calculado) ─────────────
+    // ── Score (calculado pelos engines — não é fato bruto do perfil) ─────────
     scoreTotal:       score?.scoreTotal    ?? null,
     classificacao:    score?.classificacao ?? null,
     statusConfig:     score?.statusConfig  ?? 'PROVISIONAL',
@@ -146,6 +158,14 @@ function buildGroundingFacts(perfil, score = null, tendencia = null, recorrencia
 
     // ── Recorrência ──────────────────────────────────────────────────────────
     recorrenciaStatus: recorrencia?.status ?? null,
+
+    // ── Oportunidade (determinística — não alterável pela IA) ────────────────
+    oportunidadeTipo:      oport?.tipo      ?? null,
+    oportunidadePrioridade: oport?.prioridade ?? null,
+
+    // ── Catálogo (arrays de IDs/nomes conhecidos — para validar claims de texto)
+    produtosIds,
+    categoriasIds,
 
     // ── Metadado do grounding ────────────────────────────────────────────────
     _versaoGrounding: VERSAO_GROUNDING,
@@ -210,19 +230,97 @@ function validarClaims(claims, facts) {
   return claims;
 }
 
+// ── Padrões numéricos/datas em texto livre ────────────────────────────────────
+// Detecta valores monetários, percentuais e datas no texto da IA para cross-check.
+const REGEX_MONETARIO   = /R\$\s*[\d.,]+/gi;
+const REGEX_PERCENTUAL  = /\d+[\.,]?\d*\s*%/g;
+const REGEX_DATA_BR     = /\d{2}\/\d{2}\/\d{4}/g;
+const REGEX_DATA_ISO    = /\d{4}-\d{2}-\d{2}/g;
+const REGEX_DIAS        = /\b(\d+)\s+dias?\b/gi;
+
+class TextFactViolationError extends Error {
+  constructor(tipo, valorEncontrado) {
+    super(`[TEXT_FACT] afirmação factual sem claim correspondente: ${tipo} "${valorEncontrado}"`);
+    this.name = 'TextFactViolationError';
+    this.tipo = tipo;
+    this.valorEncontrado = valorEncontrado;
+  }
+}
+
+/**
+ * Valida que valores factuais no texto livre da IA têm claims estruturados correspondentes.
+ *
+ * Estratégia conservadora: bloqueia quando há dúvida.
+ *   - Valores monetários no texto → exige claim faturamento*Cents correspondente
+ *   - Percentuais → permitidos (contexto de score é aceito)
+ *   - Datas ISO (YYYY-MM-DD) no texto → exige claim de data correspondente
+ *   - "N dias" no texto → se N > 0 e não há claim diasSemComprar/diasEntre* → bloqueia
+ *     exceto se N coincide com algum valor já em facts
+ *
+ * @param {string} texto   — conteúdo textual do output da IA
+ * @param {Object} claims  — claims estruturados já validados
+ * @param {Object} facts   — resultado de buildGroundingFacts()
+ * @throws {TextFactViolationError} se valor factual sem claim for detectado
+ */
+function validarFatosNoTexto(texto, claims, facts) {
+  if (typeof texto !== 'string') return;
+
+  // Conjunto de campos com claim aprovado
+  const camposComClaim = new Set((claims || []).map(c => c.field));
+
+  // ── Valores monetários ────────────────────────────────────────────────────
+  const monetarios = texto.match(REGEX_MONETARIO) || [];
+  for (const m of monetarios) {
+    // Se nenhum claim de faturamento está presente, bloqueia
+    const temClaimFaturamento = [...camposComClaim].some(f => f.startsWith('faturamento') || f === 'ticketMedioCents');
+    if (!temClaimFaturamento) {
+      throw new TextFactViolationError('MONETARIO', m);
+    }
+  }
+
+  // ── Datas ISO no texto ────────────────────────────────────────────────────
+  const datasISO = texto.match(REGEX_DATA_ISO) || [];
+  for (const d of datasISO) {
+    const temClaimData = [...camposComClaim].some(f =>
+      f === 'ultimaCompraEm' || f === 'primeiraCompraEm' || f === 'dataReferencia'
+    );
+    if (!temClaimData) {
+      throw new TextFactViolationError('DATA_ISO', d);
+    }
+  }
+
+  // ── "N dias" no texto ─────────────────────────────────────────────────────
+  const diasMatches = [...texto.matchAll(REGEX_DIAS)];
+  for (const match of diasMatches) {
+    const n = parseInt(match[1], 10);
+    if (n <= 0) continue;
+    // Verificar se n coincide com algum valor em facts relacionado a dias
+    const diasFacts = [
+      facts.diasSemComprar,
+      facts.diasEntreComprasMedio,
+      facts.diasEntreComprasMediana,
+    ].filter(v => v !== null);
+    const coincide = diasFacts.some(v => v === n);
+    if (!coincide && !camposComClaim.has('diasSemComprar') &&
+        !camposComClaim.has('diasEntreComprasMedio') &&
+        !camposComClaim.has('diasEntreComprasMediana')) {
+      throw new TextFactViolationError('DIAS', String(n));
+    }
+  }
+}
+
 /**
  * Valida um output estruturado de agente que usa claims.
  *
- * Espera que o output tenha um campo `claims` com array de { field, value }.
- * Se o output não tem `claims` (texto livre puro), registra aviso mas não bloqueia —
- * em modo mock o conteúdo é fixo e seguro. Quando LLM real for conectado,
- * claims devem ser obrigatórios.
+ * A partir de grounding-v2, claims são OBRIGATÓRIOS para outputs factuais.
+ * OUTPUT_SEM_CLAIMS = BLOCK (não mais aviso).
  *
- * @param {Object} output  — output do agente
- * @param {Object} facts   — resultado de buildGroundingFacts()
- * @returns {Object}       — output com metadado de grounding
+ * @param {Object} output           — output do agente
+ * @param {Object} facts            — resultado de buildGroundingFacts()
+ * @param {Object} [opcoes]         — { permitirSemClaims: boolean } — somente para MockProvider
+ * @returns {Object}                — output com metadado de grounding
  */
-function validarOutputComGrounding(output, facts) {
+function validarOutputComGrounding(output, facts, opcoes = {}) {
   if (!output || typeof output !== 'object') {
     throw new Error('validarOutputComGrounding: output inválido');
   }
@@ -231,16 +329,23 @@ function validarOutputComGrounding(output, facts) {
   }
 
   const claimsValidados = [];
-  const avisos = [];
 
   if (Array.isArray(output.claims) && output.claims.length > 0) {
-    // Output usa claims estruturados — validar cada um
     validarClaims(output.claims, facts);
     claimsValidados.push(...output.claims);
+    // Validação cruzada: fatos no texto devem ter claims
+    if (typeof output.conteudo === 'string') {
+      validarFatosNoTexto(output.conteudo, claimsValidados, facts);
+    }
   } else {
-    // Output sem claims — modo permissivo (mock seguro)
-    // Quando LLM real for conectado, claims devem ser obrigatórios.
-    avisos.push('OUTPUT_SEM_CLAIMS: sem claims estruturados. Seguro com MockProvider. Obrigatório com LLM real.');
+    // OUTPUT_SEM_CLAIMS: BLOCK a menos que explicitamente permitido (MockProvider)
+    if (!opcoes.permitirSemClaims) {
+      throw new GroundingViolationError(
+        'claims',
+        '(array de claims estruturados obrigatório)',
+        '(ausente ou vazio)'
+      );
+    }
   }
 
   return {
@@ -249,7 +354,6 @@ function validarOutputComGrounding(output, facts) {
       validadoEm:      new Date().toISOString(),
       versao:          VERSAO_GROUNDING,
       claimsValidados: claimsValidados.length,
-      avisos,
       factsClienteId:  facts.clienteMr4Id,
     },
   };
@@ -331,9 +435,11 @@ module.exports = {
   VERSAO_GROUNDING,
   GroundingViolationError,
   DataInjectionError,
+  TextFactViolationError,
   buildGroundingFacts,
   validarClaims,
   validarOutputComGrounding,
+  validarFatosNoTexto,
   sanitizarDadoParaPrompt,
   prepararContextoParaPrompt,
   // Exposto para testes

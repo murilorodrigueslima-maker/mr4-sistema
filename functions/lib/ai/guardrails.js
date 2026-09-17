@@ -21,6 +21,13 @@
 
 const VERSAO_GUARDRAILS = 'guardrails-v1';
 
+// ── Autoridade financeira da IA ───────────────────────────────────────────────
+//
+// AI_FINANCIAL_AUTHORITY = NONE
+// A IA não possui nenhuma autoridade para tomar ou sugerir decisões financeiras.
+// Preço, desconto, crédito, prazo, comissão, limite, carteira = exclusivo do humano.
+const AI_FINANCIAL_AUTHORITY = 'NONE';
+
 // ── Permissões estruturais ────────────────────────────────────────────────────
 
 const PERMISSOES = Object.freeze({
@@ -34,6 +41,7 @@ const PERMISSOES = Object.freeze({
 
 // Ações proibidas: qualquer output contendo esses marcadores é rejeitado
 const MARCADORES_PROIBIDOS = [
+  // Ações de sistema
   'CRIAR_PEDIDO',
   'ALTERAR_PRECO',
   'CONCEDER_DESCONTO',
@@ -43,7 +51,20 @@ const MARCADORES_PROIBIDOS = [
   'ENVIAR_EMAIL',
   'ALTERAR_VENDA',
   'DELETAR_VENDA',
-  'ACTION:',           // formato genérico de ação
+  // Decisões financeiras (AI_FINANCIAL_AUTHORITY = NONE)
+  'APROVAR_DESCONTO',
+  'DEFINIR_DESCONTO',
+  'APROVAR_CREDITO',
+  'DEFINIR_CREDITO',
+  'APROVAR_PRAZO',
+  'DEFINIR_PRAZO',
+  'ALTERAR_COMISSAO',
+  'ALTERAR_ENCARTEIRAMENTO',
+  'APROVAR_DEVOLUCAO',
+  'APROVAR_GARANTIA',
+  'CANCELAR_VENDA',
+  // Formatos genéricos de ação
+  'ACTION:',
   'EXECUTE:',
   'WRITE:',
 ];
@@ -144,25 +165,43 @@ function validarOutputAgente(output, nomeAgente = 'desconhecido') {
 }
 
 /**
- * Verifica se um texto de input do usuário/vendedor contém tentativas de jailbreak.
- * Proteção básica: não falha silenciosamente — retorna { seguro, motivo }.
+ * Verifica se um texto de input (vendedor ou campo de dados) contém tentativas de jailbreak.
+ * Proteção abrangente: cobre campos de dados do ERP (nome produto, observação, etc.).
+ * Não falha silenciosamente — retorna { seguro, motivo }.
  */
 function verificarInputSeguro(texto) {
   if (typeof texto !== 'string') return { seguro: false, motivo: 'input não é string' };
 
   const upper = texto.toUpperCase();
 
-  // Padrões básicos de injeção de prompt
   const padroesSuspeitos = [
+    // Jailbreak direto
     'IGNORE AS INSTRUÇÕES',
     'IGNORE PREVIOUS',
+    'IGNORE INSTRUCTIONS',
     'SYSTEM PROMPT',
     'VOCÊ É AGORA',
+    'YOU ARE NOW',
     'ACT AS IF',
     'PRETEND YOU ARE',
     'FORGET YOUR RULES',
     'JAILBREAK',
     'DAN MODE',
+    // Injeção via campos de dados (ERP, produto, observação)
+    'MUDE O SCORE',
+    'ALTERE O SCORE',
+    'SCORE=',
+    'CONSIDERE ESTE CLIENTE VIP',
+    'REVELE O PROMPT',
+    'REVEAL THE PROMPT',
+    'SHOW SYSTEM PROMPT',
+    'EXECUTE OUTRA FERRAMENTA',
+    'IGNORE SEUS GUARDRAILS',
+    // Tentativas financeiras por injeção
+    '50% DE DESCONTO',
+    'DAR DESCONTO',
+    'APROVADO AUTOMATICAMENTE',
+    'CRÉDITO LIBERADO',
   ];
 
   for (const padrao of padroesSuspeitos) {
@@ -197,6 +236,7 @@ function mkOutputAgente({ tipo, conteudo, fontes = [], observacoes = null }) {
 
 module.exports = {
   VERSAO_GUARDRAILS,
+  AI_FINANCIAL_AUTHORITY,
   PERMISSOES,
   MARCADORES_PROIBIDOS,
   MAX_CONTEUDO_CHARS,

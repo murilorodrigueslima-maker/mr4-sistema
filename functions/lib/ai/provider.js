@@ -31,12 +31,14 @@ class MockProvider {
     this.nome = 'MockProvider';
     this._respostas = {
       // Respostas padrão por chave de prompt
-      'ANALISE_CLIENTE':    'MOCK: análise do cliente baseada no Perfil360 e score.',
-      'EXPLICACAO_SCORE':   'MOCK: o score reflete a frequência e recência das compras.',
-      'SUGESTAO_ACAO':      'MOCK: cliente apresenta padrão histórico que indica oportunidade de recompra.',
-      'ALERTA_INATIVIDADE': 'MOCK: cliente sem compras por período acima do padrão histórico.',
-      'RESUMO_OPORTUNIDADES': 'MOCK: resumo das oportunidades identificadas para este cliente.',
-      'DEFAULT':            'MOCK: resposta genérica do MockProvider.',
+      'ANALISE_CLIENTE':       'MOCK: análise do cliente baseada no Perfil360 e score.',
+      'EXPLICACAO_SCORE':      'MOCK: o score reflete a frequência e recência das compras.',
+      'SUGESTAO_ACAO':         'MOCK: cliente apresenta padrão histórico que indica oportunidade de recompra.',
+      'ALERTA_INATIVIDADE':    'MOCK: cliente sem compras por período acima do padrão histórico.',
+      'RESUMO_OPORTUNIDADES':  'MOCK: resumo das oportunidades identificadas para este cliente.',
+      'ANALISTA_OPORTUNIDADE': 'MOCK: a oportunidade existe porque o cliente apresenta sinais de afastamento do ciclo histórico.',
+      'ASSISTENTE_VENDEDOR':   'MOCK: sugestão de abordagem para o vendedor. Objetivo: retomar contato. Pontos: histórico de compras, tendência recente, ciclo esperado.',
+      'DEFAULT':               'MOCK: resposta genérica do MockProvider.',
       ...respostas,
     };
     this._chamadas = [];  // auditoria de chamadas

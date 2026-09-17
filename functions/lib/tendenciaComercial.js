@@ -24,8 +24,10 @@ const VERSAO_MOTOR = 'tendencia-v1';
 // PROVISIONAL — pendente calibração empresarial
 const TOLERANCIA_ESTAVEL = 0.20;
 
-// Mínimo de pedidos em algum dos períodos para comparação ser válida
-const MINIMO_PEDIDOS_PARA_BASE = 1;
+// DECISÃO V1 (APROVADO_PROPRIETARIO_2026-09-17):
+// Mínimo de 2 pedidos na base comparável para classificar tendência.
+// Com somente 1 pedido em qualquer janela → SEM_BASE (evidência insuficiente).
+const MINIMO_PEDIDOS_PARA_BASE = 2;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -153,7 +155,7 @@ function calcularTendencia(perfil) {
     evidencias: {
       ped30, ped30ant, ped90, ped90ant,
       pedidosTotal: perfil.pedidosTotal || 0,
-      motivo: 'menos de 1 pedido em qualquer janela de comparação',
+      motivo: `menos de ${MINIMO_PEDIDOS_PARA_BASE} pedidos em qualquer janela de comparação`,
     },
     calculadoEm,
   };

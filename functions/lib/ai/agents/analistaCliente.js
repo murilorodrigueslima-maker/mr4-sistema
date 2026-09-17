@@ -15,6 +15,7 @@
  */
 
 const { mkOutputAgente, validarOutputAgente } = require('../guardrails');
+const { prepararContextoParaPrompt } = require('../groundingOutput');
 const promptTemplate = require('../prompts/analiseCliente');
 
 const NOME_AGENTE = 'analistaCliente';
@@ -32,11 +33,11 @@ const VERSAO_AGENTE = '1.0.0';
  * @param {Object} params.provider     — instância de MockProvider (ou real no futuro)
  * @returns {Promise<Object>}          — output validado com metadados
  */
-async function analisar({ perfil, score, tendencia, recorrencia, oportunidades, provider }) {
+async function analisar({ perfil, score, tendencia, recorrencia, oportunidades, provider, facts = null }) {
   if (!provider) throw new Error(`${NOME_AGENTE}: provider ausente`);
   if (!perfil)   throw new Error(`${NOME_AGENTE}: perfil ausente`);
 
-  const contexto = {
+  const contextoRaw = {
     clienteMr4Id:      perfil.clienteMr4Id,
     scoreTotal:        score?.scoreTotal   ?? null,
     classificacao:     score?.classificacao ?? 'DESCONHECIDO',
@@ -46,7 +47,8 @@ async function analisar({ perfil, score, tendencia, recorrencia, oportunidades, 
     oportunidades:     oportunidades || [],
   };
 
-  const prompt = promptTemplate.build(contexto);
+  const { contextoSanitizado, suspeitos } = prepararContextoParaPrompt(contextoRaw, facts || {});
+  const prompt = promptTemplate.build(contextoSanitizado);
   const resposta = await provider.complete(prompt, {
     chave:     promptTemplate.CHAVE_MOCK,
     maxTokens: 500,
@@ -62,11 +64,12 @@ async function analisar({ perfil, score, tendencia, recorrencia, oportunidades, 
   return {
     ...validarOutputAgente(output, NOME_AGENTE),
     _meta: {
-      agente:       NOME_AGENTE,
-      versaoAgente: VERSAO_AGENTE,
-      promptVersao: promptTemplate.VERSAO_PROMPT,
-      tokensUsados: resposta.tokens,
-      mockMode:     resposta.mock === true,
+      agente:        NOME_AGENTE,
+      versaoAgente:  VERSAO_AGENTE,
+      promptVersao:  promptTemplate.VERSAO_PROMPT,
+      tokensUsados:  resposta.tokens,
+      mockMode:      resposta.mock === true,
+      sanitizacao:   { suspeitos },
     },
   };
 }

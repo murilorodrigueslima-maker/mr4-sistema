@@ -19,6 +19,14 @@ data/
 # Exports temporários de análise — IDs internos, não commitar
 artifacts/
 
+# Credenciais e variáveis de ambiente — NUNCA commitar
+.env
+.env.local
+.env.*.local
+functions/.env.local
+functions/.env.*.local
+*.secret.local
+
 # Editor / sistema
 .DS_Store
 .claude/

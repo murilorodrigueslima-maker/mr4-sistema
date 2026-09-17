@@ -85,9 +85,9 @@ test('OPORT360-01b: IDs distintos para tipo diferente', () => {
   expect(id1).not.toBe(id2);
 });
 
-// ── OPORT360-02: NUNCA_COMPROU ────────────────────────────────────────────────
+// ── OPORT360-02: PROSPECT_VINCULADO (V1 — antes NUNCA_COMPROU) ──────────────
 
-test('OPORT360-02: nuncaComprou=true → apenas tipo NUNCA_COMPROU é gerado', () => {
+test('OPORT360-02: nuncaComprou=true → apenas tipo PROSPECT_VINCULADO, fila FILA_PROSPECCAO', () => {
   const perfilNovo = mkPerfil({
     nuncaComprou: true,
     inativo120d: false,
@@ -97,7 +97,8 @@ test('OPORT360-02: nuncaComprou=true → apenas tipo NUNCA_COMPROU é gerado', (
   });
   const oports = gerarOportunidades(perfilNovo, null, null, null, DATA_REF);
   expect(oports).toHaveLength(1);
-  expect(oports[0].tipo).toBe('NUNCA_COMPROU');
+  expect(oports[0].tipo).toBe('PROSPECT_VINCULADO');
+  expect(oports[0].fila).toBe('FILA_PROSPECCAO');
   expect(oports[0].prioridade).toBe(30);
 });
 
@@ -112,8 +113,8 @@ test('OPORT360-03: inativo120d=true, nuncaComprou=false → tipo REATIVACAO_120D
   const oports = gerarOportunidades(perfilInativo, mkScore(), mkTendencia('ESTAVEL'), mkRecorrencia(), DATA_REF);
   const tipos = oports.map(o => o.tipo);
   expect(tipos).toContain('REATIVACAO_120D');
-  expect(tipos).not.toContain('NUNCA_COMPROU');
-  expect(tipos).not.toContain('QUEDA_DE_COMPRAS');  // inativo → bloqueado
+  expect(tipos).not.toContain('PROSPECT_VINCULADO');  // V1: PROSPECT_VINCULADO é só para nuncaComprou
+  expect(tipos).not.toContain('QUEDA_DE_COMPRAS');    // inativo → bloqueado
 });
 
 test('OPORT360-03b: prioridade de REATIVACAO_120D >= 50', () => {
@@ -172,9 +173,10 @@ test('OPORT360-05c: recorrência DENTRO_DO_PADRAO → sem JANELA_DE_RECOMPRA', (
   expect(tipos).not.toContain('JANELA_DE_RECOMPRA');
 });
 
-// ── OPORT360-06: CROSS_SELL_CATEGORIA ────────────────────────────────────────
+// ── OPORT360-06: CROSS_SELL_CATEGORIA (V1: DESATIVADO) ───────────────────────
 
-test('OPORT360-06: 1 categoria + pedidosTotal>=3 + ativo → CROSS_SELL_CATEGORIA', () => {
+// DECISÃO V1: cross-sell desativado — nenhuma oportunidade CROSS_SELL_CATEGORIA.
+test('OPORT360-06: cross-sell desativado (V1) → sem CROSS_SELL_CATEGORIA mesmo com 1 categoria + ped>=3', () => {
   const perfilCross = mkPerfil({
     categoriasMaisCompradas: [{ categoria: 'PNEU', faturamento: 8000 }],
     pedidosTotal: 5,
@@ -182,7 +184,7 @@ test('OPORT360-06: 1 categoria + pedidosTotal>=3 + ativo → CROSS_SELL_CATEGORI
   });
   const oports = gerarOportunidades(perfilCross, mkScore(), mkTendencia('ESTAVEL'), mkRecorrencia(), DATA_REF);
   const tipos = oports.map(o => o.tipo);
-  expect(tipos).toContain('CROSS_SELL_CATEGORIA');
+  expect(tipos).not.toContain('CROSS_SELL_CATEGORIA');
 });
 
 test('OPORT360-06b: 2 categorias → sem CROSS_SELL_CATEGORIA', () => {

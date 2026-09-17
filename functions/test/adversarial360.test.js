@@ -142,7 +142,7 @@ test('ADV360-15: FIXTURE_NUNCA_COMPROU → score=0 e oportunidade NUNCA_COMPROU'
   const oports = gerarOportunidades(FIXTURE_NUNCA_COMPROU, score, null, null, FIXTURE_NUNCA_COMPROU.dataReferencia);
   expect(score.scoreTotal).toBeLessThanOrEqual(10);
   expect(oports).toHaveLength(1);
-  expect(oports[0].tipo).toBe('NUNCA_COMPROU');
+  expect(oports[0].tipo).toBe('PROSPECT_VINCULADO');  // V1: NUNCA_COMPROU → PROSPECT_VINCULADO
 });
 
 test('ADV360-16: FIXTURE_INATIVO_120D → score baixo e oportunidade REATIVACAO_120D', () => {

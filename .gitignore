@@ -16,6 +16,9 @@ RELATORIO_FASE2.md
 # Dados sincronizados automaticamente pelo GitHub Actions
 data/
 
+# Exports temporários de análise — IDs internos, não commitar
+artifacts/
+
 # Editor / sistema
 .DS_Store
 .claude/

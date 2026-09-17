@@ -232,11 +232,14 @@ function validarClaims(claims, facts) {
 
 // ── Padrões numéricos/datas em texto livre ────────────────────────────────────
 // Detecta valores monetários, percentuais e datas no texto da IA para cross-check.
-const REGEX_MONETARIO   = /R\$\s*[\d.,]+/gi;
-const REGEX_PERCENTUAL  = /\d+[\.,]?\d*\s*%/g;
-const REGEX_DATA_BR     = /\d{2}\/\d{2}\/\d{4}/g;
-const REGEX_DATA_ISO    = /\d{4}-\d{2}-\d{2}/g;
-const REGEX_DIAS        = /\b(\d+)\s+dias?\b/gi;
+const REGEX_MONETARIO        = /R\$\s*[\d.,]+/gi;
+const REGEX_REAIS            = /\b\d[\d.,]*\s*reais?\b/gi;         // "1500 reais" sem R$
+const REGEX_PERCENTUAL       = /\d+[\.,]?\d*\s*%/g;
+const REGEX_DATA_BR          = /\b\d{2}\/\d{2}\/\d{4}\b/g;
+const REGEX_DATA_ISO         = /\d{4}-\d{2}-\d{2}/g;
+const REGEX_DIAS             = /\b(\d+)\s+dias?\b/gi;
+const REGEX_PONTOS           = /\b(\d+)\s+pontos?\b/gi;            // "92 pontos"
+const REGEX_PEDIDOS_TEXTO    = /\b(\d+)\s+pedidos?\b/gi;           // "14 pedidos"
 
 class TextFactViolationError extends Error {
   constructor(tipo, valorEncontrado) {
@@ -244,6 +247,59 @@ class TextFactViolationError extends Error {
     this.name = 'TextFactViolationError';
     this.tipo = tipo;
     this.valorEncontrado = valorEncontrado;
+  }
+}
+
+// ── Contradição semântica (tendência) ─────────────────────────────────────────
+// Bloqueia quando o texto afirma direção oposta à tendência calculada.
+
+class SemanticContradictionError extends Error {
+  constructor(campo, valorFact, padrao) {
+    super(`[SEMANTIC] contradição factual: ${campo}="${valorFact}" mas texto afirma o oposto ("${padrao}")`);
+    this.name           = 'SemanticContradictionError';
+    this.campo          = campo;
+    this.valorFact      = valorFact;
+    this.padrao         = padrao;
+  }
+}
+
+// Padrões que contradizem cada tendência
+const PADROES_CONTRADICAO_TENDENCIA = Object.freeze({
+  // Tendência CAINDO → texto não pode afirmar crescimento de compras
+  CAINDO: [
+    /compras?\s+(est[aã][o]?\s+)?(aumentando|crescendo|subindo)/i,
+    /aumentando\s+as\s+compras?/i,
+    /crescimento\s+d[ae]\s+compras?/i,
+    /est[aá]\s+(aumentando|crescendo)\s+(as?\s+)?compras?/i,
+    /volume\s+de\s+compras?\s+(est[aá]\s+)?(crescendo|aumentando)/i,
+  ],
+  // Tendência CRESCENDO → texto não pode afirmar queda de compras
+  CRESCENDO: [
+    /compras?\s+(est[aã][o]?\s+)?(caindo|diminuindo|reduzindo)/i,
+    /queda\s+d[ae]\s+compras?/i,
+    /redu[çc][aã]o\s+d[ae]\s+compras?/i,
+    /est[aá]\s+(caindo|diminuindo)\s+(as?\s+)?compras?/i,
+    /volume\s+de\s+compras?\s+(est[aá]\s+)?(caindo|diminuindo)/i,
+  ],
+});
+
+/**
+ * Valida que o texto livre não contradiz os fatos de tendência.
+ *
+ * @param {string} texto  — conteúdo do output da IA
+ * @param {Object} facts  — resultado de buildGroundingFacts()
+ * @throws {SemanticContradictionError} se houver contradição semântica
+ */
+function validarContradicaoSemantica(texto, facts) {
+  if (typeof texto !== 'string' || !facts) return;
+  const tendencia = facts.tendencia;
+  if (!tendencia || tendencia === 'SEM_BASE') return;
+
+  const padroes = PADROES_CONTRADICAO_TENDENCIA[tendencia] || [];
+  for (const padrao of padroes) {
+    if (padrao.test(texto)) {
+      throw new SemanticContradictionError('tendencia', tendencia, padrao.source);
+    }
   }
 }
 
@@ -268,24 +324,39 @@ function validarFatosNoTexto(texto, claims, facts) {
   // Conjunto de campos com claim aprovado
   const camposComClaim = new Set((claims || []).map(c => c.field));
 
-  // ── Valores monetários ────────────────────────────────────────────────────
+  // Helper: tem claim de determinado prefixo?
+  const temClaimDe = (...prefixos) =>
+    [...camposComClaim].some(f => prefixos.some(p => f.startsWith(p) || f === p));
+
+  // ── Valores monetários (R$ prefix) ───────────────────────────────────────
   const monetarios = texto.match(REGEX_MONETARIO) || [];
   for (const m of monetarios) {
-    // Se nenhum claim de faturamento está presente, bloqueia
-    const temClaimFaturamento = [...camposComClaim].some(f => f.startsWith('faturamento') || f === 'ticketMedioCents');
-    if (!temClaimFaturamento) {
+    if (!temClaimDe('faturamento', 'ticketMedioCents')) {
       throw new TextFactViolationError('MONETARIO', m);
     }
   }
 
-  // ── Datas ISO no texto ────────────────────────────────────────────────────
+  // ── Valores em reais sem prefixo R$ (ex: "1500 reais") ───────────────────
+  const reaisTexto = texto.match(REGEX_REAIS) || [];
+  for (const m of reaisTexto) {
+    if (!temClaimDe('faturamento', 'ticketMedioCents')) {
+      throw new TextFactViolationError('REAIS_TEXTO', m);
+    }
+  }
+
+  // ── Datas ISO (YYYY-MM-DD) ────────────────────────────────────────────────
   const datasISO = texto.match(REGEX_DATA_ISO) || [];
   for (const d of datasISO) {
-    const temClaimData = [...camposComClaim].some(f =>
-      f === 'ultimaCompraEm' || f === 'primeiraCompraEm' || f === 'dataReferencia'
-    );
-    if (!temClaimData) {
+    if (!temClaimDe('ultimaCompraEm', 'primeiraCompraEm', 'dataReferencia')) {
       throw new TextFactViolationError('DATA_ISO', d);
+    }
+  }
+
+  // ── Datas BR (dd/mm/yyyy) ─────────────────────────────────────────────────
+  const datasBR = texto.match(REGEX_DATA_BR) || [];
+  for (const d of datasBR) {
+    if (!temClaimDe('ultimaCompraEm', 'primeiraCompraEm', 'dataReferencia')) {
+      throw new TextFactViolationError('DATA_BR', d);
     }
   }
 
@@ -294,17 +365,43 @@ function validarFatosNoTexto(texto, claims, facts) {
   for (const match of diasMatches) {
     const n = parseInt(match[1], 10);
     if (n <= 0) continue;
-    // Verificar se n coincide com algum valor em facts relacionado a dias
     const diasFacts = [
       facts.diasSemComprar,
       facts.diasEntreComprasMedio,
       facts.diasEntreComprasMediana,
     ].filter(v => v !== null);
     const coincide = diasFacts.some(v => v === n);
-    if (!coincide && !camposComClaim.has('diasSemComprar') &&
-        !camposComClaim.has('diasEntreComprasMedio') &&
-        !camposComClaim.has('diasEntreComprasMediana')) {
+    if (!coincide && !temClaimDe('diasSemComprar', 'diasEntreComprasMedio', 'diasEntreComprasMediana')) {
       throw new TextFactViolationError('DIAS', String(n));
+    }
+  }
+
+  // ── "N pontos" no texto (score) ───────────────────────────────────────────
+  const pontosMatches = [...texto.matchAll(REGEX_PONTOS)];
+  for (const match of pontosMatches) {
+    const n = parseInt(match[1], 10);
+    if (n <= 0) continue;
+    const coincide = facts.scoreTotal !== null && facts.scoreTotal === n;
+    if (!coincide && !temClaimDe('scoreTotal')) {
+      throw new TextFactViolationError('PONTOS', String(n));
+    }
+  }
+
+  // ── "N pedidos" no texto ──────────────────────────────────────────────────
+  const pedidosMatches = [...texto.matchAll(REGEX_PEDIDOS_TEXTO)];
+  for (const match of pedidosMatches) {
+    const n = parseInt(match[1], 10);
+    if (n < 0) continue;
+    const pedidosFacts = [
+      facts.pedidosTotal,
+      facts.pedidos30d,
+      facts.pedidos60d,
+      facts.pedidos90d,
+      facts.pedidos180d,
+    ].filter(v => v !== null);
+    const coincide = pedidosFacts.some(v => v === n);
+    if (!coincide && !temClaimDe('pedidosTotal', 'pedidos30d', 'pedidos60d', 'pedidos90d', 'pedidos180d')) {
+      throw new TextFactViolationError('PEDIDOS', String(n));
     }
   }
 }
@@ -346,6 +443,11 @@ function validarOutputComGrounding(output, facts, opcoes = {}) {
         '(ausente ou vazio)'
       );
     }
+  }
+
+  // Contradição semântica: verificada independentemente dos claims
+  if (typeof output.conteudo === 'string') {
+    validarContradicaoSemantica(output.conteudo, facts);
   }
 
   return {
@@ -436,12 +538,15 @@ module.exports = {
   GroundingViolationError,
   DataInjectionError,
   TextFactViolationError,
+  SemanticContradictionError,
   buildGroundingFacts,
   validarClaims,
   validarOutputComGrounding,
   validarFatosNoTexto,
+  validarContradicaoSemantica,
   sanitizarDadoParaPrompt,
   prepararContextoParaPrompt,
   // Exposto para testes
   PADROES_INSTRUCAO_EM_DADOS,
+  PADROES_CONTRADICAO_TENDENCIA,
 };

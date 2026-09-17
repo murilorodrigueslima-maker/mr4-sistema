@@ -24,8 +24,8 @@ const { explicarScore }          = require('./agents/explicadorComercial');
 const { auditarOutputs }         = require('./agents/auditorIA');
 const { criarProvider }          = require('./provider');
 const { criarTrace }             = require('./trace');
-const { validarSchema }          = require('./validatorOutput');
-const { buildGroundingFacts }    = require('./groundingOutput');
+const { validarSchema }                         = require('./validatorOutput');
+const { buildGroundingFacts, validarOutputComGrounding } = require('./groundingOutput');
 
 const VERSAO_SERVICO = 'servico-v2';
 
@@ -87,7 +87,10 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
   // ── Etapa 7: Análise do Cliente ─────────────────────────────────────────────
   const { encerrar: encAnalise } = trace.iniciarSpan('analistaCliente');
   const analise = await analisar({ perfil, score, tendencia, recorrencia, oportunidades: oportunidadesRanqueadas, provider });
-  const analiseValidada = validarSchema(analise);
+  const analiseValidada = validarOutputComGrounding(
+    validarSchema(analise), facts,
+    { permitirSemClaims: analise._meta?.mockMode === true }
+  );
   outputs.push(analiseValidada);
   encAnalise({ tipo: analise.tipo, mockMode: analise._meta?.mockMode });
 
@@ -103,7 +106,10 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
       recorrencia,
       provider,
     });
-    const aoValidada = validarSchema(analiseOportunidade);
+    const aoValidada = validarOutputComGrounding(
+      validarSchema(analiseOportunidade), facts,
+      { permitirSemClaims: analiseOportunidade._meta?.mockMode === true }
+    );
     outputs.push(aoValidada);
     encAO({ tipo: analiseOportunidade.tipo, tipoOportunidade: oportunidadePrincipal.tipo });
   }
@@ -119,7 +125,10 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
       tendencia,
       provider,
     });
-    const avValidada = validarSchema(orientacaoVendedor);
+    const avValidada = validarOutputComGrounding(
+      validarSchema(orientacaoVendedor), facts,
+      { permitirSemClaims: orientacaoVendedor._meta?.mockMode === true }
+    );
     outputs.push(avValidada);
     encAV({ tipo: orientacaoVendedor.tipo });
   }
@@ -129,7 +138,10 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
   if (opcoes.incluirExplicacaoScore) {
     const { encerrar: encExplica } = trace.iniciarSpan('explicadorComercial');
     explicacao = await explicarScore({ score, provider });
-    const explicacaoValidada = validarSchema(explicacao);
+    const explicacaoValidada = validarOutputComGrounding(
+      validarSchema(explicacao), facts,
+      { permitirSemClaims: explicacao._meta?.mockMode === true }
+    );
     outputs.push(explicacaoValidada);
     encExplica({ tipo: explicacao.tipo });
   }

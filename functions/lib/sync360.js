@@ -26,6 +26,10 @@ const SYNC_STATE_DOC        = 'perfil360';
 const HISTORICO_INICIO      = '2022-03-24';
 const CURSOR_OVERLAP_SECS   = 60;  // 1 minuto de margem para evitar perda no mesmo segundo
 
+// Tempo máximo que um lock pode ser mantido antes de ser considerado stale.
+// Protege contra travamentos por processo morto sem liberar o lock.
+const LOCK_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutos
+
 // ── Helpers puros ──────────────────────────────────────────────────────────────
 
 /**
@@ -336,7 +340,56 @@ async function runIncremental({
   firestoreUpsertPerfil,
   firestoreGetSyncState,
   firestoreSetSyncState,
+  // Adapters de concorrência — OPCIONAIS (backward-compatible).
+  // Se não fornecidos, executa sem lock (modo legado).
+  // Produção deve fornecer implementação atômica via Firestore transaction.
+  firestoreAcquireLock = null,  // (lockId, timeoutMs) → Promise<boolean>
+  firestoreReleaseLock = null,  // (lockId)            → Promise<void>
   dryRun = false,
+  dataReferencia,
+}) {
+  // ── Lock de concorrência (opcional) ──────────────────────────────────────────
+  // Previne corrida entre cursor, mirror e recálculo de perfil quando dois
+  // ciclos incrementais são disparados simultaneamente.
+  let lockId = null;
+  if (firestoreAcquireLock) {
+    lockId = `incr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const acquired = await firestoreAcquireLock(lockId, LOCK_TIMEOUT_MS);
+    if (!acquired) {
+      throw new Error('INCREMENTAL_LOCK_NOT_ACQUIRED: outro ciclo incremental está em execução ou lock stale detectado');
+    }
+  }
+
+  try {
+    return await _runIncrementalCore({
+      gcFetchPage, firestoreGetClientes, firestoreGetVendasByCliente,
+      firestoreGetVendaById, firestoreGetPerfil, firestoreUpsertVendas,
+      firestoreUpsertPerfil, firestoreGetSyncState, firestoreSetSyncState,
+      dryRun, dataReferencia,
+    });
+  } finally {
+    if (firestoreReleaseLock && lockId) {
+      // Best-effort: não deixar o lock preso se o core lança exceção.
+      await firestoreReleaseLock(lockId).catch(e =>
+        console.warn('[sync360] lock release falhou (best-effort):', e.message)
+      );
+    }
+  }
+}
+
+// ── Core do Incremental (lógica pura separada do lock) ────────────────────────
+
+async function _runIncrementalCore({
+  gcFetchPage,
+  firestoreGetClientes,
+  firestoreGetVendasByCliente,
+  firestoreGetVendaById,
+  firestoreGetPerfil,
+  firestoreUpsertVendas,
+  firestoreUpsertPerfil,
+  firestoreGetSyncState,
+  firestoreSetSyncState,
+  dryRun,
   dataReferencia,
 }) {
   // ── Etapa 1: Cursor + Fetch ───────────────────────────────────────────────────
@@ -468,6 +521,7 @@ module.exports = {
   SYNC_STATE_DOC,
   HISTORICO_INICIO,
   CURSOR_OVERLAP_SECS,
+  LOCK_TIMEOUT_MS,
 
   // Helpers puros (testáveis isoladamente)
   calcularDataReferencia,

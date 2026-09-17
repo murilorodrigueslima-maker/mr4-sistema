@@ -8,23 +8,25 @@
  */
 
 const { mkOutputAgente, validarOutputAgente } = require('../guardrails');
+const { prepararContextoParaPrompt } = require('../groundingOutput');
 const promptTemplate = require('../prompts/explicadorScore');
 
 const NOME_AGENTE = 'explicadorComercial';
 const VERSAO_AGENTE = '1.0.0';
 
-async function explicarScore({ score, provider }) {
+async function explicarScore({ score, provider, facts = null }) {
   if (!provider) throw new Error(`${NOME_AGENTE}: provider ausente`);
   if (!score)    throw new Error(`${NOME_AGENTE}: score ausente`);
 
-  const contexto = {
-    scoreTotal:   score.scoreTotal,
+  const contextoRaw = {
+    scoreTotal:    score.scoreTotal,
     classificacao: score.classificacao,
-    componentes:  score.componentes,
-    statusConfig: score.statusConfig,
+    componentes:   score.componentes,
+    statusConfig:  score.statusConfig,
   };
 
-  const prompt = promptTemplate.build(contexto);
+  const { contextoSanitizado, suspeitos } = prepararContextoParaPrompt(contextoRaw, facts || {});
+  const prompt = promptTemplate.build(contextoSanitizado);
   const resposta = await provider.complete(prompt, {
     chave:     promptTemplate.CHAVE_MOCK,
     maxTokens: 300,
@@ -45,6 +47,7 @@ async function explicarScore({ score, provider }) {
       promptVersao: promptTemplate.VERSAO_PROMPT,
       tokensUsados: resposta.tokens,
       mockMode:     resposta.mock === true,
+      sanitizacao:  { suspeitos },
     },
   };
 }

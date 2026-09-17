@@ -10,6 +10,7 @@
  */
 
 const { mkOutputAgente, validarOutputAgente } = require('../guardrails');
+const { prepararContextoParaPrompt } = require('../groundingOutput');
 const promptTemplate = require('../prompts/analistaOportunidade');
 
 const NOME_AGENTE  = 'analistaOportunidade';
@@ -25,12 +26,12 @@ const VERSAO_AGENTE = '1.0.0';
  * @param {Object} params.provider      — instância de provider
  * @returns {Promise<Object>}
  */
-async function analisarOportunidade({ oportunidade, perfil, score, tendencia, recorrencia, provider }) {
+async function analisarOportunidade({ oportunidade, perfil, score, tendencia, recorrencia, provider, facts = null }) {
   if (!provider)     throw new Error(`${NOME_AGENTE}: provider ausente`);
   if (!oportunidade) throw new Error(`${NOME_AGENTE}: oportunidade ausente`);
   if (!perfil)       throw new Error(`${NOME_AGENTE}: perfil ausente`);
 
-  const contexto = {
+  const contextoRaw = {
     tipoOportunidade:  oportunidade.tipo,
     scoreTotal:        score?.scoreTotal    ?? null,
     classificacao:     score?.classificacao ?? 'DESCONHECIDO',
@@ -40,7 +41,8 @@ async function analisarOportunidade({ oportunidade, perfil, score, tendencia, re
     prioridade:        oportunidade.prioridade ?? null,
   };
 
-  const prompt   = promptTemplate.build(contexto);
+  const { contextoSanitizado, suspeitos } = prepararContextoParaPrompt(contextoRaw, facts || {});
+  const prompt   = promptTemplate.build(contextoSanitizado);
   const resposta = await provider.complete(prompt, {
     chave:     promptTemplate.CHAVE_MOCK,
     maxTokens: 400,
@@ -62,6 +64,7 @@ async function analisarOportunidade({ oportunidade, perfil, score, tendencia, re
       tokensUsados:     resposta.tokens,
       mockMode:         resposta.mock === true,
       tipoOportunidade: oportunidade.tipo,
+      sanitizacao:      { suspeitos },
     },
   };
 }

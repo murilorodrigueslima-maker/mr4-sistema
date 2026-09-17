@@ -54,6 +54,9 @@ const PADROES_INSTRUCAO_EM_DADOS = [
   /aprove\s+(desconto|pedido)/i,
   /altere?\s+(pre[çc]o|desconto|limite|cr[eé]dito)/i,
   /crie?\s+(pedido|venda)/i,
+  /revele?\s+(o\s+)?(system\s+)?prompt/i,   // "revele o system prompt"
+  /\d+%\s*(de\s+)?desconto\b/i,             // "50% de desconto"
+  /\bscore\s*=\s*\d/i,                       // "score=100"
 ];
 
 // ── Erros ──────────────────────────────────────────────────────────────────────

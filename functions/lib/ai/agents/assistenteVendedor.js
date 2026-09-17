@@ -15,6 +15,7 @@
  */
 
 const { mkOutputAgente, validarOutputAgente } = require('../guardrails');
+const { prepararContextoParaPrompt } = require('../groundingOutput');
 const promptTemplate = require('../prompts/assistenteVendedor');
 
 const NOME_AGENTE  = 'assistenteVendedor';
@@ -29,12 +30,12 @@ const VERSAO_AGENTE = '1.0.0';
  * @param {Object} params.provider      — instância de provider
  * @returns {Promise<Object>}
  */
-async function orientarVendedor({ oportunidade, perfil, score, tendencia, provider }) {
+async function orientarVendedor({ oportunidade, perfil, score, tendencia, provider, facts = null }) {
   if (!provider)     throw new Error(`${NOME_AGENTE}: provider ausente`);
   if (!oportunidade) throw new Error(`${NOME_AGENTE}: oportunidade ausente`);
   if (!perfil)       throw new Error(`${NOME_AGENTE}: perfil ausente`);
 
-  const contexto = {
+  const contextoRaw = {
     tipoOportunidade: oportunidade.tipo,
     scoreTotal:       score?.scoreTotal    ?? null,
     classificacao:    score?.classificacao ?? 'DESCONHECIDO',
@@ -42,7 +43,8 @@ async function orientarVendedor({ oportunidade, perfil, score, tendencia, provid
     tendencia:        tendencia?.tendencia ?? 'SEM_BASE',
   };
 
-  const prompt   = promptTemplate.build(contexto);
+  const { contextoSanitizado, suspeitos } = prepararContextoParaPrompt(contextoRaw, facts || {});
+  const prompt   = promptTemplate.build(contextoSanitizado);
   const resposta = await provider.complete(prompt, {
     chave:     promptTemplate.CHAVE_MOCK,
     maxTokens: 500,
@@ -64,6 +66,7 @@ async function orientarVendedor({ oportunidade, perfil, score, tendencia, provid
       tokensUsados:     resposta.tokens,
       mockMode:         resposta.mock === true,
       tipoOportunidade: oportunidade.tipo,
+      sanitizacao:      { suspeitos },
     },
   };
 }

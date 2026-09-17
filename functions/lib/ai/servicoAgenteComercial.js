@@ -86,7 +86,7 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
 
   // ── Etapa 7: Análise do Cliente ─────────────────────────────────────────────
   const { encerrar: encAnalise } = trace.iniciarSpan('analistaCliente');
-  const analise = await analisar({ perfil, score, tendencia, recorrencia, oportunidades: oportunidadesRanqueadas, provider });
+  const analise = await analisar({ perfil, score, tendencia, recorrencia, oportunidades: oportunidadesRanqueadas, provider, facts });
   const analiseValidada = validarOutputComGrounding(
     validarSchema(analise), facts,
     { permitirSemClaims: analise._meta?.mockMode === true }
@@ -105,6 +105,7 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
       tendencia,
       recorrencia,
       provider,
+      facts,
     });
     const aoValidada = validarOutputComGrounding(
       validarSchema(analiseOportunidade), facts,
@@ -124,6 +125,7 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
       score,
       tendencia,
       provider,
+      facts,
     });
     const avValidada = validarOutputComGrounding(
       validarSchema(orientacaoVendedor), facts,
@@ -137,7 +139,7 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
   let explicacao = null;
   if (opcoes.incluirExplicacaoScore) {
     const { encerrar: encExplica } = trace.iniciarSpan('explicadorComercial');
-    explicacao = await explicarScore({ score, provider });
+    explicacao = await explicarScore({ score, provider, facts });
     const explicacaoValidada = validarOutputComGrounding(
       validarSchema(explicacao), facts,
       { permitirSemClaims: explicacao._meta?.mockMode === true }

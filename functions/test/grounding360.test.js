@@ -177,17 +177,28 @@ describe('G1 — validarOutputComGrounding', () => {
     const result = validarOutputComGrounding(output, facts);
     expect(result._grounding).toBeDefined();
     expect(result._grounding.claimsValidados).toBe(2);
-    expect(result._grounding.avisos).toHaveLength(0);
+    // N25: _grounding não tem mais campo avisos; claimsValidados=2 indica validação ok
+    expect(result._grounding.factsClienteId).toBe('SIM_GROUND_001');
   });
 
-  test('output sem claims → aviso mas não lança erro (modo mock seguro)', () => {
+  // N25: OUTPUT_SEM_CLAIMS = BLOCK. Sem claims lança GroundingViolationError
+  // a menos que opcoes.permitirSemClaims=true (somente MockProvider interno).
+  test('output sem claims → GroundingViolationError (N25: BLOCK)', () => {
     const output = {
       tipo: 'ANALISE', conteudo: 'texto mock', versaoGuardrails: 'g', auditoria: {},
       _guardrails: { violacoes: [] },
     };
-    const result = validarOutputComGrounding(output, facts);
-    expect(result._grounding.avisos.length).toBeGreaterThan(0);
-    expect(result._grounding.avisos[0]).toContain('OUTPUT_SEM_CLAIMS');
+    expect(() => validarOutputComGrounding(output, facts)).toThrow(GroundingViolationError);
+  });
+
+  test('output sem claims + permitirSemClaims=true → permitido (MockProvider)', () => {
+    const output = {
+      tipo: 'ANALISE', conteudo: 'texto mock', versaoGuardrails: 'g', auditoria: {},
+      _guardrails: { violacoes: [] },
+    };
+    const result = validarOutputComGrounding(output, facts, { permitirSemClaims: true });
+    expect(result._grounding).toBeDefined();
+    expect(result._grounding.claimsValidados).toBe(0);
   });
 
   test('output com claim errado → GroundingViolationError', () => {

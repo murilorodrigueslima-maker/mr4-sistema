@@ -65,7 +65,7 @@ describe('servicoAgenteComercial (N17)', () => {
     expect(resultado.analise.tipo).toBe('ANALISE');
     expect(resultado.auditoria.conformeGeral).toBe(true);
     expect(resultado.mockMode).toBe(true);
-    expect(resultado.statusServico).toBe('PROVISIONAL');
+    expect(resultado.statusServico).toBe('SHADOW'); // N25: shadow mode ativo
     expect(resultado.versaoServico).toBeTruthy();
     expect(resultado.trace.spans.length).toBeGreaterThan(0);
   });

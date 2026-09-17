@@ -105,16 +105,56 @@ function buildCursorWithOverlap(cursorStr, overlapSeconds = CURSOR_OVERLAP_SECS)
 /**
  * Constrói Map<produtoId, {nome_grupo, ...}> a partir de um array de produtos.
  * Deduplicado por id; evita chamadas repetidas ao endpoint de produtos.
+ *
+ * C1 — preservação de categoria:
+ *   nome_grupo vazio/nulo é normalizado para undefined (ausente), NÃO para ''.
+ *   Dessa forma perfil360._calcularProdutosECategorias() usa 'SEM_CATEGORIA'
+ *   explicitamente, e mesclaProdutosPorId() pode preservar valor anterior.
  */
 function buildProdutosPorId(produtos) {
   const map = {};
   for (const p of (produtos || [])) {
     const id = String(p.id || '').trim();
-    if (id && !map[id]) {
-      map[id] = { nome_grupo: String(p.nome_grupo || p.grupo || ''), ...p };
-    }
+    if (!id) continue;
+    if (map[id]) continue;
+    const nomeGrupoRaw = (p.nome_grupo || p.grupo || '').trim();
+    map[id] = {
+      ...p,
+      // Normaliza: string não-vazia → preserva; vazio → undefined (ausente)
+      nome_grupo: nomeGrupoRaw || undefined,
+    };
   }
   return map;
+}
+
+/**
+ * Mescla dois mapas de produtos preservando categorias já conhecidas (C1).
+ *
+ * Prioridade:
+ *   1. nome_grupo válido (não vazio) da API atual — fonte primária
+ *   2. nome_grupo válido previamente conhecido — preservado se API retornar vazio
+ *   3. undefined — nunca houve categoria; perfil360 usará 'SEM_CATEGORIA'
+ *
+ * @param {Object} apiMap      — resultado de buildProdutosPorId(produtosRecentes)
+ * @param {Object} [anterior]  — mapa persistido de run anterior (opcional)
+ * @returns {Object}           — mapa mesclado
+ */
+function mesclaProdutosPorId(apiMap, anterior = {}) {
+  const merged = { ...apiMap };
+  for (const [id, prodAnterior] of Object.entries(anterior || {})) {
+    const nomeGrupoAnterior = (prodAnterior?.nome_grupo || '').trim();
+    if (!nomeGrupoAnterior) continue;  // anterior sem categoria não ajuda
+
+    if (!merged[id]) {
+      // Produto saiu da API ativa — preservar apenas a entrada de categoria
+      merged[id] = { ...prodAnterior };
+    } else if (!merged[id].nome_grupo) {
+      // API retornou produto mas sem nome_grupo — preservar anterior
+      merged[id] = { ...merged[id], nome_grupo: nomeGrupoAnterior };
+    }
+    // Se merged[id].nome_grupo tem valor → mantém API (mais atualizado)
+  }
+  return merged;
 }
 
 /**
@@ -529,6 +569,7 @@ module.exports = {
   dadosMudaram,
   buildCursorWithOverlap,
   buildProdutosPorId,
+  mesclaProdutosPorId,
   fetchAllPagesByProximaPagina,
 
   // Orquestradores

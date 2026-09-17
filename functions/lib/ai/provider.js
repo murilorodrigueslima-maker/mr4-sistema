@@ -80,15 +80,46 @@ class MockProvider {
   }
 }
 
+// ── Modos de execução ─────────────────────────────────────────────────────────
+
+// Modos em que MockProvider é explicitamente permitido como provider principal.
+// Em qualquer outro modo, usar mock requer flag explícita.
+const MODOS_MOCK_PERMITIDOS = new Set(['test', 'development', 'simulation', 'offline']);
+
+// Variável de ambiente que controla o modo de execução.
+// Em produção (NODE_ENV=production) sem flag explícita, mock é bloqueado.
+function getModoExecucao() {
+  return (process.env.NODE_ENV || 'development').toLowerCase();
+}
+
 // ── Factory de provider ───────────────────────────────────────────────────────
 
 /**
  * Cria um provider de LLM.
+ *
+ * PROTEÇÃO MOCK (N19):
+ *   MockProvider é permitido em modos: test, development, simulation, offline.
+ *   Em production sem `opcoes.permitirMockEmProducao = true`, lança erro.
+ *   Isso impede uso acidental de mock como provider real em produção.
+ *
  * @param {string} tipo    — 'mock' (único suportado atualmente)
- * @param {Object} opcoes  — opções do provider
+ * @param {Object} opcoes  — { respostas, permitirMockEmProducao }
  */
 function criarProvider(tipo = 'mock', opcoes = {}) {
   if (tipo === 'mock') {
+    const modo = getModoExecucao();
+    const modoPermitido = MODOS_MOCK_PERMITIDOS.has(modo);
+    const flagExplicita = opcoes.permitirMockEmProducao === true;
+
+    if (!modoPermitido && !flagExplicita) {
+      throw new Error(
+        `criarProvider: MockProvider bloqueado em modo "${modo}". ` +
+        `Use NODE_ENV=development/test/simulation, ou passe opcoes.permitirMockEmProducao=true ` +
+        `para simulação explícita em ambiente produtivo. ` +
+        `(Este guard existe para evitar uso acidental de mock como provider real.)`
+      );
+    }
+
     return new MockProvider(opcoes.respostas || {});
   }
   // Tipos reais serão implementados após decisão empresarial (PENDENCIAS.md I1)
@@ -102,4 +133,6 @@ module.exports = {
   VERSAO_PROVIDER,
   MockProvider,
   criarProvider,
+  MODOS_MOCK_PERMITIDOS,
+  getModoExecucao,
 };

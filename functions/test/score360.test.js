@@ -111,12 +111,16 @@ test('SCORE360-01: determinismo — mesma entrada produz mesmo scoreTotal', () =
   expect(r1.motivos).toEqual(r2.motivos);
 });
 
-// ── SCORE360-02: statusConfig sempre PROVISIONAL ───────────────────────────────
+// ── SCORE360-02: statusConfig APROVADO e versaoScore V1 ───────────────────────
 
-test('SCORE360-02: statusConfig sempre PROVISIONAL em todos os cenários', () => {
-  expect(calcularScore(mkPerfilBase(), 'CRESCENDO').statusConfig).toBe('PROVISIONAL');
-  expect(calcularScore(mkPerfilNuncaComprou()).statusConfig).toBe('PROVISIONAL');
-  expect(calcularScore(mkPerfilInativo(), 'CAINDO').statusConfig).toBe('PROVISIONAL');
+test('SCORE360-02: statusConfig APROVADO e versaoScore PROPENSAO_RECOMPRA_V1', () => {
+  const r1 = calcularScore(mkPerfilBase(), 'CRESCENDO');
+  const r2 = calcularScore(mkPerfilNuncaComprou());
+  const r3 = calcularScore(mkPerfilInativo(), 'CAINDO');
+  for (const r of [r1, r2, r3]) {
+    expect(r.statusConfig).toBe('APROVADO_PROPRIETARIO_2026-09-17');
+    expect(r.versaoScore).toBe('PROPENSAO_RECOMPRA_V1');
+  }
 });
 
 // ── SCORE360-03: nuncaComprou = scoreTotal muito baixo ─────────────────────────

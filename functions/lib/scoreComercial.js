@@ -1,13 +1,15 @@
 'use strict';
 
 /**
- * Motor de Score Comercial V1 — DETERMINÍSTICO, SEM LLM.
+ * Motor de Score Comercial — PROPENSAO_RECOMPRA_V1.
+ *
+ * SIGNIFICADO OFICIAL: "FORÇA DOS SINAIS DE QUE O CLIENTE PODE VOLTAR A COMPRAR."
+ * Não é probabilidade, não é percentual de chance.
  *
  * Recebe um Perfil360 e retorna score explicável por componentes.
  * Mesma entrada + mesma config = mesma saída (sem randomização, sem I/O).
  *
- * STATUS DOS PESOS: PROVISIONAL / EXPERIMENTAL — ver config/score-comercial.v1.js
- * Os pesos precisam de calibração empresarial antes de uso comercial definitivo.
+ * APROVADO_PROPRIETARIO_2026-09-17
  *
  * NÃO usa: encarteiramento, margem, crédito, dados externos, LLM.
  * NÃO decide: preço, desconto, limite, carteira, pedido.
@@ -23,11 +25,8 @@ function clamp(v, min, max) {
   return Math.max(min, Math.min(max, v));
 }
 
-function arredondar2(v) {
-  return Math.round(v * 100) / 100;
-}
-
 // ── Componente: Recência ──────────────────────────────────────────────────────
+// Máximo: PESOS.recencia = 38 pts (quando pontuacao=100)
 
 function calcularRecencia(perfil) {
   if (perfil.nuncaComprou) {
@@ -42,27 +41,45 @@ function calcularRecencia(perfil) {
   if (dias <= t.excelente)      { faixa = 'excelente'; pontuacao = p.excelente; }
   else if (dias <= t.bom)       { faixa = 'bom';       pontuacao = p.bom; }
   else if (dias <= t.regular)   { faixa = 'regular';   pontuacao = p.regular; }
-  else if (dias <= t.fraco)     { faixa = 'fraco';     pontuacao = p.fraco; }
+  else if (dias < t.fraco)      { faixa = 'fraco';     pontuacao = p.fraco; }
   else                          { faixa = 'inativo';   pontuacao = p.inativo; }
 
   return { pontuacao, faixa, detalhes: { diasSemComprar: dias } };
 }
 
-// ── Componente: Frequência ────────────────────────────────────────────────────
+// ── Componente: Frequência / Recorrência ──────────────────────────────────────
+// DECISÃO V1: cliente com somente 1 data distinta de compra → SEM_BASE → 0 pts.
+// Pedidos no mesmo dia não criam frequência artificial.
+// A partir da 2ª data distinta de compra, frequência pode ser calculada.
+// Máximo: PESOS.frequencia = 30 pts (quando pontuacao=100)
 
 function calcularFrequencia(perfil) {
   if (perfil.nuncaComprou) {
     return { pontuacao: 0, faixa: 'NUNCA_COMPROU', detalhes: { pedidos90d: 0, diasEntreCompras: null } };
   }
 
-  const pedidos90d = perfil.pedidos90d || 0;
-  const ref = CFG.REF_PEDIDOS_90D;
+  // Single purchase → SEM_BASE: não inferir frequência de uma única compra.
+  // diasEntreComprasMediana === null indica que não há 2 datas distintas.
+  if (perfil.pedidosTotal <= 1 || perfil.diasEntreComprasMediana === null || perfil.diasEntreComprasMediana === undefined) {
+    return {
+      pontuacao: 0,
+      faixa: 'SEM_BASE',
+      detalhes: {
+        pedidosTotal: perfil.pedidosTotal || 0,
+        pedidos90d: perfil.pedidos90d || 0,
+        diasEntreCompras: null,
+        motivo: 'requer >= 2 datas distintas de compra para calcular frequência',
+      },
+    };
+  }
 
-  // Normaliza em 0-100: linear até a referência, depois capped
+  const pedidos90d = perfil.pedidos90d || 0;
+  const ref = 3;  // REF_PEDIDOS_90D — 3 pedidos em 90d = frequência de referência
+
   const pontuacao = clamp(Math.round((pedidos90d / ref) * 100), 0, 100);
-  const faixa = pedidos90d === 0 ? 'SEM_COMPRAS_90D'
-    : pedidos90d >= ref          ? 'ALTA'
-    : pedidos90d >= ref / 2      ? 'MEDIA'
+  const faixa = pedidos90d === 0  ? 'SEM_COMPRAS_90D'
+    : pedidos90d >= ref           ? 'ALTA'
+    : pedidos90d >= ref / 2       ? 'MEDIA'
     : 'BAIXA';
 
   return {
@@ -78,33 +95,36 @@ function calcularFrequencia(perfil) {
 }
 
 // ── Componente: Faturamento ───────────────────────────────────────────────────
+// DECISÃO V1: faixas progressivas. NÃO domina o score (máx 10 pts).
+// Máximo: PESOS.faturamento = 10 pts (quando pontuacao=100)
 
 function calcularFaturamento(perfil) {
   if (perfil.nuncaComprou) {
-    return { pontuacao: 0, faixa: 'NUNCA_COMPROU', detalhes: { faturamentoTotal: 0, faturamento90d: 0 } };
+    return { pontuacao: 0, faixa: 'NUNCA_COMPROU', detalhes: { faturamentoTotal: 0 } };
   }
 
   const fatTotal = perfil.faturamentoTotal || 0;
-  const fat90d   = perfil.faturamento90d   || 0;
 
-  // Score combinado: 60% total + 40% recente
-  const pctTotal = clamp(fatTotal / CFG.REF_FATURAMENTO_TOTAL, 0, 1);
-  const pct90d   = clamp(fat90d   / CFG.REF_FATURAMENTO_90D,  0, 1);
-  const pontuacao = Math.round((pctTotal * 60 + pct90d * 40) * 100) / 100;
-
-  const faixa = fatTotal === 0        ? 'SEM_FATURAMENTO'
-    : fatTotal >= CFG.REF_FATURAMENTO_TOTAL ? 'ALTO'
-    : fatTotal >= CFG.REF_FATURAMENTO_TOTAL / 2 ? 'MEDIO'
-    : 'BAIXO';
+  // Tiers progressivos baseados na realidade dos vinculados (mediana ≈ R$1.964, P75 ≈ R$4.824)
+  let pontuacao = 0;
+  let faixa = 'BAIXO';
+  for (const tier of CFG.FAIXAS_FATURAMENTO) {
+    if (fatTotal >= tier.min && fatTotal <= tier.max) {
+      pontuacao = tier.pontuacao;
+      faixa = tier.label;
+      break;
+    }
+  }
 
   return {
-    pontuacao: clamp(Math.round(pontuacao), 0, 100),
+    pontuacao,
     faixa,
-    detalhes: { faturamentoTotal: fatTotal, faturamento90d: fat90d },
+    detalhes: { faturamentoTotal: fatTotal },
   };
 }
 
 // ── Componente: Tendência (recebe classificação externa) ──────────────────────
+// Máximo: PESOS.tendencia = 15 pts (quando pontuacao=100)
 
 function calcularTendenciaPontuacao(tendencia) {
   const pontuacao = CFG.PONTOS_TENDENCIA[tendencia] ?? CFG.PONTOS_TENDENCIA['SEM_BASE'];
@@ -112,6 +132,7 @@ function calcularTendenciaPontuacao(tendencia) {
 }
 
 // ── Componente: Diversidade de Categorias ─────────────────────────────────────
+// Máximo: PESOS.diversidade = 7 pts (quando pontuacao=100)
 
 function calcularDiversidade(perfil) {
   if (perfil.nuncaComprou) {
@@ -121,7 +142,7 @@ function calcularDiversidade(perfil) {
   const numCats  = (perfil.categoriasMaisCompradas || []).length;
   const numProds = perfil.quantidadeProdutosDistintos || 0;
 
-  // Linear: 1 categoria = 25pts, 2 = 50, 3 = 75, 4+ = 100
+  // 1 cat=25, 2=50, 3=75, 4+=100
   const pontuacao = clamp(numCats * 25, 0, 100);
   const faixa = numCats === 0 ? 'ZERO'
     : numCats === 1 ? 'BAIXA'
@@ -131,14 +152,15 @@ function calcularDiversidade(perfil) {
   return { pontuacao, faixa, detalhes: { categorias: numCats, produtos: numProds } };
 }
 
-// ── Componente: Engajamento (proporção de janelas com compra) ─────────────────
+// ── Componente: Engajamento ───────────────────────────────────────────────────
+// DECISÃO V1: PESO = 0. Mantido para compatibilidade; não contribui para o score.
+// Motivo: sem fonte de dados confiável em V1 (NPS, canais, cliques não disponíveis).
 
 function calcularEngajamento(perfil) {
   if (perfil.nuncaComprou) {
     return { pontuacao: 0, faixa: 'NUNCA_COMPROU', detalhes: { janelasCom: 0 } };
   }
 
-  // Conta quantas das 4 janelas têm pelo menos 1 pedido
   const janelasCom = [perfil.pedidos30d, perfil.pedidos60d, perfil.pedidos90d, perfil.pedidos180d]
     .filter(v => v > 0).length;
 
@@ -164,7 +186,7 @@ function classificarScore(scoreTotal) {
 // ── Engine principal ──────────────────────────────────────────────────────────
 
 /**
- * Calcula o Score Comercial para um cliente a partir do seu Perfil360.
+ * Calcula o Score de Propensão de Recompra para um cliente a partir do Perfil360.
  *
  * @param {Object} perfil      — Perfil360 calculado por calcularPerfil360()
  * @param {string} tendencia   — Classificação do motor de tendência (ex: 'CRESCENDO')
@@ -179,7 +201,6 @@ function calcularScore(perfil, tendencia = 'SEM_BASE', opcoes = {}) {
   const dataReferencia = opcoes.dataReferencia || perfil.dataReferencia || null;
   const calculadoEm    = new Date().toISOString();
 
-  // Componentes individuais
   const recencia      = calcularRecencia(perfil);
   const frequencia    = calcularFrequencia(perfil);
   const faturamento   = calcularFaturamento(perfil);
@@ -190,6 +211,7 @@ function calcularScore(perfil, tendencia = 'SEM_BASE', opcoes = {}) {
   const p = CFG.PESOS;
 
   // Score total ponderado (0-100)
+  // Componentes: 0-100 | Pesos: soma=100 | resultado: (sum × pesos) / 100 ∈ [0,100]
   const scoreTotal = clamp(
     Math.round(
       (recencia.pontuacao     * p.recencia     / 100) +
@@ -204,7 +226,6 @@ function calcularScore(perfil, tendencia = 'SEM_BASE', opcoes = {}) {
 
   const classificacao = classificarScore(scoreTotal);
 
-  // Motivos em linguagem estruturada (não em linguagem comercial)
   const motivos = [];
   if (perfil.nuncaComprou)                            motivos.push('NUNCA_COMPROU');
   if (perfil.inativo120d)                              motivos.push('INATIVO_120D');
@@ -222,7 +243,8 @@ function calcularScore(perfil, tendencia = 'SEM_BASE', opcoes = {}) {
     classificacao,
     versaoMotor:    VERSAO_MOTOR,
     versaoConfig:   CFG.VERSAO_CONFIG,
-    statusConfig:   'PROVISIONAL',  // sinaliza que pesos não foram validados empresarialmente
+    versaoScore:    'PROPENSAO_RECOMPRA_V1',
+    statusConfig:   'APROVADO_PROPRIETARIO_2026-09-17',
     motivos,
     componentes: {
       recencia:    { peso: p.recencia,    ...recencia },

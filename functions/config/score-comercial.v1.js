@@ -1,40 +1,44 @@
 'use strict';
 
 /**
- * Configuração versionada do Score Comercial V1.
+ * Configuração versionada do Score Comercial — PROPENSAO_RECOMPRA_V1.
  *
- * STATUS: PROVISIONAL / EXPERIMENTAL
- * Os pesos abaixo são estimativas iniciais para validação estrutural.
- * PENDENTES de calibração com dados reais e decisão empresarial (ver PENDENCIAS.md S1).
+ * SIGNIFICADO OFICIAL:
+ *   Score = "FORÇA DOS SINAIS DE QUE O CLIENTE PODE VOLTAR A COMPRAR."
+ *   NÃO é probabilidade, NÃO é percentual de chance.
+ *   Score 90 = sinais comerciais muito fortes de possível nova compra.
  *
- * NÃO usar esses pesos como critério comercial definitivo até validação humana.
+ * STATUS: APROVADO_PROPRIETARIO_2026-09-17
  */
 
-const VERSAO_CONFIG = 'score-v1-provisional';
+const VERSAO_CONFIG = 'score-propensao-recompra-v1';
+
+const SCORE_SIGNIFICADO = 'FORCA_DOS_SINAIS_DE_POSSIVEL_RECOMPRA';
 
 // ── Pesos dos componentes (soma = 100) ────────────────────────────────────────
-// PROVISIONAL: pendente calibração empresarial
+// APROVADO em 2026-09-17
 const PESOS = {
-  recencia:           25,  // quão recente foi a última compra
-  frequencia:         20,  // ritmo de compras
-  faturamento:        25,  // volume financeiro
-  tendencia:          15,  // trajetória de compras (crescendo/caindo)
-  diversidade:        10,  // variedade de categorias
-  engajamento:         5,  // proporção de janelas com compra
+  recencia:    38,  // quão recente foi a última compra
+  frequencia:  30,  // ritmo de compras (com recorrência via mediana)
+  tendencia:   15,  // trajetória de compras (crescendo/caindo)
+  faturamento: 10,  // volume financeiro (tiers progressivos)
+  diversidade:  7,  // variedade de categorias
+  engajamento:  0,  // DESATIVADO V1 — sem fonte de dados confiável
 };
 
 // ── Thresholds de recência (dias sem comprar) ─────────────────────────────────
-// PROVISIONAL
+// Regra empresarial: >= 120 dias = INATIVO. NUNCA alterar esse threshold.
+// Never bought NÃO é inativo.
 const THRESHOLDS_RECENCIA = {
-  excelente: 30,   // até 30 dias → pontuação máxima
-  bom:        60,   // 31-60 dias
-  regular:    90,   // 61-90 dias
-  fraco:     120,   // 91-120 dias
-  inativo:   Infinity, // > 120 dias → inativo
+  excelente: 30,       // 0-30 dias → pontuação máxima
+  bom:        60,       // 31-60 dias
+  regular:    90,       // 61-90 dias
+  fraco:     120,       // 91-119 dias (note: >= 120 = inativo)
+  inativo:   Infinity,  // >= 120 dias → inativo
 };
 
 // ── Pontuação de recência (0-100) ─────────────────────────────────────────────
-// PROVISIONAL: escala linear por faixas
+// Componente contribui: pontuacao_0_100 × PESOS.recencia / 100 → máx 38 pts
 const PONTOS_RECENCIA = {
   excelente: 100,
   bom:        75,
@@ -43,24 +47,29 @@ const PONTOS_RECENCIA = {
   inativo:     0,
 };
 
-// ── Referências de faturamento para normalização ──────────────────────────────
-// PROVISIONAL: baseado nos dados conhecidos do bootstrap (R$137k / 35 compradores ≈ R$3.9k/cliente)
-const REF_FATURAMENTO_TOTAL    = 10000;  // R$10k → pontuação base máxima
-const REF_FATURAMENTO_90D      = 3000;   // R$3k em 90d → pontuação 90d boa
-const REF_PEDIDOS_90D          = 3;      // 3 pedidos em 90d → frequência boa
+// ── Tiers de faturamento (V1) ─────────────────────────────────────────────────
+// Distribuição progressiva. Baseada na realidade dos compradores vinculados:
+//   mediana histórica ≈ R$1.964 | P75 ≈ R$4.824
+// Componente retorna 0-100; contribui: pontuacao × PESOS.faturamento / 100 → máx 10 pts
+const FAIXAS_FATURAMENTO = [
+  { min: 10000, max: Infinity, pontuacao: 100, label: 'ALTO' },      // >= R$10k   → 10 pts
+  { min:  5000, max:  9999.99, pontuacao:  80, label: 'MEDIO_ALTO' }, // R$5k-<R$10k→  8 pts
+  { min:  2000, max:  4999.99, pontuacao:  60, label: 'MEDIO' },      // R$2k-<R$5k →  6 pts
+  { min:  1000, max:  1999.99, pontuacao:  40, label: 'BAIXO_MEDIO' },// R$1k-<R$2k →  4 pts
+  { min:     0, max:   999.99, pontuacao:  20, label: 'BAIXO' },      // R$0-<R$1k  →  2 pts
+];
 
-// ── Thresholds de tendência ───────────────────────────────────────────────────
-// PROVISIONAL
+// ── Pontuação de tendência (0-100) ────────────────────────────────────────────
+// Componente contribui: pontuacao × PESOS.tendencia / 100 → máx 15 pts
 const PONTOS_TENDENCIA = {
-  CRESCENDO:    100,
-  ESTAVEL:       75,
-  SEM_BASE:      50,  // neutro — sem dados suficientes
-  NUNCA_COMPROU:  0,
-  CAINDO:        25,
+  CRESCENDO:     100,
+  ESTAVEL:        75,
+  SEM_BASE:       50,  // neutro — sem dados suficientes para classificar
+  NUNCA_COMPROU:   0,
+  CAINDO:         25,
 };
 
 // ── Classificação final do score ──────────────────────────────────────────────
-// PROVISIONAL
 const FAIXAS_SCORE = [
   { label: 'EXCELENTE', min: 80, max: 100 },
   { label: 'BOM',       min: 60, max: 79  },
@@ -69,14 +78,19 @@ const FAIXAS_SCORE = [
   { label: 'INATIVO',   min:  0, max: 19  },
 ];
 
+// ── Feature flags ─────────────────────────────────────────────────────────────
+// DECISÃO V1: cross-sell desativado — nenhuma oportunidade CROSS_SELL_CATEGORIA gerada.
+// Motor não foi apagado; apenas flag desativa geração oficial.
+const CROSS_SELL_ENABLED = false;
+
 module.exports = {
   VERSAO_CONFIG,
+  SCORE_SIGNIFICADO,
   PESOS,
   THRESHOLDS_RECENCIA,
   PONTOS_RECENCIA,
-  REF_FATURAMENTO_TOTAL,
-  REF_FATURAMENTO_90D,
-  REF_PEDIDOS_90D,
+  FAIXAS_FATURAMENTO,
   PONTOS_TENDENCIA,
   FAIXAS_SCORE,
+  CROSS_SELL_ENABLED,
 };

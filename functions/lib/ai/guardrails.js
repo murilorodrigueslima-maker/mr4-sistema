@@ -63,6 +63,10 @@ const MARCADORES_PROIBIDOS = [
   'APROVAR_DEVOLUCAO',
   'APROVAR_GARANTIA',
   'CANCELAR_VENDA',
+  // Marcadores de tarefas e alteração de dados
+  'CRIAR_TAREFA',
+  'ALTERAR_DADOS',
+  'EXECUTAR_ACAO',
   // Formatos genéricos de ação
   'ACTION:',
   'EXECUTE:',

@@ -115,7 +115,9 @@ const REGEX_MONETARIO     = /R\$\s*[\d.,]+/gi;
 const REGEX_REAIS         = /\b\d[\d.,]*\s*reais?\b/gi;
 const REGEX_DATA_ISO      = /\d{4}-\d{2}-\d{2}/g;
 const REGEX_DATA_BR       = /\b\d{2}\/\d{2}\/\d{4}\b/g;
-const REGEX_DIAS          = /\b(\d+)\s+dias?\b/gi;
+// N31.5 Fix 1: captura número decimal completo ("17,5" ou "17.5" como unidade única)
+// Evita que "17,5 dias" gere match autônomo de "5 dias" via word boundary na vírgula.
+const REGEX_DIAS          = /\b(\d+(?:[,.]\d+)?)\s+dias?\b/gi;
 const REGEX_PONTOS        = /\b(\d+)\s+pontos?\b/gi;
 const REGEX_PEDIDOS_TEXTO = /\b(\d+)\s+pedidos?\b/gi;
 
@@ -130,8 +132,14 @@ const REGEX_NEGACAO_LOCAL_ANTES = [
   /\bevite?\b(?:\s+\S+){0,2}\s*$/i,    // "evite [até 2 tokens]"
 ];
 
-// N31.3 Fix 2: Janelas de métricas temporais legítimas
+// N31.3 Fix 2 / N31.5 Fix 2: Janelas de métricas temporais legítimas
 const JANELAS_METRICAS = Object.freeze(new Set([30, 60, 90, 180]));
+
+// N31.5 Fix 2: âncora de lista de janelas de métricas no ctxAntes
+// Detecta: "nos últimos [n1, n2, ..., e ]" ou "considerando as janelas de [n1, ..., e ]"
+// O ctxAntes deve terminar com esta construção imediatamente antes do número N.
+// Anti-bypass: requer âncora léxica explícita; não libera N após contexto genérico.
+const REGEX_ANCORA_JANELA = /(?:[úu]ltimos?\s+|janelas?\s+de\s+)(?:\d+\s*[,e]\s*)*\s*$/i;
 
 // ── buildGroundingFactsV2 ─────────────────────────────────────────────────────
 
@@ -278,6 +286,44 @@ function _janelaMetricaExiste(n, facts) {
   return false;
 }
 
+/**
+ * N31.5 Fix 2: Retorna o Set de janelas métricas com dados reais nos facts.
+ * Evita whitelist cega de {30,60,90,180} — só autoriza janelas com dado presente.
+ */
+function _janelasAutorizadas(facts) {
+  const autorizadas = new Set();
+  for (const n of JANELAS_METRICAS) {
+    if (_janelaMetricaExiste(n, facts)) autorizadas.add(n);
+  }
+  return autorizadas;
+}
+
+/**
+ * N31.5 Fix 2: Detecta se um match de N dias é referência legítima de janela
+ * dentro de uma construção de lista de métricas.
+ *
+ * Exemplos legítimos:
+ *   "nos últimos 30, 60, 90 e 180 dias"  → ctxAntes = "nos últimos 30, 60, 90 e "
+ *   "nos últimos 180 dias"                → ctxAntes = "nos últimos "
+ *   "janelas de 30, 60 e 90 dias"         → ctxAntes = "janelas de 30, 60 e "
+ *
+ * Anti-bypass: requer âncora ("últimos" / "janelas de") seguida de lista de
+ * números IMEDIATAMENTE antes de N. Contexto genérico com "últimos" distante
+ * (ex: "últimos resultados indicam … 180 dias") não ativa o bypass.
+ *
+ * @param {string} texto
+ * @param {number} matchIndex  — posição do match no texto
+ * @param {number} n           — valor numérico do match (deve ser inteiro)
+ * @param {Set<number>} janelasAutorizadas — resultado de _janelasAutorizadas(facts)
+ */
+function _ehReferenciaJanela(texto, matchIndex, n, janelasAutorizadas) {
+  if (!Number.isInteger(n)) return false;          // janelas só em inteiros
+  if (!JANELAS_METRICAS.has(n)) return false;      // só {30,60,90,180}
+  if (!janelasAutorizadas.has(n)) return false;    // janela precisa ter dado real
+  const ctxAntes = texto.slice(Math.max(0, matchIndex - 120), matchIndex);
+  return REGEX_ANCORA_JANELA.test(ctxAntes);
+}
+
 // ── validarFatosNoTextoV2 ─────────────────────────────────────────────────────
 
 /**
@@ -341,31 +387,41 @@ function validarFatosNoTextoV2(texto, claims, facts) {
   }
 
   // ── "N dias" no texto ─────────────────────────────────────────────────────
-  // N31: diasAteProximoCiclo incluído como fact aceitável para "N dias" no texto.
-  // N31.3 Fix 2: "nos últimos N dias" com N ∈ {30,60,90,180} é referência
-  // a janela de métricas (pedidosNd/faturamentoNd) — não exige coincide com diasFacts.
+  // N31:   diasAteProximoCiclo é fact aceitável.
+  // N31.3: janela de métricas "nos últimos N dias" → bypass quando N ∈ {30,60,90,180}
+  //        com dado presente nos facts.
+  // N31.5 Fix 1: REGEX_DIAS captura decimal completo ("17,5" / "17.5");
+  //              normalizar para float antes de comparar com facts.
+  // N31.5 Fix 2: _ehReferenciaJanela detecta lista "30, 60, 90 e 180 dias"
+  //              com âncora léxica obrigatória — substituiu o ctxAntes(20) inline.
+  const janelasAuth = _janelasAutorizadas(facts);
   const diasMatches = [...texto.matchAll(REGEX_DIAS)];
   for (const match of diasMatches) {
-    const n = parseInt(match[1], 10);
-    if (n <= 0) continue;
-    if (JANELAS_METRICAS.has(n)) {
-      const ctxAntes = texto.slice(Math.max(0, match.index - 20), match.index);
-      if (/[úu]ltimos?\s+$/i.test(ctxAntes) && _janelaMetricaExiste(n, facts)) {
-        continue;
-      }
-    }
+    const rawN = match[1];                            // ex: "17,5", "17.5", "17"
+    const n    = parseFloat(rawN.replace(',', '.'));  // normalizar separador decimal
+    if (!Number.isFinite(n) || n <= 0) continue;
+
+    // N31.5 Fix 2: referência de janela de métricas (lista ou singular)
+    if (_ehReferenciaJanela(texto, match.index, n, janelasAuth)) continue;
+
     const diasFacts = [
       facts.diasSemComprar,
       facts.diasEntreComprasMedio,
       facts.diasEntreComprasMediana,
-      facts.diasAteProximoCiclo,   // N30/N31: aceita referência ao próximo ciclo
+      facts.diasAteProximoCiclo,
     ].filter(v => v !== null);
-    // Aceita exact match ou arredondamento de float (ex: 20.5 → "20 dias" ou "21 dias")
-    const coincide = diasFacts.some(v =>
-      v === n || (!Number.isInteger(v) && (Math.floor(v) === n || Math.ceil(v) === n))
-    );
+
+    // N31.5 Fix 1: match exato cobre floats ("17,5" === 17.5);
+    // rounding só se n é inteiro no texto e fact é float (contrato N31.3).
+    const coincide = diasFacts.some(v => {
+      if (v === n) return true;
+      if (Number.isInteger(n) && !Number.isInteger(v)) {
+        return Math.floor(v) === n || Math.ceil(v) === n;
+      }
+      return false;
+    });
     if (!coincide) {
-      throw new TextFactV2ViolationError('DIAS', String(n));
+      throw new TextFactV2ViolationError('DIAS', rawN);
     }
   }
 

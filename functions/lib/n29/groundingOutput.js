@@ -150,6 +150,22 @@ const REGEX_ANCORA_PEDIDOS_EM = /\b(?:pedidos?|compras?)\s+em\s+$/i;
 // Anti-bypass: exige "faturamento" explícito; bloqueia "prazo de N dias", "condição de N dias" etc.
 const REGEX_ANCORA_FATURAMENTO_DE = /\bfaturamento\s+(?:de\s+|dos?\s+[úu]ltimos?\s+|no\s+per[íi]odo\s+de\s+)\s*$/i;
 
+// N32.4 GAP-4: "no período de N dias" / "na janela de N dias" / "neste/nesse período de N dias"
+// Cobre: "no período de", "nesse período de", "neste período de", "na janela de",
+//        "nessa janela de", "nesta janela de", "no intervalo de", "considerando o período de".
+// Anti-bypass: exige preposição locativa analítica (no/na/neste/nesse/considerando o).
+// Bloqueia: "aguarde um período de", "por um período de", "após um período de",
+//           "prazo de", "condição de pagamento por período de" — não contêm a preposição locativa.
+const REGEX_ANCORA_PERIODO_ANALITICO =
+  /\b(?:n[oa]s?\s+|ness[ae]s?\s+|nest[ae]s?\s+|considerando\s+[oa]s?\s+)(?:per[íi]odo|janela|intervalo)\s+de\s+$/i;
+
+// N32.4 GAP-5: Âncora de elipse de métrica em estrutura coordenada local.
+// Padrão: "[pedidos|compras] em N1 dias [e|ou] N2 em " imediatamente antes de M dias.
+// Captura: grupo 1 = N1 (janela do primeiro termo), grupo 2 = N2 (contagem para janela M).
+// Anti-bypass: requer dígito antes de "em" → bloqueia "ligar em", "retornar em", "prazo de".
+const REGEX_ANCORA_ELIPSE_PEDIDOS =
+  /\b(?:pedidos?|compras?)\s+em\s+(\d+)\s+dias?\s+(?:e|ou)\s+(\d+)\s+em\s+$/i;
+
 // ── buildGroundingFactsV2 ─────────────────────────────────────────────────────
 
 /**
@@ -336,7 +352,47 @@ function _ehReferenciaJanela(texto, matchIndex, n, janelasAutorizadas) {
   if (REGEX_ANCORA_PEDIDOS_EM.test(ctxAntes)) return true;
   // GAP-3 (N32.2): "faturamento de N dias" / variantes preposicionais
   if (REGEX_ANCORA_FATURAMENTO_DE.test(ctxAntes)) return true;
+  // GAP-4 (N32.4): "no período de N dias" / "na janela de N dias" (locativo analítico)
+  if (REGEX_ANCORA_PERIODO_ANALITICO.test(ctxAntes)) return true;
   return false;
+}
+
+/**
+ * N32.4 GAP-5: Detecta elipse de métrica local inequívoca em estrutura coordenada.
+ * Padrão: "5 pedidos em 30 dias e 13 em 90 dias" — "pedidos" elided no segundo termo.
+ *
+ * Pré-condições obrigatórias (todas devem passar):
+ *   1. n ∈ JANELAS_METRICAS
+ *   2. janela n tem dado nos facts (_janelaMetricaExiste)
+ *   3. ctxAntes termina com "[pedidos|compras] em N1 dias [e|ou] N2 em "
+ *   4. N1 ∈ JANELAS_METRICAS com dado nos facts
+ *   5. N2 === facts['pedidosMd'] para M = n (contagem verificada contra fact exato)
+ *
+ * Anti-bypass:
+ *   "ligar em 90 dias" → sem dígito antes de "em" → NO MATCH.
+ *   "N em 90 dias" com N errado → fact mismatch → false.
+ *   Mudança de cláusula ("5 pedidos em 30 dias. Contatar em") → sem dígito antes de "em" → NO MATCH.
+ */
+function _ehElipseMetricaLocal(texto, matchIndex, n, facts) {
+  if (!Number.isInteger(n)) return false;
+  if (!JANELAS_METRICAS.has(n)) return false;
+  if (!_janelaMetricaExiste(n, facts)) return false;
+
+  const ctxAntes = texto.slice(Math.max(0, matchIndex - 120), matchIndex);
+  const m = REGEX_ANCORA_ELIPSE_PEDIDOS.exec(ctxAntes);
+  if (!m) return false;
+
+  const n1 = parseInt(m[1], 10);  // janela do primeiro termo da coordenação
+  const n2 = parseInt(m[2], 10);  // contagem elíptica para a janela n
+
+  // N1 também deve ser janela métrica autorizada
+  if (!JANELAS_METRICAS.has(n1) || !_janelaMetricaExiste(n1, facts)) return false;
+
+  // N2 deve corresponder exatamente ao fact de pedidos para a janela n
+  const factVal = facts[`pedidos${n}d`];
+  if (factVal === null || factVal === undefined) return false;
+
+  return factVal === n2;
 }
 
 // ── validarFatosNoTextoV2 ─────────────────────────────────────────────────────
@@ -416,8 +472,11 @@ function validarFatosNoTextoV2(texto, claims, facts) {
     const n    = parseFloat(rawN.replace(',', '.'));  // normalizar separador decimal
     if (!Number.isFinite(n) || n <= 0) continue;
 
-    // N31.5 Fix 2: referência de janela de métricas (lista ou singular)
+    // N31.5 Fix 2 / N32.2: referência de janela de métricas (lista, pedidos em, faturamento de, período de)
     if (_ehReferenciaJanela(texto, match.index, n, janelasAuth)) continue;
+
+    // N32.4 GAP-5: elipse de métrica local ("5 pedidos em 30 dias e 13 em 90 dias")
+    if (_ehElipseMetricaLocal(texto, match.index, n, facts)) continue;
 
     const diasFacts = [
       facts.diasSemComprar,
@@ -677,4 +736,8 @@ module.exports = {
   REGEX_ANCORA_JANELA,
   REGEX_ANCORA_PEDIDOS_EM,
   REGEX_ANCORA_FATURAMENTO_DE,
+  // N32.4: exportar para testes
+  REGEX_ANCORA_PERIODO_ANALITICO,
+  REGEX_ANCORA_ELIPSE_PEDIDOS,
+  _ehElipseMetricaLocal,
 };

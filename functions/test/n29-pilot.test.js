@@ -268,15 +268,16 @@ test('N29-SCH-03: buildV2 lança erro quando campo obrigatório está ausente', 
   expect(() => buildV2(ctx)).toThrow('campo obrigatório ausente: "faturamentoTotal"');
 });
 
-// ── N29-SCH-04: ANALISE_OUTPUT_SCHEMA_V2 tem os 4 campos corretos ─────────────
+// ── N29-SCH-04: ANALISE_OUTPUT_SCHEMA_V2 tem os 5 campos corretos (N31 adicionou acaoTiming) ──
 
-test('N29-SCH-04: ANALISE_OUTPUT_SCHEMA_V2 required inclui diagnostico, sinaisRelevantes, acaoSugerida, claims', () => {
+test('N29-SCH-04: ANALISE_OUTPUT_SCHEMA_V2 required inclui diagnostico, sinaisRelevantes, acaoTiming, acaoSugerida, claims', () => {
   const required = ANALISE_OUTPUT_SCHEMA_V2.required;
   expect(required).toContain('diagnostico');
   expect(required).toContain('sinaisRelevantes');
+  expect(required).toContain('acaoTiming');   // N31: acaoTiming obrigatório (MOTOR DETERMINÍSTICO > LLM)
   expect(required).toContain('acaoSugerida');
   expect(required).toContain('claims');
-  expect(required).toHaveLength(4);
+  expect(required).toHaveLength(5);
 });
 
 // ── N29-SCH-05: ANALISE_OUTPUT_SCHEMA_V2 sinaisRelevantes é array de strings ──

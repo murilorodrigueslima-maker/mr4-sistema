@@ -296,6 +296,7 @@ function validarFatosNoTextoV2(texto, claims, facts) {
   }
 
   // ── "N dias" no texto ─────────────────────────────────────────────────────
+  // N31: diasAteProximoCiclo incluído como fact aceitável para "N dias" no texto.
   const diasMatches = [...texto.matchAll(REGEX_DIAS)];
   for (const match of diasMatches) {
     const n = parseInt(match[1], 10);
@@ -304,9 +305,12 @@ function validarFatosNoTextoV2(texto, claims, facts) {
       facts.diasSemComprar,
       facts.diasEntreComprasMedio,
       facts.diasEntreComprasMediana,
+      facts.diasAteProximoCiclo,   // N30/N31: aceita referência ao próximo ciclo
     ].filter(v => v !== null);
     const coincide = diasFacts.some(v => v === n);
-    if (!coincide && !temClaimDe('diasSemComprar', 'diasEntreComprasMedio', 'diasEntreComprasMediana')) {
+    if (!coincide && !temClaimDe(
+      'diasSemComprar', 'diasEntreComprasMedio', 'diasEntreComprasMediana', 'diasAteProximoCiclo'
+    )) {
       throw new TextFactV2ViolationError('DIAS', String(n));
     }
   }
@@ -404,6 +408,93 @@ function validarMarcadoresProibidosV2(output) {
   }
 }
 
+// ── validarTextoAcaoComercial ─────────────────────────────────────────────────
+
+class TextoAcaoViolationError extends Error {
+  constructor(decisao, descricao, padrao) {
+    super(
+      `[TEXTO-ACAO] output contém instrução incompatível com decisão ${decisao}: ` +
+      `${descricao} (padrão: "${padrao}")`
+    );
+    this.name     = 'TextoAcaoViolationError';
+    this.decisao  = decisao;
+    this.descricao = descricao;
+    this.padrao   = padrao;
+  }
+}
+
+// Padrões de ação imediata incompatíveis com PROGRAMAR_CICLO.
+// PROGRAMAR_CICLO = acompanhar no ciclo normal, sem urgência imediata.
+// LIMITE NLP: "amanhã" é bloqueado mesmo quando diasAteProximoCiclo=1
+// (conservador: o texto correto seria "no próximo ciclo", não "amanhã").
+const MARCADORES_PROGRAMAR_CICLO_IMEDIATO = Object.freeze([
+  [/\bentre em contato\s+(imediatamente|agora|hoje|j[aá])\b/i, 'contato imediato'],
+  [/\bligue\s+(hoje|agora|j[aá]|imediatamente)\b/i, 'ligar hoje/agora'],
+  [/\bcontate\s+(hoje|agora|j[aá]|imediatamente)\b/i, 'contato imediato'],
+  [/\babordar?\s+(imediatamente|agora|hoje|j[aá])\b/i, 'abordar imediatamente'],
+  [/\bprioriz[ae]?\b.*?\b(agora|hoje|imediatamente)\b/i, 'priorizar agora'],
+  [/\breative\s+o\s+cliente\b/i, 'reativar cliente sem oportunidade'],
+  [/amanhã/i, 'amanhã: urgência implícita incompatível com ciclo programado'],
+]);
+
+// Padrões de ação comercial incompatíveis com NAO_AGIR.
+// NAO_AGIR = sem sinal determinístico suficiente para ação.
+// LIMITE NLP: "/ligue/" pode falso-positivo em "não ligue sem verificar" —
+// documentado como aceitável (conservador: FAIL_CLOSED).
+const MARCADORES_NAO_AGIR = Object.freeze([
+  [/\bentre em contato\b/i, 'sugestão de contato'],
+  [/\bmande mensagem\b/i, 'sugestão de mensagem'],
+  [/\benvi[ae]\s+(?:uma\s+)?mensagem\b/i, 'sugestão de envio de mensagem'],
+  [/\b(?:ligue|ligar)\b/i, 'sugestão de ligação'],
+  [/\bfa[çc]a uma oferta\b/i, 'sugestão de oferta'],
+  [/\breativ[ae]\b/i, 'sugestão de reativação'],
+  [/\babordar?\s+o\s+cliente\b/i, 'sugestão de abordagem'],
+  [/\bprioriz[ae]?\s+o\s+contato\b/i, 'sugestão de priorizar contato'],
+  [/\bcontate\b/i, 'sugestão de contato direto'],
+]);
+
+/**
+ * Valida que o texto livre do output V2 não contém instruções explicitamente
+ * incompatíveis com a decisão determinística de ação comercial (N31).
+ *
+ * Verifica: diagnostico + sinaisRelevantes + acaoSugerida (texto completo).
+ *
+ * Não tenta resolver NLP completo. Detecta apenas padrões explicitamente
+ * incompatíveis (instruções de ação imediata para PROGRAMAR_CICLO;
+ * qualquer instrução de ação comercial para NAO_AGIR).
+ *
+ * AGIR_AGORA: sem bloqueio de texto (ação comercial legítima esperada).
+ *
+ * @param {string}      decisaoAcaoComercial — valor calculado deterministicamente
+ * @param {Object}      output — { diagnostico, sinaisRelevantes, acaoSugerida }
+ * @throws {TextoAcaoViolationError}
+ */
+function validarTextoAcaoComercial(decisaoAcaoComercial, output) {
+  const partes = [
+    typeof output.diagnostico === 'string'       ? output.diagnostico : '',
+    Array.isArray(output.sinaisRelevantes)        ? output.sinaisRelevantes.join(' ') : '',
+    typeof output.acaoSugerida === 'string'       ? output.acaoSugerida : '',
+  ];
+  const texto = partes.join(' ');
+
+  if (decisaoAcaoComercial === 'PROGRAMAR_CICLO') {
+    for (const [regex, descricao] of MARCADORES_PROGRAMAR_CICLO_IMEDIATO) {
+      if (regex.test(texto)) {
+        throw new TextoAcaoViolationError('PROGRAMAR_CICLO', descricao, regex.source);
+      }
+    }
+  }
+
+  if (decisaoAcaoComercial === 'NAO_AGIR') {
+    for (const [regex, descricao] of MARCADORES_NAO_AGIR) {
+      if (regex.test(texto)) {
+        throw new TextoAcaoViolationError('NAO_AGIR', descricao, regex.source);
+      }
+    }
+  }
+  // AGIR_AGORA: sem bloqueio de texto — ação comercial é esperada e legítima
+}
+
 // ── validarCoerenciaAcaoComercial ─────────────────────────────────────────────
 
 /**
@@ -442,14 +533,18 @@ module.exports = {
   VERSAO_GROUNDING_V2,
   SCHEMA_CONTEXTO_V2,
   ACAO_TIMING_MAP,
+  MARCADORES_PROGRAMAR_CICLO_IMEDIATO,
+  MARCADORES_NAO_AGIR,
   buildGroundingFactsV2,
   validarClaimsV2,
   validarFatosNoTextoV2,
   validarContradicaoSemanticaV2,
   validarMarcadoresProibidosV2,
   validarCoerenciaAcaoComercial,
+  validarTextoAcaoComercial,
   GroundingV2ViolationError,
   TextFactV2ViolationError,
   SemanticV2ContradictionError,
   AcaoCoerenciaViolationError,
+  TextoAcaoViolationError,
 };

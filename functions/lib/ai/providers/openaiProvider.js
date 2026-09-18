@@ -174,10 +174,13 @@ class OpenAIProvider {
     }
 
     // Extrai o bloco de texto da saída
-    const outputItem  = data.output?.[0];
-    if (!outputItem) throw new Error('OpenAI: resposta sem output');
+    // Modelos de raciocínio (ex: gpt-5.6-luna) retornam output[0]=reasoning, output[1]=message
+    // Por isso buscamos o primeiro item de type='message', não necessariamente output[0]
+    const outputItems = data.output;
+    if (!outputItems || outputItems.length === 0) throw new Error('OpenAI: resposta sem output');
 
-    const contentItem = outputItem.content?.find(c => c.type === 'output_text');
+    const outputItem  = outputItems.find(o => o.type === 'message') || outputItems[0];
+    const contentItem = outputItem?.content?.find(c => c.type === 'output_text');
     if (!contentItem) throw new Error('OpenAI: output_text ausente na resposta');
 
     const rawText    = contentItem.text || '';

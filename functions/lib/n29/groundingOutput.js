@@ -136,10 +136,19 @@ const REGEX_NEGACAO_LOCAL_ANTES = [
 const JANELAS_METRICAS = Object.freeze(new Set([30, 60, 90, 180]));
 
 // N31.5 Fix 2: âncora de lista de janelas de métricas no ctxAntes
-// Detecta: "nos últimos [n1, n2, ..., e ]" ou "considerando as janelas de [n1, ..., e ]"
+// Detecta: "nos últimos [n1, n2, ..., e/ou ]" ou "janelas de [n1, ..., e/ou ]"
 // O ctxAntes deve terminar com esta construção imediatamente antes do número N.
 // Anti-bypass: requer âncora léxica explícita; não libera N após contexto genérico.
-const REGEX_ANCORA_JANELA = /(?:[úu]ltimos?\s+|janelas?\s+de\s+)(?:\d+\s*[,e]\s*)*\s*$/i;
+// N32.2 GAP-1: adicionado suporte à conjunção "ou" em listas (ex: "30, 60, 90 ou 180 dias")
+const REGEX_ANCORA_JANELA = /(?:[úu]ltimos?\s+|janelas?\s+de\s+)(?:\d+\s*(?:,\s*|(?:e|ou)\s+))*\s*$/i;
+
+// N32.2 GAP-2: "pedidos em N dias" / "compras em N dias"
+// Anti-bypass: exige palavra de métrica transacional antes de "em"; bloqueia "ligar em N dias" etc.
+const REGEX_ANCORA_PEDIDOS_EM = /\b(?:pedidos?|compras?)\s+em\s+$/i;
+
+// N32.2 GAP-3: "faturamento de N dias" / "faturamento dos últimos N dias" / "faturamento no período de N dias"
+// Anti-bypass: exige "faturamento" explícito; bloqueia "prazo de N dias", "condição de N dias" etc.
+const REGEX_ANCORA_FATURAMENTO_DE = /\bfaturamento\s+(?:de\s+|dos?\s+[úu]ltimos?\s+|no\s+per[íi]odo\s+de\s+)\s*$/i;
 
 // ── buildGroundingFactsV2 ─────────────────────────────────────────────────────
 
@@ -321,7 +330,13 @@ function _ehReferenciaJanela(texto, matchIndex, n, janelasAutorizadas) {
   if (!JANELAS_METRICAS.has(n)) return false;      // só {30,60,90,180}
   if (!janelasAutorizadas.has(n)) return false;    // janela precisa ter dado real
   const ctxAntes = texto.slice(Math.max(0, matchIndex - 120), matchIndex);
-  return REGEX_ANCORA_JANELA.test(ctxAntes);
+  // GAP-1 (N31.5/N32.2): lista "nos últimos ... e/ou N" ou "janelas de ... e/ou N"
+  if (REGEX_ANCORA_JANELA.test(ctxAntes)) return true;
+  // GAP-2 (N32.2): "pedidos em N dias" / "compras em N dias"
+  if (REGEX_ANCORA_PEDIDOS_EM.test(ctxAntes)) return true;
+  // GAP-3 (N32.2): "faturamento de N dias" / variantes preposicionais
+  if (REGEX_ANCORA_FATURAMENTO_DE.test(ctxAntes)) return true;
+  return false;
 }
 
 // ── validarFatosNoTextoV2 ─────────────────────────────────────────────────────
@@ -658,4 +673,8 @@ module.exports = {
   SemanticV2ContradictionError,
   AcaoCoerenciaViolationError,
   TextoAcaoViolationError,
+  // N32.2: exportar para testes
+  REGEX_ANCORA_JANELA,
+  REGEX_ANCORA_PEDIDOS_EM,
+  REGEX_ANCORA_FATURAMENTO_DE,
 };

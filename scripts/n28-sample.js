@@ -237,7 +237,11 @@ async function main() {
   const allowlistStatus = allowlistOk ? 'PASS' : 'FAIL';
 
   // Gates finais
-  const READ_ONLY_AUTH_METHOD  = 'WIF/OIDC — github-actions-pool — mr4-sync@mr4-ponto.iam.gserviceaccount.com';
+  // READ_ONLY_AUTH_METHOD: valor completo (console/summary) — contém email de SA (não é PII de pessoa real)
+  // READ_ONLY_AUTH_ARTEFATO: redactado para o JSON do artefato — remove o padrão de email para não disparar
+  //   escaneiarTextoParaPII, que não distingue SA email de email de pessoa física.
+  const READ_ONLY_AUTH_METHOD    = 'WIF/OIDC — github-actions-pool — mr4-sync@mr4-ponto.iam.gserviceaccount.com';
+  const READ_ONLY_AUTH_ARTEFATO  = 'WIF/OIDC — github-actions-pool — [SA:mr4-sync]';
   const FIRESTORE_READ_STATUS  = firestoreRead;
   const SAMPLE_SIZE            = pseudonimizados.length;
   const NEVER_BOUGHT_SENT      = neverBoughtSent;
@@ -266,7 +270,7 @@ async function main() {
       MAPA_PERSISTIDO:    false,
     },
     gates: {
-      READ_ONLY_AUTH_METHOD,
+      READ_ONLY_AUTH_METHOD: READ_ONLY_AUTH_ARTEFATO,  // redactado: sem email-pattern no artefato
       FIRESTORE_READ:         FIRESTORE_READ_STATUS,
       SAMPLE_SIZE,
       NEVER_BOUGHT_SENT,

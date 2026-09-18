@@ -87,6 +87,28 @@ class SemanticV2ContradictionError extends Error {
   }
 }
 
+class AcaoCoerenciaViolationError extends Error {
+  constructor(decisao, acaoTimingRecebido, acaoTimingEsperado) {
+    super(
+      `[ACAO-COERENCIA] acaoTiming incoerente com decisão determinística: ` +
+      `decisao=${decisao}, acaoTiming=${acaoTimingRecebido}, esperado=${acaoTimingEsperado}`
+    );
+    this.name               = 'AcaoCoerenciaViolationError';
+    this.decisao            = decisao;
+    this.acaoTimingRecebido = acaoTimingRecebido;
+    this.acaoTimingEsperado = acaoTimingEsperado;
+  }
+}
+
+// ── Mapeamento acaoTiming ─────────────────────────────────────────────────────
+// Contrato estruturado: decisao determinística → acaoTiming esperado no output V2.
+// AGIR_AGORA→AGORA, PROGRAMAR_CICLO→NO_CICLO, NAO_AGIR→NENHUMA.
+const ACAO_TIMING_MAP = Object.freeze({
+  AGIR_AGORA:      'AGORA',
+  PROGRAMAR_CICLO: 'NO_CICLO',
+  NAO_AGIR:        'NENHUMA',
+});
+
 // ── Padrões numéricos no texto ────────────────────────────────────────────────
 
 const REGEX_MONETARIO     = /R\$\s*[\d.,]+/gi;
@@ -103,7 +125,7 @@ const REGEX_URGENCIA = /\b(urgente|urgência|urgencia|imediato|imediata|agora\s+
 // ── buildGroundingFactsV2 ─────────────────────────────────────────────────────
 
 /**
- * Constrói facts V2 a partir do contextoRaw (22 campos).
+ * Constrói facts V2 a partir do contextoRaw (22 campos) + decisão N30 (opcional).
  *
  * Valores financeiros em R$ (não centavos). null permanece null.
  * SEM_BASE permanece string. Sem nenhuma coerção.
@@ -112,10 +134,14 @@ const REGEX_URGENCIA = /\b(urgente|urgência|urgencia|imediato|imediata|agora\s+
  *   ctx.tipoOportunidade → facts.oportunidadeTipo
  *   ctx.prioridade       → facts.oportunidadePrioridade
  *
- * @param {Object} ctx  — contextoRaw V2 com os 22 campos
- * @returns {Object}    — facts imutáveis (Object.freeze)
+ * N30: segundo parâmetro opcional { decisaoAcaoComercial, diasAteProximoCiclo }.
+ *   Quando ausente, ambos os campos ficam null (claimáveis mas não afirmáveis).
+ *
+ * @param {Object} ctx     — contextoRaw V2 com os 22 campos
+ * @param {Object|null} decisao — resultado de calcularDecisaoAcaoComercial (N30)
+ * @returns {Object}       — facts imutáveis (Object.freeze)
  */
-function buildGroundingFactsV2(ctx) {
+function buildGroundingFactsV2(ctx, decisao = null) {
   if (!ctx || typeof ctx !== 'object') {
     throw new Error('buildGroundingFactsV2: ctx inválido');
   }
@@ -150,6 +176,9 @@ function buildGroundingFactsV2(ctx) {
     // 2 campos mapeados: nome do contextoRaw → nome canônico do claim (INSTRUCTIONS_V2)
     oportunidadeTipo:              ctx.tipoOportunidade,   // tipoOportunidade → oportunidadeTipo
     oportunidadePrioridade:        ctx.prioridade,          // prioridade → oportunidadePrioridade
+    // N30: campos de decisão determinística (null quando decisao não fornecido)
+    decisaoAcaoComercial:          decisao?.decisaoAcaoComercial ?? null,
+    diasAteProximoCiclo:           decisao?.diasAteProximoCiclo  ?? null,
     // Metadados internos (não afirmáveis — iniciam com _ ou são statusConfig)
     statusConfig:                  'SHADOW',
     _versaoGrounding:              VERSAO_GROUNDING_V2,
@@ -375,17 +404,52 @@ function validarMarcadoresProibidosV2(output) {
   }
 }
 
+// ── validarCoerenciaAcaoComercial ─────────────────────────────────────────────
+
+/**
+ * Valida que o acaoTiming produzido pelo LLM é coerente com a decisão
+ * determinística calculada antes da chamada (N30).
+ *
+ * Guardrail pós-output: FAIL_CLOSED — incoerência → AcaoCoerenciaViolationError.
+ *
+ * Decisão → acaoTiming esperado (ACAO_TIMING_MAP):
+ *   AGIR_AGORA      → AGORA
+ *   PROGRAMAR_CICLO → NO_CICLO
+ *   NAO_AGIR        → NENHUMA
+ *
+ * @param {string}      decisaoAcaoComercial — valor calculado deterministicamente
+ * @param {string|null} acaoTiming           — valor no output do LLM
+ * @throws {AcaoCoerenciaViolationError}
+ */
+function validarCoerenciaAcaoComercial(decisaoAcaoComercial, acaoTiming) {
+  if (acaoTiming == null) return; // schema antigo sem acaoTiming → não bloqueia
+
+  const esperado = ACAO_TIMING_MAP[decisaoAcaoComercial];
+  if (!esperado) {
+    throw new AcaoCoerenciaViolationError(
+      decisaoAcaoComercial, acaoTiming, '(decisão desconhecida)'
+    );
+  }
+
+  if (acaoTiming !== esperado) {
+    throw new AcaoCoerenciaViolationError(decisaoAcaoComercial, acaoTiming, esperado);
+  }
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 module.exports = {
   VERSAO_GROUNDING_V2,
   SCHEMA_CONTEXTO_V2,
+  ACAO_TIMING_MAP,
   buildGroundingFactsV2,
   validarClaimsV2,
   validarFatosNoTextoV2,
   validarContradicaoSemanticaV2,
   validarMarcadoresProibidosV2,
+  validarCoerenciaAcaoComercial,
   GroundingV2ViolationError,
   TextFactV2ViolationError,
   SemanticV2ContradictionError,
+  AcaoCoerenciaViolationError,
 };

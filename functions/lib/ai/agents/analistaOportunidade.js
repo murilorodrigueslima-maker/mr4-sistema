@@ -55,8 +55,15 @@ async function analisarOportunidade({ oportunidade, perfil, score, tendencia, re
     observacoes: resposta.mock ? `[MOCK] provider: ${provider.nome}` : null,
   });
 
+  // Inclui claims do provider real (OpenAI retorna claims estruturados; mock não)
+  const claimsDaIA = Array.isArray(resposta.claims) && resposta.claims.length > 0
+    ? resposta.claims
+    : undefined;
+
+  const outputComClaims = claimsDaIA ? { ...output, claims: claimsDaIA } : output;
+
   return {
-    ...validarOutputAgente(output, NOME_AGENTE),
+    ...validarOutputAgente(outputComClaims, NOME_AGENTE),
     _meta: {
       agente:           NOME_AGENTE,
       versaoAgente:     VERSAO_AGENTE,

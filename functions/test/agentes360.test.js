@@ -102,8 +102,14 @@ describe('MockProvider (N9)', () => {
     expect(p).toBeInstanceOf(MockProvider);
   });
 
-  test('AGENT360-07: criarProvider("openai") → erro (não suportado)', () => {
-    expect(() => criarProvider('openai')).toThrow('não suportado');
+  test('AGENT360-07: criarProvider("openai") sem API key → erro de credencial', () => {
+    const origKey = process.env.OPENAI_API_KEY;
+    delete process.env.OPENAI_API_KEY;
+    try {
+      expect(() => criarProvider('openai')).toThrow(/OPENAI_API_KEY/);
+    } finally {
+      if (origKey !== undefined) process.env.OPENAI_API_KEY = origKey;
+    }
   });
 
   test('AGENT360-08: MockProvider personalizado aceita respostas injetadas', async () => {

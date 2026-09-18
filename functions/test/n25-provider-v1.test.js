@@ -54,8 +54,14 @@ test('PROVIDER-V1-02b: tipo desconhecido ("anthropic") lança erro imediatamente
   expect(() => criarProvider('anthropic')).toThrow('não suportado');
 });
 
-test('PROVIDER-V1-02c: tipo "openai" lança erro imediatamente', () => {
-  expect(() => criarProvider('openai')).toThrow('não suportado');
+test('PROVIDER-V1-02c: tipo "openai" sem API key lança erro de credencial', () => {
+  const origKey = process.env.OPENAI_API_KEY;
+  delete process.env.OPENAI_API_KEY;
+  try {
+    expect(() => criarProvider('openai')).toThrow(/OPENAI_API_KEY/);
+  } finally {
+    if (origKey !== undefined) process.env.OPENAI_API_KEY = origKey;
+  }
 });
 
 test('PROVIDER-V1-02d: tipo "gemini" lança erro imediatamente', () => {

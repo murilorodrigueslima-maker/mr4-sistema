@@ -3,17 +3,12 @@
 /**
  * Provider de LLM para o Agente Comercial IA.
  *
- * MODO ATUAL: APENAS MockProvider.
- * Nenhuma chamada real a LLM, nenhuma chave de API, nenhum custo.
- *
- * Decisão pendente:
- *   - Qual modelo usar em produção (ver PENDENCIAS.md I1)
- *   - Orçamento de tokens (ver PENDENCIAS.md I2)
- *   - Latência aceitável (ver PENDENCIAS.md I3)
- *   - Fallback/retry strategy (ver PENDENCIAS.md I4)
+ * Providers disponíveis:
+ *   - MockProvider: determinístico, sem LLM real (test/development/simulation)
+ *   - OpenAIProvider: Chat Completions API, modelo gpt-5.6-luna (N27+)
  *
  * Interface do provider:
- *   provider.complete(prompt, opcoes) → Promise<{ texto, tokens, modelo, latenciaMs }>
+ *   provider.complete(prompt, opcoes) → Promise<{ texto, claims?, tokens, modelo, latenciaMs }>
  *
  * MockProvider:
  *   - Retorna respostas pré-definidas por tipo de prompt
@@ -21,6 +16,8 @@
  *   - Não faz chamadas externas, não lê variáveis de ambiente
  *   - Sinaliza explicitamente que é MOCK em cada resposta
  */
+
+const { OpenAIProvider } = require('./providers/openaiProvider');
 
 const VERSAO_PROVIDER = 'provider-v1';
 
@@ -124,16 +121,21 @@ function criarProvider(tipo = 'mock', opcoes = {}) {
 
     return new MockProvider(opcoes.respostas || {});
   }
-  // Tipos reais serão implementados após decisão empresarial (PENDENCIAS.md I1)
+
+  if (tipo === 'openai') {
+    return new OpenAIProvider(opcoes);
+  }
+
   throw new Error(
     `criarProvider: tipo "${tipo}" não suportado. ` +
-    `Apenas "mock" disponível até decisão sobre provedor de produção (PENDENCIAS.md I1).`
+    `Tipos disponíveis: "mock", "openai".`
   );
 }
 
 module.exports = {
   VERSAO_PROVIDER,
   MockProvider,
+  OpenAIProvider,
   criarProvider,
   MODOS_MOCK_PERMITIDOS,
   getModoExecucao,

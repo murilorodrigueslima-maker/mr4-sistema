@@ -33,12 +33,37 @@ function _fmt(v, sufixo = '') {
   return v == null ? 'N/A' : `${v}${sufixo}`;
 }
 
-function buildV2(ctx) {
+// Mapeamento decisao → acaoTiming esperado (N31: MOTOR DETERMINÍSTICO > LLM).
+// Duplicado aqui para que o prompt possa gerar a instrução de obediência
+// sem criar dependência circular com decisaoAcaoComercial.js.
+const _ACAO_TIMING_MAP_V2 = {
+  AGIR_AGORA:      'AGORA',
+  PROGRAMAR_CICLO: 'NO_CICLO',
+  NAO_AGIR:        'NENHUMA',
+};
+
+/**
+ * Constrói o prompt V2 para analistaOportunidade.
+ *
+ * @param {Object}      ctx    — contextoRaw com os 22 campos obrigatórios
+ * @param {Object|null} decisao — resultado de calcularDecisaoAcaoComercial (N30/N31)
+ *   { decisaoAcaoComercial: string, diasAteProximoCiclo: number|null }
+ *   Quando null, usa NAO_AGIR como padrão conservador.
+ */
+function buildV2(ctx, decisao = null) {
   for (const campo of SCHEMA_CONTEXTO_V2) {
     if (!(campo in ctx)) {
       throw new Error(`analistaOportunidadeV2.buildV2: campo obrigatório ausente: "${campo}"`);
     }
   }
+
+  const decisaoAcaoComercial = decisao?.decisaoAcaoComercial ?? 'NAO_AGIR';
+  const diasAteProximoCiclo  = decisao?.diasAteProximoCiclo  ?? null;
+  const acaoTimingEsperado   = _ACAO_TIMING_MAP_V2[decisaoAcaoComercial] ?? 'NENHUMA';
+
+  const linhasDias = diasAteProximoCiclo != null
+    ? `- Dias até próximo ciclo: ${diasAteProximoCiclo}`
+    : '';
 
   return `
 Você é um analista comercial. Responda as 3 perguntas abaixo sobre este cliente.
@@ -47,6 +72,10 @@ Baseie-se EXCLUSIVAMENTE nos dados fornecidos. Não invente valores, datas ou pr
 TIPO DE OPORTUNIDADE: ${ctx.tipoOportunidade ?? 'null'}
 PRIORIDADE: ${ctx.prioridade ?? 'null'}
 
+DECISÃO DE AÇÃO COMERCIAL (MOTOR DETERMINÍSTICO): ${decisaoAcaoComercial}
+OBRIGAÇÃO: Você DEVE retornar acaoTiming="${acaoTimingEsperado}". \
+Esta decisão foi calculada antes desta análise. Você NÃO pode alterá-la.
+${linhasDias ? linhasDias + '\n' : ''}
 DADOS DO CLIENTE:
 - Score Comercial: ${_fmt(ctx.scoreTotal, '/100')} (${_fmt(ctx.classificacao)})
 - Tendência: ${_fmt(ctx.tendencia)}
@@ -73,7 +102,7 @@ RESPONDA as 3 perguntas:
 
 REGRAS:
 1. Use APENAS os dados acima — sem invenção.
-2. O tipo de oportunidade é definido pelo sistema determinístico — não altere.
+2. O tipo de oportunidade e a DECISÃO DE AÇÃO COMERCIAL são definidos pelo motor determinístico — NÃO altere.
 3. NÃO defina preços, descontos, crédito, limite de crédito, comissão ou promoções.
 4. NÃO tome ações financeiras. Apenas direcione a abordagem comercial.
 5. Português, objetivo, respeite os limites de palavras.

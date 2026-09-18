@@ -1,0 +1,80 @@
+name: N29 — Shadow Pilot V2 Preflight (Read-Only, Zero LLM)
+
+# Executa SOMENTE as etapas A-E do N29:
+#   A) Leitura read-only do Firestore (perfis_360) via WIF
+#   B) Enriquecimento local com engines determinísticos
+#   C) Seleção determinística de até 12 clientes (critérios N28 — exclui nuncaComprou=true)
+#   D) Pseudonimização V2 — SHADOW-001..012, 22 campos (mapa ephemeral, nunca persiste)
+#   E) PII Gate V2: auditarContextoPromptV2 + scan em cada payload
+#
+# NÃO executa chamadas LLM (OPENAI_API_KEY não é usada aqui).
+# O artefato de saída contém ZERO PII, ZERO IDs reais, ZERO mapa real→SHADOW,
+#   ZERO texto ERP (produtosMaisComprados, categoriasMaisCompradas).
+#
+# Restrições absolutas:
+#   FIRESTORE_WRITES = ZERO
+#   PROD_WRITES      = ZERO
+#   LLM_CALLS        = ZERO
+#   DEPLOYS          = ZERO
+#   PII_REAL_SENT    = ZERO
+#
+# Autenticação: WIF/OIDC — mesmo pool/SA do N28 (n28-sample.yml)
+#   SA: mr4-sync@mr4-ponto.iam.gserviceaccount.com
+#   Pool: github-actions-pool / github-actions-provider
+
+on:
+  workflow_dispatch:   # somente manual — nunca automático para N29
+
+jobs:
+  n29-preflight:
+    name: N29 Preflight Gate V2
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read    # apenas leitura do repo
+      id-token: write   # obrigatório para OIDC → WIF
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Autenticar no Google Cloud (OIDC/WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/848211361584/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'mr4-sync@mr4-ponto.iam.gserviceaccount.com'
+
+      - name: Instalar dependências (scripts/)
+        run: npm install --prefix scripts --omit=dev --no-audit --no-fund
+
+      - name: Instalar dependências (functions/) — engines determinísticos
+        run: npm install --prefix functions --omit=dev --no-audit --no-fund
+
+      - name: N29 Preflight V2 — Leitura + Seleção + PII Gate V2 (ZERO LLM)
+        run: node scripts/n29-sample.js
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+          NODE_ENV: production   # bloqueia MockProvider
+
+      - name: Upload artefato sanitizado V2 (ZERO PII)
+        if: always()   # faz upload mesmo em falha para diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: n29-preflight-gates
+          path: |
+            artifacts/n29-sample-gates.json
+            artifacts/n29-sample-summary.txt
+          retention-days: 7
+          # IMPORTANTE: este artefato contém SOMENTE:
+          #   - SHADOW-001..012 IDs
+          #   - 22 campos comerciais estruturados (allowlist V2)
+          #   - resultados dos gates de privacidade
+          # NUNCA contém: IDs reais, nome, email, CPF/CNPJ, telefone, endereço,
+          #               número de pedido, vendedor, observações, mapa real→SHADOW,
+          #               texto ERP (nomes de produtos ou categorias)

@@ -122,6 +122,17 @@ const REGEX_PEDIDOS_TEXTO = /\b(\d+)\s+pedidos?\b/gi;
 // Urgência sem sinal determinístico
 const REGEX_URGENCIA = /\b(urgente|urgência|urgencia|imediato|imediata|agora\s+mesmo|hoje\s+mesmo|sem\s+demora|imediatamente)\b/i;
 
+// N31.3 Fix 1: Negação LOCAL (mesma cláusula, antes da palavra de urgência)
+// Usa \S+ em vez de \w+ para cobrir caracteres acentuados do português (á, ã, é, ç …)
+const REGEX_NEGACAO_LOCAL_ANTES = [
+  /\bn[ãa]o\b(?:\s+\S+){0,5}\s*$/i,   // "não [até 5 tokens]"
+  /\bsem\b(?:\s+\S+){0,3}\s*$/i,       // "sem [até 3 tokens]"
+  /\bevite?\b(?:\s+\S+){0,2}\s*$/i,    // "evite [até 2 tokens]"
+];
+
+// N31.3 Fix 2: Janelas de métricas temporais legítimas
+const JANELAS_METRICAS = Object.freeze(new Set([30, 60, 90, 180]));
+
 // ── buildGroundingFactsV2 ─────────────────────────────────────────────────────
 
 /**
@@ -233,6 +244,40 @@ function validarClaimsV2(claims, facts) {
   }
 }
 
+// ── Helpers N31.3 ────────────────────────────────────────────────────────────
+
+/**
+ * N31.3 Fix 1: Retorna a palavra de urgência se há urgência AFIRMATIVA no texto,
+ * ou null se todas as ocorrências estão localmente negadas.
+ * Negação LOCAL = na mesma cláusula (.!?;) e antes da palavra de urgência.
+ */
+function _urgenciaAfirmativaPresente(texto) {
+  if (typeof texto !== 'string') return null;
+  const clausulas = texto.split(/(?<=[.!?;])\s*/);
+  for (const clausula of clausulas) {
+    if (!clausula) continue;
+    for (const m of clausula.matchAll(new RegExp(REGEX_URGENCIA.source, 'gi'))) {
+      const textoAntes = clausula.slice(0, m.index);
+      if (!REGEX_NEGACAO_LOCAL_ANTES.some(r => r.test(textoAntes))) {
+        return m[0];
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * N31.3 Fix 2: Verifica se a janela de métricas de N dias está presente nos facts.
+ * Cobre pedidosNd e faturamentoNd para N ∈ {30,60,90,180}.
+ */
+function _janelaMetricaExiste(n, facts) {
+  if (n === 30)  return facts.pedidos30d  !== null || facts.faturamento30d  !== null;
+  if (n === 60)  return facts.pedidos60d  !== null || facts.faturamento60d  !== null;
+  if (n === 90)  return facts.pedidos90d  !== null || facts.faturamento90d  !== null;
+  if (n === 180) return facts.pedidos180d !== null || facts.faturamento180d !== null;
+  return false;
+}
+
 // ── validarFatosNoTextoV2 ─────────────────────────────────────────────────────
 
 /**
@@ -297,20 +342,29 @@ function validarFatosNoTextoV2(texto, claims, facts) {
 
   // ── "N dias" no texto ─────────────────────────────────────────────────────
   // N31: diasAteProximoCiclo incluído como fact aceitável para "N dias" no texto.
+  // N31.3 Fix 2: "nos últimos N dias" com N ∈ {30,60,90,180} é referência
+  // a janela de métricas (pedidosNd/faturamentoNd) — não exige coincide com diasFacts.
   const diasMatches = [...texto.matchAll(REGEX_DIAS)];
   for (const match of diasMatches) {
     const n = parseInt(match[1], 10);
     if (n <= 0) continue;
+    if (JANELAS_METRICAS.has(n)) {
+      const ctxAntes = texto.slice(Math.max(0, match.index - 20), match.index);
+      if (/[úu]ltimos?\s+$/i.test(ctxAntes) && _janelaMetricaExiste(n, facts)) {
+        continue;
+      }
+    }
     const diasFacts = [
       facts.diasSemComprar,
       facts.diasEntreComprasMedio,
       facts.diasEntreComprasMediana,
       facts.diasAteProximoCiclo,   // N30/N31: aceita referência ao próximo ciclo
     ].filter(v => v !== null);
-    const coincide = diasFacts.some(v => v === n);
-    if (!coincide && !temClaimDe(
-      'diasSemComprar', 'diasEntreComprasMedio', 'diasEntreComprasMediana', 'diasAteProximoCiclo'
-    )) {
+    // Aceita exact match ou arredondamento de float (ex: 20.5 → "20 dias" ou "21 dias")
+    const coincide = diasFacts.some(v =>
+      v === n || (!Number.isInteger(v) && (Math.floor(v) === n || Math.ceil(v) === n))
+    );
+    if (!coincide) {
       throw new TextFactV2ViolationError('DIAS', String(n));
     }
   }
@@ -345,14 +399,15 @@ function validarFatosNoTextoV2(texto, claims, facts) {
   }
 
   // ── URGÊNCIA SEM SINAL DETERMINÍSTICO ─────────────────────────────────────
-  // Regra determinística: urgência requer pelo menos um sinal do motor
+  // Regra determinística: urgência AFIRMATIVA requer pelo menos um sinal do motor
   // (oportunidadeTipo ≠ null OU oportunidadePrioridade ≠ null).
-  // Quando ambos são null, não há base factual para afirmar urgência.
-  const urgenciaMatch = texto.match(REGEX_URGENCIA);
-  if (urgenciaMatch &&
+  // N31.3 Fix 1: negação LOCAL (mesma cláusula, antes da palavra) isenta a ocorrência.
+  // "não há necessidade de ação imediata" → isento; "entre em contato imediatamente" → BLOCK.
+  const urgenciaAfirmativa = _urgenciaAfirmativaPresente(texto);
+  if (urgenciaAfirmativa !== null &&
       facts.oportunidadeTipo === null &&
       facts.oportunidadePrioridade === null) {
-    throw new TextFactV2ViolationError('URGENCIA_SEM_SINAL', urgenciaMatch[0]);
+    throw new TextFactV2ViolationError('URGENCIA_SEM_SINAL', urgenciaAfirmativa);
   }
 }
 

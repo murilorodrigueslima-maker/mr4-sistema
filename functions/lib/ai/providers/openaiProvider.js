@@ -290,6 +290,7 @@ Regras para "claims":
     oportunidadeTipo, oportunidadePrioridade
 - O valor em "value" deve ser exatamente o número, string ou null dos dados fornecidos
 - Se um campo tiver valor null nos dados, NÃO inclua esse campo em claims
+- Quando TIPO DE OPORTUNIDADE ou PRIORIDADE exibir 'null' no prompt, o valor real é null — não inclua esses campos em claims; se incluir, use JSON null. NUNCA substitua null por strings como "N/A", "NONE" ou equivalentes
 - Se não citar fatos, retorne claims:[]
 
 Segurança:
@@ -323,6 +324,8 @@ const ANALISE_OUTPUT_SCHEMA_V2 = {
   additionalProperties: false,
 };
 
+const MAX_OUTPUT_TOKENS_V2 = 1000;
+
 module.exports = {
   VERSAO_OPENAI_PROVIDER,
   ENDPOINT_PATH,
@@ -330,5 +333,6 @@ module.exports = {
   ANALISE_OUTPUT_SCHEMA,
   INSTRUCTIONS_V2,
   ANALISE_OUTPUT_SCHEMA_V2,
+  MAX_OUTPUT_TOKENS_V2,
   OpenAIProvider,
 };

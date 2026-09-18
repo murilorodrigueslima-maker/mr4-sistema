@@ -44,8 +44,8 @@ function buildV2(ctx) {
 Você é um analista comercial. Responda as 3 perguntas abaixo sobre este cliente.
 Baseie-se EXCLUSIVAMENTE nos dados fornecidos. Não invente valores, datas ou produtos.
 
-TIPO DE OPORTUNIDADE: ${_fmt(ctx.tipoOportunidade)}
-PRIORIDADE: ${_fmt(ctx.prioridade)}
+TIPO DE OPORTUNIDADE: ${ctx.tipoOportunidade ?? 'null'}
+PRIORIDADE: ${ctx.prioridade ?? 'null'}
 
 DADOS DO CLIENTE:
 - Score Comercial: ${_fmt(ctx.scoreTotal, '/100')} (${_fmt(ctx.classificacao)})

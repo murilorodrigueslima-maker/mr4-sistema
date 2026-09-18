@@ -10,10 +10,14 @@
  *   - pseudonimizarV2: exclui PII, inclui 22 campos, computa quantidades corretas
  *   - buildV2: valida schema V2, lança erro para campo ausente
  *   - ANALISE_OUTPUT_SCHEMA_V2: estrutura com diagnostico/sinaisRelevantes/acaoSugerida/claims
+ *   - groundingOutput backward compat: ticketMedioCents (N28) ainda passa; ticketMedioTotal (N29) passa
+ *   - inventar faturamento/ticket sem claim é bloqueado
+ *   - inventar desconto financeiro é bloqueado por guardrails
  *
  * N29-PII-01 a N29-PII-05: PII Guard V2 e allowlist
  * N29-CTX-01 a N29-CTX-05: Contexto V2 e pseudonimização
- * N29-SCH-01 a N29-SCH-05: Schema V2 e prompt V2
+ * N29-SCH-01 a N29-SCH-08: Schema V2 e prompt V2
+ * N29-GRD-01 a N29-GRD-05: Grounding — backward compat e bloqueio de invenção
  */
 
 const {
@@ -23,6 +27,14 @@ const {
   auditarGroundingFactsV2,
   GROUNDING_ALLOWLIST_V2,
 } = require('../lib/n29/piiGuard');
+
+const {
+  validarFatosNoTexto,
+  TextFactViolationError,
+} = require('../lib/ai/groundingOutput');
+
+const { MARCADORES_PROIBIDOS, validarOutputAgente, mkOutputAgente, GuardrailViolationError } =
+  require('../lib/ai/guardrails');
 
 const { VERSAO_PROMPT, SCHEMA_CONTEXTO_V2, buildV2 } =
   require('../lib/ai/prompts/analistaOportunidadeV2');
@@ -300,4 +312,50 @@ test('N29-SCH-08: INSTRUCTIONS_V2 menciona restrição financeira (AI_FINANCIAL_
   expect(INSTRUCTIONS_V2).toContain('acaoSugerida');
   expect(INSTRUCTIONS_V2).toContain('diagnostico');
   expect(INSTRUCTIONS_V2).toContain('sinaisRelevantes');
+});
+
+// ── N29-GRD-01: backward compat — ticketMedioCents (N28) ainda valida texto ──
+// Garante que o fix ticketMedioCents→ticketMedio não quebrou N28.
+
+test('N29-GRD-01: claim ticketMedioCents (N28) ainda passa validarFatosNoTexto com "R$ X"', () => {
+  const minFacts = { diasSemComprar: 30, diasEntreComprasMedio: 28, diasEntreComprasMediana: 25, scoreTotal: 65 };
+  const claims   = [{ field: 'ticketMedioCents', value: 60000 }];
+  expect(() => validarFatosNoTexto('O ticket médio do cliente é R$ 600,00.', claims, minFacts))
+    .not.toThrow();
+});
+
+// ── N29-GRD-02: forward compat — ticketMedioTotal (N29) valida texto ──────────
+
+test('N29-GRD-02: claim ticketMedioTotal (N29) passa validarFatosNoTexto com "R$ X"', () => {
+  const minFacts = { diasSemComprar: 30, diasEntreComprasMedio: 28, diasEntreComprasMediana: 25, scoreTotal: 65 };
+  const claims   = [{ field: 'ticketMedioTotal', value: 600.00 }];
+  expect(() => validarFatosNoTexto('O ticket médio do cliente é R$ 600,00.', claims, minFacts))
+    .not.toThrow();
+});
+
+// ── N29-GRD-03: INVENTED_TICKET_BLOCKED — "R$ X" sem claim → bloqueio ────────
+// Garante que ticket inventado sem claim é bloqueado pelo grounding.
+
+test('N29-GRD-03: "R$ X" no texto sem claim de faturamento/ticket bloqueia (INVENTED_TICKET_BLOCKED)', () => {
+  const minFacts = { diasSemComprar: 30, diasEntreComprasMedio: 28, diasEntreComprasMediana: 25, scoreTotal: 65 };
+  expect(() => validarFatosNoTexto('O ticket médio é R$ 850,00 por pedido.', [], minFacts))
+    .toThrow(TextFactViolationError);
+});
+
+// ── N29-GRD-04: INVENTED_REVENUE_BLOCKED — faturamento inventado → bloqueio ──
+
+test('N29-GRD-04: faturamento inventado sem claim bloqueia (INVENTED_REVENUE_BLOCKED)', () => {
+  const minFacts = { diasSemComprar: 30, diasEntreComprasMedio: 28, diasEntreComprasMediana: 25, scoreTotal: 65 };
+  expect(() => validarFatosNoTexto('O cliente faturou R$ 50.000 no semestre.', [], minFacts))
+    .toThrow(TextFactViolationError);
+});
+
+// ── N29-GRD-05: INVENTED_DISCOUNT_BLOCKED — guardrail bloqueia marcador ──────
+// Garante AI_FINANCIAL_AUTHORITY=NONE: CONCEDER_DESCONTO é marcador proibido.
+
+test('N29-GRD-05: output com CONCEDER_DESCONTO é bloqueado por guardrail (INVENTED_DISCOUNT_BLOCKED)', () => {
+  const output = mkOutputAgente({ tipo: 'SUGESTAO', conteudo: 'x' });
+  output.conteudo = 'CONCEDER_DESCONTO de 15% para reativação';
+  expect(() => validarOutputAgente(output)).toThrow(GuardrailViolationError);
+  expect(MARCADORES_PROIBIDOS).toContain('CONCEDER_DESCONTO');
 });

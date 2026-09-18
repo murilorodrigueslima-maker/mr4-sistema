@@ -1,0 +1,78 @@
+name: N28 — Shadow Pilot Preflight (Read-Only, Zero LLM)
+
+# Executa SOMENTE as etapas A-E do N28:
+#   A) Leitura read-only do Firestore (perfis_360) via WIF
+#   B) Enriquecimento local com engines determinísticos
+#   C) Seleção determinística de até 12 clientes (exclui nuncaComprou=true)
+#   D) Pseudonimização SHADOW-001..012 (mapa ephemeral, nunca persiste)
+#   E) PII Gate: auditarContextoPrompt + scan em cada payload
+#
+# NÃO executa chamadas LLM (OPENAI_API_KEY não é usada aqui).
+# O artefato de saída contém ZERO PII, ZERO IDs reais, ZERO mapa real→SHADOW.
+#
+# Restrições absolutas:
+#   FIRESTORE_WRITES = ZERO
+#   PROD_WRITES      = ZERO
+#   LLM_CALLS        = ZERO
+#   DEPLOYS          = ZERO
+#   PII_REAL_SENT    = ZERO
+#
+# Autenticação: WIF/OIDC — mesmo pool/SA do N21 (export-vinculos360.yml)
+#   SA: mr4-sync@mr4-ponto.iam.gserviceaccount.com
+#   Pool: github-actions-pool / github-actions-provider
+
+on:
+  workflow_dispatch:   # somente manual — nunca automático para N28
+
+jobs:
+  n28-preflight:
+    name: N28 Preflight Gate
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read    # apenas leitura do repo
+      id-token: write   # obrigatório para OIDC → WIF
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Autenticar no Google Cloud (OIDC/WIF)
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: 'projects/848211361584/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+          service_account: 'mr4-sync@mr4-ponto.iam.gserviceaccount.com'
+
+      - name: Instalar dependências (scripts/)
+        run: npm install --prefix scripts --omit=dev --no-audit --no-fund
+
+      - name: Instalar dependências (functions/) — engines determinísticos
+        run: npm install --prefix functions --omit=dev --no-audit --no-fund
+
+      - name: N28 Preflight — Leitura + Seleção + PII Gate (ZERO LLM)
+        run: node scripts/n28-sample.js
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+          NODE_ENV: production   # bloqueia MockProvider
+
+      - name: Upload artefato sanitizado (ZERO PII)
+        if: always()   # faz upload mesmo em falha para diagnóstico
+        uses: actions/upload-artifact@v4
+        with:
+          name: n28-preflight-gates
+          path: |
+            artifacts/n28-sample-gates.json
+            artifacts/n28-sample-summary.txt
+          retention-days: 7
+          # IMPORTANTE: este artefato contém SOMENTE:
+          #   - SHADOW-001..012 IDs
+          #   - 7 campos comerciais estruturados (allowlist)
+          #   - resultados dos gates de privacidade
+          # NUNCA contém: IDs reais, nome, email, CPF/CNPJ, telefone, endereço,
+          #               número de pedido, vendedor, observações, mapa real→SHADOW

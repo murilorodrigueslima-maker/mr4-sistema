@@ -334,7 +334,9 @@ function validarFatosNoTexto(texto, claims, facts) {
   // ── Valores monetários (R$ prefix) ───────────────────────────────────────
   const monetarios = texto.match(REGEX_MONETARIO) || [];
   for (const m of monetarios) {
-    if (!temClaimDe('faturamento', 'ticketMedioCents')) {
+    // 'faturamento' cobre faturamentoTotalCents (N28) e faturamentoTotal (N29).
+    // 'ticketMedio' cobre ticketMedioCents (N28) e ticketMedioTotal (N29).
+    if (!temClaimDe('faturamento', 'ticketMedio')) {
       throw new TextFactViolationError('MONETARIO', m);
     }
   }
@@ -342,7 +344,7 @@ function validarFatosNoTexto(texto, claims, facts) {
   // ── Valores em reais sem prefixo R$ (ex: "1500 reais") ───────────────────
   const reaisTexto = texto.match(REGEX_REAIS) || [];
   for (const m of reaisTexto) {
-    if (!temClaimDe('faturamento', 'ticketMedioCents')) {
+    if (!temClaimDe('faturamento', 'ticketMedio')) {
       throw new TextFactViolationError('REAIS_TEXTO', m);
     }
   }

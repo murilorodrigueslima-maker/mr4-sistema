@@ -1,0 +1,206 @@
+{
+  "_meta": {
+    "geradoEm": "2026-09-19T13:58:12.098Z",
+    "pilot": "N33.4",
+    "aiMode": "SHADOW",
+    "modelo": "gpt-5.6-luna",
+    "store": false,
+    "head": "6f848edfc8c8f1394889a5bde938d6eab60a0ae9",
+    "nota": "SHADOW — outputs nunca chegam ao vendedor. Nenhum dado real de identidade."
+  },
+  "configuracao": {
+    "primaryCases": 6,
+    "realSanitizedCases": 5,
+    "syntheticControlCases": 1
+  },
+  "estatisticas": {
+    "llmSuccess": 6,
+    "schemaBlock": 0,
+    "contractBlock": 0,
+    "financialBlock": 0,
+    "securityBlock": 0,
+    "infraError": 0,
+    "httpCalls": 6,
+    "retryCalls": 0,
+    "inputTokens": 2855,
+    "outputTokens": 390,
+    "totalTokens": 3245,
+    "latAvgMs": 1815,
+    "latP50Ms": 1588,
+    "latP95Ms": 3264
+  },
+  "resultados": [
+    {
+      "pilotId": "P01-REAT-A",
+      "tipo": "REAL_SANITIZED",
+      "tipoOportunidade": "REATIVACAO_120D",
+      "pipelineOutcome": "LLM_SUCCESS",
+      "comoAbordar": "Investigue o motivo da pausa nas compras e se houve mudança no padrão de abastecimento. Verifique também se existe demanda atual e, conforme a resposta, identifique como retomar o relacionamento.",
+      "atrasoCicloStatus": "ATRASADO",
+      "variacaoJ30Status": "SEM_MOVIMENTO",
+      "variacaoJ90Status": "QUEDA_TOTAL",
+      "camposContexto": [
+        "versao",
+        "tipoOportunidade",
+        "decisaoAcao",
+        "diasSemComprar",
+        "cicloMedianoDias",
+        "tendencia",
+        "diasAlemDoCiclo",
+        "razaoDoCiclo",
+        "statusVariacaoPedidos",
+        "variacaoPedidosPct"
+      ],
+      "latenciaMs": 3264,
+      "tokens": {
+        "input": 483,
+        "output": 57,
+        "cached": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "pilotId": "P02-REAT-B",
+      "tipo": "REAL_SANITIZED",
+      "tipoOportunidade": "REATIVACAO_120D",
+      "pipelineOutcome": "LLM_SUCCESS",
+      "comoAbordar": "Conduza o contato para entender o que interrompeu o ciclo de compras e se há alguma demanda atual. Investigue também se houve mudança no padrão de abastecimento ou no fornecedor utilizado.",
+      "atrasoCicloStatus": "ATRASADO",
+      "variacaoJ30Status": "SEM_MOVIMENTO",
+      "variacaoJ90Status": "SEM_MOVIMENTO",
+      "camposContexto": [
+        "versao",
+        "tipoOportunidade",
+        "decisaoAcao",
+        "diasSemComprar",
+        "cicloMedianoDias",
+        "tendencia",
+        "diasAlemDoCiclo",
+        "razaoDoCiclo"
+      ],
+      "latenciaMs": 1486,
+      "tokens": {
+        "input": 462,
+        "output": 57,
+        "cached": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "pilotId": "P03-QUEDA-A",
+      "tipo": "REAL_SANITIZED",
+      "tipoOportunidade": "QUEDA_DE_COMPRAS",
+      "pipelineOutcome": "LLM_SUCCESS",
+      "comoAbordar": "Investigue a queda de compras: o cliente está há 31 dias sem comprar, 9 dias além do ciclo habitual de 22 dias. Procure entender se houve mudança de necessidade, giro de estoque ou alteração no padrão de compras.",
+      "atrasoCicloStatus": "ATRASADO",
+      "variacaoJ30Status": "QUEDA_TOTAL",
+      "variacaoJ90Status": "QUEDA",
+      "camposContexto": [
+        "versao",
+        "tipoOportunidade",
+        "decisaoAcao",
+        "diasSemComprar",
+        "cicloMedianoDias",
+        "tendencia",
+        "diasAlemDoCiclo",
+        "razaoDoCiclo",
+        "statusVariacaoPedidos",
+        "variacaoPedidosPct"
+      ],
+      "latenciaMs": 1398,
+      "tokens": {
+        "input": 479,
+        "output": 66,
+        "cached": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "pilotId": "P04-QUEDA-B",
+      "tipo": "REAL_SANITIZED",
+      "tipoOportunidade": "QUEDA_DE_COMPRAS",
+      "pipelineOutcome": "LLM_SUCCESS",
+      "comoAbordar": "Investigue a razão da queda de 60% nas compras e dos 60 dias sem pedidos, verificando se houve mudança de necessidade, giro de estoque ou no padrão de abastecimento. Compare o consumo atual com o ciclo habitual de aproximadamente 15 dias para entender o novo ritmo de compras.",
+      "atrasoCicloStatus": "ATRASADO",
+      "variacaoJ30Status": "SEM_MOVIMENTO",
+      "variacaoJ90Status": "QUEDA",
+      "camposContexto": [
+        "versao",
+        "tipoOportunidade",
+        "decisaoAcao",
+        "diasSemComprar",
+        "cicloMedianoDias",
+        "tendencia",
+        "diasAlemDoCiclo",
+        "razaoDoCiclo",
+        "statusVariacaoPedidos",
+        "variacaoPedidosPct"
+      ],
+      "latenciaMs": 1873,
+      "tokens": {
+        "input": 480,
+        "output": 77,
+        "cached": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "pilotId": "P05-JANELA-A",
+      "tipo": "REAL_SANITIZED",
+      "tipoOportunidade": "JANELA_DE_RECOMPRA",
+      "pipelineOutcome": "LLM_SUCCESS",
+      "comoAbordar": "Faça um acompanhamento leve para verificar a necessidade atual e investigar se há reposição de estoque pendente. Como o cliente está oito dias além do ciclo habitual e não houve compra no período, confirme apenas se existe alguma demanda, sem criar urgência.",
+      "atrasoCicloStatus": "ATRASADO",
+      "variacaoJ30Status": "QUEDA_TOTAL",
+      "variacaoJ90Status": "BASE_ZERO_CRESCIMENTO",
+      "camposContexto": [
+        "versao",
+        "tipoOportunidade",
+        "decisaoAcao",
+        "diasSemComprar",
+        "cicloMedianoDias",
+        "tendencia",
+        "diasAlemDoCiclo",
+        "razaoDoCiclo",
+        "statusVariacaoPedidos",
+        "variacaoPedidosPct"
+      ],
+      "latenciaMs": 1588,
+      "tokens": {
+        "input": 474,
+        "output": 67,
+        "cached": 0,
+        "reasoning": 0
+      }
+    },
+    {
+      "pilotId": "P06-JANELA-B",
+      "tipo": "SYNTHETIC_CONTROL",
+      "tipoOportunidade": "JANELA_DE_RECOMPRA",
+      "pipelineOutcome": "LLM_SUCCESS",
+      "comoAbordar": "Faça um acompanhamento leve para verificar a necessidade atual e investigar se há reposição de estoque a programar. Como o intervalo está um pouco além do ciclo habitual, confirme apenas se o cliente precisa recompor neste momento, sem criar urgência.",
+      "atrasoCicloStatus": "ATRASADO",
+      "variacaoJ30Status": "ESTAVEL",
+      "variacaoJ90Status": "CRESCIMENTO",
+      "camposContexto": [
+        "versao",
+        "tipoOportunidade",
+        "decisaoAcao",
+        "diasSemComprar",
+        "cicloMedianoDias",
+        "tendencia",
+        "diasAlemDoCiclo",
+        "razaoDoCiclo",
+        "statusVariacaoPedidos",
+        "variacaoPedidosPct"
+      ],
+      "latenciaMs": 1281,
+      "tokens": {
+        "input": 477,
+        "output": 66,
+        "cached": 0,
+        "reasoning": 0
+      }
+    }
+  ]
+}

@@ -17,6 +17,9 @@ const { calcularTendencia }      = require('../tendenciaComercial');
 const { calcularRecorrencia }    = require('../recorrencia');
 const { gerarOportunidades }     = require('../oportunidades');
 const { priorizarOportunidades } = require('../priorizadorOportunidades');
+const { calcularDecisaoAcaoComercial } = require('../decisaoAcaoComercial');
+const { calcularAtrasoCiclo, calcularVariacaoVolume } = require('../sinaisComerciais');
+const { calcularSellerAssist }   = require('../n33/sellerAssistService');
 const { analisar }               = require('./agents/analistaCliente');
 const { analisarOportunidade }   = require('./agents/analistaOportunidade');
 const { orientarVendedor }       = require('./agents/assistenteVendedor');
@@ -76,9 +79,45 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
   const oportunidadesRanqueadas = priorizarOportunidades(oportunidades, perfil, score);
   encPrio({ count: oportunidadesRanqueadas.length });
 
+  const oportunidadePrincipal = oportunidadesRanqueadas[0] || null;
+
+  // ── Etapa 5b: Decisão de Ação Comercial (N30) ──────────────────────────────
+  const { encerrar: encDecisao } = trace.iniciarSpan('calcularDecisaoAcaoComercial');
+  const decisaoInput = {
+    tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+    recorrenciaStatus:       recorrencia.status,
+    diasEntreComprasMediana: perfil.diasEntreComprasMediana,
+    diasSemComprar:          perfil.diasSemComprar,
+  };
+  const decisaoResult = calcularDecisaoAcaoComercial(decisaoInput);
+  encDecisao({ decisaoAcaoComercial: decisaoResult.decisaoAcaoComercial });
+
+  // ── Etapa 5c: Sinais Comerciais (N33.2) ────────────────────────────────────
+  const { encerrar: encSinais } = trace.iniciarSpan('calcularSinaisComerciais');
+  const atrasoCiclo    = calcularAtrasoCiclo(perfil.diasSemComprar, perfil.diasEntreComprasMediana);
+  const variacaoVolume = calcularVariacaoVolume(perfil);
+  encSinais({ statusAtraso: atrasoCiclo.status });
+
+  // ── Etapa 5d: Seller Assist (N33.5) ───────────────────────────────────────
+  const { encerrar: encAssist } = trace.iniciarSpan('calcularSellerAssist');
+  const sellerAssistDecisaoCtx = {
+    decisaoAcaoComercial:    decisaoResult.decisaoAcaoComercial,
+    diasAteProximoCiclo:     decisaoResult.diasAteProximoCiclo,
+    tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+    diasSemComprar:          perfil.diasSemComprar,
+    diasEntreComprasMediana: perfil.diasEntreComprasMediana,
+    tendencia:               tendencia.tendencia,
+  };
+  const sellerAssistSinaisCtx = { atrasoCiclo, variacaoVolume };
+  const sellerAssist = await calcularSellerAssist(
+    sellerAssistDecisaoCtx,
+    sellerAssistSinaisCtx,
+    { provider: opcoes.sellerAssistProvider || null }
+  );
+  encAssist({ modo: sellerAssist.modo, llmStatus: sellerAssist.metadata.llmStatus });
+
   // ── Etapa 6: Grounding Facts ────────────────────────────────────────────────
   const { encerrar: encGround } = trace.iniciarSpan('buildGroundingFacts');
-  const oportunidadePrincipal   = oportunidadesRanqueadas[0] || null;
   const facts = buildGroundingFacts(perfil, score, tendencia, recorrencia, {
     oportunidade: oportunidadePrincipal,
   });
@@ -167,6 +206,8 @@ async function executarPipelineComercial(perfil, opcoes = {}) {
     tendencia,
     recorrencia,
     oportunidades:         oportunidadesRanqueadas,
+    decisaoAcaoComercial:  decisaoResult.decisaoAcaoComercial,
+    sellerAssist,
     analise:               analiseValidada,
     analiseOportunidade,
     orientacaoVendedor,

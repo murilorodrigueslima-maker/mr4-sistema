@@ -29,6 +29,7 @@ const {
   AbordagemViolationError,
 } = require('./abordagemContract');
 const { construirUserPrompt, VERSAO_PROMPT } = require('./promptComoAbordar');
+const { TIPOS_RECOMPRA_V1 } = require('../decisaoAcaoComercial');
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
 
@@ -223,6 +224,10 @@ async function calcularSellerAssist(decisaoCtx, sinaisCtx = {}, opcoes = {}) {
   const decisaoAcao = decisaoCtx.decisaoAcaoComercial;
 
   if (decisaoAcao === 'AGIR_AGORA') {
+    const tipo = decisaoCtx.tipoOportunidade;
+    if (!tipo || !TIPOS_RECOMPRA_V1.includes(tipo)) {
+      return _buildFailClosedResult(`Tipo de oportunidade não suportado pelo Seller Assist V1: "${tipo ?? 'null'}".`);
+    }
     return _rotaHybridLLM(decisaoCtx, sinaisCtx, opcoes);
   }
 

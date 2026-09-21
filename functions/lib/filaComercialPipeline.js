@@ -1,11 +1,12 @@
 'use strict';
-// N34.3 — Fila Comercial Pipeline
+// N34.3.2 — Fila Comercial Pipeline (refatorado)
 // Pipeline determinístico: transforma dados brutos de clientes em clientesBrutos
-// prontos para construirSnapshot(). ZERO OPENAI: sellerAssist com provider=null.
+// prontos para construirSnapshot(). Sem Seller Assist. Sem OpenAI. Sem erros de infra.
 //
 // INVARIANTES:
-//   OPENAI_CALLS=0        (provider: null → INFRA_ERROR path, sem LLM)
+//   OPENAI_CALLS=0        (sem LLM — renderer puro de abordagemContract)
 //   PROD_WRITES=0         (este módulo não acessa Firestore)
+//   SELLER_ASSIST=NO      (situacao/quando via renderers diretos de abordagemContract)
 //   prioridadeFinal→prioridade no clienteBruto (para filtrarOrdenarFilaHoje)
 
 const { calcularScore }               = require('./scoreComercial');
@@ -14,11 +15,15 @@ const { calcularRecorrencia }         = require('./recorrencia');
 const { gerarOportunidades }          = require('./oportunidades');
 const { priorizarOportunidades }      = require('./priorizadorOportunidades');
 const { calcularDecisaoAcaoComercial }= require('./decisaoAcaoComercial');
-const { calcularAtrasoCiclo, calcularVariacaoVolume } = require('./sinaisComerciais');
-const { calcularSellerAssist }        = require('./n33/sellerAssistService');
 const { calcularPerfil360 }           = require('./perfil360');
+const {
+  QUANDO_AGIR_AGORA,
+  renderizarAgirAgora,
+  renderizarProgramarCiclo,
+  renderizarNaoAgir,
+} = require('./n33/abordagemContract');
 
-const PIPELINE_VERSION = 'N34.3-local';
+const PIPELINE_VERSION = 'N34.3.2-local';
 
 /**
  * Processa um único cliente e retorna clienteBruto para construirSnapshot().
@@ -65,25 +70,27 @@ async function processarCliente(clienteInput, opts = {}) {
     diasSemComprar:          perfil.diasSemComprar,
   });
 
-  // 8. Sinais comerciais (para contexto do sellerAssist)
-  const atrasoCiclo    = calcularAtrasoCiclo(perfil.diasSemComprar, perfil.diasEntreComprasMediana);
-  const variacaoVolume = calcularVariacaoVolume(perfil);
+  // 8. Renderer determinístico — zero Seller Assist, zero LLM, zero erros de infra
+  const decisaoAcao = decisaoResult.decisaoAcaoComercial;
+  let situacaoFila, quandoFila;
 
-  // 9. SellerAssist — ZERO OPENAI: provider=null → INFRA_ERROR path, retorno determinístico
-  //    Para AGIR_AGORA: situacao e quando retornam via _renderSituacaoAgirAgora
-  //    Para PROGRAMAR_CICLO / NAO_AGIR: retorno via rotas determinísticas
-  const sellerAssist = await calcularSellerAssist(
-    {
-      decisaoAcaoComercial:    decisaoResult.decisaoAcaoComercial,
-      diasAteProximoCiclo:     decisaoResult.diasAteProximoCiclo,
+  if (decisaoAcao === 'AGIR_AGORA') {
+    situacaoFila = renderizarAgirAgora({
       tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
       diasSemComprar:          perfil.diasSemComprar,
       diasEntreComprasMediana: perfil.diasEntreComprasMediana,
-      tendencia:               tendenciaResult.tendencia,
-    },
-    { atrasoCiclo, variacaoVolume },
-    { provider: null }  // ZERO OPENAI
-  );
+    });
+    quandoFila = QUANDO_AGIR_AGORA;
+  } else if (decisaoAcao === 'PROGRAMAR_CICLO') {
+    const rendered = renderizarProgramarCiclo(decisaoResult.diasAteProximoCiclo);
+    situacaoFila   = rendered.situacao;
+    quandoFila     = rendered.quando;
+  } else {
+    // NAO_AGIR e fallback
+    const rendered = renderizarNaoAgir();
+    situacaoFila   = rendered.situacao;
+    quandoFila     = rendered.quando;
+  }
 
   return {
     clienteMr4Id:            clienteInput.clienteMr4Id,
@@ -96,8 +103,8 @@ async function processarCliente(clienteInput, opts = {}) {
     diasEntreComprasMediana: perfil.diasEntreComprasMediana,
     tendencia:               tendenciaResult.tendencia,
     sellerAssist: {
-      situacao: sellerAssist.situacao,
-      quando:   sellerAssist.quando,
+      situacao: situacaoFila,
+      quando:   quandoFila,
       sinais: {
         diasSemComprar:   perfil.diasSemComprar,
         cicloMedianoDias: perfil.diasEntreComprasMediana,

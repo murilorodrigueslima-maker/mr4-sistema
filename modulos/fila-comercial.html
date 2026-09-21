@@ -139,12 +139,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 <div class="app" id="appContainer" style="display:none">
   <div class="main" id="mainContent">
 
-    <!-- Aviso DATA_DELIVERY_GAP — remover quando pipeline estiver persistindo para Firestore -->
-    <div class="data-gap-notice" id="dataGapNotice">
-      <span class="material-symbols-outlined">info</span>
-      <span><strong>Modo demonstração</strong> — dados de exemplo. A fila real requer integração do pipeline com Firestore (N34.3).</span>
-    </div>
-
     <!-- Seção HOJE -->
     <div class="queue-section" id="secHoje">
       <div class="section-header">
@@ -184,7 +178,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 <script type="module">
 import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -196,6 +190,11 @@ const app = initializeApp({
 });
 const auth = getAuth(app);
 const db   = getFirestore(app);
+
+// Conecta ao emulador Firestore quando rodando localmente (N34.3 / dev)
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  connectFirestoreEmulator(db, 'localhost', 8080);
+}
 
 // ── Constantes (espelho de filaComercialUtils.js — lógica de apresentação pura) ──
 
@@ -225,55 +224,6 @@ function labelOportunidade(tipo) {
   return LABEL_OPORTUNIDADE[tipo] || null;
 }
 
-function filtrarOrdenarFilaHoje(clientes) {
-  if (!Array.isArray(clientes)) return [];
-  return clientes
-    .filter(c => c && c.decisaoAcaoComercial === 'AGIR_AGORA' && TIPOS_RECOMPRA_V1.includes(c.tipoOportunidade))
-    .sort((a, b) => {
-      const pA = typeof a.prioridade === 'number' ? a.prioridade : 0;
-      const pB = typeof b.prioridade === 'number' ? b.prioridade : 0;
-      if (pB !== pA) return pB - pA;
-      const dA = typeof a.diasSemComprar === 'number' ? a.diasSemComprar : 0;
-      const dB = typeof b.diasSemComprar === 'number' ? b.diasSemComprar : 0;
-      if (dB !== dA) return dB - dA;
-      return (a.clienteMr4Id || '').localeCompare(b.clienteMr4Id || '');
-    });
-}
-
-function filtrarOrdenarProximosContatos(clientes) {
-  if (!Array.isArray(clientes)) return [];
-  return clientes
-    .filter(c =>
-      c &&
-      c.decisaoAcaoComercial === 'PROGRAMAR_CICLO' &&
-      typeof c.diasAteProximoCiclo === 'number' &&
-      c.diasAteProximoCiclo >= 0 &&
-      c.diasAteProximoCiclo <= UPCOMING_WINDOW_DAYS
-    )
-    .sort((a, b) => {
-      if (a.diasAteProximoCiclo !== b.diasAteProximoCiclo) return a.diasAteProximoCiclo - b.diasAteProximoCiclo;
-      return (a.clienteMr4Id || '').localeCompare(b.clienteMr4Id || '');
-    });
-}
-
-function extrairSinaisVisiveis(cliente) {
-  const sinais = [];
-  if (typeof cliente.diasSemComprar === 'number' && cliente.diasSemComprar >= 0) {
-    sinais.push({ label: 'Dias sem comprar', valor: `${cliente.diasSemComprar} dias` });
-  }
-  const mediana = (typeof cliente.diasEntreComprasMediana === 'number' ? cliente.diasEntreComprasMediana : null)
-    ?? (cliente.sellerAssist?.sinais?.cicloMedianoDias ?? null);
-  if (typeof mediana === 'number' && mediana > 0) {
-    sinais.push({ label: 'Ciclo habitual', valor: `${mediana} dias` });
-  }
-  const tendencia = cliente.tendencia ?? (cliente.sellerAssist?.sinais?.tendencia ?? null);
-  if (tendencia) {
-    const mapa = { SUBINDO: '↗ Subindo', CAINDO: '↘ Caindo', ESTAVEL: '→ Estável' };
-    sinais.push({ label: 'Tendência', valor: mapa[tendencia] || tendencia });
-  }
-  return sinais.slice(0, 3);
-}
-
 function formatarDiasAteProximoCiclo(dias) {
   if (dias == null || typeof dias !== 'number' || dias < 0) return null;
   if (dias === 0) return 'Hoje';
@@ -281,12 +231,11 @@ function formatarDiasAteProximoCiclo(dias) {
   return `Em ${dias} dias`;
 }
 
-// ── DATA_DELIVERY_GAP — fixture local ────────────────────────────────────────
-// Pipeline em SHADOW: resultados não persistidos em Firestore.
-// Este fixture simula a estrutura de dados do pipeline para desenvolvimento da UI.
-// REMOVER e substituir por consulta real ao implementar N34.3.
+// ── [FIXTURE REMOVIDO — N34.3] ────────────────────────────────────────────────
+// Firestore é a única fonte de dados. Veja carregarSnapshot().
+// PRODUCTION_UI_FIXTURE_FALLBACK=NO
 
-const FIXTURE_CLIENTES = [
+const FIXTURE_CLIENTES_LEGACY_PLACEHOLDER = [
   {
     clienteMr4Id: 'DEMO_F1', nomeCliente: 'Farmácia Central Ltda',
     decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'REATIVACAO_120D',
@@ -383,6 +332,27 @@ const FIXTURE_CLIENTES = [
 
 // ── Estado ─────────────────────────────────────────────────────────────────────
 let clienteSelecionado = null;
+let snapshotState = { clientesHoje: [], clientesProximos: [] };
+
+// ── Carregamento do snapshot (N34.3) ──────────────────────────────────────────
+async function carregarSnapshot() {
+  try {
+    const snapDoc = await getDoc(doc(db, 'fila_comercial', 'snapshot'));
+    if (snapDoc.exists()) {
+      const data = snapDoc.data();
+      snapshotState = {
+        clientesHoje:    Array.isArray(data.clientesHoje)    ? data.clientesHoje    : [],
+        clientesProximos: Array.isArray(data.clientesProximos) ? data.clientesProximos : [],
+      };
+    } else {
+      snapshotState = { clientesHoje: [], clientesProximos: [] };
+    }
+  } catch (e) {
+    snapshotState = { clientesHoje: [], clientesProximos: [] };
+    console.error('[fila-comercial] Erro ao carregar snapshot:', e);
+  }
+  renderizarFila();
+}
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async u => {
@@ -422,7 +392,7 @@ function inicializar() {
   document.getElementById('mainUI').style.display = 'flex';
   document.getElementById('appContainer').style.display = 'flex';
 
-  renderizarFila();
+  carregarSnapshot();  // N34.3: lê fila_comercial/snapshot do Firestore
 
   document.getElementById('detailClose').addEventListener('click', fecharDetalhe);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharDetalhe(); });
@@ -430,8 +400,8 @@ function inicializar() {
 
 // ── Renderização ──────────────────────────────────────────────────────────────
 function renderizarFila() {
-  const filaHoje     = filtrarOrdenarFilaHoje(FIXTURE_CLIENTES);
-  const filaProximos = filtrarOrdenarProximosContatos(FIXTURE_CLIENTES);
+  const filaHoje     = snapshotState.clientesHoje    || [];
+  const filaProximos = snapshotState.clientesProximos || [];
 
   document.getElementById('badgeHoje').textContent = filaHoje.length;
   document.getElementById('badgeProximos').textContent = filaProximos.length;
@@ -449,13 +419,13 @@ function renderizarFila() {
   document.getElementById('listaProximos').innerHTML =
     filaProximos.length ? filaProximos.map((c, i) => renderCard(c, 'proximos', i)).join('') : renderEmpty('proximos');
 
-  // Eventos nos cards
+  // Eventos nos cards — usa snapshotState como fonte de dados
   document.querySelectorAll('.queue-card').forEach(el => {
     el.addEventListener('click', () => {
       const idx  = parseInt(el.dataset.idx, 10);
       const modo = el.dataset.modo;
-      const lista = modo === 'hoje' ? filtrarOrdenarFilaHoje(FIXTURE_CLIENTES) : filtrarOrdenarProximosContatos(FIXTURE_CLIENTES);
-      abrirDetalhe(lista[idx], el);
+      const lista = modo === 'hoje' ? snapshotState.clientesHoje : snapshotState.clientesProximos;
+      if (lista && lista[idx]) abrirDetalhe(lista[idx], el);
     });
   });
 }
@@ -465,7 +435,7 @@ function renderCard(c, modo, idx) {
   const fundo  = COR_FUNDO_OPORTUNIDADE[c.tipoOportunidade] || 'rgba(95,99,104,.08)';
   const label  = labelOportunidade(c.tipoOportunidade);
   const dias   = typeof c.diasSemComprar === 'number' ? `há ${c.diasSemComprar}d` : '';
-  const sit    = c.sellerAssist?.situacao || '';
+  const sit    = c.situacao || '';  // VIEW MODEL: situacao já está no top-level
 
   let extras = '';
   if (modo === 'proximos') {
@@ -514,9 +484,9 @@ function abrirDetalhe(cliente, cardEl) {
   const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
   const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
   const label = labelOportunidade(cliente.tipoOportunidade);
-  const sit   = cliente.sellerAssist?.situacao || null;
-  const quando = cliente.sellerAssist?.quando || null;
-  const sinais = extrairSinaisVisiveis(cliente);
+  const sit    = cliente.situacao || null;          // VIEW MODEL: top-level
+  const quando = cliente.quando   || null;          // VIEW MODEL: top-level
+  const sinais = Array.isArray(cliente.sinaisVisiveis) ? cliente.sinaisVisiveis : [];
 
   let html = '';
 

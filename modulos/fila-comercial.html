@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fila Comercial — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a73e8;--blue-dk:#1557b0;--blue-lt:rgba(26,115,232,.08);
+  --bg:#f5f5f5;--white:#FFFFFF;--text:#202124;--muted:#5f6368;
+  --border:#dadce0;--border-dk:#c6c9ce;
+  --green:#0d904f;--yellow:#e37400;--red:#d93025;
+  --detail-w:380px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* ── TOPBAR ── */
+.topbar{height:54px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1.1rem;gap:.75rem;flex-shrink:0;z-index:50;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.topbar-back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.35rem .7rem;border:1px solid var(--border);border-radius:8px;transition:all .15s;white-space:nowrap}
+.topbar-back:hover{color:var(--text);border-color:var(--border-dk)}
+.topbar-divider{width:1px;height:22px;background:var(--border);flex-shrink:0}
+.topbar-title{font-size:.95rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:.45rem}
+.topbar-title .material-symbols-outlined{font-size:1.15rem;color:var(--blue)}
+.topbar-spacer{flex:1}
+.topbar-user{font-size:.78rem;font-weight:500;color:var(--muted)}
+
+/* ── LAYOUT ── */
+.app{display:flex;flex:1;overflow:hidden}
+
+/* ── MAIN ── */
+.main{flex:1;overflow-y:auto;padding:1.25rem 1.5rem}
+
+/* ── SEÇÃO DA FILA ── */
+.queue-section{margin-bottom:2rem}
+.section-header{display:flex;align-items:center;gap:.6rem;margin-bottom:.85rem}
+.section-title{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.2px}
+.section-badge{background:var(--blue);color:#fff;font-size:.62rem;font-weight:700;padding:.1rem .42rem;border-radius:20px;min-width:20px;text-align:center}
+.section-badge.verde{background:var(--green)}
+.section-badge.vazio{background:var(--border-dk);color:var(--muted)}
+
+/* ── CARD DA FILA ── */
+.queue-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;margin-bottom:.55rem;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:.85rem;position:relative}
+.queue-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(26,115,232,.12)}
+.queue-card.selected{border-color:var(--blue);background:rgba(26,115,232,.03);box-shadow:0 2px 12px rgba(26,115,232,.12)}
+.card-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:.28rem}
+.card-body{flex:1;min-width:0}
+.card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.22rem;flex-wrap:wrap}
+.card-nome{font-size:.88rem;font-weight:700;color:var(--text)}
+.card-tipo{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;letter-spacing:.2px;white-space:nowrap}
+.card-dias{font-size:.72rem;font-weight:500;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0}
+.card-situacao{font-size:.76rem;color:var(--muted);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* ── NEXT CYCLE (seção PRÓXIMOS) ── */
+.card-quando-badge{font-size:.7rem;font-weight:600;color:var(--green);background:rgba(13,144,79,.08);padding:.15rem .5rem;border-radius:20px;white-space:nowrap}
+
+/* ── EMPTY STATE ── */
+.empty-state{padding:2rem 1rem;text-align:center;color:var(--muted)}
+.empty-icon{font-size:2.5rem;margin-bottom:.5rem}
+.empty-title{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+.empty-desc{font-size:.78rem;line-height:1.5}
+
+/* ── LOADING / ERROR ── */
+.loading-msg{padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem}
+
+/* ── DATA GAP NOTICE ── */
+.data-gap-notice{background:#fef3e2;border:1px solid #f9ab00;border-radius:10px;padding:.65rem 1rem;margin-bottom:1.25rem;font-size:.74rem;color:#e37400;display:flex;align-items:center;gap:.5rem}
+.data-gap-notice .material-symbols-outlined{font-size:1rem;flex-shrink:0}
+
+/* ── DETAIL PANEL ── */
+.detail-overlay{position:fixed;top:54px;right:0;bottom:0;width:var(--detail-w);background:var(--white);border-left:1px solid var(--border);box-shadow:-4px 0 20px rgba(0,0,0,.08);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;z-index:40}
+.detail-overlay.open{transform:translateX(0)}
+.detail-topbar{height:50px;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 1rem;gap:.6rem;flex-shrink:0}
+.detail-close{width:30px;height:30px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:7px;color:var(--muted);transition:all .12s;flex-shrink:0}
+.detail-close:hover{background:var(--bg);color:var(--text)}
+.detail-close .material-symbols-outlined{font-size:1.15rem}
+.detail-title{font-size:.88rem;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail-body{flex:1;overflow-y:auto;padding:1.1rem}
+
+.detail-tipo-pill{display:inline-flex;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;margin-bottom:1rem}
+
+.detail-section{margin-bottom:1.1rem}
+.detail-section-label{font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.35rem}
+.detail-section-text{font-size:.82rem;color:var(--text);line-height:1.55}
+.detail-quando-box{background:rgba(13,144,79,.06);border:1px solid rgba(13,144,79,.18);border-radius:9px;padding:.6rem .85rem;font-size:.82rem;font-weight:600;color:var(--green)}
+
+/* ── SINAIS ── */
+.sinais-list{display:flex;flex-direction:column;gap:.4rem}
+.sinal-row{display:flex;align-items:center;justify-content:space-between;padding:.45rem .7rem;background:var(--bg);border-radius:8px;font-size:.78rem}
+.sinal-label{color:var(--muted);font-weight:500}
+.sinal-valor{color:var(--text);font-weight:700}
+
+/* ── SHIMMER (loading skeleton) ── */
+@keyframes shimmer{to{background-position:-200% 0}}
+.shimmer{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:8px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:.7rem 1.25rem;border-radius:10px;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;z-index:9999;display:none;align-items:center;gap:.5rem;box-shadow:0 8px 30px rgba(0,0,0,.18);animation:toastIn .2s ease}
+.toast.info{background:#e8f0fe;color:#1557b0;border:1.5px solid #aecbfa}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px){
+  .main{padding:.85rem .75rem}
+  .detail-overlay{width:100%;top:54px}
+  .topbar-user{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loadingScreen" style="position:fixed;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:.75rem">
+  <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite"></div>
+  <p style="font-size:.82rem;color:var(--muted)">Carregando fila comercial…</p>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+</div>
+
+<!-- Topbar -->
+<div class="topbar" id="mainUI" style="display:none">
+  <a href="../index.html" class="topbar-back">
+    <span class="material-symbols-outlined" style="font-size:.9rem">arrow_back</span>
+    Sistema
+  </a>
+  <div class="topbar-divider"></div>
+  <div class="topbar-title">
+    <span class="material-symbols-outlined">assignment</span>
+    Fila Comercial
+  </div>
+  <div class="topbar-spacer"></div>
+  <div class="topbar-user" id="topbarUser"></div>
+</div>
+
+<!-- App -->
+<div class="app" id="appContainer" style="display:none">
+  <div class="main" id="mainContent">
+
+    <!-- Aviso DATA_DELIVERY_GAP — remover quando pipeline estiver persistindo para Firestore -->
+    <div class="data-gap-notice" id="dataGapNotice">
+      <span class="material-symbols-outlined">info</span>
+      <span><strong>Modo demonstração</strong> — dados de exemplo. A fila real requer integração do pipeline com Firestore (N34.3).</span>
+    </div>
+
+    <!-- Seção HOJE -->
+    <div class="queue-section" id="secHoje">
+      <div class="section-header">
+        <span class="section-title">Hoje</span>
+        <span class="section-badge" id="badgeHoje">0</span>
+      </div>
+      <div id="listaHoje"><div class="loading-msg">Carregando…</div></div>
+    </div>
+
+    <!-- Seção PRÓXIMOS CONTATOS -->
+    <div class="queue-section" id="secProximos">
+      <div class="section-header">
+        <span class="section-title">Próximos contatos</span>
+        <span class="section-badge verde" id="badgeProximos">0</span>
+        <span style="font-size:.7rem;color:var(--muted);margin-left:.15rem">nos próximos 7 dias</span>
+      </div>
+      <div id="listaProximos"><div class="loading-msg">Carregando…</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Painel de detalhe -->
+<div class="detail-overlay" id="detailPanel">
+  <div class="detail-topbar">
+    <button class="detail-close" id="detailClose" aria-label="Fechar">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <div class="detail-title" id="detailNome">—</div>
+  </div>
+  <div class="detail-body" id="detailBody"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
+  authDomain:"mr4-ponto.firebaseapp.com",
+  projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app",
+  messagingSenderId:"848211361584",
+  appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── Constantes (espelho de filaComercialUtils.js — lógica de apresentação pura) ──
+
+const UPCOMING_WINDOW_DAYS = 7;
+
+const TIPOS_RECOMPRA_V1 = ['REATIVACAO_120D', 'QUEDA_DE_COMPRAS', 'JANELA_DE_RECOMPRA'];
+
+const LABEL_OPORTUNIDADE = {
+  REATIVACAO_120D:    'Retomar contato',
+  QUEDA_DE_COMPRAS:   'Queda no ritmo',
+  JANELA_DE_RECOMPRA: 'Janela de recompra',
+};
+
+const COR_OPORTUNIDADE = {
+  REATIVACAO_120D:    '#d93025',
+  QUEDA_DE_COMPRAS:   '#e37400',
+  JANELA_DE_RECOMPRA: '#1a73e8',
+};
+
+const COR_FUNDO_OPORTUNIDADE = {
+  REATIVACAO_120D:    'rgba(217,48,37,.1)',
+  QUEDA_DE_COMPRAS:   'rgba(227,116,0,.1)',
+  JANELA_DE_RECOMPRA: 'rgba(26,115,232,.1)',
+};
+
+function labelOportunidade(tipo) {
+  return LABEL_OPORTUNIDADE[tipo] || null;
+}
+
+function filtrarOrdenarFilaHoje(clientes) {
+  if (!Array.isArray(clientes)) return [];
+  return clientes
+    .filter(c => c && c.decisaoAcaoComercial === 'AGIR_AGORA' && TIPOS_RECOMPRA_V1.includes(c.tipoOportunidade))
+    .sort((a, b) => {
+      const pA = typeof a.prioridade === 'number' ? a.prioridade : 0;
+      const pB = typeof b.prioridade === 'number' ? b.prioridade : 0;
+      if (pB !== pA) return pB - pA;
+      const dA = typeof a.diasSemComprar === 'number' ? a.diasSemComprar : 0;
+      const dB = typeof b.diasSemComprar === 'number' ? b.diasSemComprar : 0;
+      if (dB !== dA) return dB - dA;
+      return (a.clienteMr4Id || '').localeCompare(b.clienteMr4Id || '');
+    });
+}
+
+function filtrarOrdenarProximosContatos(clientes) {
+  if (!Array.isArray(clientes)) return [];
+  return clientes
+    .filter(c =>
+      c &&
+      c.decisaoAcaoComercial === 'PROGRAMAR_CICLO' &&
+      typeof c.diasAteProximoCiclo === 'number' &&
+      c.diasAteProximoCiclo >= 0 &&
+      c.diasAteProximoCiclo <= UPCOMING_WINDOW_DAYS
+    )
+    .sort((a, b) => {
+      if (a.diasAteProximoCiclo !== b.diasAteProximoCiclo) return a.diasAteProximoCiclo - b.diasAteProximoCiclo;
+      return (a.clienteMr4Id || '').localeCompare(b.clienteMr4Id || '');
+    });
+}
+
+function extrairSinaisVisiveis(cliente) {
+  const sinais = [];
+  if (typeof cliente.diasSemComprar === 'number' && cliente.diasSemComprar >= 0) {
+    sinais.push({ label: 'Dias sem comprar', valor: `${cliente.diasSemComprar} dias` });
+  }
+  const mediana = (typeof cliente.diasEntreComprasMediana === 'number' ? cliente.diasEntreComprasMediana : null)
+    ?? (cliente.sellerAssist?.sinais?.cicloMedianoDias ?? null);
+  if (typeof mediana === 'number' && mediana > 0) {
+    sinais.push({ label: 'Ciclo habitual', valor: `${mediana} dias` });
+  }
+  const tendencia = cliente.tendencia ?? (cliente.sellerAssist?.sinais?.tendencia ?? null);
+  if (tendencia) {
+    const mapa = { SUBINDO: '↗ Subindo', CAINDO: '↘ Caindo', ESTAVEL: '→ Estável' };
+    sinais.push({ label: 'Tendência', valor: mapa[tendencia] || tendencia });
+  }
+  return sinais.slice(0, 3);
+}
+
+function formatarDiasAteProximoCiclo(dias) {
+  if (dias == null || typeof dias !== 'number' || dias < 0) return null;
+  if (dias === 0) return 'Hoje';
+  if (dias === 1) return 'Amanhã';
+  return `Em ${dias} dias`;
+}
+
+// ── DATA_DELIVERY_GAP — fixture local ────────────────────────────────────────
+// Pipeline em SHADOW: resultados não persistidos em Firestore.
+// Este fixture simula a estrutura de dados do pipeline para desenvolvimento da UI.
+// REMOVER e substituir por consulta real ao implementar N34.3.
+
+const FIXTURE_CLIENTES = [
+  {
+    clienteMr4Id: 'DEMO_F1', nomeCliente: 'Farmácia Central Ltda',
+    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'REATIVACAO_120D',
+    prioridade: 97, diasSemComprar: 143, diasEntreComprasMediana: 30,
+    diasAteProximoCiclo: null, tendencia: 'CAINDO',
+    sellerAssist: {
+      situacao: 'Sem compras há 143 dias. Ciclo habitual desta farmácia é de 30 dias — o afastamento está muito além do padrão.',
+      quando: 'Ação recomendada neste ciclo.',
+      sinais: { diasSemComprar: 143, cicloMedianoDias: 30, tendencia: 'CAINDO' },
+    },
+  },
+  {
+    clienteMr4Id: 'DEMO_F2', nomeCliente: 'Auto Peças Vitória',
+    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'JANELA_DE_RECOMPRA',
+    prioridade: 75, diasSemComprar: 36, diasEntreComprasMediana: 30,
+    diasAteProximoCiclo: null, tendencia: 'ESTAVEL',
+    sellerAssist: {
+      situacao: 'Na janela de recompra habitual. Última compra há 36 dias; ciclo habitual: 30 dias.',
+      quando: 'Ação recomendada neste ciclo.',
+      sinais: { diasSemComprar: 36, cicloMedianoDias: 30, tendencia: 'ESTAVEL' },
+    },
+  },
+  {
+    clienteMr4Id: 'DEMO_F3', nomeCliente: 'Distribuidora Norte SP',
+    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'QUEDA_DE_COMPRAS',
+    prioridade: 65, diasSemComprar: 22, diasEntreComprasMediana: 30,
+    diasAteProximoCiclo: null, tendencia: 'CAINDO',
+    sellerAssist: {
+      situacao: 'Volume de compras em queda. Sem compras há 22 dias — frequência abaixo do padrão habitual.',
+      quando: 'Ação recomendada neste ciclo.',
+      sinais: { diasSemComprar: 22, cicloMedianoDias: 30, tendencia: 'CAINDO' },
+    },
+  },
+  {
+    clienteMr4Id: 'DEMO_F4', nomeCliente: 'Mecânica Sul Distribuidora',
+    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'REATIVACAO_120D',
+    prioridade: 58, diasSemComprar: 127, diasEntreComprasMediana: 45,
+    diasAteProximoCiclo: null, tendencia: 'CAINDO',
+    sellerAssist: {
+      situacao: 'Sem compras há 127 dias. Ciclo habitual: 45 dias.',
+      quando: 'Ação recomendada neste ciclo.',
+      sinais: { diasSemComprar: 127, cicloMedianoDias: 45, tendencia: 'CAINDO' },
+    },
+  },
+  {
+    clienteMr4Id: 'DEMO_P1', nomeCliente: 'Auto Center Recife',
+    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
+    prioridade: null, diasSemComprar: 28, diasEntreComprasMediana: 30,
+    diasAteProximoCiclo: 2, tendencia: 'ESTAVEL',
+    sellerAssist: {
+      situacao: 'Cliente dentro do ciclo habitual de compras. Próximo contato programado.',
+      quando: 'Próximo ciclo em 2 dias.',
+      sinais: null,
+    },
+  },
+  {
+    clienteMr4Id: 'DEMO_P2', nomeCliente: 'Peças & Cia Maceió',
+    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
+    prioridade: null, diasSemComprar: 23, diasEntreComprasMediana: 30,
+    diasAteProximoCiclo: 7, tendencia: 'ESTAVEL',
+    sellerAssist: {
+      situacao: 'Cliente dentro do ciclo habitual de compras.',
+      quando: 'Próximo ciclo em 7 dias.',
+      sinais: null,
+    },
+  },
+  {
+    clienteMr4Id: 'DEMO_P3', nomeCliente: 'Loja Auto Atacado BH',
+    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
+    prioridade: null, diasSemComprar: 25, diasEntreComprasMediana: 25,
+    diasAteProximoCiclo: 0, tendencia: 'SUBINDO',
+    sellerAssist: {
+      situacao: 'Ciclo de recompra exatamente hoje. Cliente com tendência de crescimento.',
+      quando: 'Próximo ciclo hoje.',
+      sinais: { diasSemComprar: 25, cicloMedianoDias: 25, tendencia: 'SUBINDO' },
+    },
+  },
+  // NAO_AGIR e PROGRAMAR > 7 dias: excluídos pela lógica de filtragem — fixture aqui apenas para completude
+  {
+    clienteMr4Id: 'DEMO_NA1', nomeCliente: 'Histórico Incompleto',
+    decisaoAcaoComercial: 'NAO_AGIR', tipoOportunidade: null,
+    prioridade: null, diasSemComprar: null, diasEntreComprasMediana: null,
+    diasAteProximoCiclo: null, tendencia: null,
+    sellerAssist: null,
+  },
+  {
+    clienteMr4Id: 'DEMO_P8', nomeCliente: 'Compras Futuras Ltda',
+    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
+    prioridade: null, diasSemComprar: 20, diasEntreComprasMediana: 30,
+    diasAteProximoCiclo: 10, tendencia: 'ESTAVEL',
+    sellerAssist: null,
+  },
+];
+
+// ── Estado ─────────────────────────────────────────────────────────────────────
+let clienteSelecionado = null;
+
+// ── Auth ───────────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async u => {
+  if (!u) { window.location.href = '../login.html'; return; }
+
+  try {
+    const rSnap = await getDoc(doc(db, 'users', u.uid));
+    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+      window.location.href = '../login.html'; return;
+    }
+
+    // Verifica acesso ao módulo fila-comercial
+    const sSnap = await getDoc(doc(db, 'sistema_usuarios', u.uid));
+    if (sSnap.exists()) {
+      const sData = sSnap.data();
+      const isAdmin = !!sData.admin;
+      const hasModule = Array.isArray(sData.modulos) && sData.modulos.includes('fila-comercial');
+      if (!isAdmin && !hasModule) {
+        document.getElementById('loadingScreen').innerHTML =
+          '<p style="font-size:.88rem;color:#5f6368;padding:2rem;text-align:center">Você não tem acesso à Fila Comercial.<br><a href="../index.html" style="color:#1a73e8;font-weight:600">← Voltar ao sistema</a></p>';
+        return;
+      }
+      const nome = sData.nome || u.email.split('@')[0];
+      document.getElementById('topbarUser').textContent = nome;
+    }
+  } catch(e) {
+    // Falha no check de acesso → nega por segurança
+    window.location.href = '../login.html'; return;
+  }
+
+  inicializar();
+});
+
+// ── Inicialização ──────────────────────────────────────────────────────────────
+function inicializar() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('mainUI').style.display = 'flex';
+  document.getElementById('appContainer').style.display = 'flex';
+
+  renderizarFila();
+
+  document.getElementById('detailClose').addEventListener('click', fecharDetalhe);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharDetalhe(); });
+}
+
+// ── Renderização ──────────────────────────────────────────────────────────────
+function renderizarFila() {
+  const filaHoje     = filtrarOrdenarFilaHoje(FIXTURE_CLIENTES);
+  const filaProximos = filtrarOrdenarProximosContatos(FIXTURE_CLIENTES);
+
+  document.getElementById('badgeHoje').textContent = filaHoje.length;
+  document.getElementById('badgeProximos').textContent = filaProximos.length;
+
+  if (!filaHoje.length) {
+    document.getElementById('badgeHoje').classList.add('vazio');
+  }
+  if (!filaProximos.length) {
+    document.getElementById('badgeProximos').classList.add('vazio');
+  }
+
+  document.getElementById('listaHoje').innerHTML =
+    filaHoje.length ? filaHoje.map((c, i) => renderCard(c, 'hoje', i)).join('') : renderEmpty('hoje');
+
+  document.getElementById('listaProximos').innerHTML =
+    filaProximos.length ? filaProximos.map((c, i) => renderCard(c, 'proximos', i)).join('') : renderEmpty('proximos');
+
+  // Eventos nos cards
+  document.querySelectorAll('.queue-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx  = parseInt(el.dataset.idx, 10);
+      const modo = el.dataset.modo;
+      const lista = modo === 'hoje' ? filtrarOrdenarFilaHoje(FIXTURE_CLIENTES) : filtrarOrdenarProximosContatos(FIXTURE_CLIENTES);
+      abrirDetalhe(lista[idx], el);
+    });
+  });
+}
+
+function renderCard(c, modo, idx) {
+  const cor    = COR_OPORTUNIDADE[c.tipoOportunidade] || '#5f6368';
+  const fundo  = COR_FUNDO_OPORTUNIDADE[c.tipoOportunidade] || 'rgba(95,99,104,.08)';
+  const label  = labelOportunidade(c.tipoOportunidade);
+  const dias   = typeof c.diasSemComprar === 'number' ? `há ${c.diasSemComprar}d` : '';
+  const sit    = c.sellerAssist?.situacao || '';
+
+  let extras = '';
+  if (modo === 'proximos') {
+    const quando = formatarDiasAteProximoCiclo(c.diasAteProximoCiclo);
+    if (quando) extras = `<div style="margin-top:.35rem"><span class="card-quando-badge">${esc(quando)}</span></div>`;
+  }
+
+  return `
+    <div class="queue-card" data-modo="${modo}" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalhes de ${esc(c.nomeCliente)}">
+      <div class="card-dot" style="background:${cor}"></div>
+      <div class="card-body">
+        <div class="card-top">
+          ${label ? `<span class="card-tipo" style="color:${cor};background:${fundo}">${esc(label)}</span>` : ''}
+          <span class="card-nome">${esc(c.nomeCliente || '—')}</span>
+          ${dias ? `<span class="card-dias">${esc(dias)}</span>` : ''}
+        </div>
+        ${sit ? `<div class="card-situacao">${esc(sit)}</div>` : ''}
+        ${extras}
+      </div>
+    </div>`;
+}
+
+function renderEmpty(tipo) {
+  if (tipo === 'hoje') {
+    return `<div class="empty-state">
+      <div class="empty-icon">✓</div>
+      <div class="empty-title">Sem contatos urgentes hoje</div>
+      <div class="empty-desc">Todos os clientes estão dentro do ciclo habitual.</div>
+    </div>`;
+  }
+  return `<div class="empty-state">
+    <div class="empty-icon">📅</div>
+    <div class="empty-title">Nenhum contato nos próximos 7 dias</div>
+    <div class="empty-desc">Clientes dentro do ciclo habitual não estão próximos do próximo contato.</div>
+  </div>`;
+}
+
+// ── Painel de detalhe ─────────────────────────────────────────────────────────
+function abrirDetalhe(cliente, cardEl) {
+  clienteSelecionado = cliente;
+  document.querySelectorAll('.queue-card').forEach(el => el.classList.remove('selected'));
+  if (cardEl) cardEl.classList.add('selected');
+
+  document.getElementById('detailNome').textContent = cliente.nomeCliente || '—';
+
+  const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
+  const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
+  const label = labelOportunidade(cliente.tipoOportunidade);
+  const sit   = cliente.sellerAssist?.situacao || null;
+  const quando = cliente.sellerAssist?.quando || null;
+  const sinais = extrairSinaisVisiveis(cliente);
+
+  let html = '';
+
+  if (label) {
+    html += `<div class="detail-tipo-pill" style="color:${cor};background:${fundo}">${esc(label)}</div>`;
+  }
+
+  if (sit) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Situação</div>
+      <div class="detail-section-text">${esc(sit)}</div>
+    </div>`;
+  }
+
+  if (quando) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Quando agir</div>
+      <div class="detail-quando-box">${esc(quando)}</div>
+    </div>`;
+  }
+
+  if (sinais.length > 0) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Sinais</div>
+      <div class="sinais-list">
+        ${sinais.map(s => `<div class="sinal-row"><span class="sinal-label">${esc(s.label)}</span><span class="sinal-valor">${esc(s.valor)}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (!sit && !quando && !sinais.length) {
+    html += `<div class="empty-state" style="padding:1.5rem 0">
+      <div class="empty-desc">Dados insuficientes para este cliente.</div>
+    </div>`;
+  }
+
+  document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function fecharDetalhe() {
+  document.getElementById('detailPanel').classList.remove('open');
+  document.querySelectorAll('.queue-card').forEach(el => el.classList.remove('selected'));
+  clienteSelecionado = null;
+}
+
+// ── Utilitário ─────────────────────────────────────────────────────────────────
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+</script>
+</body>
+</html>

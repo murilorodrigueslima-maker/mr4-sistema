@@ -23,7 +23,7 @@ const {
   renderizarNaoAgir,
 } = require('./n33/abordagemContract');
 
-const PIPELINE_VERSION = 'N34.3.2-local';
+const PIPELINE_VERSION = 'N34.5.0';
 
 /**
  * Processa um único cliente e retorna clienteBruto para construirSnapshot().

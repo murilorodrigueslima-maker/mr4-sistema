@@ -1,23 +1,23 @@
 {
-  "atualizado_em": "2026-09-18T05:41:46",
+  "atualizado_em": "2026-09-21T06:32:17",
   "hoje": 0,
-  "semana": 32191.780000000002,
-  "mes": 104234.33000000006,
+  "semana": 0,
+  "mes": 116805.33000000009,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
   "vendedores": [
     {
       "nome": "ADEMIR LOPES FURTADO",
-      "faturamento": 163594.96999999997,
-      "pedidos": 371,
-      "ticket_medio": 440.9567924528301
+      "faturamento": 145613.08000000002,
+      "pedidos": 341,
+      "ticket_medio": 427.0178299120235
     },
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 75547.06999999999,
-      "pedidos": 152,
-      "ticket_medio": 497.020197368421
+      "faturamento": 65892.73999999999,
+      "pedidos": 140,
+      "ticket_medio": 470.6624285714285
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
@@ -30,30 +30,9 @@
       "faturamento": 741.22,
       "pedidos": 1,
       "ticket_medio": 741.22
-    },
-    {
-      "nome": "Camila Silveira Silva",
-      "faturamento": 32.82,
-      "pedidos": 1,
-      "ticket_medio": 32.82
     }
   ],
   "ultimos_7_dias": [
-    {
-      "data": "2026-09-12",
-      "label": "sáb., 12/09",
-      "valor": 3157.1999999999994
-    },
-    {
-      "data": "2026-09-13",
-      "label": "dom., 13/09",
-      "valor": 0
-    },
-    {
-      "data": "2026-09-14",
-      "label": "seg., 14/09",
-      "valor": 5671.629999999999
-    },
     {
       "data": "2026-09-15",
       "label": "ter., 15/09",
@@ -67,11 +46,26 @@
     {
       "data": "2026-09-17",
       "label": "qui., 17/09",
-      "valor": 10082.21
+      "valor": 8697.82
     },
     {
       "data": "2026-09-18",
       "label": "sex., 18/09",
+      "valor": 11389.79
+    },
+    {
+      "data": "2026-09-19",
+      "label": "sáb., 19/09",
+      "valor": 2565.6000000000004
+    },
+    {
+      "data": "2026-09-20",
+      "label": "dom., 20/09",
+      "valor": 0
+    },
+    {
+      "data": "2026-09-21",
+      "label": "seg., 21/09",
       "valor": 0
     }
   ]

@@ -402,6 +402,17 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── Coleção: fila_comercial ───────────────────────────────────────────────
+    // Snapshot VIEW MODEL da Fila Comercial (N34 Phase E).
+    // Escrita APENAS via Admin SDK (Cloud Function pipeline). Frontend: somente leitura.
+    // Conteúdo: já sanitizado por prepararDadosUI() — sem CAMPOS_BLOQUEADOS.
+    // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
+
+    match /fila_comercial/{docId} {
+      allow read:  if temModulo('fila-comercial');
+      allow write: if false;
+    }
+
     // ── Tudo mais: negado por padrão ───────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

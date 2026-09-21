@@ -39,6 +39,36 @@ function ehElegivelLLM(decisaoAcaoComercial) {
 // ── Renders determinísticos ───────────────────────────────────────────────────
 
 /**
+ * Texto de "quando" para AGIR_AGORA — constante seller-facing.
+ * Single source of truth: usada pela fila e pelo Seller Assist.
+ */
+const QUANDO_AGIR_AGORA = 'Ação recomendada: neste ciclo.';
+
+/**
+ * Render determinístico para AGIR_AGORA — sem LLM, sem provider.
+ * Single source of truth: usada diretamente pela fila e reutilizada pelo Seller Assist.
+ *
+ * @param {Object} decisaoCtx — { tipoOportunidade, diasSemComprar, diasEntreComprasMediana, cicloMedianoDias? }
+ * @returns {string} — texto seller-facing de situacao
+ */
+function renderizarAgirAgora(decisaoCtx) {
+  const tipo = decisaoCtx.tipoOportunidade;
+  const dsc  = decisaoCtx.diasSemComprar;
+  const med  = decisaoCtx.diasEntreComprasMediana ?? decisaoCtx.cicloMedianoDias ?? null;
+
+  if (tipo === 'REATIVACAO_120D') {
+    return `Cliente sem comprar há ${dsc} dias (ciclo habitual: ${med} dias). Reativação necessária.`;
+  }
+  if (tipo === 'QUEDA_DE_COMPRAS') {
+    return `Cliente com queda no ritmo de compras. Sem compras há ${dsc} dias (ciclo habitual: ${med} dias).`;
+  }
+  if (tipo === 'JANELA_DE_RECOMPRA') {
+    return `Cliente na janela de recompra habitual. ${dsc} dias desde a última compra (ciclo habitual: ${med} dias).`;
+  }
+  return `Ação comercial identificada. ${dsc} dias desde a última compra.`;
+}
+
+/**
  * Render determinístico para PROGRAMAR_CICLO — sem LLM.
  *
  * @param {number|null} diasAteProximoCiclo — diasAteProximoCiclo do motor N30
@@ -339,6 +369,8 @@ module.exports = {
   PADROES_URGENCIA_JANELA,
   AbordagemViolationError,
   ehElegivelLLM,
+  QUANDO_AGIR_AGORA,
+  renderizarAgirAgora,
   renderizarProgramarCiclo,
   renderizarNaoAgir,
   validarComoAbordar,

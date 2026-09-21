@@ -23,6 +23,8 @@
 
 const { buildContextoComoAbordar }   = require('./contextBuilder');
 const {
+  QUANDO_AGIR_AGORA,
+  renderizarAgirAgora,
   renderizarProgramarCiclo,
   renderizarNaoAgir,
   validarComoAbordar,
@@ -43,7 +45,7 @@ const LLM_STATUS = Object.freeze({
   FAIL_CLOSED:    'FAIL_CLOSED',
 });
 
-const _QUANDO_AGIR_AGORA = 'Ação recomendada: neste ciclo.';
+// QUANDO_AGIR_AGORA e renderizarAgirAgora importados de abordagemContract (single source)
 
 // ── Helpers de construção de resultado ────────────────────────────────────────
 
@@ -91,25 +93,6 @@ function _buildFailClosedResult(situacao) {
   });
 }
 
-// ── Situação determinística para AGIR_AGORA ───────────────────────────────────
-
-function _renderSituacaoAgirAgora(decisaoCtx) {
-  const tipo = decisaoCtx.tipoOportunidade;
-  const dsc  = decisaoCtx.diasSemComprar;
-  const med  = decisaoCtx.diasEntreComprasMediana ?? decisaoCtx.cicloMedianoDias ?? null;
-
-  if (tipo === 'REATIVACAO_120D') {
-    return `Cliente sem comprar há ${dsc} dias (ciclo habitual: ${med} dias). Reativação necessária.`;
-  }
-  if (tipo === 'QUEDA_DE_COMPRAS') {
-    return `Cliente com queda no ritmo de compras. Sem compras há ${dsc} dias (ciclo habitual: ${med} dias).`;
-  }
-  if (tipo === 'JANELA_DE_RECOMPRA') {
-    return `Cliente na janela de recompra habitual. ${dsc} dias desde a última compra (ciclo habitual: ${med} dias).`;
-  }
-  return `Ação comercial identificada. ${dsc} dias desde a última compra.`;
-}
-
 // ── Extração de sinais (subset do contextoProvider) ──────────────────────────
 
 function _extrairSinais(contextoProvider) {
@@ -140,8 +123,8 @@ function _rotaDeterministicNaoAgir() {
 
 async function _rotaHybridLLM(decisaoCtx, sinaisCtx, opcoes) {
   const provider = opcoes.provider;
-  const situacao = _renderSituacaoAgirAgora(decisaoCtx);
-  const quando   = _QUANDO_AGIR_AGORA;
+  const situacao = renderizarAgirAgora(decisaoCtx);   // single source: abordagemContract
+  const quando   = QUANDO_AGIR_AGORA;                 // single source: abordagemContract
 
   // Guard: provider ausente ou interface inválida
   if (!provider || typeof provider.complete !== 'function') {

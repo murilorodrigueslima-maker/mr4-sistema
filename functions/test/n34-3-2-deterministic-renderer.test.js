@@ -427,8 +427,8 @@ describe('G — Snapshot sem campos bloqueados', () => {
 
 describe('H — Invariantes do pipeline refatorado', () => {
 
-  test('H-01: PIPELINE_VERSION = "N34.3.2-local"', () => {
-    expect(PIPELINE_VERSION).toBe('N34.3.2-local');
+  test('H-01: PIPELINE_VERSION = "N34.5.0"', () => {
+    expect(PIPELINE_VERSION).toBe('N34.5.0');
   });
 
   test('H-02: processarClientesParaFila retorna Promise', () => {

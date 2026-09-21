@@ -129,8 +129,115 @@ async function processarClientesParaFila(clientes, opts = {}) {
   return resultados.filter(Boolean);
 }
 
+/**
+ * N34.5 — Entry point alternativo: aceita perfil360 já calculado (de perfis_360).
+ * Evita re-leitura de vendas_gc e re-computação de calcularPerfil360.
+ * Executa apenas as etapas 2-8 do pipeline (tendência → renderer).
+ *
+ * @param {object} perfil360   — output de calcularPerfil360, tal como gravado em perfis_360
+ * @param {string} nomeCliente — nome do cliente (de clientes/{clienteMr4Id})
+ * @param {object} opts        — { dataReferencia?: string YYYY-MM-DD }
+ * @returns {Promise<object>}  — mesmo shape que processarCliente()
+ */
+async function processarPerfilParaFila(perfil360, nomeCliente, opts = {}) {
+  const dataRef = opts.dataReferencia
+    || (typeof perfil360.dataReferencia === 'string' ? perfil360.dataReferencia : null)
+    || new Date().toISOString().slice(0, 10);
+
+  // perfil360 É o output de calcularPerfil360 — usado diretamente como perfil (etapa 1 pulada)
+  const perfil = perfil360;
+
+  // 2. Tendência
+  const tendenciaResult = calcularTendencia(perfil);
+
+  // 3. Score
+  const score = calcularScore(perfil, tendenciaResult.tendencia, { dataReferencia: dataRef });
+
+  // 4. Recorrência
+  const recorrencia = calcularRecorrencia(perfil);
+
+  // 5. Oportunidades
+  const oportunidades = gerarOportunidades(perfil, score, tendenciaResult, recorrencia, dataRef);
+
+  // 6. Priorização
+  const oportunidadesRanqueadas = priorizarOportunidades(oportunidades, perfil, score);
+  const oportunidadePrincipal   = oportunidadesRanqueadas[0] || null;
+
+  // 7. Decisão de Ação Comercial
+  const decisaoResult = calcularDecisaoAcaoComercial({
+    tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+    recorrenciaStatus:       recorrencia.status,
+    diasEntreComprasMediana: perfil.diasEntreComprasMediana,
+    diasSemComprar:          perfil.diasSemComprar,
+  });
+
+  // 8. Renderer determinístico — zero Seller Assist, zero LLM
+  const decisaoAcao = decisaoResult.decisaoAcaoComercial;
+  let situacaoFila, quandoFila;
+
+  if (decisaoAcao === 'AGIR_AGORA') {
+    situacaoFila = renderizarAgirAgora({
+      tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+      diasSemComprar:          perfil.diasSemComprar,
+      diasEntreComprasMediana: perfil.diasEntreComprasMediana,
+    });
+    quandoFila = QUANDO_AGIR_AGORA;
+  } else if (decisaoAcao === 'PROGRAMAR_CICLO') {
+    const rendered = renderizarProgramarCiclo(decisaoResult.diasAteProximoCiclo);
+    situacaoFila   = rendered.situacao;
+    quandoFila     = rendered.quando;
+  } else {
+    const rendered = renderizarNaoAgir();
+    situacaoFila   = rendered.situacao;
+    quandoFila     = rendered.quando;
+  }
+
+  return {
+    clienteMr4Id:            perfil360.clienteMr4Id,
+    nomeCliente:             nomeCliente || null,
+    tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+    prioridade:              oportunidadePrincipal?.prioridadeFinal ?? null,
+    decisaoAcaoComercial:    decisaoResult.decisaoAcaoComercial,
+    diasAteProximoCiclo:     decisaoResult.diasAteProximoCiclo,
+    diasSemComprar:          perfil.diasSemComprar,
+    diasEntreComprasMediana: perfil.diasEntreComprasMediana,
+    tendencia:               tendenciaResult.tendencia,
+    sellerAssist: {
+      situacao: situacaoFila,
+      quando:   quandoFila,
+      sinais: {
+        diasSemComprar:   perfil.diasSemComprar,
+        cicloMedianoDias: perfil.diasEntreComprasMediana,
+        tendencia:        tendenciaResult.tendencia,
+      },
+    },
+  };
+}
+
+/**
+ * N34.5 — Processa lista de { perfil360, nomeCliente } para fila comercial.
+ * Equivalente a processarClientesParaFila mas aceita perfis pré-calculados.
+ *
+ * @param {Array<{ perfil360: object, nomeCliente: string|null }>} perfisComNomes
+ * @param {object} opts — { dataReferencia?: string YYYY-MM-DD }
+ * @returns {Promise<object[]>}
+ */
+async function processarPerfisParaFila(perfisComNomes, opts = {}) {
+  if (!Array.isArray(perfisComNomes)) {
+    throw new TypeError('processarPerfisParaFila: perfisComNomes deve ser Array');
+  }
+  const resultados = await Promise.all(
+    perfisComNomes.map(({ perfil360, nomeCliente }) =>
+      processarPerfilParaFila(perfil360, nomeCliente, opts)
+    )
+  );
+  return resultados.filter(Boolean);
+}
+
 module.exports = {
   PIPELINE_VERSION,
   processarCliente,
   processarClientesParaFila,
+  processarPerfilParaFila,
+  processarPerfisParaFila,
 };

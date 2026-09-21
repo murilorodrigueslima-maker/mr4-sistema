@@ -19,6 +19,7 @@ const { onSchedule }          = require('firebase-functions/v2/scheduler');
 const { onDocumentUpdated }   = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
+const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapshotGenerator');
 
 if (!admin.apps.length) admin.initializeApp();
 const db        = admin.firestore();
@@ -792,6 +793,22 @@ exports.concluirRevisaoEspelho = onDocumentUpdated(
   { document: 'espelhos/{espelhoId}', region: REGION, retry: true },
   concluirRevisaoEspelhoHandler,
 );
+
+// N34.5 — Geração agendada do snapshot da fila comercial (a cada 60 min).
+// Falha isolada: erro não interrompe sync360 nem syncPainelDisplay.
+// FUNCTION_DEPLOYED=NO — deployar manualmente após N34.5 ser aprovado.
+exports.gerarFilaSnapshot = onSchedule({
+  schedule:        'every 60 minutes',
+  region:          REGION,
+  timeoutSeconds:  300,
+}, async () => {
+  try {
+    await executarGeracaoFilaSnapshot({ db });
+  } catch (err) {
+    console.error('[fila-snapshot] ERRO na geração:', err.message);
+    // NÃO re-throw — falha isolada, não afeta sync360 nem syncPainelDisplay
+  }
+});
 
 // Handlers exportados para testes diretos (sem onCall/trigger wrapper)
 exports._registrarPontoHandler             = registrarPontoHandler;

@@ -413,11 +413,21 @@ window._chamarCF          = (name)  => httpsCallable(_functions, name);
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
 
-  // FAIL CLOSED: role check antes de verificar permissão de admin
+  // FAIL CLOSED: role check antes de verificar permissão de admin (P0 fix 2026-09-22)
+  // Permite: gestor OU funcionario com sistema_usuarios válido (dual-role)
+  // Bloqueia: sem users/{uid}, inativo, display, role desconhecida
   try {
     const rSnap = await getDoc(doc(db, 'users', user.uid));
-    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+    if (!rSnap.exists() || !rSnap.data().ativo) {
       window.location.href = '../login.html'; return;
+    }
+    const role = rSnap.data().role;
+    if (role !== 'gestor') {
+      if (role !== 'funcionario') { window.location.href = '../login.html'; return; }
+      const sysSnap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      if (!sysSnap.exists() || sysSnap.data().bloqueado) {
+        window.location.href = '../login.html'; return;
+      }
     }
   } catch(e) { window.location.href = '../login.html'; return; }
 

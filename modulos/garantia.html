@@ -450,6 +450,7 @@ import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable }
   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { verificarAcessoModulo } from '../js/guard.js';
 
 const app  = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
@@ -468,12 +469,8 @@ window._deleteDoc=(r)=>deleteDoc(r);
 
 onAuthStateChanged(auth, async user=>{
   if(!user){window.location.href='../login.html';return;}
-  try {
-    const rSnap = await getDoc(doc(db, 'users', user.uid));
-    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
-      window.location.href='../login.html'; return;
-    }
-  } catch(e) { window.location.href='../login.html'; return; }
+  // FAIL CLOSED dual-role (P0 fix 2026-09-22)
+  if (!await verificarAcessoModulo(db, user.uid, 'garantia')) { window.location.href='../login.html'; return; }
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('appWrap').style.display='';
   window.dispatchEvent(new Event('firebaseReady'));

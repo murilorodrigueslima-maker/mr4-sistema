@@ -659,6 +659,7 @@
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, getDoc, doc, collection, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { verificarAcessoModulo } from '../js/guard.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -679,15 +680,8 @@
       return;
     }
 
-    // FAIL CLOSED: verifica role antes de mostrar dados financeiros
-    try {
-      const rSnap = await getDoc(doc(db, 'users', user.uid));
-      if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
-        await signOut(auth);
-        window.location.href = '../login.html';
-        return;
-      }
-    } catch(e) {
+    // FAIL CLOSED dual-role (P0 fix 2026-09-22)
+    if (!await verificarAcessoModulo(db, user.uid, 'financeiro')) {
       await signOut(auth);
       window.location.href = '../login.html';
       return;

@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-09-14 (S2b: espelho — assinatura requer snapshot e hash)
+// Versão: 2026-09-22 (P0 fix: dual-role model — isDualRoleAtivo + temAcessoModulo)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -10,6 +10,7 @@
 // Perfis:
 //   gestor      — acesso total (requer doc users/{uid} com role='gestor' e ativo=true)
 //   funcionario — acesso limitado ao próprio funcId
+//                 + acesso admin com dual-role (role='funcionario' + sistema_usuarios válido)
 //
 // Criação de registros de ponto:
 //   Funcionários NÃO podem criar registros diretamente.
@@ -54,7 +55,7 @@ service cloud.firestore {
       return meuPerfil().funcionarioId;
     }
 
-    // ── Funções auxiliares — segurança comercial (adicionadas em S0) ───────────
+    // ── Funções auxiliares — segurança comercial ───────────────────────────────
     //
     // BILLING IMPORTANTE:
     //   Cada chamada get() / exists() nas Rules conta como leitura Firestore
@@ -66,6 +67,8 @@ service cloud.firestore {
     //   isGestor() já lê users/{uid} → 1 leitura faturada (cached por meuPerfil).
     //   isDisplay() lê users/{uid}   → mesma leitura (cached).
     //   temModulo() lê sistema_usuarios/{uid} → 1 leitura adicional faturada.
+    //   isDualRoleAtivo() lê users/{uid} + sistema_usuarios/{uid} → 2 leituras.
+    //   temAcessoModulo() = isDualRoleAtivo() + get(sistema_usuarios) [cached] → 2 leituras.
     //
     //   Custo real por operação de gestor com módulo verificado: 2 leituras.
     //   No volume atual (< 50k/dia), o custo está dentro do free tier.
@@ -98,6 +101,36 @@ service cloud.firestore {
     function temModulo(modulo) {
       return isGestor() &&
         exists(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('admin', false) == true ||
+         get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.modulos.hasAny([modulo]));
+    }
+
+    // ── Dual-role model (P0 fix 2026-09-22) ───────────────────────────────────
+    //
+    // Identidade administrativa válida para usuários com role='funcionario' que
+    // também possuem perfil administrativo em sistema_usuarios.
+    //
+    // Permite: role=gestor OU role=funcionario com sistema_usuarios válido e não bloqueado.
+    // Bloqueia: users/{uid} ausente, inativo, role=display, bloqueado=true, erro.
+    //
+    // BILLING: 2 leituras (users/{uid} + sistema_usuarios/{uid}).
+    //          O Firestore faz cache por path — get() repetidos na mesma avaliação
+    //          não são cobrados novamente.
+    function isDualRoleAtivo() {
+      return isAuthed() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        meuPerfil().ativo == true &&
+        (meuPerfil().role == 'gestor' || meuPerfil().role == 'funcionario') &&
+        exists(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)) &&
+        !get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('bloqueado', false);
+    }
+
+    // Autoriza acesso a módulo administrativo — dual-role aware.
+    // Identidade administrativa (gestor ou funcionario+perfil) + módulo liberado.
+    // NÃO usar para ponto — ponto usa temModulo('ponto') (role=gestor obrigatório).
+    // BILLING: 2 leituras (users + sistema_usuarios, cached).
+    function temAcessoModulo(modulo) {
+      return isDualRoleAtivo() &&
         (get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('admin', false) == true ||
          get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.modulos.hasAny([modulo]));
     }
@@ -232,7 +265,8 @@ service cloud.firestore {
 
     // ── Coleção: sistema_usuarios ──────────────────────────────────────────────
     // Perfis de acesso ao sistema administrativo (modulos/permissoes por gestor).
-    // Funcionários nunca têm docs aqui; mesmo assim a regra é explícita.
+    // Self-read: qualquer usuário autenticado pode ler o próprio perfil
+    // (necessário para dual-role: funcionario lê seus próprios módulos).
 
     match /sistema_usuarios/{uid} {
       allow read: if isAuthed() && (request.auth.uid == uid || isGestor());
@@ -242,13 +276,13 @@ service cloud.firestore {
     // ── Coleção: produto_equivalentes ──────────────────────────────────────────
 
     match /produto_equivalentes/{docId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('equivalentes');
     }
 
     // ── Coleção: demandas ──────────────────────────────────────────────────────
 
     match /demandas/{demandaId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('demandas');
     }
 
     // ── Coleção: painel_config ─────────────────────────────────────────────────
@@ -260,48 +294,47 @@ service cloud.firestore {
 
     // ── Coleção: compras_config ────────────────────────────────────────────────
     // Configurações do módulo de compras (settings, fornecedores, mapeamento).
-    // Apenas gestores — nenhum acesso de funcionários ou usuários sem perfil.
 
     match /compras_config/{docId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('compras');
     }
 
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
-    // Rules garantem o mínimo: acesso restrito a gestores.
 
     match /expedicao_pedidos/{pedidoId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('expedicao');
     }
 
     // ── Coleções: marketing ────────────────────────────────────────────────────
     // Conteúdos de pipeline, ideias e legendas do módulo de marketing.
 
     match /marketing_conteudos/{docId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('marketing');
     }
 
     match /marketing_ideias/{docId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('marketing');
     }
 
     match /marketing_legendas/{docId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('marketing');
     }
 
     // ── Coleção: garantias ─────────────────────────────────────────────────────
-    // Registros de garantia de produtos. Acesso exclusivo de gestores.
+    // Registros de garantia de produtos.
 
     match /garantias/{garantiaId} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('garantia');
     }
 
     // ── Coleção: fornecedores_custo ────────────────────────────────────────────
     // Tabela de fornecedores com percentuais de custo.
-    // Usada em garantia.html (read). Calculadora de Custo removida.
+    // Usada em garantia.html (read). Escrita restrita a gestores (dado sensível).
 
     match /fornecedores_custo/{fornecedorId} {
-      allow read, write: if isGestor();
+      allow read:  if isGestor() || temAcessoModulo('garantia');
+      allow write: if isGestor();
     }
 
     // ── Coleção: clientes ──────────────────────────────────────────────────────
@@ -313,10 +346,10 @@ service cloud.firestore {
     //   O Admin SDK ignora Rules — proteção só afeta chamadas de cliente.
 
     match /clientes/{clienteId} {
-      allow read:   if isGestor();
-      allow create: if isGestor() && noGcFieldsOnCreate();
-      allow update: if isGestor() && gcFieldsIntact();
-      allow delete: if isGestor();
+      allow read:   if isGestor() || temAcessoModulo('clientes');
+      allow create: if (isGestor() || temAcessoModulo('clientes')) && noGcFieldsOnCreate();
+      allow update: if (isGestor() || temAcessoModulo('clientes')) && gcFieldsIntact();
+      allow delete: if isGestor() || temAcessoModulo('clientes');
     }
 
     // ── Coleção: conversas (e subcoleção msgs) ─────────────────────────────────
@@ -325,9 +358,9 @@ service cloud.firestore {
     // conversas/{phone}/msgs/{msgId} — mensagens da conversa.
 
     match /conversas/{phone} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('clientes');
       match /msgs/{msgId} {
-        allow read, write: if isGestor();
+        allow read, write: if isGestor() || temAcessoModulo('clientes');
       }
     }
 
@@ -335,14 +368,14 @@ service cloud.firestore {
     // Resumos de conversas para exibição no painel de inbox.
 
     match /conversas_resumo/{phone} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('clientes');
     }
 
     // ── Coleção: chat_status ───────────────────────────────────────────────────
     // Status de conexão do WhatsApp por número de telefone.
 
     match /chat_status/{phone} {
-      allow read, write: if isGestor();
+      allow read, write: if isGestor() || temAcessoModulo('clientes');
     }
 
     // ── Coleção: display_metrics ───────────────────────────────────────────────
@@ -367,10 +400,10 @@ service cloud.firestore {
     // ── Coleção: financeiro_cache ──────────────────────────────────────────────
     // Cache financeiro (contas vencidas/vencendo). Escrita APENAS via Admin SDK.
     // Substitui data/financeiro.json (público) — adicionada em S1.
-    // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
+    // BILLING: temAcessoModulo() = 2 leituras (users + sistema_usuarios).
 
     match /financeiro_cache/{docId} {
-      allow read:  if temModulo('financeiro');
+      allow read:  if temAcessoModulo('financeiro');
       allow write: if false;
     }
 
@@ -378,10 +411,10 @@ service cloud.firestore {
     // Cache de pedidos para expedição. Escrita APENAS via Admin SDK.
     // Substitui data/pedidos.json (público) — adicionada em S1.
     // Dados sanitizados (CPF/cadastro removidos) antes da escrita no sync.
-    // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
+    // BILLING: temAcessoModulo() = 2 leituras (users + sistema_usuarios).
 
     match /pedidos_cache/{docId} {
-      allow read:  if temModulo('expedicao');
+      allow read:  if temAcessoModulo('expedicao');
       allow write: if false;
     }
 

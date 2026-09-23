@@ -309,7 +309,7 @@ input:focus {
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -322,6 +322,9 @@ input:focus {
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+  }
 
   // Se já está logado, vai direto pro sistema
   onAuthStateChanged(auth, user => {

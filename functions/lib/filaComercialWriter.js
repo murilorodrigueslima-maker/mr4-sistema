@@ -13,51 +13,61 @@
 
 const {
   prepararDadosUI,
+  prepararDadosUIProspect,
   filtrarOrdenarFilaHoje,
   filtrarOrdenarProximosContatos,
+  filtrarOrdenarProspeccao,
   verificarCamposBloqueados,
   UPCOMING_WINDOW_DAYS,
 } = require('./filaComercialUtils');
 
-const SCHEMA_VERSION = 'v1';
+const SCHEMA_VERSION = 'v2';
 
 /**
  * Constrói o snapshot VIEW MODEL a partir de clientes brutos do pipeline.
  * Deve ser chamado ANTES de qualquer escrita em Firestore.
+ * V2: inclui clientesProspeccao (seção separada) e dataReferencia única no metadata.
  *
  * @param {object[]} clientesBrutos - Array de clientes com campos completos do pipeline
  * @param {object}   opts
- * @param {number}   [opts.windowDays=7]      - Janela de PRÓXIMOS em dias
+ * @param {number}   [opts.windowDays=7]        - Janela de PRÓXIMOS em dias
  * @param {Date}     [opts.timestamp=new Date()] - Momento do snapshot
- * @param {string}   [opts.pipelineVersion]   - Versão do pipeline (ex: 'N33.6')
- * @returns {{ clientesHoje: object[], clientesProximos: object[], metadata: object }}
+ * @param {string}   [opts.pipelineVersion]      - Versão do pipeline (ex: 'N34.6.0')
+ * @param {string}   [opts.dataReferencia]        - Data comercial única YYYY-MM-DD do snapshot
+ * @returns {{ clientesHoje, clientesProximos, clientesProspeccao, metadata }}
  */
 function construirSnapshot(clientesBrutos, opts = {}) {
-  const windowDays = (typeof opts.windowDays === 'number') ? opts.windowDays : UPCOMING_WINDOW_DAYS;
-  const timestamp = (opts.timestamp instanceof Date) ? opts.timestamp : new Date();
+  const windowDays      = (typeof opts.windowDays === 'number') ? opts.windowDays : UPCOMING_WINDOW_DAYS;
+  const timestamp       = (opts.timestamp instanceof Date) ? opts.timestamp : new Date();
   const pipelineVersion = opts.pipelineVersion || null;
+  const dataReferencia  = (typeof opts.dataReferencia === 'string') ? opts.dataReferencia : null;
 
   if (!Array.isArray(clientesBrutos)) {
     throw new TypeError('construirSnapshot: clientesBrutos deve ser Array');
   }
 
-  // Filtra e ordena nas duas seções ANTES de preparar UI (usa campos brutos para sort)
-  const filaHoje     = filtrarOrdenarFilaHoje(clientesBrutos);
-  const filaProximos = filtrarOrdenarProximosContatos(clientesBrutos, windowDays);
+  // Filtra e ordena nas seções ANTES de preparar UI (usa campos brutos para sort)
+  const filaHoje        = filtrarOrdenarFilaHoje(clientesBrutos);
+  const filaProximos    = filtrarOrdenarProximosContatos(clientesBrutos, windowDays);
+  const filaProspeccao  = filtrarOrdenarProspeccao(clientesBrutos);
 
-  // Prepara VIEW MODEL (strip de CAMPOS_BLOQUEADOS) para cada cliente
-  const clientesHoje     = filaHoje.map(prepararDadosUI).filter(Boolean);
-  const clientesProximos = filaProximos.map(prepararDadosUI).filter(Boolean);
+  // Prepara VIEW MODEL (strip de CAMPOS_BLOQUEADOS) para cada seção
+  const clientesHoje       = filaHoje.map(prepararDadosUI).filter(Boolean);
+  const clientesProximos   = filaProximos.map(prepararDadosUI).filter(Boolean);
+  const clientesProspeccao = filaProspeccao.map(prepararDadosUIProspect).filter(Boolean);
 
   return {
     schemaVersion:   SCHEMA_VERSION,
     pipelineVersion: pipelineVersion,
+    dataReferencia:  dataReferencia,
     timestamp:       timestamp,
     clientesHoje,
     clientesProximos,
+    clientesProspeccao,
     metadata: {
-      totalHoje:      clientesHoje.length,
-      totalProximos:  clientesProximos.length,
+      totalHoje:        clientesHoje.length,
+      totalProximos:    clientesProximos.length,
+      totalProspeccao:  clientesProspeccao.length,
       totalProcessados: clientesBrutos.length,
       windowDays,
     },

@@ -52,7 +52,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.22rem;flex-wrap:wrap}
 .card-nome{font-size:.88rem;font-weight:700;color:var(--text)}
 .card-tipo{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;letter-spacing:.2px;white-space:nowrap}
-.card-dias{font-size:.72rem;font-weight:500;color:var(--muted);margin-left:auto;white-space:nowrap;flex-shrink:0}
 .card-situacao{font-size:.76rem;color:var(--muted);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 
 /* ── NEXT CYCLE (seção PRÓXIMOS) ── */
@@ -158,6 +157,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
       <div id="listaProximos"><div class="loading-msg">Carregando…</div></div>
     </div>
 
+    <!-- Seção PROSPECÇÃO -->
+    <div class="queue-section" id="secProspeccao">
+      <div class="section-header">
+        <span class="section-title">Prospecção</span>
+        <span class="section-badge" id="badgeProspeccao" style="background:#9e9e9e">0</span>
+      </div>
+      <p style="font-size:.74rem;color:var(--muted);margin-bottom:.75rem">Clientes cadastrados que ainda não realizaram uma compra.</p>
+      <div id="listaProspeccao"><div class="loading-msg">Carregando…</div></div>
+    </div>
+
   </div>
 </div>
 
@@ -177,7 +186,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 
 <script type="module">
 import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 const app = initializeApp({
@@ -191,9 +200,11 @@ const app = initializeApp({
 const auth = getAuth(app);
 const db   = getFirestore(app);
 
-// Conecta ao emulador Firestore quando rodando localmente (N34.3 / dev)
-if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+// Conecta aos emuladores quando rodando localmente (N34.3 / dev)
+const _isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+if (_isLocal) {
   connectFirestoreEmulator(db, 'localhost', 8080);
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
 }
 
 // ── Constantes (espelho de filaComercialUtils.js — lógica de apresentação pura) ──
@@ -231,108 +242,9 @@ function formatarDiasAteProximoCiclo(dias) {
   return `Em ${dias} dias`;
 }
 
-// ── [FIXTURE REMOVIDO — N34.3] ────────────────────────────────────────────────
-// Firestore é a única fonte de dados. Veja carregarSnapshot().
-// PRODUCTION_UI_FIXTURE_FALLBACK=NO
-
-const FIXTURE_CLIENTES_LEGACY_PLACEHOLDER = [
-  {
-    clienteMr4Id: 'DEMO_F1', nomeCliente: 'Farmácia Central Ltda',
-    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'REATIVACAO_120D',
-    prioridade: 97, diasSemComprar: 143, diasEntreComprasMediana: 30,
-    diasAteProximoCiclo: null, tendencia: 'CAINDO',
-    sellerAssist: {
-      situacao: 'Sem compras há 143 dias. Ciclo habitual desta farmácia é de 30 dias — o afastamento está muito além do padrão.',
-      quando: 'Ação recomendada neste ciclo.',
-      sinais: { diasSemComprar: 143, cicloMedianoDias: 30, tendencia: 'CAINDO' },
-    },
-  },
-  {
-    clienteMr4Id: 'DEMO_F2', nomeCliente: 'Auto Peças Vitória',
-    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'JANELA_DE_RECOMPRA',
-    prioridade: 75, diasSemComprar: 36, diasEntreComprasMediana: 30,
-    diasAteProximoCiclo: null, tendencia: 'ESTAVEL',
-    sellerAssist: {
-      situacao: 'Na janela de recompra habitual. Última compra há 36 dias; ciclo habitual: 30 dias.',
-      quando: 'Ação recomendada neste ciclo.',
-      sinais: { diasSemComprar: 36, cicloMedianoDias: 30, tendencia: 'ESTAVEL' },
-    },
-  },
-  {
-    clienteMr4Id: 'DEMO_F3', nomeCliente: 'Distribuidora Norte SP',
-    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'QUEDA_DE_COMPRAS',
-    prioridade: 65, diasSemComprar: 22, diasEntreComprasMediana: 30,
-    diasAteProximoCiclo: null, tendencia: 'CAINDO',
-    sellerAssist: {
-      situacao: 'Volume de compras em queda. Sem compras há 22 dias — frequência abaixo do padrão habitual.',
-      quando: 'Ação recomendada neste ciclo.',
-      sinais: { diasSemComprar: 22, cicloMedianoDias: 30, tendencia: 'CAINDO' },
-    },
-  },
-  {
-    clienteMr4Id: 'DEMO_F4', nomeCliente: 'Mecânica Sul Distribuidora',
-    decisaoAcaoComercial: 'AGIR_AGORA', tipoOportunidade: 'REATIVACAO_120D',
-    prioridade: 58, diasSemComprar: 127, diasEntreComprasMediana: 45,
-    diasAteProximoCiclo: null, tendencia: 'CAINDO',
-    sellerAssist: {
-      situacao: 'Sem compras há 127 dias. Ciclo habitual: 45 dias.',
-      quando: 'Ação recomendada neste ciclo.',
-      sinais: { diasSemComprar: 127, cicloMedianoDias: 45, tendencia: 'CAINDO' },
-    },
-  },
-  {
-    clienteMr4Id: 'DEMO_P1', nomeCliente: 'Auto Center Recife',
-    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
-    prioridade: null, diasSemComprar: 28, diasEntreComprasMediana: 30,
-    diasAteProximoCiclo: 2, tendencia: 'ESTAVEL',
-    sellerAssist: {
-      situacao: 'Cliente dentro do ciclo habitual de compras. Próximo contato programado.',
-      quando: 'Próximo ciclo em 2 dias.',
-      sinais: null,
-    },
-  },
-  {
-    clienteMr4Id: 'DEMO_P2', nomeCliente: 'Peças & Cia Maceió',
-    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
-    prioridade: null, diasSemComprar: 23, diasEntreComprasMediana: 30,
-    diasAteProximoCiclo: 7, tendencia: 'ESTAVEL',
-    sellerAssist: {
-      situacao: 'Cliente dentro do ciclo habitual de compras.',
-      quando: 'Próximo ciclo em 7 dias.',
-      sinais: null,
-    },
-  },
-  {
-    clienteMr4Id: 'DEMO_P3', nomeCliente: 'Loja Auto Atacado BH',
-    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
-    prioridade: null, diasSemComprar: 25, diasEntreComprasMediana: 25,
-    diasAteProximoCiclo: 0, tendencia: 'SUBINDO',
-    sellerAssist: {
-      situacao: 'Ciclo de recompra exatamente hoje. Cliente com tendência de crescimento.',
-      quando: 'Próximo ciclo hoje.',
-      sinais: { diasSemComprar: 25, cicloMedianoDias: 25, tendencia: 'SUBINDO' },
-    },
-  },
-  // NAO_AGIR e PROGRAMAR > 7 dias: excluídos pela lógica de filtragem — fixture aqui apenas para completude
-  {
-    clienteMr4Id: 'DEMO_NA1', nomeCliente: 'Histórico Incompleto',
-    decisaoAcaoComercial: 'NAO_AGIR', tipoOportunidade: null,
-    prioridade: null, diasSemComprar: null, diasEntreComprasMediana: null,
-    diasAteProximoCiclo: null, tendencia: null,
-    sellerAssist: null,
-  },
-  {
-    clienteMr4Id: 'DEMO_P8', nomeCliente: 'Compras Futuras Ltda',
-    decisaoAcaoComercial: 'PROGRAMAR_CICLO', tipoOportunidade: null,
-    prioridade: null, diasSemComprar: 20, diasEntreComprasMediana: 30,
-    diasAteProximoCiclo: 10, tendencia: 'ESTAVEL',
-    sellerAssist: null,
-  },
-];
-
 // ── Estado ─────────────────────────────────────────────────────────────────────
 let clienteSelecionado = null;
-let snapshotState = { clientesHoje: [], clientesProximos: [] };
+let snapshotState = { clientesHoje: [], clientesProximos: [], clientesProspeccao: [] };
 
 // ── Carregamento do snapshot (N34.3) ──────────────────────────────────────────
 async function carregarSnapshot() {
@@ -341,14 +253,15 @@ async function carregarSnapshot() {
     if (snapDoc.exists()) {
       const data = snapDoc.data();
       snapshotState = {
-        clientesHoje:    Array.isArray(data.clientesHoje)    ? data.clientesHoje    : [],
-        clientesProximos: Array.isArray(data.clientesProximos) ? data.clientesProximos : [],
+        clientesHoje:       Array.isArray(data.clientesHoje)       ? data.clientesHoje       : [],
+        clientesProximos:   Array.isArray(data.clientesProximos)   ? data.clientesProximos   : [],
+        clientesProspeccao: Array.isArray(data.clientesProspeccao) ? data.clientesProspeccao : [],
       };
     } else {
-      snapshotState = { clientesHoje: [], clientesProximos: [] };
+      snapshotState = { clientesHoje: [], clientesProximos: [], clientesProspeccao: [] };
     }
   } catch (e) {
-    snapshotState = { clientesHoje: [], clientesProximos: [] };
+    snapshotState = { clientesHoje: [], clientesProximos: [], clientesProspeccao: [] };
     console.error('[fila-comercial] Erro ao carregar snapshot:', e);
   }
   renderizarFila();
@@ -400,18 +313,17 @@ function inicializar() {
 
 // ── Renderização ──────────────────────────────────────────────────────────────
 function renderizarFila() {
-  const filaHoje     = snapshotState.clientesHoje    || [];
-  const filaProximos = snapshotState.clientesProximos || [];
+  const filaHoje       = snapshotState.clientesHoje       || [];
+  const filaProximos   = snapshotState.clientesProximos   || [];
+  const filaProspeccao = snapshotState.clientesProspeccao || [];
 
-  document.getElementById('badgeHoje').textContent = filaHoje.length;
+  document.getElementById('badgeHoje').textContent     = filaHoje.length;
   document.getElementById('badgeProximos').textContent = filaProximos.length;
+  document.getElementById('badgeProspeccao').textContent = filaProspeccao.length;
 
-  if (!filaHoje.length) {
-    document.getElementById('badgeHoje').classList.add('vazio');
-  }
-  if (!filaProximos.length) {
-    document.getElementById('badgeProximos').classList.add('vazio');
-  }
+  if (!filaHoje.length)       document.getElementById('badgeHoje').classList.add('vazio');
+  if (!filaProximos.length)   document.getElementById('badgeProximos').classList.add('vazio');
+  if (!filaProspeccao.length) document.getElementById('badgeProspeccao').classList.add('vazio');
 
   document.getElementById('listaHoje').innerHTML =
     filaHoje.length ? filaHoje.map((c, i) => renderCard(c, 'hoje', i)).join('') : renderEmpty('hoje');
@@ -419,13 +331,19 @@ function renderizarFila() {
   document.getElementById('listaProximos').innerHTML =
     filaProximos.length ? filaProximos.map((c, i) => renderCard(c, 'proximos', i)).join('') : renderEmpty('proximos');
 
+  document.getElementById('listaProspeccao').innerHTML =
+    filaProspeccao.length ? filaProspeccao.map((c, i) => renderCardProspect(c, i)).join('') : renderEmpty('prospeccao');
+
   // Eventos nos cards — usa snapshotState como fonte de dados
   document.querySelectorAll('.queue-card').forEach(el => {
     el.addEventListener('click', () => {
       const idx  = parseInt(el.dataset.idx, 10);
       const modo = el.dataset.modo;
-      const lista = modo === 'hoje' ? snapshotState.clientesHoje : snapshotState.clientesProximos;
-      if (lista && lista[idx]) abrirDetalhe(lista[idx], el);
+      let lista;
+      if (modo === 'hoje')       lista = snapshotState.clientesHoje;
+      else if (modo === 'proximos') lista = snapshotState.clientesProximos;
+      else if (modo === 'prospeccao') lista = snapshotState.clientesProspeccao;
+      if (lista && lista[idx]) abrirDetalheProspect(lista[idx], el, modo === 'prospeccao');
     });
   });
 }
@@ -434,7 +352,6 @@ function renderCard(c, modo, idx) {
   const cor    = COR_OPORTUNIDADE[c.tipoOportunidade] || '#5f6368';
   const fundo  = COR_FUNDO_OPORTUNIDADE[c.tipoOportunidade] || 'rgba(95,99,104,.08)';
   const label  = labelOportunidade(c.tipoOportunidade);
-  const dias   = typeof c.diasSemComprar === 'number' ? `há ${c.diasSemComprar}d` : '';
   const sit    = c.situacao || '';  // VIEW MODEL: situacao já está no top-level
 
   let extras = '';
@@ -450,7 +367,6 @@ function renderCard(c, modo, idx) {
         <div class="card-top">
           ${label ? `<span class="card-tipo" style="color:${cor};background:${fundo}">${esc(label)}</span>` : ''}
           <span class="card-nome">${esc(c.nomeCliente || '—')}</span>
-          ${dias ? `<span class="card-dias">${esc(dias)}</span>` : ''}
         </div>
         ${sit ? `<div class="card-situacao">${esc(sit)}</div>` : ''}
         ${extras}
@@ -466,61 +382,84 @@ function renderEmpty(tipo) {
       <div class="empty-desc">Todos os clientes estão dentro do ciclo habitual.</div>
     </div>`;
   }
+  if (tipo === 'proximos') {
+    return `<div class="empty-state">
+      <div class="empty-icon">📅</div>
+      <div class="empty-title">Nenhum contato nos próximos 7 dias</div>
+      <div class="empty-desc">Clientes dentro do ciclo habitual não estão próximos do próximo contato.</div>
+    </div>`;
+  }
   return `<div class="empty-state">
-    <div class="empty-icon">📅</div>
-    <div class="empty-title">Nenhum contato nos próximos 7 dias</div>
-    <div class="empty-desc">Clientes dentro do ciclo habitual não estão próximos do próximo contato.</div>
+    <div class="empty-icon">👤</div>
+    <div class="empty-title">Nenhum prospecto cadastrado</div>
+    <div class="empty-desc">Clientes vinculados que ainda não realizaram uma compra aparecerão aqui.</div>
   </div>`;
 }
 
+function renderCardProspect(c, idx) {
+  return `
+    <div class="queue-card" data-modo="prospeccao" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalhes de ${esc(c.nomeCliente)}">
+      <div class="card-dot" style="background:#9e9e9e"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <span class="card-tipo" style="color:#5f6368;background:rgba(95,99,104,.1)">Nunca comprou</span>
+          <span class="card-nome">${esc(c.nomeCliente || '—')}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
 // ── Painel de detalhe ─────────────────────────────────────────────────────────
-function abrirDetalhe(cliente, cardEl) {
+function abrirDetalheProspect(cliente, cardEl, isProspect = false) {
   clienteSelecionado = cliente;
   document.querySelectorAll('.queue-card').forEach(el => el.classList.remove('selected'));
   if (cardEl) cardEl.classList.add('selected');
 
   document.getElementById('detailNome').textContent = cliente.nomeCliente || '—';
 
-  const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
-  const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
-  const label = labelOportunidade(cliente.tipoOportunidade);
-  const sit    = cliente.situacao || null;          // VIEW MODEL: top-level
-  const quando = cliente.quando   || null;          // VIEW MODEL: top-level
-  const sinais = Array.isArray(cliente.sinaisVisiveis) ? cliente.sinaisVisiveis : [];
-
   let html = '';
 
-  if (label) {
-    html += `<div class="detail-tipo-pill" style="color:${cor};background:${fundo}">${esc(label)}</div>`;
-  }
-
-  if (sit) {
+  if (isProspect) {
+    html += `<div class="detail-tipo-pill" style="color:#5f6368;background:rgba(95,99,104,.1)">Nunca comprou</div>`;
     html += `<div class="detail-section">
-      <div class="detail-section-label">Situação</div>
-      <div class="detail-section-text">${esc(sit)}</div>
+      <div class="detail-section-text" style="color:var(--muted)">Clientes cadastrados que ainda não realizaram uma compra.</div>
     </div>`;
-  }
+  } else {
+    const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
+    const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
+    const label = labelOportunidade(cliente.tipoOportunidade);
+    const sit    = cliente.situacao || null;
+    const quando = cliente.quando   || null;
+    const sinais = Array.isArray(cliente.sinaisVisiveis) ? cliente.sinaisVisiveis : [];
 
-  if (quando) {
-    html += `<div class="detail-section">
-      <div class="detail-section-label">Quando agir</div>
-      <div class="detail-quando-box">${esc(quando)}</div>
-    </div>`;
-  }
-
-  if (sinais.length > 0) {
-    html += `<div class="detail-section">
-      <div class="detail-section-label">Sinais</div>
-      <div class="sinais-list">
-        ${sinais.map(s => `<div class="sinal-row"><span class="sinal-label">${esc(s.label)}</span><span class="sinal-valor">${esc(s.valor)}</span></div>`).join('')}
-      </div>
-    </div>`;
-  }
-
-  if (!sit && !quando && !sinais.length) {
-    html += `<div class="empty-state" style="padding:1.5rem 0">
-      <div class="empty-desc">Dados insuficientes para este cliente.</div>
-    </div>`;
+    if (label) {
+      html += `<div class="detail-tipo-pill" style="color:${cor};background:${fundo}">${esc(label)}</div>`;
+    }
+    if (sit) {
+      html += `<div class="detail-section">
+        <div class="detail-section-label">Situação</div>
+        <div class="detail-section-text">${esc(sit)}</div>
+      </div>`;
+    }
+    if (quando) {
+      html += `<div class="detail-section">
+        <div class="detail-section-label">Quando agir</div>
+        <div class="detail-quando-box">${esc(quando)}</div>
+      </div>`;
+    }
+    if (sinais.length > 0) {
+      html += `<div class="detail-section">
+        <div class="detail-section-label">Sinais</div>
+        <div class="sinais-list">
+          ${sinais.map(s => `<div class="sinal-row"><span class="sinal-label">${esc(s.label)}</span><span class="sinal-valor">${esc(s.valor)}</span></div>`).join('')}
+        </div>
+      </div>`;
+    }
+    if (!sit && !quando && !sinais.length) {
+      html += `<div class="empty-state" style="padding:1.5rem 0">
+        <div class="empty-desc">Dados insuficientes para este cliente.</div>
+      </div>`;
+    }
   }
 
   document.getElementById('detailBody').innerHTML = html;

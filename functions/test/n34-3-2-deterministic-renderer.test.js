@@ -66,24 +66,26 @@ describe('A — renderizarAgirAgora puro e determinístico', () => {
     expect(s).toContain('100');
   });
 
-  test('A-02: REATIVACAO_120D — situação semânticamente correta', () => {
+  test('A-02: REATIVACAO_120D — situação semânticamente correta (N34.6 copy)', () => {
     const s = renderizarAgirAgora(ctx('REATIVACAO_120D'));
-    expect(s).toContain('Reativação necessária');
-    expect(s).toContain('ciclo habitual: 20 dias');
+    expect(s).toContain('100');
+    // N34.6: new copy — "Está há N dias sem comprar. Ciclo habitual: N dias."
+    expect(s).toMatch(/está há \d+ dias sem comprar/i);
   });
 
-  test('A-03: QUEDA_DE_COMPRAS — situação semânticamente correta', () => {
+  test('A-03: QUEDA_DE_COMPRAS — situação semânticamente correta (N34.6 copy)', () => {
     const s = renderizarAgirAgora(ctx('QUEDA_DE_COMPRAS'));
-    expect(s).toContain('queda no ritmo');
+    // N34.6: new copy — "Ritmo de compras caiu em relação ao período anterior."
+    expect(s).toMatch(/ritmo de compras/i);
     expect(s).toContain('100');
-    expect(s).toContain('20 dias');
   });
 
-  test('A-04: JANELA_DE_RECOMPRA — situação semânticamente correta', () => {
+  test('A-04: JANELA_DE_RECOMPRA — situação semânticamente correta (N34.6 copy)', () => {
     const s = renderizarAgirAgora(ctx('JANELA_DE_RECOMPRA'));
-    expect(s).toContain('janela de recompra');
+    // N34.6 Gate5A5: new copy — "Está na janela habitual de recompra. Última compra há N dias (ciclo: N dias)."
+    expect(s).toMatch(/janela.*recompra/i);
     expect(s).toContain('100');
-    expect(s).toContain('ciclo habitual: 20 dias');
+    expect(s).toContain('20');
   });
 
   test('A-05: fallback tipo desconhecido — retorna string', () => {
@@ -290,7 +292,7 @@ describe('E — Fila funciona com Seller Assist indisponível', () => {
     const clientesBrutos = await processarClientesParaFila(clientes, { dataReferencia: DATA_REF });
     const snapshot = construirSnapshot(clientesBrutos, { pipelineVersion: PIPELINE_VERSION });
 
-    expect(snapshot).toHaveProperty('schemaVersion', 'v1');
+    expect(snapshot).toHaveProperty('schemaVersion', 'v2'); // N34.6: bumped to v2
     expect(Array.isArray(snapshot.clientesHoje)).toBe(true);
     expect(Array.isArray(snapshot.clientesProximos)).toBe(true);
   });
@@ -415,8 +417,8 @@ describe('G — Snapshot sem campos bloqueados', () => {
     expect(json).not.toContain('INFRA_ERROR');
   });
 
-  test('G-05: schema v1 preservado', () => {
-    expect(snap.schemaVersion).toBe('v1');
+  test('G-05: schema v2 (N34.6 bump)', () => {
+    expect(snap.schemaVersion).toBe('v2'); // N34.6: v1→v2 (clientesProspeccao added)
   });
 
 });
@@ -427,8 +429,8 @@ describe('G — Snapshot sem campos bloqueados', () => {
 
 describe('H — Invariantes do pipeline refatorado', () => {
 
-  test('H-01: PIPELINE_VERSION = "N34.5.0"', () => {
-    expect(PIPELINE_VERSION).toBe('N34.5.0');
+  test('H-01: PIPELINE_VERSION = "N34.6.1"', () => {
+    expect(PIPELINE_VERSION).toBe('N34.6.1'); // N34.6 Gate5A5: Cenário B bump
   });
 
   test('H-02: processarClientesParaFila retorna Promise', () => {

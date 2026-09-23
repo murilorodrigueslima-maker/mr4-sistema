@@ -23,7 +23,7 @@ const {
   renderizarNaoAgir,
 } = require('./n33/abordagemContract');
 
-const PIPELINE_VERSION = 'N34.5.0';
+const PIPELINE_VERSION = 'N34.6.1'; // Gate 5A.5: Cenário B (QUEDA vence JANELA quando CAINDO+>=1.5x)
 
 /**
  * Processa um único cliente e retorna clienteBruto para construirSnapshot().

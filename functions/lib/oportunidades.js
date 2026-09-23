@@ -205,6 +205,31 @@ function gerarOportCrossSell(perfil, score, dataReferencia) {
   });
 }
 
+// ── Cenário B: precedência QUEDA sobre JANELA (Gate 5A.4.2, 2026-09-22) ───────
+
+// Retorna true quando QUEDA_DE_COMPRAS deve vencer JANELA_DE_RECOMPRA.
+// Condições: CAINDO + cicloHabitual válido + DSC/ciclo >= 1.5 + DSC < 120.
+// REATIVACAO_120D nunca chega aqui (já foi filtrada em gerarOportJanelaRecompra/gerarOportQuedaDeCompras).
+function deveQuedaVencerJanela(perfil, tendencia, recorrencia) {
+  if (!tendencia || tendencia.tendencia !== 'CAINDO') return false;
+  if (!recorrencia || !recorrencia.padrao) return false;
+  const cicloHabitual = recorrencia.padrao.medianaIntervaloDias ?? recorrencia.padrao.mediaIntervaloDias;
+  if (!Number.isFinite(cicloHabitual) || cicloHabitual <= 0) return false;
+  const dsc = perfil.diasSemComprar;
+  if (!Number.isFinite(dsc) || dsc >= 120) return false;
+  return (dsc / cicloHabitual) >= 1.5;
+}
+
+// Aplica a regra de precedência: remove JANELA quando QUEDA deve vencer.
+// Só age se ambos os tipos estiverem presentes.
+function filtrarConflitosJanelaQueda(oportunidades, perfil, tendencia, recorrencia) {
+  if (!deveQuedaVencerJanela(perfil, tendencia, recorrencia)) return oportunidades;
+  const temJanela = oportunidades.some(o => o.tipo === 'JANELA_DE_RECOMPRA');
+  const temQueda  = oportunidades.some(o => o.tipo === 'QUEDA_DE_COMPRAS');
+  if (!temJanela || !temQueda) return oportunidades;
+  return oportunidades.filter(o => o.tipo !== 'JANELA_DE_RECOMPRA');
+}
+
 // ── Engine principal ──────────────────────────────────────────────────────────
 
 /**
@@ -236,7 +261,7 @@ function gerarOportunidades(perfil, score, tendencia, recorrencia, dataReferenci
   add(() => gerarOportJanelaRecompra(perfil, recorrencia, score, ref));
   add(() => gerarOportCrossSell(perfil, score, ref));
 
-  return oportunidades;
+  return filtrarConflitosJanelaQueda(oportunidades, perfil, tendencia, recorrencia);
 }
 
 module.exports = {
@@ -250,4 +275,7 @@ module.exports = {
   gerarOportQuedaDeCompras,
   gerarOportJanelaRecompra,
   gerarOportCrossSell,
+  // Regra de precedência (Gate 5A.4.2)
+  deveQuedaVencerJanela,
+  filtrarConflitosJanelaQueda,
 };

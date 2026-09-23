@@ -120,6 +120,7 @@ function filtrarOrdenarProximosContatos(clientes, windowDays) {
  * Extrai até MAX_VISIBLE_SIGNALS=3 sinais para exibição no painel de detalhe.
  * Retorna array de objetos { label: string, valor: string }.
  * Nunca retorna um valor fabricado a partir de dado null.
+ * SEM_BASE (mediana=null) é sinalizado explicitamente ao invés de omitido silenciosamente.
  */
 function extrairSinaisVisiveis(cliente) {
   const sinais = [];
@@ -134,6 +135,8 @@ function extrairSinaisVisiveis(cliente) {
     (cliente.sellerAssist?.sinais?.cicloMedianoDias ?? null);
   if (typeof mediana === 'number' && mediana > 0) {
     sinais.push({ label: 'Ciclo habitual', valor: `${mediana} dias` });
+  } else if (mediana === null && typeof diasSemComprar === 'number') {
+    sinais.push({ label: 'Ciclo habitual', valor: 'Ainda sem padrão de recompra' });
   }
 
   const tendencia =
@@ -171,6 +174,39 @@ function prepararDadosUI(cliente) {
 }
 
 /**
+ * Filtra e ordena a seção PROSPECÇÃO: clientes never-bought (PROSPECT_VINCULADO).
+ * Ordenação: nomeCliente normalizado ASC (determinístico, sem IA, sem score).
+ * NUNCA mistura com HOJE ou PRÓXIMOS.
+ */
+function filtrarOrdenarProspeccao(clientes) {
+  if (!Array.isArray(clientes)) return [];
+  return clientes
+    .filter(c => c != null && c.tipoOportunidade === 'PROSPECT_VINCULADO')
+    .sort((a, b) =>
+      (a.nomeCliente || '').localeCompare(b.nomeCliente || '', 'pt-BR', { sensitivity: 'base' })
+    );
+}
+
+/**
+ * Prepara o subconjunto mínimo e seguro de um prospect para exibição na UI.
+ * Campos seller-facing: somente nomeCliente + labelOp + (opcionalmente) criadoEm.
+ * PROIBIDO: diasSemComprar, cicloHabitual, inativo120d, oportunidade de recompra.
+ */
+function prepararDadosUIProspect(cliente) {
+  if (!cliente) return null;
+  const result = {
+    nomeCliente:          cliente.nomeCliente || null,
+    tipoOportunidade:     'PROSPECT_VINCULADO',
+    labelOp:              'Nunca comprou',
+    decisaoAcaoComercial: 'FILA_PROSPECCAO',
+  };
+  if (cliente.criadoEm && typeof cliente.criadoEm === 'string') {
+    result.criadoEm = cliente.criadoEm;
+  }
+  return result;
+}
+
+/**
  * Verifica se um objeto (ou seus filhos) contém campos bloqueados.
  * Usado em testes para garantir ausência de dados internos na camada de UI.
  * @returns {string[]} lista de caminhos de campos bloqueados encontrados
@@ -205,7 +241,9 @@ module.exports = {
   formatarDiasAteProximoCiclo,
   filtrarOrdenarFilaHoje,
   filtrarOrdenarProximosContatos,
+  filtrarOrdenarProspeccao,
   extrairSinaisVisiveis,
   prepararDadosUI,
+  prepararDadosUIProspect,
   verificarCamposBloqueados,
 };

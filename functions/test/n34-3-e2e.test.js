@@ -160,7 +160,7 @@ test('E2E-06: construirSnapshot retorna objeto com estrutura correta', () => {
     pipelineVersion: PIPELINE_VERSION,
     timestamp: new Date('2026-09-21T12:00:00Z'),
   });
-  expect(snapshot).toHaveProperty('schemaVersion', 'v1');
+  expect(snapshot).toHaveProperty('schemaVersion', 'v2');
   expect(snapshot).toHaveProperty('pipelineVersion', PIPELINE_VERSION);
   expect(Array.isArray(snapshot.clientesHoje)).toBe(true);
   expect(Array.isArray(snapshot.clientesProximos)).toBe(true);
@@ -199,7 +199,7 @@ test('E2E-10: documento fila_comercial/snapshot existe e tem estrutura correta',
   docLido = await docRef.get();
   expect(docLido.exists).toBe(true);
   const data = docLido.data();
-  expect(data).toHaveProperty('schemaVersion', 'v1');
+  expect(data).toHaveProperty('schemaVersion', 'v2');
   expect(Array.isArray(data.clientesHoje)).toBe(true);
   expect(Array.isArray(data.clientesProximos)).toBe(true);
   expect(data).toHaveProperty('metadata');

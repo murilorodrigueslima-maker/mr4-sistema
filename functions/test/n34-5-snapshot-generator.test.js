@@ -432,8 +432,8 @@ describe('H — Schema e estrutura do snapshot', () => {
     snapshot = await executarGeracaoFilaSnapshot({ db, dataReferencia: DR });
   });
 
-  test('H-01: schemaVersion === "v1"', () => {
-    expect(snapshot.schemaVersion).toBe('v1');
+  test('H-01: schemaVersion === "v2" (N34.6 bump)', () => {
+    expect(snapshot.schemaVersion).toBe('v2'); // N34.6: v1→v2 (clientesProspeccao added)
   });
 
   test('H-02: pipelineVersion está presente e é string', () => {

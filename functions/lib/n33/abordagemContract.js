@@ -55,15 +55,18 @@ function renderizarAgirAgora(decisaoCtx) {
   const tipo = decisaoCtx.tipoOportunidade;
   const dsc  = decisaoCtx.diasSemComprar;
   const med  = decisaoCtx.diasEntreComprasMediana ?? decisaoCtx.cicloMedianoDias ?? null;
+  const cicloTexto = (typeof med === 'number' && med > 0)
+    ? `Ciclo habitual: ${med} dias.`
+    : 'Ainda sem padrão de recompra.';
 
   if (tipo === 'REATIVACAO_120D') {
-    return `Cliente sem comprar há ${dsc} dias (ciclo habitual: ${med} dias). Reativação necessária.`;
+    return `Está há ${dsc} dias sem comprar. ${cicloTexto}`;
   }
   if (tipo === 'QUEDA_DE_COMPRAS') {
-    return `Cliente com queda no ritmo de compras. Sem compras há ${dsc} dias (ciclo habitual: ${med} dias).`;
+    return `Ritmo de compras caiu em relação ao período anterior. Sem compras há ${dsc} dias.`;
   }
   if (tipo === 'JANELA_DE_RECOMPRA') {
-    return `Cliente na janela de recompra habitual. ${dsc} dias desde a última compra (ciclo habitual: ${med} dias).`;
+    return `Está na janela habitual de recompra. Última compra há ${dsc} dias (ciclo: ${med} dias).`;
   }
   return `Ação comercial identificada. ${dsc} dias desde a última compra.`;
 }

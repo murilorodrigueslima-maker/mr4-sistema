@@ -306,6 +306,7 @@ import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { verificarAcessoModulo } from '../js/guard.js';
 
 const app  = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",authDomain:"mr4-ponto.firebaseapp.com",
@@ -330,13 +331,8 @@ window._fsGetOne = async (colName, id) => {
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href='../login.html'; return; }
-  // FAIL CLOSED: role check antes de qualquer acesso
-  try {
-    const rSnap = await getDoc(doc(db, 'users', user.uid));
-    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
-      window.location.href='../login.html'; return;
-    }
-  } catch(e) { window.location.href='../login.html'; return; }
+  // FAIL CLOSED dual-role (P0 fix 2026-09-22)
+  if (!await verificarAcessoModulo(db, user.uid, 'expedicao')) { window.location.href='../login.html'; return; }
   let ok=false;
   try {
     const s=await getDoc(doc(db,'sistema_usuarios',user.uid));

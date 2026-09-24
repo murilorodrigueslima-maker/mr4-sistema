@@ -159,6 +159,8 @@ function prepararDadosUI(cliente) {
   return {
     nomeCliente:             cliente.nomeCliente || null,
     tipoOportunidade:        cliente.tipoOportunidade || null,
+    // N35.11: ponte de identidade operacional (hash, não é PII, não está em CAMPOS_BLOQUEADOS)
+    opportunityInstanceId:   cliente.opportunityInstanceId || null,
     labelOp:                 labelOportunidade(cliente.tipoOportunidade),
     decisaoAcaoComercial:    cliente.decisaoAcaoComercial || null,
     diasSemComprar:          typeof cliente.diasSemComprar === 'number' ? cliente.diasSemComprar : null,

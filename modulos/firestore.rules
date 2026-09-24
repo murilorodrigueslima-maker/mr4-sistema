@@ -446,6 +446,16 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Coleção: interacoes_fila (N35.10/N35.12) ──────────────────────────────
+    // Estado operacional canário da Fila Comercial.
+    // Escrita APENAS via Admin SDK (Cloud Function). Frontend: somente leitura.
+    // Dual-role (N35.12): gestor+módulo OU funcionario+perfil_adm+módulo (ex.: Camila).
+    // BILLING: temAcessoModulo() = 2 leituras (users + sistema_usuarios, cached).
+    match /interacoes_fila/{oppId} {
+      allow read:  if temModulo('fila-comercial') || temAcessoModulo('fila-comercial');
+      allow write: if false;
+    }
+
     // ── Tudo mais: negado por padrão ───────────────────────────────────────────
     match /{document=**} {
       allow read, write: if false;

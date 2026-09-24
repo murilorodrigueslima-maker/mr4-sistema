@@ -236,6 +236,7 @@ tr:hover td{background:rgba(26,115,232,.04);}
     <div class="topbar-right">
       <div class="topbar-data" id="topbar-data"></div>
       <div class="topbar-user" id="topbar-user"></div>
+      <a href="ponto-func.html" id="btn-meu-ponto" class="btn-voltar" style="display:none;">Meu Ponto ↗</a>
       <a href="../index.html" class="btn-voltar">← Sistema</a>
       <button class="btn-sair" onclick="sair()">Sair</button>
     </div>
@@ -490,32 +491,47 @@ window._signOut = () => signOut(auth);
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
 window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
 
-window._userEmail=''; window._monitorFuncId=null;
+window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href='../login.html'; return; }
-  // Funcionários autenticados são redirecionados para a tela deles
   try {
     const perfSnap = await getDoc(doc(db, 'users', user.uid));
-    if (perfSnap.exists() && perfSnap.data().role === 'funcionario') {
-      window.location.href = 'ponto-func.html'; return;
-    }
-    // FAIL CLOSED: gestores precisam ter doc users/{uid} com role='gestor'.
-    // Se não tiver, acesso é negado (evita acesso indevido via conta sem perfil).
-    // FAIL CLOSED: sem doc users/{uid} com role=gestor e ativo=true → nega acesso
-    if (!perfSnap.exists() || !perfSnap.data().ativo || perfSnap.data().role !== 'gestor') {
+    const perfil   = perfSnap.exists() ? perfSnap.data() : null;
+
+    if (!perfil) {
       document.getElementById('loadingScreen').innerHTML =
         '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Inter,sans-serif;">Sair</button></div>';
       return;
     }
-    // MÓDULO PONTO: gestor precisa ter módulo 'ponto' liberado em sistema_usuarios.
-    // admin=true concede acesso irrestrito (compatível com admin.html).
-    const sysSnap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
-    const sysData = sysSnap.exists() ? sysSnap.data() : null;
-    const temAcessoPonto = sysData && (sysData.admin === true || (sysData.modulos || []).includes('ponto'));
-    if (!temAcessoPonto) {
-      document.getElementById('loadingScreen').innerHTML =
-        '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Módulo Ponto não liberado.<br>Contate o administrador.<br><button onclick="window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Inter,sans-serif;">Sair</button></div>';
-      return;
+
+    if (perfil.role === 'funcionario') {
+      // Dual-role: funcionário com módulo ponto → acesso à Gestão de Ponto.
+      // Funcionário comum (sem módulo ponto) → Meu Ponto.
+      const sysSnap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      const sysData = sysSnap.exists() ? sysSnap.data() : null;
+      const isDualRole = perfil.ativo &&
+        sysData && !sysData.bloqueado &&
+        (sysData.admin === true || (sysData.modulos || []).includes('ponto'));
+      if (!isDualRole) {
+        window.location.href = 'ponto-func.html'; return;
+      }
+      window._isDualRole = true;
+    } else {
+      // FAIL CLOSED: gestor precisa de role=gestor e ativo=true
+      if (!perfil.ativo || perfil.role !== 'gestor') {
+        document.getElementById('loadingScreen').innerHTML =
+          '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Acesso não autorizado.<br><button onclick="window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Inter,sans-serif;">Sair</button></div>';
+        return;
+      }
+      // MÓDULO PONTO: gestor precisa ter módulo 'ponto' em sistema_usuarios
+      const sysSnap = await getDoc(doc(db, 'sistema_usuarios', user.uid));
+      const sysData = sysSnap.exists() ? sysSnap.data() : null;
+      const temAcessoPonto = sysData && (sysData.admin === true || (sysData.modulos || []).includes('ponto'));
+      if (!temAcessoPonto) {
+        document.getElementById('loadingScreen').innerHTML =
+          '<div style="padding:2rem;text-align:center;color:#888;font-size:14px;">Módulo Ponto não liberado.<br>Contate o administrador.<br><button onclick="window._signOut()" style="background:#1a73e8;color:white;border:none;border-radius:8px;padding:10px 20px;margin-top:12px;cursor:pointer;font-family:Inter,sans-serif;">Sair</button></div>';
+        return;
+      }
     }
   } catch(e) {
     console.warn('[Auth] Erro ao verificar perfil:', e);
@@ -526,6 +542,9 @@ onAuthStateChanged(auth, async user => {
   window._userUid   = user.uid   || '';
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dashboard').style.display='flex';
+  if (window._isDualRole) {
+    document.getElementById('btn-meu-ponto').style.display='inline-flex';
+  }
   window._firebaseReady=true;
   window.dispatchEvent(new Event('firebaseReady'));
 });

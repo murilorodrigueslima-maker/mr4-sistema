@@ -248,33 +248,34 @@ describe('PM-3: gestor ativo + sem módulo ponto → DENY', () => {
   });
 });
 
-// ─── PM-4: funcionário ativo + módulo ponto → DENY administrativo, ALLOW próprios
-describe('PM-4: funcionário + módulo ponto → DENY admin, ALLOW próprios dados', () => {
-  test('lê funcionarios/{alheio} → DENY (sem isGestor)', async () => {
+// ─── PM-4: funcionário ativo + módulo ponto → ALLOW admin (dual-role P0 fix 2026-09-24)
+// Após o P0 fix: temAcessoModulo('ponto') retorna true para role=funcionario + modulos=['ponto']
+describe('PM-4: funcionário + módulo ponto → ALLOW admin (dual-role)', () => {
+  test('lê funcionarios/{alheio} → ALLOW (temAcessoModulo dual-role)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
-    await assertFails(db.collection('funcionarios').doc(FUNC_ID_SEM).get());
+    await assertSucceeds(db.collection('funcionarios').doc(FUNC_ID_SEM).get());
   });
-  test('lê funcionarios/{próprio} → ALLOW (isFuncionario path)', async () => {
+  test('lê funcionarios/{próprio} → ALLOW', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
     await assertSucceeds(db.collection('funcionarios').doc(FUNC_ID_PONTO).get());
   });
-  test('escreve em funcionarios → DENY', async () => {
+  test('escreve em funcionarios → ALLOW (temAcessoModulo dual-role)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
-    await assertFails(
-      db.collection('funcionarios').doc(FUNC_ID_PONTO).update({ cargo: 'Modificado' })
+    await assertSucceeds(
+      db.collection('funcionarios').doc(FUNC_ID_PONTO).update({ cargo: 'Modificado-DR' })
     );
   });
-  test('lê registros/{alheio} → DENY', async () => {
+  test('lê registros/{alheio} → ALLOW (temAcessoModulo dual-role)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
-    await assertFails(db.collection('registros').doc('reg-sem').get());
+    await assertSucceeds(db.collection('registros').doc('reg-sem').get());
   });
   test('lê registros/{próprio} → ALLOW', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
     await assertSucceeds(db.collection('registros').doc('reg-ponto').get());
   });
-  test('lê avaliacoes → DENY (sem path de funcionário)', async () => {
+  test('lê avaliacoes → ALLOW (temAcessoModulo dual-role)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
-    await assertFails(db.collection('avaliacoes').doc('aval-qualquer').get());
+    await assertSucceeds(db.collection('avaliacoes').doc('aval-qualquer').get());
   });
 });
 
@@ -294,28 +295,27 @@ describe('PM-5: funcionário sem módulo ponto → próprios dados preservados',
   });
 });
 
-// ─── PM-6: funcionário + admin=true → NÃO ganha acesso administrativo ─────────
-describe('PM-6: funcionário + admin=true → DENY administrativo (isGestor=false)', () => {
-  test('lê funcionarios/{alheio} → DENY', async () => {
+// ─── PM-6: funcionário + admin=true → ALLOW (dual-role via admin=true P0 fix 2026-09-24)
+// Após o P0 fix: temAcessoModulo('ponto') retorna true para role=funcionario + admin=true
+describe('PM-6: funcionário + admin=true → ALLOW (dual-role via admin=true em sistema_usuarios)', () => {
+  test('lê funcionarios/{alheio} → ALLOW (temAcessoModulo admin=true)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_ADMIN_TRUE).firestore();
-    await assertFails(db.collection('funcionarios').doc(FUNC_ID_PONTO).get());
+    await assertSucceeds(db.collection('funcionarios').doc(FUNC_ID_PONTO).get());
   });
-  test('lê registros → DENY (admin path bloqueado, isFuncionario path OK só para o próprio)', async () => {
+  test('lê registros/{próprio} → ALLOW e lê registros/{alheio} → ALLOW (admin=true)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_ADMIN_TRUE).firestore();
-    // Consegue ler o próprio
     await assertSucceeds(db.collection('registros').doc('reg-admin').get());
-    // Não consegue ler o alheio
-    await assertFails(db.collection('registros').doc('reg-ponto').get());
+    await assertSucceeds(db.collection('registros').doc('reg-ponto').get());
   });
-  test('escreve em funcionarios → DENY', async () => {
+  test('escreve em funcionarios → ALLOW (temAcessoModulo admin=true)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_ADMIN_TRUE).firestore();
-    await assertFails(
-      db.collection('funcionarios').doc('func-admin-hack').set({ nome: 'Hack' })
+    await assertSucceeds(
+      db.collection('funcionarios').doc('func-admin-dr').set({ nome: 'DualRole Admin' })
     );
   });
-  test('lê avaliacoes → DENY', async () => {
+  test('lê avaliacoes → ALLOW (temAcessoModulo admin=true)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_ADMIN_TRUE).firestore();
-    await assertFails(db.collection('avaliacoes').doc('aval-qualquer').get());
+    await assertSucceeds(db.collection('avaliacoes').doc('aval-qualquer').get());
   });
 });
 
@@ -375,8 +375,9 @@ describe('PM-7: assinatura de espelho pelo funcionário → ALLOW (regra isFunci
 describe('PM-8: justificativa do próprio funcionário → ALLOW', () => {
   test('funcionário cria justificativa pendente → ALLOW', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_SEM).firestore();
+    // Usa .add() (auto-ID) para evitar bug do emulador v1.19.8 que avalia update rule em set() de doc novo.
     await assertSucceeds(
-      db.collection('justificativas').doc('justif-func-sem').set({
+      db.collection('justificativas').add({
         funcId:           FUNC_ID_SEM,
         data:             '2026-09-02',
         motivo:           'Consulta médica',
@@ -407,19 +408,21 @@ describe('PM-9: leitura dos próprios registros → ALLOW (qualquer funcionário
   });
 });
 
-// ─── PM-10: leitura de registros de OUTRO funcionário → DENY ──────────────────
-describe('PM-10: leitura de registros de outro funcionário → DENY', () => {
+// ─── PM-10: leitura de registros — controle por role e dual-role ─────────────
+// Após P0 fix: FUNC_PONTO (funcionario + modulos=['ponto']) é dual-role → ALLOW admin.
+// FUNC_SEM (sem sistema_usuarios) continua como funcionario comum → DENY registro alheio.
+describe('PM-10: leitura de registros — funcionário comum DENY alheio, dual-role ALLOW', () => {
   test('FUNC_SEM tenta ler reg-ponto → DENY', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_SEM).firestore();
     await assertFails(db.collection('registros').doc('reg-ponto').get());
   });
-  test('FUNC_PONTO tenta ler reg-sem → DENY', async () => {
+  test('FUNC_PONTO (dual-role) lê reg-sem → ALLOW (temAcessoModulo)', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
-    await assertFails(db.collection('registros').doc('reg-sem').get());
+    await assertSucceeds(db.collection('registros').doc('reg-sem').get());
   });
-  test('FUNC_PONTO tenta ler todos registros (getDocs) → DENY', async () => {
+  test('FUNC_PONTO (dual-role) lê todos registros (getDocs) → ALLOW', async () => {
     const db = testEnv.authenticatedContext(UID_FUNC_PONTO).firestore();
-    await assertFails(db.collection('registros').get());
+    await assertSucceeds(db.collection('registros').get());
   });
 });
 
@@ -429,8 +432,9 @@ describe('PM-10: leitura de registros de outro funcionário → DENY', () => {
 describe('PM-11: Admin SDK bypassa Rules (documentado)', () => {
   test('withSecurityRulesDisabled escreve em registros sem verificar módulo ponto', async () => {
     await testEnv.withSecurityRulesDisabled(async ctx => {
+      // Usa .add() para evitar bug do emulador v1.19.8 com set() em doc novo.
       await assertSucceeds(
-        ctx.firestore().collection('registros').doc('reg-admin-sdk').set({
+        ctx.firestore().collection('registros').add({
           funcId: FUNC_ID_PONTO,
           data: '2026-09-03',
           tipo: 'entrada',

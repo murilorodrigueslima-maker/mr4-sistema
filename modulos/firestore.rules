@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-09-22 (P0 fix: dual-role model — isDualRoleAtivo + temAcessoModulo)
+// Versão: 2026-09-24 (P0 fix: Camila dual-role ponto — temAcessoModulo nas collections ponto)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -127,7 +127,7 @@ service cloud.firestore {
 
     // Autoriza acesso a módulo administrativo — dual-role aware.
     // Identidade administrativa (gestor ou funcionario+perfil) + módulo liberado.
-    // NÃO usar para ponto — ponto usa temModulo('ponto') (role=gestor obrigatório).
+    // Para ponto: usar temModulo('ponto') || temAcessoModulo('ponto') — dual-role autorizado (P0 fix 2026-09-24).
     // BILLING: 2 leituras (users + sistema_usuarios, cached).
     function temAcessoModulo(modulo) {
       return isDualRoleAtivo() &&
@@ -160,8 +160,8 @@ service cloud.firestore {
     // ── Coleção: funcionarios ──────────────────────────────────────────────────
 
     match /funcionarios/{funcId} {
-      allow read:  if temModulo('ponto') || (isFuncionario() && funcId == meuFuncId());
-      allow write: if temModulo('ponto');
+      allow read:  if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && funcId == meuFuncId());
+      allow write: if temModulo('ponto') || temAcessoModulo('ponto');
     }
 
     // ── Coleção: registros ─────────────────────────────────────────────────────
@@ -170,15 +170,15 @@ service cloud.firestore {
     // Gestores podem criar, editar e deletar (lançamento manual, correções).
 
     match /registros/{regId} {
-      allow read:             if temModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create, update, delete: if temModulo('ponto');
+      allow read:             if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create, update, delete: if temModulo('ponto') || temAcessoModulo('ponto');
     }
 
     // ── Coleção: justificativas ────────────────────────────────────────────────
 
     match /justificativas/{justifId} {
-      allow read:   if temModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create: if temModulo('ponto') || (
+      allow read:   if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) || (
         isFuncionario() &&
         request.resource.data.funcId == meuFuncId() &&
         request.resource.data.status == 'pendente' &&
@@ -187,7 +187,7 @@ service cloud.firestore {
       // Identidade: quando gravados, respondidoPorUid/Email devem corresponder ao caller.
       // Server timestamp: respondidoEm deve ser avaliado no momento do servidor (request.time).
       // Imutabilidade: após a resposta, esses três campos não podem ser alterados nem removidos.
-      allow update: if temModulo('ponto') &&
+      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorUid']) ||
          request.resource.data.respondidoPorUid == request.auth.uid) &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorEmail']) ||
@@ -203,30 +203,30 @@ service cloud.firestore {
         (!('respondidoEm'       in resource.data) ||
          ('respondidoEm'       in request.resource.data &&
           resource.data.respondidoEm       == request.resource.data.respondidoEm));
-      allow delete: if temModulo('ponto') && resource.data.status == 'pendente';
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && resource.data.status == 'pendente';
     }
 
     // ── Coleção: creditos_jornada ──────────────────────────────────────────────
 
     match /creditos_jornada/{creditoId} {
-      allow read:  if temModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow write: if temModulo('ponto');
+      allow read:  if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow write: if temModulo('ponto') || temAcessoModulo('ponto');
     }
 
     // ── Coleção: espelhos ──────────────────────────────────────────────────────
 
     match /espelhos/{espelhoId} {
-      allow read: if temModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
 
-      // Gestor cria: espelho sempre nasce não-assinado.
-      allow create: if temModulo('ponto') && request.resource.data.assinado == false;
+      // Gestor/dual-role cria: espelho sempre nasce não-assinado.
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && request.resource.data.assinado == false;
 
       // Gestor atualiza:
       //   Campos estruturais (funcId, mes, versao, versaoAnteriorId) são imutáveis após create.
       //   Espelho não-assinado: snapshot/hash/status/revisão podem ser atualizados.
       //   Espelho assinado: snapshot, hash e campos de assinatura são imutáveis.
       //   Finalização de v1 (revisaoEmAndamento/substituido) é feita pela Cloud Function (Admin SDK).
-      allow update: if temModulo('ponto') &&
+      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
         !request.resource.data.diff(resource.data).affectedKeys()
           .hasAny(['funcId', 'mes', 'versao', 'versaoAnteriorId']) &&
         (
@@ -253,14 +253,14 @@ service cloud.firestore {
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) ||
           request.resource.data.status == 'assinado');
 
-      // Gestor exclui: apenas espelhos não assinados.
-      allow delete: if temModulo('ponto') && !resource.data.assinado;
+      // Gestor/dual-role exclui: apenas espelhos não assinados.
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && !resource.data.assinado;
     }
 
     // ── Coleção: avaliacoes ────────────────────────────────────────────────────
 
     match /avaliacoes/{avalId} {
-      allow read, write: if temModulo('ponto');
+      allow read, write: if temModulo('ponto') || temAcessoModulo('ponto');
     }
 
     // ── Coleção: sistema_usuarios ──────────────────────────────────────────────

@@ -377,7 +377,7 @@ const S={
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});}
 function horaFmt(ts){return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});}
-function hoje(){return new Date().toISOString().slice(0,10);}
+function hoje(){return new Date().toLocaleDateString('sv-SE',{timeZone:'America/Fortaleza'});}
 
 function dataCurtaFmt(dataStr){
   // '2026-04-15' → '15/04'
@@ -492,8 +492,10 @@ async function fetchPedidos(){
       if(!num || nums.has(num)) continue;
 
       // Verifica no Firestore — se já existe com QUALQUER status, não recria
-      const jaExiste = await window._fsGetOne('expedicao_pedidos', num);
-      if(jaExiste){ S.pedidos[num] = jaExiste; continue; }
+      let jaExiste=null;
+      try{jaExiste=await window._fsGetOne('expedicao_pedidos',num);}
+      catch(fe){console.warn('fetchPedidos #'+num+':',fe.message);continue;}
+      if(jaExiste){S.pedidos[num]=jaExiste;continue;}
 
       const now = Date.now();
       const novo = {
@@ -530,7 +532,7 @@ async function fetchPedidos(){
 async function fetchViaGcQuery(){
   function diasAtras(n){
     const d=new Date(); d.setDate(d.getDate()-n);
-    return d.toISOString().slice(0,10);
+    return d.toLocaleDateString('sv-SE',{timeZone:'America/Fortaleza'});
   }
   const inicio = diasAtras(2);
   const fim    = hoje();
@@ -687,7 +689,7 @@ function render(){
   const se=getColuna('se');
   const pr=getColuna('pr');
   // Despachados: só mostra de hoje
-  const de=getColuna('de').filter(p=>p.data===hojeStr||p.saidaEm&&new Date(p.saidaEm).toISOString().slice(0,10)===hojeStr);
+  const de=getColuna('de').filter(p=>p.data===hojeStr||p.saidaEm&&new Date(p.saidaEm).toLocaleDateString('sv-SE',{timeZone:'America/Fortaleza'})===hojeStr);
 
   const total=ag.length+se.length+pr.length;
   document.getElementById('sumTotal').textContent=total;

@@ -8,6 +8,7 @@
 //   PROD_WRITES=0         (este módulo não acessa Firestore)
 //   SELLER_ASSIST=NO      (situacao/quando via renderers diretos de abordagemContract)
 //   prioridadeFinal→prioridade no clienteBruto (para filtrarOrdenarFilaHoje)
+//   N35.11: opportunityInstanceId incluído no output para join com interacoes_fila
 
 const { calcularScore }               = require('./scoreComercial');
 const { calcularTendencia }           = require('./tendenciaComercial');
@@ -16,6 +17,12 @@ const { gerarOportunidades }          = require('./oportunidades');
 const { priorizarOportunidades }      = require('./priorizadorOportunidades');
 const { calcularDecisaoAcaoComercial }= require('./decisaoAcaoComercial');
 const { calcularPerfil360 }           = require('./perfil360');
+const {
+  buildOpportunityInstanceId,
+  buildCommercialEntityId,
+  commercialEntityIdFromPerfil360,
+  SOURCES,
+} = require('./commercialIdentity');
 const {
   QUANDO_AGIR_AGORA,
   renderizarAgirAgora,
@@ -92,10 +99,21 @@ async function processarCliente(clienteInput, opts = {}) {
     quandoFila     = rendered.quando;
   }
 
+  // N35.11: oportunityInstanceId para join com interacoes_fila (não é PII)
+  let opportunityInstanceId = null;
+  const tipo = oportunidadePrincipal?.tipo ?? null;
+  if (tipo && clienteInput.clienteMr4Id) {
+    try {
+      const entityId = buildCommercialEntityId({ source: SOURCES.MR4_LINKED, mr4ClientId: clienteInput.clienteMr4Id });
+      opportunityInstanceId = buildOpportunityInstanceId(entityId, tipo, perfil.ultimaCompraEm || null);
+    } catch (_) { /* identidade inválida — opportunityInstanceId fica null */ }
+  }
+
   return {
     clienteMr4Id:            clienteInput.clienteMr4Id,
     nomeCliente:             clienteInput.nomeCliente || null,
-    tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+    tipoOportunidade:        tipo,
+    opportunityInstanceId,
     prioridade:              oportunidadePrincipal?.prioridadeFinal ?? null,  // prioridadeFinal → prioridade
     decisaoAcaoComercial:    decisaoResult.decisaoAcaoComercial,
     diasAteProximoCiclo:     decisaoResult.diasAteProximoCiclo,
@@ -192,10 +210,21 @@ async function processarPerfilParaFila(perfil360, nomeCliente, opts = {}) {
     quandoFila     = rendered.quando;
   }
 
+  // N35.11: oportunityInstanceId para join com interacoes_fila
+  const tipoPerf = oportunidadePrincipal?.tipo ?? null;
+  let opportunityInstanceIdPerf = null;
+  if (tipoPerf) {
+    try {
+      const entityIdPerf = commercialEntityIdFromPerfil360(perfil360);
+      opportunityInstanceIdPerf = buildOpportunityInstanceId(entityIdPerf, tipoPerf, perfil360.ultimaCompraEm || null);
+    } catch (_) { /* identidade inválida — opportunityInstanceId fica null */ }
+  }
+
   return {
     clienteMr4Id:            perfil360.clienteMr4Id,
     nomeCliente:             nomeCliente || null,
-    tipoOportunidade:        oportunidadePrincipal?.tipo ?? null,
+    tipoOportunidade:        tipoPerf,
+    opportunityInstanceId:   opportunityInstanceIdPerf,
     prioridade:              oportunidadePrincipal?.prioridadeFinal ?? null,
     decisaoAcaoComercial:    decisaoResult.decisaoAcaoComercial,
     diasAteProximoCiclo:     decisaoResult.diasAteProximoCiclo,

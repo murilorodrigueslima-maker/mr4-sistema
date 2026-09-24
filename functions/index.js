@@ -20,6 +20,11 @@ const { onDocumentUpdated }   = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapshotGenerator');
+const {
+  claimOpportunityHandler,
+  registerOutcomeHandler,
+  releaseOpportunityHandler,
+} = require('./lib/canaryCallable');
 
 if (!admin.apps.length) admin.initializeApp();
 const db        = admin.firestore();
@@ -822,6 +827,11 @@ exports.gerarFilaSnapshot = onSchedule({
   }
 });
 
+// N35.11 — Callables da Fila Comercial (canário operacional)
+exports.claimOpportunity   = onCall({ region: REGION }, claimOpportunityHandler);
+exports.registerOutcome    = onCall({ region: REGION }, registerOutcomeHandler);
+exports.releaseOpportunity = onCall({ region: REGION }, releaseOpportunityHandler);
+
 // Handlers exportados para testes diretos (sem onCall/trigger wrapper)
 exports._registrarPontoHandler             = registrarPontoHandler;
 exports._criarContaFuncionarioHandler      = criarContaFuncionarioHandler;
@@ -829,4 +839,7 @@ exports._syncPainelDisplayHandler          = syncPainelDisplayHandler;
 exports._nomeMatchPainel                   = nomeMatchPainel;
 exports._fetchTodasVendasGC                = fetchTodasVendasGC;
 exports._concluirRevisaoEspelhoHandler     = concluirRevisaoEspelhoHandler;
+exports._claimOpportunityHandler           = claimOpportunityHandler;
+exports._registerOutcomeHandler            = registerOutcomeHandler;
+exports._releaseOpportunityHandler         = releaseOpportunityHandler;
 exports._validateConcluirRevisao           = validateConcluirRevisao;

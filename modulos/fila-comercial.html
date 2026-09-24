@@ -14,7 +14,7 @@
   --bg:#f5f5f5;--white:#FFFFFF;--text:#202124;--muted:#5f6368;
   --border:#dadce0;--border-dk:#c6c9ce;
   --green:#0d904f;--yellow:#e37400;--red:#d93025;
-  --detail-w:380px;
+  --detail-w:400px;
 }
 html,body{height:100%;overflow:hidden}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
@@ -47,12 +47,37 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .queue-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:.9rem 1.1rem;margin-bottom:.55rem;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:.85rem;position:relative}
 .queue-card:hover{border-color:var(--blue);box-shadow:0 2px 12px rgba(26,115,232,.12)}
 .queue-card.selected{border-color:var(--blue);background:rgba(26,115,232,.03);box-shadow:0 2px 12px rgba(26,115,232,.12)}
+.queue-card.op-em-atendimento{border-left:3px solid var(--yellow)}
+.queue-card.op-aguardando{border-left:3px solid var(--blue)}
+.queue-card.op-concluida{border-left:3px solid var(--green);opacity:.7}
 .card-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:.28rem}
 .card-body{flex:1;min-width:0}
 .card-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.22rem;flex-wrap:wrap}
 .card-nome{font-size:.88rem;font-weight:700;color:var(--text)}
 .card-tipo{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;letter-spacing:.2px;white-space:nowrap}
 .card-situacao{font-size:.76rem;color:var(--muted);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* ── OPERATIONAL STATUS BADGE ── */
+.op-status-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem;flex-wrap:wrap}
+.op-badge{font-size:.66rem;font-weight:700;padding:.15rem .55rem;border-radius:20px;display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.op-badge.disponivel{background:rgba(13,144,79,.1);color:var(--green)}
+.op-badge.em-atendimento{background:rgba(227,116,0,.1);color:var(--yellow)}
+.op-badge.aguardando{background:rgba(26,115,232,.1);color:var(--blue)}
+.op-badge.concluida{background:rgba(95,99,104,.1);color:var(--muted)}
+.op-badge.cooldown{background:rgba(217,48,37,.08);color:var(--red)}
+.btn-claim{
+  font-size:.72rem;font-weight:700;color:var(--white);background:var(--blue);
+  border:none;border-radius:7px;padding:.28rem .8rem;cursor:pointer;
+  font-family:inherit;transition:background .12s;white-space:nowrap;
+}
+.btn-claim:hover{background:var(--blue-dk)}
+.btn-claim:disabled{opacity:.5;cursor:not-allowed}
+.btn-release{
+  font-size:.72rem;font-weight:600;color:var(--muted);background:none;
+  border:1px solid var(--border);border-radius:7px;padding:.26rem .7rem;cursor:pointer;
+  font-family:inherit;transition:all .12s;
+}
+.btn-release:hover{border-color:var(--red);color:var(--red)}
 
 /* ── NEXT CYCLE (seção PRÓXIMOS) ── */
 .card-quando-badge{font-size:.7rem;font-weight:600;color:var(--green);background:rgba(13,144,79,.08);padding:.15rem .5rem;border-radius:20px;white-space:nowrap}
@@ -66,10 +91,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 /* ── LOADING / ERROR ── */
 .loading-msg{padding:1.5rem;text-align:center;color:var(--muted);font-size:.82rem}
 
-/* ── DATA GAP NOTICE ── */
-.data-gap-notice{background:#fef3e2;border:1px solid #f9ab00;border-radius:10px;padding:.65rem 1rem;margin-bottom:1.25rem;font-size:.74rem;color:#e37400;display:flex;align-items:center;gap:.5rem}
-.data-gap-notice .material-symbols-outlined{font-size:1rem;flex-shrink:0}
-
 /* ── DETAIL PANEL ── */
 .detail-overlay{position:fixed;top:54px;right:0;bottom:0;width:var(--detail-w);background:var(--white);border-left:1px solid var(--border);box-shadow:-4px 0 20px rgba(0,0,0,.08);display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease;z-index:40}
 .detail-overlay.open{transform:translateX(0)}
@@ -80,12 +101,85 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .detail-title{font-size:.88rem;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .detail-body{flex:1;overflow-y:auto;padding:1.1rem}
 
-.detail-tipo-pill{display:inline-flex;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;margin-bottom:1rem}
+.detail-tipo-pill{display:inline-flex;font-size:.7rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;margin-bottom:.75rem}
 
 .detail-section{margin-bottom:1.1rem}
 .detail-section-label{font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:.35rem}
 .detail-section-text{font-size:.82rem;color:var(--text);line-height:1.55}
 .detail-quando-box{background:rgba(13,144,79,.06);border:1px solid rgba(13,144,79,.18);border-radius:9px;padding:.6rem .85rem;font-size:.82rem;font-weight:600;color:var(--green)}
+
+/* ── OPERATIONAL DETAIL ── */
+.op-detail-box{background:var(--bg);border-radius:10px;padding:.85rem 1rem;margin-bottom:1.1rem}
+.op-detail-state{font-size:.78rem;font-weight:700;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.op-owner-row{font-size:.78rem;color:var(--muted);margin-bottom:.5rem}
+.op-owner-row span{font-weight:600;color:var(--text)}
+.op-followup-row{font-size:.78rem;color:var(--blue);margin-bottom:.5rem}
+.op-cooldown-msg{font-size:.78rem;color:var(--red);margin-bottom:.5rem}
+
+.btn-registrar{
+  width:100%;padding:.65rem;font-size:.82rem;font-weight:700;
+  background:var(--blue);color:#fff;border:none;border-radius:9px;
+  cursor:pointer;font-family:inherit;transition:background .12s;margin-top:.5rem;
+}
+.btn-registrar:hover{background:var(--blue-dk)}
+.btn-registrar:disabled{opacity:.4;cursor:not-allowed}
+.btn-claim-detail{
+  width:100%;padding:.65rem;font-size:.82rem;font-weight:700;
+  background:var(--green);color:#fff;border:none;border-radius:9px;
+  cursor:pointer;font-family:inherit;transition:background .12s;margin-top:.5rem;
+}
+.btn-claim-detail:hover{background:#0a7a42}
+.btn-claim-detail:disabled{opacity:.4;cursor:not-allowed}
+.btn-release-detail{
+  width:100%;padding:.55rem;font-size:.78rem;font-weight:600;
+  background:none;color:var(--muted);border:1px solid var(--border);border-radius:9px;
+  cursor:pointer;font-family:inherit;transition:all .12s;margin-top:.4rem;
+}
+.btn-release-detail:hover{border-color:var(--red);color:var(--red)}
+
+/* ── OUTCOME MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);
+  z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.modal-overlay.open{display:flex}
+.modal-box{
+  background:#fff;border-radius:16px;padding:1.5rem;width:min(440px,100%);
+  box-shadow:0 20px 60px rgba(0,0,0,.18);animation:mIn .18s ease;
+}
+@keyframes mIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:.95rem;font-weight:800;margin-bottom:1rem;color:var(--text)}
+.outcome-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
+.btn-outcome-opt{
+  padding:.65rem 1rem;border:1.5px solid var(--border);border-radius:10px;
+  background:none;text-align:left;cursor:pointer;font-family:inherit;font-size:.84rem;
+  font-weight:600;color:var(--text);transition:all .14s;
+}
+.btn-outcome-opt:hover{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
+.btn-outcome-opt.selected{border-color:var(--blue);background:var(--blue-lt);color:var(--blue)}
+.followup-section{display:none;margin-bottom:.75rem;padding:.75rem;background:var(--bg);border-radius:9px}
+.followup-section.visible{display:block}
+.followup-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:.4rem}
+.followup-input{
+  width:100%;padding:.55rem .75rem;border:1.5px solid var(--border);border-radius:8px;
+  font-family:inherit;font-size:.84rem;color:var(--text);outline:none;background:#fff;
+}
+.followup-input:focus{border-color:var(--blue)}
+.modal-err{color:var(--red);font-size:.75rem;min-height:1.1rem;margin-bottom:.5rem}
+.modal-foot{display:flex;gap:.6rem;justify-content:flex-end}
+.btn-modal-cancel{
+  padding:.55rem 1rem;border:1.5px solid var(--border);border-radius:8px;
+  background:none;color:var(--muted);font-size:.82rem;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .12s;
+}
+.btn-modal-cancel:hover{border-color:var(--red);color:var(--red)}
+.btn-modal-ok{
+  padding:.55rem 1.25rem;border:none;border-radius:8px;
+  background:var(--blue);color:#fff;font-size:.82rem;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:background .12s;
+}
+.btn-modal-ok:hover{background:var(--blue-dk)}
+.btn-modal-ok:disabled{opacity:.4;cursor:not-allowed}
 
 /* ── SINAIS ── */
 .sinais-list{display:flex;flex-direction:column;gap:.4rem}
@@ -93,13 +187,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .sinal-label{color:var(--muted);font-weight:500}
 .sinal-valor{color:var(--text);font-weight:700}
 
-/* ── SHIMMER (loading skeleton) ── */
+/* ── SHIMMER ── */
 @keyframes shimmer{to{background-position:-200% 0}}
 .shimmer{background:linear-gradient(90deg,#f0f0f0 25%,#e0e0e0 50%,#f0f0f0 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:8px}
 
 /* ── TOAST ── */
 .toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);padding:.7rem 1.25rem;border-radius:10px;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;z-index:9999;display:none;align-items:center;gap:.5rem;box-shadow:0 8px 30px rgba(0,0,0,.18);animation:toastIn .2s ease}
 .toast.info{background:#e8f0fe;color:#1557b0;border:1.5px solid #aecbfa}
+.toast.ok  {background:#e6f4ea;color:#0d652d;border:1.5px solid #a8d5b5}
+.toast.err {background:#fce8e6;color:#c5221f;border:1.5px solid #f5c6c2}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
 /* ── RESPONSIVE ── */
@@ -181,13 +277,40 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
   <div class="detail-body" id="detailBody"></div>
 </div>
 
+<!-- Outcome modal -->
+<div class="modal-overlay" id="outcomeModal">
+  <div class="modal-box">
+    <div class="modal-title">Registrar resultado</div>
+    <div class="outcome-list" id="outcomeList"></div>
+    <div class="followup-section" id="followupSection">
+      <div class="followup-label">Data do retorno</div>
+      <input class="followup-input" type="date" id="followupDate">
+    </div>
+    <div class="modal-err" id="outcomeErr"></div>
+    <div class="modal-foot">
+      <button class="btn-modal-cancel" id="outcomeCancelBtn">Cancelar</button>
+      <button class="btn-modal-ok" id="outcomeOkBtn" disabled>Confirmar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {
+  getAuth, onAuthStateChanged,
+  connectAuthEmulator,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import {
+  getFirestore, doc, getDoc, collection, onSnapshot,
+  connectFirestoreEmulator,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import {
+  getFunctions, httpsCallable,
+  connectFunctionsEmulator,
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const app = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -197,21 +320,25 @@ const app = initializeApp({
   messagingSenderId:"848211361584",
   appId:"1:848211361584:web:2732e1893122f4a23452f5"
 });
-const auth = getAuth(app);
-const db   = getFirestore(app);
+const auth  = getAuth(app);
+const db    = getFirestore(app);
+const funcs = getFunctions(app, 'southamerica-east1');
 
-// Conecta aos emuladores quando rodando localmente (N34.3 / dev)
 const _isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 if (_isLocal) {
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+  connectFunctionsEmulator(funcs, 'localhost', 5001);
 }
 
-// ── Constantes (espelho de filaComercialUtils.js — lógica de apresentação pura) ──
+// ── Callables ─────────────────────────────────────────────────────────────────
+const _claimOpportunity   = httpsCallable(funcs, 'claimOpportunity');
+const _registerOutcome    = httpsCallable(funcs, 'registerOutcome');
+const _releaseOpportunity = httpsCallable(funcs, 'releaseOpportunity');
+
+// ── Constantes ─────────────────────────────────────────────────────────────────
 
 const UPCOMING_WINDOW_DAYS = 7;
-
-const TIPOS_RECOMPRA_V1 = ['REATIVACAO_120D', 'QUEDA_DE_COMPRAS', 'JANELA_DE_RECOMPRA'];
 
 const LABEL_OPORTUNIDADE = {
   REATIVACAO_120D:    'Retomar contato',
@@ -231,6 +358,15 @@ const COR_FUNDO_OPORTUNIDADE = {
   JANELA_DE_RECOMPRA: 'rgba(26,115,232,.1)',
 };
 
+// Mapeamento de outcomes canônicos → labels seller-facing
+const OUTCOME_LABELS = {
+  CONVERSA_REALIZADA:   'Contato realizado',
+  SEM_RESPOSTA:         'Sem resposta',
+  PEDIU_RETORNO:        'Pediu para ligar depois',
+  SEM_INTERESSE_AGORA:  'Sem interesse agora',
+  CONTATO_INVALIDO:     'Contato inválido',
+};
+
 function labelOportunidade(tipo) {
   return LABEL_OPORTUNIDADE[tipo] || null;
 }
@@ -242,11 +378,32 @@ function formatarDiasAteProximoCiclo(dias) {
   return `Em ${dias} dias`;
 }
 
-// ── Estado ─────────────────────────────────────────────────────────────────────
-let clienteSelecionado = null;
-let snapshotState = { clientesHoje: [], clientesProximos: [], clientesProspeccao: [] };
+// ── Estado da aplicação ────────────────────────────────────────────────────────
 
-// ── Carregamento do snapshot (N34.3) ──────────────────────────────────────────
+let currentUid      = null;
+let currentNome     = null;  // display name do usuário logado
+let clienteSelecionado = null;
+let snapshotState   = { clientesHoje: [], clientesProximos: [], clientesProspeccao: [] };
+let operationalMap  = new Map(); // opportunityInstanceId → estadoOperacional
+let _unsubOp        = null;
+
+// Estado do modal de outcome
+let modalOppId        = null;
+let modalOutcomeSel   = null;
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
+
+function toast(msg, tipo = 'info') {
+  const el = document.getElementById('toast');
+  el.className = `toast ${tipo}`;
+  el.innerHTML = `<span>${tipo === 'ok' ? '✓' : tipo === 'err' ? '✗' : 'ℹ'}</span><span>${esc(msg)}</span>`;
+  el.style.display = 'flex';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 3500);
+}
+
+// ── Snapshot da fila (N34.3) ──────────────────────────────────────────────────
+
 async function carregarSnapshot() {
   try {
     const snapDoc = await getDoc(doc(db, 'fila_comercial', 'snapshot'));
@@ -267,32 +424,64 @@ async function carregarSnapshot() {
   renderizarFila();
 }
 
+// ── Listener operacional realtime (N35.11) ────────────────────────────────────
+
+function iniciarListenerOperacional() {
+  if (_unsubOp) { _unsubOp(); _unsubOp = null; }
+
+  _unsubOp = onSnapshot(
+    collection(db, 'interacoes_fila'),
+    snap => {
+      snap.forEach(d => {
+        operationalMap.set(d.id, d.data());
+      });
+      // Remove entradas deletadas
+      snap.docChanges().forEach(change => {
+        if (change.type === 'removed') operationalMap.delete(change.doc.id);
+      });
+      renderizarFila();
+      // Re-renderizar detalhe se painel aberto
+      if (clienteSelecionado) {
+        const oppId = clienteSelecionado.opportunityInstanceId;
+        if (oppId) atualizarDetalheOperacional(oppId);
+      }
+    },
+    err => {
+      console.warn('[fila-comercial] Listener interacoes_fila:', err.code, err.message);
+      // Não é crítico — fila de snapshot continua funcionando
+    }
+  );
+}
+
 // ── Auth ───────────────────────────────────────────────────────────────────────
+
 onAuthStateChanged(auth, async u => {
   if (!u) { window.location.href = '../login.html'; return; }
+  currentUid = u.uid;
 
   try {
     const rSnap = await getDoc(doc(db, 'users', u.uid));
-    if (!rSnap.exists() || !rSnap.data().ativo || rSnap.data().role !== 'gestor') {
+    const _ud = rSnap.exists() ? rSnap.data() : null;
+    // Dual-role (N35.12): gestor ou funcionario com perfil administrativo + módulo fila-comercial.
+    // Funcionário sem o módulo é barrado na verificação de sistema_usuarios abaixo.
+    if (!_ud || !_ud.ativo || (_ud.role !== 'gestor' && _ud.role !== 'funcionario')) {
       window.location.href = '../login.html'; return;
     }
 
-    // Verifica acesso ao módulo fila-comercial
     const sSnap = await getDoc(doc(db, 'sistema_usuarios', u.uid));
     if (sSnap.exists()) {
       const sData = sSnap.data();
-      const isAdmin = !!sData.admin;
-      const hasModule = Array.isArray(sData.modulos) && sData.modulos.includes('fila-comercial');
-      if (!isAdmin && !hasModule) {
+      const isAdmin  = !!sData.admin;
+      const hasMod   = Array.isArray(sData.modulos) && sData.modulos.includes('fila-comercial');
+      if (!isAdmin && !hasMod) {
         document.getElementById('loadingScreen').innerHTML =
           '<p style="font-size:.88rem;color:#5f6368;padding:2rem;text-align:center">Você não tem acesso à Fila Comercial.<br><a href="../index.html" style="color:#1a73e8;font-weight:600">← Voltar ao sistema</a></p>';
         return;
       }
-      const nome = sData.nome || u.email.split('@')[0];
-      document.getElementById('topbarUser').textContent = nome;
+      currentNome = sData.nome || u.email.split('@')[0];
+      document.getElementById('topbarUser').textContent = currentNome;
     }
   } catch(e) {
-    // Falha no check de acesso → nega por segurança
     window.location.href = '../login.html'; return;
   }
 
@@ -300,25 +489,30 @@ onAuthStateChanged(auth, async u => {
 });
 
 // ── Inicialização ──────────────────────────────────────────────────────────────
+
 function inicializar() {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('mainUI').style.display = 'flex';
   document.getElementById('appContainer').style.display = 'flex';
 
-  carregarSnapshot();  // N34.3: lê fila_comercial/snapshot do Firestore
+  carregarSnapshot();
+  iniciarListenerOperacional();
 
   document.getElementById('detailClose').addEventListener('click', fecharDetalhe);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharDetalhe(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { fecharDetalhe(); fecharModal(); } });
+  document.getElementById('outcomeCancelBtn').addEventListener('click', fecharModal);
+  document.getElementById('outcomeOkBtn').addEventListener('click', confirmarOutcome);
 }
 
 // ── Renderização ──────────────────────────────────────────────────────────────
+
 function renderizarFila() {
   const filaHoje       = snapshotState.clientesHoje       || [];
   const filaProximos   = snapshotState.clientesProximos   || [];
   const filaProspeccao = snapshotState.clientesProspeccao || [];
 
-  document.getElementById('badgeHoje').textContent     = filaHoje.length;
-  document.getElementById('badgeProximos').textContent = filaProximos.length;
+  document.getElementById('badgeHoje').textContent       = filaHoje.length;
+  document.getElementById('badgeProximos').textContent   = filaProximos.length;
   document.getElementById('badgeProspeccao').textContent = filaProspeccao.length;
 
   if (!filaHoje.length)       document.getElementById('badgeHoje').classList.add('vazio');
@@ -334,34 +528,106 @@ function renderizarFila() {
   document.getElementById('listaProspeccao').innerHTML =
     filaProspeccao.length ? filaProspeccao.map((c, i) => renderCardProspect(c, i)).join('') : renderEmpty('prospeccao');
 
-  // Eventos nos cards — usa snapshotState como fonte de dados
+  // Eventos nos cards
   document.querySelectorAll('.queue-card').forEach(el => {
     el.addEventListener('click', () => {
       const idx  = parseInt(el.dataset.idx, 10);
       const modo = el.dataset.modo;
       let lista;
-      if (modo === 'hoje')       lista = snapshotState.clientesHoje;
-      else if (modo === 'proximos') lista = snapshotState.clientesProximos;
+      if      (modo === 'hoje')       lista = snapshotState.clientesHoje;
+      else if (modo === 'proximos')   lista = snapshotState.clientesProximos;
       else if (modo === 'prospeccao') lista = snapshotState.clientesProspeccao;
-      if (lista && lista[idx]) abrirDetalheProspect(lista[idx], el, modo === 'prospeccao');
+      if (lista && lista[idx]) abrirDetalhe(lista[idx], el, modo === 'prospeccao');
+    });
+  });
+
+  // Botões de claim inline nos cards
+  document.querySelectorAll('.btn-claim[data-oppid]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      handleClaim(btn.dataset.oppid, btn);
     });
   });
 }
+
+// ── Helpers operacionais ───────────────────────────────────────────────────────
+
+function getOpState(oppId) {
+  if (!oppId) return null;
+  return operationalMap.get(oppId) || null;
+}
+
+function renderOpStatusInline(oppId) {
+  const op = getOpState(oppId);
+  if (!op) return '';
+
+  const estado = op.estado;
+  if (estado === 'DISPONIVEL') {
+    if (op.cooledUntil && new Date() < new Date(op.cooledUntil)) {
+      const ate = new Date(op.cooledUntil).toLocaleDateString('pt-BR', { day:'2-digit', month:'short' });
+      return `<div class="op-status-row">
+        <span class="op-badge cooldown">⏸ Pausa até ${esc(ate)}</span>
+      </div>`;
+    }
+    return `<div class="op-status-row">
+      <span class="op-badge disponivel">● Disponível</span>
+      <button class="btn-claim" data-oppid="${esc(oppId)}">Iniciar atendimento</button>
+    </div>`;
+  }
+  if (estado === 'EM_ATENDIMENTO') {
+    const nome = op.claimAtual?.operadorNome || null;
+    const isOwner = op.claimAtual?.operadorId === currentUid;
+    const label = isOwner ? '● Em atendimento por você'
+      : nome ? `● Em atendimento por ${esc(nome)}`
+      : '● Em atendimento';
+    return `<div class="op-status-row">
+      <span class="op-badge em-atendimento">${label}</span>
+    </div>`;
+  }
+  if (estado === 'AGUARDANDO_RETORNO') {
+    const dt = op.nextFollowUpAt
+      ? new Date(op.nextFollowUpAt + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'short' })
+      : null;
+    return `<div class="op-status-row">
+      <span class="op-badge aguardando">⏰ Retorno${dt ? ' em ' + esc(dt) : ''}</span>
+    </div>`;
+  }
+  if (estado === 'CONCLUIDA') {
+    return `<div class="op-status-row"><span class="op-badge concluida">✓ Concluído</span></div>`;
+  }
+  return '';
+}
+
+function cardOpClass(oppId) {
+  const op = getOpState(oppId);
+  if (!op) return '';
+  if (op.estado === 'EM_ATENDIMENTO')     return 'op-em-atendimento';
+  if (op.estado === 'AGUARDANDO_RETORNO') return 'op-aguardando';
+  if (op.estado === 'CONCLUIDA')          return 'op-concluida';
+  return '';
+}
+
+// ── Render de cards ────────────────────────────────────────────────────────────
 
 function renderCard(c, modo, idx) {
   const cor    = COR_OPORTUNIDADE[c.tipoOportunidade] || '#5f6368';
   const fundo  = COR_FUNDO_OPORTUNIDADE[c.tipoOportunidade] || 'rgba(95,99,104,.08)';
   const label  = labelOportunidade(c.tipoOportunidade);
-  const sit    = c.situacao || '';  // VIEW MODEL: situacao já está no top-level
+  const sit    = c.situacao || '';
+  const oppId  = c.opportunityInstanceId || null;
+  const opCls  = oppId ? cardOpClass(oppId) : '';
 
   let extras = '';
   if (modo === 'proximos') {
     const quando = formatarDiasAteProximoCiclo(c.diasAteProximoCiclo);
-    if (quando) extras = `<div style="margin-top:.35rem"><span class="card-quando-badge">${esc(quando)}</span></div>`;
+    if (quando) extras += `<div style="margin-top:.35rem"><span class="card-quando-badge">${esc(quando)}</span></div>`;
+  }
+  if (oppId) {
+    extras += renderOpStatusInline(oppId);
   }
 
   return `
-    <div class="queue-card" data-modo="${modo}" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalhes de ${esc(c.nomeCliente)}">
+    <div class="queue-card ${opCls}" data-modo="${modo}" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalhes de ${esc(c.nomeCliente)}">
       <div class="card-dot" style="background:${cor}"></div>
       <div class="card-body">
         <div class="card-top">
@@ -409,61 +675,149 @@ function renderCardProspect(c, idx) {
     </div>`;
 }
 
-// ── Painel de detalhe ─────────────────────────────────────────────────────────
-function abrirDetalheProspect(cliente, cardEl, isProspect = false) {
+// ── Painel de detalhe ──────────────────────────────────────────────────────────
+
+function abrirDetalhe(cliente, cardEl, isProspect = false) {
   clienteSelecionado = cliente;
   document.querySelectorAll('.queue-card').forEach(el => el.classList.remove('selected'));
   if (cardEl) cardEl.classList.add('selected');
 
   document.getElementById('detailNome').textContent = cliente.nomeCliente || '—';
+  renderDetalheContent(cliente, isProspect);
+  document.getElementById('detailPanel').classList.add('open');
+}
 
+function renderDetalheContent(cliente, isProspect) {
   let html = '';
+  const oppId = cliente.opportunityInstanceId || null;
+  const op    = oppId ? getOpState(oppId) : null;
 
   if (isProspect) {
     html += `<div class="detail-tipo-pill" style="color:#5f6368;background:rgba(95,99,104,.1)">Nunca comprou</div>`;
     html += `<div class="detail-section">
       <div class="detail-section-text" style="color:var(--muted)">Clientes cadastrados que ainda não realizaram uma compra.</div>
     </div>`;
-  } else {
-    const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
-    const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
-    const label = labelOportunidade(cliente.tipoOportunidade);
-    const sit    = cliente.situacao || null;
-    const quando = cliente.quando   || null;
-    const sinais = Array.isArray(cliente.sinaisVisiveis) ? cliente.sinaisVisiveis : [];
+    document.getElementById('detailBody').innerHTML = html;
+    return;
+  }
 
-    if (label) {
-      html += `<div class="detail-tipo-pill" style="color:${cor};background:${fundo}">${esc(label)}</div>`;
-    }
-    if (sit) {
-      html += `<div class="detail-section">
-        <div class="detail-section-label">Situação</div>
-        <div class="detail-section-text">${esc(sit)}</div>
-      </div>`;
-    }
-    if (quando) {
-      html += `<div class="detail-section">
-        <div class="detail-section-label">Quando agir</div>
-        <div class="detail-quando-box">${esc(quando)}</div>
-      </div>`;
-    }
-    if (sinais.length > 0) {
-      html += `<div class="detail-section">
-        <div class="detail-section-label">Sinais</div>
-        <div class="sinais-list">
-          ${sinais.map(s => `<div class="sinal-row"><span class="sinal-label">${esc(s.label)}</span><span class="sinal-valor">${esc(s.valor)}</span></div>`).join('')}
-        </div>
-      </div>`;
-    }
-    if (!sit && !quando && !sinais.length) {
-      html += `<div class="empty-state" style="padding:1.5rem 0">
-        <div class="empty-desc">Dados insuficientes para este cliente.</div>
-      </div>`;
-    }
+  const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
+  const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
+  const label = labelOportunidade(cliente.tipoOportunidade);
+  const sit    = cliente.situacao || null;
+  const quando = cliente.quando   || null;
+  const sinais = Array.isArray(cliente.sinaisVisiveis) ? cliente.sinaisVisiveis : [];
+
+  if (label) html += `<div class="detail-tipo-pill" style="color:${cor};background:${fundo}">${esc(label)}</div>`;
+
+  // ── Bloco operacional ──
+  if (op) {
+    html += renderDetalheOperacional(oppId, op);
+  }
+
+  if (sit) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Situação</div>
+      <div class="detail-section-text">${esc(sit)}</div>
+    </div>`;
+  }
+  if (quando) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Quando agir</div>
+      <div class="detail-quando-box">${esc(quando)}</div>
+    </div>`;
+  }
+  if (sinais.length > 0) {
+    html += `<div class="detail-section">
+      <div class="detail-section-label">Sinais</div>
+      <div class="sinais-list">
+        ${sinais.map(s => `<div class="sinal-row"><span class="sinal-label">${esc(s.label)}</span><span class="sinal-valor">${esc(s.valor)}</span></div>`).join('')}
+      </div>
+    </div>`;
+  }
+  if (!sit && !quando && !sinais.length && !op) {
+    html += `<div class="empty-state" style="padding:1.5rem 0">
+      <div class="empty-desc">Dados insuficientes para este cliente.</div>
+    </div>`;
   }
 
   document.getElementById('detailBody').innerHTML = html;
-  document.getElementById('detailPanel').classList.add('open');
+
+  // Adicionar eventos dos botões operacionais após renderização
+  const claimBtn = document.getElementById('detailClaimBtn');
+  if (claimBtn) claimBtn.addEventListener('click', () => handleClaim(oppId, claimBtn));
+
+  const releaseBtn = document.getElementById('detailReleaseBtn');
+  if (releaseBtn) releaseBtn.addEventListener('click', () => handleRelease(oppId, releaseBtn));
+
+  const outcomeBtn = document.getElementById('detailOutcomeBtn');
+  if (outcomeBtn) outcomeBtn.addEventListener('click', () => abrirModal(oppId));
+}
+
+function renderDetalheOperacional(oppId, op) {
+  const estado   = op.estado;
+  const isOwner  = op.claimAtual?.operadorId === currentUid;
+  const ownerNome = op.claimAtual?.operadorNome || null;
+
+  if (estado === 'DISPONIVEL') {
+    const emCooldown = op.cooledUntil && new Date() < new Date(op.cooledUntil);
+    if (emCooldown) {
+      const ate = new Date(op.cooledUntil).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+      return `<div class="op-detail-box">
+        <div class="op-detail-state"><span class="op-badge cooldown">⏸ Em pausa</span></div>
+        <div class="op-cooldown-msg">Contato pausado. Disponível para nova tentativa após ${esc(ate)}.</div>
+      </div>`;
+    }
+    return `<div class="op-detail-box">
+      <div class="op-detail-state"><span class="op-badge disponivel">● Disponível para contato</span></div>
+      <button class="btn-claim-detail" id="detailClaimBtn">Iniciar atendimento</button>
+    </div>`;
+  }
+
+  if (estado === 'EM_ATENDIMENTO') {
+    const labelEstado = isOwner
+      ? 'Em atendimento por você'
+      : ownerNome ? `Em atendimento por ${esc(ownerNome)}`
+      : 'Em atendimento';
+    let btns = '';
+    if (isOwner) {
+      btns = `<button class="btn-registrar" id="detailOutcomeBtn">Registrar resultado</button>
+              <button class="btn-release-detail" id="detailReleaseBtn">Cancelar atendimento</button>`;
+    }
+    return `<div class="op-detail-box">
+      <div class="op-detail-state"><span class="op-badge em-atendimento">● ${labelEstado}</span></div>
+      ${btns}
+    </div>`;
+  }
+
+  if (estado === 'AGUARDANDO_RETORNO') {
+    const dt = op.nextFollowUpAt
+      ? new Date(op.nextFollowUpAt + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
+      : null;
+    const followupMsg = dt ? `Retorno agendado para ${esc(dt)}.` : 'Retorno agendado.';
+    const past = op.nextFollowUpAt && op.nextFollowUpAt <= new Date().toISOString().slice(0, 10);
+    return `<div class="op-detail-box">
+      <div class="op-detail-state"><span class="op-badge aguardando">⏰ Aguardando retorno</span></div>
+      <div class="op-followup-row">${followupMsg}${past ? ' <strong style="color:var(--yellow)">— Data vencida</strong>' : ''}</div>
+      <button class="btn-claim-detail" id="detailClaimBtn">Iniciar atendimento</button>
+    </div>`;
+  }
+
+  if (estado === 'CONCLUIDA') {
+    const ultimoOutcome = op.eventos?.filter(e => e.tipo === 'OUTCOME_REGISTERED').slice(-1)[0];
+    const outcomeLbl = ultimoOutcome ? (OUTCOME_LABELS[ultimoOutcome.outcome] || ultimoOutcome.outcome) : null;
+    return `<div class="op-detail-box">
+      <div class="op-detail-state"><span class="op-badge concluida">✓ Atendimento concluído</span></div>
+      ${outcomeLbl ? `<div class="op-owner-row">Resultado: <span>${esc(outcomeLbl)}</span></div>` : ''}
+    </div>`;
+  }
+
+  return '';
+}
+
+function atualizarDetalheOperacional(oppId) {
+  if (!clienteSelecionado || clienteSelecionado.opportunityInstanceId !== oppId) return;
+  renderDetalheContent(clienteSelecionado, false);
 }
 
 function fecharDetalhe() {
@@ -472,7 +826,118 @@ function fecharDetalhe() {
   clienteSelecionado = null;
 }
 
-// ── Utilitário ─────────────────────────────────────────────────────────────────
+// ── Claim ─────────────────────────────────────────────────────────────────────
+
+async function handleClaim(oppId, btn) {
+  if (!oppId) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Aguarde…'; }
+  try {
+    await _claimOpportunity({ opportunityInstanceId: oppId });
+    toast('Atendimento iniciado!', 'ok');
+  } catch (e) {
+    const msg = e?.message || 'Erro ao iniciar atendimento.';
+    if (msg.includes('já está em atendimento') || msg.includes('already-exists')) {
+      toast('Oportunidade já está em atendimento por outro usuário.', 'err');
+    } else if (msg.includes('cooldown')) {
+      toast('Oportunidade em pausa, tente mais tarde.', 'err');
+    } else {
+      toast(msg, 'err');
+    }
+    console.error('[claim]', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = btn.classList.contains('btn-claim-detail') ? 'Iniciar atendimento' : 'Iniciar atendimento'; }
+  }
+}
+
+// ── Release ───────────────────────────────────────────────────────────────────
+
+async function handleRelease(oppId, btn) {
+  if (!oppId) return;
+  if (btn) { btn.disabled = true; btn.textContent = 'Aguarde…'; }
+  try {
+    await _releaseOpportunity({ opportunityInstanceId: oppId });
+    toast('Atendimento cancelado.', 'info');
+  } catch (e) {
+    toast(e?.message || 'Erro ao cancelar atendimento.', 'err');
+    console.error('[release]', e);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Cancelar atendimento'; }
+  }
+}
+
+// ── Outcome modal ──────────────────────────────────────────────────────────────
+
+function abrirModal(oppId) {
+  modalOppId      = oppId;
+  modalOutcomeSel = null;
+
+  // Renderizar opções
+  const list = document.getElementById('outcomeList');
+  list.innerHTML = Object.entries(OUTCOME_LABELS).map(([key, label]) =>
+    `<button class="btn-outcome-opt" data-outcome="${key}">${esc(label)}</button>`
+  ).join('');
+
+  list.querySelectorAll('.btn-outcome-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      list.querySelectorAll('.btn-outcome-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      modalOutcomeSel = btn.dataset.outcome;
+      const needDate = modalOutcomeSel === 'PEDIU_RETORNO';
+      document.getElementById('followupSection').classList.toggle('visible', needDate);
+      document.getElementById('outcomeErr').textContent = '';
+      document.getElementById('outcomeOkBtn').disabled = false;
+    });
+  });
+
+  // Reset
+  document.getElementById('followupDate').value = '';
+  document.getElementById('followupSection').classList.remove('visible');
+  document.getElementById('outcomeErr').textContent = '';
+  document.getElementById('outcomeOkBtn').disabled = true;
+  document.getElementById('outcomeModal').classList.add('open');
+}
+
+function fecharModal() {
+  document.getElementById('outcomeModal').classList.remove('open');
+  modalOppId = null;
+  modalOutcomeSel = null;
+}
+
+async function confirmarOutcome() {
+  if (!modalOppId || !modalOutcomeSel) return;
+  const errEl = document.getElementById('outcomeErr');
+  errEl.textContent = '';
+
+  let scheduledFor = null;
+  if (modalOutcomeSel === 'PEDIU_RETORNO') {
+    scheduledFor = document.getElementById('followupDate').value;
+    if (!scheduledFor) { errEl.textContent = 'Informe a data do retorno.'; return; }
+    const hoje = new Date().toISOString().slice(0, 10);
+    if (scheduledFor <= hoje) { errEl.textContent = 'A data deve ser futura (após hoje).'; return; }
+  }
+
+  const okBtn = document.getElementById('outcomeOkBtn');
+  okBtn.disabled = true;
+  okBtn.textContent = 'Aguarde…';
+
+  try {
+    const payload = { opportunityInstanceId: modalOppId, outcome: modalOutcomeSel };
+    if (scheduledFor) payload.scheduledFor = scheduledFor;
+    await _registerOutcome(payload);
+    fecharModal();
+    toast('Resultado registrado!', 'ok');
+  } catch (e) {
+    const msg = e?.message || 'Erro ao registrar resultado.';
+    errEl.textContent = msg;
+    console.error('[outcome]', e);
+  } finally {
+    okBtn.disabled = false;
+    okBtn.textContent = 'Confirmar';
+  }
+}
+
+// ── Utilitário ────────────────────────────────────────────────────────────────
+
 function esc(str) {
   if (str == null) return '';
   return String(str)

@@ -99,7 +99,7 @@ async function carregarPerfisComNomes(db) {
       const info = clienteInfoMap.get(doc.id) || {};
       return {
         perfil360:   doc.data(),
-        nomeCliente: info.nome || null,
+        nomeCliente: info.nome || doc.data().nomeCliente || null,
         criadoEm:    info.criadoEm || null,
       };
     })

@@ -49,12 +49,13 @@ const { _gcQueryHandler } = require('../index');
 const { HttpsError }      = require('firebase-functions/v2/https');
 
 // ── UIDs de teste ─────────────────────────────────────────────────────────────
-const UID_GESTOR_CALC    = 'uid-gc-gestor-calc';       // gestor ativo, módulos: garantia+compras+expedicao
-const UID_GESTOR_SEM_MOD = 'uid-gc-gestor-sem-modulo'; // gestor ativo, módulos: []
-const UID_INATIVO        = 'uid-gc-gestor-inativo';    // gestor inativo
-const UID_SEM_PERFIL     = 'uid-gc-sem-perfil';        // sem documento em users/
-const UID_FUNC           = 'uid-gc-funcionario';       // role=funcionario
-const UID_SOMENTE_CALC   = 'uid-gc-somente-calc';      // gestor ativo, módulos: ['calculadora'] apenas
+const UID_GESTOR_CALC      = 'uid-gc-gestor-calc';        // gestor ativo, módulos: garantia+compras+expedicao
+const UID_GESTOR_SEM_MOD   = 'uid-gc-gestor-sem-modulo';  // gestor ativo, módulos: []
+const UID_INATIVO          = 'uid-gc-gestor-inativo';     // gestor inativo
+const UID_SEM_PERFIL       = 'uid-gc-sem-perfil';         // sem documento em users/
+const UID_FUNC             = 'uid-gc-funcionario';        // role=funcionario, sem sistema_usuarios
+const UID_FUNC_EXPEDICAO   = 'uid-gc-func-expedicao';     // role=funcionario, ativo, modulos=['expedicao']
+const UID_SOMENTE_CALC     = 'uid-gc-somente-calc';       // gestor ativo, módulos: ['calculadora'] apenas
 
 // ── Mock fetch global ─────────────────────────────────────────────────────────
 // Resposta padrão GC: lista vazia, meta pagina 1/1
@@ -86,6 +87,10 @@ beforeAll(async () => {
   await db.collection('sistema_usuarios').doc(UID_INATIVO).set({ modulos: ['garantia'], admin: false });
 
   await db.collection('users').doc(UID_FUNC).set({ role: 'funcionario', ativo: true, nome: 'Func GC' });
+  // UID_FUNC: sem sistema_usuarios → modulos=[] → sem expedicao
+
+  await db.collection('users').doc(UID_FUNC_EXPEDICAO).set({ role: 'funcionario', ativo: true, nome: 'Func Expedicao' });
+  await db.collection('sistema_usuarios').doc(UID_FUNC_EXPEDICAO).set({ modulos: ['expedicao'], admin: false });
 
   // UID_SOMENTE_CALC: gestor ativo mas apenas com módulo 'calculadora' (removido do sistema)
   await db.collection('users').doc(UID_SOMENTE_CALC).set({ role: 'gestor', ativo: true, nome: 'Gestor Somente Calc' });
@@ -233,10 +238,36 @@ test('F12 — method arbitrário em dados ignorado; GC chamado com método fixo'
   expect(methods.every(m => m === 'GET')).toBe(true);
 });
 
-// ── F17 — funcionário não acessa gcQuery ─────────────────────────────────────
-test('F17 — funcionário → permission-denied', async () => {
+// ── F17 — funcionário + op≠LISTAR_VENDAS → DENY ─────────────────────────────
+test('F17 — funcionário + LISTAR_PRODUTOS → permission-denied', async () => {
   await expectError(
     _gcQueryHandler(req(UID_FUNC, { operacao: 'LISTAR_PRODUTOS' })),
+    'permission-denied'
+  );
+});
+
+// ── F17a — funcionário + expedicao + LISTAR_VENDAS → ALLOW ───────────────────
+test('F17a — funcionário com expedicao + LISTAR_VENDAS → ALLOW', async () => {
+  const result = await _gcQueryHandler(req(UID_FUNC_EXPEDICAO, {
+    operacao: 'LISTAR_VENDAS',
+    dados: { limite: 10 },
+  }));
+  expect(result).toHaveProperty('data');
+  expect(Array.isArray(result.data)).toBe(true);
+});
+
+// ── F17b — funcionário + expedicao + op≠LISTAR_VENDAS → DENY ─────────────────
+test('F17b — funcionário com expedicao + LISTAR_PRODUTOS → permission-denied', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_FUNC_EXPEDICAO, { operacao: 'LISTAR_PRODUTOS' })),
+    'permission-denied'
+  );
+});
+
+// ── F17c — funcionário SEM expedicao + LISTAR_VENDAS → DENY ──────────────────
+test('F17c — funcionário sem expedicao + LISTAR_VENDAS → permission-denied', async () => {
+  await expectError(
+    _gcQueryHandler(req(UID_FUNC, { operacao: 'LISTAR_VENDAS' })),
     'permission-denied'
   );
 });

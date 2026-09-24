@@ -434,11 +434,23 @@ async function gcQueryHandler(request) {
   }
   const uid = request.auth.uid;
 
-  // 2. Verificar gestor — FAIL CLOSED (lê users/{uid})
+  // 2. Verificar perfil — FAIL CLOSED (lê users/{uid})
   const userDoc = await db.collection('users').doc(uid).get();
   const perfil  = userDoc.exists ? userDoc.data() : null;
-  if (!perfil || perfil.role !== 'gestor' || !perfil.ativo) {
-    throw new HttpsError('permission-denied', 'Acesso negado. Somente gestores ativos podem consultar o GestãoClick.');
+  if (!perfil || !perfil.ativo) {
+    throw new HttpsError('permission-denied', 'Acesso negado.');
+  }
+  // Gestor: acesso completo. Funcionário da expedição: somente LISTAR_VENDAS.
+  if (perfil.role !== 'gestor') {
+    const { operacao: opCheck } = request.data || {};
+    if (perfil.role !== 'funcionario' || opCheck !== 'LISTAR_VENDAS') {
+      throw new HttpsError('permission-denied', 'Acesso negado. Somente gestores ou funcionários da expedição (LISTAR_VENDAS).');
+    }
+    const sysCheck = await db.collection('sistema_usuarios').doc(uid).get();
+    const modCheck = sysCheck.exists ? (sysCheck.data().modulos || []) : [];
+    if (!modCheck.includes('expedicao')) {
+      throw new HttpsError('permission-denied', 'Módulo expedicao necessário para esta operação.');
+    }
   }
 
   // 3. Payload do cliente

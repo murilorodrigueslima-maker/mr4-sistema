@@ -119,7 +119,8 @@ describe('Idempotência', () => {
     expect(r1.status).toBe('GERADA');
     const r2 = await G.executarGeracaoWorklist({ db, now: new Date('2026-09-25T15:00:00.000Z'), mode: 'LIVE', logger: quiet, lookupNome: nomeMock, dados: dadosBase({ nGc: 40 }) });
     expect(r2.status).toBe('JA_GERADA_HOJE');
-    expect(db.writes).toEqual(['fila_comercial/worklist']);
+    // N35.20.1: 1ª geração grava operacional + gerencial; a 2ª não grava nada
+    expect(db.writes).toEqual(['fila_comercial/worklist', 'fila_comercial_gestao/worklist']);
   });
   test('ID-04 LIVE no dia seguinte gera nova worklist', async () => {
     const db = fakeDb();
@@ -132,11 +133,12 @@ describe('Idempotência', () => {
 
 // ── Escritas permitidas ──────────────────────────────────────────────────────
 describe('Escritas', () => {
-  test('WR-01 DRY_RUN grava SOMENTE fila_comercial/worklist_preview', async () => {
+  test('WR-01 DRY_RUN grava SOMENTE a prévia (operacional + gerencial N35.20.1)', async () => {
     const db = fakeDb();
     const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: nomeMock, dados: dadosBase() });
-    expect(db.writes).toEqual(['fila_comercial/worklist_preview']);
+    expect(db.writes).toEqual(['fila_comercial/worklist_preview', 'fila_comercial_gestao/worklist_preview']);
     expect(r.escrito).toBe('fila_comercial/worklist_preview');
+    expect(r.escritoGestao).toBe('fila_comercial_gestao/worklist_preview');
   });
   test('WR-02 OFF não lê nem grava nada', async () => {
     const db = fakeDb();
@@ -171,7 +173,11 @@ describe('Schema do documento', () => {
   test('SC-03 item contém só os campos da fila', async () => {
     const r = await gerar();
     const chaves = new Set(minha(r).novas.flatMap(x => Object.keys(x)));
-    expect([...chaves].sort()).toEqual(['commercialEntityId', 'diasEntreComprasMediana', 'diasSemComprar', 'labelOp', 'nomeCliente', 'opportunityInstanceId', 'quando', 'rank', 'sinaisVisiveis', 'situacao', 'tipoOportunidade'].sort());
+    // N35.20: + contextoComercial (informativo), com lista branca própria
+    expect([...chaves].sort()).toEqual(['commercialEntityId', 'contextoComercial', 'diasEntreComprasMediana', 'diasSemComprar', 'labelOp', 'nomeCliente', 'opportunityInstanceId', 'quando', 'rank', 'sinaisVisiveis', 'situacao', 'tipoOportunidade'].sort());
+    const ctxChaves = new Set(minha(r).novas.flatMap(x => Object.keys(x.contextoComercial || {})));
+    // N35.20.1: `gestao` NÃO é permitido no documento operacional
+    for (const k of ctxChaves) expect(['versao', 'motivo', 'motivoCodigo', 'rotuloTipo', 'historico', 'produtos', 'sinais', 'tendencia']).toContain(k);
   });
   test('SC-04 metadados: schemaVersion, versao, dataReferencia em America/Fortaleza, rótulo do vendedor', async () => {
     const r = await gerar({ now: new Date('2026-09-26T01:30:00.000Z') }); // 22:30 de 25/09 em Fortaleza

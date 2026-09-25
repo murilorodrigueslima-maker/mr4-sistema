@@ -56,6 +56,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .card-nome{font-size:.88rem;font-weight:700;color:var(--text)}
 .card-tipo{font-size:.68rem;font-weight:700;padding:.15rem .5rem;border-radius:20px;letter-spacing:.2px;white-space:nowrap}
 .card-situacao{font-size:.76rem;color:var(--muted);line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+/* N35.20 — contexto comercial */
+.card-historico{font-size:.72rem;color:var(--muted);margin-top:.15rem;font-variant-numeric:tabular-nums}
+.ctx-sub{font-size:.7rem;font-weight:700;color:var(--muted);margin:.75rem 0 .3rem}
+.ctx-lista{margin:0;padding-left:1.1rem;font-size:.8rem;line-height:1.5;color:var(--text)}
+.ctx-muted{color:var(--muted);font-size:.72rem;white-space:nowrap}
+.ctx-chips{display:flex;flex-wrap:wrap;gap:.3rem}
+.ctx-chip{font-size:.7rem;font-weight:600;padding:.15rem .55rem;border-radius:20px;background:var(--blue-lt);color:var(--blue)}
+.wl-linha[data-modo="wlg"]{cursor:pointer}
+.wl-linha[data-modo="wlg"]:hover{background:var(--blue-lt)}
+.wl-gestor-tipos{font-size:.7rem;color:var(--muted);margin:-.1rem 0 .35rem}
 
 /* ── OPERATIONAL STATUS BADGE ── */
 .op-status-row{display:flex;align-items:center;gap:.5rem;margin-top:.4rem;flex-wrap:wrap}
@@ -438,6 +448,10 @@ let _unsubWl        = null;
 let _tickWl         = null;
 let visaoAtual      = { novas: [], retornos: [], emAtendimento: [], trabalhadasHoje: [] };
 let visaoGestaoAtual = [];
+// N35.20.1 — dados EXCLUSIVOS de gestão (fila_comercial_gestao; Rules negam ao vendedor). Carregados SOMENTE
+// para quem tem gestão, sob demanda (detalhe aberto pela visão de gestão). Escopo do módulo — não é window.
+let _gestaoCarga   = null;   // { dataReferencia, itens }
+let _gestaoPromise = null;
 window.__filaListeners = { worklist: 0, interacoes: 0 };
 
 // Estado do modal de outcome
@@ -617,6 +631,7 @@ function renderWorklistCard(v, grupo, idx) {
   const label = labelOportunidade(c.tipoOportunidade);
   const btn = (v.estado.podeIniciar && window._canOperateQueue)
     ? `<button class="btn-claim" data-oppid="${esc(c.opportunityInstanceId)}">Iniciar atendimento</button>` : '';
+  const mc = WL.modeloCard(c); // N35.20: motivo + (última compra · pedidos); sem contexto → card anterior
   return `
     <div class="queue-card" data-modo="wl-${grupo}" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalhes de ${esc(c.nomeCliente)}">
       <div class="card-dot" style="background:${cor}"></div>
@@ -625,8 +640,9 @@ function renderWorklistCard(v, grupo, idx) {
           ${label ? `<span class="card-tipo" style="color:${cor};background:${fundo}">${esc(label)}</span>` : ''}
           <span class="card-nome">${esc(c.nomeCliente)}</span>
         </div>
-        ${c.situacao ? `<div class="card-situacao">${esc(c.situacao)}</div>` : ''}
-        ${v.grupoOrigem === 'pendentes' ? `<div class="card-situacao" style="color:var(--muted)">Pendente${c.atribuidoDesde ? ' desde ' + esc(fmtDataCurta(c.atribuidoDesde)) : ''} · continua na sua fila</div>` : ''}
+        ${mc.motivo ? `<div class="card-situacao">${esc(mc.motivo)}</div>` : ''}
+        ${mc.linhaHistorico ? `<div class="card-historico">${esc(mc.linhaHistorico)}</div>` : ''}
+        ${!mc.usaContexto && v.grupoOrigem === 'pendentes' ? `<div class="card-situacao" style="color:var(--muted)">Pendente${c.atribuidoDesde ? ' desde ' + esc(fmtDataCurta(c.atribuidoDesde)) : ''} · continua na sua fila</div>` : ''}
         <div class="op-status-row">${badgeWorklist(v.estado)}${btn}</div>
       </div>
     </div>`;
@@ -638,18 +654,19 @@ function renderGrupoWl(lista, grupo, vazio) {
 
 function renderGestaoWorklist(visao) {
   if (!visao.length) return '<div class="wl-vazio">Nenhum vendedor ativo na fila de hoje.</div>';
-  return visao.map(s => {
+  return visao.map((s, si) => {
     const k = s.contagens;
-    const linhas = s.linhas.map(l => `
-      <div class="wl-linha">
+    const tipos = Object.entries(k.porTipo || {}).map(([t, n]) => `${n} ${t.toLowerCase()}`).join(' · ');
+    const linhas = s.linhas.map((l, li) => `
+      <div class="wl-linha" data-modo="wlg" data-s="${si}" data-idx="${li}" tabindex="0" role="button" aria-label="Ver contexto de ${esc(l.item.nomeCliente)}">
         <span class="wl-linha-nome">${esc(l.item.nomeCliente)} <span style="color:var(--muted)">· ${esc(labelOportunidade(l.item.tipoOportunidade) || '')}${l.grupoOrigem === 'followUps' ? ' · retorno' : ''}${l.grupoOrigem === 'pendentes' ? ' · pendente anterior' : ''}</span></span>
         ${badgeWorklist(l.estado)}
       </div>`).join('');
     return `<div class="wl-gestor">
       <div class="wl-gestor-head">
         <span class="wl-gestor-nome">${esc(s.rotulo)}</span>
-        <span class="wl-gestor-cont">${k.novas} novas · ${k.anteriores ? k.anteriores + ' pendentes anteriores · ' : ''}${k.retornos} retornos · ${k.emAtendimento} em atendimento · ${k.concluidas} concluídas · ${k.retornoAgendado} reagendadas · ${k.pendentes} pendentes</span>
-      </div>${linhas}
+        <span class="wl-gestor-cont">${k.novas} novas · ${k.anteriores ? k.anteriores + ' pendentes anteriores · ' : ''}${k.retornos} retornos · ${k.emAtendimento} em atendimento · ${k.concluidas} concluídas · ${k.retornoAgendado} reagendadas · ${k.pendentes} a trabalhar</span>
+      </div>${tipos ? `<div class="wl-gestor-tipos">${esc(tipos)}</div>` : ''}${linhas}
     </div>`;
   }).join('');
 }
@@ -686,6 +703,14 @@ function renderizarWorklist() {
     visaoGestaoAtual = visaoG;
     secG.style.display = '';
     document.getElementById('gestaoWorklistBody').innerHTML = renderGestaoWorklist(visaoG);
+    // N35.20: gestão abre o contexto do cliente (somente leitura; inclui ticket médio)
+    document.querySelectorAll('.wl-linha[data-modo="wlg"]').forEach(el => {
+      el.addEventListener('click', () => {
+        const s = visaoGestaoAtual[parseInt(el.dataset.s, 10)];
+        const l = s && s.linhas[parseInt(el.dataset.idx, 10)];
+        if (l) abrirDetalhe({ ...l.item, _wlGestao: true }, null, false);
+      });
+    });
   } else {
     visaoGestaoAtual = [];
     secG.style.display = 'none';
@@ -899,9 +924,13 @@ function renderDetalheContent(cliente, isProspect) {
   const cor   = COR_OPORTUNIDADE[cliente.tipoOportunidade] || '#5f6368';
   const fundo = COR_FUNDO_OPORTUNIDADE[cliente.tipoOportunidade] || 'rgba(95,99,104,.08)';
   const label = labelOportunidade(cliente.tipoOportunidade);
-  const sit    = cliente.situacao || null;
-  const quando = cliente.quando   || null;
-  const sinais = Array.isArray(cliente.sinaisVisiveis) ? cliente.sinaisVisiveis : [];
+  // N35.20: contexto comercial V1 quando existir; senão, detalhe anterior (sinais legados sem enum técnico)
+  // N35.20.1: dado gerencial só na visão de gestão, vindo de fila_comercial_gestao (nunca do documento operacional)
+  const viaGestao = !!cliente._wlGestao && !!window._canManageQueue;
+  const md     = WL.modeloDetalhe(cliente, { gestao: viaGestao, dadosGestao: viaGestao ? dadosGestaoPara(oppId) : null });
+  const sit    = md.usaContexto ? null : (cliente.situacao || null);
+  const quando = md.usaContexto ? null : (cliente.quando   || null);
+  const sinais = md.usaContexto ? [] : md.sinaisLegados;
 
   if (label) html += `<div class="detail-tipo-pill" style="color:${cor};background:${fundo}">${esc(label)}</div>`;
 
@@ -909,6 +938,8 @@ function renderDetalheContent(cliente, isProspect) {
   if (op) {
     html += renderDetalheOperacional(oppId, op);
   }
+
+  if (md.usaContexto) html += renderContextoComercial(md);
 
   if (sit) {
     html += `<div class="detail-section">
@@ -930,13 +961,18 @@ function renderDetalheContent(cliente, isProspect) {
       </div>
     </div>`;
   }
-  if (!sit && !quando && !sinais.length && !op) {
+  if (!md.usaContexto && !sit && !quando && !sinais.length && !op) {
     html += `<div class="empty-state" style="padding:1.5rem 0">
       <div class="empty-desc">Dados insuficientes para este cliente.</div>
     </div>`;
   }
 
   document.getElementById('detailBody').innerHTML = html;
+
+  // N35.20.1: gestão — carrega o documento gerencial uma vez e re-renderiza só se o mesmo cliente seguir aberto
+  if (viaGestao && md.gestao && md.gestao.estado === 'carregando') {
+    carregarDadosGestao().then(() => { if (clienteSelecionado === cliente) renderDetalheContent(cliente, isProspect); });
+  }
 
   // Adicionar eventos dos botões operacionais após renderização
   const claimBtn = document.getElementById('detailClaimBtn');
@@ -947,6 +983,68 @@ function renderDetalheContent(cliente, isProspect) {
 
   const outcomeBtn = document.getElementById('detailOutcomeBtn');
   if (outcomeBtn) outcomeBtn.addEventListener('click', () => abrirModal(oppId));
+}
+
+// N35.20.1 — leitura única (por dia) do documento gerencial; nunca por card; nunca para o vendedor.
+function carregarDadosGestao() {
+  if (!window._canManageQueue) return Promise.resolve(null);
+  const dr = worklistDoc ? worklistDoc.dataReferencia : null;
+  if (_gestaoCarga && _gestaoCarga.dataReferencia === dr) return Promise.resolve(_gestaoCarga);
+  if (_gestaoPromise) return _gestaoPromise;
+  _gestaoPromise = getDoc(doc(db, 'fila_comercial_gestao', 'worklist'))
+    .then(s => {
+      const d = s.exists() ? s.data() : null;
+      _gestaoCarga = { dataReferencia: dr, itens: (d && d.dataReferencia === dr && d.itens) ? d.itens : {} };
+      return _gestaoCarga;
+    })
+    .catch(e => {
+      console.warn('[fila-comercial] dados de gestão indisponíveis:', e.code || e.message);
+      _gestaoCarga = { dataReferencia: dr, itens: {} };
+      return _gestaoCarga;
+    })
+    .finally(() => { _gestaoPromise = null; });
+  return _gestaoPromise;
+}
+/** undefined = ainda carregando; null = indisponível; objeto = dados gerenciais da oportunidade. */
+function dadosGestaoPara(oppId) {
+  const dr = worklistDoc ? worklistDoc.dataReferencia : null;
+  if (!_gestaoCarga || _gestaoCarga.dataReferencia !== dr) return undefined;
+  return (oppId && _gestaoCarga.itens[oppId]) || null;
+}
+
+// N35.20 — Contexto comercial (informativo). Recebe o modelo pronto do view-model; nada é consultado aqui.
+function renderContextoComercial(md) {
+  let h = `<div class="detail-section ctx-bloco">
+    <div class="detail-section-label">Contexto comercial</div>
+    <div class="ctx-sub">Por que falar com este cliente?</div>
+    <div class="detail-section-text">${esc(md.motivo)}</div>`;
+  if (md.historico.length) {
+    h += `<div class="ctx-sub">Histórico</div><div class="sinais-list">
+      ${md.historico.map(x => `<div class="sinal-row"><span class="sinal-label">${esc(x.label)}</span><span class="sinal-valor">${esc(x.valor)}</span></div>`).join('')}
+    </div>`;
+  }
+  if (md.produtosRecorrentes.length) {
+    h += `<div class="ctx-sub">Produtos recorrentes</div><ul class="ctx-lista">
+      ${md.produtosRecorrentes.map(p => `<li>${esc(p.nome)} <span class="ctx-muted">${esc(p.detalhe)}</span></li>`).join('')}
+    </ul>`;
+  }
+  if (md.produtosUltimaCompra.length) {
+    h += `<div class="ctx-sub">Última compra</div><ul class="ctx-lista">
+      ${md.produtosUltimaCompra.map(n => `<li>${esc(n)}</li>`).join('')}
+    </ul>`;
+  }
+  if (md.sinais.length) {
+    h += `<div class="ctx-sub">Sinais comerciais</div><div class="ctx-chips">
+      ${md.sinais.map(s => `<span class="ctx-chip">${esc(s)}</span>`).join('')}
+    </div>`;
+  }
+  if (md.gestao) {
+    const valor = md.gestao.ticketMedio || (md.gestao.estado === 'carregando' ? 'carregando…' : 'informação indisponível');
+    h += `<div class="ctx-sub">Gestão</div><div class="sinais-list">
+      <div class="sinal-row"><span class="sinal-label">Ticket médio</span><span class="sinal-valor">${esc(valor)}</span></div>
+    </div>`;
+  }
+  return h + '</div>';
 }
 
 function renderDetalheOperacional(oppId, op) {

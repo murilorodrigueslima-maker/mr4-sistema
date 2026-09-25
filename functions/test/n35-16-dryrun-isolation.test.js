@@ -51,11 +51,11 @@ test('DR-02 função agendada não sobrescreve o modo (usa o valor do config)', 
   expect(bloco).not.toMatch(/LIVE/);
 });
 
-test('DR-03 DRY_RUN grava exatamente 1 documento: fila_comercial/worklist_preview', async () => {
+test('DR-03 DRY_RUN grava exatamente 2 documentos da prévia: operacional + gerencial (N35.20.1)', async () => {
   const db = fakeDb();
   const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
   expect(r.escrito).toBe('fila_comercial/worklist_preview');
-  expect(db.writes).toEqual(['fila_comercial/worklist_preview']);
+  expect(db.writes).toEqual(['fila_comercial/worklist_preview', 'fila_comercial_gestao/worklist_preview']);
 });
 
 test('DR-04 DRY_RUN com worklist LIVE existente: LIVE intocada (nem lida para decidir, nem regravada)', async () => {
@@ -69,7 +69,8 @@ test('DR-04 DRY_RUN com worklist LIVE existente: LIVE intocada (nem lida para de
 test('DR-05 DRY_RUN nunca escreve interacoes_fila, perfis_360, clientes, vendas_gc, users ou sistema_usuarios', async () => {
   const db = fakeDb();
   await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
-  expect(db.writes.filter(w => !w.startsWith('fila_comercial/worklist_preview'))).toEqual([]);
+  const PERMITIDOS = ['fila_comercial/worklist_preview', 'fila_comercial_gestao/worklist_preview']; // N35.20.1
+  expect(db.writes.filter(w => !PERMITIDOS.includes(w))).toEqual([]);
 });
 
 test('DR-06 a tela assina SOMENTE fila_comercial/worklist (nunca a prévia)', () => {

@@ -1,4 +1,4 @@
-// fila-worklist-view.js — N35.15 (N35.18.1: grupo "pendentes" de dias anteriores)
+// fila-worklist-view.js — N35.15 (N35.18.1: grupo "pendentes" de dias anteriores; N35.20: contexto comercial V1)
 // View-model PURO da Worklist V2 (sem DOM, sem Firebase). Incluído por fila-comercial.html
 // e testado em functions/test/n35-15-*.test.js. Nenhuma decisão de negócio nova aqui:
 // só interpreta o documento fila_comercial/worklist + estados de interacoes_fila para exibição.
@@ -68,6 +68,115 @@
     return r;
   }
 
+  // ── N35.20: Inteligência Comercial V1 (apresentação; nenhuma decisão) ────────────
+  var ROTULO_TIPO = { REATIVACAO_120D: 'Retomar contato', JANELA_DE_RECOMPRA: 'Janela de recompra', QUEDA_DE_COMPRAS: 'Queda no ritmo' };
+  var TENDENCIA_HUMANA = {
+    CRESCENDO: 'Compras aumentando', SUBINDO: 'Compras aumentando', '↗ Subindo': 'Compras aumentando',
+    CAINDO: 'Compras diminuindo', '↘ Caindo': 'Compras diminuindo',
+    ESTAVEL: 'Compras estáveis', '→ Estável': 'Compras estáveis',
+    SEM_BASE: 'Histórico insuficiente',
+  };
+  var MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+
+  function dataBR(ymd) {
+    if (typeof ymd !== 'string' || !/^\d{4}-\d{2}-\d{2}/.test(ymd)) return null;
+    var p = ymd.slice(0, 10).split('-');
+    return p[2] + '/' + p[1] + '/' + p[0];
+  }
+  function mesAno(ymd) {
+    if (typeof ymd !== 'string' || !/^\d{4}-\d{2}/.test(ymd)) return null;
+    var m = MESES[parseInt(ymd.slice(5, 7), 10) - 1];
+    return m ? m.charAt(0).toUpperCase() + m.slice(1) + '/' + ymd.slice(0, 4) : null;
+  }
+  function moedaBR(v) {
+    if (typeof v !== 'number' || !isFinite(v)) return null;
+    return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  function inteiroPositivo(v) { return typeof v === 'number' && isFinite(v) && Math.floor(v) === v && v > 0; }
+  function contexto(item) {
+    var c = item && item.contextoComercial;
+    return c && typeof c === 'object' && c.versao === 'V1' && typeof c.motivo === 'string' && c.motivo ? c : null;
+  }
+
+  /** Valor de sinal legado (sinaisVisiveis) sem enum técnico. Enum desconhecido → null (omitido). */
+  function humanizarValorLegado(valor) {
+    if (typeof valor !== 'string' || !valor.trim()) return null;
+    var v = valor.trim();
+    if (TENDENCIA_HUMANA[v]) return TENDENCIA_HUMANA[v];
+    if (/^[A-Z][A-Z_]+$/.test(v)) return null;
+    return v;
+  }
+  function sinaisLegadosSeguros(sinais) {
+    return (Array.isArray(sinais) ? sinais : []).map(function (s) {
+      var val = humanizarValorLegado(s && s.valor);
+      return s && s.label && val ? { label: String(s.label), valor: val } : null;
+    }).filter(Boolean);
+  }
+
+  /**
+   * Card do vendedor: tipo + motivo + (última compra · pedidos). Nunca produtos, ticket, IDs ou enums.
+   * Sem contexto (worklist legada): usa `situacao` como antes.
+   */
+  function modeloCard(item) {
+    var ctx = contexto(item);
+    if (!ctx) return { usaContexto: false, motivo: (item && item.situacao) || null, linhaHistorico: null };
+    var h = ctx.historico || {};
+    var partes = [];
+    var motivo = ctx.motivo;
+    // Pendência: no card o prefixo vira "Pendente desde dd/mm" na linha de histórico (motivo real visível
+    // nas 2 linhas do card); o detalhe mantém o motivo completo.
+    var pref = /^Continua na sua fila desde (\d{2})\/(\d{2})\/\d{4}\.\s*/.exec(motivo);
+    if (ctx.motivoCodigo === 'PENDENCIA_ANTERIOR' && pref) {
+      motivo = motivo.slice(pref[0].length) || motivo;
+      partes.push('Pendente desde ' + pref[1] + '/' + pref[2]);
+    }
+    if (dataBR(h.ultimaCompraEm)) partes.push('Última compra: ' + dataBR(h.ultimaCompraEm));
+    if (inteiroPositivo(h.pedidosTotal)) partes.push(h.pedidosTotal + (h.pedidosTotal === 1 ? ' pedido' : ' pedidos'));
+    return { usaContexto: true, motivo: motivo, linhaHistorico: partes.length ? partes.join(' · ') : null };
+  }
+
+  /**
+   * Detalhe: motivo, histórico, produtos, sinais. `gestao` só com opts.gestao=true e opts.dadosGestao
+   * (undefined = carregando; null = indisponível; { ticketMedio } = dado do documento gerencial).
+   * Campos ausentes são omitidos (nunca null/undefined/N/A/"0 dias").
+   */
+  function modeloDetalhe(item, opts) {
+    var ctx = contexto(item);
+    var gestao = !!(opts && opts.gestao);
+    if (!ctx) {
+      return { usaContexto: false, motivo: (item && item.situacao) || null, quando: (item && item.quando) || null, sinaisLegados: sinaisLegadosSeguros(item && item.sinaisVisiveis) };
+    }
+    var h = ctx.historico || {};
+    var historico = [];
+    if (dataBR(h.ultimaCompraEm)) historico.push({ label: 'Última compra', valor: dataBR(h.ultimaCompraEm) });
+    if (inteiroPositivo(h.diasSemComprar)) historico.push({ label: 'Sem comprar', valor: h.diasSemComprar + (h.diasSemComprar === 1 ? ' dia' : ' dias') });
+    if (inteiroPositivo(h.pedidosTotal)) historico.push({ label: 'Pedidos', valor: String(h.pedidosTotal) });
+    if (mesAno(h.clienteDesde)) historico.push({ label: 'Cliente desde', valor: mesAno(h.clienteDesde) });
+    if (inteiroPositivo(h.cicloHabitualDias)) historico.push({ label: 'Ciclo habitual', valor: '~' + h.cicloHabitualDias + ' dias' });
+    if (ctx.tendencia && TENDENCIA_HUMANA[ctx.tendencia.codigo]) historico.push({ label: 'Tendência', valor: TENDENCIA_HUMANA[ctx.tendencia.codigo] });
+    var prod = ctx.produtos || {};
+    var out = {
+      usaContexto: true,
+      rotuloTipo: ctx.rotuloTipo || ROTULO_TIPO[item.tipoOportunidade] || null,
+      motivo: ctx.motivo,
+      historico: historico,
+      produtosRecorrentes: (prod.recorrentes || []).filter(function (p) { return p && p.nome && inteiroPositivo(p.pedidos) && p.pedidos >= 2; })
+        .slice(0, 3).map(function (p) { return { nome: p.nome, detalhe: p.pedidos + ' pedidos' }; }),
+      produtosUltimaCompra: (prod.ultimaCompra || []).filter(function (p) { return p && p.nome; }).slice(0, 3).map(function (p) { return p.nome; }),
+      sinais: (ctx.sinais || []).filter(function (s) { return s && s.label; }).map(function (s) { return s.label; }),
+      gestao: null,
+    };
+    // N35.20.1: dado gerencial vem SOMENTE de opts.dadosGestao (fila_comercial_gestao, lido só pela gestão).
+    // `ctx.gestao` (formato N35.20 local) é ignorado. Vendedor: sempre null.
+    if (gestao) {
+      var dg = opts.dadosGestao;
+      if (dg === undefined) out.gestao = { estado: 'carregando' };
+      else if (dg && moedaBR(dg.ticketMedio)) out.gestao = { ticketMedio: moedaBR(dg.ticketMedio) };
+      else out.gestao = { estado: 'indisponivel' };
+    }
+    return out;
+  }
+
   var ATIVOS = { DISPONIVEL: 1, EM_ATENDIMENTO_MEU: 1, EM_ATENDIMENTO_OUTRO: 1 };
 
   function exibivel(item) {
@@ -129,6 +238,12 @@
         });
       });
       var cont = { novas: (g.novas || []).filter(exibivel).length, anteriores: (g.pendentes || []).filter(exibivel).length, retornos: (g.followUps || []).filter(exibivel).length, emAtendimento: 0, concluidas: 0, retornoAgendado: 0, pendentes: 0 };
+      // N35.20: contagens por tipo de oportunidade (sem ranking, sem valores financeiros)
+      cont.porTipo = {};
+      linhas.forEach(function (l) {
+        var rt = ROTULO_TIPO[l.item.tipoOportunidade] || 'Outros';
+        cont.porTipo[rt] = (cont.porTipo[rt] || 0) + 1;
+      });
       linhas.forEach(function (l) {
         var c = l.estado.codigo;
         if (c === 'EM_ATENDIMENTO_OUTRO' || c === 'EM_ATENDIMENTO_MEU') cont.emAtendimento++;
@@ -148,6 +263,11 @@
     exibivel: exibivel,
     montarVisaoVendedor: montarVisaoVendedor,
     montarVisaoGestao: montarVisaoGestao,
+    // N35.20
+    modeloCard: modeloCard,
+    modeloDetalhe: modeloDetalhe,
+    humanizarValorLegado: humanizarValorLegado,
+    sinaisLegadosSeguros: sinaisLegadosSeguros,
     OUTCOME_LABELS: OUTCOME_LABELS,
   };
   root.FilaWorklistView = api;

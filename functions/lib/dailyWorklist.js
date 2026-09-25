@@ -12,6 +12,14 @@
 //     não só a instância — mudança de tipo não burla a regra
 //   - ordenação canônica única (filaOrdering), igual à do snapshot HOJE
 //   - identidade só por IDs canônicos; nome nunca participa
+//
+// N35.18.1 — Ownership persistente entre dias:
+//   - oportunidade distribuída continua do MESMO vendedor enquanto pendente (atribuicoesAnteriores)
+//   - pendente = sem outcome que encerre (CONCLUIDA), sem cooldown/supressão, sem compromisso aberto
+//     (follow-up/atendimento ativo seguem a regra própria) e ainda elegível hoje
+//   - claim expirado NÃO troca o dono; vendedor pausado mantém as pendências
+//   - dono fora da fila (inativo/removido) → pendência RETIDA (nunca redistribuída automaticamente)
+//   - pendências ficam FORA do limite de novas (limite = novas distribuídas no dia)
 
 const config = require('./operationalConfig');
 const { compararOrdemCanonica } = require('./filaOrdering');
@@ -213,10 +221,11 @@ function resolverParticipantes(sistemaDocs, usersDocs) {
  * @param {Iterable<string>} [p.duplicateGcIds]
  * @param {Iterable<string>} [p.canaryIds]
  * @param {number} [p.cap]             — CAP de NOVAS por vendedor
+ * @param {Array}  [p.atribuicoesAnteriores] — N35.18.1: extrairAtribuicoesAnteriores(worklist anterior)
  */
 function gerarWorklistPorVendedor({
   candidatos, estados, vendedoresAtivos, participantes, dataReferencia, agoraIso,
-  duplicateGcIds = [], canaryIds = [], cap = WORKLIST_CAP,
+  duplicateGcIds = [], canaryIds = [], cap = WORKLIST_CAP, atribuicoesAnteriores = [],
 }) {
   if (!Array.isArray(candidatos)) throw new Error('gerarWorklistPorVendedor: candidatos deve ser array');
   if (!(estados instanceof Map)) throw new Error('gerarWorklistPorVendedor: estados deve ser Map');
@@ -247,7 +256,7 @@ function gerarWorklistPorVendedor({
   const bloqueios = bloqueiosPorEntidade(estados, agora);
   const compromissos = compromissosPorEntidade(estados, dataReferencia, agora);
 
-  const porVendedor = Object.fromEntries(ativos.map(uid => [uid, { dueFollowUps: [], emAtendimento: [], newOpportunities: [] }]));
+  const porVendedor = Object.fromEntries(ativos.map(uid => [uid, { dueFollowUps: [], emAtendimento: [], pendentes: [], newOpportunities: [] }]));
   const excluidos = {};
   const excluir = (motivo, c) => { (excluidos[motivo] = excluidos[motivo] || []).push(c.opportunityInstanceId || c.commercialEntityId || null); };
   const canariosSeparados = [];
@@ -282,21 +291,69 @@ function gerarWorklistPorVendedor({
     else followUpsSemDonoAtivo.push({ ...item, donoOriginal: k.dono });
   }
 
+  // Elegibilidade de uma instância como ação comercial de hoje (mesmos filtros do pool)
+  const motivoInelegivel = (ent, c) => {
+    if (c.decisaoAcaoComercial !== 'AGIR_AGORA' || !TIPOS_V1.includes(c.tipoOportunidade)) return 'FORA_DA_FILA_HOJE';
+    const gc = gcIdDoCandidato(c);
+    if (gc && dup.has(gc)) return 'DUPLICATA_GC';
+    if (canarios.has(c.opportunityInstanceId)) return 'CANARIO';
+    if (compromissos.has(ent)) {
+      const k = compromissos.get(ent);
+      return k.tipo === 'EM_ATENDIMENTO' ? 'EM_ATENDIMENTO' : (k.vencido ? 'FOLLOWUP_VENCIDO' : 'FOLLOWUP_FUTURO');
+    }
+    if (bloqueios.has(ent)) return bloqueios.get(ent).motivo;
+    const est = estados.get(c.opportunityInstanceId);
+    if (est && est.estado === ESTADOS.CONCLUIDA) return 'CONCLUIDA_MESMA_INSTANCIA';
+    return null;
+  };
+
+  // 1b) N35.18.1 — pendências de distribuições anteriores continuam com o MESMO dono
+  //     (fora do limite de novas; claim expirado não troca dono; dono fora da fila → retida)
+  const reservadas = new Set();          // entidades com dono de distribuição anterior
+  const pendenciasRetidas = [];
+  const pendenciasEncerradas = {};
+  const encerrar = (motivo) => { pendenciasEncerradas[motivo] = (pendenciasEncerradas[motivo] || 0) + 1; };
+  const anteriores = [...(atribuicoesAnteriores || [])]
+    .filter(Boolean)
+    .sort((a, b) => (a.opportunityInstanceId < b.opportunityInstanceId ? -1 : a.opportunityInstanceId > b.opportunityInstanceId ? 1 : 0));
+  const jaVisto = new Set();
+  for (const a of anteriores) {
+    const opp = a.opportunityInstanceId, ent = a.commercialEntityId;
+    if (!a.uid || !OPP_ID_RE.test(opp || '') || !ENTITY_RE.test(ent || '')) { encerrar('IDENTIDADE_INVALIDA'); continue; }
+    if (jaVisto.has(opp) || reservadas.has(ent)) { encerrar('DUPLICADA_NA_ORIGEM'); continue; }
+    jaVisto.add(opp);
+    if (canarios.has(opp)) { encerrar('CANARIO'); continue; }
+    if (compromissos.has(ent)) { encerrar('COMPROMISSO_ABERTO'); continue; } // follow-up/atendimento: dono vem do estado
+    const c = melhorPorEntidade.get(ent);
+    if (!c || c.opportunityInstanceId !== opp) {
+      const est = estados.get(opp);
+      encerrar(est && est.estado === ESTADOS.CONCLUIDA ? 'CONCLUIDA' : (bloqueios.has(ent) ? bloqueios.get(ent).motivo : 'NAO_ELEGIVEL_HOJE'));
+      continue;
+    }
+    const motivo = motivoInelegivel(ent, c);
+    if (motivo) { encerrar(motivo); continue; }
+    const item = {
+      ...c,
+      nomeCliente: c.nomeCliente || a.nomeCliente || null,
+      atribuidoDesde: a.desde || null,
+    };
+    reservadas.add(ent);
+    if (!ativosSet.has(a.uid)) { pendenciasRetidas.push({ ...item, donoOriginal: a.uid }); continue; }
+    if (a.mesmoDia && a.grupo === 'novas') {
+      // mesma data de referência: continua sendo NOVA do dia (consome o limite do dono)
+      porVendedor[a.uid].newOpportunities.push({ ...item, assignedSeller: a.uid });
+    } else {
+      porVendedor[a.uid].pendentes.push({ ...item, assignedSeller: a.uid });
+    }
+  }
+
   // 2) Pool de NOVAS
   const pool = [];
   for (const [ent, c] of melhorPorEntidade) {
-    if (c.decisaoAcaoComercial !== 'AGIR_AGORA' || !TIPOS_V1.includes(c.tipoOportunidade)) { excluir('FORA_DA_FILA_HOJE', c); continue; }
-    const gc = gcIdDoCandidato(c);
-    if (gc && dup.has(gc)) { excluir('DUPLICATA_GC', c); continue; }
-    if (canarios.has(c.opportunityInstanceId)) { canariosSeparados.push(c); continue; }
-    if (compromissos.has(ent)) {
-      const k = compromissos.get(ent);
-      excluir(k.tipo === 'EM_ATENDIMENTO' ? 'EM_ATENDIMENTO' : (k.vencido ? 'FOLLOWUP_VENCIDO' : 'FOLLOWUP_FUTURO'), c);
-      continue;
-    }
-    if (bloqueios.has(ent)) { excluir(bloqueios.get(ent).motivo, c); continue; }
-    const est = estados.get(c.opportunityInstanceId);
-    if (est && est.estado === ESTADOS.CONCLUIDA) { excluir('CONCLUIDA_MESMA_INSTANCIA', c); continue; }
+    const motivo = motivoInelegivel(ent, c);
+    if (motivo === 'CANARIO') { canariosSeparados.push(c); continue; }
+    if (motivo) { excluir(motivo, c); continue; }
+    if (reservadas.has(ent)) { excluir('PENDENTE_COM_DONO', c); continue; }
     pool.push(c);
   }
   pool.sort(compararOrdemCanonica);
@@ -323,7 +380,9 @@ function gerarWorklistPorVendedor({
     g.dueFollowUps.sort(compararOrdemCanonica);
     g.dueFollowUps = g.dueFollowUps.map(c => ({ ...c, assignedSeller: uid }));
     g.emAtendimento = g.emAtendimento.map(c => ({ ...c, assignedSeller: uid }));
-    g.worklist = [...g.dueFollowUps, ...g.newOpportunities];
+    g.pendentes.sort(compararOrdemCanonica);
+    g.newOpportunities.sort(compararOrdemCanonica); // no-op no fluxo normal; ordena novas mantidas do mesmo dia
+    g.worklist = [...g.dueFollowUps, ...g.pendentes, ...g.newOpportunities];
   }
 
   return {
@@ -336,9 +395,42 @@ function gerarWorklistPorVendedor({
     porVendedor,
     canarios: canariosSeparados.sort(compararOrdemCanonica),
     followUpsSemDonoAtivo,
+    pendenciasRetidas: pendenciasRetidas.sort(compararOrdemCanonica),
+    pendenciasEncerradas,
     backlog,
     excluidos,
   };
+}
+
+/**
+ * N35.18.1 — Atribuições da worklist anterior (fonte do ownership entre dias).
+ * Lê atribuicoes (todos os grupos) + pendenciasRetidas. Só IDs e dono; nome apenas para exibição.
+ * Documento de data futura ou de outro schema é ignorado.
+ * @param {object|null} doc — fila_comercial/worklist atual (antes de ser sobrescrito)
+ * @param {string} dataReferencia — dia comercial da geração
+ * @returns {Array<{opportunityInstanceId, uid, commercialEntityId, tipoOportunidade, nomeCliente, desde, grupo, mesmoDia}>}
+ */
+function extrairAtribuicoesAnteriores(doc, dataReferencia) {
+  if (!doc || doc.schemaVersion !== 'worklist-v2' || typeof doc.dataReferencia !== 'string') return [];
+  if (doc.dataReferencia > dataReferencia) return [];
+  const mesmoDia = doc.dataReferencia === dataReferencia;
+  const out = [];
+  const add = (opp, a, grupo) => {
+    if (!a || typeof a !== 'object') return;
+    out.push({
+      opportunityInstanceId: opp,
+      uid: a.uid || a.donoOriginal || null,
+      commercialEntityId: a.commercialEntityId || null,
+      tipoOportunidade: a.tipoOportunidade || null,
+      nomeCliente: a.nomeCliente || null,
+      desde: a.desde || doc.dataReferencia,
+      grupo,
+      mesmoDia,
+    });
+  };
+  for (const [opp, a] of Object.entries(doc.atribuicoes || {})) add(opp, a, a && a.grupo);
+  for (const [opp, a] of Object.entries(doc.pendenciasRetidas || {})) add(opp, a, 'retidas');
+  return out;
 }
 
 /**
@@ -349,8 +441,8 @@ function indiceAtribuicoes(wl) {
   const porOpp = new Map();
   const porEnt = new Map();
   for (const [uid, g] of Object.entries(wl.porVendedor)) {
-    for (const grupo of ['dueFollowUps', 'emAtendimento', 'newOpportunities']) {
-      for (const c of g[grupo]) {
+    for (const grupo of ['dueFollowUps', 'emAtendimento', 'pendentes', 'newOpportunities']) {
+      for (const c of (g[grupo] || [])) {
         if (porOpp.has(c.opportunityInstanceId)) throw new Error(`COLISAO_OPORTUNIDADE ${c.opportunityInstanceId}`);
         if (porEnt.has(c.commercialEntityId) && porEnt.get(c.commercialEntityId) !== uid) throw new Error(`COLISAO_ENTIDADE ${c.commercialEntityId}`);
         porOpp.set(c.opportunityInstanceId, { uid, grupo, commercialEntityId: c.commercialEntityId, tipoOportunidade: c.tipoOportunidade });
@@ -504,6 +596,8 @@ module.exports = {
   gerarWorklistPorVendedor,
   indiceAtribuicoes,
   montarDocumentoWorklist,
+  // N35.18.1
+  extrairAtribuicoesAnteriores,
   bloqueiosPorEntidade,
   compromissosPorEntidade,
   inicioDoDia,

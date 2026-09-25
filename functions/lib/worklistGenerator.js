@@ -7,10 +7,11 @@
 //   NUNCA escreve em interacoes_fila, perfis_360, clientes ou vendas_gc (criação operacional é lazy, no claim)
 //   Idempotente no mesmo dia: worklist LIVE já gerada para hoje não é recalculada (CAP de 10 NOVAS/dia preservado)
 //   Documento sem CPF/CNPJ/telefone/e-mail/endereço/financeiro/prioridade; nome só para exibição
+//   N35.18.1: a worklist LIVE anterior é a fonte do ownership entre dias (atribuicoes + pendenciasRetidas)
 
 const QC = require('./filaQueueConfig');
 const {
-  gerarWorklistPorVendedor, resolverParticipantes, indiceAtribuicoes,
+  gerarWorklistPorVendedor, resolverParticipantes, indiceAtribuicoes, extrairAtribuicoesAnteriores,
 } = require('./dailyWorklist');
 const { construirUniversoHibrido } = require('./worklistUniverso');
 const { calcularDataReferencia } = require('./filaSnapshotGenerator');
@@ -21,7 +22,7 @@ const COLL = 'fila_comercial';
 const DOC_LIVE = 'worklist';
 const DOC_PREVIEW = 'worklist_preview';
 const SCHEMA_VERSION = 'worklist-v2';
-const VERSAO = 'N35.17';
+const VERSAO = 'N35.18.1';
 const CAMPOS_VENDAS = ['id', 'cliente_id', 'data', 'nome_situacao', 'valor_total', 'cadastrado_em', 'vendedor_id', 'produtos'];
 
 function gcIdDe(c) {
@@ -46,6 +47,7 @@ function itemDoc(c, rank) {
     sinaisVisiveis: ui.sinaisVisiveis || [],
   };
   if (c.nextFollowUpAt) item.nextFollowUpAt = c.nextFollowUpAt;
+  if (c.atribuidoDesde) item.atribuidoDesde = c.atribuidoDesde;
   return item;
 }
 
@@ -54,7 +56,7 @@ function itemDoc(c, rank) {
  * Follow-ups e atendimentos NUNCA são descartados por falta de nome (compromisso já assumido):
  * usam o nome gravado no estado operacional ou o lookup.
  */
-async function selecionarComNomes({ candidatos, estados, participantes, dataReferencia, agoraIso, lookupNome, maxLookups }) {
+async function selecionarComNomes({ candidatos, estados, participantes, dataReferencia, agoraIso, lookupNome, maxLookups, atribuicoesAnteriores = [] }) {
   const cacheNome = new Map();            // commercialEntityId → nome|null
   const naoResolvidos = new Set();        // entidades excluídas por nome
   let lookups = 0;
@@ -96,6 +98,7 @@ async function selecionarComNomes({ candidatos, estados, participantes, dataRefe
       candidatos: candidatos.filter(c => !naoResolvidos.has(c.commercialEntityId)),
       estados, participantes, dataReferencia, agoraIso,
       duplicateGcIds: QC.DUPLICATE_GC_IDS, canaryIds: QC.CANARY_OPPORTUNITY_IDS,
+      atribuicoesAnteriores,
     });
     let excluiu = false;
     for (const uid of wl.vendedoresAtivos) {
@@ -110,8 +113,14 @@ async function selecionarComNomes({ candidatos, estados, participantes, dataRefe
   for (const uid of wl.vendedoresAtivos) {
     const g = wl.porVendedor[uid];
     g.newOpportunities = g.newOpportunities.filter(c => cacheNome.get(c.commercialEntityId));
-    for (const grupo of ['dueFollowUps', 'emAtendimento']) {
+    for (const grupo of ['dueFollowUps', 'emAtendimento', 'pendentes']) {
       for (const c of g[grupo]) await resolver(c);
+    }
+    // N35.18.1: pendência sem nome exibível NÃO perde o dono — fica retida (não exibida, não redistribuída)
+    const semNome = g.pendentes.filter(c => !cacheNome.get(c.commercialEntityId));
+    if (semNome.length) {
+      wl.pendenciasRetidas.push(...semNome.map(c => ({ ...c, donoOriginal: uid, motivoRetencao: 'SEM_NOME' })));
+      g.pendentes = g.pendentes.filter(c => cacheNome.get(c.commercialEntityId));
     }
   }
   const aplicarNome = c => ({ ...c, nomeCliente: cacheNome.get(c.commercialEntityId) || nomeLocal(c) || null });
@@ -120,7 +129,9 @@ async function selecionarComNomes({ candidatos, estados, participantes, dataRefe
     g.newOpportunities = g.newOpportunities.map(aplicarNome);
     g.dueFollowUps = g.dueFollowUps.map(aplicarNome);
     g.emAtendimento = g.emAtendimento.map(aplicarNome);
+    g.pendentes = g.pendentes.map(aplicarNome);
   }
+  wl.pendenciasRetidas = wl.pendenciasRetidas.map(c => ({ ...c, nomeCliente: nomeLocal(c) }));
   const st = (lookupNome && lookupNome.stats) || { sanitized: 0, sanitizedEmpty: 0 };
   return {
     wl, lookups, nameUnresolved: naoResolvidos.size, limiteAtingido,
@@ -138,15 +149,25 @@ function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados,
       novas: g.newOpportunities.map((c, i) => itemDoc(c, i + 1)),
       followUps: g.dueFollowUps.map((c, i) => itemDoc(c, i + 1)),
       emAtendimento: g.emAtendimento.map((c, i) => itemDoc(c, i + 1)),
+      pendentes: (g.pendentes || []).map((c, i) => itemDoc(c, i + 1)),
     };
-    for (const grupo of ['novas', 'followUps', 'emAtendimento']) {
+    for (const grupo of ['novas', 'followUps', 'emAtendimento', 'pendentes']) {
       for (const it of vendedores[uid][grupo]) {
         const a = idx.get(it.opportunityInstanceId);
         atribuicoes[it.opportunityInstanceId] = {
           uid, grupo, commercialEntityId: a.commercialEntityId, tipoOportunidade: a.tipoOportunidade, nomeCliente: it.nomeCliente || null,
+          desde: it.atribuidoDesde || dataReferencia, // N35.18.1: 1ª distribuição ao dono
         };
       }
     }
+  }
+  // N35.18.1: dono fora da fila hoje → ownership preservado, não exibido nem redistribuído
+  const pendenciasRetidas = {};
+  for (const c of (wl.pendenciasRetidas || [])) {
+    pendenciasRetidas[c.opportunityInstanceId] = {
+      uid: c.donoOriginal, commercialEntityId: c.commercialEntityId, tipoOportunidade: c.tipoOportunidade || null,
+      nomeCliente: c.nomeCliente || null, desde: c.atribuidoDesde || dataReferencia, motivo: c.motivoRetencao || 'DONO_FORA_DA_FILA',
+    };
   }
   const excluidos = Object.fromEntries(Object.entries(wl.excluidos).map(([k, v]) => [k, v.length]));
   return {
@@ -161,8 +182,12 @@ function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados,
     vendedoresConfig: Object.fromEntries(wl.vendedoresAtivos.map(uid => [uid, { recebeNovas: wl.recebeNovas[uid], limiteNovas: wl.limites[uid] }])),
     vendedores,
     atribuicoes,
+    pendenciasRetidas,
     canarios: wl.canarios.map(c => c.opportunityInstanceId),
     contagens: {
+      pendenciasCarregadas: wl.vendedoresAtivos.reduce((s, u) => s + (wl.porVendedor[u].pendentes || []).length, 0),
+      pendenciasRetidas: Object.keys(pendenciasRetidas).length,
+      pendenciasEncerradas: wl.pendenciasEncerradas || {},
       candidatosHoje: stats.hoje,
       gcNativeEmMemoria: stats.gcNativeEmMemoria,
       excluidos,
@@ -179,12 +204,13 @@ function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados,
 
 async function carregarDados(db) {
   // N35.17: participantes vêm da configuração em sistema_usuarios (coleção pequena) — nenhum uid no código
-  const [perfisSnap, clientesSnap, vendasSnap, interSnap, sistemaSnap] = await Promise.all([
+  const [perfisSnap, clientesSnap, vendasSnap, interSnap, sistemaSnap, anteriorSnap] = await Promise.all([
     db.collection('perfis_360').get(),
     db.collection('clientes').get(),
     db.collection('vendas_gc').select(...CAMPOS_VENDAS).get(),
     db.collection('interacoes_fila').get(),
     db.collection('sistema_usuarios').get(),
+    db.collection(COLL).doc(DOC_LIVE).get(), // N35.18.1: fonte do ownership (sempre a LIVE, também em DRY_RUN)
   ]);
   const sistema = new Map(sistemaSnap.docs.map(d => [d.id, d.data()]));
   const comConfig = [...sistema.entries()].filter(([, s]) => s && s[QC.FILA_CONFIG_FIELD]).map(([uid]) => uid);
@@ -196,6 +222,7 @@ async function carregarDados(db) {
     estados: new Map(interSnap.docs.map(d => [d.id, d.data()])),
     users: new Map(comConfig.map((uid, i) => [uid, userSnaps[i].exists ? userSnaps[i].data() : null])),
     sistema,
+    worklistAnterior: anteriorSnap.exists ? anteriorSnap.data() : null,
   };
 }
 
@@ -229,9 +256,11 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
   const d = dados || await carregarDados(db);
   const universo = await construirUniversoHibrido({ perfis: d.perfis, clientes: d.clientes, vendas: d.vendas, dataReferencia });
   const { participantes, rejeitados } = resolverParticipantes(d.sistema, d.users);
+  const atribuicoesAnteriores = extrairAtribuicoesAnteriores(d.worklistAnterior || null, dataReferencia);
   const sel = await selecionarComNomes({
     candidatos: universo.hoje, estados: d.estados, participantes, dataReferencia,
     agoraIso: now.toISOString(), lookupNome, maxLookups: QC.MAX_NAME_LOOKUPS_PER_RUN,
+    atribuicoesAnteriores,
   });
   const doc = montarDocumento({ wl: sel.wl, dataReferencia, geradoEm: now.toISOString(), stats: universo.stats, sel, rejeitados, participantes });
 
@@ -239,9 +268,11 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
   if (bloqueados.length) throw new Error('WORKLIST_DOC_CAMPOS_BLOQUEADOS: ' + bloqueados.join(','));
   // N35.16.1 — defesa final antes de persistir: nenhum nome vazio ou com CPF/CNPJ (fail closed, nada é gravado)
   const nomesInvalidos = Object.values(doc.vendedores)
-    .flatMap(v => [...v.novas, ...v.followUps, ...v.emAtendimento])
+    .flatMap(v => [...v.novas, ...v.followUps, ...v.emAtendimento, ...(v.pendentes || [])])
     .concat(Object.values(doc.atribuicoes))
-    .filter(x => !x.nomeCliente || contemDocumento(x.nomeCliente)).length;
+    .filter(x => !x.nomeCliente || contemDocumento(x.nomeCliente)).length
+    // retidas não são exibidas: nome pode faltar, mas nunca pode conter documento
+    + Object.values(doc.pendenciasRetidas || {}).filter(x => x.nomeCliente && contemDocumento(x.nomeCliente)).length;
   if (nomesInvalidos) throw new Error(`WORKLIST_DOC_NOME_INVALIDO: ${nomesInvalidos}`);
 
   if (db) {
@@ -267,6 +298,8 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
     vendedores: doc.vendedoresAtivos.length,
     novas: doc.vendedoresAtivos.map(u => doc.vendedores[u].novas.length),
     followUps: doc.vendedoresAtivos.map(u => doc.vendedores[u].followUps.length),
+    pendentes: doc.vendedoresAtivos.map(u => doc.vendedores[u].pendentes.length),
+    pendenciasRetidas: doc.contagens.pendenciasRetidas,
     nameLookups: sel.lookups, nameUnresolved: sel.nameUnresolved,
   }));
   return { status: 'GERADA', escrito: db ? `${COLL}/${destino}` : null, doc, rejeitados };

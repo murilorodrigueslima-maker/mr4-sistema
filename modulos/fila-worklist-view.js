@@ -1,4 +1,4 @@
-// fila-worklist-view.js — N35.15
+// fila-worklist-view.js — N35.15 (N35.18.1: grupo "pendentes" de dias anteriores)
 // View-model PURO da Worklist V2 (sem DOM, sem Firebase). Incluído por fila-comercial.html
 // e testado em functions/test/n35-15-*.test.js. Nenhuma decisão de negócio nova aqui:
 // só interpreta o documento fila_comercial/worklist + estados de interacoes_fila para exibição.
@@ -100,9 +100,12 @@
     }
     (minha.followUps || []).forEach(function (i) { colocar(i, 'followUps'); });
     (minha.emAtendimento || []).forEach(function (i) { colocar(i, 'emAtendimento'); });
+    // N35.18.1: pendências de dias anteriores (continuam suas; fora do limite de novas) antes das novas
+    (minha.pendentes || []).forEach(function (i) { colocar(i, 'pendentes'); });
     (minha.novas || []).forEach(function (i) { colocar(i, 'novas'); });
     out.contagens = {
       novas: (minha.novas || []).filter(exibivel).length,
+      pendentesAnteriores: (minha.pendentes || []).filter(exibivel).length,
       retornos: out.retornos.length,
       emAtendimento: out.emAtendimento.length,
       trabalhadasHoje: out.trabalhadasHoje.length,
@@ -119,13 +122,13 @@
     return (doc.vendedoresAtivos || []).map(function (uid) {
       var g = doc.vendedores[uid] || {};
       var linhas = [];
-      ['followUps', 'emAtendimento', 'novas'].forEach(function (grupo) {
+      ['followUps', 'emAtendimento', 'pendentes', 'novas'].forEach(function (grupo) {
         (g[grupo] || []).filter(exibivel).forEach(function (item) {
           var op = p.opMap && p.opMap.get ? p.opMap.get(item.opportunityInstanceId) : null;
           linhas.push({ item: item, grupoOrigem: grupo, estado: estadoVisual(op, ctx) });
         });
       });
-      var cont = { novas: (g.novas || []).filter(exibivel).length, retornos: (g.followUps || []).filter(exibivel).length, emAtendimento: 0, concluidas: 0, retornoAgendado: 0, pendentes: 0 };
+      var cont = { novas: (g.novas || []).filter(exibivel).length, anteriores: (g.pendentes || []).filter(exibivel).length, retornos: (g.followUps || []).filter(exibivel).length, emAtendimento: 0, concluidas: 0, retornoAgendado: 0, pendentes: 0 };
       linhas.forEach(function (l) {
         var c = l.estado.codigo;
         if (c === 'EM_ATENDIMENTO_OUTRO' || c === 'EM_ATENDIMENTO_MEU') cont.emAtendimento++;

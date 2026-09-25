@@ -176,7 +176,7 @@ describe('Schema do documento', () => {
   test('SC-04 metadados: schemaVersion, versao, dataReferencia em America/Fortaleza, rótulo do vendedor', async () => {
     const r = await gerar({ now: new Date('2026-09-26T01:30:00.000Z') }); // 22:30 de 25/09 em Fortaleza
     expect(r.doc.schemaVersion).toBe('worklist-v2');
-    expect(r.doc.versao).toBe('N35.17');
+    expect(r.doc.versao).toBe('N35.18.1');
     expect(r.doc.dataReferencia).toBe('2026-09-25');
     expect(r.doc.vendedoresRotulos).toEqual({ [FAB]: 'FABIANA' });
   });

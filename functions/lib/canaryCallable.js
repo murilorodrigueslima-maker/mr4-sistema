@@ -54,8 +54,9 @@ async function verificarPermissaoFila(uid) {
   if (!sysSnap.exists) throw new HttpsError('permission-denied', 'Perfil de sistema não encontrado.');
   const sys = sysSnap.data();
   if (sys.bloqueado === true) throw new HttpsError('permission-denied', 'Conta bloqueada.');
-  const temModulo = sys.admin === true || (Array.isArray(sys.modulos) && sys.modulos.includes('fila-comercial'));
-  if (!temModulo) throw new HttpsError('permission-denied', 'Módulo fila-comercial não autorizado.');
+  // N35.12S: OPERAÇÃO requer módulo explícito. admin=true e fila-comercial genérico NÃO concedem acesso operacional.
+  const podeOperar = Array.isArray(sys.modulos) && sys.modulos.includes('fila-comercial-operar');
+  if (!podeOperar) throw new HttpsError('permission-denied', 'Módulo fila-comercial-operar necessário para operar a fila.');
 
   return sys.nome || user.email?.split('@')[0] || uid;
 }

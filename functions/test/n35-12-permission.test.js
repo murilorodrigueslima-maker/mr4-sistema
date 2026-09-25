@@ -68,15 +68,15 @@ beforeAll(async () => {
   const estado = criarEstadoInicial(ENTITY, OPP_ID, 'REATIVACAO_120D', T0);
   await db.collection(COLL).doc(OPP_ID).set(estado);
 
-  // PA-01 — gestor autorizado
+  // PA-01 — gestor (gestão apenas, sem operar; N35.12S: gestor não opera por padrão → DENY)
   await seedUser(UID.GESTOR_OK,
     { ativo: true, role: 'gestor',     email: 'gestor@test.mr4' },
-    { admin: false, modulos: ['fila-comercial'], nome: 'Gestor Teste' }
+    { admin: false, modulos: ['fila-comercial-gestao'], nome: 'Gestor Teste' }
   );
-  // PA-02 — funcionario + módulo (padrão Camila)
+  // PA-02 — funcionario + módulo operar (N35.12S: fila-comercial-operar necessário para claim)
   await seedUser(UID.FUNC_MOD_OK,
-    { ativo: true, role: 'funcionario', email: 'camila@test.mr4' },
-    { admin: true, modulos: ['catalogo','expedicao','ponto','garantia','demandas','fila-comercial'], nome: 'Camila Teste' }
+    { ativo: true, role: 'funcionario', email: 'vendedor@test.mr4' },
+    { admin: false, modulos: ['fila-comercial-operar'], nome: 'Vendedor Teste' }
   );
   // PA-03 — funcionario sem módulo fila-comercial
   await seedUser(UID.FUNC_SEM_MOD,
@@ -106,27 +106,27 @@ afterEach(async () => {
   await db.collection(COLL).doc(OPP_ID).set(estado);
 }, 5000);
 
-// ── PA-01 — Gestor autorizado → ALLOW ─────────────────────────────────────────
+// ── PA-01 — Gestor sem operar → DENY (N35.12S: role=gestor NÃO concede operação) ─
 
-describe('PA-01: gestor autorizado', () => {
-  test('claim concluído sem erro de permissão', async () => {
+describe('PA-01: gestor sem fila-comercial-operar → DENY', () => {
+  test('claim rejeitado (gestor é gestão, não operação)', async () => {
     const req = mockRequest(UID.GESTOR_OK);
-    const res = await claimOpportunityHandler(req);
-    expect(res.estado).toBe('EM_ATENDIMENTO');
-    expect(res.operadorNome).toBeTruthy();
-    console.log('PA_01_GESTOR_ALLOW=PASS operadorNome=' + res.operadorNome);
+    await expect(claimOpportunityHandler(req)).rejects.toMatchObject({
+      code: 'permission-denied',
+    });
+    console.log('PA_01_GESTOR_SEM_OPERAR_DENY=PASS');
   }, 15000);
 });
 
-// ── PA-02 — Funcionario + módulo fila-comercial → ALLOW (Camila) ──────────────
+// ── PA-02 — Funcionario com fila-comercial-operar → ALLOW ─────────────────────
 
-describe('PA-02: funcionario com módulo fila-comercial (padrão Camila)', () => {
+describe('PA-02: funcionario com fila-comercial-operar (vendedor) → ALLOW', () => {
   test('claim concluído sem erro de permissão', async () => {
     const req = mockRequest(UID.FUNC_MOD_OK);
     const res = await claimOpportunityHandler(req);
     expect(res.estado).toBe('EM_ATENDIMENTO');
     expect(res.operadorNome).toBeTruthy();
-    console.log('PA_02_FUNC_MOD_ALLOW=PASS operadorNome=' + res.operadorNome);
+    console.log('PA_02_VENDEDOR_OPERAR_ALLOW=PASS operadorNome=' + res.operadorNome);
   }, 15000);
 });
 

@@ -441,18 +441,18 @@ service cloud.firestore {
     // Conteúdo: já sanitizado por prepararDadosUI() — sem CAMPOS_BLOQUEADOS.
     // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
 
+    // N35.12S: operar = vendedores (funcionario+operar); gestao = Camila (funcionario+gestao); gestores = isGestor().
     match /fila_comercial/{docId} {
-      allow read:  if temModulo('fila-comercial');
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-operar') || temAcessoModulo('fila-comercial-gestao');
       allow write: if false;
     }
 
-    // ── Coleção: interacoes_fila (N35.10/N35.12) ──────────────────────────────
+    // ── Coleção: interacoes_fila (N35.10/N35.12/N35.12S) ─────────────────────
     // Estado operacional canário da Fila Comercial.
     // Escrita APENAS via Admin SDK (Cloud Function). Frontend: somente leitura.
-    // Dual-role (N35.12): gestor+módulo OU funcionario+perfil_adm+módulo (ex.: Camila).
-    // BILLING: temAcessoModulo() = 2 leituras (users + sistema_usuarios, cached).
+    // N35.12S: gestores leem via isGestor(); vendedores via operar; supervisão via gestao.
     match /interacoes_fila/{oppId} {
-      allow read:  if temModulo('fila-comercial') || temAcessoModulo('fila-comercial');
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-operar') || temAcessoModulo('fila-comercial-gestao');
       allow write: if false;
     }
 

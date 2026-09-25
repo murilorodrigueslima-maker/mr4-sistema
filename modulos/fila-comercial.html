@@ -469,18 +469,24 @@ onAuthStateChanged(auth, async u => {
     }
 
     const sSnap = await getDoc(doc(db, 'sistema_usuarios', u.uid));
-    if (sSnap.exists()) {
-      const sData = sSnap.data();
-      const isAdmin  = !!sData.admin;
-      const hasMod   = Array.isArray(sData.modulos) && sData.modulos.includes('fila-comercial');
-      if (!isAdmin && !hasMod) {
-        document.getElementById('loadingScreen').innerHTML =
-          '<p style="font-size:.88rem;color:#5f6368;padding:2rem;text-align:center">Você não tem acesso à Fila Comercial.<br><a href="../index.html" style="color:#1a73e8;font-weight:600">← Voltar ao sistema</a></p>';
-        return;
-      }
-      currentNome = sData.nome || u.email.split('@')[0];
-      document.getElementById('topbarUser').textContent = currentNome;
+    if (!sSnap.exists()) {
+      document.getElementById('loadingScreen').innerHTML =
+        '<p style="font-size:.88rem;color:#5f6368;padding:2rem;text-align:center">Você não tem acesso à Fila Comercial.<br><a href="../index.html" style="color:#1a73e8;font-weight:600">← Voltar ao sistema</a></p>';
+      return;
     }
+    const sData = sSnap.data();
+    const _mods = Array.isArray(sData.modulos) ? sData.modulos : [];
+    // N35.12S: capacidades derivadas explicitamente. admin=true NÃO concede operação nem gestão.
+    const canOperateQueue = _mods.includes('fila-comercial-operar');
+    const canManageQueue  = _ud.role === 'gestor' || _mods.includes('fila-comercial-gestao');
+    window._canOperateQueue = canOperateQueue;
+    if (!canOperateQueue && !canManageQueue) {
+      document.getElementById('loadingScreen').innerHTML =
+        '<p style="font-size:.88rem;color:#5f6368;padding:2rem;text-align:center">Você não tem acesso à Fila Comercial.<br><a href="../index.html" style="color:#1a73e8;font-weight:600">← Voltar ao sistema</a></p>';
+      return;
+    }
+    currentNome = sData.nome || u.email.split('@')[0];
+    document.getElementById('topbarUser').textContent = currentNome;
   } catch(e) {
     window.location.href = '../login.html'; return;
   }
@@ -571,7 +577,7 @@ function renderOpStatusInline(oppId) {
     }
     return `<div class="op-status-row">
       <span class="op-badge disponivel">● Disponível</span>
-      <button class="btn-claim" data-oppid="${esc(oppId)}">Iniciar atendimento</button>
+      ${window._canOperateQueue ? `<button class="btn-claim" data-oppid="${esc(oppId)}">Iniciar atendimento</button>` : ''}
     </div>`;
   }
   if (estado === 'EM_ATENDIMENTO') {
@@ -770,7 +776,7 @@ function renderDetalheOperacional(oppId, op) {
     }
     return `<div class="op-detail-box">
       <div class="op-detail-state"><span class="op-badge disponivel">● Disponível para contato</span></div>
-      <button class="btn-claim-detail" id="detailClaimBtn">Iniciar atendimento</button>
+      ${window._canOperateQueue ? `<button class="btn-claim-detail" id="detailClaimBtn">Iniciar atendimento</button>` : ''}
     </div>`;
   }
 
@@ -780,7 +786,7 @@ function renderDetalheOperacional(oppId, op) {
       : ownerNome ? `Em atendimento por ${esc(ownerNome)}`
       : 'Em atendimento';
     let btns = '';
-    if (isOwner) {
+    if (isOwner && window._canOperateQueue) {
       btns = `<button class="btn-registrar" id="detailOutcomeBtn">Registrar resultado</button>
               <button class="btn-release-detail" id="detailReleaseBtn">Cancelar atendimento</button>`;
     }
@@ -799,7 +805,7 @@ function renderDetalheOperacional(oppId, op) {
     return `<div class="op-detail-box">
       <div class="op-detail-state"><span class="op-badge aguardando">⏰ Aguardando retorno</span></div>
       <div class="op-followup-row">${followupMsg}${past ? ' <strong style="color:var(--yellow)">— Data vencida</strong>' : ''}</div>
-      <button class="btn-claim-detail" id="detailClaimBtn">Iniciar atendimento</button>
+      ${window._canOperateQueue ? `<button class="btn-claim-detail" id="detailClaimBtn">Iniciar atendimento</button>` : ''}
     </div>`;
   }
 

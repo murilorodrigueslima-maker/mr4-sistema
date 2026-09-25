@@ -39,8 +39,8 @@ function fakeDb(inicial = {}) {
   };
 }
 
-test('DR-01 modo efetivo do repositório = DRY_RUN', () => {
-  expect(QC.WORKLIST_V2_MODE).toBe('DRY_RUN');
+test('DR-01 modo do repositório é um modo válido (LIVE desde a N35.17); isolamento do DRY_RUN testado abaixo por parâmetro', () => {
+  expect(['OFF', 'DRY_RUN', 'LIVE']).toContain(QC.WORKLIST_V2_MODE);
 });
 
 test('DR-02 função agendada não sobrescreve o modo (usa o valor do config)', () => {
@@ -53,7 +53,7 @@ test('DR-02 função agendada não sobrescreve o modo (usa o valor do config)', 
 
 test('DR-03 DRY_RUN grava exatamente 1 documento: fila_comercial/worklist_preview', async () => {
   const db = fakeDb();
-  const r = await G.executarGeracaoWorklist({ db, now: NOW, logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
+  const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
   expect(r.escrito).toBe('fila_comercial/worklist_preview');
   expect(db.writes).toEqual(['fila_comercial/worklist_preview']);
 });
@@ -61,14 +61,14 @@ test('DR-03 DRY_RUN grava exatamente 1 documento: fila_comercial/worklist_previe
 test('DR-04 DRY_RUN com worklist LIVE existente: LIVE intocada (nem lida para decidir, nem regravada)', async () => {
   const live = { schemaVersion: 'worklist-v2', dataReferencia: '2026-09-25', marcador: 'LIVE-ORIGINAL' };
   const db = fakeDb({ 'fila_comercial/worklist': live });
-  await G.executarGeracaoWorklist({ db, now: NOW, logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
+  await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
   expect(db.docs.get('fila_comercial/worklist')).toBe(live);
   expect(db.writes).not.toContain('fila_comercial/worklist');
 });
 
 test('DR-05 DRY_RUN nunca escreve interacoes_fila, perfis_360, clientes, vendas_gc, users ou sistema_usuarios', async () => {
   const db = fakeDb();
-  await G.executarGeracaoWorklist({ db, now: NOW, logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
+  await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
   expect(db.writes.filter(w => !w.startsWith('fila_comercial/worklist_preview'))).toEqual([]);
 });
 
@@ -86,7 +86,7 @@ test('DR-07 a callable de claim valida atribuição SOMENTE contra fila_comercia
 
 test('DR-08 a prévia só usa campos permitidos (mesma validação do LIVE)', async () => {
   const db = fakeDb();
-  await G.executarGeracaoWorklist({ db, now: NOW, logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
+  await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
   const doc = db.docs.get('fila_comercial/worklist_preview');
   expect(JSON.stringify(doc)).not.toMatch(/prioridade|faturamento|cpf|cnpj|telefone|email|endereco/i);
   expect(doc.vendedores[FAB].novas).toHaveLength(10);

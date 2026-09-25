@@ -153,8 +153,8 @@ describe('Escritas', () => {
   test('WR-04 modo inválido lança erro', async () => {
     await expect(G.executarGeracaoWorklist({ db: null, now: NOW, mode: 'XYZ', logger: quiet, dados: dadosBase() })).rejects.toThrow();
   });
-  test('WR-05 modo padrão do repositório é DRY_RUN (LIVE exige mudança explícita)', () => {
-    expect(QC.WORKLIST_V2_MODE).toBe('DRY_RUN');
+  test('WR-05 modo do repositório é LIVE desde a N35.17 (DRY_RUN continua disponível por parâmetro)', () => {
+    expect(QC.WORKLIST_V2_MODE).toBe('LIVE');
   });
 });
 

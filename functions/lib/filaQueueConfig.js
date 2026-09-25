@@ -44,7 +44,7 @@ const DUPLICATE_GC_IDS = Object.freeze(DUPLICATE_GC_GROUPS.flat());
 //   OFF     — não gera nada
 //   DRY_RUN — gera e grava SOMENTE fila_comercial/worklist_preview (não lido por claim nem pela tela)
 //   LIVE    — grava fila_comercial/worklist (habilita criação lazy no claim e a tela da vendedora)
-const WORKLIST_V2_MODE = 'DRY_RUN';
+const WORKLIST_V2_MODE = 'LIVE'; // N35.17: ativado para os vendedores configurados em sistema_usuarios.filaComercial
 
 // Teto de consultas de nome ao GestãoClick por geração (só itens selecionados).
 const MAX_NAME_LOOKUPS_PER_RUN = 40;

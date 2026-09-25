@@ -26,7 +26,7 @@ function inativo(gcId, ultima = '2026-03-09', n = 6) {
 }
 function usuarios({ fabAtiva = true, ademirConfigurado = false } = {}) {
   const users = new Map([[FAB, { ativo: fabAtiva, role: 'funcionario' }], [ADEMIR, { ativo: true, role: 'funcionario' }]]);
-  const sistema = new Map([[FAB, { modulos: ['fila-comercial-operar'] }], [ADEMIR, { modulos: ['fila-comercial-operar'] }]]);
+  const sistema = new Map([[FAB, { nome: 'FABIANA', modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }], [ADEMIR, { modulos: ['fila-comercial-operar'] }]]);
   return { users, sistema, ademirConfigurado };
 }
 function dadosBase({ nGc = 25, estados = new Map(), extraVendas = [], perfis = [], clientes = [], u = usuarios() } = {}) {
@@ -176,7 +176,7 @@ describe('Schema do documento', () => {
   test('SC-04 metadados: schemaVersion, versao, dataReferencia em America/Fortaleza, rótulo do vendedor', async () => {
     const r = await gerar({ now: new Date('2026-09-26T01:30:00.000Z') }); // 22:30 de 25/09 em Fortaleza
     expect(r.doc.schemaVersion).toBe('worklist-v2');
-    expect(r.doc.versao).toBe('N35.15');
+    expect(r.doc.versao).toBe('N35.17');
     expect(r.doc.dataReferencia).toBe('2026-09-25');
     expect(r.doc.vendedoresRotulos).toEqual({ [FAB]: 'FABIANA' });
   });

@@ -24,7 +24,7 @@ function vendas(n) {
 const dados = () => ({
   perfis: [], clientes: [], vendas: vendas(15), estados: new Map(),
   users: new Map([[FAB, { ativo: true, role: 'funcionario' }]]),
-  sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'] }]]),
+  sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]),
 });
 function fakeDb(inicial = {}) {
   const docs = new Map(Object.entries(inicial));

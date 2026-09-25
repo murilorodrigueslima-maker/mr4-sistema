@@ -158,6 +158,49 @@ function resolverVendedoresAtivos(configurados, usersDocs, sistemaDocs) {
   return { ativos: [...new Set(ativos)].sort(), rejeitados };
 }
 
+/**
+ * N35.17 — Participantes da Worklist lidos da CONFIGURAÇÃO (sistema_usuarios.filaComercial).
+ * Nenhum vendedor no código. Adicionar/pausar vendedor = editar a configuração do usuário.
+ *
+ * Participa (recebe a própria worklist: follow-ups e atendimentos):
+ *   filaComercial.ativo === true  E users.ativo  E role=funcionario  E não bloqueado
+ *   E módulo fila-comercial-operar  E SEM fila-comercial-gestao (gestão não opera)
+ * Recebe NOVAS: além disso filaComercial.recebeNovasOportunidades === true, até limiteNovasPorDia.
+ *
+ * @param {Map<uid, object>} sistemaDocs — sistema_usuarios (todos)
+ * @param {Map<uid, object>} usersDocs   — users (para os uids com configuração)
+ * @returns {{ participantes: Array<{uid, rotulo, recebeNovas, limite}>, rejeitados: Array<{uid, motivo}> }}
+ */
+function resolverParticipantes(sistemaDocs, usersDocs) {
+  const participantes = [];
+  const rejeitados = [];
+  const maxCap = config.MAX_NEW_OPPORTUNITY_CAP_PER_SELLER;
+  for (const [uid, sys] of [...sistemaDocs.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+    const fc = sys && sys.filaComercial;
+    if (!fc || typeof fc !== 'object') continue;             // sem configuração: fora da fila (sem ruído)
+    const u = usersDocs.get(uid);
+    const mods = Array.isArray(sys.modulos) ? sys.modulos : [];
+    let motivo = null;
+    if (fc.ativo !== true) motivo = 'CONFIG_INATIVA';
+    else if (!u) motivo = 'USERS_DOC_AUSENTE';
+    else if (u.ativo !== true) motivo = 'INATIVO';
+    else if (u.role !== 'funcionario') motivo = 'ROLE_NAO_VENDEDOR';
+    else if (sys.bloqueado === true) motivo = 'BLOQUEADO';
+    else if (!mods.includes(MODULO_OPERAR)) motivo = 'SEM_MODULO_OPERAR';
+    else if (mods.includes('fila-comercial-gestao')) motivo = 'PERFIL_GESTAO';
+    if (motivo) { rejeitados.push({ uid, motivo }); continue; }
+    const lim = fc.limiteNovasPorDia;
+    const limite = Number.isInteger(lim) && lim >= 1 ? Math.min(lim, maxCap) : WORKLIST_CAP;
+    participantes.push({
+      uid,
+      rotulo: (typeof sys.nome === 'string' && sys.nome.trim()) ? sys.nome.trim() : 'Vendedor',
+      recebeNovas: fc.recebeNovasOportunidades === true,
+      limite,
+    });
+  }
+  return { participantes, rejeitados };
+}
+
 // ── Worklist V2 ───────────────────────────────────────────────────────────────
 
 /**
@@ -172,19 +215,32 @@ function resolverVendedoresAtivos(configurados, usersDocs, sistemaDocs) {
  * @param {number} [p.cap]             — CAP de NOVAS por vendedor
  */
 function gerarWorklistPorVendedor({
-  candidatos, estados, vendedoresAtivos, dataReferencia, agoraIso,
+  candidatos, estados, vendedoresAtivos, participantes, dataReferencia, agoraIso,
   duplicateGcIds = [], canaryIds = [], cap = WORKLIST_CAP,
 }) {
   if (!Array.isArray(candidatos)) throw new Error('gerarWorklistPorVendedor: candidatos deve ser array');
   if (!(estados instanceof Map)) throw new Error('gerarWorklistPorVendedor: estados deve ser Map');
-  if (!Array.isArray(vendedoresAtivos)) throw new Error('gerarWorklistPorVendedor: vendedoresAtivos deve ser array');
+  if (!Array.isArray(participantes) && !Array.isArray(vendedoresAtivos)) throw new Error('gerarWorklistPorVendedor: participantes (ou vendedoresAtivos) deve ser array');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dataReferencia || '')) throw new Error('gerarWorklistPorVendedor: dataReferencia obrigatória');
   if (!Number.isInteger(cap) || cap < 1) throw new Error(`gerarWorklistPorVendedor: cap inválido: ${cap}`);
 
   const { ESTADOS } = require('./filaOperacional');
   const agora = agoraIso || inicioDoDia(dataReferencia);
-  const ativos = [...new Set(vendedoresAtivos)].sort();
+  // N35.17: participantes com limite individual; vendedoresAtivos (legado) = todos recebem novas com o mesmo cap
+  const parts = Array.isArray(participantes)
+    ? participantes
+    : vendedoresAtivos.map(uid => ({ uid, recebeNovas: true, limite: cap }));
+  const limitePor = new Map();
+  const recebeNovasSet = new Set();
+  for (const p of parts) {
+    if (!p || !p.uid) continue;
+    const lim = Number.isInteger(p.limite) && p.limite >= 1 ? p.limite : cap;
+    limitePor.set(p.uid, lim);
+    if (p.recebeNovas) recebeNovasSet.add(p.uid);
+  }
+  const ativos = [...limitePor.keys()].sort();
   const ativosSet = new Set(ativos);
+  const receptores = ativos.filter(uid => recebeNovasSet.has(uid));
   const dup = new Set([...duplicateGcIds].map(String));
   const canarios = new Set(canaryIds);
 
@@ -248,16 +304,16 @@ function gerarWorklistPorVendedor({
   // 3) Distribuição determinística: round-robin sobre a ordem canônica,
   //    vendedor inicial rotacionado por dia. Sem inferência de carteira.
   const backlog = [];
-  const n = ativos.length;
+  const n = receptores.length;
   if (n === 0) {
     backlog.push(...pool);
   } else {
     let k = Math.floor(Date.parse(dataReferencia + 'T12:00:00Z') / 86400000) % n;
     for (const c of pool) {
       let tentativas = 0;
-      while (tentativas < n && porVendedor[ativos[k % n]].newOpportunities.length >= cap) { k++; tentativas++; }
+      while (tentativas < n && porVendedor[receptores[k % n]].newOpportunities.length >= limitePor.get(receptores[k % n])) { k++; tentativas++; }
       if (tentativas >= n) { backlog.push(c); continue; }
-      porVendedor[ativos[k % n]].newOpportunities.push({ ...c, assignedSeller: ativos[k % n] });
+      porVendedor[receptores[k % n]].newOpportunities.push({ ...c, assignedSeller: receptores[k % n] });
       k++;
     }
   }
@@ -275,6 +331,8 @@ function gerarWorklistPorVendedor({
     geradoParaInstante: agora,
     cap,
     vendedoresAtivos: ativos,
+    limites: Object.fromEntries(ativos.map(uid => [uid, limitePor.get(uid)])),
+    recebeNovas: Object.fromEntries(ativos.map(uid => [uid, recebeNovasSet.has(uid)])),
     porVendedor,
     canarios: canariosSeparados.sort(compararOrdemCanonica),
     followUpsSemDonoAtivo,
@@ -442,6 +500,7 @@ module.exports = {
   gerarWorklistSimples,
   // N35.14
   resolverVendedoresAtivos,
+  resolverParticipantes,
   gerarWorklistPorVendedor,
   indiceAtribuicoes,
   montarDocumentoWorklist,

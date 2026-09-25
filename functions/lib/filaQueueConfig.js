@@ -1,14 +1,18 @@
 'use strict';
-// N35.14 — Configuração explícita e auditável da distribuição da Fila Comercial.
+// N35.14 / N35.17 — Configuração da Fila Comercial.
 //
-// "Pode operar a fila" (módulo fila-comercial-operar em sistema_usuarios) NÃO implica
-// "está ativo para receber distribuição diária". Só entra na distribuição quem estiver
-// listado aqui E continuar com permissão válida no momento da geração.
-// Alterar esta lista exige commit (trilha de auditoria no git).
-
-const ACTIVE_QUEUE_SELLERS = Object.freeze([
-  Object.freeze({ uid: 'UGXinD3KVXX0ouYEfamBWjizC5C2', label: 'FABIANA' }),
-]);
+// N35.17: NÃO há lista de vendedores no código. Quem participa da Worklist é definido por
+// CONFIGURAÇÃO em sistema_usuarios/{uid} (editável só por gestor; sem deploy):
+//
+//   filaComercial: {
+//     ativo: true,                     // participa da worklist (recebe seus follow-ups/atendimentos)
+//     recebeNovasOportunidades: true,  // recebe NOVAS oportunidades (false = pausa, ex.: férias)
+//     limiteNovasPorDia: 10            // 1..MAX_NEW_OPPORTUNITY_CAP_PER_SELLER (padrão DAILY_NEW_OPPORTUNITY_CAP)
+//   }
+//
+// Além da configuração, a permissão continua obrigatória no momento da geração:
+// users.ativo, role=funcionario, não bloqueado, módulo fila-comercial-operar e sem fila-comercial-gestao.
+const FILA_CONFIG_FIELD = 'filaComercial';
 
 // D-CANARY: canários de validação — fora do ranking e fora do CAP.
 const CANARY_OPPORTUNITY_IDS = Object.freeze([
@@ -48,7 +52,7 @@ const MAX_NAME_LOOKUPS_PER_RUN = 40;
 module.exports = {
   WORKLIST_V2_MODE,
   MAX_NAME_LOOKUPS_PER_RUN,
-  ACTIVE_QUEUE_SELLERS,
+  FILA_CONFIG_FIELD,
   CANARY_OPPORTUNITY_IDS,
   DUPLICATE_GC_GROUPS,
   DUPLICATE_GC_IDS,

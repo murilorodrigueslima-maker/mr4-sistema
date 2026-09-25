@@ -36,7 +36,7 @@ function dados(estados) {
   return {
     perfis: [], clientes: [], vendas: vendas(88800000, 20), estados,
     users: new Map([[FAB, { ativo: true, role: 'funcionario' }]]),
-    sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'] }]]),
+    sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]),
   };
 }
 const nome = async gc => 'Cliente Emu ' + gc;

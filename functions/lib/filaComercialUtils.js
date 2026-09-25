@@ -12,6 +12,7 @@
 //   PROSPECT_VINCULADO_IN_RECOMPRA_QUEUE=NO
 
 const { compararOrdemCanonica } = require('./filaOrdering');
+const { sanitizeCommercialDisplayName } = require('./nomeExibicao');
 
 const UPCOMING_WINDOW_DAYS = 7;
 
@@ -151,7 +152,7 @@ function extrairSinaisVisiveis(cliente) {
 function prepararDadosUI(cliente) {
   if (!cliente) return null;
   return {
-    nomeCliente:             cliente.nomeCliente || null,
+    nomeCliente:             sanitizeCommercialDisplayName(cliente.nomeCliente), // N35.16.1: sem CPF/CNPJ
     tipoOportunidade:        cliente.tipoOportunidade || null,
     // N35.11: ponte de identidade operacional (hash, não é PII, não está em CAMPOS_BLOQUEADOS)
     opportunityInstanceId:   cliente.opportunityInstanceId || null,
@@ -191,7 +192,7 @@ function filtrarOrdenarProspeccao(clientes) {
 function prepararDadosUIProspect(cliente) {
   if (!cliente) return null;
   const result = {
-    nomeCliente:          cliente.nomeCliente || null,
+    nomeCliente:          sanitizeCommercialDisplayName(cliente.nomeCliente), // N35.16.1: sem CPF/CNPJ
     tipoOportunidade:     'PROSPECT_VINCULADO',
     labelOp:              'Nunca comprou',
     decisaoAcaoComercial: 'FILA_PROSPECCAO',

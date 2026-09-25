@@ -3,6 +3,8 @@
 // Nome é apresentação: nunca identidade, join ou chave de deduplicação.
 // Sem I/O próprio: o lookup (ex.: API GestãoClick por gestaoClickId) é injetado pelo chamador.
 
+const { sanitizeCommercialDisplayName, contemDocumento } = require('./nomeExibicao');
+
 const MAX_LOOKUPS_PADRAO = 20;
 
 /**
@@ -20,7 +22,8 @@ async function resolverNomesSelecionados(itens, { lookupNome, max = MAX_LOOKUPS_
   const cache = new Map();
   const out = [];
   for (const item of itens) {
-    if (item.nomeCliente) { out.push({ ...item, nameResolved: 'EXISTENTE' }); continue; }
+    const existente = sanitizeCommercialDisplayName(item.nomeCliente);
+    if (existente) { out.push({ ...item, nomeCliente: existente, nameResolved: 'EXISTENTE' }); continue; }
     const gc = item.gestaoClickId ? String(item.gestaoClickId) : null;
     if (!gc) { naoResolvidos++; out.push({ ...item, nameResolved: 'SEM_GC_ID' }); continue; }
     if (!cache.has(gc)) {
@@ -28,7 +31,7 @@ async function resolverNomesSelecionados(itens, { lookupNome, max = MAX_LOOKUPS_
       lookups++;
       let nome = null;
       try { nome = await lookupNome(gc); } catch (_) { nome = null; }
-      cache.set(gc, typeof nome === 'string' && nome.trim() ? nome.trim() : null);
+      cache.set(gc, sanitizeCommercialDisplayName(typeof nome === 'string' ? nome.trim() : null));
     }
     const nome = cache.get(gc);
     if (!nome) naoResolvidos++;
@@ -47,7 +50,8 @@ const GC_BASE_URL = 'https://api.gestaoclick.com';
  */
 function criarLookupNomeGC({ accessToken, secretToken, fetchImpl = globalThis.fetch }) {
   if (!accessToken || !secretToken) throw new Error('criarLookupNomeGC: credenciais GC ausentes');
-  return async function lookupNome(gestaoClickId) {
+  const stats = { sanitized: 0, sanitizedEmpty: 0 }; // contagens apenas — nunca o conteúdo removido
+  async function lookupNome(gestaoClickId) {
     const id = String(gestaoClickId || '');
     if (!/^\d+$/.test(id)) return null;
     const res = await fetchImpl(`${GC_BASE_URL}/clientes/${id}`, {
@@ -59,8 +63,14 @@ function criarLookupNomeGC({ accessToken, secretToken, fetchImpl = globalThis.fe
     const d = (body && body.data) || {};
     if (String(d.id || '') !== id) return null;
     const nome = d.nome_fantasia || d.razao_social || d.nome || null;
-    return typeof nome === 'string' && nome.trim() ? nome.trim() : null;
-  };
+    // N35.16.1: o cadastro GC pode trazer CPF/CNPJ dentro do nome — nunca sai daqui com documento
+    const bruto = typeof nome === 'string' ? nome.trim() : null;
+    const limpo = sanitizeCommercialDisplayName(bruto);
+    if (contemDocumento(bruto)) { stats.sanitized++; if (!limpo) stats.sanitizedEmpty++; }
+    return limpo;
+  }
+  lookupNome.stats = stats;
+  return lookupNome;
 }
 
 module.exports = { resolverNomesSelecionados, criarLookupNomeGC, MAX_LOOKUPS_PADRAO };

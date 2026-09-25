@@ -25,6 +25,7 @@ const {
   OUTCOMES,
   ESTADOS,
 } = require('./filaOperacional');
+const { sanitizeCommercialDisplayName } = require('./nomeExibicao');
 
 const COLL = 'interacoes_fila';
 const WORKLIST_COLL = 'fila_comercial';
@@ -117,7 +118,7 @@ async function claimOpportunityHandler(request) {
       }
       estado = {
         ...criarEstadoInicial(atrib.commercialEntityId, opportunityInstanceId, atrib.tipoOportunidade, isoNow),
-        nomeCliente: atrib.nomeCliente || null, // exibição apenas (follow-ups futuros sem novo lookup)
+        nomeCliente: sanitizeCommercialDisplayName(atrib.nomeCliente), // exibição apenas, sem CPF/CNPJ
       };
     } else {
       estado = snap.data();

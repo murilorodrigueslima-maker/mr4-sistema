@@ -24,6 +24,26 @@ function addDays(isoString, days) {
   return d.toISOString();
 }
 
+/** Data comercial (YYYY-MM-DD) de um instante ISO no fuso configurado. */
+function dataComercial(isoString) {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: config.BUSINESS_TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date(isoString));
+  const p = t => partes.find(x => x.type === t).value;
+  return `${p('year')}-${p('month')}-${p('day')}`;
+}
+
+/**
+ * Próximo dia útil (seg–sex) após a data YYYY-MM-DD. Sem feriados (V1).
+ * seg→ter, ter→qua, qua→qui, qui→sex, sex→seg, sáb→seg, dom→seg.
+ */
+function proximoDiaUtil(dataYmd) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataYmd || '')) throw new Error(`proximoDiaUtil: data inválida: ${dataYmd}`);
+  const d = new Date(dataYmd + 'T12:00:00Z');
+  do { d.setUTCDate(d.getUTCDate() + 1); } while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
+  return d.toISOString().slice(0, 10);
+}
+
 // ── Constantes ────────────────────────────────────────────────────────────────
 
 const ESTADOS = Object.freeze({
@@ -336,6 +356,7 @@ function registrarOutcome(estado, operadorId, outcome, isoNow, meta = {}) {
 
   // N35.9C — Calcular cooledUntil
   let cooledUntil = estado.cooledUntil || null; // preservar se já havia
+  let nextFollowUpAt = null; // limpar por padrão
 
   if (outcome === OUTCOMES.SEM_INTERESSE_AGORA) {
     // Entidade suprimida por 30 dias (armazenado no doc CONCLUIDA para worklist usar)
@@ -345,15 +366,14 @@ function registrarOutcome(estado, operadorId, outcome, isoNow, meta = {}) {
     const consecutivo = getConsecutiveSemRespostaCount(estado) + 1;
     if (consecutivo >= config.SEM_RESPOSTA_MAX_CONSECUTIVE) {
       cooledUntil = addDays(isoNow, config.SEM_RESPOSTA_COOLDOWN_DAYS);
+    } else {
+      // N35.14 D-RETRY: tentativa #1/#2 volta no próximo dia útil como follow-up do mesmo vendedor
+      nextFollowUpAt = proximoDiaUtil(dataComercial(isoNow));
     }
-  }
-  // Outros outcomes preservam cooledUntil existente (pode já estar expirado)
-
-  // N35.9C — Calcular nextFollowUpAt
-  let nextFollowUpAt = null; // limpar por padrão
-  if (outcome === OUTCOMES.PEDIU_RETORNO) {
+  } else if (outcome === OUTCOMES.PEDIU_RETORNO) {
     nextFollowUpAt = (meta && meta.scheduledFor) ? meta.scheduledFor : null;
   }
+  // Outros outcomes preservam cooledUntil existente (pode já estar expirado)
 
   const evento = {
     tipo:         EVENT_TYPES.OUTCOME_REGISTERED,
@@ -426,4 +446,7 @@ module.exports = {
   isClaimExpired,
   isCooledDown,
   getCooledUntil,
+  // N35.14
+  dataComercial,
+  proximoDiaUtil,
 };

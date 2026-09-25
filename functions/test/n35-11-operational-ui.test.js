@@ -278,13 +278,17 @@ test('SM-20: registrarOutcome (pure fn) aceita qualquer operadorId — ownership
 
 // ── FOLLOW-21: nextFollowUpAt limpo em outcomes não-follow-up ─────────────────
 
-test('FOLLOW-21: nextFollowUpAt é null após outcomes que não são PEDIU_RETORNO', () => {
+test('FOLLOW-21: SEM_RESPOSTA substitui o retorno agendado pelo próximo dia útil (N35.14 D-RETRY)', () => {
+  const { proximoDiaUtil, dataComercial } = require('../lib/filaOperacional');
   let s = estadoBase();
   s = claimOportunidade(s, OP1, T0);
   s = registrarOutcome(s, OP1, OUTCOMES.PEDIU_RETORNO, T0, { scheduledFor: '2026-10-10' });
   expect(s.nextFollowUpAt).toBe('2026-10-10');
   s = claimOportunidade(s, OP1, T1);
   s = registrarOutcome(s, OP1, OUTCOMES.SEM_RESPOSTA, T1);
+  expect(s.nextFollowUpAt).toBe(proximoDiaUtil(dataComercial(T1)));
+  s = claimOportunidade(s, OP1, T1);
+  s = registrarOutcome(s, OP1, OUTCOMES.CONVERSA_REALIZADA, T1);
   expect(s.nextFollowUpAt).toBeNull();
 });
 

@@ -258,8 +258,8 @@ describe('A. Trajectórias — máquina de estado pura', () => {
   });
 
   // CANÁRIO C — follow-up
-  test('CAN-C-01: PEDIU_RETORNO → nextFollowUpAt futuro → não é dueFollowUp, aparece em newOpportunities', () => {
-    // Design: AGUARDANDO_RETORNO com nextFollowUpAt futuro não é excluído da worklist
+  test('CAN-C-01: PEDIU_RETORNO → nextFollowUpAt futuro → fora de dueFollowUps E de newOpportunities', () => {
+    // N35.14: follow-up futuro bloqueia a entidade até a data (antes reaparecia como nova — bug N35.13)
     // (só fica em dueFollowUps quando a data venceu; antes disso, é newOpportunity elegível)
     const c = CANARIOS[2];
     let est = criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, T0);
@@ -283,9 +283,8 @@ describe('A. Trajectórias — máquina de estado pura', () => {
     // follow-up futuro → isDueFollowUp=false → não vai para dueFollowUps
     expect(isDueFollowUp(est, DATA_REF)).toBe(false);
     expect(worklist.dueFollowUps).toHaveLength(0);
-    // AGUARDANDO_RETORNO sem cooldown → elegível como nova oportunidade
-    expect(worklist.newOpportunities).toHaveLength(1);
-    expect(worklist.worklist).toHaveLength(1);
+    expect(worklist.newOpportunities).toHaveLength(0);
+    expect(worklist.worklist).toHaveLength(0);
   });
 
   test('CAN-C-02: follow-up vencido → aparece em dueFollowUps e NÃO consome CAP', () => {

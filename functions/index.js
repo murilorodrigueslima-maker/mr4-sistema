@@ -20,6 +20,8 @@ const { onDocumentUpdated }   = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapshotGenerator');
+const { executarGeracaoWorklist }                   = require('./lib/worklistGenerator');
+const { criarLookupNomeGC }                         = require('./lib/filaNomes');
 const {
   claimOpportunityHandler,
   registerOutcomeHandler,
@@ -824,6 +826,28 @@ exports.gerarFilaSnapshot = onSchedule({
   } catch (err) {
     console.error('[fila-snapshot] ERRO na geração:', err.message);
     // NÃO re-throw — falha isolada, não afeta sync360 nem syncPainelDisplay
+  }
+});
+
+// N35.15 — Worklist V2 diária (dias úteis, 06:00 America/Fortaleza).
+// Modo em lib/filaQueueConfig.js (OFF | DRY_RUN | LIVE). Grava no máximo 1 documento em fila_comercial.
+// Nunca cria interacoes_fila (criação é lazy, no claim). Falha isolada: não afeta snapshot nem sync.
+exports.gerarWorklistDiaria = onSchedule({
+  schedule:        '0 6 * * 1-5',
+  timeZone:        'America/Fortaleza',
+  region:          REGION,
+  timeoutSeconds:  300,
+  memory:          '512MiB',
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+}, async () => {
+  try {
+    const lookupNome = criarLookupNomeGC({
+      accessToken: process.env.GC_ACCESS_TOKEN,
+      secretToken: process.env.GC_SECRET_ACCESS_TOKEN,
+    });
+    await executarGeracaoWorklist({ db, lookupNome });
+  } catch (err) {
+    console.error('[worklist-v2] ERRO na geração:', err.message);
   }
 });
 

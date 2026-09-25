@@ -563,9 +563,13 @@ describe('N35-9C-EC — Edge cases e suppressedEntities', () => {
     expect(s.nextFollowUpAt).toBe('2026-10-15');
     expect(s.estado).toBe(ESTADOS.AGUARDANDO_RETORNO);
 
-    // Recontratar → SEM_RESPOSTA → limpa nextFollowUpAt
+    // N35.14 D-RETRY: SEM_RESPOSTA (#1) agenda o próximo dia útil; CONVERSA_REALIZADA limpa
     s = makeClaimed(s);
     s = makeOutcome(s, OUTCOMES.SEM_RESPOSTA);
+    expect(s.nextFollowUpAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(s.nextFollowUpAt).not.toBe('2026-10-15');
+    s = makeClaimed(s);
+    s = makeOutcome(s, OUTCOMES.CONVERSA_REALIZADA);
     expect(s.nextFollowUpAt).toBeNull();
   });
 

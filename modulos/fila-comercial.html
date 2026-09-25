@@ -198,6 +198,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .toast.err {background:#fce8e6;color:#c5221f;border:1.5px solid #f5c6c2}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
 
+/* ── WORKLIST V2 (N35.15) ── */
+.wl-sub{margin-bottom:1rem}
+.wl-sub-title{font-size:.78rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:.45rem}
+.wl-sub-hint{font-size:.7rem;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;margin-left:.3rem}
+.wl-vazio{font-size:.78rem;color:var(--muted);padding:.35rem 0 .2rem}
+.wl-gestor{border:1px solid var(--border);border-radius:10px;padding:.75rem .85rem;margin-bottom:.75rem}
+.wl-gestor-head{display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline;margin-bottom:.5rem}
+.wl-gestor-nome{font-weight:600;font-size:.88rem}
+.wl-gestor-cont{font-size:.74rem;color:var(--muted)}
+.wl-linha{display:flex;gap:.5rem;align-items:center;justify-content:space-between;font-size:.8rem;padding:.3rem 0;border-top:1px solid var(--border)}
+.wl-linha-nome{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
 /* ── RESPONSIVE ── */
 @media(max-width:700px){
   .main{padding:.85rem .75rem}
@@ -233,6 +245,39 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 <!-- App -->
 <div class="app" id="appContainer" style="display:none">
   <div class="main" id="mainContent">
+
+    <!-- N35.15 — Worklist V2: fila da vendedora (somente a própria) -->
+    <div class="queue-section" id="secMinhaFila" style="display:none">
+      <div class="section-header">
+        <span class="section-title">Minha fila de hoje</span>
+        <span class="section-badge" id="badgeMinhaFila">0</span>
+      </div>
+      <div class="wl-sub">
+        <div class="wl-sub-title">Retornos de hoje <span class="wl-sub-hint">fora do limite diário</span></div>
+        <div id="listaRetornos"></div>
+      </div>
+      <div class="wl-sub">
+        <div class="wl-sub-title">Em atendimento</div>
+        <div id="listaEmAtendimento"></div>
+      </div>
+      <div class="wl-sub">
+        <div class="wl-sub-title">Novas oportunidades <span class="wl-sub-hint" id="hintNovas"></span></div>
+        <div id="listaNovas"></div>
+      </div>
+      <div class="wl-sub">
+        <div class="wl-sub-title">Trabalhados hoje</div>
+        <div id="listaTrabalhadas"></div>
+      </div>
+    </div>
+
+    <!-- N35.15 — Worklist V2: visão de gestão (somente leitura) -->
+    <div class="queue-section" id="secGestaoWorklist" style="display:none">
+      <div class="section-header">
+        <span class="section-title">Fila do dia por vendedor</span>
+        <span class="wl-sub-hint">acompanhamento — sem ações</span>
+      </div>
+      <div id="gestaoWorklistBody"></div>
+    </div>
 
     <!-- Seção HOJE -->
     <div class="queue-section" id="secHoje">
@@ -297,6 +342,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<script src="fila-worklist-view.js"></script>
 <script type="module">
 import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import {
@@ -386,6 +432,13 @@ let clienteSelecionado = null;
 let snapshotState   = { clientesHoje: [], clientesProximos: [], clientesProspeccao: [] };
 let operationalMap  = new Map(); // opportunityInstanceId → estadoOperacional
 let _unsubOp        = null;
+// N35.15 — Worklist V2
+let worklistDoc     = null;       // fila_comercial/worklist (null = sem worklist → modo snapshot)
+let _unsubWl        = null;
+let _tickWl         = null;
+let visaoAtual      = { novas: [], retornos: [], emAtendimento: [], trabalhadasHoje: [] };
+let visaoGestaoAtual = [];
+window.__filaListeners = { worklist: 0, interacoes: 0 };
 
 // Estado do modal de outcome
 let modalOppId        = null;
@@ -426,8 +479,23 @@ async function carregarSnapshot() {
 
 // ── Listener operacional realtime (N35.11) ────────────────────────────────────
 
+// ── Listener da Worklist V2 (N35.15) — único ──────────────────────────────────
+
+function iniciarListenerWorklist() {
+  if (_unsubWl) { _unsubWl(); _unsubWl = null; window.__filaListeners.worklist--; }
+  _unsubWl = onSnapshot(
+    doc(db, 'fila_comercial', 'worklist'),
+    snap => { worklistDoc = snap.exists() ? snap.data() : null; renderizarFila(); },
+    err => { console.warn('[fila-comercial] Listener worklist:', err.code, err.message); worklistDoc = null; renderizarFila(); }
+  );
+  window.__filaListeners.worklist++;
+  // Re-render periódico: expiração de claim (4h) e virada do dia comercial sem reload
+  if (!_tickWl) _tickWl = setInterval(renderizarFila, 60000);
+}
+
 function iniciarListenerOperacional() {
-  if (_unsubOp) { _unsubOp(); _unsubOp = null; }
+  if (_unsubOp) { _unsubOp(); _unsubOp = null; window.__filaListeners.interacoes--; }
+  window.__filaListeners.interacoes++;
 
   _unsubOp = onSnapshot(
     collection(db, 'interacoes_fila'),
@@ -480,6 +548,7 @@ onAuthStateChanged(auth, async u => {
     const canOperateQueue = _mods.includes('fila-comercial-operar');
     const canManageQueue  = _ud.role === 'gestor' || _mods.includes('fila-comercial-gestao');
     window._canOperateQueue = canOperateQueue;
+    window._canManageQueue  = canManageQueue;
     if (!canOperateQueue && !canManageQueue) {
       document.getElementById('loadingScreen').innerHTML =
         '<p style="font-size:.88rem;color:#5f6368;padding:2rem;text-align:center">Você não tem acesso à Fila Comercial.<br><a href="../index.html" style="color:#1a73e8;font-weight:600">← Voltar ao sistema</a></p>';
@@ -503,6 +572,7 @@ function inicializar() {
 
   carregarSnapshot();
   iniciarListenerOperacional();
+  iniciarListenerWorklist();
 
   document.getElementById('detailClose').addEventListener('click', fecharDetalhe);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { fecharDetalhe(); fecharModal(); } });
@@ -512,7 +582,118 @@ function inicializar() {
 
 // ── Renderização ──────────────────────────────────────────────────────────────
 
+// ── Worklist V2 (N35.15) ──────────────────────────────────────────────────────
+
+const WL = window.FilaWorklistView;
+
+const BADGE_WL = {
+  DISPONIVEL:           ['disponivel',     '● Disponível'],
+  EM_ATENDIMENTO_MEU:   ['em-atendimento', '● Em atendimento por você'],
+  EM_ATENDIMENTO_OUTRO: ['em-atendimento', '● Em atendimento'],
+  CONCLUIDA:            ['concluida',      '✓ Concluído'],
+  RETORNO_AGENDADO:     ['aguardando',     '⏰ Retorno agendado'],
+  PAUSA:                ['cooldown',       '⏸ Em pausa'],
+};
+
+function fmtDataCurta(ymd) {
+  if (!ymd) return '';
+  return new Date(ymd + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+}
+
+function badgeWorklist(ev) {
+  const [cls, txt] = BADGE_WL[ev.codigo] || ['disponivel', ev.rotulo];
+  let extra = '';
+  if (ev.codigo === 'RETORNO_AGENDADO' && ev.detalhe) extra = ` em ${fmtDataCurta(ev.detalhe)}`;
+  if (ev.codigo === 'PAUSA' && ev.detalhe) extra = ` até ${fmtDataCurta(ev.detalhe)}`;
+  if (ev.codigo === 'CONCLUIDA' && ev.detalhe) extra = ` — ${ev.detalhe}`;
+  const label = ev.codigo === 'EM_ATENDIMENTO_OUTRO' ? '● ' + ev.rotulo : txt;
+  return `<span class="op-badge ${cls}">${esc(label + extra)}</span>`;
+}
+
+function renderWorklistCard(v, grupo, idx) {
+  const c = v.item;
+  const cor   = COR_OPORTUNIDADE[c.tipoOportunidade] || '#5f6368';
+  const fundo = COR_FUNDO_OPORTUNIDADE[c.tipoOportunidade] || 'rgba(95,99,104,.08)';
+  const label = labelOportunidade(c.tipoOportunidade);
+  const btn = (v.estado.podeIniciar && window._canOperateQueue)
+    ? `<button class="btn-claim" data-oppid="${esc(c.opportunityInstanceId)}">Iniciar atendimento</button>` : '';
+  return `
+    <div class="queue-card" data-modo="wl-${grupo}" data-idx="${idx}" tabindex="0" role="button" aria-label="Ver detalhes de ${esc(c.nomeCliente)}">
+      <div class="card-dot" style="background:${cor}"></div>
+      <div class="card-body">
+        <div class="card-top">
+          ${label ? `<span class="card-tipo" style="color:${cor};background:${fundo}">${esc(label)}</span>` : ''}
+          <span class="card-nome">${esc(c.nomeCliente)}</span>
+        </div>
+        ${c.situacao ? `<div class="card-situacao">${esc(c.situacao)}</div>` : ''}
+        <div class="op-status-row">${badgeWorklist(v.estado)}${btn}</div>
+      </div>
+    </div>`;
+}
+
+function renderGrupoWl(lista, grupo, vazio) {
+  return lista.length ? lista.map((v, i) => renderWorklistCard(v, grupo, i)).join('') : `<div class="wl-vazio">${esc(vazio)}</div>`;
+}
+
+function renderGestaoWorklist(visao) {
+  if (!visao.length) return '<div class="wl-vazio">Nenhum vendedor ativo na fila de hoje.</div>';
+  return visao.map(s => {
+    const k = s.contagens;
+    const linhas = s.linhas.map(l => `
+      <div class="wl-linha">
+        <span class="wl-linha-nome">${esc(l.item.nomeCliente)} <span style="color:var(--muted)">· ${esc(labelOportunidade(l.item.tipoOportunidade) || '')}${l.grupoOrigem === 'followUps' ? ' · retorno' : ''}</span></span>
+        ${badgeWorklist(l.estado)}
+      </div>`).join('');
+    return `<div class="wl-gestor">
+      <div class="wl-gestor-head">
+        <span class="wl-gestor-nome">${esc(s.rotulo)}</span>
+        <span class="wl-gestor-cont">${k.novas} novas · ${k.retornos} retornos · ${k.emAtendimento} em atendimento · ${k.concluidas} concluídas · ${k.retornoAgendado} reagendadas · ${k.pendentes} pendentes</span>
+      </div>${linhas}
+    </div>`;
+  }).join('');
+}
+
+function renderizarWorklist() {
+  const hoje = WL.dataComercial(new Date());
+  const agoraMs = Date.now();
+  const visaoV = window._canOperateQueue
+    ? WL.montarVisaoVendedor({ doc: worklistDoc, uid: currentUid, hoje, agoraMs, opMap: operationalMap, podeOperar: true })
+    : null;
+  const visaoG = window._canManageQueue
+    ? WL.montarVisaoGestao({ doc: worklistDoc, hoje, agoraMs, opMap: operationalMap })
+    : null;
+
+  const secMinha = document.getElementById('secMinhaFila');
+  if (visaoV) {
+    visaoAtual = visaoV;
+    secMinha.style.display = '';
+    const ativos = visaoV.novas.length + visaoV.retornos.length + visaoV.emAtendimento.length;
+    document.getElementById('badgeMinhaFila').textContent = ativos;
+    document.getElementById('hintNovas').textContent = `${visaoV.contagens.novas} de até ${visaoV.contagens.cap} por dia`;
+    document.getElementById('listaRetornos').innerHTML      = renderGrupoWl(visaoV.retornos, 'retornos', 'Nenhum retorno para hoje.');
+    document.getElementById('listaEmAtendimento').innerHTML = renderGrupoWl(visaoV.emAtendimento, 'emAtendimento', 'Nenhum atendimento em andamento.');
+    document.getElementById('listaNovas').innerHTML         = renderGrupoWl(visaoV.novas, 'novas', 'Todas as novas oportunidades de hoje já foram trabalhadas.');
+    document.getElementById('listaTrabalhadas').innerHTML   = renderGrupoWl(visaoV.trabalhadasHoje, 'trabalhadasHoje', 'Nada trabalhado ainda hoje.');
+  } else {
+    visaoAtual = { novas: [], retornos: [], emAtendimento: [], trabalhadasHoje: [] };
+    secMinha.style.display = 'none';
+  }
+
+  const secG = document.getElementById('secGestaoWorklist');
+  if (visaoG) {
+    visaoGestaoAtual = visaoG;
+    secG.style.display = '';
+    document.getElementById('gestaoWorklistBody').innerHTML = renderGestaoWorklist(visaoG);
+  } else {
+    visaoGestaoAtual = [];
+    secG.style.display = 'none';
+  }
+  // Vendedora com worklist do dia trabalha SOMENTE a própria lista: seção HOJE do snapshot fica oculta.
+  document.getElementById('secHoje').style.display = visaoV ? 'none' : '';
+}
+
 function renderizarFila() {
+  renderizarWorklist();
   const filaHoje       = snapshotState.clientesHoje       || [];
   const filaProximos   = snapshotState.clientesProximos   || [];
   const filaProspeccao = snapshotState.clientesProspeccao || [];
@@ -543,6 +724,11 @@ function renderizarFila() {
       if      (modo === 'hoje')       lista = snapshotState.clientesHoje;
       else if (modo === 'proximos')   lista = snapshotState.clientesProximos;
       else if (modo === 'prospeccao') lista = snapshotState.clientesProspeccao;
+      else if (modo && modo.startsWith('wl-')) {
+        const v = (visaoAtual[modo.slice(3)] || [])[idx];
+        if (v) abrirDetalhe({ ...v.item, _wlMinha: true }, el, false);
+        return;
+      }
       if (lista && lista[idx]) abrirDetalhe(lista[idx], el, modo === 'prospeccao');
     });
   });
@@ -696,7 +882,8 @@ function abrirDetalhe(cliente, cardEl, isProspect = false) {
 function renderDetalheContent(cliente, isProspect) {
   let html = '';
   const oppId = cliente.opportunityInstanceId || null;
-  const op    = oppId ? getOpState(oppId) : null;
+  // N35.15: item da própria worklist ainda sem documento operacional = disponível (criação lazy no claim)
+  const op    = oppId ? (getOpState(oppId) || (cliente._wlMinha && window._canOperateQueue ? { estado: 'DISPONIVEL', eventos: [] } : null)) : null;
 
   if (isProspect) {
     html += `<div class="detail-tipo-pill" style="color:#5f6368;background:rgba(95,99,104,.1)">Nunca comprou</div>`;
@@ -772,6 +959,15 @@ function renderDetalheOperacional(oppId, op) {
       return `<div class="op-detail-box">
         <div class="op-detail-state"><span class="op-badge cooldown">⏸ Em pausa</span></div>
         <div class="op-cooldown-msg">Contato pausado. Disponível para nova tentativa após ${esc(ate)}.</div>
+      </div>`;
+    }
+    // N35.15 D-RETRY: após SEM_RESPOSTA, nova tentativa só a partir do próximo dia útil
+    const hojeFtz = window.FilaWorklistView ? window.FilaWorklistView.dataComercial(new Date()) : new Date().toISOString().slice(0, 10);
+    if (op.nextFollowUpAt && op.nextFollowUpAt > hojeFtz) {
+      const dtRet = new Date(op.nextFollowUpAt + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+      return `<div class="op-detail-box">
+        <div class="op-detail-state"><span class="op-badge aguardando">⏰ Nova tentativa agendada</span></div>
+        <div class="op-followup-row">Retorna para a fila em ${esc(dtRet)}.</div>
       </div>`;
     }
     return `<div class="op-detail-box">

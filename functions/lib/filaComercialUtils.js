@@ -11,6 +11,8 @@
 //   MAX_VISIBLE_SIGNALS=3
 //   PROSPECT_VINCULADO_IN_RECOMPRA_QUEUE=NO
 
+const { compararOrdemCanonica } = require('./filaOrdering');
+
 const UPCOMING_WINDOW_DAYS = 7;
 
 const TIPOS_RECOMPRA_V1 = Object.freeze([
@@ -71,7 +73,7 @@ function formatarDiasAteProximoCiclo(dias) {
 /**
  * Filtra e ordena a seção HOJE: decisaoAcaoComercial=AGIR_AGORA, tipos V1 apenas.
  * PROSPECT_VINCULADO pertence à FILA_PROSPECCAO e NÃO aparece aqui.
- * Ordena: prioridade DESC → diasSemComprar DESC → clienteMr4Id ASC (desempate determinístico).
+ * Ordena pela regra canônica única (filaOrdering): prioridade DESC → diasSemComprar DESC → identidade ASC.
  */
 function filtrarOrdenarFilaHoje(clientes) {
   if (!Array.isArray(clientes)) return [];
@@ -81,15 +83,7 @@ function filtrarOrdenarFilaHoje(clientes) {
       c.decisaoAcaoComercial === 'AGIR_AGORA' &&
       TIPOS_RECOMPRA_V1.includes(c.tipoOportunidade)
     )
-    .sort((a, b) => {
-      const pA = typeof a.prioridade === 'number' ? a.prioridade : 0;
-      const pB = typeof b.prioridade === 'number' ? b.prioridade : 0;
-      if (pB !== pA) return pB - pA;
-      const dA = typeof a.diasSemComprar === 'number' ? a.diasSemComprar : 0;
-      const dB = typeof b.diasSemComprar === 'number' ? b.diasSemComprar : 0;
-      if (dB !== dA) return dB - dA;
-      return (a.clienteMr4Id || '').localeCompare(b.clienteMr4Id || '');
-    });
+    .sort(compararOrdemCanonica);
 }
 
 /**
@@ -143,7 +137,7 @@ function extrairSinaisVisiveis(cliente) {
     cliente.tendencia ??
     (cliente.sellerAssist?.sinais?.tendencia ?? null);
   if (tendencia && typeof tendencia === 'string') {
-    const mapa = { SUBINDO: '↗ Subindo', CAINDO: '↘ Caindo', ESTAVEL: '→ Estável' };
+    const mapa = { SUBINDO: '↗ Subindo', CAINDO: '↘ Caindo', ESTAVEL: '→ Estável', SEM_BASE: 'Histórico insuficiente' };
     sinais.push({ label: 'Tendência', valor: mapa[tendencia] || tendencia });
   }
 

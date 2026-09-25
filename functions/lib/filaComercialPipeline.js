@@ -101,16 +101,20 @@ async function processarCliente(clienteInput, opts = {}) {
 
   // N35.11: oportunityInstanceId para join com interacoes_fila (não é PII)
   let opportunityInstanceId = null;
+  let entityId = null;
   const tipo = oportunidadePrincipal?.tipo ?? null;
-  if (tipo && clienteInput.clienteMr4Id) {
-    try {
-      const entityId = buildCommercialEntityId({ source: SOURCES.MR4_LINKED, mr4ClientId: clienteInput.clienteMr4Id });
-      opportunityInstanceId = buildOpportunityInstanceId(entityId, tipo, perfil.ultimaCompraEm || null);
-    } catch (_) { /* identidade inválida — opportunityInstanceId fica null */ }
+  try {
+    entityId = buildCommercialEntityId({ source: SOURCES.MR4_LINKED, mr4ClientId: clienteInput.clienteMr4Id });
+  } catch (_) { /* identidade inválida */ }
+  if (tipo && entityId) {
+    opportunityInstanceId = buildOpportunityInstanceId(entityId, tipo, perfil.ultimaCompraEm || null);
   }
 
   return {
     clienteMr4Id:            clienteInput.clienteMr4Id,
+    commercialEntityId:      entityId,
+    source:                  SOURCES.MR4_LINKED,
+    gestaoClickId:           clienteInput.gestaoClickId ? String(clienteInput.gestaoClickId) : null,
     nomeCliente:             clienteInput.nomeCliente || null,
     tipoOportunidade:        tipo,
     opportunityInstanceId,
@@ -211,17 +215,20 @@ async function processarPerfilParaFila(perfil360, nomeCliente, opts = {}) {
   }
 
   // N35.11: oportunityInstanceId para join com interacoes_fila
+  // N35.14: commercialEntityId/source/gestaoClickId expostos no bruto (uso interno; prepararDadosUI não os publica)
   const tipoPerf = oportunidadePrincipal?.tipo ?? null;
   let opportunityInstanceIdPerf = null;
-  if (tipoPerf) {
-    try {
-      const entityIdPerf = commercialEntityIdFromPerfil360(perfil360);
-      opportunityInstanceIdPerf = buildOpportunityInstanceId(entityIdPerf, tipoPerf, perfil360.ultimaCompraEm || null);
-    } catch (_) { /* identidade inválida — opportunityInstanceId fica null */ }
+  let entityIdPerf = null;
+  try { entityIdPerf = commercialEntityIdFromPerfil360(perfil360); } catch (_) { /* identidade inválida */ }
+  if (tipoPerf && entityIdPerf) {
+    opportunityInstanceIdPerf = buildOpportunityInstanceId(entityIdPerf, tipoPerf, perfil360.ultimaCompraEm || null);
   }
 
   return {
     clienteMr4Id:            perfil360.clienteMr4Id,
+    commercialEntityId:      entityIdPerf,
+    source:                  perfil360.source === SOURCES.GC_NATIVE ? SOURCES.GC_NATIVE : SOURCES.MR4_LINKED,
+    gestaoClickId:           perfil360.gestaoClickId ? String(perfil360.gestaoClickId) : null,
     nomeCliente:             nomeCliente || null,
     tipoOportunidade:        tipoPerf,
     opportunityInstanceId:   opportunityInstanceIdPerf,

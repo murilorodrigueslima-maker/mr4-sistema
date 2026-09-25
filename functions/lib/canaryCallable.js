@@ -7,7 +7,7 @@
 //   CLIENT_WRITES_TO_CLIENTES=0
 //   CLIENT_WRITES_TO_PERFIS_360=0
 //   CAP10_ACTIVATED=NO
-//   AUTO_NEW_OPPORTUNITY=NO
+//   AUTO_NEW_OPPORTUNITY=NO (N35.14: estado nasce só no 1º claim de oportunidade atribuída ao próprio vendedor)
 //
 // Arquitetura: frontend envia INTENÇÃO → servidor autentica, valida permissão,
 // carrega estado, valida transição, aplica máquina de estado, transaciona, devolve resultado.
@@ -20,12 +20,17 @@ const {
   releaseExpiredClaim,
   registrarOutcome,
   isClaimExpired,
+  criarEstadoInicial,
+  dataComercial,
   OUTCOMES,
   ESTADOS,
 } = require('./filaOperacional');
 
 const COLL = 'interacoes_fila';
+const WORKLIST_COLL = 'fila_comercial';
+const WORKLIST_DOC = 'worklist';
 const OPP_ID_RE = /^[0-9a-f]{16}$/;
+const ENTITY_RE = /^(MR4_LINKED|GC_NATIVE):.+$/;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -93,9 +98,30 @@ async function claimOpportunityHandler(request) {
 
   await store.runTransaction(async tx => {
     const snap = await tx.get(ref);
-    if (!snap.exists) throw new HttpsError('not-found', 'Oportunidade não encontrada.');
+    // N35.14: worklist do dia define atribuição. Lida na MESMA transação (antes de qualquer write).
+    const wlSnap = await tx.get(store.collection(WORKLIST_COLL).doc(WORKLIST_DOC));
+    const wl = wlSnap.exists ? wlSnap.data() : null;
+    const atrib = (wl && wl.dataReferencia === dataComercial(isoNow))
+      ? ((wl.atribuicoes || {})[opportunityInstanceId] || null)
+      : null;
 
-    let estado = snap.data();
+    if (atrib && atrib.uid !== uid) {
+      throw new HttpsError('permission-denied', 'Oportunidade atribuída a outro vendedor hoje.');
+    }
+
+    let estado;
+    if (!snap.exists) {
+      // Criação lazy: só nasce no primeiro claim de oportunidade atribuída ao próprio vendedor.
+      if (!atrib || !ENTITY_RE.test(atrib.commercialEntityId || '') || !atrib.tipoOportunidade) {
+        throw new HttpsError('not-found', 'Oportunidade não encontrada ou não atribuída a você hoje.');
+      }
+      estado = {
+        ...criarEstadoInicial(atrib.commercialEntityId, opportunityInstanceId, atrib.tipoOportunidade, isoNow),
+        nomeCliente: atrib.nomeCliente || null, // exibição apenas (follow-ups futuros sem novo lookup)
+      };
+    } else {
+      estado = snap.data();
+    }
 
     // Libera claim expirado antes de tentar novo claim (N35.9C)
     if (isClaimExpired(estado, isoNow)) {

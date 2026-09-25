@@ -21,6 +21,15 @@ const OPERATIONAL_CONFIG_V1 = Object.freeze({
 
   // Follow-ups com data vencida NÃO consomem quota do CAP
   FOLLOWUPS_COUNT_TOWARD_CAP: false,
+
+  // N35.14 — D-RETRY: SEM_RESPOSTA #1/#2 volta no próximo dia útil, mesmo vendedor, fora do CAP
+  SEM_RESPOSTA_RETRY_RULE: 'NEXT_BUSINESS_DAY',
+
+  // N35.14 — D-RECONTACT: entidade (commercialEntityId) suprimida após encerramento
+  RECONTACT_SUPPRESSION_DAYS: 30,
+
+  // Fuso comercial para "dia" e "dia útil" (sem horário de verão)
+  BUSINESS_TIMEZONE: 'America/Fortaleza',
 });
 
 module.exports = OPERATIONAL_CONFIG_V1;

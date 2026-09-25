@@ -9,7 +9,7 @@ const {
 } = require('../lib/filaOperacional');
 const {
   gerarWorklistPorVendedor, resolverVendedoresAtivos, indiceAtribuicoes, montarDocumentoWorklist,
-  gerarDailyWorklist, compararPrioridade, WORKLIST_CAP,
+  gerarDailyWorklist, compararPrioridade, WORKLIST_CAP, resolverParticipantes,
 } = require('../lib/dailyWorklist');
 const { compararOrdemCanonica } = require('../lib/filaOrdering');
 const { filtrarOrdenarFilaHoje, prepararDadosUI, verificarCamposBloqueados } = require('../lib/filaComercialUtils');
@@ -136,33 +136,36 @@ describe('Ativação de vendedores', () => {
     [FAB, { ativo: true, role: 'funcionario' }], [ADEMIR, { ativo: true, role: 'funcionario' }],
     [CAMILA, { ativo: true, role: 'funcionario' }], [MURILO, { ativo: true, role: 'gestor' }],
   ]);
+  const FC = { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 };
   const sys = new Map([
-    [FAB, { modulos: ['catalogo', 'fila-comercial', 'fila-comercial-operar'], admin: false }],
+    [FAB, { nome: 'Fabiana', modulos: ['catalogo', 'fila-comercial', 'fila-comercial-operar'], admin: false, filaComercial: FC }],
     [ADEMIR, { modulos: ['fila-comercial', 'fila-comercial-operar'], admin: false }],
     [CAMILA, { modulos: ['ponto', 'fila-comercial-gestao'], admin: false }],
     [MURILO, { modulos: ['fila-comercial'], admin: true }],
   ]);
-  test('SA-01 config oficial: somente Fabiana ativa', () => {
-    expect(QC.ACTIVE_QUEUE_SELLERS.map(s => s.uid)).toEqual([FAB]);
-    expect(resolverVendedoresAtivos(QC.ACTIVE_QUEUE_SELLERS, users, sys).ativos).toEqual([FAB]);
+  // N35.17: participação vem da configuração sistema_usuarios.filaComercial (sem lista no código)
+  test('SA-01 somente quem tem configuração ativa participa (Fabiana)', () => {
+    expect(QC.ACTIVE_QUEUE_SELLERS).toBeUndefined();
+    expect(resolverParticipantes(sys, users).participantes.map(p => p.uid)).toEqual([FAB]);
   });
-  test('SA-02 Ademir tem fila-comercial-operar mas NÃO está ativo (não configurado)', () => {
-    const r = resolverVendedoresAtivos(QC.ACTIVE_QUEUE_SELLERS, users, sys);
-    expect(r.ativos).not.toContain(ADEMIR);
+  test('SA-02 Ademir tem fila-comercial-operar mas sem configuração → não participa', () => {
+    expect(resolverParticipantes(sys, users).participantes.map(p => p.uid)).not.toContain(ADEMIR);
   });
   test('SA-03 Camila (gestão) configurada por engano é rejeitada: SEM_MODULO_OPERAR', () => {
-    const r = resolverVendedoresAtivos([{ uid: CAMILA }], users, sys);
-    expect(r.ativos).toEqual([]);
-    expect(r.rejeitados).toEqual([{ uid: CAMILA, motivo: 'SEM_MODULO_OPERAR' }]);
+    const s2 = new Map(sys); s2.set(CAMILA, { ...sys.get(CAMILA), filaComercial: FC });
+    const r = resolverParticipantes(s2, users);
+    expect(r.participantes.map(p => p.uid)).not.toContain(CAMILA);
+    expect(r.rejeitados).toContainEqual({ uid: CAMILA, motivo: 'SEM_MODULO_OPERAR' });
   });
-  test('SA-04 gestor/admin (Murilo) não recebe automaticamente nem se configurado sem operar', () => {
-    expect(resolverVendedoresAtivos([{ uid: MURILO }], users, sys).ativos).toEqual([]);
+  test('SA-04 gestor (Murilo) configurado não participa: ROLE_NAO_VENDEDOR', () => {
+    const s2 = new Map(sys); s2.set(MURILO, { ...sys.get(MURILO), modulos: ['fila-comercial-operar'], filaComercial: FC });
+    expect(resolverParticipantes(s2, users).rejeitados).toContainEqual({ uid: MURILO, motivo: 'ROLE_NAO_VENDEDOR' });
   });
   test('SA-05 vendedor configurado bloqueado ou inativo é rejeitado', () => {
     const s2 = new Map(sys); s2.set(FAB, { ...sys.get(FAB), bloqueado: true });
-    expect(resolverVendedoresAtivos(QC.ACTIVE_QUEUE_SELLERS, users, s2).rejeitados[0].motivo).toBe('BLOQUEADO');
+    expect(resolverParticipantes(s2, users).rejeitados[0].motivo).toBe('BLOQUEADO');
     const u2 = new Map(users); u2.set(FAB, { ativo: false, role: 'funcionario' });
-    expect(resolverVendedoresAtivos(QC.ACTIVE_QUEUE_SELLERS, u2, sys).rejeitados[0].motivo).toBe('INATIVO');
+    expect(resolverParticipantes(sys, u2).rejeitados[0].motivo).toBe('INATIVO');
   });
   test('SA-06 vendedor não ativo recebe 0 mesmo existindo candidatos', () => {
     const r = wl({ candidatos: muitos(15), vendedoresAtivos: [] });

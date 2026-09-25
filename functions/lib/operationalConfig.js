@@ -16,8 +16,11 @@ const OPERATIONAL_CONFIG_V1 = Object.freeze({
   // Tempo máximo de claim exclusivo antes de expirar (horas)
   CLAIM_TIMEOUT_HOURS: 4,
 
-  // Máximo de NOVAS oportunidades por operador por dia
+  // Máximo de NOVAS oportunidades por operador por dia (padrão quando o vendedor não define limite)
   DAILY_NEW_OPPORTUNITY_CAP: 10,
+
+  // N35.17 — teto de segurança para sistema_usuarios.filaComercial.limiteNovasPorDia
+  MAX_NEW_OPPORTUNITY_CAP_PER_SELLER: 30,
 
   // Follow-ups com data vencida NÃO consomem quota do CAP
   FOLLOWUPS_COUNT_TOWARD_CAP: false,

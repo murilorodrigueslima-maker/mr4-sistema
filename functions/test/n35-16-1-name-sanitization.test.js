@@ -146,7 +146,7 @@ describe('Worklist V2', () => {
         vendas.push({ id: gc + 'v' + k, cliente_id: gc, data: d, nome_situacao: 'Concretizada', valor_total: '300', cadastrado_em: d + ' 10:00:00', vendedor_id: '1', produtos: [] });
       }
     }
-    return { perfis: [], clientes: [], vendas, estados: new Map(), users: new Map([[FAB, { ativo: true, role: 'funcionario' }]]), sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'] }]]) };
+    return { perfis: [], clientes: [], vendas, estados: new Map(), users: new Map([[FAB, { ativo: true, role: 'funcionario' }]]), sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]) };
   }
   const gerar = lookupNome => G.executarGeracaoWorklist({ db: null, now: new Date('2026-09-25T09:00:00.000Z'), mode: 'DRY_RUN', logger: { log() {} }, lookupNome, dados: dados() });
   const mesmaSemNome = r => r.doc.vendedores[FAB].novas.map(x => x.opportunityInstanceId);

@@ -10,7 +10,7 @@
 
 const QC = require('./filaQueueConfig');
 const {
-  gerarWorklistPorVendedor, resolverVendedoresAtivos, indiceAtribuicoes,
+  gerarWorklistPorVendedor, resolverParticipantes, indiceAtribuicoes,
 } = require('./dailyWorklist');
 const { construirUniversoHibrido } = require('./worklistUniverso');
 const { calcularDataReferencia } = require('./filaSnapshotGenerator');
@@ -21,7 +21,7 @@ const COLL = 'fila_comercial';
 const DOC_LIVE = 'worklist';
 const DOC_PREVIEW = 'worklist_preview';
 const SCHEMA_VERSION = 'worklist-v2';
-const VERSAO = 'N35.15';
+const VERSAO = 'N35.17';
 const CAMPOS_VENDAS = ['id', 'cliente_id', 'data', 'nome_situacao', 'valor_total', 'cadastrado_em', 'vendedor_id', 'produtos'];
 
 function gcIdDe(c) {
@@ -54,7 +54,7 @@ function itemDoc(c, rank) {
  * Follow-ups e atendimentos NUNCA são descartados por falta de nome (compromisso já assumido):
  * usam o nome gravado no estado operacional ou o lookup.
  */
-async function selecionarComNomes({ candidatos, estados, ativos, dataReferencia, agoraIso, lookupNome, maxLookups }) {
+async function selecionarComNomes({ candidatos, estados, participantes, dataReferencia, agoraIso, lookupNome, maxLookups }) {
   const cacheNome = new Map();            // commercialEntityId → nome|null
   const naoResolvidos = new Set();        // entidades excluídas por nome
   let lookups = 0;
@@ -94,7 +94,7 @@ async function selecionarComNomes({ candidatos, estados, ativos, dataReferencia,
   for (let rodada = 0; rodada < 50; rodada++) {
     wl = gerarWorklistPorVendedor({
       candidatos: candidatos.filter(c => !naoResolvidos.has(c.commercialEntityId)),
-      estados, vendedoresAtivos: ativos, dataReferencia, agoraIso,
+      estados, participantes, dataReferencia, agoraIso,
       duplicateGcIds: QC.DUPLICATE_GC_IDS, canaryIds: QC.CANARY_OPPORTUNITY_IDS,
     });
     let excluiu = false;
@@ -128,7 +128,7 @@ async function selecionarComNomes({ candidatos, estados, ativos, dataReferencia,
   };
 }
 
-function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados }) {
+function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados, participantes = [] }) {
   const vendedores = {};
   const atribuicoes = {};
   const idx = indiceAtribuicoes(wl); // lança se houver colisão
@@ -155,8 +155,10 @@ function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados 
     dataReferencia,
     geradoEm,
     cap: wl.cap,
+    pipelineVersion: VERSAO,
     vendedoresAtivos: wl.vendedoresAtivos,
-    vendedoresRotulos: Object.fromEntries(QC.ACTIVE_QUEUE_SELLERS.filter(s => wl.vendedoresAtivos.includes(s.uid)).map(s => [s.uid, s.label])),
+    vendedoresRotulos: Object.fromEntries(participantes.filter(p => wl.vendedoresAtivos.includes(p.uid)).map(p => [p.uid, p.rotulo])),
+    vendedoresConfig: Object.fromEntries(wl.vendedoresAtivos.map(uid => [uid, { recebeNovas: wl.recebeNovas[uid], limiteNovas: wl.limites[uid] }])),
     vendedores,
     atribuicoes,
     canarios: wl.canarios.map(c => c.opportunityInstanceId),
@@ -176,23 +178,24 @@ function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados 
 }
 
 async function carregarDados(db) {
-  const configurados = QC.ACTIVE_QUEUE_SELLERS.map(s => s.uid);
-  const [perfisSnap, clientesSnap, vendasSnap, interSnap, ...userSnaps] = await Promise.all([
+  // N35.17: participantes vêm da configuração em sistema_usuarios (coleção pequena) — nenhum uid no código
+  const [perfisSnap, clientesSnap, vendasSnap, interSnap, sistemaSnap] = await Promise.all([
     db.collection('perfis_360').get(),
     db.collection('clientes').get(),
     db.collection('vendas_gc').select(...CAMPOS_VENDAS).get(),
     db.collection('interacoes_fila').get(),
-    ...configurados.map(uid => db.collection('users').doc(uid).get()),
-    ...configurados.map(uid => db.collection('sistema_usuarios').doc(uid).get()),
+    db.collection('sistema_usuarios').get(),
   ]);
-  const n = configurados.length;
+  const sistema = new Map(sistemaSnap.docs.map(d => [d.id, d.data()]));
+  const comConfig = [...sistema.entries()].filter(([, s]) => s && s[QC.FILA_CONFIG_FIELD]).map(([uid]) => uid);
+  const userSnaps = await Promise.all(comConfig.map(uid => db.collection('users').doc(uid).get()));
   return {
     perfis: perfisSnap.docs.map(d => ({ id: d.id, data: d.data() })),
     clientes: clientesSnap.docs.map(d => ({ id: d.id, data: d.data() })),
     vendas: vendasSnap.docs.map(d => d.data()),
     estados: new Map(interSnap.docs.map(d => [d.id, d.data()])),
-    users: new Map(configurados.map((uid, i) => [uid, userSnaps[i].exists ? userSnaps[i].data() : null])),
-    sistema: new Map(configurados.map((uid, i) => [uid, userSnaps[n + i].exists ? userSnaps[n + i].data() : null])),
+    users: new Map(comConfig.map((uid, i) => [uid, userSnaps[i].exists ? userSnaps[i].data() : null])),
+    sistema,
   };
 }
 
@@ -225,12 +228,12 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
 
   const d = dados || await carregarDados(db);
   const universo = await construirUniversoHibrido({ perfis: d.perfis, clientes: d.clientes, vendas: d.vendas, dataReferencia });
-  const { ativos, rejeitados } = resolverVendedoresAtivos(QC.ACTIVE_QUEUE_SELLERS, d.users, d.sistema);
+  const { participantes, rejeitados } = resolverParticipantes(d.sistema, d.users);
   const sel = await selecionarComNomes({
-    candidatos: universo.hoje, estados: d.estados, ativos, dataReferencia,
+    candidatos: universo.hoje, estados: d.estados, participantes, dataReferencia,
     agoraIso: now.toISOString(), lookupNome, maxLookups: QC.MAX_NAME_LOOKUPS_PER_RUN,
   });
-  const doc = montarDocumento({ wl: sel.wl, dataReferencia, geradoEm: now.toISOString(), stats: universo.stats, sel, rejeitados });
+  const doc = montarDocumento({ wl: sel.wl, dataReferencia, geradoEm: now.toISOString(), stats: universo.stats, sel, rejeitados, participantes });
 
   const bloqueados = verificarCamposBloqueados(doc);
   if (bloqueados.length) throw new Error('WORKLIST_DOC_CAMPOS_BLOQUEADOS: ' + bloqueados.join(','));
@@ -241,7 +244,24 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
     .filter(x => !x.nomeCliente || contemDocumento(x.nomeCliente)).length;
   if (nomesInvalidos) throw new Error(`WORKLIST_DOC_NOME_INVALIDO: ${nomesInvalidos}`);
 
-  if (db) await db.collection(COLL).doc(destino).set(doc);
+  if (db) {
+    const ref = db.collection(COLL).doc(destino);
+    if (mode === 'LIVE' && typeof db.runTransaction === 'function') {
+      // N35.17: execuções concorrentes/retry — só a primeira grava a worklist do dia (CAP diário preservado)
+      const gravou = await db.runTransaction(async tx => {
+        const atual = await tx.get(ref);
+        if (atual.exists && atual.data().dataReferencia === dataReferencia && atual.data().schemaVersion === SCHEMA_VERSION) return false;
+        tx.set(ref, doc);
+        return true;
+      });
+      if (!gravou) {
+        logger.log(JSON.stringify({ event: 'worklist_v2_ja_gerada', dataReferencia, origem: 'transacao' }));
+        return { status: 'JA_GERADA_HOJE', escrito: null, doc: (await ref.get()).data() };
+      }
+    } else {
+      await ref.set(doc);
+    }
+  }
   logger.log(JSON.stringify({
     event: 'worklist_v2_gerada', mode, destino, dataReferencia,
     vendedores: doc.vendedoresAtivos.length,

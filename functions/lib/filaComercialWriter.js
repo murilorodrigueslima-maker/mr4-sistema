@@ -20,6 +20,7 @@ const {
   verificarCamposBloqueados,
   UPCOMING_WINDOW_DAYS,
 } = require('./filaComercialUtils');
+const { contemDocumento } = require('./nomeExibicao');
 
 const SCHEMA_VERSION = 'v2';
 
@@ -85,6 +86,12 @@ function assertSnapshotSeguro(snapshot) {
     throw new Error(
       `SECURITY VIOLATION: snapshot contém CAMPOS_BLOQUEADOS: ${bloqueados.join(', ')}`
     );
+  }
+  // N35.16.1: nenhum nome de exibição pode conter CPF/CNPJ
+  const secoes = [snapshot.clientesHoje, snapshot.clientesProximos, snapshot.clientesProspeccao];
+  const comDocumento = secoes.flatMap(a => Array.isArray(a) ? a : []).filter(c => c && contemDocumento(c.nomeCliente)).length;
+  if (comDocumento > 0) {
+    throw new Error(`SECURITY VIOLATION: snapshot contém ${comDocumento} nome(s) com CPF/CNPJ`);
   }
 }
 

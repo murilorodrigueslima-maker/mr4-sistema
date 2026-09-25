@@ -15,6 +15,7 @@ const {
 const { construirUniversoHibrido } = require('./worklistUniverso');
 const { calcularDataReferencia } = require('./filaSnapshotGenerator');
 const { prepararDadosUI, verificarCamposBloqueados } = require('./filaComercialUtils');
+const { sanitizeCommercialDisplayName, contemDocumento } = require('./nomeExibicao');
 
 const COLL = 'fila_comercial';
 const DOC_LIVE = 'worklist';
@@ -37,7 +38,7 @@ function itemDoc(c, rank) {
     commercialEntityId: c.commercialEntityId,
     tipoOportunidade: c.tipoOportunidade || null,
     labelOp: ui.labelOp || null,
-    nomeCliente: c.nomeCliente,
+    nomeCliente: sanitizeCommercialDisplayName(c.nomeCliente),
     diasSemComprar: typeof c.diasSemComprar === 'number' ? c.diasSemComprar : null,
     diasEntreComprasMediana: ui.diasEntreComprasMediana ?? null,
     situacao: ui.situacao || null,
@@ -58,11 +59,19 @@ async function selecionarComNomes({ candidatos, estados, ativos, dataReferencia,
   const naoResolvidos = new Set();        // entidades excluídas por nome
   let lookups = 0;
   let limiteAtingido = false;
+  let nameSanitized = 0;       // nomes que tinham CPF/CNPJ removido
+  let nameSanitizedEmpty = 0;  // nomes que ficaram vazios após a sanitização (candidato substituído)
 
+  // N35.16.1: todo nome passa pela sanitização central; vazio após sanitizar = não exibível
+  const limpar = (bruto) => {
+    if (typeof bruto !== 'string' || !bruto.trim()) return null;
+    const limpo = sanitizeCommercialDisplayName(bruto);
+    if (contemDocumento(bruto)) { nameSanitized++; if (!limpo) nameSanitizedEmpty++; }
+    return limpo;
+  };
   const nomeLocal = (c) => {
-    if (c.nomeCliente) return c.nomeCliente;
     const e = estados.get(c.opportunityInstanceId);
-    return (e && e.nomeCliente) || null;
+    return limpar(c.nomeCliente) || limpar(e && e.nomeCliente) || null;
   };
   async function resolver(c) {
     if (cacheNome.has(c.commercialEntityId)) return cacheNome.get(c.commercialEntityId);
@@ -72,8 +81,9 @@ async function selecionarComNomes({ candidatos, estados, ativos, dataReferencia,
       if (gc && typeof lookupNome === 'function') {
         if (lookups >= maxLookups) { limiteAtingido = true; return null; }
         lookups++;
-        try { nome = await lookupNome(gc); } catch (_) { nome = null; }
-        nome = typeof nome === 'string' && nome.trim() ? nome.trim() : null;
+        let bruto = null;
+        try { bruto = await lookupNome(gc); } catch (_) { bruto = null; }
+        nome = limpar(bruto);
       }
     }
     cacheNome.set(c.commercialEntityId, nome);
@@ -111,7 +121,11 @@ async function selecionarComNomes({ candidatos, estados, ativos, dataReferencia,
     g.dueFollowUps = g.dueFollowUps.map(aplicarNome);
     g.emAtendimento = g.emAtendimento.map(aplicarNome);
   }
-  return { wl, lookups, nameUnresolved: naoResolvidos.size, limiteAtingido };
+  const st = (lookupNome && lookupNome.stats) || { sanitized: 0, sanitizedEmpty: 0 };
+  return {
+    wl, lookups, nameUnresolved: naoResolvidos.size, limiteAtingido,
+    nameSanitized: nameSanitized + st.sanitized, nameSanitizedEmpty: nameSanitizedEmpty + st.sanitizedEmpty,
+  };
 }
 
 function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados }) {
@@ -154,6 +168,8 @@ function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados 
       followUpsSemDonoAtivo: wl.followUpsSemDonoAtivo.length,
       nameLookups: sel.lookups,
       nameUnresolved: sel.nameUnresolved,
+      nameSanitized: sel.nameSanitized,
+      nameSanitizedEmpty: sel.nameSanitizedEmpty,
       vendedoresRejeitados: rejeitados.length,
     },
   };
@@ -218,6 +234,12 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
 
   const bloqueados = verificarCamposBloqueados(doc);
   if (bloqueados.length) throw new Error('WORKLIST_DOC_CAMPOS_BLOQUEADOS: ' + bloqueados.join(','));
+  // N35.16.1 — defesa final antes de persistir: nenhum nome vazio ou com CPF/CNPJ (fail closed, nada é gravado)
+  const nomesInvalidos = Object.values(doc.vendedores)
+    .flatMap(v => [...v.novas, ...v.followUps, ...v.emAtendimento])
+    .concat(Object.values(doc.atribuicoes))
+    .filter(x => !x.nomeCliente || contemDocumento(x.nomeCliente)).length;
+  if (nomesInvalidos) throw new Error(`WORKLIST_DOC_NOME_INVALIDO: ${nomesInvalidos}`);
 
   if (db) await db.collection(COLL).doc(destino).set(doc);
   logger.log(JSON.stringify({

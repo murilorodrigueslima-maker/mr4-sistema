@@ -3,17 +3,27 @@
 //
 // INVARIANTES:
 //   OPENAI_CALLS=0
-//   Escreve NO MÁXIMO 1 documento: fila_comercial/worklist (LIVE) ou fila_comercial/worklist_preview (DRY_RUN)
+//   Escreve NO MÁXIMO 2 documentos (N35.20.1): fila_comercial/{worklist|worklist_preview} (operacional) e
+//   fila_comercial_gestao/{worklist|worklist_preview} (gerencial, mesma transação/lote)
 //   NUNCA escreve em interacoes_fila, perfis_360, clientes ou vendas_gc (criação operacional é lazy, no claim)
 //   Idempotente no mesmo dia: worklist LIVE já gerada para hoje não é recalculada (CAP de 10 NOVAS/dia preservado)
 //   Documento sem CPF/CNPJ/telefone/e-mail/endereço/financeiro/prioridade; nome só para exibição
 //   N35.18.1: a worklist LIVE anterior é a fonte do ownership entre dias (atribuicoes + pendenciasRetidas)
+//   N35.20: cada item pode levar `contextoComercial` (informativo, calculado após a seleção).
+//   N35.20.1: dado gerencial (ticket médio) NUNCA no documento operacional — vai para fila_comercial_gestao/{mesmo id},
+//             chave opportunityInstanceId, gravado na mesma transação. Rules: vendedor DENY.
+//   Escritas: fila_comercial/{worklist|worklist_preview} + fila_comercial_gestao/{worklist|worklist_preview}
 
 const QC = require('./filaQueueConfig');
 const {
   gerarWorklistPorVendedor, resolverParticipantes, indiceAtribuicoes, extrairAtribuicoesAnteriores,
 } = require('./dailyWorklist');
-const { construirUniversoHibrido } = require('./worklistUniverso');
+const { construirUniversoHibrido, agruparVendasPorCliente } = require('./worklistUniverso');
+// N35.20: camada INFORMATIVA — calculada só para itens já selecionados; nunca participa da seleção
+const { buildContextoComercial, contextoSemPII, separarGestao, camposGestaoExpostos } = require('./contextoComercial');
+const { calcularPerfil360 } = require('./perfil360');
+const { calcularTendencia } = require('./tendenciaComercial');
+const { parseCommercialEntityId, commercialEntityIdFromPerfil360 } = require('./commercialIdentity');
 const { calcularDataReferencia } = require('./filaSnapshotGenerator');
 const { prepararDadosUI, verificarCamposBloqueados } = require('./filaComercialUtils');
 const { sanitizeCommercialDisplayName, contemDocumento } = require('./nomeExibicao');
@@ -21,6 +31,9 @@ const { sanitizeCommercialDisplayName, contemDocumento } = require('./nomeExibic
 const COLL = 'fila_comercial';
 const DOC_LIVE = 'worklist';
 const DOC_PREVIEW = 'worklist_preview';
+// N35.20.1: dados EXCLUSIVOS de gestão (ticket médio) — coleção própria; Rules negam leitura ao vendedor
+const COLL_GESTAO = 'fila_comercial_gestao';
+const SCHEMA_GESTAO = 'worklist-gestao-v1';
 const SCHEMA_VERSION = 'worklist-v2';
 const VERSAO = 'N35.18.1';
 const CAMPOS_VENDAS = ['id', 'cliente_id', 'data', 'nome_situacao', 'valor_total', 'cadastrado_em', 'vendedor_id', 'produtos'];
@@ -139,17 +152,69 @@ async function selecionarComNomes({ candidatos, estados, participantes, dataRefe
   };
 }
 
-function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados, participantes = [] }) {
+/**
+ * N35.20 — Fábrica do contexto comercial (informativo). Recalcula o perfil do DIA a partir de vendas_gc em memória
+ * (GC_NATIVE e MR4_LINKED com gestaoClickId); sem vendas, usa o perfil gravado (tendência só se do dia).
+ * Qualquer erro ou PII → sem contexto para o item (a UI usa o card anterior). Nunca lança.
+ */
+function criarFabricaContexto({ dados, dataReferencia }) {
+  let porGc = null;
+  let perfilPorEntidade = null;
+  return function contextoPara(c, grupo) {
+    try {
+      if (!porGc) porGc = agruparVendasPorCliente(dados.vendas || []);
+      if (!perfilPorEntidade) {
+        perfilPorEntidade = new Map();
+        for (const p of dados.perfis || []) {
+          try { perfilPorEntidade.set(commercialEntityIdFromPerfil360(p.data || {}), p.data); } catch (_) { /* identidade inválida */ }
+        }
+      }
+      const { source, stableId } = parseCommercialEntityId(c.commercialEntityId);
+      const gravado = perfilPorEntidade.get(c.commercialEntityId) || null;
+      const gcId = source === 'GC_NATIVE' ? stableId : (gravado && gravado.gestaoClickId ? String(gravado.gestaoClickId) : null);
+      const vendas = gcId ? (porGc.get(gcId) || []) : [];
+      let perfil = gravado;
+      let perfilAtual = !!(gravado && gravado.dataReferencia === dataReferencia);
+      if (vendas.length) {
+        perfil = calcularPerfil360({ clienteMr4Id: gravado ? gravado.clienteMr4Id : stableId, gestaoClickId: gcId, vendas, dataReferencia });
+        perfilAtual = true;
+      }
+      const tendenciaCodigo = perfil ? calcularTendencia(perfil).tendencia : null;
+      const ctx = buildContextoComercial({
+        item: c, perfil, perfilAtual, tendenciaCodigo, vendas, grupo,
+        estadoOperacional: dados.estados && dados.estados.get ? dados.estados.get(c.opportunityInstanceId) : null,
+        dataReferencia,
+      });
+      return contextoSemPII(ctx) ? ctx : null;
+    } catch (_) {
+      return null;
+    }
+  };
+}
+
+function montarDocumento({ wl, dataReferencia, geradoEm, stats, sel, rejeitados, participantes = [], contextoPara = null, coletorGestao = null }) {
   const vendedores = {};
   const atribuicoes = {};
   const idx = indiceAtribuicoes(wl); // lança se houver colisão
+  // N35.20: contexto é anexado DEPOIS da seleção; não altera IDs, ordem, grupo, dono ou atribuições
+  // N35.20.1: `gestao` sai do item (vai para o coletor → fila_comercial_gestao, chave opportunityInstanceId)
+  const comContexto = (c, i, grupo) => {
+    const it = itemDoc(c, i + 1);
+    const ctx = contextoPara ? contextoPara(c, grupo) : null;
+    if (ctx) {
+      const { operacional, gestao } = separarGestao(ctx);
+      it.contextoComercial = operacional;
+      if (gestao && coletorGestao) coletorGestao.set(c.opportunityInstanceId, gestao);
+    }
+    return it;
+  };
   for (const uid of wl.vendedoresAtivos) {
     const g = wl.porVendedor[uid];
     vendedores[uid] = {
-      novas: g.newOpportunities.map((c, i) => itemDoc(c, i + 1)),
-      followUps: g.dueFollowUps.map((c, i) => itemDoc(c, i + 1)),
-      emAtendimento: g.emAtendimento.map((c, i) => itemDoc(c, i + 1)),
-      pendentes: (g.pendentes || []).map((c, i) => itemDoc(c, i + 1)),
+      novas: g.newOpportunities.map((c, i) => comContexto(c, i, 'novas')),
+      followUps: g.dueFollowUps.map((c, i) => comContexto(c, i, 'followUps')),
+      emAtendimento: g.emAtendimento.map((c, i) => comContexto(c, i, 'emAtendimento')),
+      pendentes: (g.pendentes || []).map((c, i) => comContexto(c, i, 'pendentes')),
     };
     for (const grupo of ['novas', 'followUps', 'emAtendimento', 'pendentes']) {
       for (const it of vendedores[uid][grupo]) {
@@ -262,10 +327,22 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
     agoraIso: now.toISOString(), lookupNome, maxLookups: QC.MAX_NAME_LOOKUPS_PER_RUN,
     atribuicoesAnteriores,
   });
-  const doc = montarDocumento({ wl: sel.wl, dataReferencia, geradoEm: now.toISOString(), stats: universo.stats, sel, rejeitados, participantes });
+  const contextoPara = criarFabricaContexto({ dados: d, dataReferencia });
+  const coletorGestao = new Map();
+  const doc = montarDocumento({ wl: sel.wl, dataReferencia, geradoEm: now.toISOString(), stats: universo.stats, sel, rejeitados, participantes, contextoPara, coletorGestao });
+  // N35.20.1: documento gerencial — só opportunityInstanceId → campos gerenciais (sem nome, uid ou PII)
+  const docGestao = {
+    schemaVersion: SCHEMA_GESTAO,
+    dataReferencia,
+    geradoEm: doc.geradoEm,
+    itens: Object.fromEntries([...coletorGestao.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))),
+  };
 
   const bloqueados = verificarCamposBloqueados(doc);
   if (bloqueados.length) throw new Error('WORKLIST_DOC_CAMPOS_BLOQUEADOS: ' + bloqueados.join(','));
+  // N35.20.1 — defesa final: documento legível pelo vendedor NUNCA contém campo exclusivo de gestão (fail closed)
+  const expostos = camposGestaoExpostos(doc);
+  if (expostos.length) throw new Error('WORKLIST_DOC_CAMPO_GESTAO_EXPOSTO: ' + expostos.slice(0, 5).join(','));
   // N35.16.1 — defesa final antes de persistir: nenhum nome vazio ou com CPF/CNPJ (fail closed, nada é gravado)
   const nomesInvalidos = Object.values(doc.vendedores)
     .flatMap(v => [...v.novas, ...v.followUps, ...v.emAtendimento, ...(v.pendentes || [])])
@@ -277,12 +354,15 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
 
   if (db) {
     const ref = db.collection(COLL).doc(destino);
+    const refGestao = db.collection(COLL_GESTAO).doc(destino); // mesmo id (worklist | worklist_preview)
     if (mode === 'LIVE' && typeof db.runTransaction === 'function') {
       // N35.17: execuções concorrentes/retry — só a primeira grava a worklist do dia (CAP diário preservado)
+      // N35.20.1: operacional + gerencial na MESMA transação (nunca um sem o outro)
       const gravou = await db.runTransaction(async tx => {
         const atual = await tx.get(ref);
         if (atual.exists && atual.data().dataReferencia === dataReferencia && atual.data().schemaVersion === SCHEMA_VERSION) return false;
         tx.set(ref, doc);
+        tx.set(refGestao, docGestao);
         return true;
       });
       if (!gravou) {
@@ -290,7 +370,9 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
         return { status: 'JA_GERADA_HOJE', escrito: null, doc: (await ref.get()).data() };
       }
     } else {
-      await ref.set(doc);
+      const batch = typeof db.batch === 'function' ? db.batch() : null;
+      if (batch) { batch.set(ref, doc); batch.set(refGestao, docGestao); await batch.commit(); }
+      else { await ref.set(doc); await refGestao.set(docGestao); }
     }
   }
   logger.log(JSON.stringify({
@@ -302,10 +384,10 @@ async function executarGeracaoWorklist({ db, lookupNome, now = new Date(), mode 
     pendenciasRetidas: doc.contagens.pendenciasRetidas,
     nameLookups: sel.lookups, nameUnresolved: sel.nameUnresolved,
   }));
-  return { status: 'GERADA', escrito: db ? `${COLL}/${destino}` : null, doc, rejeitados };
+  return { status: 'GERADA', escrito: db ? `${COLL}/${destino}` : null, escritoGestao: db ? `${COLL_GESTAO}/${destino}` : null, doc, docGestao, rejeitados };
 }
 
 module.exports = {
-  executarGeracaoWorklist, selecionarComNomes, montarDocumento, carregarDados, itemDoc,
-  COLL, DOC_LIVE, DOC_PREVIEW, SCHEMA_VERSION,
+  executarGeracaoWorklist, selecionarComNomes, montarDocumento, carregarDados, itemDoc, criarFabricaContexto,
+  COLL, DOC_LIVE, DOC_PREVIEW, SCHEMA_VERSION, COLL_GESTAO, SCHEMA_GESTAO,
 };

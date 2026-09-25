@@ -447,6 +447,21 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Coleção: fila_comercial_gestao (N35.20.1) ─────────────────────────────
+    // Dados EXCLUSIVOS de gestão da Worklist (ex.: ticket médio), chave opportunityInstanceId, sem PII.
+    // Vendedor (fila-comercial-operar) NUNCA lê — por isso fica FORA de fila_comercial/{docId}.
+    // Leitura: role gestor (isGestor) OU módulo 'fila-comercial-gestao' EXPLÍCITO.
+    // SEM atalho admin=true (temAcessoModulo concede tudo a admin; aqui não se aplica).
+    // Escrita APENAS via Admin SDK (Cloud Function gerarWorklistDiaria).
+    function temModuloGestaoFilaExplicito() {
+      return isDualRoleAtivo() &&
+        get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('modulos', []).hasAny(['fila-comercial-gestao']);
+    }
+    match /fila_comercial_gestao/{docId} {
+      allow read:  if isGestor() || temModuloGestaoFilaExplicito();
+      allow write: if false;
+    }
+
     // ── Coleção: interacoes_fila (N35.10/N35.12/N35.12S) ─────────────────────
     // Estado operacional canário da Fila Comercial.
     // Escrita APENAS via Admin SDK (Cloud Function). Frontend: somente leitura.

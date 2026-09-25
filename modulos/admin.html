@@ -318,6 +318,27 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
       <div class="modulos-grid-form" id="modulosForm"><!-- JS --></div>
     </div>
 
+    <!-- N35.17.1 — Fila Comercial: permissões independentes + participação na distribuição -->
+    <div class="form-group" id="filaSection">
+      <label class="fl">Fila Comercial</label>
+      <div class="modulos-grid-form">
+        <label class="mod-toggle" id="ftog_operar">
+          <input type="checkbox" id="fFilaOperar" onchange="onFilaChange()"> 🎯 Pode operar a Fila Comercial
+        </label>
+        <label class="mod-toggle" id="ftog_gestao">
+          <input type="checkbox" id="fFilaGestao" onchange="onFilaChange()"> 👁️ Gestão / acompanhamento da Fila Comercial
+        </label>
+        <label class="mod-toggle" id="ftog_participa">
+          <input type="checkbox" id="fFilaParticipa" onchange="onFilaChange()"> 📥 Participa da distribuição diária
+        </label>
+        <label class="mod-toggle" id="ftog_limite" style="gap:.5rem">
+          Novas oportunidades por dia
+          <input type="number" id="fFilaLimite" min="1" max="30" step="1" value="10" style="width:4.2rem">
+        </label>
+      </div>
+      <div class="uid-hint" id="filaHint">Operar e gestão são permissões independentes. Participar da distribuição exige poder operar; desmarcar pausa novas oportunidades sem remover o acesso.</div>
+    </div>
+
     <!-- Bloqueado -->
     <div class="admin-toggle-row" style="margin-top:.25rem">
       <div>
@@ -451,6 +472,7 @@ onAuthStateChanged(auth, async user => {
 });
 </script>
 
+<script src="admin-usuarios-logic.js"></script>
 <script>
 // ── Definição de módulos ─────────────────────────────────────────────────────
 const MODULOS_DEF = [
@@ -525,6 +547,16 @@ function renderTabela(lista) {
         .join('');
       modsHtml = chips || '<span class="mod-chip">Sem acesso</span>';
     }
+    // N35.17.1: situação na Fila Comercial (independe de admin)
+    const modsFila = u.modulos || [];
+    const fc = u.filaComercial || null;
+    const filaChips = [
+      modsFila.includes('fila-comercial-operar') ? '<span class="mod-chip on">🎯 Opera fila</span>' : '',
+      modsFila.includes('fila-comercial-gestao') ? '<span class="mod-chip on">👁️ Gestão fila</span>' : '',
+      fc && fc.ativo === true && fc.recebeNovasOportunidades === true ? `<span class="mod-chip on">📥 Distribuição ${Number(fc.limiteNovasPorDia) || 10}/dia</span>` : '',
+      fc && fc.recebeNovasOportunidades === false ? '<span class="mod-chip">⏸️ Distribuição pausada</span>' : '',
+    ].join('');
+    if (filaChips) modsHtml += filaChips;
 
     // Status
     const statusHtml = bloq
@@ -596,6 +628,40 @@ function getModsSelecionados() {
     .map(e => e.value);
 }
 
+// ── N35.17.1 — Seção Fila Comercial ─────────────────────────────────────────
+function renderFilaForm(estado) {
+  document.getElementById('fFilaOperar').checked    = !!estado.podeOperar;
+  document.getElementById('fFilaGestao').checked    = !!estado.gestao;
+  document.getElementById('fFilaParticipa').checked = !!estado.participa;
+  document.getElementById('fFilaLimite').value      = estado.limite;
+  onFilaChange();
+}
+
+// Participação/limite só fazem sentido para quem pode operar: desabilita visualmente,
+// sem alterar os valores (nada é persistido até o Salvar).
+window.onFilaChange = function() {
+  const operar   = document.getElementById('fFilaOperar').checked;
+  const participa = document.getElementById('fFilaParticipa');
+  const limite    = document.getElementById('fFilaLimite');
+  participa.disabled = !operar;
+  limite.disabled    = !operar || !participa.checked;
+  document.getElementById('ftog_participa').style.opacity = operar ? '' : '.45';
+  document.getElementById('ftog_limite').style.opacity    = (operar && participa.checked) ? '' : '.45';
+  ['operar', 'gestao', 'participa'].forEach(k => {
+    const el = document.getElementById({ operar: 'fFilaOperar', gestao: 'fFilaGestao', participa: 'fFilaParticipa' }[k]);
+    document.getElementById('ftog_' + k).classList.toggle('checked', el.checked);
+  });
+};
+
+function lerFilaForm() {
+  return {
+    filaOperar:    document.getElementById('fFilaOperar').checked,
+    filaGestao:    document.getElementById('fFilaGestao').checked,
+    filaParticipa: document.getElementById('fFilaParticipa').checked,
+    filaLimite:    document.getElementById('fFilaLimite').value,
+  };
+}
+
 // ── Abrir modal Novo ─────────────────────────────────────────────────────────
 window.abrirModalNovo = function() {
   document.getElementById('editUid').value      = '';
@@ -610,6 +676,7 @@ window.abrirModalNovo = function() {
   document.getElementById('modalTitulo').textContent  = 'Novo Usuário';
   document.getElementById('modalSub').textContent     = 'Cadastre um novo colaborador e defina os módulos';
   renderModulosForm(['catalogo'], false);
+  renderFilaForm(window.AdminUsuariosLogic.estadoInicialFila(null));
   document.getElementById('modalOverlay').classList.add('show');
 };
 
@@ -630,6 +697,7 @@ window.abrirModalEditar = function(uid) {
   document.getElementById('modalTitulo').textContent  = 'Editar Usuário';
   document.getElementById('modalSub').textContent     = `Editando: ${u.nome || u.email || uid}`;
   renderModulosForm(u.modulos||[], !!u.admin);
+  renderFilaForm(window.AdminUsuariosLogic.estadoInicialFila(u));
   document.getElementById('modalOverlay').classList.add('show');
 };
 
@@ -646,11 +714,16 @@ window.salvarUsuario = async function() {
   const cargo   = document.getElementById('fCargo').value.trim();
   const isAdmin = document.getElementById('fAdmin').checked;
   const bloq    = document.getElementById('fBloqueado').checked;
-  const modulos = isAdmin ? MODULOS_DEF.map(m => m.id) : getModsSelecionados();
 
   if (!nome)  { toast('Informe o nome completo!', true); return; }
   if (!cargo) { toast('Informe o cargo ou função!', true); return; }
   if (!email) { toast('Informe o e-mail!', true); return; }
+
+  const filaPrev = lerFilaForm();
+  if (filaPrev.filaOperar && filaPrev.filaParticipa) {
+    const v = window.AdminUsuariosLogic.validarLimite(filaPrev.filaLimite);
+    if (!v.ok) { toast(v.erro, true); return; }
+  }
 
   let uid = editUid;
 
@@ -663,11 +736,21 @@ window.salvarUsuario = async function() {
       await window._auth2SignOut(); // desconecta do app secundário, não afeta o admin
     }
 
-    const dados = { nome, cargo, email, modulos, admin: isAdmin, bloqueado: bloq };
-    await window._setDoc(window._doc('sistema_usuarios', uid), dados, { merge: true });
+    // N35.17.1: relê o documento no momento do salvar e só altera o que a tela controla
+    // (módulos desconhecidos/futuros e configurações não editadas são preservados).
+    const snapAtual = await window._getDoc(window._doc('sistema_usuarios', uid));
+    const existente = snapAtual.exists() ? snapAtual.data() : null;
+    const r = window.AdminUsuariosLogic.montarPayloadUsuario(existente, {
+      nome, cargo, email, isAdmin, bloqueado: bloq,
+      idsDaTela: MODULOS_DEF.map(m => m.id), marcadosNaTela: getModsSelecionados(),
+      ...lerFilaForm(),
+    });
+    if (r.erro) { toast(r.erro, true); return; }
+    await window._setDoc(window._doc('sistema_usuarios', uid), r.dados, { merge: true });
     toast(editUid ? '✅ Usuário atualizado!' : `✅ Conta criada! Login: ${email}`);
     fecharModal();
     await carregarUsuarios();
+    renderTabelaPonto();
   } catch(e) {
     if (e.code === 'auth/email-already-in-use') {
       toast('Este e-mail já tem uma conta. Peça o UID no Firebase Console.', true);
@@ -715,8 +798,8 @@ function toast(msg, err=false) {
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
-window.addEventListener('firebaseReady', () => {
-  carregarUsuarios();
+window.addEventListener('firebaseReady', async () => {
+  await carregarUsuarios();          // perfis primeiro: a tabela do ponto usa-os para "Configurar perfil"
   carregarFuncionariosPonto();
 });
 
@@ -777,6 +860,10 @@ function renderTabelaPonto() {
     } else if (user.ativo) {
       statusHtml = `<span class="ponto-badge ponto-ativo"><span class="status-dot"></span>Ativo</span>`;
       acoesHtml  = `<button class="btn-sm btn-sm-secondary" id="btn-reset-${f.id}" onclick="pedirConfirmacaoReset('${f.id}')">↻ Redefinir senha</button>`;
+      // N35.17.1: conta existe mas sem perfil administrativo → cria o perfil pela tela (sem Firebase Console)
+      if (!todosUsuarios.some(x => x.uid === user.uid)) {
+        acoesHtml += ` <button class="btn-sm btn-sm-primary" id="btn-perfil-${f.id}" onclick="abrirModalPerfil('${f.id}')">Configurar perfil</button>`;
+      }
     } else {
       statusHtml = `<span class="ponto-badge ponto-desativado"><span class="status-dot"></span>Conta desativada</span>`;
       acoesHtml  = `<span style="font-size:.72rem;color:var(--muted)">ativo=false em users/${user.uid}</span>`;
@@ -799,6 +886,26 @@ function renderTabelaPonto() {
       </tr>`;
   }).join('');
 }
+
+// N35.17.1 — Cria perfil em sistema_usuarios para funcionário que já tem conta (users/{uid})
+window.abrirModalPerfil = function(funcId) {
+  const f    = todaFuncionarios.find(x => x.id === funcId);
+  const user = usersMapPonto[funcId];
+  if (!user) return;
+  document.getElementById('editUid').value      = user.uid;
+  document.getElementById('fNome').value        = (f && f.nome) || user.nome || '';
+  document.getElementById('fEmail').value       = user.email || (f && f.email) || '';
+  document.getElementById('fSenha').value       = '';
+  document.getElementById('fCargo').value       = (f && f.cargo) || '';
+  document.getElementById('fAdmin').checked     = false;
+  document.getElementById('fBloqueado').checked = false;
+  document.getElementById('senhaGroup').style.display = 'none';
+  document.getElementById('modalTitulo').textContent  = 'Configurar perfil';
+  document.getElementById('modalSub').textContent     = `Conta existente — defina os módulos e a Fila Comercial de ${(f && f.nome) || user.email || ''}`;
+  renderModulosForm([], false);
+  renderFilaForm(window.AdminUsuariosLogic.estadoInicialFila(null));
+  document.getElementById('modalOverlay').classList.add('show');
+};
 
 window.pedirConfirmacaoReset = function(funcId) {
   const f    = todaFuncionarios.find(x => x.id === funcId);

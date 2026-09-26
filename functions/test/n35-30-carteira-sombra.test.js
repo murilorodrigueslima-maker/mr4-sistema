@@ -27,11 +27,12 @@ async function vendedor(uid, { pode = true, pausa = false, pausaMotivo, gc = GC[
     carteiraComercial: { podePossuirCarteira: pode, ativoComercialmente: ativoCom, pausaTemporaria: pausa, desligado: false, gestaoClickVendedorId: gc, ...(pausaMotivo ? { pausaMotivo } : {}) } });
 }
 let seq = 0;
-async function venda(cli, data, uid, { situacao = 'Concretizada', valor = '150.00', vendGc, id } = {}) {
+async function venda(cli, data, uid, { situacao = 'Concretizada', valor = '150.00', vendGc, id, mod } = {}) {
   const vid = id || String(710000000 + (++seq));
   criados.vendas.add(vid);
   await db.doc('vendas_gc/' + vid).set({ id: vid, cliente_id: String(cli), data, nome_situacao: situacao, valor_total: valor,
-    vendedor_id: vendGc !== undefined ? vendGc : (GC[uid] || ''), nome_vendedor: 'Pessoa Teste', nome_cliente: 'Cliente Teste', cpf: '00000000000', produtos: [] });
+    vendedor_id: vendGc !== undefined ? vendGc : (GC[uid] || ''), nome_vendedor: 'Pessoa Teste', nome_cliente: 'Cliente Teste', cpf: '00000000000', produtos: [],
+    cadastrado_em: data + ' 12:00:00', modificado_em: mod || (data + ' 12:00:00') });
   return vid;
 }
 async function carteira(cli, owner) {
@@ -127,7 +128,8 @@ describe('Payload e logs', () => {
     await regra(SOMBRA); await job();
     const linha = logs.find(l => l.includes('"job":"processarCarteiraComercial"'));
     const j = JSON.parse(linha);
-    expect(j).toMatchObject({ status: 'OK', mode: 'SOMBRA', ruleVersion: 'N35.30', cutoff: CORTE, checkpointBefore: null, checkpointAfter: '2026-09-30', processed: 1, errors: 0 });
+    expect(j).toMatchObject({ status: 'OK', mode: 'SOMBRA', ruleVersion: 'N35.32', lateArrivalMechanism: 'MARCA_DAGUA_MODIFICADO_EM+JANELA_DATA', cutoff: CORTE, checkpointBefore: null,
+      checkpointAfter: '2026-09-30 12:00:00', processed: 1, errors: 0 });
     expect(j.runId).toMatch(/^\d{14}-[0-9a-f]{6}$/);
     expect(typeof j.durationMs).toBe('number');
     expect(logs.join('\n')).not.toMatch(/Cliente Teste|Pessoa Teste|00000000000|cpf|cnpj|telefone|email|token|secret/i);
@@ -139,7 +141,7 @@ describe('Idempotência e concorrência', () => {
     await carteira('8810009', FAB); await venda('8810009', '2026-04-01', FAB);
     const v = await venda('8810009', '2026-09-30', ADE);
     await regra(SOMBRA);
-    await Promise.all(Array.from({ length: 6 }, () => R.processarVendaCarteira(db, { vendaId: v, agoraIso: AGORA, regraDoc: SOMBRA, forcarSombra: true })));
+    await Promise.all(Array.from({ length: 6 }, () => R.reavaliarClienteSombra(db, { gcCliente: '8810009', agoraIso: AGORA, regra: R.lerRegra(SOMBRA), runId: 'c' })));
     await job(); await job(); await job();
     expect((await sombras()).filter(s => s.vendaId === v)).toHaveLength(1);
     expect((await db.doc('carteira_comercial/GC:8810009').get()).data()).toMatchObject({ ownerUid: FAB, versao: 1 });
@@ -150,16 +152,18 @@ describe('Corte de ativação e checkpoint', () => {
   test('SH-08 primeira execução: histórico anterior ao corte nunca é lido como novo (sem replay)', async () => {
     const b = db.batch();
     for (let i = 0; i < 60; i++) { const id = String(720000000 + i); criados.vendas.add(id);
-      b.set(db.doc('vendas_gc/' + id), { id, cliente_id: String(8811000 + (i % 7)), data: '2026-0' + (1 + (i % 8)) + '-15', nome_situacao: 'Concretizada', valor_total: '10', vendedor_id: GC[ADE] }); }
+      const data = '2026-0' + (1 + (i % 8)) + '-15';
+      b.set(db.doc('vendas_gc/' + id), { id, cliente_id: String(8811000 + (i % 7)), data, nome_situacao: 'Concretizada', valor_total: '10', vendedor_id: GC[ADE], cadastrado_em: data + ' 10:00:00', modificado_em: data + ' 10:00:00' }); }
     await b.commit();
     await venda('8811000', '2026-09-27', ADE);                                                   // véspera do corte
     const nova = await venda('8811001', '2026-09-28', FAB);                                     // dia do corte
     await regra(SOMBRA);
     const r = await job();
-    expect(r).toMatchObject({ corte: CORTE, checkpointAntes: null, lidas: 1, processadas: 1, checkpointDepois: '2026-09-28' });
+    expect(r).toMatchObject({ corte: CORTE, checkpointAntes: null, clientesReavaliados: 1, processadas: 1, checkpointDepois: '2026-09-28 12:00:00' });
     expect((await sombras()).map(s => s.vendaId)).toEqual([nova]);
-    const cp = (await db.doc('carteira_comercial_config/checkpoint_sombra').get()).data();
-    expect(cp).toMatchObject({ corte: CORTE, maiorDataAvaliada: '2026-09-28', modo: 'SOMBRA' });
+    const cp = (await db.doc('carteira_comercial_config/checkpoint_sombra_v2').get()).data();
+    expect(cp).toMatchObject({ versao: 2, corte: CORTE, marcaDagua: '2026-09-28 12:00:00' });
+    expect((await db.doc('carteira_comercial_config/checkpoint_sombra').get()).exists).toBe(false);   // V1 não é mais escrito
   });
   test('SH-09 checkpoint só avança com sucesso; falha no meio não perde venda', async () => {
     await regra(SOMBRA);
@@ -168,18 +172,18 @@ describe('Corte de ativação e checkpoint', () => {
     const store = { collection: n => db.collection(n), runTransaction: (f, o) => { if (falhar) throw new Error('falha simulada'); return db.runTransaction(f, o); } };
     const r1 = await R.processarVendasRecentes(store, { agoraIso: AGORA, forcarSombra: true, runId: 'x' });
     expect(r1).toMatchObject({ status: 'ERRO_PARCIAL', erros: 2, checkpointDepois: null });
-    expect((await db.doc('carteira_comercial_config/checkpoint_sombra').get()).exists).toBe(false);
+    expect((await db.doc('carteira_comercial_config/checkpoint_sombra_v2').get()).exists).toBe(false);
     falhar = false;
     const r2 = await R.processarVendasRecentes(store, { agoraIso: AGORA, forcarSombra: true, runId: 'y' });
-    expect(r2).toMatchObject({ status: 'OK', processadas: 2, checkpointDepois: '2026-10-02' });
+    expect(r2).toMatchObject({ status: 'OK', processadas: 2, checkpointDepois: '2026-10-02 12:00:00' });
     expect((await sombras()).map(s => s.vendaId)).toContain(v2);
   });
   test('SH-10 venda atrasada dentro da janela ainda é avaliada; corte alterado descarta checkpoint', async () => {
     await regra(SOMBRA);
     await venda('8811201', '2026-10-04', FAB); await job();
-    const atrasada = await venda('8811202', '2026-09-29', ADE);                                  // lançada depois, data antiga (>= corte)
+    const atrasada = await venda('8811202', '2026-09-29', ADE, { mod: '2026-10-05 08:00:00' });  // lançada depois, data comercial antiga (>= corte)
     const r = await job();
-    expect(r).toMatchObject({ checkpointAntes: '2026-10-04', processadas: 1 });
+    expect(r).toMatchObject({ checkpointAntes: '2026-10-04 12:00:00', processadas: 1, checkpointDepois: '2026-10-05 08:00:00' });
     expect((await sombras()).map(s => s.vendaId)).toContain(atrasada);
     await regra({ ...SOMBRA, ativoDesde: '2026-10-01' });
     expect((await job()).checkpointAntes).toBeNull();
@@ -249,14 +253,16 @@ describe('Cenários críticos em SOMBRA (bloqueantes)', () => {
     expect(r.ignoradasPorMotivo).toMatchObject({ SITUACAO_NAO_CONCRETIZADA: 3, VALOR_ZERADO: 1, SEM_CLIENTE: 1 });
     expect(await sombras()).toHaveLength(0);
   });
-  test('SH-17 venda cancelada após decisão sombra: pendência vai para a SOMBRA, nunca para a coleção oficial', async () => {
+  test('SH-17 venda cancelada após decisão sombra: nova revisão INVALIDADA na SOMBRA, nunca na coleção oficial', async () => {
     await carteira('8812012', FAB); await venda('8812012', '2026-04-01', FAB);
     const v = await venda('8812012', '2026-09-30', ADE);
     await regra(SOMBRA); await job();
-    await db.doc('vendas_gc/' + v).update({ nome_situacao: 'Cancelada' });
+    await db.doc('vendas_gc/' + v).update({ nome_situacao: 'Cancelada', modificado_em: '2026-10-05 08:00:00' });
     const r = await job();
-    expect(r.invalidadasAposDecisao).toBe(1);
-    expect((await sombras()).map(s => s.motivo)).toContain('VENDA_INVALIDADA_APOS_DECISAO');
+    expect(r.invalidadas).toBe(1);
+    const revs = (await sombras()).filter(x => x.vendaId === v).sort((a, b) => a.revisao - b.revisao);
+    expect(revs.map(x => [x.revisao, x.decisaoSombra])).toEqual([[1, 'TRANSFERIRIA_R2'], [2, 'INVALIDADA']]);
+    expect(revs[1]).toMatchObject({ motivo: 'VENDA_INVALIDADA_SITUACAO_NAO_CONCRETIZADA', substitui: revs[0].decisionId, causa: 'VENDA_ALTERADA' });
     expect(await tamanho('carteira_comercial_decisoes')).toBe(0);
   });
 });
@@ -268,12 +274,12 @@ describe('Kill switch', () => {
     expect(await sombras()).toHaveLength(1);
     await regra({ ...SOMBRA, modo: 'DESLIGADO' });
     const nova = await venda('8813002', '2026-09-30', ADE);
-    const cpAntes = (await db.doc('carteira_comercial_config/checkpoint_sombra').get()).data();
+    const cpAntes = (await db.doc('carteira_comercial_config/checkpoint_sombra_v2').get()).data();
     const antes = await oficiaisSnapshot();
     expect((await job()).status).toBe('DESLIGADO');
     expect(await sombras()).toHaveLength(1);
     expect(await oficiaisSnapshot()).toEqual(antes);
-    expect((await db.doc('carteira_comercial_config/checkpoint_sombra').get()).data()).toEqual(cpAntes);
+    expect((await db.doc('carteira_comercial_config/checkpoint_sombra_v2').get()).data()).toEqual(cpAntes);
     await regra(SOMBRA);
     await job();
     expect((await sombras()).map(s => s.vendaId)).toContain(nova);

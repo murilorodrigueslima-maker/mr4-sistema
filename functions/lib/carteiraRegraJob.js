@@ -22,9 +22,10 @@ async function carteiraRegraJobHandler(_event, opts = {}) {
   const r = await processarVendasRecentes(store, { agoraIso: agora.toISOString(), forcarSombra: FORCAR_SOMBRA, runId });
   // Log só com IDs/contagens (sem cliente, documento, contato ou valor).
   console.log(JSON.stringify({ job: 'processarCarteiraComercial', status: r.status, runId: r.runId, mode: r.modo, ruleVersion: r.regraVersao,
-    cutoff: r.corte, checkpointBefore: r.checkpointAntes, checkpointAfter: r.checkpointDepois, read: r.lidas, processed: r.processadas,
-    decisions: r.porDecisaoSombra, alreadyProcessed: r.jaProcessadas, ignored: r.ignoradasPorMotivo, invalidatedAfterDecision: r.invalidadasAposDecisao,
-    errors: r.erros, durationMs: r.duracaoMs }));
+    lateArrivalMechanism: r.mecanismo || null, cutoff: r.corte, checkpointBefore: r.checkpointAntes, checkpointAfter: r.checkpointDepois,
+    syncCursor: r.cursorSync || null, read: r.lidas, clientsReevaluated: r.clientesReavaliados || 0, processed: r.processadas,
+    reevaluations: r.reavaliacoes || 0, invalidated: r.invalidadas || 0, unchanged: r.inalteradas || 0,
+    decisions: r.porDecisaoSombra, ignored: r.ignoradasPorMotivo, errors: r.erros, durationMs: r.duracaoMs }));
   return r;
 }
 

@@ -41,7 +41,7 @@ const COLL_DEC = 'carteira_comercial_decisoes';
 const COLL_DEC_SOMBRA = 'carteira_comercial_decisoes_sombra';
 const COLL_CONFIG = 'carteira_comercial_config';
 const REF_CONFIG = [COLL_CONFIG, 'regra'];
-const REGRA_VERSAO = 'N35.30';
+const REGRA_VERSAO = 'N35.32';
 const OPERADOR_SISTEMA = 'SISTEMA:carteira-regra';
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 const SITUACAO_VALIDA = 'Concretizada';
@@ -58,7 +58,9 @@ const ALTERA_CARTEIRA = [DECISOES.CRIAR_PRIMEIRA_VENDA, DECISOES.CRIAR_REATIVACA
 
 // Campos permitidos numa decisão (oficial ou sombra). Nada de nome, documento, contato, valor ou texto livre.
 const CAMPOS_DECISAO = Object.freeze(['decisionId', 'vendaId', 'portfolioId', 'dataVenda', 'vendedorGestaoClickId', 'vendedorUid',
-  'decisao', 'decisaoSombra', 'motivo', 'ownerAntesUid', 'ownerDepoisUid', 'diasSemComprar', 'gestaoReview', 'modo', 'regraVersao', 'processadoEm', 'runId']);
+  'decisao', 'decisaoSombra', 'motivo', 'ownerAntesUid', 'ownerDepoisUid', 'diasSemComprar', 'gestaoReview', 'modo', 'regraVersao', 'processadoEm', 'runId',
+  // N35.32 — revisões auditáveis (venda atrasada / alterada / cancelada)
+  'revisao', 'substitui', 'causa', 'revisaoVenda', 'chaveConteudo', 'vendaModificadaEm', 'diasAteDeteccao', 'vendaTardia']);
 const PROIBIDO_DECISAO = /nome|cpf|cnpj|telefone|fone|email|endereco|observ|ticket|valor|faturamento|margem|lucro|custo|senha|token|segredo|secret|credencial/i;
 
 // ── Venda válida ─────────────────────────────────────────────────────────────
@@ -160,6 +162,7 @@ function decidirVendaCarteira({ carteira, anteriores, venda, vendedor, dono, reg
 
 /** Rótulo legível do que a regra FARIA (usado na sombra e nos relatórios). */
 function rotuloSombra(d) {
+  if (d.decisao === 'VENDA_INVALIDADA') return 'INVALIDADA';
   if (d.decisao === DECISOES.CRIAR_PRIMEIRA_VENDA) return 'CRIARIA_CARTEIRA';
   if (d.decisao === DECISOES.CRIAR_REATIVACAO) return 'CRIARIA_CARTEIRA_REATIVACAO';
   if (d.decisao === DECISOES.TRANSFERIR_R2) return 'TRANSFERIRIA_R2';
@@ -275,6 +278,211 @@ async function processarVendaCarteira(store, { vendaId, agoraIso, regraDoc, forc
   return res;
 }
 
+// ── N35.32 — SOMBRA segura para vendas atrasadas ─────────────────────────────
+// Duas datas SEPARADAS:
+//   • data comercial da venda (vendas_gc.data)        → ordem comercial e regra dos 120 dias;
+//   • data de detecção (vendas_gc.modificado_em, GC)  → só decide QUANDO reavaliar (marca d'água).
+// Detecção: (A) modificado_em >= marcaDagua − 72 h, com "vistos" (id|modificado) para não repetir trabalho;
+//           (B) data comercial nos últimos 7 dias sem decisão (vendas pré-datadas cuja data chegou).
+// A marca d'água nunca passa do cursor já confirmado pelo sync (sync_state/perfil360.modifiedSinceCursor),
+// nem do "agora" no fuso do GC (America/Fortaleza, UTC−3). Só avança se a execução terminar sem erro.
+// Reavaliação: para cada cliente tocado, TODA a sequência de vendas válidas com data >= corte é recalculada em ordem
+// comercial (data, id), com o dono "sombra" evoluindo como no modo ATIVO. Cada venda tem revisões create-only
+// S_<vendaId>_r<n>: nova revisão só quando o conteúdo da decisão muda (venda atrasada, alterada, cancelada ou movida).
+const COLL_CHECKPOINT_V2 = 'checkpoint_sombra_v2';
+const SOBREPOSICAO_HORAS = 72;
+const JANELA_DATA_DIAS = 7;
+const TS_GC = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+const FUSO_GC_HORAS = -3;
+const sha8 = x => require('crypto').createHash('sha256').update(JSON.stringify(x)).digest('hex').slice(0, 16);
+function tsMais(ts, horas) { return new Date(Date.parse(ts.replace(' ', 'T') + 'Z') + horas * 3600000).toISOString().replace('T', ' ').slice(0, 19); }
+function agoraNoFusoGc(agoraIso) { return new Date(Date.parse(agoraIso) + FUSO_GC_HORAS * 3600000).toISOString().replace('T', ' ').slice(0, 19); }
+const idDecisaoV2 = (vendaId, rev) => 'S_' + String(vendaId).replace(/[^A-Za-z0-9_-]/g, '_') + '_r' + rev;
+/** Campos da venda que mudam a decisão comercial (outras edições — produtos, valor > 0 → > 0 — não reavaliam). */
+function revisaoComercialVenda(v, hoje) {
+  return sha8([String(v.data || '').slice(0, 10), normalizeGestaoClickId(v.cliente_id), normalizeGestaoClickId(v.vendedor_id), validarVenda(v, hoje) || 'VALIDA']);
+}
+
+/**
+ * Planeja (puro) a sequência de decisões de UM cliente, em ordem comercial, com o dono sombra evoluindo.
+ * @returns {Array<{venda, d, revisaoVenda}>} só vendas válidas com data >= corte (e não futuras)
+ */
+function planejarSequenciaCliente({ vendasCliente, carteira, configs, situacaoDe, regra, hoje }) {
+  const vistos = new Set();
+  const validas = (vendasCliente || []).filter(v => !validarVenda(v, hoje)).filter(v => (vistos.has(String(v.id)) ? false : vistos.add(String(v.id))))
+    .sort((a, b) => (chaveOrdem(a) < chaveOrdem(b) ? -1 : 1));
+  let dono = (carteira && carteira.ownerUid) || null;
+  const out = [];
+  for (let i = 0; i < validas.length; i++) {
+    const venda = validas[i];
+    if (String(venda.data).slice(0, 10) < regra.ativoDesde) continue;           // antes do corte: só serve de histórico
+    const rv = resolverVendedorPorGc(configs, venda.vendedor_id);
+    const d = decidirVendaCarteira({ carteira: dono ? { ownerUid: dono } : null, anteriores: validas.slice(0, i), venda,
+      vendedor: { ...rv, situacao: rv.uid ? situacaoDe(rv.uid) : null }, dono: dono ? situacaoDe(dono) : null, regra });
+    out.push({ venda, d, revisaoVenda: revisaoComercialVenda(venda, hoje) });
+    if (ALTERA_CARTEIRA.includes(d.decisao)) dono = d.ownerDepoisUid;             // dono sombra evolui (sem gravar nada oficial)
+  }
+  return out;
+}
+
+/** Reavalia TODA a sequência de um cliente numa transação e grava só as revisões novas (sombra). */
+async function reavaliarClienteSombra(store, { gcCliente, agoraIso, regra, runId }) {
+  const hoje = String(agoraIso).slice(0, 10);
+  const portfolioId = portfolioAnchorFromGcId(gcCliente);
+  const res = { criadas: 0, reavaliacoes: 0, invalidadas: 0, inalteradas: 0, porDecisaoSombra: {} };
+  await store.runTransaction(async tx => {
+    Object.assign(res, { criadas: 0, reavaliacoes: 0, invalidadas: 0, inalteradas: 0, porDecisaoSombra: {} });
+    let identidadeErro = null;
+    try { await resolverAncoraTx(tx, store, 'GC_NATIVE:' + gcCliente); } catch (e) {
+      identidadeErro = 'IDENTIDADE_' + ((String(e.message).match(/\(([A-Z_]+)\)/) || [])[1] || 'NAO_RESOLVIDA');
+    }
+    const [vSnap, cSnap, configs, decPort] = await Promise.all([
+      tx.get(store.collection('vendas_gc').where('cliente_id', '==', String(gcCliente))),
+      tx.get(store.collection(COLL).doc(portfolioId)),
+      lerConfigsVendedores(tx, store),
+      tx.get(store.collection(COLL_DEC_SOMBRA).where('portfolioId', '==', portfolioId)),
+    ]);
+    const vendasCliente = vSnap.docs.map(d => d.data());
+    const carteira = cSnap.exists ? cSnap.data() : null;
+    // revisões existentes: por venda (global — a venda pode ter mudado de cliente)
+    const idsVenda = [...new Set([...vendasCliente.map(v => String(v.id)), ...decPort.docs.map(d => String(d.data().vendaId))])];
+    const docsDec = new Map(decPort.docs.map(d => [d.id, d.data()]));
+    for (let i = 0; i < idsVenda.length; i += 30) {
+      const s = await tx.get(store.collection(COLL_DEC_SOMBRA).where('vendaId', 'in', idsVenda.slice(i, i + 30)));
+      for (const d of s.docs) docsDec.set(d.id, d.data());
+    }
+    const ultimaPorVenda = new Map();
+    for (const d of docsDec.values()) {
+      if (!Number.isInteger(d.revisao)) continue;                                   // decisões do formato anterior (N35.30) não participam
+      const u = ultimaPorVenda.get(d.vendaId);
+      if (!u || d.revisao > u.revisao) ultimaPorVenda.set(d.vendaId, d);
+    }
+    const uids = new Set(configs.map(c => c.uid)); if (carteira && carteira.ownerUid) uids.add(carteira.ownerUid);
+    const sits = new Map();
+    for (const uid of uids) sits.set(uid, await situacaoPorUid(tx, store, uid));
+    const situacaoDe = uid => sits.get(uid) || situacaoVendedor(null, null);
+
+    const plano = identidadeErro ? [] : planejarSequenciaCliente({ vendasCliente, carteira, configs, situacaoDe, regra, hoje });
+    const escrever = [];
+    const novoDoc = (venda, d, extra) => {
+      const u = ultimaPorVenda.get(String(venda.id));
+      const conteudo = [d.decisao, d.motivo, d.ownerAntesUid || null, d.ownerDepoisUid || null, d.vendedorUid || null, Number.isInteger(d.diasSemComprar) ? d.diasSemComprar : null,
+        d.gestaoReview === true, String(venda.data || '').slice(0, 10), normalizeGestaoClickId(venda.vendedor_id) || null, portfolioId];
+      const chave = sha8(conteudo);
+      if (u && u.chaveConteudo === chave) { res.inalteradas++; return; }
+      const revisao = u ? u.revisao + 1 : 1;
+      const dataV = String(venda.data || '').slice(0, 10);
+      const det = u ? u.diasAteDeteccao : Math.max(0, Math.round((Date.parse(hoje + 'T12:00:00Z') - Date.parse(dataV + 'T12:00:00Z')) / 86400000));
+      const doc = { decisionId: idDecisaoV2(venda.id, revisao), vendaId: String(venda.id), portfolioId, dataVenda: dataV,
+        vendedorGestaoClickId: normalizeGestaoClickId(venda.vendedor_id) || null, vendedorUid: d.vendedorUid || null, decisao: d.decisao, decisaoSombra: rotuloSombra(d),
+        motivo: d.motivo, ownerAntesUid: d.ownerAntesUid || null, ownerDepoisUid: d.ownerDepoisUid || null,
+        diasSemComprar: Number.isInteger(d.diasSemComprar) ? d.diasSemComprar : null, gestaoReview: d.gestaoReview === true, modo: 'SOMBRA', regraVersao: REGRA_VERSAO,
+        processadoEm: agoraIso, runId: runId || null, revisao, substitui: u ? u.decisionId : null,
+        causa: !u ? null : (extra.causa || (u.revisaoVenda !== extra.revisaoVenda ? 'VENDA_ALTERADA' : 'SEQUENCIA_ALTERADA')),
+        revisaoVenda: extra.revisaoVenda || null, chaveConteudo: chave, vendaModificadaEm: TS_GC.test(String(venda.modificado_em || '')) ? venda.modificado_em : null,
+        diasAteDeteccao: det, vendaTardia: det > JANELA_DATA_DIAS };
+      const erro = validarDecisao(doc);
+      if (erro) throw new Error('DECISAO_FORA_DA_WHITELIST:' + erro);
+      escrever.push(doc);
+      if (!u) res.criadas++; else if (d.decisao === 'VENDA_INVALIDADA') res.invalidadas++; else res.reavaliacoes++;
+      res.porDecisaoSombra[doc.decisaoSombra] = (res.porDecisaoSombra[doc.decisaoSombra] || 0) + 1;
+    };
+    if (identidadeErro) {
+      for (const v of vendasCliente.filter(x => !validarVenda(x, hoje) && String(x.data).slice(0, 10) >= regra.ativoDesde))
+        novoDoc(v, { decisao: DECISOES.PENDENCIA_GESTAO, motivo: identidadeErro, ownerAntesUid: null, ownerDepoisUid: null, vendedorUid: null, diasSemComprar: null, gestaoReview: true },
+          { revisaoVenda: revisaoComercialVenda(v, hoje) });
+    }
+    for (const p of plano) novoDoc(p.venda, p.d, { revisaoVenda: p.revisaoVenda });
+    // vendas que tinham decisão vigente neste cliente e deixaram de ser decidíveis aqui (cancelada, movida, data < corte)
+    const vigentes = new Set(identidadeErro ? vendasCliente.map(v => String(v.id)) : plano.map(p => String(p.venda.id)));
+    for (const [vendaId, u] of ultimaPorVenda) {
+      if (u.portfolioId !== portfolioId || vigentes.has(vendaId) || u.decisao === 'VENDA_INVALIDADA') continue;
+      const v = vendasCliente.find(x => String(x.id) === vendaId);
+      const motivo = !v ? 'VENDA_MOVIDA_OU_REMOVIDA' : validarVenda(v, hoje) ? 'VENDA_INVALIDADA_' + validarVenda(v, hoje) : 'VENDA_ANTES_DO_CORTE';
+      novoDoc(v || { id: vendaId, data: u.dataVenda, vendedor_id: u.vendedorGestaoClickId }, { decisao: 'VENDA_INVALIDADA', motivo, ownerAntesUid: u.ownerAntesUid, ownerDepoisUid: u.ownerAntesUid,
+        vendedorUid: u.vendedorUid, diasSemComprar: null, gestaoReview: false }, { revisaoVenda: v ? revisaoComercialVenda(v, hoje) : 'REMOVIDA', causa: v ? 'VENDA_ALTERADA' : 'VENDA_MOVIDA' });
+    }
+    for (const doc of escrever) tx.create(store.collection(COLL_DEC_SOMBRA).doc(doc.decisionId), doc);
+  });
+  return res;
+}
+
+/**
+ * Execução SOMBRA segura para vendas atrasadas (N35.32). Nunca escreve carteira, histórico ou decisão oficial.
+ * Checkpoint V2 próprio (checkpoint_sombra_v2); o checkpoint V1 (checkpoint_sombra) é preservado e não é mais usado.
+ */
+async function processarVendasSombraV2(store, { agoraIso, runId, regra }) {
+  const inicioMs = Date.now();
+  const hoje = String(agoraIso).slice(0, 10);
+  const cpRef = store.collection(COLL_CONFIG).doc(COLL_CHECKPOINT_V2);
+  const [cpSnap, syncSnap] = await Promise.all([cpRef.get(), store.collection('sync_state').doc('perfil360').get()]);
+  const cp = cpSnap.exists && cpSnap.data().corte === regra.ativoDesde ? cpSnap.data() : null;     // corte mudou ⇒ recomeça
+  const cursorSync = syncSnap.exists && TS_GC.test(String(syncSnap.data().modifiedSinceCursor || '')) ? syncSnap.data().modifiedSinceCursor : null;
+  const agoraGc = agoraNoFusoGc(agoraIso);
+  const resumo = { runId: runId || null, modo: 'SOMBRA', regraVersao: REGRA_VERSAO, mecanismo: 'MARCA_DAGUA_MODIFICADO_EM+JANELA_DATA', corte: regra.ativoDesde,
+    checkpointAntes: cp ? cp.marcaDagua : null, checkpointDepois: null, cursorSync, lidas: 0, clientesReavaliados: 0,
+    processadas: 0, reavaliacoes: 0, invalidadas: 0, inalteradas: 0, porDecisaoSombra: {}, ignoradasPorMotivo: {}, erros: 0, duracaoMs: 0 };
+  // marca inicial: corte − 90 dias (cobre vendas pré-datadas); o corte comercial continua valendo para decidir
+  const marca = cp ? cp.marcaDagua : diasAntes(regra.ativoDesde, 90) + ' 00:00:00';
+  const desde = tsMais(marca, -SOBREPOSICAO_HORAS);
+  const vistosAntes = new Set(cp && Array.isArray(cp.vistos) ? cp.vistos : []);
+  const [snapA, snapB, decB] = await Promise.all([
+    store.collection('vendas_gc').where('modificado_em', '>=', desde).get(),
+    store.collection('vendas_gc').where('data', '>=', [regra.ativoDesde, diasAntes(hoje, JANELA_DATA_DIAS)].sort().pop()).get(),
+    store.collection(COLL_DEC_SOMBRA).where('dataVenda', '>=', [regra.ativoDesde, diasAntes(hoje, JANELA_DATA_DIAS)].sort().pop()).get(),
+  ]);
+  const A = snapA.docs.map(d => d.data()).filter(v => v && v.id);
+  const B = snapB.docs.map(d => d.data()).filter(v => v && v.id);
+  resumo.lidas = A.length + B.length;
+  const unicas = new Map([...A, ...B].map(v => [String(v.id), v]));
+  for (const v of unicas.values()) {
+    const m = validarVenda(v, hoje);
+    if (m && String(v.data || '').slice(0, 10) >= regra.ativoDesde) resumo.ignoradasPorMotivo[m] = (resumo.ignoradasPorMotivo[m] || 0) + 1;
+  }
+  const decididasB = new Set(decB.docs.map(d => String(d.data().vendaId)));
+  const clientes = new Set(), antigos = new Set();
+  for (const v of A) {
+    const gc = normalizeGestaoClickId(v.cliente_id);
+    if (!gc || vistosAntes.has(String(v.id) + '|' + v.modificado_em)) continue;
+    // venda com data >= corte: sempre reavalia; venda anterior ao corte só importa se o cliente já tem decisão sombra
+    if (String(v.data || '').slice(0, 10) >= regra.ativoDesde) clientes.add(gc); else antigos.add(gc);
+  }
+  // venda que MUDOU de cliente: a decisão antiga fica no cliente anterior ⇒ reavaliar também quem tem decisão desta venda
+  const idsA = [...new Set(A.filter(v => !vistosAntes.has(String(v.id) + '|' + v.modificado_em)).map(v => String(v.id)))];
+  for (let i = 0; i < idsA.length; i += 30) {
+    const s = await store.collection(COLL_DEC_SOMBRA).where('vendaId', 'in', idsA.slice(i, i + 30)).get();
+    for (const d of s.docs) if (d.data().portfolioId) clientes.add(String(d.data().portfolioId).slice(3));
+  }
+  const listaAntigos = [...antigos].filter(gc => !clientes.has(gc));
+  for (let i = 0; i < listaAntigos.length; i += 30) {
+    const s = await store.collection(COLL_DEC_SOMBRA).where('portfolioId', 'in', listaAntigos.slice(i, i + 30).map(g => portfolioAnchorFromGcId(g))).get();
+    for (const d of s.docs) clientes.add(String(d.data().portfolioId).slice(3));
+  }
+  for (const v of B) if (!validarVenda(v, hoje) && !decididasB.has(String(v.id))) clientes.add(normalizeGestaoClickId(v.cliente_id));
+  for (const gc of [...clientes].sort()) {
+    try {
+      const r = await reavaliarClienteSombra(store, { gcCliente: gc, agoraIso, regra, runId });
+      resumo.clientesReavaliados++;
+      resumo.processadas += r.criadas; resumo.reavaliacoes += r.reavaliacoes; resumo.invalidadas += r.invalidadas; resumo.inalteradas += r.inalteradas;
+      for (const [k, n] of Object.entries(r.porDecisaoSombra)) resumo.porDecisaoSombra[k] = (resumo.porDecisaoSombra[k] || 0) + n;
+    } catch (e) {
+      resumo.erros++;
+      console.error(JSON.stringify({ job: 'carteiraRegra', runId: runId || null, cliente: 'GC:' + gc, erro: String(e && e.message || e).slice(0, 200) }));
+    }
+  }
+  if (resumo.erros === 0) {
+    const maxVisto = A.map(v => v.modificado_em).filter(t => TS_GC.test(String(t || ''))).sort().pop() || marca;
+    const nova = [marca, [maxVisto, cursorSync || maxVisto, agoraGc].sort()[0]].sort().pop();      // nunca recua; nunca passa do sync nem do agora
+    const limiteVistos = tsMais(nova, -SOBREPOSICAO_HORAS);
+    const vistos = A.filter(v => TS_GC.test(String(v.modificado_em || '')) && v.modificado_em >= limiteVistos).map(v => String(v.id) + '|' + v.modificado_em).sort();
+    await cpRef.set({ versao: 2, corte: regra.ativoDesde, marcaDagua: nova, vistos, ultimaExecucaoOk: agoraIso, runId: runId || null, regraVersao: REGRA_VERSAO,
+      clientesReavaliados: resumo.clientesReavaliados });
+    resumo.checkpointDepois = nova;
+  } else resumo.checkpointDepois = resumo.checkpointAntes;                               // falhou ⇒ não avança
+  resumo.duracaoMs = Date.now() - inicioMs;
+  return { status: resumo.erros ? 'ERRO_PARCIAL' : 'OK', ...resumo };
+}
+
 // ── Execução em lote com corte + checkpoint ──────────────────────────────────
 function diasAntes(ymd, n) { return new Date(Date.parse(ymd + 'T12:00:00Z') - n * 86400000).toISOString().slice(0, 10); }
 const refCheckpoint = (store, modo) => store.collection(COLL_CONFIG).doc(modo === 'SOMBRA' ? 'checkpoint_sombra' : 'checkpoint_ativo');
@@ -294,6 +502,9 @@ async function processarVendasRecentes(store, { agoraIso, forcarSombra, runId })
   const resumo = { runId: runId || null, modo, regraVersao: REGRA_VERSAO, corte: regra.ativoDesde || null, checkpointAntes: null, checkpointDepois: null,
     lidas: 0, processadas: 0, porDecisao: {}, porDecisaoSombra: {}, jaProcessadas: 0, ignoradas: 0, ignoradasPorMotivo: {}, invalidadasAposDecisao: 0, erros: 0, duracaoMs: 0 };
   if (modo === 'DESLIGADO') { resumo.duracaoMs = Date.now() - inicioMs; return { status: 'DESLIGADO', ...resumo }; }
+  // N35.32: SOMBRA usa o mecanismo seguro para vendas atrasadas. O caminho abaixo (janela por data) fica só para o
+  // modo ATIVO, que NÃO está publicado e precisará do mesmo mecanismo antes de qualquer ativação.
+  if (modo === 'SOMBRA') return processarVendasSombraV2(store, { agoraIso, runId, regra });
   const collDec = modo === 'SOMBRA' ? COLL_DEC_SOMBRA : COLL_DEC;
   const cpRef = refCheckpoint(store, modo);
   const cpSnap = await cpRef.get();
@@ -358,5 +569,7 @@ function avaliarDesligamento({ carteiras, uid }) {
 module.exports = {
   validarVenda, vendasAnteriores, situacaoVendedor, isPortfolioEligibleSeller, resolverVendedorPorGc, lerRegra, modoEfetivo,
   decidirVendaCarteira, rotuloSombra, validarDecisao, processarVendaCarteira, processarVendasRecentes, avaliarDesligamento, idDecisao,
-  DECISOES, CAMPOS_DECISAO, COLL, COLL_HIST, COLL_DEC, COLL_DEC_SOMBRA, COLL_CONFIG, REF_CONFIG, REGRA_VERSAO, OPERADOR_SISTEMA, DIAS_REATIVACAO,
+  planejarSequenciaCliente, reavaliarClienteSombra, processarVendasSombraV2, revisaoComercialVenda, idDecisaoV2, tsMais, agoraNoFusoGc,
+  DECISOES, CAMPOS_DECISAO, COLL, COLL_HIST, COLL_DEC, COLL_DEC_SOMBRA, COLL_CONFIG, COLL_CHECKPOINT_V2, REF_CONFIG, REGRA_VERSAO, OPERADOR_SISTEMA,
+  DIAS_REATIVACAO, SOBREPOSICAO_HORAS, JANELA_DATA_DIAS,
 };

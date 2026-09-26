@@ -96,7 +96,7 @@ describe('Venda válida e vendedor elegível (puro)', () => {
     expect(src).not.toMatch(/\b(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Z])[A-Za-z0-9]{28}\b/);   // UID Firebase (28 chars, com dígito)
     expect(src).not.toMatch(/1080453|948278|559684|791775|1392140|1249840/);  // vendedores GC reais
     const reqs = [...src.matchAll(/require\('([^']+)'\)/g)].map(m => m[1]).sort();
-    expect(reqs).toEqual(['./carteiraMigracao', './carteiraV1', './commercialIdentity']);
+    expect(reqs).toEqual(['./carteiraMigracao', './carteiraV1', './commercialIdentity', 'crypto']);
     expect(src).not.toMatch(/fila_comercial|interacoes_fila|perfis_360/);
   });
 });

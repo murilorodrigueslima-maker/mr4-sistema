@@ -22,6 +22,7 @@ const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapshotGenerator');
 const { executarGeracaoWorklist }                   = require('./lib/worklistGenerator');
 const { criarLookupNomeGC }                         = require('./lib/filaNomes');
+const { carteiraRegraJobHandler }                   = require('./lib/carteiraRegraJob');
 const {
   claimOpportunityHandler,
   registerOutcomeHandler,
@@ -848,6 +849,23 @@ exports.gerarWorklistDiaria = onSchedule({
     await executarGeracaoWorklist({ db, lookupNome });
   } catch (err) {
     console.error('[worklist-v2] ERRO na geração:', err.message);
+  }
+});
+
+// N35.30 — Regra da carteira comercial (R2) em MODO SOMBRA: grava só decisões de sombra (FORCAR_SOMBRA no job).
+// De hora em hora (o sync de vendas_gc roda a cada 2 h); sem retry automático; falha isolada.
+exports.processarCarteiraComercial = onSchedule({
+  schedule:        '45 * * * *',
+  timeZone:        'America/Fortaleza',
+  region:          REGION,
+  timeoutSeconds:  300,
+  memory:          '256MiB',
+  retryCount:      0,
+}, async (event) => {
+  try {
+    await carteiraRegraJobHandler(event);
+  } catch (err) {
+    console.error('[carteira-regra] ERRO:', err.message);
   }
 });
 

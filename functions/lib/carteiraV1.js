@@ -25,7 +25,9 @@ const DIAS_REATIVACAO = 120;
 const SCHEMA = 'carteira-v1';
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 const ENT_RE = /^(GC_NATIVE:\d{1,20}|MR4_LINKED:[A-Za-z0-9_-]{1,40})$/;
-const TIPOS_EVENTO = Object.freeze(['CARTEIRA_CRIADA', 'TRANSFERENCIA', 'CORRECAO_ADMINISTRATIVA']);
+// N35.29: eventos automáticos da regra definitiva (carteiraRegra.js) — primeira venda, criação na reativação e R2.
+const TIPOS_EVENTO = Object.freeze(['CARTEIRA_CRIADA', 'TRANSFERENCIA', 'CORRECAO_ADMINISTRATIVA',
+  'CARTEIRA_CRIADA_PRIMEIRA_VENDA', 'CARTEIRA_CRIADA_REATIVACAO', 'REATIVACAO_120D_PRIMEIRA_VENDA']);
 // Campos do documento de carteira (whitelist). Justificativa de cada um no relatório N35.25.
 const CAMPOS_CARTEIRA = Object.freeze(['schemaVersion', 'portfolioId', 'ownerUid', 'ownerDesde',
   'origemComercialUid', 'origemComercialGestaoClickId', 'criadoEm', 'atualizadoEm', 'versao']);

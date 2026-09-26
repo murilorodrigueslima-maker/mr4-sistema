@@ -180,6 +180,60 @@ function validateIdentity(perfil360) {
   }
 }
 
+// ── N35.25.1: âncora ESTÁVEL da carteira comercial ────────────────────────────
+//
+// O commercialEntityId da fila MUDA quando um cliente GC é vinculado ao MR4:
+//   GC_NATIVE:<gcId>  →  MR4_LINKED:<mr4Id>   (worklistUniverso passa a pular o gcId vinculado)
+// A carteira NÃO pode depender dessa chave. O único ID técnico presente nas duas formas e que nunca muda
+// é o ID do cliente no GestãoClick (gcId): direto em GC_NATIVE; em MR4_LINKED via clientes/{mr4Id}.gestaoClickId.
+// Âncora da carteira = "GC:<gcId>". Resolução centralizada AQUI (nenhum outro módulo interpreta prefixos).
+// Sem PII: só IDs técnicos. MR4 sem vínculo GC → não resolve (falha fechada: sem carteira, nunca "carteira nova").
+
+const PORTFOLIO_ANCHOR_PREFIX = 'GC:';
+const PORTFOLIO_ANCHOR_RE = /^GC:\d{1,20}$/;
+
+/** Normaliza gestaoClickId (nos cadastros aparece como número OU string) → string de dígitos ou null. */
+function normalizeGestaoClickId(v) {
+  if (v === null || v === undefined) return null;
+  const s = String(v).trim();
+  return /^\d{1,20}$/.test(s) ? s.replace(/^0+(?=\d)/, '') : null;
+}
+
+function portfolioAnchorFromGcId(gcId) {
+  const g = normalizeGestaoClickId(gcId);
+  if (!g) throw new Error('portfolioAnchorFromGcId: gcId inválido');
+  return PORTFOLIO_ANCHOR_PREFIX + g;
+}
+
+/**
+ * Resolve qualquer commercialEntityId para a âncora estável da carteira.
+ * @param {string} commercialEntityId
+ * @param {{ gcIdForMr4: (mr4Id:string) => (string|number|null) }} links — vínculo MR4→GC (clientes/{mr4Id}.gestaoClickId)
+ * @returns {{ status:'RESOLVED', anchorId, gcId, source, mr4Id } | { status:'UNRESOLVED', reason, source?, mr4Id? }}
+ */
+function resolvePortfolioAnchor(commercialEntityId, links) {
+  let parsed;
+  try { parsed = parseCommercialEntityId(commercialEntityId); } catch (e) { return { status: 'UNRESOLVED', reason: 'ID_INVALIDO' }; }
+  if (parsed.source === SOURCES.GC_NATIVE) {
+    const gcId = normalizeGestaoClickId(parsed.stableId);
+    if (!gcId) return { status: 'UNRESOLVED', reason: 'ID_INVALIDO', source: parsed.source };
+    return { status: 'RESOLVED', anchorId: PORTFOLIO_ANCHOR_PREFIX + gcId, gcId, source: parsed.source, mr4Id: null };
+  }
+  const mr4Id = parsed.stableId;
+  const raw = links && typeof links.gcIdForMr4 === 'function' ? links.gcIdForMr4(mr4Id) : undefined;
+  const gcId = normalizeGestaoClickId(raw);
+  if (!gcId) return { status: 'UNRESOLVED', reason: raw === undefined ? 'VINCULO_DESCONHECIDO' : 'MR4_SEM_VINCULO_GC', source: parsed.source, mr4Id };
+  return { status: 'RESOLVED', anchorId: PORTFOLIO_ANCHOR_PREFIX + gcId, gcId, source: parsed.source, mr4Id };
+}
+
+/** Identidades conhecidas (derivadas, NÃO armazenadas) de uma âncora: a atual da fila e os aliases técnicos. */
+function knownIdentitiesForGc(gcId, mr4Ids) {
+  const g = normalizeGestaoClickId(gcId);
+  const list = (mr4Ids || []).filter(Boolean).map(String).sort();
+  const aliases = [buildCommercialEntityId({ source: SOURCES.GC_NATIVE, gestaoClickId: g }), ...list.map(m => buildCommercialEntityId({ source: SOURCES.MR4_LINKED, mr4ClientId: m }))];
+  return { anchorId: PORTFOLIO_ANCHOR_PREFIX + g, current: list.length === 1 ? aliases[1] : aliases[0], aliases, ambiguous: list.length > 1 };
+}
+
 // ── Exports ───────────────────────────────────────────────────────────────────
 
 module.exports = {
@@ -190,4 +244,11 @@ module.exports = {
   commercialEntityIdFromPerfil360,
   buildOpportunityInstanceId,
   validateIdentity,
+  // N35.25.1
+  PORTFOLIO_ANCHOR_PREFIX,
+  PORTFOLIO_ANCHOR_RE,
+  normalizeGestaoClickId,
+  portfolioAnchorFromGcId,
+  resolvePortfolioAnchor,
+  knownIdentitiesForGc,
 };

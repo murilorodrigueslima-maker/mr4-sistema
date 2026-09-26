@@ -462,6 +462,24 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Coleção: carteira_comercial (N35.26 — publicada para a Onda 1) ──
+    // Vínculo estrutural cliente → vendedor responsável, SEPARADO de worklist/claim/transferência.
+    // Gestão lê tudo; vendedor (operar EXPLÍCITO, sem atalho admin) lê só documentos da própria carteira.
+    // Escrita APENAS via Admin SDK (migração controlada da N35.26; nenhuma escrita pelo cliente/navegador).
+    function temModuloOperarFilaExplicito() {
+      return isDualRoleAtivo() &&
+        get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('modulos', []).hasAny(['fila-comercial-operar']);
+    }
+    match /carteira_comercial/{entidadeId} {
+      allow read:  if isGestor() || temModuloGestaoFilaExplicito() ||
+                   (temModuloOperarFilaExplicito() && resource.data.ownerUid == request.auth.uid);
+      allow write: if false;
+    }
+    match /carteira_comercial_historico/{eventoId} {
+      allow read:  if isGestor() || temModuloGestaoFilaExplicito();
+      allow write: if false;
+    }
+
     // ── Coleção: interacoes_fila (N35.10/N35.12/N35.12S) ─────────────────────
     // Estado operacional canário da Fila Comercial.
     // Escrita APENAS via Admin SDK (Cloud Function). Frontend: somente leitura.

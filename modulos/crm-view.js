@@ -143,7 +143,8 @@
   function limitesRetorno(hoje) { return { min: somarDias(hoje, 1), max: somarDias(hoje, 180) }; }
 
   function dataBR(ymd) { if (!ymd || !/^\d{4}-\d{2}-\d{2}/.test(ymd)) return ''; var p = String(ymd).slice(0, 10).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
-  function moedaBR(v) { var n = Number(v); if (!isFinite(n)) return ''; return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  // ausente (null/undefined/'') → '' (a tela omite); nunca vira "R$ 0,00"
+  function moedaBR(v) { if (v === null || v === undefined || v === '') return ''; var n = Number(v); if (!isFinite(n)) return ''; return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function horaBR(iso) {
     try { return new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); } catch (e) { return ''; }
   }

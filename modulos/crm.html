@@ -206,7 +206,7 @@ const fnRelease = httpsCallable(funcs, 'releaseOpportunity');
 const fnConsulta = httpsCallable(funcs, 'crmConsulta');
 const V = window.CrmView;
 
-const S = { uid: null, nome: '', podeOperar: false, gestao: false, doc: null, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
+const S = { uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
   indicadores: null, aba: 'hoje', aberto: null, sel: {}, enviando: new Set(), erros: {} };
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -240,6 +240,10 @@ const SECOES = [
 ];
 
 function renderHoje() {
+  if (!S.docCarregado || !S.opCarregado) {                      // ainda carregando: não afirmar que a lista "não foi gerada"
+    document.getElementById('avisoHoje').innerHTML = ''; document.getElementById('secoes').innerHTML = '<div class="carregando">Carregando a sua lista…</div>';
+    renderKpis(); return;
+  }
   const agoraMs = Date.now();
   S.visao = V.montarHoje({ doc: S.doc, opMap: S.opMap, uid: S.uid, hoje: hoje(), agoraMs, podeOperar: S.podeOperar });
   const v = S.visao;
@@ -306,6 +310,7 @@ function painelRegistro(id) {
 
 // ── Render: AGENDA ───────────────────────────────────────────────────────────────────────────────────
 function renderAgenda() {
+  if (!S.opCarregado) { document.getElementById('agenda').innerHTML = '<div class="carregando">Carregando a agenda…</div>'; document.getElementById('agendaDepois').textContent = ''; return; }
   const a = V.montarAgenda({ opMap: S.opMap, uid: S.uid, hoje: hoje(), agoraMs: Date.now() });
   const col = (k, titulo) => `<div class="col ${k}"><h3>${titulo}<span>${a[k].length}</span></h3>${a[k].length ? a[k].map(it =>
     `<button class="ag-item" data-a="cliente" data-ent="${esc(it.commercialEntityId)}"><div class="ag-nome">${esc(it.nomeCliente || 'Cliente')}</div>
@@ -490,11 +495,12 @@ onAuthStateChanged(auth, async u => {
   } catch (e) { location.href = '../login.html'; return; }
   document.getElementById('carregando').hidden = true;
   document.getElementById('viewHoje').hidden = false;
-  onSnapshot(doc(db, 'fila_comercial', 'worklist'), s => { S.doc = s.exists() ? s.data() : null; render(); }, err => console.warn('[crm] worklist:', err.code));
+  onSnapshot(doc(db, 'fila_comercial', 'worklist'), s => { S.doc = s.exists() ? s.data() : null; S.docCarregado = true; render(); },
+    err => { console.warn('[crm] worklist:', err.code); S.docCarregado = true; render(); toast('Não foi possível carregar a lista de hoje.', true); });
   onSnapshot(collection(db, 'interacoes_fila'), s => {
     s.docChanges().forEach(ch => { if (ch.type === 'removed') S.opMap.delete(ch.doc.id); else S.opMap.set(ch.doc.id, ch.doc.data()); });
-    render();
-  }, err => console.warn('[crm] interacoes:', err.code));
+    S.opCarregado = true; render();
+  }, err => { console.warn('[crm] interacoes:', err.code); S.opCarregado = true; render(); toast('Não foi possível carregar os atendimentos.', true); });
   setInterval(render, 60000);          // virada de dia / expiração de claim sem recarregar
   atualizarIndicadores();
 });

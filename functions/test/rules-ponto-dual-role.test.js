@@ -199,10 +199,20 @@ describe('DR-2: funcionário dual-role (ponto em modulos) → ALLOW admin', () =
     const db = testEnv.authenticatedContext(UID_DR_DUAL).firestore();
     await assertSucceeds(db.collection('registros').doc('dr-reg-comum').get());
   });
-  test('cria registro → ALLOW', async () => {
+  // PONTO 2.0 F0 (P1-05): antes o teste criava registro para o PRÓPRIO funcId (autoedição) e esperava ALLOW.
+  // Agora: registro de OUTRO funcionário → ALLOW; o próprio → DENY (ninguém lança/corrige o próprio ponto).
+  test('cria registro de outro funcionário → ALLOW', async () => {
     const db = testEnv.authenticatedContext(UID_DR_DUAL).firestore();
     await assertSucceeds(
       db.collection('registros').doc('dr-reg-new').set({
+        funcId: FUNC_ID_COMUM, data: '2026-09-03', tipo: 'entrada', hora: '08:00:00',
+      })
+    );
+  });
+  test('cria registro do PRÓPRIO funcId → DENY (SELF_EDIT_PROTECTION)', async () => {
+    const db = testEnv.authenticatedContext(UID_DR_DUAL).firestore();
+    await assertFails(
+      db.collection('registros').doc('dr-reg-self').set({
         funcId: FUNC_ID_DUAL, data: '2026-09-03', tipo: 'entrada', hora: '08:00:00',
       })
     );

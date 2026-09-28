@@ -95,11 +95,30 @@ function calcSaldoDia(totalMin, jornadaMin) {
   return totalMin - jornadaMin;
 }
 
+// PONTO 2.0 F0 (P1-01): assinadoEm pode ser string ISO (legado) OU Timestamp (fluxo atual, serverTimestamp()).
+// Devolve 'YYYY-MM-DD' (dia em America/Fortaleza para Timestamp) ou '' — nunca lança.
+function dataIsoDe(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'string') return v.slice(0, 10);
+  let d = null;
+  if (typeof v.toDate === 'function') d = v.toDate();
+  else if (typeof v.seconds === 'number') d = new Date(v.seconds * 1000);
+  else if (Object.prototype.toString.call(v) === '[object Date]') d = v;
+  if (!d || isNaN(d)) return '';
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Fortaleza', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+}
+
+// PONTO 2.0 F0 (P0-02): registros substituídos por uma correção aprovada continuam gravados (auditoria),
+// mas não entram no cálculo. Registros antigos não têm o campo → cálculo histórico idêntico ao anterior.
+function registrosEfetivos(registros) {
+  return (registros || []).filter(r => r && !r.substituidoPor);
+}
+
 // Constrói objeto dias { 'YYYY-MM-DD': { entrada, saida_almoco, ... } } a partir de registros.
 // lancadoPorJustificativa: batida corretiva aprovada pelo gestor sempre prevalece.
 function buildDiasFromRegistros(registros) {
   const dias = {};
-  registros.forEach(r => {
+  registrosEfetivos(registros).forEach(r => {
     if (!dias[r.data]) dias[r.data] = {};
     if (!dias[r.data][r.tipo] || r.lancadoPorJustificativa)
       dias[r.data][r.tipo] = r.hora;
@@ -287,7 +306,7 @@ function buildEspelhoSnapshot(funcionario, registros, creditos, justificativas, 
   const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
   const TIPOS_SEM_CREDITO = ['Falta injustificada', 'Folga não remunerada', 'Suspensão disciplinar', 'Home Office'];
 
-  const regsDoMes  = (registros      || []).filter(r => r.data && r.data.startsWith(mes));
+  const regsDoMes  = registrosEfetivos(registros).filter(r => r.data && r.data.startsWith(mes));
   const credDoMes  = (creditos        || []).filter(c => c.data && c.data.startsWith(mes));
   const justifDoMes = (justificativas || []).filter(j => j.data && j.data.startsWith(mes) && j.status === 'aprovado');
 
@@ -416,6 +435,8 @@ function canonicalizarSnapshot(snapshot) {
 // Gera as linhas HTML (<tr>) do corpo da tabela de espelho a partir de um snapshot.
 // Usada tanto por ponto.html (gestor) quanto por ponto-func.html (funcionário),
 // eliminando duplicação da lógica de renderização.
+// PONTO 2.0 F0 (P1-04): ocorrência vem de justificativa (texto do funcionário) — sempre escapada
+function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"'`]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c])); }
 function renderEspelhoRowsHTML(snap) {
   const NOMES_DIA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   return snap.dias.map(d => {
@@ -452,7 +473,7 @@ function renderEspelhoRowsHTML(snap) {
       `<td style="color:#111;">${d.saida        || '—'}</td>` +
       `<td style="${totalColor}">${totalLabel}</td>` +
       `<td style="${saldoColor}">${saldoStr}</td>` +
-      `<td style="${ocorrColor}font-size:10px;">${d.ocorrencia || ''}</td>` +
+      `<td style="${ocorrColor}font-size:10px;">${escHtml(d.ocorrencia || '')}</td>` +
       `</tr>`;
   }).join('');
 }

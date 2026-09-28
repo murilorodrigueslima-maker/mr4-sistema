@@ -767,6 +767,16 @@ html,body{overflow-x:hidden;}
         </button>
       </div>
 
+      <!-- Estado: não confirmado (PONTO 2.0 F0) — verifica o estado real antes de permitir nova intenção -->
+      <div id="est-incerto" style="display:none;">
+        <div class="comprovante" role="status" aria-live="polite">
+          <div class="comp-titulo" id="incerto-titulo">Não foi possível confirmar. Verificando o estado…</div>
+          <div class="comp-row" id="incerto-msg" style="display:block"></div>
+        </div>
+        <button class="btn-ok" id="btn-incerto-retentar" style="display:none" onclick="retentarIntencao()">Tentar novamente</button>
+        <button class="btn-ok" id="btn-incerto-descartar" style="display:none;background:#fff;color:#5f6368;border:1px solid #dadce0" onclick="descartarIntencao()">Não registrar</button>
+      </div>
+
       <!-- Estado: comprovante -->
       <div id="est-comp" style="display:none;">
         <div class="comprovante" id="comp-content"></div>
@@ -944,7 +954,7 @@ window._fbGetOne = async (c, id) => {
 
 // Registro de ponto via Cloud Function (server-side: uid, hora, GPS, sequência)
 // Funcionário NÃO grava diretamente em registros — regra FAIL CLOSED nas Firestore Rules.
-window._registrarPonto = httpsCallable(functions, 'registrarPonto');
+window._registrarPonto = httpsCallable(functions, 'registrarPonto', { timeout: 20000 }); // F0: 20 s → deadline-exceeded → reconcilia pela intenção (antes: 70 s)
 
 // Escrita genérica própria — valida funcId quando presente, injeta authUid
 window._fbSetOwn = async function(colName, id, data) {
@@ -1012,6 +1022,13 @@ const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200;
 let funcAtivo=null, locAtual=null;
 let justifAtualId=null, espelhoAtualFuncId=null;
 let batidaEmProgresso=false; // guard: evita duplo-toque em btn-bater
+// PONTO 2.0 F0 (P1-04): texto do usuário nunca vira HTML/JS
+function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));}
+// id usado dentro de onclick="...('ID')": só formato seguro (entidades HTML seriam decodificadas antes do JS)
+function sid(v){v=String(v==null?'':v);return /^[A-Za-z0-9_.:-]{1,160}$/.test(v)?v:'';}
+// texto curto dentro de onclick (ex.: rótulo de mês): remove aspas, barra invertida e sinais de tag
+function sjs(v){return String(v==null?'':v).replace(/['"\\<>`]/g,'');}
+
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
 // Cache de leitura — TTL 30s. Invalidado explicitamente após cada escrita na coleção.
@@ -1019,7 +1036,8 @@ const _funcCache={};const _FUNC_CACHE_TTL=30000;
 async function fbGet(c,fid){
   const now=Date.now();
   if(_funcCache[c]&&(now-_funcCache[c].ts)<_FUNC_CACHE_TTL)return _funcCache[c].data;
-  const data=await window._fbGetAll(c,fid!==undefined?fid:(funcAtivo&&funcAtivo.id));
+  let data=await window._fbGetAll(c,fid!==undefined?fid:(funcAtivo&&funcAtivo.id));
+  if(c==='registros')data=registrosEfetivos(data);   // PONTO 2.0 F0 (P0-02): substituídos não contam (continuam gravados)
   _funcCache[c]={data,ts:now};
   return data;
 }
@@ -1060,9 +1078,10 @@ function iniciarApp(){
   if(funcAtivo.cargo)document.getElementById('func-cargo-top').textContent=funcAtivo.cargo;
   // Avatar no header
   const av=document.getElementById('func-avatar-header');
-  if(funcAtivo.foto){av.innerHTML=`<img src="${funcAtivo.foto}" alt="Foto de ${funcAtivo.nome}" loading="lazy">`;}
+  if(funcAtivo.foto){av.innerHTML=`<img src="${esc(funcAtivo.foto)}" alt="Foto de ${esc(funcAtivo.nome)}" loading="lazy">`;}
   else{av.textContent=iniciais(funcAtivo.nome);}
   iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();
+  if(lerIntencaoPendente())reconciliarIntencao();                 // PONTO 2.0 F0: refresh após enviar
   document.getElementById('justif-data').value=hoje();
   document.getElementById('justif-anexo').addEventListener('change',e=>{
     const f=e.target.files[0];document.getElementById('justif-anexo-nome').textContent=f?f.name:'';
@@ -1111,33 +1130,47 @@ async function proxPonto(regsAll){
   return null;
 }
 
+// ── PONTO 2.0 F0 — intenção da batida (idempotência no servidor) ────────────────
+// Um toque = uma intenção {requestId, tipoEsperado}. Reenviar a MESMA intenção nunca gera outra batida:
+// o servidor responde JA_PROCESSADO. A intenção fica guardada até ser confirmada, para sobreviver a refresh/timeout.
+const INTENCAO_TTL_MS=10*60*1000;
+function chaveIntencao(){return 'ponto_intencao_'+(funcAtivo&&funcAtivo.id);}
+function novoRequestId(){
+  try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID().replace(/-/g,'');}catch(e){}
+  return Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+}
+function lerIntencaoPendente(){try{const v=JSON.parse(localStorage.getItem(chaveIntencao())||'null');return v&&v.requestId?v:null;}catch(e){return null;}}
+function salvarIntencao(i){try{localStorage.setItem(chaveIntencao(),JSON.stringify(i));}catch(e){}}
+function limparIntencao(){try{localStorage.removeItem(chaveIntencao());}catch(e){}}
+function mostrarEstado(id){['est-aguardando','est-proc','est-comp','est-gps-bloqueado','est-incerto'].forEach(x=>{const el=document.getElementById(x);if(el)el.style.display=(x===id?'block':'none');});}
+const ERROS_INCERTOS=['functions/unavailable','functions/deadline-exceeded','functions/internal','functions/unknown','functions/cancelled','functions/aborted'];
+
 async function iniciarBatida(){
   if(batidaEmProgresso)return;
   batidaEmProgresso=true;
-  const prox=await proxPonto();
-  if(!prox){notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
+  if(lerIntencaoPendente()){batidaEmProgresso=false;reconciliarIntencao();return;}   // há uma batida não confirmada: verificar antes
+  mostrarEstado('est-proc');                                                          // feedback imediato
+  const prox=await proxPonto().catch(()=>null);
+  if(!prox){mostrarEstado('est-aguardando');notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
   // GPS bloqueante: PRESENCIAL exige localização dentro do raio
   if((funcAtivo.modalidade||'PRESENCIAL')==='PRESENCIAL'){
     if(locAtual===null){
       document.getElementById('gps-erro-msg').textContent='Localização GPS ainda não obtida. Certifique-se de permitir o acesso à localização e tente novamente.';
-      document.getElementById('est-aguardando').style.display='none';
-      document.getElementById('est-gps-bloqueado').style.display='block';
+      mostrarEstado('est-gps-bloqueado');
       batidaEmProgresso=false;
       return;
     }
     const dist=distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG);
     if(dist>RAIO){
       document.getElementById('gps-erro-msg').textContent=`Você está a ${Math.round(dist)}m da empresa (raio permitido: ${RAIO}m). Aproxime-se para bater o ponto.`;
-      document.getElementById('est-aguardando').style.display='none';
-      document.getElementById('est-gps-bloqueado').style.display='block';
+      mostrarEstado('est-gps-bloqueado');
       batidaEmProgresso=false;
       return;
     }
   }
-  // Mudar botão para estado de processamento
-  document.getElementById('est-aguardando').style.display='none';
-  document.getElementById('est-proc').style.display='block';
-  finalizarBatida();
+  const intencao={requestId:novoRequestId(),tipoEsperado:prox.tipo,criadoEm:Date.now(),data:hoje()};
+  salvarIntencao(intencao);
+  finalizarBatida(intencao);
 }
 window.iniciarBatida=iniciarBatida;
 
@@ -1149,30 +1182,80 @@ function tentarNovamenteLoc(){
 }
 window.tentarNovamenteLoc=tentarNovamenteLoc;
 
-async function finalizarBatida(){
-  // Chama Cloud Function — server valida uid, hora, GPS, sequência
+async function finalizarBatida(intencao){
+  // Chama Cloud Function — server valida uid, hora, GPS, sequência e a INTENÇÃO (requestId + tipoEsperado)
   // horaCliente é enviada apenas para auditoria de desvio de relógio
+  mostrarEstado('est-proc');
   const payload={
     lat:         locAtual?.lat ?? null,
     lng:         locAtual?.lng ?? null,
     horaCliente: hojeHora(),
     facialScore: null,
     foto:        null,
+    requestId:   intencao.requestId,
+    tipoEsperado:intencao.tipoEsperado,
   };
   try{
     const result=await window._registrarPonto(payload);
     const reg=result.data;
+    limparIntencao();
     delete _funcCache['registros']; // novo registro — invalida cache antes de renderizar
-    document.getElementById('est-proc').style.display='none';
+    mostrarEstado(null);
     mostrarComp(reg,reg.dentroRaio);renderHistDia();renderBancoFunc();
   }catch(e){
-    document.getElementById('est-proc').style.display='none';
-    document.getElementById('est-aguardando').style.display='block';
-    const msg=e?.details?.message||e?.message||'Erro ao salvar ponto.';
+    const codigo=e?.details?.codigo||null;
+    if(!codigo&&(ERROS_INCERTOS.includes(e?.code)||!e?.code)){
+      // Não sabemos se o servidor gravou: NÃO liberar nova intenção antes de verificar
+      batidaEmProgresso=false;
+      reconciliarIntencao();
+      return;
+    }
+    limparIntencao();                                       // resposta definitiva do servidor: a intenção terminou
+    delete _funcCache['registros'];
+    mostrarEstado('est-aguardando');
+    let msg=e?.message||'Erro ao salvar ponto.';
+    if(codigo==='TIPO_ESPERADO_DIVERGENTE')msg='Seu ponto mudou desde que a tela abriu (talvez registrado em outro aparelho). Confira as batidas de hoje antes de continuar.';
+    else if(codigo==='JA_REGISTRADO'||codigo==='DIA_COMPLETO')msg='Esta batida já estava registrada. Confira as batidas de hoje.';
     notif(msg,'vermelho');
     batidaEmProgresso=false;
+    voltarPonto();renderHistDia();
   }
 }
+
+// Verifica no Firestore se a intenção pendente foi gravada (refresh, timeout, resposta perdida)
+async function reconciliarIntencao(){
+  const i=lerIntencaoPendente();
+  if(!i){mostrarEstado('est-aguardando');return;}
+  if(Date.now()-i.criadoEm>INTENCAO_TTL_MS||i.data!==hoje()){limparIntencao();mostrarEstado('est-aguardando');voltarPonto();return;}
+  mostrarEstado('est-incerto');
+  document.getElementById('incerto-titulo').textContent='Não foi possível confirmar. Verificando o estado…';
+  document.getElementById('incerto-msg').textContent='';
+  document.getElementById('btn-incerto-retentar').style.display='none';
+  document.getElementById('btn-incerto-descartar').style.display='none';
+  try{
+    delete _funcCache['registros'];
+    const regs=await fbGet('registros');
+    const gravado=regs.find(r=>r.requestId===i.requestId);
+    if(gravado){limparIntencao();mostrarEstado(null);mostrarComp(gravado,gravado.dentroRaio);renderHistDia();renderBancoFunc();return;}
+    document.getElementById('incerto-titulo').textContent='A batida não foi confirmada.';
+    document.getElementById('incerto-msg').textContent='Nenhuma batida foi gravada para esta tentativa. Você pode tentar de novo (sem risco de registrar duas vezes).';
+  }catch(e){
+    document.getElementById('incerto-titulo').textContent='Sem conexão para verificar agora.';
+    document.getElementById('incerto-msg').textContent='Tentar de novo usa a mesma tentativa: o servidor não registra duas vezes.';
+  }
+  document.getElementById('btn-incerto-retentar').style.display='block';
+  document.getElementById('btn-incerto-descartar').style.display='block';
+}
+window.reconciliarIntencao=reconciliarIntencao;
+function retentarIntencao(){
+  const i=lerIntencaoPendente();
+  if(!i||batidaEmProgresso){reconciliarIntencao();return;}
+  batidaEmProgresso=true;
+  finalizarBatida(i);                                        // MESMO requestId: idempotente no servidor
+}
+window.retentarIntencao=retentarIntencao;
+function descartarIntencao(){limparIntencao();mostrarEstado('est-aguardando');voltarPonto();}
+window.descartarIntencao=descartarIntencao;
 
 function mostrarComp(reg,dentroRaio){
   const locTxt=dentroRaio===true?'Dentro do raio':dentroRaio===false?'Fora do raio':'Não obtida';
@@ -1183,8 +1266,8 @@ function mostrarComp(reg,dentroRaio){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
       Ponto registrado
     </div>
-    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${funcAtivo.nome}</span></div>
-    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel||reg.tipo||'—'}</span></div>
+    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${esc(funcAtivo.nome)}</span></div>
+    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${esc(reg.tipoLabel||reg.tipo||'—')}</span></div>
     <div class="comp-row"><span class="comp-label">Horário (servidor)</span><span class="comp-val">${horaExib}</span></div>
     <div class="comp-row"><span class="comp-label">Localização</span><span class="comp-val ${locClass}">${locTxt}</span></div>`;
   document.getElementById('est-comp').style.display='block';
@@ -1192,8 +1275,7 @@ function mostrarComp(reg,dentroRaio){
 
 async function voltarPonto(){
   batidaEmProgresso=false;
-  document.getElementById('est-comp').style.display='none';
-  document.getElementById('est-aguardando').style.display='block';
+  mostrarEstado('est-aguardando');
   obterLoc();
   const prox=await proxPonto();
   const btn=document.getElementById('btn-bater');
@@ -1339,11 +1421,11 @@ async function renderJustifFunc(){
   el.innerHTML=justifs.map(j=>`
     <div class="justif-item">
       <div class="justif-header">
-        <span class="justif-titulo">${fmtData(j.data)} — ${j.motivo}</span>
+        <span class="justif-titulo">${fmtData(j.data)} — ${esc(j.motivo)}</span>
         <span class="badge ${j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado'}">${j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovada':'Rejeitada'}</span>
       </div>
-      ${j.descricao?`<div class="justif-desc">${j.descricao}</div>`:''}
-      ${j.obsGestor?`<div class="justif-gestor">Gestor: ${j.obsGestor}</div>`:''}
+      ${j.descricao?`<div class="justif-desc">${esc(j.descricao)}</div>`:''}
+      ${j.obsGestor?`<div class="justif-gestor">Gestor: ${esc(j.obsGestor)}</div>`:''}
     </div>`).join('');
 }
 
@@ -1362,15 +1444,15 @@ async function verMinhaFolha(){
     const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel,espExist);
     let btnAssin='';
     if(espExist&&espExist.assinado){
-      btnAssin=`<div class="assinado-ok">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
+      btnAssin=`<div class="assinado-ok">✓ Espelho assinado em ${fmtData(dataIsoDe(espExist.assinadoEm))}</div>`;
     }else if(espExist){
-      btnAssin=`<div style="margin-top:10px;"><button class="btn-primary" onclick="abrirAssinar('${espExist.id}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
+      btnAssin=`<div style="margin-top:10px;"><button class="btn-primary" onclick="abrirAssinar('${sid(espExist.id)}','${sid(funcAtivo.id)}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
     }else{
       btnAssin=`<div class="sem-espelho-aviso">Espelho ainda não gerado pelo gestor para este mês. Solicite ao gestor que gere o espelho.</div>`;
     }
     cont.innerHTML=html+btnAssin;
   }catch(err){
-    cont.innerHTML=`<div style="font-size:12px;color:var(--danger);">Erro ao carregar: ${err.message}</div>`;
+    cont.innerHTML=`<div style="font-size:12px;color:var(--danger);">Erro ao carregar: ${esc(err.message)}</div>`;
   }
 }
 window.verMinhaFolha=verMinhaFolha;
@@ -1384,12 +1466,12 @@ async function renderEspelhosFunc(){
   el.innerHTML=espelhos.map(e=>`
     <div class="espelho-func-card">
       <div>
-        <div class="espelho-info-mes">${e.mesLabel||e.mes}</div>
-        <div class="espelho-info-status">${e.assinado?'Assinado em '+fmtData(e.assinadoEm?.slice(0,10)):'Aguardando sua assinatura'}</div>
+        <div class="espelho-info-mes">${esc(e.mesLabel||e.mes)}</div>
+        <div class="espelho-info-status">${e.assinado?'Assinado em '+fmtData(dataIsoDe(e.assinadoEm)):'Aguardando sua assinatura'}</div>
       </div>
       ${e.assinado
         ?`<span class="badge assinado">✓ Assinado</span>`
-        :`<button class="btn-assinar" onclick="abrirAssinar('${e.id}','${e.funcId}','${e.mes}','${e.mesLabel||e.mes}')">Assinar</button>`
+        :`<button class="btn-assinar" onclick="abrirAssinar('${sid(e.id)}','${sid(e.funcId)}','${sjs(e.mes)}','${sjs(e.mesLabel||e.mes)}')">Assinar</button>`
       }
     </div>`).join('');
 }
@@ -1455,7 +1537,7 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
     <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">
       <div style="font-size:13px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div>
       <div style="font-size:15px;font-weight:700;">Espelho de Ponto — ${nomeMes}/${ano}</div>
-      <div style="font-size:11px;color:#555;">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div>
+      <div style="font-size:11px;color:#555;">${esc(func.nome)} · ${esc(func.cargo||'')} · Jornada: ${esc(func.jornada||8)}h/dia</div>
       ${snap.geradoEm?`<div style="font-size:10px;color:#888;margin-top:2px;">Gerado em ${new Date(snap.geradoEm).toLocaleString('pt-BR')}</div>`:''}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:480px;">

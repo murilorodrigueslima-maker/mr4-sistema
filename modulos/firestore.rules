@@ -55,6 +55,12 @@ service cloud.firestore {
       return meuPerfil().funcionarioId;
     }
 
+    // PONTO 2.0 F0 (P1-05): ninguém usa privilégio administrativo sobre o PRÓPRIO ponto
+    // (vale para gestor, admin e dual-role). Sem vínculo de funcionário → nunca é "próprio".
+    function naoEhProprioPonto(fid) {
+      return fid != meuPerfil().get('funcionarioId', '__sem_vinculo__');
+    }
+
     // ── Funções auxiliares — segurança comercial ───────────────────────────────
     //
     // BILLING IMPORTANTE:
@@ -171,14 +177,24 @@ service cloud.firestore {
 
     match /registros/{regId} {
       allow read:             if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create, update, delete: if temModulo('ponto') || temAcessoModulo('ponto');
+      // PONTO 2.0 F0 (P0-02): batida original é IMUTÁVEL e não pode ser apagada pelo cliente.
+      //   create: lançamento administrativo (ex.: correção aprovada) — nunca do próprio ponto;
+      //   update: só marcar a substituição por uma correção, uma única vez, sem tocar hora/tipo/data;
+      //   delete: proibido (a trilha fica completa).
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId);
+      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
+        naoEhProprioPonto(resource.data.funcId) &&
+        !('substituidoPor' in resource.data) &&
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['substituidoPor', 'substituidoEm', 'substituidoPorJustificativa']);
+      allow delete: if false;
     }
 
     // ── Coleção: justificativas ────────────────────────────────────────────────
 
     match /justificativas/{justifId} {
       allow read:   if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) || (
+      allow create: if ((temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId)) || (
         isFuncionario() &&
         request.resource.data.funcId == meuFuncId() &&
         request.resource.data.status == 'pendente' &&
@@ -188,6 +204,10 @@ service cloud.firestore {
       // Server timestamp: respondidoEm deve ser avaliado no momento do servidor (request.time).
       // Imutabilidade: após a resposta, esses três campos não podem ser alterados nem removidos.
       allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
+        naoEhProprioPonto(resource.data.funcId) &&                                    // PONTO 2.0 F0 (P1-05)
+        naoEhProprioPonto(request.resource.data.funcId) &&
+        // PONTO 2.0 F0: decisão só a partir de 'pendente' (impede 2ª aprovação/reversão silenciosa)
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) || resource.data.status == 'pendente') &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorUid']) ||
          request.resource.data.respondidoPorUid == request.auth.uid) &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorEmail']) ||
@@ -203,14 +223,17 @@ service cloud.firestore {
         (!('respondidoEm'       in resource.data) ||
          ('respondidoEm'       in request.resource.data &&
           resource.data.respondidoEm       == request.resource.data.respondidoEm));
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && resource.data.status == 'pendente';
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && resource.data.status == 'pendente' && naoEhProprioPonto(resource.data.funcId);
     }
 
     // ── Coleção: creditos_jornada ──────────────────────────────────────────────
 
     match /creditos_jornada/{creditoId} {
       allow read:  if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow write: if temModulo('ponto') || temAcessoModulo('ponto');
+      // PONTO 2.0 F0 (P1-05): crédito de jornada nunca no próprio ponto
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId);
+      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId) && naoEhProprioPonto(request.resource.data.funcId);
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId);
     }
 
     // ── Coleção: espelhos ──────────────────────────────────────────────────────
@@ -219,7 +242,7 @@ service cloud.firestore {
       allow read: if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
 
       // Gestor/dual-role cria: espelho sempre nasce não-assinado.
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && request.resource.data.assinado == false;
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && request.resource.data.assinado == false && naoEhProprioPonto(request.resource.data.funcId);
 
       // Gestor atualiza:
       //   Campos estruturais (funcId, mes, versao, versaoAnteriorId) são imutáveis após create.
@@ -227,6 +250,7 @@ service cloud.firestore {
       //   Espelho assinado: snapshot, hash e campos de assinatura são imutáveis.
       //   Finalização de v1 (revisaoEmAndamento/substituido) é feita pela Cloud Function (Admin SDK).
       allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
+        naoEhProprioPonto(resource.data.funcId) &&                                    // PONTO 2.0 F0 (P1-05)
         !request.resource.data.diff(resource.data).affectedKeys()
           .hasAny(['funcId', 'mes', 'versao', 'versaoAnteriorId']) &&
         (
@@ -254,7 +278,7 @@ service cloud.firestore {
           request.resource.data.status == 'assinado');
 
       // Gestor/dual-role exclui: apenas espelhos não assinados.
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && !resource.data.assinado;
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && !resource.data.assinado && naoEhProprioPonto(resource.data.funcId);
     }
 
     // ── Coleção: avaliacoes ────────────────────────────────────────────────────

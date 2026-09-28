@@ -53,6 +53,8 @@ const LABEL_PONTO = {
 };
 
 // ── Handler: registrarPonto ───────────────────────────────────────────────────
+// PONTO 2.0 F0 (P0-01): batida idempotente por intenção (requestId + tipoEsperado) — ver lib/pontoBatida.js
+const pontoBatida = require('./lib/pontoBatida');
 
 async function registrarPontoHandler(request) {
   // 1. Autenticação obrigatória
@@ -88,6 +90,9 @@ async function registrarPontoHandler(request) {
 
   // 4. Payload do cliente (campos controlados pelo servidor são ignorados se enviados)
   const { lat, lng, horaCliente, facialScore, foto } = request.data || {};
+  let intencao;
+  try { intencao = pontoBatida.lerIntencao(request.data); }
+  catch (e) { throw new HttpsError('invalid-argument', 'Dados da batida inválidos (' + e.codigo + ').'); }
 
   // 5. Validação de GPS
   let dentroRaio = null;
@@ -115,88 +120,24 @@ async function registrarPontoHandler(request) {
   // 7. Hora oficial do servidor (America/Fortaleza — nunca do cliente)
   const { data, hora } = fortalezaAgora();
 
-  // 8. Sequência + gravação em transação
-  const registrosRef = db.collection('registros');
-
-  let tipoRegistro    = null;
-  let tipoLabel       = null;
-  let deterministicId = null; // funcId_data_tipo — garante unicidade atômica
-
-  await db.runTransaction(async (tx) => {
-    // 8a. Registros de hoje — sem orderBy (sort em memória; não exige índice na transação)
-    const snap = await tx.get(
-      registrosRef
-        .where('funcId', '==', funcId)
-        .where('data',   '==', data),
-    );
-    const regsHoje = snap.docs
-      .map(d => d.data())
-      .sort((a, b) => {
-        // Quando dois registros têm a mesma hora (ss precision), usa criadoEm como tie-break
-        if (a.hora !== b.hora) return a.hora > b.hora ? 1 : -1;
-        const ta = a.criadoEm instanceof admin.firestore.Timestamp ? a.criadoEm.toMillis() : 0;
-        const tb = b.criadoEm instanceof admin.firestore.Timestamp ? b.criadoEm.toMillis() : 0;
-        return ta - tb;
-      });
-
-    const ultimo = regsHoje[regsHoje.length - 1];
-
-    // 8b. Próximo tipo na sequência
-    if (!ultimo)                               tipoRegistro = 'entrada';
-    else if (ultimo.tipo === 'entrada')        tipoRegistro = 'saida_almoco';
-    else if (ultimo.tipo === 'saida_almoco')   tipoRegistro = 'retorno_almoco';
-    else if (ultimo.tipo === 'retorno_almoco') tipoRegistro = 'saida';
-    else throw new HttpsError('failed-precondition', 'Ponto do dia já completo.');
-
-    tipoLabel       = LABEL_PONTO[tipoRegistro];
-    // ID determinístico: garante que dois commits simultâneos para o mesmo tipo
-    // conflitem atomicamente — Firestore aborta e faz retry; no retry o doc já existe.
-    deterministicId = funcId + '_' + data + '_' + tipoRegistro;
-
-    // 8c. Unicidade atômica — lê o doc determinístico para registrá-lo no read-set
-    //     da transação. Se outra transação concorrente já o criou, o Firestore vai
-    //     abortar esta e reexecutar; na reexecução o exists() vai ser true → already-exists.
-    const dupSnap = await tx.get(registrosRef.doc(deterministicId));
-    if (dupSnap.exists) {
-      throw new HttpsError('already-exists', 'Este tipo de ponto já foi registrado para esta data.');
-    }
-
-    // 8d. Cooldown (anti-duplo-clique em rede lenta — segunda camada de proteção)
-    if (ultimo) {
-      const criadoEm = ultimo.criadoEm instanceof admin.firestore.Timestamp
-        ? ultimo.criadoEm.toMillis()
-        : (typeof ultimo.criadoEm === 'string' ? new Date(ultimo.criadoEm).getTime() : 0);
-      if (Date.now() - criadoEm < COOLDOWN_MS()) {
-        throw new HttpsError('resource-exhausted', 'Aguarde alguns segundos antes de registrar outro ponto.');
-      }
-    }
-
-    // 8e. Grava com ID determinístico dentro da transação
-    tx.set(registrosRef.doc(deterministicId), {
-      id:          deterministicId,
-      funcId,                                              // SERVIDOR
-      funcNome:    func.nome || '',                        // SERVIDOR
-      authUid:     uid,                                    // SERVIDOR
-      modalidade,                                          // SERVIDOR (do banco)
-      data,                                                // SERVIDOR
-      hora,                                                // SERVIDOR
-      tipo:        tipoRegistro,                           // SERVIDOR
-      tipoLabel,                                           // SERVIDOR
-      lat:         validarLatLng(lat, lng) ? lat  : null, // CLIENTE/AUDITORIA
-      lng:         validarLatLng(lat, lng) ? lng  : null, // CLIENTE/AUDITORIA
-      dentroRaio,                                          // SERVIDOR (recalculado)
-      horaCliente: typeof horaCliente === 'string'
-        ? horaCliente.slice(0, 8) : null,                 // CLIENTE/AUDITORIA
-      facialScore: typeof facialScore === 'number'
-        ? Math.round(facialScore) : null,                 // CLIENTE/AUDITORIA
-      foto:        foto && typeof foto === 'string'
-        ? foto : null,                                    // CLIENTE/AUDITORIA
-      criadoEm:    admin.firestore.FieldValue.serverTimestamp(), // SERVIDOR
-    });
+  // 8. Sequência + gravação em UMA transação, idempotente por intenção (PONTO 2.0 F0 — P0-01)
+  const envCooldown = process.env.PONTO_COOLDOWN_MS;
+  const r = await pontoBatida.registrarBatidaTx(db, {
+    funcId, uid, func, data, hora, modalidade, dentroRaio,
+    lat:         validarLatLng(lat, lng) ? lat : null,                      // CLIENTE/AUDITORIA
+    lng:         validarLatLng(lat, lng) ? lng : null,                      // CLIENTE/AUDITORIA
+    horaCliente: typeof horaCliente === 'string' ? horaCliente.slice(0, 8) : null,
+    facialScore: typeof facialScore === 'number' ? Math.round(facialScore) : null,
+    foto:        foto && typeof foto === 'string' ? foto : null,
+    requestId: intencao.requestId, tipoEsperado: intencao.tipoEsperado,
+    agoraMs: Date.now(),
+    cooldownOverrideMs: envCooldown !== undefined ? parseInt(envCooldown, 10) : undefined,   // testes (PONTO_COOLDOWN_MS)
+    LABEL_PONTO, HttpsError, serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return {
-    ok: true, id: deterministicId, tipo: tipoRegistro, tipoLabel, data, hora, dentroRaio, modalidade,
+    ok: true, status: r.status, id: r.id, tipo: r.tipo, tipoLabel: r.tipoLabel, data: r.data, hora: r.hora,
+    dentroRaio: r.dentroRaio, modalidade: r.modalidade,
   };
 }
 

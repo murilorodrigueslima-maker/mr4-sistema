@@ -870,9 +870,14 @@ exports.processarCarteiraComercial = onSchedule({
 });
 
 // N35.11 — Callables da Fila Comercial (canário operacional)
-exports.claimOpportunity   = onCall({ region: REGION }, claimOpportunityHandler);
-exports.registerOutcome    = onCall({ region: REGION }, registerOutcomeHandler);
-exports.releaseOpportunity = onCall({ region: REGION }, releaseOpportunityHandler);
+// CRM 2.0 F1: handlers recebem SÓ `request` (o 2º argumento do onCall v2 é a resposta de streaming, não opções de teste)
+exports.claimOpportunity   = onCall({ region: REGION }, req => claimOpportunityHandler(req));
+exports.registerOutcome    = onCall({ region: REGION }, req => registerOutcomeHandler(req));
+exports.releaseOpportunity = onCall({ region: REGION }, req => releaseOpportunityHandler(req));
+
+// CRM MR4 2.0 — Fase 1: leitura do CRM (Cliente 360, cartões, indicadores). SOMENTE LEITURA; escopo validado no servidor.
+const { crmConsultaHandler } = require('./lib/crmConsulta');
+exports.crmConsulta        = onCall({ region: REGION }, req => crmConsultaHandler(req));
 
 // Handlers exportados para testes diretos (sem onCall/trigger wrapper)
 exports._registrarPontoHandler             = registrarPontoHandler;

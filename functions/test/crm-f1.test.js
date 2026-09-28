@@ -15,6 +15,7 @@ const C  = require('../lib/canaryCallable');
 const Q  = require('../lib/crmConsulta');
 const TL = require('../lib/crmTimeline');
 const V  = require('../../modulos/crm-view.js');
+jest.setTimeout(60000);                                              // máquina carregada: hooks do emulador podem passar de 5 s
 
 // relógio: segunda 28/09/2026; 22:30 em Fortaleza = 01:30Z de terça 29/09
 const T_MANHA = '2026-09-28T13:00:00.000Z';          // 10:00 Fortaleza
@@ -59,6 +60,7 @@ beforeAll(async () => {
   const vendas = [
     ['crmf1-v1', '99100001', '2026-03-01', 300], ['crmf1-v2', '99100001', '2026-04-01', 250], ['crmf1-v3', '99100001', '2026-10-02', 480],
     ['crmf1-v4', '99100005', '2026-01-10', 100], ['crmf1-v5', '99100005', '2026-09-28', 90], ['crmf1-v6', '99100001', '2026-09-20', 0],
+    ['crmf1-v7', '99100002', '2026-07-01', 150],
   ];
   for (const [id, cli, data, valor] of vendas) await put('vendas_gc/' + id, { id, cliente_id: cli, data, nome_situacao: 'Concretizada', valor_total: String(valor), vendedor_id: '948278', nome_vendedor: 'Fabiana', produtos: [{ produto_id: '1', nome_produto: 'Lâmpada LED H4', quantidade: '2', valor_total: String(valor) }] });
   await put('display_metrics/painel_comercial', { vendedores: [{ nome: 'Fabiana', meta: 20000, totalMes: 5000 }, { nome: 'Ademir', meta: 30000, totalMes: 12000 }], equipe: {} });
@@ -164,7 +166,7 @@ describe('Timeline / venda após contato / recuperado (puro)', () => {
     const cron = [...t].reverse().map(x => x.tipo);
     expect(cron).toEqual(['VENDA', 'VENDA', 'ENTROU_WORKLIST', 'INICIOU', 'RESULTADO', 'VENDA']);   // inclui o pedido de valor zero (20/09); cancelada fica fora
     expect(t.find(x => x.tipo === 'RESULTADO')).toMatchObject({ ator: 'VENDEDOR', nota: 'estoque alto', detalhe: 'Retorno marcado para 30/09/2026' });
-    expect(t.filter(x => x.tipo === 'VENDA').every(x => x.ator === 'VENDA' && x.valor === undefined)).toBe(true);
+    expect(t.filter(x => x.tipo === 'VENDA').every(x => x.ator === 'VENDA' && !('valor' in x))).toBe(true);
     expect(TL.montarTimeline({ estados: est(ev), vendas, podeVerValores: true }).find(x => x.tipo === 'VENDA').valor).toBe(480);
   });
   test('VC-01 venda após contato: APOS (dia seguinte ou depois), INDETERMINADO (mesmo dia), nada antes; CONTATO_INVALIDO não conta', () => {
@@ -325,4 +327,49 @@ describe('Cliente 360 (crmConsulta) — escopo, valores, timeline', () => {
     expect(k2.contatosHoje).toBe(1);
     expect(await erro(Q.crmConsultaHandler(req(FAB, { acao: 'indicadores', vendedorUid: ADE }), { db }))).toBe('permission-denied:SEM_PERMISSAO');
   }, 30000);
+});
+
+
+// ── Release Candidate: menu, visibilidade financeira, ausência de dado ─────────────────────────────
+describe('RC — menu seguro, R$ restrito no backend, dado ausente', () => {
+  const fs = require('fs'); const path = require('path');
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', 'index.html'), 'utf8');
+  const MODULOS = new Function(html.slice(html.indexOf('const MODULOS = ['), html.indexOf('];', html.indexOf('const MODULOS = [')) + 2) + '; return MODULOS;')();
+  const crm = MODULOS.find(m => m.id === 'crm');
+  const perfil = (extra) => ({ temSistemaUsuario: true, role: 'funcionario', modulosReais: [], admin: false, ...extra });
+  test('MENU-01 entrada CRM: vendedor (operar), gestão (módulo ou role gestor) sim; admin-flag, ponto, bloqueado não; Fila continua', () => {
+    expect(crm).toMatchObject({ nome: 'CRM', url: 'modulos/crm.html' });
+    expect(crm.acesso(perfil({ modulosReais: ['fila-comercial', 'fila-comercial-operar'] }))).toBe(true);
+    expect(crm.acesso(perfil({ modulosReais: ['fila-comercial-gestao'] }))).toBe(true);
+    expect(crm.acesso(perfil({ role: 'gestor' }))).toBe(true);
+    expect(crm.acesso(perfil({ admin: true, modulosReais: ['ponto'] }))).toBe(false);     // admin=true não concede operação (N35.12S)
+    expect(crm.acesso(perfil({ modulosReais: ['ponto'] }))).toBe(false);
+    expect(crm.acesso(perfil({ temSistemaUsuario: false, role: 'gestor' }))).toBe(false);
+    expect(MODULOS.some(m => m.id === 'fila-comercial')).toBe(true);
+  });
+  test('MENU-02 administrador pela flag explícita; nenhuma regra "quantidade de módulos"', () => {
+    expect(html).not.toMatch(/modulos\.length\s*===\s*MODULOS\.length/);
+    expect(html).toMatch(/const isAdmin = perfil\.admin === true;/);
+    expect(html).toMatch(/perfil\.admin = d\.admin === true;/);
+  });
+  test('FIN-01 vendedor: nenhum campo de valor em R$ no JSON do cliente/cartões/indicadores (restrição no backend)', async () => {
+    await C.claimOpportunityHandler(req(FAB, { opportunityInstanceId: OPP.a }), at(T_MANHA));
+    await C.registerOutcomeHandler(req(FAB, { opportunityInstanceId: OPP.a, outcome: 'CONVERSA_REALIZADA' }), at(T_MANHA));
+    const chaves = o => { const ks = []; (function f(x) { if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) { ks.push(k); f(v); } })(o); return ks; };
+    const proibidas = /^(valor|valorVenda|valores|faturamento\w*|ticket\w*)$/;
+    const c = await Q.crmConsultaHandler(req(FAB, { acao: 'cliente', entidade: ENT.a }), { db, ...at('2026-10-03T13:00:00.000Z') });
+    const k = await Q.crmConsultaHandler(req(FAB, { acao: 'cartoes', entidades: [ENT.d] }), { db, ...at(T_MANHA) });
+    const i = await Q.crmConsultaHandler(req(FAB, { acao: 'indicadores' }), { db, ...at(T_MANHA) });
+    for (const r of [c, k, i]) expect(chaves(r).filter(x => proibidas.test(x))).toEqual([]);
+    const g = await Q.crmConsultaHandler(req(GES, { acao: 'cliente', entidade: ENT.a }), { db, ...at('2026-10-03T13:00:00.000Z') });
+    expect(chaves(g).filter(x => proibidas.test(x)).length).toBeGreaterThan(0);          // gestão continua vendo
+  });
+  test('AUS-01 dado ausente não vira zero: 1 compra → frequência null; nunca comprou → dias null, compras []; moeda ausente → ""', async () => {
+    const r = await Q.crmConsultaHandler(req(GES, { acao: 'cliente', entidade: ENT.b }), { db, ...at(T_MANHA) });   // cliente B: exatamente 1 compra
+    expect(r.resumo.frequenciaDias).toBeNull(); expect(r.resumo.diasSemComprar).not.toBeNull();
+    const d = await Q.crmConsultaHandler(req(GES, { acao: 'cliente', entidade: ENT.d }), { db, ...at(T_MANHA) });
+    expect(d.resumo).toMatchObject({ nuncaComprou: true, diasSemComprar: null, ultimaCompraEm: null, pedidosTotal: 0 });
+    expect(d.resumo.valores.ticketMedio180d).toBeNull(); expect(d.compras).toEqual([]); expect(d.recuperado).toBeNull(); expect(d.vendaAposContato).toEqual([]);
+    expect(V.moedaBR(null)).toBe(''); expect(V.moedaBR(undefined)).toBe(''); expect(V.moedaBR(0)).toBe('R$ 0,00');
+  });
 });

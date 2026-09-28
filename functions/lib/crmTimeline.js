@@ -130,7 +130,7 @@ function montarTimeline({ estados = [], vendas = [], atribuicoes = [], carteiraH
   for (const v of vendasOrdenadas(vendas, { incluirValorZero: true })) {
     ev.push({ quando: v.data, precisao: 'DIA', ator: 'VENDA', tipo: 'VENDA', titulo: v.valor > 0 ? 'Pedido concretizado' : 'Pedido concretizado (sem valor)',
       detalhe: [v.vendedorNome ? 'Vendedor: ' + v.vendedorNome : null, v.itens != null ? v.itens + ' itens' : null].filter(Boolean).join(' · ') || null,
-      valor: podeVerValores ? v.valor : undefined });
+      ...(podeVerValores ? { valor: v.valor } : {}) });       // vendedor: a chave nem existe (N35.20.1)
   }
   for (const h of carteiraHistorico || []) if (h && h.criadoEm) {
     const t = String(h.tipoEvento || '');

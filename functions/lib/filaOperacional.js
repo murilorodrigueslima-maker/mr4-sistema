@@ -315,6 +315,22 @@ function releaseExpiredClaim(estado, now, timeoutHours) {
 
 // ── Registrar Outcome ─────────────────────────────────────────────────────────
 
+// CRM 2.0 F1 — observação opcional do vendedor, guardada no próprio evento OUTCOME_REGISTERED (meta.nota).
+// Histórica por construção: cada resultado é um evento novo em eventos[]; nada é sobrescrito.
+const NOTA_MAX_CHARS = 280;
+/**
+ * Normaliza a observação: remove caracteres de controle, apara espaços; vazio → null.
+ * Lança Error se não for texto ou se passar de NOTA_MAX_CHARS (contados por code point).
+ */
+function normalizarNota(nota) {
+  if (nota === undefined || nota === null) return null;
+  if (typeof nota !== 'string') throw new Error('observação deve ser texto');
+  const limpa = nota.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '').replace(/\r\n?/g, '\n').trim();
+  if (!limpa) return null;
+  if (Array.from(limpa).length > NOTA_MAX_CHARS) throw new Error(`observação acima de ${NOTA_MAX_CHARS} caracteres`);
+  return limpa;
+}
+
 /**
  * Registra o resultado de um atendimento e transiciona o estado.
  * Só pode ser chamado quando estado = EM_ATENDIMENTO.
@@ -375,6 +391,12 @@ function registrarOutcome(estado, operadorId, outcome, isoNow, meta = {}) {
   }
   // Outros outcomes preservam cooledUntil existente (pode já estar expirado)
 
+  // CRM 2.0 F1: meta.nota validada aqui também (defesa em profundidade; o callable já valida)
+  const metaFinal = { ...(meta || {}) };
+  if ('nota' in metaFinal) {
+    const nota = normalizarNota(metaFinal.nota);
+    if (nota) metaFinal.nota = nota; else delete metaFinal.nota;
+  }
   const evento = {
     tipo:         EVENT_TYPES.OUTCOME_REGISTERED,
     operadorId:   operadorId.trim(),
@@ -382,7 +404,7 @@ function registrarOutcome(estado, operadorId, outcome, isoNow, meta = {}) {
     estadoAntes:  ESTADOS.EM_ATENDIMENTO,
     estadoDepois: novoEstado,
     timestamp:    isoNow,
-    ...( Object.keys(meta).length > 0 ? { meta } : {} ),
+    ...( Object.keys(metaFinal).length > 0 ? { meta: metaFinal } : {} ),
   };
 
   return {
@@ -440,6 +462,8 @@ module.exports = {
   isEmAtendimento,
   isConcluida,
   getOperadorAtual,
+  normalizarNota,
+  NOTA_MAX_CHARS,
   getUltimoOutcome,
   // N35.9C
   getConsecutiveSemRespostaCount,

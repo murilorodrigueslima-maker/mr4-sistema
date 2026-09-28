@@ -24,6 +24,9 @@ const {
   dataComercial,
   OUTCOMES,
   ESTADOS,
+  EVENT_TYPES,
+  isCooledDown,
+  normalizarNota,
 } = require('./filaOperacional');
 const { sanitizeCommercialDisplayName } = require('./nomeExibicao');
 
@@ -36,6 +39,28 @@ const ENTITY_RE = /^(MR4_LINKED|GC_NATIVE):.+$/;
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function db() { return admin.firestore(); }
+
+// CRM 2.0 F1: relógio injetável só para testes (onCall passa `request`; um 2º argumento sem {now: fn} é ignorado)
+function agoraIso(opts) { return (opts && typeof opts.now === 'function' ? opts.now() : new Date()).toISOString(); }
+const HORIZONTE_RETORNO_DIAS = 180;
+/** YYYY-MM-DD de calendário real (rejeita 2026-02-31). */
+function dataValida(ymd) {
+  if (typeof ymd !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return false;
+  const d = new Date(ymd + 'T12:00:00Z');
+  return !isNaN(d) && d.toISOString().slice(0, 10) === ymd;
+}
+function somarDiasYmd(ymd, n) { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+/**
+ * CRM 2.0 F1 — dono reservado de um estado existente, verificado no SERVIDOR:
+ * follow-up aberto (não concluído, sem cooldown ativo, com nextFollowUpAt) pertence ao autor do último resultado.
+ * É a mesma regra que o gerador usa para devolver o retorno ao dono (dailyWorklist.compromissosPorEntidade).
+ */
+function donoReservado(estado, isoNow) {
+  if (!estado || estado.estado === ESTADOS.CONCLUIDA || !estado.nextFollowUpAt) return null;
+  if (isCooledDown(estado, isoNow)) return null;
+  const outs = (estado.eventos || []).filter(e => e && e.tipo === EVENT_TYPES.OUTCOME_REGISTERED);
+  return outs.length ? (outs[outs.length - 1].operadorId || null) : null;
+}
 
 /**
  * Verifica autenticação + permissão fila-comercial.
@@ -83,7 +108,7 @@ function validarOppId(id) {
  * Transação garante: sem double-claim, sem last-write-wins.
  * Claim expirado (>4h) é liberado automaticamente antes do novo claim.
  */
-async function claimOpportunityHandler(request) {
+async function claimOpportunityHandler(request, opts = {}) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Login necessário.');
   const uid = request.auth.uid;
 
@@ -94,7 +119,7 @@ async function claimOpportunityHandler(request) {
 
   const store  = db();
   const ref    = store.collection(COLL).doc(opportunityInstanceId);
-  const isoNow = new Date().toISOString();
+  const isoNow = agoraIso(opts);
   let novoEstado;
 
   await store.runTransaction(async tx => {
@@ -108,6 +133,17 @@ async function claimOpportunityHandler(request) {
 
     if (atrib && atrib.uid !== uid) {
       throw new HttpsError('permission-denied', 'Oportunidade atribuída a outro vendedor hoje.');
+    }
+    // CRM 2.0 F1 — sem atribuição de hoje (antes das 06:00, fim de semana, retorno futuro): as reservas continuam valendo
+    if (!atrib) {
+      const atribAnterior = wl ? ((wl.atribuicoes || {})[opportunityInstanceId] || null) : null;
+      if (atribAnterior && atribAnterior.uid && atribAnterior.uid !== uid) {
+        throw new HttpsError('permission-denied', 'Oportunidade reservada para outro vendedor.');
+      }
+      const dono = snap.exists ? donoReservado(snap.data(), isoNow) : null;
+      if (dono && dono !== uid) {
+        throw new HttpsError('permission-denied', 'Retorno reservado para outro vendedor.');
+      }
     }
 
     let estado;
@@ -164,20 +200,20 @@ async function claimOpportunityHandler(request) {
 
 /**
  * Registra resultado de um atendimento.
- * Entrada: { opportunityInstanceId, outcome, scheduledFor? (YYYY-MM-DD para PEDIU_RETORNO) }
+ * Entrada: { opportunityInstanceId, outcome, scheduledFor? (YYYY-MM-DD para PEDIU_RETORNO), nota? (≤280, CRM 2.0 F1) }
  * Saída:   { estado, outcome, nextFollowUpAt, cooledUntil }
  *
  * Apenas o owner do claim pode registrar outcome.
  * PEDIU_RETORNO exige scheduledFor no futuro.
  * Cooldown calculado server-side (SEM_INTERESSE_AGORA / 3× SEM_RESPOSTA).
  */
-async function registerOutcomeHandler(request) {
+async function registerOutcomeHandler(request, opts = {}) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Login necessário.');
   const uid = request.auth.uid;
 
   await verificarPermissaoFila(uid);
 
-  const { opportunityInstanceId, outcome, scheduledFor } = request.data || {};
+  const { opportunityInstanceId, outcome, scheduledFor, nota } = request.data || {};
   validarOppId(opportunityInstanceId);
 
   if (!outcome || !OUTCOMES[outcome]) {
@@ -187,20 +223,28 @@ async function registerOutcomeHandler(request) {
     );
   }
 
+  const isoNow = agoraIso(opts);
   // scheduledFor obrigatório e futuro para PEDIU_RETORNO
   if (outcome === OUTCOMES.PEDIU_RETORNO) {
-    if (!scheduledFor || typeof scheduledFor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(scheduledFor)) {
+    if (!dataValida(scheduledFor)) {
       throw new HttpsError('invalid-argument', 'scheduledFor (YYYY-MM-DD) obrigatório para PEDIU_RETORNO.');
     }
-    const hoje = new Date().toISOString().slice(0, 10);
+    // CRM 2.0 F1: "hoje" no fuso comercial (America/Fortaleza), não em UTC — corrige a fronteira das 21h às 24h
+    const hoje = dataComercial(isoNow);
     if (scheduledFor <= hoje) {
       throw new HttpsError('invalid-argument', 'Data do retorno deve ser futura (após hoje).');
     }
+    if (scheduledFor > somarDiasYmd(hoje, HORIZONTE_RETORNO_DIAS)) {
+      throw new HttpsError('invalid-argument', `Data do retorno deve estar nos próximos ${HORIZONTE_RETORNO_DIAS} dias.`);
+    }
   }
+  // CRM 2.0 F1: observação opcional (texto, trim, até 280) — validada aqui e de novo na máquina de estados
+  let notaLimpa;
+  try { notaLimpa = normalizarNota(nota); }
+  catch (e) { throw new HttpsError('invalid-argument', 'Observação inválida: ' + e.message + '.'); }
 
   const store  = db();
   const ref    = store.collection(COLL).doc(opportunityInstanceId);
-  const isoNow = new Date().toISOString();
   let novoEstado;
 
   await store.runTransaction(async tx => {
@@ -222,6 +266,7 @@ async function registerOutcomeHandler(request) {
     if (outcome === OUTCOMES.PEDIU_RETORNO && scheduledFor) {
       meta.scheduledFor = scheduledFor;
     }
+    if (notaLimpa) meta.nota = notaLimpa;
 
     novoEstado = registrarOutcome(estado, uid, outcome, isoNow, meta);
     tx.set(ref, novoEstado);
@@ -242,7 +287,7 @@ async function registerOutcomeHandler(request) {
  * Retorna oportunidade para DISPONIVEL com evento RELEASED no histórico.
  * Entrada: { opportunityInstanceId }
  */
-async function releaseOpportunityHandler(request) {
+async function releaseOpportunityHandler(request, opts = {}) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Login necessário.');
   const uid = request.auth.uid;
 
@@ -253,7 +298,7 @@ async function releaseOpportunityHandler(request) {
 
   const store  = db();
   const ref    = store.collection(COLL).doc(opportunityInstanceId);
-  const isoNow = new Date().toISOString();
+  const isoNow = agoraIso(opts);
   let novoEstado;
 
   await store.runTransaction(async tx => {

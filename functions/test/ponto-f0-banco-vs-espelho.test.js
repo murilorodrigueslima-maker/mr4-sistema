@@ -1,6 +1,7 @@
 'use strict';
-// PONTO MR4 2.0 — Fase 0 · Banco × Espelho. NÃO CORRIGE NADA: roda calcBancoMes e buildEspelhoSnapshot
-// sobre as MESMAS fixtures e documenta cada divergência (CASE / INPUT / BANK_RESULT / MIRROR_RESULT / ...).
+// PONTO MR4 2.0 — Banco × Espelho sobre as MESMAS 24 fixtures da Fase 0.
+// Fase 0 documentou 7 divergências (campos regra/bankPath/mirrorPath = diagnóstico HISTÓRICO do engine 3.0.0).
+// Motor único 4.0.0: as duas visualizações vêm de calcMes → BANK_VS_MIRROR_DIVERGENCES=0 (inclusive pendências).
 // Técnica: todos os outros dias úteis do mês até o dia do caso têm jornada exata (saldo 0) → a diferença de
 // totais vem só do dia do caso. hojeStr = dia do caso (dias seguintes não contam em nenhum dos dois motores).
 const fs = require('fs'), path = require('path'), vm = require('vm');
@@ -29,12 +30,12 @@ function base(mes, ate) {
 function rodar({ data, regs = [], creditos = [], justificativas = [], func = FUNC, mes }) {
   mes = mes || data.slice(0, 7);
   const registros = [...base(mes, data), ...regs];
-  const b = calcBancoMes(func, registros, creditos, mes, data);
+  const b = calcBancoMes(func, registros, creditos, mes, data, justificativas);
   const e = buildEspelhoSnapshot(func, registros, creditos, justificativas, mes, data);
   const dE = e.dias.find(x => x.data === data) || {};
   return {
     bank: { saldo: b.saldo, trabMin: b.trabMin, esperMin: b.esperMin, pendencia: b.pendencias.some(p => p.data === data) },
-    mirror: { saldo: e.totais.saldo, trabMin: e.totais.trabMin, esperMin: e.totais.esperMin, statusDia: dE.status, saldoDia: dE.saldoDia },
+    mirror: { saldo: e.totais.saldo, trabMin: e.totais.trabMin, esperMin: e.totais.esperMin, statusDia: dE.status, saldoDia: dE.saldoDia, pendencia: e.dias.some(x => x.data === data && x.pendente) },
   };
 }
 const H = '2026-09-15';   // terça
@@ -87,7 +88,7 @@ const CASOS = [
 ];
 
 const saida = [];
-describe('Banco × Espelho sobre fixtures idênticas (documentação, sem correção)', () => {
+describe('Banco × Espelho sobre fixtures idênticas — motor único (0 divergências)', () => {
   for (const c of CASOS) {
     test(c.caso, () => {
       let r;
@@ -97,10 +98,11 @@ describe('Banco × Espelho sobre fixtures idênticas (documentação, sem corre�
         const e = buildEspelhoSnapshot(c.input.func, regs, [], [], c.input.mes, c.input.data);
         r = { bank: { saldo: b.saldo, trabMin: b.trabMin, esperMin: b.esperMin }, mirror: { saldo: e.totais.saldo, trabMin: e.totais.trabMin, esperMin: e.totais.esperMin } };
       } else r = rodar(c.input);
-      const diverge = r.bank.saldo !== r.mirror.saldo || r.bank.trabMin !== r.mirror.trabMin || r.bank.esperMin !== r.mirror.esperMin;
+      const diverge = r.bank.saldo !== r.mirror.saldo || r.bank.trabMin !== r.mirror.trabMin || r.bank.esperMin !== r.mirror.esperMin ||
+        (r.bank.pendencia !== undefined && r.bank.pendencia !== r.mirror.pendencia);
       saida.push({ ...c, r, diverge });
-      // documentação: casos com "regra" SÃO divergências conhecidas; os demais devem coincidir
-      expect(diverge).toBe(!!c.regra);
+      // motor único: nenhum caso diverge (os 7 com "regra" eram as divergências do engine 3.0.0)
+      expect(diverge).toBe(false);
     });
   }
   afterAll(() => {

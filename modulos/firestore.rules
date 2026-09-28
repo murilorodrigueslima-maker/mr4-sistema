@@ -252,7 +252,7 @@ service cloud.firestore {
       allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
         naoEhProprioPonto(resource.data.funcId) &&                                    // PONTO 2.0 F0 (P1-05)
         !request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['funcId', 'mes', 'versao', 'versaoAnteriorId']) &&
+          .hasAny(['funcId', 'mes', 'versao', 'versaoAnteriorId', 'hashAssinado']) &&   // hashAssinado: só o funcionário, ao assinar
         (
           !resource.data.assinado ||
           !request.resource.data.diff(resource.data).affectedKeys()
@@ -264,7 +264,9 @@ service cloud.firestore {
       //   - assinadoEm deve ser serverTimestamp() — não aceitamos timestamp do cliente.
       //   - Espelho deve ter snapshot e hash antes de poder ser assinado.
       //   - Se status for enviado, deve ser 'assinado'.
-      //   - Somente os 5 campos de assinatura podem ser alterados.
+      //   - Somente os campos de assinatura podem ser alterados.
+      //   - PONTO 2.0 SIGNED_SNAPSHOT: hashAssinado (hash do espelho que o funcionário viu) deve ser igual ao
+      //     hashSnapshot atual do documento → se o gestor reenviar outra versão no meio, a assinatura é recusada.
       allow update: if isFuncionario() &&
         resource.data.funcId == meuFuncId() &&
         !resource.data.assinado &&
@@ -272,8 +274,9 @@ service cloud.firestore {
         resource.data.hashSnapshot != null &&
         request.resource.data.assinado == true &&
         request.resource.data.assinadoEm == request.time &&
+        request.resource.data.hashAssinado == resource.data.hashSnapshot &&
         request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor', 'status']) &&
+          .hasOnly(['assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor', 'status', 'hashAssinado']) &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) ||
           request.resource.data.status == 'assinado');
 

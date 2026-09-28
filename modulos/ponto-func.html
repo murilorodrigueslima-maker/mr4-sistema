@@ -1014,13 +1014,13 @@ onAuthStateChanged(auth, async user => {
 });
 </script>
 
-<script src="ponto-regras.js"></script>
+<script src="ponto-regras.js?v=4.0.0"></script>
 
 <script>
 const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200;
 // JORNADA_SABADO_MIN vem de ponto-regras.js
 let funcAtivo=null, locAtual=null;
-let justifAtualId=null, espelhoAtualFuncId=null;
+let justifAtualId=null, espelhoAtualFuncId=null, hashEspelhoAberto=null;  // hash do espelho exibido na assinatura (SIGNED_SNAPSHOT)
 let batidaEmProgresso=false; // guard: evita duplo-toque em btn-bater
 // PONTO 2.0 F0 (P1-04): texto do usuário nunca vira HTML/JS
 function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));}
@@ -1374,12 +1374,15 @@ async function renderBancoFunc(){
   const mes=sel?sel.value:mesAtual();
   const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));
   const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
-  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
+  const justF=(await fbGet('justificativas')).filter(j=>j.funcId===funcAtivo.id&&j.data&&j.data.startsWith(mes));
+  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justF);
   const saldoCls=saldo>=0?'positivo':'negativo';
   const saldoStr=(saldo>=0?'+':'')+fmtMin(saldo);
   let pendHtml='';
   if(pendencias.length>0){
-    pendHtml=`<div class="banco-aviso"><strong>⚠ ${pendencias.length} dia${pendencias.length>1?'s':''} com ponto incompleto</strong>${pendencias.map(p=>fmtData(p.data)).join(' · ')} — Regularize com seu gestor.</div>`;
+    const nInc=pendencias.filter(p=>p.tipo==='DATA_INCONSISTENCY').length;
+    const rotulo=nInc&&nInc===pendencias.length?'com inconsistência administrativa':nInc?'com pendência (ponto incompleto ou inconsistência)':'com ponto incompleto';
+    pendHtml=`<div class="banco-aviso"><strong>⚠ ${pendencias.length} dia${pendencias.length>1?'s':''} ${rotulo}</strong>${pendencias.map(p=>fmtData(p.data)).join(' · ')} — Regularize com seu gestor.</div>`;
   }
   document.getElementById('banco-func').innerHTML=`
     <div class="banco-grid">
@@ -1489,9 +1492,15 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
       fbGet('creditos_jornada'),
       fbGet('justificativas'),
     ]);
-    const {pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
+    const {pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justifs);
     const resultado=podeAssinarEspelho(pendencias,justifs,mes);
     if(!resultado.pode){notif(resultado.motivo,'vermelho');return;}
+    // SIGNED_SNAPSHOT: só assina se o documento enviado ainda corresponde ao cálculo atual do motor
+    const atual=buildEspelhoSnapshot(funcAtivo,regs,credF,justifs,mes,hoje());atual.funcId=funcAtivo.id;
+    if(!exist.snapshot||!exist.hashSnapshot||!snapshotsEquivalentes(exist.snapshot,atual)){
+      notif('Este espelho está desatualizado em relação aos seus registros. Peça ao gestor para gerar e enviar novamente.','vermelho');return;
+    }
+    hashEspelhoAberto=exist.hashSnapshot;
   }catch(err){
     console.error('Erro ao verificar pré-condições de assinatura:',err);
     notif('Erro ao verificar condições. Tente novamente.','vermelho');
@@ -1614,6 +1623,7 @@ async function confirmarAssinatura(){
   // do gestor em ponto.html. Enquanto isso, v1 continua com revisaoEmAndamento:true.
   await setDoc(doc(db, 'espelhos', espelhoAtualFuncId), {
     assinado: true, assinaturaImg, status: 'assinado',
+    hashAssinado: hashEspelhoAberto,  // prova do conteúdo visto: as Rules exigem == hashSnapshot atual do documento
     assinadoEm: serverTimestamp(),  // serverTimestamp validado pelas Rules (request.time)
     assinadoPor: funcAtivo.nome
   }, {merge: true});

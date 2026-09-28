@@ -365,6 +365,7 @@ describe('DR-7: funcionário dual-role assina espelho próprio → ALLOW (isFunc
         assinaturaImg:'data:image/png;base64,drtest',
         assinadoEm:   serverTimestamp(),
         assinadoPor:  'Func Dual DR',
+        hashAssinado: 'abc123abc123abc123abc123abc123abc123abc123abc123abc123abc123abc1',  // SIGNED_SNAPSHOT: hash do espelho visto == hashSnapshot
         status:       'assinado',
       })
     );

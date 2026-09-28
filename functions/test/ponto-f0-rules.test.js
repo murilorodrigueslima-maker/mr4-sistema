@@ -121,3 +121,28 @@ describe('P1-05 — ninguém edita/aprova/corrige o próprio ponto (chamada dire
     await assertSucceeds(dual.collection('justificativas').doc('j-d-nova').set({ id: 'j-d-nova', funcId: F_D, data: DIA, motivo: 'Atestado médico', descricao: 'x', status: 'pendente', lancadoPorGestor: false }));
   });
 });
+
+describe('SIGNED_SNAPSHOT — assinatura prova o conteúdo visto (motor único 4.0.0)', () => {
+  const HASH = 'f'.repeat(64);
+  const semear = () => testEnv.withSecurityRulesDisabled(async c => c.firestore().collection('espelhos').doc('esp-e-set').set({
+    id: 'esp-e-set', funcId: F_E, mes: '2026-09', versao: 1, versaoAnteriorId: null, assinado: false,
+    snapshot: { engineVersao: '4.0.0', dias: [], totais: {} }, hashSnapshot: HASH }));
+  const assinar = (uid, extra) => ctx(uid).collection('espelhos').doc('esp-e-set').update({
+    assinado: true, assinaturaImg: 'data:image/png;base64,SIG', assinadoEm: serverTimestamp(), assinadoPor: 'Func', status: 'assinado', ...extra });
+  test('SIG-01 funcionário assina com hashAssinado == hashSnapshot → ALLOW; documento fica imutável', async () => {
+    await semear();
+    await assertSucceeds(assinar(UID_E, { hashAssinado: HASH }));
+    expect((await ler('espelhos/esp-e-set')).hashAssinado).toBe(HASH);
+    await assertFails(ctx(UID_G).collection('espelhos').doc('esp-e-set').update({ snapshot: { engineVersao: '4.0.0', dias: [1], totais: {} } }));
+    await assertFails(ctx(UID_G).collection('espelhos').doc('esp-e-set').update({ hashAssinado: 'x' }));
+  });
+  test('SIG-02 hash diferente (gestor reenviou outra versão) ou ausente → DENY', async () => {
+    await semear();
+    await assertFails(assinar(UID_E, { hashAssinado: 'e'.repeat(64) }));
+    await assertFails(assinar(UID_E, {}));
+  });
+  test('SIG-03 gestor não pode gravar hashAssinado em espelho não assinado', async () => {
+    await semear();
+    await assertFails(ctx(UID_G).collection('espelhos').doc('esp-e-set').update({ hashAssinado: HASH }));
+  });
+});

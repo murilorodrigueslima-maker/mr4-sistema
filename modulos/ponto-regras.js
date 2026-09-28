@@ -114,167 +114,314 @@ function registrosEfetivos(registros) {
   return (registros || []).filter(r => r && !r.substituidoPor);
 }
 
-// Constrói objeto dias { 'YYYY-MM-DD': { entrada, saida_almoco, ... } } a partir de registros.
-// lancadoPorJustificativa: batida corretiva aprovada pelo gestor sempre prevalece.
+// ═══════════════════════════════════════════════════════════════════════════════
+// MOTOR ÚNICO DO DIA — engine 4.0.0 (PONTO 2.0 · unificação Banco × Espelho)
+//
+//   BATIDAS EFETIVAS + JORNADA + FERIADOS/CRÉDITOS + JUSTIFICATIVAS + PERÍODO APLICÁVEL
+//        ↓ calcDia()               (única implementação das regras)
+//   RESULTADO DO DIA (DAY_RESULT)
+//        ↓ calcMes()               (única soma)
+//   BANCO (calcBancoMes) · ESPELHO (buildEspelhoSnapshot) · PENDÊNCIAS · BLOQUEIO DE ASSINATURA
+//
+// Banco e Espelho NÃO calculam regras: só adaptam o resultado de calcMes().
+//
+// Regras oficiais (decisões de 28/09/2026):
+//   R1 FERIADO: não trabalhado → saldo 0; trabalhado → todas as horas trabalhadas viram saldo positivo
+//      (o crédito do feriado cobre a jornada). Batidas incompletas → PENDENTE (não fecha o dia).
+//   R2 ATESTADO + TRABALHO PARCIAL: abono completa o restante da jornada, limitado aos minutos do crédito
+//      e nunca além do necessário (abono = min(minutosCrédito, jornada − trabalhado)).
+//   R3 JUSTIFICATIVA DE AUSÊNCIA APROVADA SEM CRÉDITO: DATA_INCONSISTENCY (pendência; não abona, não desconta).
+//   R4 CORREÇÃO DUPLA LEGADA: vale a correção vigente mais recente (aprovadoEm, senão criadoEm);
+//      sem timestamp confiável ou empate → DATA_INCONSISTENCY (nunca escolhe pela ordem do Firestore).
+//   R5 CORREÇÃO DE BATIDA corrige só aquela batida; dia ainda incompleto → PENDENTE.
+//      Justificativa de AUSÊNCIA só abona através do crédito correspondente.
+//   R6 DOMINGO: jornada 0; sem trabalho → nada; trabalhado → horas viram saldo positivo; incompleto → PENDENTE.
+//   R7 PERÍODO: fora de inicioBancoHoras / afastamentoBanco / controleBancoHoras=false → sem falta, sem débito,
+//      sem pendência (batidas continuam visíveis).
+// Mantidos: DEC-1 (almoço obrigatório > 6h), DEC-4 (folga compensatória = débito), DEC-10 (férias = saldo 0),
+//   DEC-11/12 (sequência inválida / meia-noite → PENDENTE). Almoço < 1h conta como trabalhado
+//   (LUNCH_MINIMUM_RULE=NEEDS_FUTURE_BUSINESS_DECISION — comportamento atual preservado).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const TIPOS_PONTO = ['entrada', 'saida_almoco', 'retorno_almoco', 'saida'];
+// Motivos de justificativa aprovada que NÃO geram crédito (mesma lista usada por ponto.html ao aprovar).
+const TIPOS_SEM_CREDITO = ['Falta injustificada', 'Folga não remunerada', 'Suspensão disciplinar', 'Home Office'];
+
+const PENDENCIA = { PONTO_INCOMPLETO: 'PONTO_INCOMPLETO', DATA_INCONSISTENCY: 'DATA_INCONSISTENCY' };
+
+// Timestamp confiável em ms (Timestamp do Firestore, {seconds}, ISO string, Date). null se ausente/inválido.
+function tsMillis(v) {
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (typeof v === 'string') { const t = Date.parse(v); return isNaN(t) ? null : t; }
+  if (typeof v.toMillis === 'function') return v.toMillis();
+  if (typeof v.seconds === 'number') return v.seconds * 1000 + Math.floor((v.nanoseconds || 0) / 1e6);
+  if (Object.prototype.toString.call(v) === '[object Date]') return isNaN(v) ? null : v.getTime();
+  return null;
+}
+
+// Justificativa de CORREÇÃO DE BATIDA (vira batida corretiva) × justificativa de AUSÊNCIA (abona via crédito).
+function ehCorrecaoDeBatida(j) { return !!(j && j.tipoPonto && j.horarioPonto); }
+
+// R4 — batida vigente de UM tipo, entre os registros efetivos do dia.
+// Retorna { reg } ou { reg:null, inconsistencia }.
+function escolherBatida(regsTipo) {
+  const corretivas = regsTipo.filter(r => r.lancadoPorJustificativa);
+  if (corretivas.length === 1) return { reg: corretivas[0] };
+  if (corretivas.length > 1) {
+    const comTs = corretivas.map(r => ({ r, t: tsMillis(r.aprovadoEm) ?? tsMillis(r.criadoEm) }));
+    if (comTs.some(x => x.t == null)) return { reg: null, inconsistencia: 'CORRECAO_DUPLA_SEM_TIMESTAMP' };
+    comTs.sort((a, b) => b.t - a.t);
+    if (comTs[0].t === comTs[1].t) return { reg: null, inconsistencia: 'CORRECAO_DUPLA_EMPATE' };
+    return { reg: comTs[0].r };
+  }
+  if (regsTipo.length === 0) return { reg: null };
+  if (regsTipo.length === 1) return { reg: regsTipo[0] };
+  // Originais duplicados (só legado; hoje o ID é único por tipo/dia): determinístico — o mais antigo.
+  const ord = [...regsTipo].sort((a, b) =>
+    ((tsMillis(a.criadoEm) ?? Infinity) - (tsMillis(b.criadoEm) ?? Infinity)) ||
+    String(a.hora || '').localeCompare(String(b.hora || '')) ||
+    String(a.id || '').localeCompare(String(b.id || '')));
+  return { reg: ord[0] };
+}
+
+// Constrói objeto dias { 'YYYY-MM-DD': { entrada, saida_almoco, ... } } a partir de registros efetivos,
+// com a MESMA escolha de batida do motor (R4). Tipo com correção dupla inconsistente fica ausente.
 function buildDiasFromRegistros(registros) {
+  const porData = {};
+  registrosEfetivos(registros).forEach(r => { (porData[r.data] = porData[r.data] || []).push(r); });
   const dias = {};
-  registrosEfetivos(registros).forEach(r => {
-    if (!dias[r.data]) dias[r.data] = {};
-    if (!dias[r.data][r.tipo] || r.lancadoPorJustificativa)
-      dias[r.data][r.tipo] = r.hora;
+  Object.keys(porData).forEach(data => {
+    dias[data] = {};
+    TIPOS_PONTO.forEach(tipo => {
+      const esc = escolherBatida(porData[data].filter(r => r.tipo === tipo));
+      if (esc.reg) dias[data][tipo] = esc.reg.hora;
+    });
   });
   return dias;
 }
 
-// Engine único de cálculo de banco de horas.
-//
-// Parâmetros:
-//   funcionario — objeto com { jornada: '8' | '6' | ... }
-//   registros   — array já filtrado por funcId e mês
-//   creditos    — array já filtrado por funcId e mês (coleção creditos_jornada)
-//   mes         — 'YYYY-MM'
-//   hojeStr     — 'YYYY-MM-DD' (dias futuros são ignorados)
-//
-// Retorna: { trabMin, esperMin, saldo, diasTrab, pendencias }
-//   pendencias = [{ data: 'YYYY-MM-DD', tipo: 'PONTO_INCOMPLETO' }]
-//
-// Regras (DEC-1..DEC-14):
-//   FALTA INJUSTIFICADA  = sem registro + sem crédito → esperMin cresce, trabMin não.
-//   PONTO INCOMPLETO     = calcTotal=null → NEM esperMin NEM trabMin mudam (PENDENTE).
-//   PONTO COMPLETO       = calcTotal > null → trabMin/esperMin crescem; crédito pode ajustar (ver abaixo).
-//   CRÉDITO tipo férias  = saldo forçado 0; trabMin = esperMin = jornadaDia (ignora ponto se existir).
-//   CRÉDITO tipo feriado = sem ponto: saldo=0; com ponto: saldo = +t (horas extras ganhas).
-//   CRÉDITO tipo abono   = sem ponto: cobre jornada; com ponto: abono = max(0, jornada−t).
-//   CRÉDITO folga comp   = minutos=0 → débito do banco = −jornadaDia.
-//   HOME OFFICE          = não gera crédito; ponto é a fonte de verdade.
-//   DOMINGO sem ponto    = ignorado (sem falta, sem crédito).
-//   DOMINGO com ponto    = jornadaDia=0; trabalho conta como saldo positivo integral.
-//   SÁBADO               = jornadaDia = 210 min.
-//   SEQUÊNCIA INVÁLIDA   = calcTotal retorna null → PONTO_INCOMPLETO.
-//   MEIA-NOITE           = saída < entrada → calcTotal null → PONTO_INCOMPLETO.
-function calcBancoMes(funcionario, registros, creditos, mes, hojeStr) {
-  // PERIODIZAÇÃO: controleBancoHoras=false → funcionário não participa do banco.
-  if (funcionario.controleBancoHoras === false) {
-    return { trabMin: 0, esperMin: 0, saldo: 0, diasTrab: 0, pendencias: [] };
+// R7 — o dia pertence ao período aplicável do funcionário?
+function periodoDoDia(funcionario, dataStr) {
+  if (funcionario.controleBancoHoras === false) return { noPeriodo: false, motivo: 'FORA_DO_BANCO' };
+  if (funcionario.inicioBancoHoras && dataStr < funcionario.inicioBancoHoras) return { noPeriodo: false, motivo: 'ANTES_DO_INICIO' };
+  const a = funcionario.afastamentoBanco;
+  if (a && a.inicio && dataStr >= a.inicio && (!a.fim || dataStr <= a.fim)) return { noPeriodo: false, motivo: 'AFASTAMENTO' };
+  return { noPeriodo: true, motivo: null };
+}
+
+const ROTULO_FORA_PERIODO = { FORA_DO_BANCO: 'Fora do banco de horas', ANTES_DO_INICIO: 'Antes do início do banco', AFASTAMENTO: 'Afastamento' };
+const ROTULO_INCONSISTENCIA = {
+  JUSTIFICATIVA_SEM_CREDITO: 'Justificativa aprovada sem crédito',
+  CREDITO_SEM_MINUTOS: 'Crédito sem minutos',
+  CORRECAO_DUPLA_SEM_TIMESTAMP: 'Correção dupla sem data',
+  CORRECAO_DUPLA_EMPATE: 'Correção dupla empatada',
+};
+
+function minutosDoCredito(c) {
+  if (!c || c.minutos === null || c.minutos === undefined || c.minutos === '') return null;
+  const n = Number(c.minutos);
+  return Number.isFinite(n) && n >= 0 ? n : null;
+}
+
+/**
+ * MOTOR ÚNICO DO DIA.
+ * @param funcionario   { jornada, controleBancoHoras?, inicioBancoHoras?, afastamentoBanco? }
+ * @param dataStr       'YYYY-MM-DD'
+ * @param regsDia       registros do funcId nesse dia (quaisquer; substituídos são ignorados aqui)
+ * @param creditoD      crédito de jornada do dia (creditos_jornada) ou null
+ * @param justifsDia    justificativas do dia (qualquer status; só 'aprovado' conta)
+ * @returns DAY_RESULT  {
+ *   data, diaSemana, noPeriodo, foraPeriodoMotivo, jornadaPrevistaMin,
+ *   entrada, saidaAlmoco, retornoAlmoco, saida,           // batidas vigentes 'HH:MM'
+ *   trabalhadoMin,      // horas válidas trabalhadas (null se não há batida ou dia incompleto/inconsistente)
+ *   abonadoMin,         // parte coberta por crédito (feriado/atestado/férias/abono)
+ *   saldoMin,           // null quando o dia não entra no saldo
+ *   contaNoSaldo,       // entra em Banco e Espelho (esperado += jornada, saldo += saldoMin)
+ *   diaTrabalhado,      // conta em "dias trabalhados"
+ *   status,             // ok | credito | falta | incompleto | inconsistente | domingo | fora_periodo
+ *   pendente,           // true = STATUS PENDENTE (bloqueia assinatura)
+ *   pendencias,         // [{ tipo: PONTO_INCOMPLETO|DATA_INCONSISTENCY, motivo? }]
+ *   ocorrencia          // texto exibido
+ * }
+ */
+function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
+  const diaSemana = new Date(dataStr + 'T12:00:00').getDay();
+  const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
+  const jornadaDia = diaSemana === 0 ? 0 : diaSemana === 6 ? JORNADA_SABADO_MIN : jornMin;
+
+  const efetivos = registrosEfetivos(regsDia);
+  const batidas = {};
+  let inconsBatida = null;
+  TIPOS_PONTO.forEach(tipo => {
+    const esc = escolherBatida(efetivos.filter(r => r.tipo === tipo));
+    if (esc.inconsistencia && !inconsBatida) inconsBatida = esc.inconsistencia;
+    batidas[tipo] = esc.reg && esc.reg.hora ? esc.reg.hora.slice(0, 5) : null;
+  });
+  const temBatida = efetivos.length > 0;
+
+  const aprovadas = (justifsDia || []).filter(j => j && j.status === 'aprovado')
+    .sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')));
+  const ausencias = aprovadas.filter(j => !ehCorrecaoDeBatida(j));
+  const correcoes = aprovadas.filter(ehCorrecaoDeBatida);
+
+  const periodo = periodoDoDia(funcionario, dataStr);
+  const r = {
+    data: dataStr, diaSemana, noPeriodo: periodo.noPeriodo, foraPeriodoMotivo: periodo.motivo,
+    jornadaPrevistaMin: jornadaDia,
+    entrada: batidas.entrada, saidaAlmoco: batidas.saida_almoco, retornoAlmoco: batidas.retorno_almoco, saida: batidas.saida,
+    trabalhadoMin: null, abonadoMin: 0, saldoMin: null, contaNoSaldo: false, diaTrabalhado: false,
+    status: 'ok', pendente: false, pendencias: [],
+    ocorrencia: ausencias[0] ? (ausencias[0].motivo || '')
+      : correcoes[0] ? (correcoes[0].motivo || '')
+      : (creditoD && !temBatida ? (creditoD.motivo || '') : ''),
+  };
+  const pendenciar = (tipo, motivo, status) => {
+    r.pendencias.push(motivo ? { tipo, motivo } : { tipo });
+    r.pendente = true; r.status = status;
+  };
+  const t = inconsBatida ? null : calcTotal(batidas.entrada, batidas.saida_almoco, batidas.retorno_almoco, batidas.saida);
+
+  // R7 — fora do período aplicável: batidas visíveis, sem falta, sem débito, sem pendência.
+  if (!periodo.noPeriodo) {
+    r.trabalhadoMin = temBatida ? t : null;
+    r.status = 'fora_periodo';
+    r.jornadaPrevistaMin = 0;
+    if (!r.ocorrencia) r.ocorrencia = ROTULO_FORA_PERIODO[periodo.motivo] || '';
+    return r;
+  }
+  // R4 — correção dupla legada sem critério seguro
+  if (inconsBatida) {
+    pendenciar(PENDENCIA.DATA_INCONSISTENCY, inconsBatida, 'inconsistente');
+    r.ocorrencia = ROTULO_INCONSISTENCIA[inconsBatida];
+    return r;
+  }
+  // R6 — domingo sem batida: nada a contar (crédito em domingo é ignorado, DEC-7)
+  if (diaSemana === 0 && !temBatida) { r.status = 'domingo'; return r; }
+
+  const tipoCred = creditoD ? getTipoCredito(creditoD.motivo) : null;
+  const minCred = minutosDoCredito(creditoD);
+  // Crédito que não informa minutos não pode abonar nada com segurança (férias não dependem de minutos).
+  if (creditoD && tipoCred !== 'ferias' && minCred === null && jornadaDia > 0) {
+    pendenciar(PENDENCIA.DATA_INCONSISTENCY, 'CREDITO_SEM_MINUTOS', 'inconsistente');
+    r.ocorrencia = ROTULO_INCONSISTENCIA.CREDITO_SEM_MINUTOS + (creditoD.motivo ? ' (' + creditoD.motivo + ')' : '');
+    return r;
+  }
+  // R3 — ausência aprovada que deveria ter gerado crédito, mas o crédito não existe
+  if (!creditoD && jornadaDia > 0 && ausencias.some(j => !TIPOS_SEM_CREDITO.includes(j.motivo))) {
+    pendenciar(PENDENCIA.DATA_INCONSISTENCY, 'JUSTIFICATIVA_SEM_CREDITO', 'inconsistente');
+    r.trabalhadoMin = temBatida ? t : null;
+    const m = ausencias.find(j => !TIPOS_SEM_CREDITO.includes(j.motivo)).motivo;
+    r.ocorrencia = ROTULO_INCONSISTENCIA.JUSTIFICATIVA_SEM_CREDITO + (m ? ' (' + m + ')' : '');
+    return r;
   }
 
-  // inicioBancoHoras: 'YYYY-MM-DD' — dias anteriores são ignorados completamente.
-  const inicioBanco = funcionario.inicioBancoHoras || null;
-  // afastamentoBanco: { tipo, inicio:'YYYY-MM-DD', fim:'YYYY-MM-DD'|null }
-  // Dias dentro do período são ignorados — não geram falta.
-  const afastamento = funcionario.afastamentoBanco || null;
+  if (temBatida) {
+    // R1/R5/R6 + DEC-1/11/12 — dia com batida incompleta ou inválida nunca é fechado automaticamente
+    if (t === null) { pendenciar(PENDENCIA.PONTO_INCOMPLETO, null, 'incompleto'); return r; }
+    r.trabalhadoMin = t;
+    r.contaNoSaldo = true;
+    r.diaTrabalhado = true;
+    if (tipoCred === 'ferias') {
+      // DEC-10: férias → saldo 0 mesmo com ponto
+      r.abonadoMin = Math.max(0, jornadaDia - t);
+      r.saldoMin = 0;
+    } else if (tipoCred === 'feriado') {
+      // R1: crédito do feriado cobre a jornada → todas as horas trabalhadas viram saldo positivo
+      r.abonadoMin = Math.min(minCred, jornadaDia);
+      r.saldoMin = t + r.abonadoMin - jornadaDia;
+    } else if (tipoCred === 'abono') {
+      // R2: atestado/abono completa só o que falta, limitado aos minutos do crédito
+      r.abonadoMin = Math.min(minCred, Math.max(0, jornadaDia - t));
+      r.saldoMin = t + r.abonadoMin - jornadaDia;
+    } else {
+      // sem crédito relevante (null, folga compensatória): ponto normal; domingo tem jornada 0 (R6)
+      r.saldoMin = t - jornadaDia;
+    }
+    r.status = 'ok';
+    return r;
+  }
 
-  const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
+  if (creditoD) {
+    // dia sem batida coberto por crédito (feriado não trabalhado, atestado, férias, folga compensatória)
+    r.contaNoSaldo = true;
+    if (tipoCred === 'ferias') { r.abonadoMin = jornadaDia; r.saldoMin = 0; r.diaTrabalhado = true; r.status = 'credito'; return r; }
+    r.abonadoMin = Math.min(minCred, jornadaDia);
+    r.saldoMin = r.abonadoMin - jornadaDia;            // folga compensatória (0 min) = −jornada (DEC-4)
+    r.diaTrabalhado = r.abonadoMin > 0;
+    r.status = r.abonadoMin > 0 ? 'credito' : 'ok';
+    return r;
+  }
+
+  // falta: sem batida e sem crédito
+  r.contaNoSaldo = true;
+  r.saldoMin = -jornadaDia;
+  r.status = 'falta';
+  return r;
+}
+
+/**
+ * Mês completo a partir do motor do dia. Única soma usada por Banco e Espelho.
+ * Dias futuros (> hojeStr) não entram.
+ */
+function calcMes(funcionario, registros, creditos, justificativas, mes, hojeStr) {
   const [ano, mesNum] = mes.split('-').map(Number);
   const diasNoMes = new Date(ano, mesNum, 0).getDate();
+  const regsPorData = {}, credPorData = {}, justPorData = {};
+  (registros || []).forEach(x => { if (x && x.data && x.data.startsWith(mes)) (regsPorData[x.data] = regsPorData[x.data] || []).push(x); });
+  (creditos || []).forEach(x => { if (x && x.data && x.data.startsWith(mes)) credPorData[x.data] = x; });
+  (justificativas || []).forEach(x => { if (x && x.data && x.data.startsWith(mes)) (justPorData[x.data] = justPorData[x.data] || []).push(x); });
 
-  const diasMap = buildDiasFromRegistros(registros);
-  const creditoMap = {};
-  creditos.forEach(c => { creditoMap[c.data] = c; });
-
-  let trabMin = 0, esperMin = 0, diasTrab = 0;
-  const pendencias = [];
-
+  const dias = [];
   for (let d = 1; d <= diasNoMes; d++) {
-    const dataStr = `${ano}-${String(mesNum).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const diaSemana = new Date(ano, mesNum - 1, d).getDay();
-    const diaRegs = diasMap[dataStr];
-    const creditoD = creditoMap[dataStr];
-
-    // PERIODIZAÇÃO: antes do início do controle → ignorado completamente (sem falta, sem débito).
-    if (inicioBanco && dataStr < inicioBanco) continue;
-
-    // AFASTAMENTO: dentro do período de afastamento → ignorado completamente (sem falta).
-    if (afastamento && afastamento.inicio &&
-        dataStr >= afastamento.inicio &&
-        (!afastamento.fim || dataStr <= afastamento.fim)) continue;
-
-    // DEC-7: domingo sem ponto = ignorado (sem falta)
-    if (diaSemana === 0 && !diaRegs) continue;
-    if (dataStr > hojeStr) continue; // futuro: não conta
-
-    // DEC-7: domingo com ponto tem jornadaDia=0 (todo trabalho = saldo positivo)
-    const jornadaDia = diaSemana === 0 ? 0
-                     : diaSemana === 6 ? JORNADA_SABADO_MIN
-                     : jornMin;
-
-    if (diaRegs) {
-      const t = calcTotal(
-        diaRegs.entrada?.slice(0, 5),
-        diaRegs.saida_almoco?.slice(0, 5),
-        diaRegs.retorno_almoco?.slice(0, 5),
-        diaRegs.saida?.slice(0, 5)
-      );
-      if (t !== null && t !== undefined) {
-        const tipo = creditoD ? getTipoCredito(creditoD.motivo) : null;
-        if (tipo === 'ferias') {
-          // DEC-10: férias com ponto → saldo forçado 0
-          trabMin += jornadaDia;
-          esperMin += jornadaDia;
-        } else if (tipo === 'feriado') {
-          // DEC-8: feriado trabalhado → jornada abonada + horas reais = saldo positivo
-          trabMin += t + (creditoD.minutos || 0);
-          esperMin += jornadaDia;
-        } else if (tipo === 'abono') {
-          // DEC-9: atestado com ponto → abono cobre diferença; saldo nunca inflado
-          const abono = Math.max(0, jornadaDia - t);
-          trabMin += t + abono;
-          esperMin += jornadaDia;
-        } else {
-          // sem crédito relevante (null, folga_comp): ponto normal
-          trabMin += t;
-          esperMin += jornadaDia;
-        }
-        diasTrab++;
-      } else {
-        // ponto incompleto: nem trabMin nem esperMin mudam → saldo não consolidado
-        pendencias.push({ data: dataStr, tipo: 'PONTO_INCOMPLETO' });
-      }
-    } else if (creditoD) {
-      const tipo = getTipoCredito(creditoD.motivo);
-      if (tipo === 'ferias') {
-        // DEC-10: férias sem ponto → saldo=0
-        trabMin += jornadaDia;
-        esperMin += jornadaDia;
-      } else {
-        // feriado, abono, folga_comp: usa creditoD.minutos
-        // folga_comp: minutos=0 → débito = −jornadaDia (design intencional DEC-4)
-        trabMin += creditoD.minutos || 0;
-        esperMin += jornadaDia;
-      }
-      if ((creditoD.minutos || 0) > 0 || tipo === 'ferias') diasTrab++;
-    } else {
-      // falta injustificada: esperMin cresce, trabMin não → saldo decresce
-      esperMin += jornadaDia;
-    }
+    const dataStr = `${ano}-${String(mesNum).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    if (dataStr > hojeStr) continue;
+    dias.push(calcDia(funcionario, dataStr, regsPorData[dataStr] || [], credPorData[dataStr] || null, justPorData[dataStr] || []));
   }
+  let trabMin = 0, esperMin = 0, saldo = 0, diasTrab = 0, abonadoMin = 0;
+  const pendencias = [];
+  dias.forEach(x => {
+    if (x.contaNoSaldo) {
+      esperMin += x.jornadaPrevistaMin;
+      saldo += x.saldoMin;
+      trabMin += x.jornadaPrevistaMin + x.saldoMin;     // horas creditadas (trabalhado + abono), como no banco 3.x
+      abonadoMin += x.abonadoMin;
+      if (x.diaTrabalhado) diasTrab++;
+    }
+    x.pendencias.forEach(p => pendencias.push({ data: x.data, ...p }));
+  });
+  return { mes, dias, totais: { trabMin, esperMin, saldo, diasTrab, abonadoMin }, pendencias };
+}
 
-  const saldo = trabMin - esperMin;
-  return { trabMin, esperMin, saldo, diasTrab, pendencias };
+// BANCO DE HORAS — adaptador do motor único (não contém regra).
+// `justificativas` (6º parâmetro) é necessário para R3/R5; ausente = nenhuma justificativa.
+function calcBancoMes(funcionario, registros, creditos, mes, hojeStr, justificativas) {
+  const m = calcMes(funcionario, registros, creditos || [], justificativas || [], mes, hojeStr);
+  const { trabMin, esperMin, saldo, diasTrab } = m.totais;
+  return { trabMin, esperMin, saldo, diasTrab, pendencias: m.pendencias, dias: m.dias };
 }
 
 // Verifica se um espelho pode ser assinado.
 //
-// Bloqueia se:
-//   - Há pendências PONTO_INCOMPLETO no período (calculadas por calcBancoMes).
+// Bloqueia se (fonte = pendências do MOTOR ÚNICO, as mesmas do Banco e do Espelho):
+//   - Há dia PENDENTE no período: PONTO_INCOMPLETO ou DATA_INCONSISTENCY.
 //   - Há justificativas com status='pendente' no período (mês YYYY-MM).
 //
 // Permite mesmo com:
 //   - Saldo negativo, faltas já resolvidas (aprovadas), férias, atestado,
 //     folga compensatória, Home Office com ponto correto.
 //
-// Parâmetros:
-//   pendencias     — array de { data, tipo } retornado por calcBancoMes
-//   justificativas — array de justificativas do funcionário (qualquer mês)
-//   mes            — 'YYYY-MM' — filtra justificativas pelo período
-//
 // Retorna: { pode: bool, motivo: string|null }
 function podeAssinarEspelho(pendencias, justificativas, mes) {
-  if (pendencias.length > 0) {
+  const inconsist = (pendencias || []).filter(p => p.tipo === PENDENCIA.DATA_INCONSISTENCY);
+  if (inconsist.length > 0) {
+    return { pode: false, motivo: 'Existem inconsistências administrativas no período (' + inconsist.length + ' dia(s)) — procure o gestor' };
+  }
+  if ((pendencias || []).length > 0) {
     return { pode: false, motivo: 'Existem pontos incompletos no período' };
   }
-  const justifPendentes = justificativas.filter(
-    j => j.data.startsWith(mes) && j.status === 'pendente'
+  const justifPendentes = (justificativas || []).filter(
+    j => j.data && j.data.startsWith(mes) && j.status === 'pendente'
   );
   if (justifPendentes.length > 0) {
     return { pode: false, motivo: 'Existem justificativas pendentes no período' };
@@ -284,121 +431,150 @@ function podeAssinarEspelho(pendencias, justificativas, mes) {
 
 // ── Snapshot e versionamento de espelho ──────────────────────────────────────
 
-const VERSAO_ENGINE = '3.0.0';
+// 4.0.0 = motor único (calcDia/calcMes). Snapshots 3.x continuam renderizados e verificados com as regras 3.x.
+const VERSAO_ENGINE = '4.0.0';
+function ehSnapshotV4(snap) { return !!(snap && typeof snap.engineVersao === 'string' && /^4\./.test(snap.engineVersao)); }
 
-// Constrói snapshot estruturado de um espelho de ponto.
-// Usa os mesmos primitivos (calcTotal, getTipoCredito, JORNADA_SABADO_MIN) do
-// motor de banco de horas, eliminando implementação paralela de cálculo.
+// ESPELHO — adaptador do motor único (não contém regra).
+// O snapshot é o SIGNED_SNAPSHOT: tudo o que o funcionário vê e assina (linhas, totais, pendências, período),
+// congelado no documento; mudanças futuras no motor não alteram um snapshot já gravado.
 //
-// Parâmetros:
-//   funcionario    — { id?, nome, cargo, jornada }
-//   registros      — array de registros (todos do funcId; filtrado internamente por mes)
-//   creditos       — array de créditos_jornada (idem)
-//   justificativas — array de justificativas (idem; qualquer status)
-//   mes            — 'YYYY-MM'
-//   hojeStr        — 'YYYY-MM-DD' (dias futuros não entram no snapshot)
-//
-// Retorna: objeto snapshot sem 'geradoEm' — o caller define e adiciona antes
-// de canonicalizar, pois o timestamp pertence ao momento da persistência.
+// Parâmetros: funcionario { id?, nome, cargo, jornada, inicioBancoHoras?, afastamentoBanco?, controleBancoHoras? },
+//   registros/creditos/justificativas (todos do funcId; filtrados internamente por mês), mes 'YYYY-MM', hojeStr.
+// Retorna: snapshot sem 'geradoEm' — o caller define e adiciona antes de canonicalizar.
 function buildEspelhoSnapshot(funcionario, registros, creditos, justificativas, mes, hojeStr) {
-  const [ano, mesNum] = mes.split('-').map(Number);
-  const diasNoMes = new Date(ano, mesNum, 0).getDate();
-  const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
-  const TIPOS_SEM_CREDITO = ['Falta injustificada', 'Folga não remunerada', 'Suspensão disciplinar', 'Home Office'];
-
-  const regsDoMes  = registrosEfetivos(registros).filter(r => r.data && r.data.startsWith(mes));
-  const credDoMes  = (creditos        || []).filter(c => c.data && c.data.startsWith(mes));
-  const justifDoMes = (justificativas || []).filter(j => j.data && j.data.startsWith(mes) && j.status === 'aprovado');
-
-  const regsPorData = {};
-  regsDoMes.forEach(r => { if (!regsPorData[r.data]) regsPorData[r.data] = []; regsPorData[r.data].push(r); });
-  const credPorData  = {};
-  credDoMes.forEach(c  => { credPorData[c.data]  = c; });
-  const justifPorData = {};
-  justifDoMes.forEach(j => { justifPorData[j.data] = j; });
-
-  let trabMin = 0, esperMin = 0, diasTrab = 0;
-  const dias = [];
-
-  for (let d = 1; d <= diasNoMes; d++) {
-    const dataStr  = `${ano}-${String(mesNum).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const diaSemana = new Date(ano, mesNum - 1, d).getDay();
-    const ehSabado  = diaSemana === 6;
-    const ehDomingo = diaSemana === 0;
-    const ehFuturo  = dataStr > hojeStr;
-    const regsD     = regsPorData[dataStr]  || [];
-    const creditoD  = credPorData[dataStr]  || null;
-    const justifD   = justifPorData[dataStr] || null;
-
-    // Dias futuros fora do snapshot; domingos sem ponto incluídos só para exibição.
-    if (ehFuturo) continue;
-
-    const jornadaDia = ehDomingo ? 0 : ehSabado ? JORNADA_SABADO_MIN : jornMin;
-
-    if (ehDomingo && regsD.length === 0) {
-      dias.push({ data: dataStr, diaSemana, entrada: null, saidaAlmoco: null,
-                  retornoAlmoco: null, saida: null, totalMin: null, jornadaDia: 0,
-                  saldoDia: null, ocorrencia: '', status: 'domingo' });
-      continue;
-    }
-
-    // Batida: lancadoPorJustificativa prevalece (mesma lógica dos HTMLs).
-    const get = tipo => {
-      const j = regsD.find(r => r.tipo === tipo && r.lancadoPorJustificativa);
-      if (j) return j.hora ? j.hora.slice(0, 5) : null;
-      const r = regsD.find(r => r.tipo === tipo);
-      return r && r.hora ? r.hora.slice(0, 5) : null;
-    };
-
-    const e  = get('entrada');
-    const sa = get('saida_almoco');
-    const ra = get('retorno_almoco');
-    const s  = get('saida');
-
-    let totalMin = calcTotal(e, sa, ra, s);
-
-    const justifCredita = justifD && !TIPOS_SEM_CREDITO.includes(justifD.motivo);
-    if (totalMin === null && (creditoD || justifCredita))
-      totalMin = (creditoD && creditoD.minutos != null) ? creditoD.minutos : jornadaDia;
-
-    const ehIncompleto      = !ehDomingo && regsD.length > 0 && totalMin === null;
-    const saldoDia          = (!ehDomingo && !ehIncompleto && totalMin !== null) ? totalMin - jornadaDia : null;
-    const temCreditoSemPonto = !!(creditoD || justifCredita) && totalMin != null && totalMin > 0 && regsD.length === 0;
-
-    let status;
-    if      (ehIncompleto)        status = 'incompleto';
-    else if (temCreditoSemPonto)  status = 'credito';
-    else if (totalMin === null)   status = 'falta';
-    else                          status = 'ok';
-
-    const ocorrencia = justifD
-      ? (justifD.motivo || '')
-      : (creditoD && regsD.length === 0 ? (creditoD.motivo || '') : '');
-
-    if (!ehDomingo && !ehIncompleto) {
-      esperMin += jornadaDia;
-      if (totalMin !== null) { trabMin += totalMin; diasTrab++; }
-    }
-
-    dias.push({ data: dataStr, diaSemana, entrada: e, saidaAlmoco: sa,
-                retornoAlmoco: ra, saida: s, totalMin, jornadaDia, saldoDia,
-                ocorrencia, status });
-  }
-
+  const m = calcMes(funcionario, registros, creditos, justificativas, mes, hojeStr);
+  const dias = m.dias.map(d => ({
+    data: d.data, diaSemana: d.diaSemana,
+    entrada: d.entrada, saidaAlmoco: d.saidaAlmoco, retornoAlmoco: d.retornoAlmoco, saida: d.saida,
+    // Total exibido: horas trabalhadas; em dia só de crédito, os minutos abonados (como no espelho 3.x)
+    totalMin: d.trabalhadoMin !== null ? d.trabalhadoMin : (d.contaNoSaldo && d.status !== 'falta' ? d.abonadoMin : null),
+    trabalhadoMin: d.trabalhadoMin,
+    abonadoMin: d.abonadoMin,
+    jornadaDia: d.jornadaPrevistaMin,
+    saldoDia: d.contaNoSaldo ? d.saldoMin : null,
+    contaNoSaldo: d.contaNoSaldo,
+    status: d.status,
+    pendente: d.pendente,
+    pendencias: d.pendencias.map(p => p.motivo ? p.tipo + ':' + p.motivo : p.tipo),
+    ocorrencia: d.ocorrencia,
+  }));
   return {
     funcId:      funcionario.id || funcionario.funcId || '',
-    funcionario: { nome: funcionario.nome || '', cargo: funcionario.cargo || '', jornada: funcionario.jornada || 8 },
+    funcionario: {
+      nome: funcionario.nome || '', cargo: funcionario.cargo || '', jornada: funcionario.jornada || 8,
+      // período aplicável usado no cálculo (faz parte do que foi assinado)
+      inicioBancoHoras: funcionario.inicioBancoHoras || null,
+      afastamentoBanco: funcionario.afastamentoBanco
+        ? { inicio: funcionario.afastamentoBanco.inicio || null, fim: funcionario.afastamentoBanco.fim || null, tipo: funcionario.afastamentoBanco.tipo || null }
+        : null,
+      controleBancoHoras: funcionario.controleBancoHoras !== false,
+    },
     mes,
     dias,
-    totais:      { trabMin, esperMin, saldo: trabMin - esperMin, diasTrab },
+    totais: { ...m.totais, pendencias: m.pendencias.length },
     engineVersao: VERSAO_ENGINE,
   };
 }
 
 // Representação canônica determinística do snapshot para hashing.
 // O campo 'geradoEm' deve ser adicionado ao snapshot pelo caller antes de chamar.
-// Campos enumerados explicitamente (nunca dependem de ordem de inserção de objeto).
+// Versionada: snapshot 3.x usa exatamente o formato 3.x (hashes antigos continuam verificáveis).
 function canonicalizarSnapshot(snapshot) {
+  if (!ehSnapshotV4(snapshot)) return _canonicalizarSnapshotV3(snapshot);
+  const diasOrdenados = [...(snapshot.dias || [])].sort((a, b) => a.data < b.data ? -1 : 1);
+  const f = snapshot.funcionario || {};
+  const af = f.afastamentoBanco || null;
+  return JSON.stringify({
+    funcId: snapshot.funcId,
+    funcionario: {
+      nome: f.nome, cargo: f.cargo, jornada: f.jornada,
+      inicioBancoHoras: f.inicioBancoHoras || null,
+      afastamentoBanco: af ? { inicio: af.inicio || null, fim: af.fim || null, tipo: af.tipo || null } : null,
+      controleBancoHoras: f.controleBancoHoras !== false,
+    },
+    mes: snapshot.mes,
+    dias: diasOrdenados.map(d => ({
+      data: d.data, diaSemana: d.diaSemana,
+      entrada: d.entrada, saidaAlmoco: d.saidaAlmoco, retornoAlmoco: d.retornoAlmoco, saida: d.saida,
+      totalMin: d.totalMin, trabalhadoMin: d.trabalhadoMin, abonadoMin: d.abonadoMin,
+      jornadaDia: d.jornadaDia, saldoDia: d.saldoDia, contaNoSaldo: d.contaNoSaldo,
+      status: d.status, pendente: d.pendente, pendencias: [...(d.pendencias || [])],
+      ocorrencia: d.ocorrencia,
+    })),
+    totais: {
+      trabMin: snapshot.totais.trabMin, esperMin: snapshot.totais.esperMin, saldo: snapshot.totais.saldo,
+      diasTrab: snapshot.totais.diasTrab, abonadoMin: snapshot.totais.abonadoMin, pendencias: snapshot.totais.pendencias,
+    },
+    geradoEm:     snapshot.geradoEm     || '',
+    engineVersao: snapshot.engineVersao || '',
+  });
+}
+
+// Mesmo conteúdo calculado (ignora apenas o momento da geração)? Usado para impedir assinatura de espelho
+// desatualizado: o funcionário só assina se o snapshot enviado ainda é o que o motor calcula hoje.
+function snapshotsEquivalentes(a, b) {
+  if (!a || !b || !ehSnapshotV4(a) || !ehSnapshotV4(b)) return false;
+  return canonicalizarSnapshot({ ...a, geradoEm: '' }) === canonicalizarSnapshot({ ...b, geradoEm: '' });
+}
+
+// Gera as linhas HTML (<tr>) do corpo da tabela de espelho a partir de um snapshot.
+// Usada tanto por ponto.html (gestor) quanto por ponto-func.html (funcionário).
+// Versionada: snapshot 3.x é desenhado exatamente como era (documento congelado não muda de aparência).
+// PONTO 2.0 F0 (P1-04): ocorrência vem de justificativa (texto do funcionário) — sempre escapada
+function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"'`]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c])); }
+function renderEspelhoRowsHTML(snap) {
+  if (!ehSnapshotV4(snap)) return _renderEspelhoRowsHTMLV3(snap);
+  const NOMES_DIA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  return snap.dias.map(d => {
+    const ehFimSemana = d.diaSemana === 0 || d.diaSemana === 6;
+    const diaN = parseInt(d.data.split('-')[2], 10);
+    const diaSem = NOMES_DIA[d.diaSemana];
+
+    let totalLabel = '—';
+    if (d.status === 'incompleto') totalLabel = 'Incompleto';
+    else if (d.status === 'inconsistente') totalLabel = 'Inconsistência';
+    else if (d.status === 'falta') totalLabel = 'Falta';
+    else if (d.totalMin !== null && d.totalMin !== undefined) {
+      totalLabel = fmtMin(d.totalMin);
+      // trabalho + abono no mesmo dia (feriado trabalhado, atestado parcial): mostra as duas partes
+      if (d.trabalhadoMin !== null && d.trabalhadoMin !== undefined && d.abonadoMin > 0) totalLabel += ' + ' + fmtMin(d.abonadoMin) + ' abono';
+    }
+
+    const saldoStr = d.saldoDia !== null && d.saldoDia !== undefined ? (d.saldoDia >= 0 ? '+' : '') + fmtMin(d.saldoDia) : '—';
+    const bgColor = d.status === 'fora_periodo' ? 'background:#f3f3f3;'
+                  : d.pendente ? 'background:#fff4e5;'
+                  : ehFimSemana ? 'background:#eeeeee;'
+                  : d.status === 'credito' && !d.entrada ? 'background:#f0fff4;'
+                  : d.ocorrencia ? 'background:#fff8e1;'
+                  : '';
+    const totalColor = totalLabel === 'Falta' ? 'color:#c0392b;font-weight:600;'
+                     : d.pendente ? 'color:#e67e22;font-weight:600;'
+                     : d.status === 'fora_periodo' ? 'color:#777;'
+                     : 'color:#111;';
+    const saldoColor = d.saldoDia > 0 ? 'color:#1a7a3a;font-weight:600;'
+                     : d.saldoDia < 0 ? 'color:#c0392b;font-weight:600;'
+                     : 'color:#111;';
+    const ocorrColor = d.status === 'credito' && !d.entrada ? 'color:#1a7a3a;'
+                     : d.status === 'fora_periodo' ? 'color:#777;'
+                     : 'color:#c0392b;';
+    return `<tr style="${bgColor}">` +
+      `<td style="color:#111;font-weight:600;"><strong>${diaN}</strong> ${diaSem}</td>` +
+      `<td style="color:#111;">${d.entrada       || '—'}</td>` +
+      `<td style="color:#111;">${d.saidaAlmoco   || '—'}</td>` +
+      `<td style="color:#111;">${d.retornoAlmoco || '—'}</td>` +
+      `<td style="color:#111;">${d.saida         || '—'}</td>` +
+      `<td style="${totalColor}">${totalLabel}</td>` +
+      `<td style="${saldoColor}">${saldoStr}</td>` +
+      `<td style="${ocorrColor}font-size:10px;">${escHtml(d.ocorrencia || '')}</td>` +
+      `</tr>`;
+  }).join('');
+}
+
+// [3.x] Formato canônico do engine 3.0.0 — PRESERVADO sem alteração para verificar hashes de snapshots 3.x.
+// O campo 'geradoEm' deve ser adicionado ao snapshot pelo caller antes de chamar.
+// Campos enumerados explicitamente (nunca dependem de ordem de inserção de objeto).
+function _canonicalizarSnapshotV3(snapshot) {
   const diasOrdenados = [...(snapshot.dias || [])].sort((a, b) => a.data < b.data ? -1 : 1);
   return JSON.stringify({
     funcId: snapshot.funcId,
@@ -432,12 +608,8 @@ function canonicalizarSnapshot(snapshot) {
   });
 }
 
-// Gera as linhas HTML (<tr>) do corpo da tabela de espelho a partir de um snapshot.
-// Usada tanto por ponto.html (gestor) quanto por ponto-func.html (funcionário),
-// eliminando duplicação da lógica de renderização.
-// PONTO 2.0 F0 (P1-04): ocorrência vem de justificativa (texto do funcionário) — sempre escapada
-function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"'`]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c])); }
-function renderEspelhoRowsHTML(snap) {
+// [3.x] Linhas do espelho como o engine 3.0.0 desenhava — PRESERVADO para snapshots 3.x congelados.
+function _renderEspelhoRowsHTMLV3(snap) {
   const NOMES_DIA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   return snap.dias.map(d => {
     const ehDomingo   = d.diaSemana === 0;

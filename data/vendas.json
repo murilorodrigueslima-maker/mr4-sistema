@@ -1,23 +1,23 @@
 {
-  "atualizado_em": "2026-09-28T16:09:01",
-  "hoje": 7044.2300000000005,
-  "semana": 7044.2300000000005,
-  "mes": 169541.76000000007,
+  "atualizado_em": "2026-09-28T21:08:38",
+  "hoje": 7233.349999999999,
+  "semana": 7233.349999999999,
+  "mes": 169730.88000000006,
   "meta_mes": 200000,
   "meta_dia": 8000,
   "meta_semana": 40000,
   "vendedores": [
     {
       "nome": "ADEMIR LOPES FURTADO",
-      "faturamento": 133880.88000000006,
-      "pedidos": 347,
-      "ticket_medio": 385.8238616714699
+      "faturamento": 133950.00000000006,
+      "pedidos": 348,
+      "ticket_medio": 384.9137931034484
     },
     {
       "nome": "fabiana andrade da silva",
-      "faturamento": 58250.979999999996,
-      "pedidos": 158,
-      "ticket_medio": 368.6770886075949
+      "faturamento": 58370.979999999996,
+      "pedidos": 159,
+      "ticket_medio": 367.11308176100624
     },
     {
       "nome": "MURILO RODRIGUES LIMA",
@@ -72,7 +72,7 @@
     {
       "data": "2026-09-28",
       "label": "seg., 28/09",
-      "valor": 7044.2300000000005
+      "valor": 7233.349999999999
     }
   ]
 }

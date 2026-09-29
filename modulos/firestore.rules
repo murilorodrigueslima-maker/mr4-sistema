@@ -299,6 +299,45 @@ service cloud.firestore {
       allow read, write: if isGestor() || temAcessoModulo('compras');
     }
 
+    // ── AGENTE COMPRAS & ESTOQUE MR4 — Fase 0 (motor determinístico) ─────────────────────────
+    // Escrita só pelo sync server-side (Admin SDK). Menor privilégio:
+    //   operacional (produto, saldo, velocidade, cobertura, ruptura, reposição, sugestão; SEM custo/faturamento):
+    //     módulo 'estoque' (gestor ou funcionário ativo, não bloqueado) — compras_n0/{resumo,meta}, compras_n0_produtos
+    //   custo / faturamento / valor de estoque: GESTOR + (admin | módulo 'estoque'), não bloqueado — compras_n0_custos
+    //   histórico de saldo (estoque_snapshots): módulo 'estoque' · base do incremental (compras_n0_base): ninguém
+    match /compras_n0/{docId} {
+      allow read:  if docId in ['resumo', 'meta'] && temAcessoModulo('estoque');
+      allow write: if false;
+    }
+    match /compras_n0_produtos/{blocoId} {
+      allow read:  if temAcessoModulo('estoque');
+      allow write: if false;
+    }
+    match /compras_n0_custos/{blocoId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+    }
+    // snapshot COMPLETO diário do saldo bruto (dia comercial America/Fortaleza); docId = YYYY-MM-DD
+    match /estoque_snapshots/{dia} {
+      allow read:  if dia.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && temAcessoModulo('estoque');
+      allow write: if false;
+    }
+    // base compacta do sync incremental (itens de venda/compra com valores, SEM cliente): só o Admin SDK
+    match /compras_n0_base/{docId} {
+      allow read, write: if false;
+    }
+    // visão da TELA de Compras (já processada no servidor): sugestoes = operacional (SEM custo) · custos = só gestor
+    match /compras_n0_view/{docId} {
+      allow read:  if (docId == 'sugestoes' && temAcessoModulo('estoque')) ||
+                      (docId == 'custos'    && temModulo('estoque') && naoBloqueado());
+      allow write: if false;
+    }
+    // registro de execuções do sync (só metadados seguros): gestor com módulo estoque (ou admin)
+    match /compras_n0_runs/{runId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+    }
+
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
 

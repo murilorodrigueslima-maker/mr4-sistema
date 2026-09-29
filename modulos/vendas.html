@@ -617,10 +617,10 @@
     </div>
   </div>
 
-  <!-- No data banner (shown when JSON is missing) -->
+  <!-- No data banner (shown when the protected cache is missing or access is denied) -->
   <div class="no-data-banner" id="noDataBanner" style="display:none">
     <span class="icon">⚠️</span>
-    <span>Dados sendo carregados... O arquivo <code>data/vendas.json</code> ainda não foi encontrado. Os valores exibidos são zerados.</span>
+    <span id="noDataText">Dados de vendas ainda não disponíveis (a próxima sincronização os gera). Nenhum valor é exibido até lá.</span>
   </div>
 
   <!-- KPI Cards -->
@@ -855,33 +855,31 @@
     loadVendas();
   });
 
-  /* ── Load vendas.json ── */
+  /* ── Load vendas (SECURITY HOTFIX P0: Firestore protegido painel_cache/vendas; antes data/vendas.json público) ── */
   async function loadVendas() {
     let data = null;
     let dataFound = false;
 
     try {
-      const res = await fetch('../data/vendas.json', { cache: 'no-cache' });
-      if (res.ok) {
-        data = await res.json();
+      const snap = await getDoc(doc(db, 'painel_cache', 'vendas'));   // Rules: gestor + (admin | módulo vendas)
+      if (snap.exists()) {
+        data = snap.data();
         dataFound = true;
       }
-    } catch { /* file not found or network error */ }
+    } catch (e) {
+      if (e && e.code === 'permission-denied') {
+        document.getElementById('noDataText').textContent = 'Seu usuário não tem permissão para ver os dados de vendas (módulo Vendas). Fale com o administrador.';
+      }
+    }
 
     if (!dataFound) {
+      // SECURITY HOTFIX RC: sem dados (cache ainda não gerado ou sem permissão) → aviso e "—";
+      // nunca desenhar zeros como se fossem faturamento real, nunca recorrer a arquivo público.
       document.getElementById('noDataBanner').style.display = '';
-      // Use zero defaults
-      data = {
-        atualizado_em: null,
-        hoje:          0,
-        semana:        0,
-        mes:           0,
-        meta_mes:      200000,
-        meta_dia:      8000,
-        meta_semana:   40000,
-        vendedores:    [],
-        ultimos_7_dias: []
-      };
+      for (const id of ['kpiHoje', 'kpiMes', 'kpiPct']) document.getElementById(id).textContent = '—';
+      document.getElementById('kpiMesHint').textContent = 'Dados indisponíveis';
+      document.getElementById('kpiPctHint').textContent = 'Dados indisponíveis';
+      return;
     }
 
     renderDashboard(data);

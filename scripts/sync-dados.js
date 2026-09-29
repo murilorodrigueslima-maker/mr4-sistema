@@ -2,16 +2,16 @@
 // Roda via GitHub Actions a cada 2 horas
 //
 // S1: financeiro_cache e pedidos_cache escritos no Firestore (Admin SDK).
-//     Dual write: JSON continua sendo gerado durante a janela de migração.
-//     Remove os arquivos JSON após validação em produção (S1 fase 2).
-const fs   = require('fs');
+// SECURITY HOTFIX P0 (28/09/2026): vendas, estoque e catálogo deixaram de ser gravados em
+//   data/*.json (servidos publicamente pelo GitHub Pages). Agora vão para a coleção protegida
+//   painel_cache (Rules: leitura por módulo, escrita só Admin SDK). Nenhum dado comercial é
+//   escrito no repositório.
 const path = require('path');
 const https = require('https');
 
 const ACCESS_TOKEN  = process.env.GC_ACCESS_TOKEN;
 const SECRET_TOKEN  = process.env.GC_SECRET_ACCESS_TOKEN;
 const API_BASE      = 'https://api.gestaoclick.com';
-const DATA_DIR      = path.join(__dirname, '..', 'data');
 const PROJECT_ID    = 'mr4-ponto';
 
 if (!ACCESS_TOKEN || !SECRET_TOKEN) {
@@ -24,7 +24,8 @@ if (!ACCESS_TOKEN || !SECRET_TOKEN) {
 //   - GOOGLE_APPLICATION_CREDENTIALS com arquivo external_account (WIF/OIDC)
 //   - FIREBASE_SERVICE_ACCOUNT (JSON da SA, fallback local)
 //   - ADC padrão (gcloud application-default)
-// Se nenhum disponível: sync continua em modo JSON-only.
+// Se nenhum disponível: os caches protegidos (painel_cache, financeiro_cache, pedidos_cache,
+// display_metrics) não são atualizados — nenhum dado comercial é gravado em arquivo público.
 let _db = null;
 
 function initFirestore() {
@@ -206,6 +207,9 @@ async function syncVendas() {
     console.log(`  → ${vendas.length} vendas encontradas`);
   } catch(e) {
     console.log('⚠️ Erro ao buscar vendas:', e.message);
+    // GC falhou: não sobrescreve os caches protegidos com zeros (preserva o último válido)
+    console.log('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
+    return;
   }
 
   const hojStr  = hoje();
@@ -273,10 +277,14 @@ async function syncVendas() {
     ultimos_7_dias: ultimos7,
   };
 
-  fs.writeFileSync(path.join(DATA_DIR, 'vendas.json'), JSON.stringify(dadosVendas, null, 2));
-  console.log(`✅ Vendas: hoje R$ ${fatHoje.toFixed(2)} | mês R$ ${fatMes.toFixed(2)}`);
+  // SECURITY HOTFIX P0: antes em data/vendas.json (público). Agora protegido:
+  //   painel_cache/vendas — dashboard de vendas (faturamento, metas, vendedores): gestor + módulo vendas/admin
+  //   painel_cache/caixa  — só o necessário ao Caixa Diário (faturamento de hoje): gestor + módulo caixa/admin
+  const vOk = await firestoreSet('painel_cache', 'vendas', dadosVendas);
+  const cOk = await firestoreSet('painel_cache', 'caixa', { atualizado_em: dadosVendas.atualizado_em, hoje: fatHoje });
+  console.log(`${vOk && cOk ? '✅' : '❌'} Vendas: hoje R$ ${fatHoje.toFixed(2)} | mês R$ ${fatMes.toFixed(2)}${vOk && cOk ? '' : ' — FALHA ao gravar painel_cache'}`);
 
-  // display_metrics — painel de TV (bridge S2; exige apenas auth anônima para ler)
+  // display_metrics — painel de TV (Rules: perfil 'display' ativo ou gestor)
   const dmVendedores = Object.values(vendedorMapDM)
     .sort((a,b) => b.total_mes - a.total_mes)
     .map(v => ({
@@ -315,6 +323,8 @@ async function syncEstoque() {
     }
   } catch(e) {
     console.log('⚠️ Erro ao buscar produtos:', e.message);
+    console.log('  ↩ Mantendo painel_cache/estoque e painel_cache/estoque_custos inalterados');
+    return;
   }
 
   let valorTotal = 0;
@@ -350,17 +360,24 @@ async function syncEstoque() {
     }
   });
 
-  const estoque = {
-    atualizado_em:       dataISO(),
-    total_produtos:      produtos.length,
+  // SECURITY HOTFIX P0: antes em data/estoque.json (público, com custo). Menor privilégio:
+  //   painel_cache/estoque        — operacional (sem custo/preço): módulo estoque (gestor ou funcionário)
+  //   painel_cache/estoque_custos — valor do estoque e margem (custo/preço): gestor + módulo estoque/admin
+  const atualizadoEm = dataISO();
+  const estoqueOperacional = {
+    atualizado_em:  atualizadoEm,
+    total_produtos: produtos.length,
+    abaixo_minimo:  abaixoMinimo.slice(0, 50),
+    sem_giro:       semGiro.sort((a,b) => b.dias - a.dias).slice(0, 50),
+  };
+  const estoqueCustos = {
+    atualizado_em:       atualizadoEm,
     valor_total_estoque: valorTotal,
-    abaixo_minimo:       abaixoMinimo.slice(0, 50),
-    sem_giro:            semGiro.sort((a,b) => b.dias - a.dias).slice(0, 50),
     margem_baixa:        margemBaixa.sort((a,b) => a.margem - b.margem).slice(0, 50),
   };
-
-  fs.writeFileSync(path.join(DATA_DIR, 'estoque.json'), JSON.stringify(estoque, null, 2));
-  console.log(`✅ Estoque: ${produtos.length} produtos | ${abaixoMinimo.length} abaixo do mínimo`);
+  const eOk = await firestoreSet('painel_cache', 'estoque', estoqueOperacional);
+  const kOk = await firestoreSet('painel_cache', 'estoque_custos', estoqueCustos);
+  console.log(`${eOk && kOk ? '✅' : '❌'} Estoque: ${produtos.length} produtos | ${abaixoMinimo.length} abaixo do mínimo${eOk && kOk ? '' : ' — FALHA ao gravar painel_cache'}`);
 }
 
 // ── FINANCEIRO ───────────────────────────────────────────────────────────────
@@ -554,6 +571,8 @@ async function syncCatalogoProdutos() {
     }
   } catch(e) {
     console.log('⚠️ Erro ao buscar catálogo:', e.message);
+    console.log('  ↩ Mantendo painel_cache/produtos_catalogo inalterado');
+    return;
   }
 
   const catalogo = produtos.map(p => ({
@@ -563,8 +582,11 @@ async function syncCatalogoProdutos() {
     fabricante: p.marca || p.fabricante || '',
   })).filter(p => p.codigo || p.nome);
 
-  fs.writeFileSync(path.join(DATA_DIR, 'produtos.json'), JSON.stringify(catalogo, null, 0));
-  console.log(`✅ Catálogo: ${catalogo.length} produtos salvos`);
+  // SECURITY HOTFIX P0: antes em data/produtos.json (público). Agora painel_cache/produtos_catalogo
+  // (autocomplete da aba Equivalentes do Estoque): módulo estoque. ~100 B por item → limite de 1 MiB do
+  // documento comporta ~8.000 produtos; hoje ~900.
+  const pOk = await firestoreSet('painel_cache', 'produtos_catalogo', { atualizado_em: dataISO(), total: catalogo.length, itens: catalogo });
+  console.log(`${pOk ? '✅' : '❌'} Catálogo: ${catalogo.length} produtos${pOk ? '' : ' — FALHA ao gravar painel_cache'}`);
 }
 
 // ── PERFIL360 INCREMENTAL ────────────────────────────────────────────────────

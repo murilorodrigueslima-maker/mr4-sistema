@@ -555,6 +555,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── AGENTE FINANCEIRO MR4 — Fase 1 (motor Nível 1: contas a pagar / a receber) ─────────────
+    // Gravado só pelo sync server-side (Admin SDK). Leitura: módulo 'financeiro' (ou admin), perfil ativo e
+    // não bloqueado (temAcessoModulo = dual-role: gestor OU funcionário com o módulo). Ser gestor sozinho não basta.
+    //   fin_n1/resumo | fin_n1/auditoria | fin_n1/meta   e   fin_n1_titulos_abertos/{bloco}
+    // Qualquer outro docId em fin_n1: negado.
+    match /fin_n1/{docId} {
+      allow read:  if docId in ['resumo', 'auditoria', 'meta'] && temAcessoModulo('financeiro');
+      allow write: if false;
+    }
+    match /fin_n1_titulos_abertos/{blocoId} {
+      allow read:  if temAcessoModulo('financeiro');
+      allow write: if false;
+    }
+
     // ── Coleção: painel_cache (SECURITY HOTFIX P0 — substitui data/*.json públicos) ─────────
     // Gravada somente pelo sync (Admin SDK). Leitura por documento, com menor privilégio:
     //   vendas            → faturamento, metas, faturamento por vendedor: gestor + (admin | módulo vendas)

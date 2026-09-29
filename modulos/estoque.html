@@ -733,31 +733,44 @@
       .replace(/"/g, '&quot;');
   }
 
-  // ── Fetch estoque.json ──
+  // ── Estoque (SECURITY HOTFIX P0: Firestore protegido; antes data/estoque.json público com custo) ──
+  //   painel_cache/estoque        → operacional (sem custo/preço): módulo estoque
+  //   painel_cache/estoque_custos → valor do estoque e margem (custo/preço): gestor + (admin | módulo estoque)
   async function carregarEstoque() {
     let dados = null;
+    let custos = null, custosRestritos = false;
 
     try {
-      const resp = await fetch('../data/estoque.json', { cache: 'no-cache' });
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      dados = await resp.json();
+      const snap = await getDoc(doc(db, 'painel_cache', 'estoque'));
+      if (!snap.exists()) throw new Error('painel_cache/estoque ainda não gerado');
+      dados = snap.data();
     } catch(e) {
-      console.warn('estoque.json não encontrado ou inválido:', e.message);
-      // Usa estrutura vazia para exibir estado gracioso
-      dados = {
-        atualizado_em:         null,
-        total_produtos:        0,
-        valor_total_estoque:   0,
-        abaixo_minimo:         [],
-        sem_giro:              [],
-        margem_baixa:          [],
-        candidatos_promocao:   []
-      };
+      // SECURITY HOTFIX RC: sem dados (cache ainda não gerado ou sem permissão) → "—" e aviso claro;
+      // nunca "0 produtos"/"nenhum abaixo do mínimo" como se fosse real, nunca arquivo público.
+      console.warn('Estoque indisponível:', e.code || e.message);
+      const semPermissao = e && e.code === 'permission-denied';
+      const titulo = semPermissao ? 'Sem permissão para os dados de estoque' : 'Dados de estoque ainda não disponíveis';
+      const desc   = semPermissao ? 'Fale com o administrador (módulo Estoque).' : 'A próxima sincronização gera os dados.';
+      for (const id of ['kpiTotalProdutos', 'kpiValorEstoque', 'kpiAbaixoMinimo', 'kpiSemGiro']) document.getElementById(id).textContent = '—';
+      for (const id of ['cntAbaixoMinimo', 'cntSemGiro', 'cntMargemBaixa', 'cntListaCompras']) document.getElementById(id).textContent = '—';
+      for (const id of ['tblAbaixoMinimoWrap', 'tblSemGiroWrap', 'tblMargemBaixaWrap', 'listaComprasWrap'])
+        document.getElementById(id).innerHTML = emptyState(semPermissao ? '🔒' : '⏳', titulo, desc);
+      document.getElementById('updateInfo').textContent = titulo;
+      return;
     }
+    try {
+      const snapC = await getDoc(doc(db, 'painel_cache', 'estoque_custos'));
+      custos = snapC.exists() ? snapC.data() : null;
+    } catch(e) {
+      custosRestritos = e && e.code === 'permission-denied';   // sem permissão para custo/margem: não é erro
+      if (!custosRestritos) console.warn('Custos de estoque indisponíveis:', e.code || e.message);
+    }
+    dados.valor_total_estoque = custos ? custos.valor_total_estoque : 0;
+    dados.margem_baixa        = custos ? (custos.margem_baixa || []) : [];
 
     // KPIs
     document.getElementById('kpiTotalProdutos').textContent = (dados.total_produtos ?? 0).toLocaleString('pt-BR');
-    document.getElementById('kpiValorEstoque').textContent  = fmtMoeda(dados.valor_total_estoque);
+    document.getElementById('kpiValorEstoque').textContent  = custosRestritos ? 'Restrito' : fmtMoeda(dados.valor_total_estoque);
     document.getElementById('kpiAbaixoMinimo').textContent  = (dados.abaixo_minimo  ?? []).length;
     document.getElementById('kpiSemGiro').textContent       = (dados.sem_giro        ?? []).length;
 
@@ -769,7 +782,12 @@
     // Tabelas
     renderAbaixoMinimo(dados.abaixo_minimo  ?? []);
     renderSemGiro(dados.sem_giro            ?? []);
-    renderMargemBaixa(dados.margem_baixa    ?? []);
+    if (custosRestritos) {
+      document.getElementById('cntMargemBaixa').textContent = '—';
+      document.getElementById('tblMargemBaixaWrap').innerHTML = emptyState('🔒', 'Margens e custos restritos', 'Disponível apenas para gestores com o módulo Estoque.');
+    } else {
+      renderMargemBaixa(dados.margem_baixa  ?? []);
+    }
     renderListaCompras(dados.abaixo_minimo  ?? []);
   }
 
@@ -803,17 +821,19 @@
   let _eqDelId   = null;
   let _eqRowSeq  = 0;
 
-  // ── Catálogo local de produtos (carregado do data/produtos.json) ─────────
+  // ── Catálogo de produtos (SECURITY HOTFIX P0: Firestore protegido painel_cache/produtos_catalogo;
+  //    antes data/produtos.json público). Rules: módulo estoque. 1 leitura por sessão da aba.
   let _eqCatalogo = null;
 
   async function eqCarregarCatalogo() {
     if (_eqCatalogo) return _eqCatalogo;
     try {
-      const r = await fetch('../data/produtos.json');
-      _eqCatalogo = await r.json();
+      const m = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      const snap = await m.getDoc(m.doc(window.__db, 'painel_cache', 'produtos_catalogo'));
+      _eqCatalogo = snap.exists() && Array.isArray(snap.data().itens) ? snap.data().itens : [];
     } catch(e) {
       _eqCatalogo = [];
-      console.warn('Catálogo produtos.json não disponível:', e);
+      console.warn('Catálogo de produtos não disponível:', e.code || e.message);
     }
     return _eqCatalogo;
   }

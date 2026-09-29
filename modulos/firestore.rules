@@ -407,6 +407,28 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Coleção: painel_cache (SECURITY HOTFIX P0 — substitui data/*.json públicos) ─────────
+    // Gravada somente pelo sync (Admin SDK). Leitura por documento, com menor privilégio:
+    //   vendas            → faturamento, metas, faturamento por vendedor: gestor + (admin | módulo vendas)
+    //   caixa             → só o faturamento do dia (Caixa Diário):         gestor + (admin | módulo caixa)
+    //   estoque           → operacional, sem custo/preço (reposição, giro):  módulo estoque (gestor ou funcionário)
+    //   estoque_custos    → valor do estoque, custo, preço e margem:         gestor + (admin | módulo estoque)
+    //   produtos_catalogo → id/código/nome/fabricante (autocomplete):        módulo estoque (gestor ou funcionário)
+    // Qualquer outro docId: negado. Ser "gestor" sozinho não basta (exige sistema_usuarios não bloqueado).
+    // temModulo() não olha o bloqueio; naoBloqueado() completa (usado só depois de temModulo, que já exige o doc).
+    function naoBloqueado() {
+      return !get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('bloqueado', false);
+    }
+    match /painel_cache/{docId} {
+      allow read: if
+        (docId == 'vendas'            && temModulo('vendas')           && naoBloqueado()) ||
+        (docId == 'caixa'             && temModulo('caixa')            && naoBloqueado()) ||
+        (docId == 'estoque'           && temAcessoModulo('estoque'))                       ||
+        (docId == 'estoque_custos'    && temModulo('estoque')          && naoBloqueado()) ||
+        (docId == 'produtos_catalogo' && temAcessoModulo('estoque'));
+      allow write: if false;
+    }
+
     // ── Coleção: pedidos_cache ─────────────────────────────────────────────────
     // Cache de pedidos para expedição. Escrita APENAS via Admin SDK.
     // Substitui data/pedidos.json (público) — adicionada em S1.

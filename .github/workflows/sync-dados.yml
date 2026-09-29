@@ -9,7 +9,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read    # SECURITY HOTFIX P0: o sync não grava mais nada no repositório público
       id-token: write   # obrigatório para GitHub Actions OIDC → WIF
 
     steps:
@@ -35,11 +35,5 @@ jobs:
           GC_ACCESS_TOKEN:        ${{ secrets.GC_ACCESS_TOKEN }}
           GC_SECRET_ACCESS_TOKEN: ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
         run: node scripts/sync-dados.js
-
-      - name: Commit e push dos dados
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f data/vendas.json data/estoque.json data/produtos.json
-          git diff --staged --quiet || git commit -m "sync: atualiza dados [$(date -u '+%d/%m/%Y %H:%M')] UTC"
-          git push
+      # SECURITY HOTFIX P0: removido o passo "Commit e push dos dados". Vendas, estoque e catálogo
+      # agora vão para o Firestore protegido (painel_cache); data/*.json não é mais publicado.

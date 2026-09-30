@@ -45,14 +45,14 @@ describe('EXECUÇÃO — trava com lease e registro seguro', () => {
   test('execução OK: registro com metadados seguros, trava liberada, snapshot gravado com a política vigente', async () => {
     const db = dbFalso(); const { cli, chamadas } = gcFalso();
     const reg = await E.executarExecucao({ db, cli, tipo: 'FULL', gatilho: 'MANUAL', agora: AG, relogio: () => new Date(AG.getTime() + 5000) });
-    expect(reg).toMatchObject({ status: 'OK', tipo: 'FULL', gatilho: 'MANUAL', policy_version: '1.1', duracao_ms: 5000, chamadas_gc: chamadas.length, erro: null });
+    expect(reg).toMatchObject({ status: 'OK', tipo: 'FULL', gatilho: 'MANUAL', policy_version: '1.2', duracao_ms: 5000, chamadas_gc: chamadas.length, erro: null });
     expect(reg.quantidades).toMatchObject({ produtos: X.cenario().produtos.length }); expect(reg.quantidades.vendas).toBe(reg.quantidades.vendas_consulta_ampla);
     expect(reg.tamanho).toMatchObject({ lotes: 1 }); expect(reg.tamanho.maior_doc_bytes).toBeLessThanOrEqual(S.DOC_BYTES_MAX);
     expect(le(db, 'compras_n0_runs', reg.run_id)).toEqual(JSON.parse(JSON.stringify(reg)));
     expect(le(db, 'compras_n0', 'lock')).toBeUndefined();
     expect(JSON.stringify(reg)).not.toMatch(/Produto sintético|tok-FAKE|sec-FAKE|nome_cliente/);
     expect(chamadas.every(c => c.method === 'GET')).toBe(true);
-    expect(le(db, 'compras_n0_view', 'sugestoes').policy_version).toBe('1.1');
+    expect(le(db, 'compras_n0_view', 'sugestoes').policy_version).toBe('1.2');
   });
   test('com a trava ocupada: SKIPPED_LOCKED registrado, nenhuma chamada ao GestãoClick, snapshot intocado', async () => {
     const db = dbFalso(); await E.adquirirLock(db, { runId: 'outro', tipo: 'FULL', agora: AG });
@@ -93,7 +93,7 @@ describe('ENTRYPOINTS — HTTP privado e agendados', () => {
   test('manual FULL OK → 200 com resumo seguro; log estruturado sem segredo; em seguida incremental OK', async () => {
     const db = dbFalso(), L = logs();
     let r = res(); await EP.syncManualHandler({ method: 'POST', body: { tipo: 'FULL' } }, r, { db, criarCliente: () => gcFalso().cli, log: L.log, agora: AG });
-    expect(r.code).toBe(200); expect(r.body).toMatchObject({ status: 'OK', tipo: 'FULL', gatilho: 'MANUAL', policy_version: '1.1' });
+    expect(r.code).toBe(200); expect(r.body).toMatchObject({ status: 'OK', tipo: 'FULL', gatilho: 'MANUAL', policy_version: '1.2' });
     expect(JSON.parse(L.l[0])).toMatchObject({ evento: 'compras_sync', status: 'OK' }); expect(L.l.join('')).not.toMatch(/tok-FAKE|sec-FAKE/);
     r = res(); await EP.syncManualHandler({ method: 'POST', body: { tipo: 'INCREMENTAL' } }, r, { db, criarCliente: () => gcFalso().cli, log: L.log, agora: new Date(AG.getTime() + 3600e3) });
     expect(r.body).toMatchObject({ status: 'OK', tipo: 'INCREMENTAL' }); expect(r.body.quantidades.mescla).toBeTruthy();
@@ -163,7 +163,7 @@ describe('VISÃO DA TELA — compras_n0_view', () => {
     const ps = Array.from({ length: 877 }, (_, i) => X.produto('PX-' + i, { estoque: (i % 9) - 1 }));
     const vs = Array.from({ length: 6000 }, (_, i) => X.venda(X.dia(i % 170), [['PX-' + (i % 877), 1 + (i % 3), 25]], { id: 'VX-' + i }));
     const cs = Array.from({ length: 300 }, (_, i) => X.compra(X.dia(200 + (i % 100)), Array.from({ length: 8 }, (_, j) => ['PX-' + ((i * 8 + j) % 877), 10, 10]), { id: 'CX-' + i }));
-    const sn = S.montarSnapshot({ brutosProdutos: ps, brutosVendas: vs, brutosCompras: cs, agora: X.AGORA });
+    const sn = S.montarSnapshot({ brutosProdutos: ps, brutosVendas: vs, brutosCompras: cs, agora: X.AGORA, politica: require('../lib/compras/politica').POLITICA_1_1 });   // tamanho da visão 1.1 (a 1.2 tem teste próprio < 750 KB)
     expect(Buffer.byteLength(JSON.stringify(sn.view.sugestoes))).toBeLessThan(300 * 1024);
     expect(Buffer.byteLength(JSON.stringify(sn.view.custos))).toBeLessThan(300 * 1024);
   });

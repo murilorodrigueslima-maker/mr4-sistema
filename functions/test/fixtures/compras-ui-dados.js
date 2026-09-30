@@ -24,7 +24,7 @@ function cenario(extras = 0, escala = 1) {
 function dados(extras = 0, agora = X.AGORA, escala = 1) {
   const c = cenario(extras, escala);
   const sn = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora, politica });
-  const sn11 = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora });   // Política vigente (1.1)
+  const sn11 = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora, politica: Pol.POLITICA_1_1 });   // Política 1.1 explícita (a vigente agora é a 1.2)
   return { sn, sn11, sugestoes: sn.view.sugestoes, custos: sn.view.custos, sugestoes11: sn11.view.sugestoes, custos11: sn11.view.custos };
 }
 module.exports = { cenario, dados, politica };

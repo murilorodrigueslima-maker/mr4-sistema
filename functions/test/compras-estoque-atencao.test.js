@@ -7,7 +7,7 @@ const Pol = require('../lib/compras/politica');
 const X = require('./fixtures/compras-estoque-f0');
 const OLD = path.join(__dirname, 'fixtures', 'compras-view-fase-d-golden.json');
 
-const gerar = c => S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora: X.AGORA });
+const gerar = c => S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora: X.AGORA, politica: Pol.POLITICA_1_1 });   // golden da Fase D = Política 1.1
 const snapA = gerar(X.cenario()), snapN = gerar(X.cenarioProdutoNovo());
 const linhas = s => s.view.sugestoes.linhas;
 const L = (s, id) => linhas(s).find(l => l.id === id);
@@ -126,7 +126,7 @@ describe('ATENÇÃO — estrutura, segurança e tamanho', () => {
       expect(Object.fromEntries(semAt)).toEqual(golden[nome].linhas_fase_d);
       expect(s.view.custos.linhas).toEqual(golden[nome].custos);
     }
-    expect(Pol.POLITICA_VIGENTE.policy_version).toBe('1.1');
+    expect(Pol.POLITICA_1_1.policy_version).toBe('1.1');   // a 1.1 segue intacta (a vigente agora é a 1.2, que herda seus parâmetros)
     expect(Pol.POLITICA_1_1.target_days).toEqual({ A: 30, B: 21, C: 15 });
   });
 });

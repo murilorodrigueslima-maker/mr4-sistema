@@ -234,9 +234,9 @@ describe('matriz de decisão e sinais (explicativos; não mudam quantidade)', ()
       expect(sv(b.view.sugestoes)).toBe(sv(a.view.sugestoes)); expect(sv(b.resumo)).toBe(sv(a.resumo)); expect(sv(b.meta)).toBe(sv(a.meta));
     }
   });
-  test('Política 1.1 intocada e continua vigente; 1.2 é candidata, herda a 1.1 e valida', () => {
-    expect(Pol.POLITICA_VIGENTE.policy_version).toBe('1.1'); expect(Pol.POLITICA_1_1.profitability).toBeUndefined();
-    expect(Pol.POLITICA_1_2).toMatchObject({ policy_version: '1.2', inherits_from: '1.1', status: 'RELEASE_CANDIDATE_NOT_APPROVED', approved_on: null });
+  test('Política 1.1 intocada; 1.2 (vigente desde 30/09/2026) herda a 1.1 e valida', () => {
+    expect(Pol.POLITICA_VIGENTE.policy_version).toBe('1.2'); expect(Pol.POLITICA_VIGENTE).toBe(Pol.POLITICA_1_2); expect(Pol.POLITICA_1_1.profitability).toBeUndefined();
+    expect(Pol.POLITICA_1_2).toMatchObject({ policy_version: '1.2', inherits_from: '1.1', status: 'APPROVED', approved_on: '2026-09-30' });
     for (const k of ['target_days', 'abc', 'demand', 'velocity', 'new_product', 'coverage_indicators', 'rounding', 'priority']) expect(Pol.POLITICA_1_2[k]).toEqual(Pol.POLITICA_1_1[k]);
     expect(Pol.validarPolitica(Pol.POLITICA_1_2)).toEqual([]);
     expect(PF.thresholds.status).toBe('APPROVED_FOR_RC'); expect(PF.thresholds.threshold_source).toBe('distribution_rc_2026_09'); expect(PF.thresholds.negative_margin_auto_block).toBe(false); expect(PF.thresholds.efficiency_status).toBe('PROPOSED_NOT_APPROVED');

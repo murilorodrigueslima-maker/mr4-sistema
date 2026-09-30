@@ -499,9 +499,10 @@ window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario'
 window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href='../login.html'; return; }
+  let perfil = null;   // declarado FORA do try: é lido depois dele (window._meuFuncId). Dentro do try, o uso abaixo dava ReferenceError e o loader nunca saía.
   try {
     const perfSnap = await getDoc(doc(db, 'users', user.uid));
-    const perfil   = perfSnap.exists() ? perfSnap.data() : null;
+    perfil = perfSnap.exists() ? perfSnap.data() : null;
 
     if (!perfil) {
       document.getElementById('loadingScreen').innerHTML =

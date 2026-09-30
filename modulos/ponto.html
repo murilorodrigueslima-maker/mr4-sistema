@@ -465,7 +465,7 @@ tr:hover td{background:rgba(26,115,232,.04);}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, writeBatch, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
@@ -484,8 +484,11 @@ const functions = getFunctions(app, 'southamerica-east1');
 
 window._db=db; window._col=collection; window._doc=doc;
 window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
+// PONTO 2.0 F0: leitura FRESCA dos registros de um funcionário em um dia (sem o cache de 30 s — evita correção duplicada, P1-07)
+window._getRegistrosDia=async(funcId,data)=>{const q=query(collection(db,'registros'),where('funcId','==',funcId),where('data','==',data));return (await getDocs(q)).docs.map(d=>({id:d.id,...d.data()}));};
 window._deleteDoc=deleteDoc; window._serverTimestamp=serverTimestamp;
 window._writeBatch=()=>writeBatch(db);
+
 window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
@@ -540,6 +543,7 @@ onAuthStateChanged(auth, async user => {
   }
   window._userEmail = user.email || '';
   window._userUid   = user.uid   || '';
+  window._meuFuncId = (perfil && perfil.funcionarioId) || null;   // PONTO 2.0 F0 (P1-05): esconder ações sobre o próprio ponto (Rules são a autoridade)
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dashboard').style.display='flex';
   if (window._isDualRole) {
@@ -550,13 +554,19 @@ onAuthStateChanged(auth, async user => {
 });
 </script>
 
-<script src="ponto-regras.js"></script>
+<script src="ponto-regras.js?v=4.0.0"></script>
 
 <script>
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function db(){return window._db;}
 function col(n){return window._col(db(),n);}
 function docRef(n,id){return window._doc(db(),n,id);}
+// PONTO 2.0 F0 (P1-04): texto do usuário nunca vira HTML/JS
+function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));}
+// id usado dentro de onclick="...('ID')": só formato seguro (entidades HTML seriam decodificadas antes do JS)
+function sid(v){v=String(v==null?'':v);return /^[A-Za-z0-9_.:-]{1,160}$/.test(v)?v:'';}
+// texto curto dentro de onclick (ex.: rótulo de mês): remove aspas, barra invertida e sinais de tag
+function sjs(v){return String(v==null?'':v).replace(/['"\\<>`]/g,'');}
 
 // Cache local com TTL de 30s para reduzir leituras ao Firestore
 const _fbCache={};const _FB_TTL=30000;
@@ -564,7 +574,9 @@ async function fbGet(c){
   const now=Date.now();
   if(_fbCache[c]&&(now-_fbCache[c].ts)<_FB_TTL)return _fbCache[c].data;
   const s=await window._getDocs(col(c));
-  const data=s.docs.map(d=>({id:d.id,...d.data()}));
+  let data=s.docs.map(d=>({id:d.id,...d.data()}));
+  // PONTO 2.0 F0 (P0-02): telas e cálculos usam só registros efetivos; o substituído fica no Firestore (auditoria)
+  if(c==='registros')data=registrosEfetivos(data);
   _fbCache[c]={data,ts:now};
   return data;
 }
@@ -659,11 +671,11 @@ async function renderHoje(){
     const atrasou=e&&toMin(e)>toMin('08:05');
     const status=rf.length===0?'ausente':atrasou?'atrasou':'presente';
     const labels={presente:'Presente',ausente:'Ausente',atrasou:'Atrasou'};
-    return `<tr><td><div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''}</div></div></div></td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td><span class="badge ${status}">${labels[status]}</span></td></tr>`;
+    return `<tr><td><div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div class="func-cell-info"><div class="nome">${esc(f.nome)}</div><div class="cargo">${esc(f.cargo||'')}</div></div></div></td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td><span class="badge ${status}">${labels[status]}</span></td></tr>`;
   }).join('');
   aplicarLazyFotos(document.getElementById('tbody-hoje'));
   const ultimas=[...regs].sort((a,b)=>a.criadoEm>b.criadoEm?-1:1).slice(0,5);
-  document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${r.funcNome}</td><td>${r.tipoLabel}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
+  document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${esc(r.funcNome)}</td><td>${esc(r.tipoLabel)}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
 }
 
 async function verFoto(regId){
@@ -684,26 +696,28 @@ async function renderRegistros(){
   regs.forEach(r=>{const k=r.funcId+'|'+r.data;if(!grupos[k])grupos[k]={funcId:r.funcId,funcNome:r.funcNome,data:r.data,regs:[]};grupos[k].regs.push(r);});
   const rows=Object.values(grupos).sort((a,b)=>a.data>b.data?-1:1);
   const funcs=await fbGet('funcionarios');
+  const credTodos=await fbGet('creditos_jornada');const justTodas=await fbGet('justificativas');
   if(!rows.length){document.getElementById('tbody-registros').innerHTML='<tr><td colspan="11" class="vazio">Nenhum registro.</td></tr>';return;}
   document.getElementById('tbody-registros').innerHTML=rows.map(({funcId,funcNome,data,regs})=>{
-    const get=tipo=>{const j=regs.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=regs.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
-    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
-    const total=calcTotal(e,sa,ra,s);
-    const func=funcs.find(f=>f.id===funcId);
-    const jornMin=(parseFloat(func?.jornada)||8)*60;
-    const saldo=total!==null?total-jornadaParaData(data,jornMin):null;
+    // Motor único: mesmas batidas vigentes, mesmo total e mesmo saldo do Banco e do Espelho
+    const func=funcs.find(f=>f.id===funcId)||{jornada:8};
+    const dr=calcDia(func,data,regs,credTodos.find(c=>c.funcId===funcId&&c.data===data)||null,justTodas.filter(j=>j.funcId===funcId&&j.data===data));
+    const e=dr.entrada,sa=dr.saidaAlmoco,ra=dr.retornoAlmoco,s=dr.saida;
+    const total=dr.trabalhadoMin;
+    const saldo=dr.contaNoSaldo?dr.saldoMin:null;
     const fotoReg=regs.find(r=>r.foto);
     const dentroRaio=regs.some(r=>r.dentroRaio===true)?true:regs.some(r=>r.dentroRaio===false)?false:null;
     const scores=regs.map(r=>r.facialScore).filter(s=>s!=null);
     const facialScore=scores.length?Math.min(...scores):null;
     const fb=facialBadge(facialScore);
-    return `<tr><td>${funcNome}</td><td>${fmtData(data)}</td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td>${saldo!==null?`<span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span>`:'—'}</td><td>${dentroRaio===true?'<span class="badge dentro">Dentro</span>':dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span style="color:${fb.cor};font-size:11px;">${fb.txt}</span></td><td>${fotoReg?`<button class="btn-acao" onclick="verFoto('${fotoReg.id}')">Ver</button>`:'—'}</td></tr>`;
+    return `<tr><td>${esc(funcNome)}</td><td>${fmtData(data)}</td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${dr.pendente?`<span class="badge atrasou" title="${esc(dr.ocorrencia||'')}">${dr.status==='inconsistente'?'Inconsistência':'Pendente'}</span>`:dr.status==='fora_periodo'?'<span style="color:var(--cinza-texto);">fora do período</span>':fmtMin(total)}</td><td>${saldo!==null?`<span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span>`:'—'}</td><td>${dentroRaio===true?'<span class="badge dentro">Dentro</span>':dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span style="color:${fb.cor};font-size:11px;">${fb.txt}</span></td><td>${fotoReg?`<button class="btn-acao" onclick="verFoto('${sid(fotoReg.id)}')">Ver</button>`:'—'}</td></tr>`;
   }).join('');
 }
 window.renderRegistros=renderRegistros;
 
 async function renderBanco(){
   const funcs=await fbGet('funcionarios');const regs=await fbGet('registros');const creditos=await fbGet('creditos_jornada');
+  const justifsTodas=await fbGet('justificativas');   // motor único: justificativas participam do resultado do dia (R3/R5)
   if(!funcs.length){document.getElementById('banco-cards').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Nenhum funcionário.</div>';document.getElementById('metrics-banco').innerHTML='';return;}
   let totalPos=0,totalNeg=0;
   const funcsAtivas=funcs.filter(f=>f.controleBancoHoras!==false);
@@ -714,12 +728,13 @@ async function renderBanco(){
   const cards=funcsAtivas.map(f=>{
     const regsF=_regsDoMes.filter(r=>r.funcId===f.id);
     const credF=_credDoMes.filter(c=>c.funcId===f.id);
+    const justF=justifsTodas.filter(j=>j.funcId===f.id&&j.data&&j.data.startsWith(_mesFiltro));
     let hojeParaBanco=_hojeStr;if(_ehMesAtual){const rHF=_regsHoje.filter(r=>r.funcId===f.id);const eH=(rHF.find(r=>r.tipo==='entrada'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='entrada'))?.hora?.slice(0,5);const saH=(rHF.find(r=>r.tipo==='saida_almoco'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='saida_almoco'))?.hora?.slice(0,5);const raH=(rHF.find(r=>r.tipo==='retorno_almoco'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='retorno_almoco'))?.hora?.slice(0,5);const sH=(rHF.find(r=>r.tipo==='saida'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='saida'))?.hora?.slice(0,5);if(calcTotal(eH,saH,raH,sH)===null)hojeParaBanco=_ontemStr;}
-    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hojeParaBanco);
+    const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hojeParaBanco,justF);
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
     const pendenciasTitle=pendencias.length?pendencias.map(p=>fmtData(p.data)).join(', '):'';
-    return `<div class="ficha" style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><div class="ficha-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.nome}</div><div style="font-size:11px;color:var(--cinza-texto);">${f.cargo||''}</div></div><span class="badge ${saldo>=0?'extra':'debito'}" style="font-size:12px;padding:3px 10px;flex-shrink:0;">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:flex;gap:0;margin-bottom:6px;"><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Trabalhado</div><div style="font-size:13px;font-weight:600;">${fmtMin(trabMin)}</div></div><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Esperado</div><div style="font-size:13px;font-weight:600;">${fmtMin(esperMin)}</div></div><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Dias</div><div style="font-size:13px;font-weight:600;">${diasTrab}</div></div><div style="flex:1;" title="${pendenciasTitle}"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Pendências</div><div style="font-size:13px;font-weight:600;${pendencias.length?'color:var(--amarelo);':''}">${pendencias.length}${pendencias.length?' ⚠':''}</div></div></div><div class="barra-wrap" style="height:5px;margin-bottom:0;"><div class="barra" style="width:${pct}%;background:${saldo>=0?'var(--verde)':'var(--vermelho)'};"></div></div></div>`;
+    return `<div class="ficha" style="padding:10px 14px;"><div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;"><div class="ficha-avatar" style="width:36px;height:36px;font-size:13px;flex-shrink:0;">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(f.nome)}</div><div style="font-size:11px;color:var(--cinza-texto);">${esc(f.cargo||'')}</div></div><span class="badge ${saldo>=0?'extra':'debito'}" style="font-size:12px;padding:3px 10px;flex-shrink:0;">${saldo>=0?'+':''}${fmtMin(saldo)}</span></div><div style="display:flex;gap:0;margin-bottom:6px;"><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Trabalhado</div><div style="font-size:13px;font-weight:600;">${fmtMin(trabMin)}</div></div><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Esperado</div><div style="font-size:13px;font-weight:600;">${fmtMin(esperMin)}</div></div><div style="flex:1;"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Dias</div><div style="font-size:13px;font-weight:600;">${diasTrab}</div></div><div style="flex:1;" title="${pendenciasTitle}"><div style="font-size:10px;color:var(--cinza-texto);text-transform:uppercase;letter-spacing:.5px;">Pendências</div><div style="font-size:13px;font-weight:600;${pendencias.length?'color:var(--amarelo);':''}">${pendencias.length}${pendencias.length?' ⚠':''}</div></div></div><div class="barra-wrap" style="height:5px;margin-bottom:0;"><div class="barra" style="width:${pct}%;background:${saldo>=0?'var(--verde)':'var(--vermelho)'};"></div></div></div>`;
   }).join('');
   document.getElementById('banco-cards').innerHTML=cards;
   aplicarLazyFotos(document.getElementById('banco-cards'));
@@ -733,7 +748,7 @@ function abrirFeriados2026(){
   const lista=FERIADOS_2026.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--cinza-borda);font-size:13px;gap:10px;"><div><span style="font-weight:600;">${fmtData(f.data)}</span><span style="color:var(--cinza-texto);margin-left:8px;">${f.nome}</span></div><span class="badge ${f.tipo.includes('nacional')?'presente':f.tipo.includes('estadual')?'atrasou':'pendente'}" style="font-size:10px;">${f.tipo.replace('Feriado ','')}</span></div>`).join('');
   document.getElementById('foto-reg-img').style.display='none';
   document.getElementById('modal-foto-reg').querySelector('.modal').innerHTML=`<div class="modal-titulo"><span>Feriados 2026 — Fortaleza/CE</span><button class="modal-fechar" onclick="fecharFeriados()">×</button></div><div style="font-size:12px;color:var(--cinza-texto);margin-bottom:12px;">Selecione funcionário e clique em "Aplicar para todos".</div><div style="max-height:400px;overflow-y:auto;">${lista}</div><div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;"><select id="feriado-func-sel" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;"><option value="todos">Todos os funcionários</option></select><button class="btn-novo" onclick="aplicarFeriados2026()">Aplicar todos feriados</button></div><div id="feriados-status" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div><div class="modal-footer"><button class="btn-cancelar" onclick="fecharFeriados()">Fechar</button></div>`;
-  fbGet('funcionarios').then(funcs=>{const sel=document.getElementById('feriado-func-sel');funcs.forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.nome}</option>`);});
+  fbGet('funcionarios').then(funcs=>{const sel=document.getElementById('feriado-func-sel');funcs.filter(f=>f.id!==window._meuFuncId).forEach(f=>sel.innerHTML+=`<option value="${esc(f.id)}">${esc(f.nome)}</option>`);});
   document.getElementById('modal-foto-reg').classList.add('aberto');
 }
 window.abrirFeriados2026=abrirFeriados2026;
@@ -812,7 +827,7 @@ async function renderJustificativas(){
     const sClass=j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado';
     const sLabel=j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovado':'Rejeitado';
     const origem=j.lancadoPorGestor?'<span style="font-size:10px;color:var(--laranja);margin-left:6px;">pelo gestor</span>':'';
-    return `<div class="justif-card"><div class="justif-header"><div><div class="justif-nome">${j.funcNome}${origem}</div><div class="justif-info">${fmtData(j.data)} · ${j.motivo}</div></div><span class="badge ${sClass}">${sLabel}</span></div>${j.descricao&&j.descricao!==j.motivo?`<div class="justif-motivo">${j.descricao}</div>`:''} ${j.anexoNome?`<div style="margin-bottom:8px;"><button class="btn-acao" onclick="verAnexo('${j.id}')">📎 ${j.anexoNome}</button></div>`:''} ${j.obsGestor?`<div style="font-size:12px;color:var(--cinza-texto);margin-bottom:8px;">Obs: ${j.obsGestor}</div>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;">${j.status==='pendente'&&!j.lancadoPorGestor?`<button class="btn-acao success" onclick="abrirJustifGestor('${j.id}')">Analisar</button>`:''}${j.status==='pendente'?`<button class="btn-acao danger" onclick="excluirOcorrencia('${j.id}')">Excluir</button>`:''}</div></div>`;
+    return `<div class="justif-card"><div class="justif-header"><div><div class="justif-nome">${esc(j.funcNome)}${origem}</div><div class="justif-info">${fmtData(j.data)} · ${esc(j.motivo)}</div></div><span class="badge ${sClass}">${sLabel}</span></div>${j.descricao&&j.descricao!==j.motivo?`<div class="justif-motivo">${esc(j.descricao)}</div>`:''} ${j.anexoNome?`<div style="margin-bottom:8px;"><button class="btn-acao" onclick="verAnexo('${sid(j.id)}')">📎 ${esc(j.anexoNome)}</button></div>`:''} ${j.obsGestor?`<div style="font-size:12px;color:var(--cinza-texto);margin-bottom:8px;">Obs: ${esc(j.obsGestor)}</div>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;">${j.status==='pendente'&&!j.lancadoPorGestor?`<button class="btn-acao success" onclick="abrirJustifGestor('${sid(j.id)}')">Analisar</button>`:''}${j.status==='pendente'?`<button class="btn-acao danger" onclick="excluirOcorrencia('${sid(j.id)}')">Excluir</button>`:''}</div></div>`;
   }).join('');
   atualizarBadgeJustif();
 }
@@ -825,8 +840,9 @@ async function verAnexo(justifId){
   const snap=await window._getDoc(docRef('justificativas',justifId));
   if(!snap.exists()||!snap.data().anexo)return;
   const d=snap.data();
-  if(d.anexoTipo==='application/pdf'){const w=window.open();w.document.write(`<iframe src="${d.anexo}" style="width:100%;height:100%;border:none;"></iframe>`);}
-  else{document.getElementById('foto-reg-img').src=d.anexo;document.getElementById('modal-foto-reg').classList.add('aberto');}
+  // PONTO 2.0 F0 (P1-04): anexo só como data: URL do tipo esperado (nunca javascript:/HTML)
+  if(d.anexoTipo==='application/pdf'){if(!/^data:application\/pdf;base64,[A-Za-z0-9+/=]+$/.test(d.anexo))return;const w=window.open();w.document.write(`<iframe src="${esc(d.anexo)}" style="width:100%;height:100%;border:none;"></iframe>`);}
+  else{if(!/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+/=]+$/.test(d.anexo))return;document.getElementById('foto-reg-img').src=d.anexo;document.getElementById('modal-foto-reg').classList.add('aberto');}
 }
 window.verAnexo=verAnexo;
 
@@ -834,8 +850,22 @@ let justifAtualId=null;
 async function abrirJustifGestor(id){
   justifAtualId=id;
   const snap=await window._getDoc(docRef('justificativas',id));const j=snap.data();
-  const pontoInfo=j.tipoPonto?`<div style="background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:7px;padding:10px;margin-top:8px;"><div style="font-size:12px;color:var(--laranja);font-weight:600;margin-bottom:4px;">Ponto não batido — lançamento automático</div><div style="font-size:13px;">Batida: <strong>${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[j.tipoPonto]}</strong></div><div style="font-size:13px;">Horário: <strong>${j.horarioPonto}</strong></div><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">Ao aprovar, esta batida será lançada automaticamente.</div></div>`:'';
-  document.getElementById('justif-detalhe').innerHTML=`<div style="background:var(--cinza-medio);border-radius:8px;padding:12px;margin-bottom:1rem;"><div style="font-size:15px;font-weight:600;margin-bottom:4px;">${j.funcNome}</div><div style="font-size:13px;color:var(--cinza-texto);margin-bottom:6px;">${fmtData(j.data)} · ${j.motivo}</div>${j.descricao?`<div style="font-size:13px;">${j.descricao}</div>`:''}${pontoInfo}${j.anexoNome?`<div style="margin-top:8px;"><button class="btn-acao" onclick="verAnexo('${id}')">📎 Ver ${j.anexoNome}</button></div>`:''}</div>`;
+  const pontoInfo=j.tipoPonto?`<div style="background:rgba(26,115,232,.08);border:1px solid rgba(26,115,232,.2);border-radius:7px;padding:10px;margin-top:8px;"><div style="font-size:12px;color:var(--laranja);font-weight:600;margin-bottom:4px;">Ponto não batido — lançamento automático</div><div style="font-size:13px;">Batida: <strong>${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[j.tipoPonto]}</strong></div><div style="font-size:13px;">Horário: <strong>${esc(j.horarioPonto)}</strong></div><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">Ao aprovar, esta batida será lançada automaticamente.</div></div>`:'';
+  document.getElementById('justif-detalhe').innerHTML=`<div style="background:var(--cinza-medio);border-radius:8px;padding:12px;margin-bottom:1rem;"><div style="font-size:15px;font-weight:600;margin-bottom:4px;">${esc(j.funcNome)}</div><div style="font-size:13px;color:var(--cinza-texto);margin-bottom:6px;">${fmtData(j.data)} · ${esc(j.motivo)}</div>${j.descricao?`<div style="font-size:13px;">${esc(j.descricao)}</div>`:''}${pontoInfo}${j.anexoNome?`<div style="margin-top:8px;"><button class="btn-acao" onclick="verAnexo('${sid(id)}')">📎 Ver ${esc(j.anexoNome)}</button></div>`:''}</div>`;
+  // PONTO 2.0 F0: trilha da correção (ORIGINAL → EFETIVO, quem, quando) e bloqueio do próprio ponto
+  const det=document.getElementById('justif-detalhe');
+  if(Array.isArray(j.registrosOriginais)||j.registroEfetivoId){
+    const orig=(j.registrosOriginais||[]).map(o=>(o.hora||'').slice(0,5)).filter(Boolean).join(', ')||'sem batida original';
+    const quando=j.respondidoEm&&j.respondidoEm.toDate?j.respondidoEm.toDate().toLocaleString('pt-BR'):'';
+    const trilha=document.createElement('div');
+    trilha.style.cssText='font-size:12px;background:#f1f3f4;border-radius:7px;padding:8px 10px;margin-top:8px;';
+    trilha.textContent='Trilha: original '+orig+' → efetivo '+(j.horarioPonto||'')+' · decidido por '+(j.respondidoPorEmail||'—')+(quando?' em '+quando:'')+'. O registro original continua guardado.';
+    det.appendChild(trilha);
+  }
+  const proprio=!!(window._meuFuncId&&j.funcId===window._meuFuncId);
+  const decidida=j.status&&j.status!=='pendente';
+  document.querySelectorAll('#modal-justif-gestor .btn-aprovar,#modal-justif-gestor .btn-rejeitar').forEach(b=>{b.style.display=(proprio||decidida)?'none':'';b.disabled=false;});
+  if(proprio){const av=document.createElement('div');av.style.cssText='font-size:13px;color:var(--vermelho);margin-top:8px;font-weight:600;';av.textContent='Você não pode aprovar, rejeitar ou corrigir o próprio ponto. Peça a outro gestor.';det.appendChild(av);}
   document.getElementById('justif-obs-gestor').value='';
   document.getElementById('modal-justif-gestor').classList.add('aberto');
 }
@@ -862,14 +892,21 @@ async function responderJustificativa(status){
     batch.update(docRef('justificativas',justifAtualId),auditFields);
     if(status==='aprovado'){
       if(j.tipoPonto&&j.horarioPonto){
-        const todosRegs=await fbGet('registros');
-        // Remove TODOS os registros existentes do mesmo tipo/dia (inclui correções anteriores)
-        // para garantir exatamente um registro por tipo por dia após a correção.
-        const regsExistentes=todosRegs.filter(r=>r.funcId===j.funcId&&r.data===j.data&&r.tipo===j.tipoPonto);
-        for(const reg of regsExistentes)batch.delete(docRef('registros',reg.id));
+        // PONTO 2.0 F0 (P0-02): correção ADITIVA — a batida original NUNCA é apagada.
+        // O original (e uma correção anterior) recebe substituidoPor; a nova correção guarda a trilha completa.
+        const regsDia=await window._getRegistrosDia(j.funcId,j.data);          // leitura fresca do dia (sem cache)
+        const vigentes=regsDia.filter(r=>r.tipo===j.tipoPonto&&!r.substituidoPor);
         const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
-        const regId=uid();
-        batch.set(docRef('registros',regId),{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,criadoEm:new Date().toISOString()});
+        const regId='corr_'+justifAtualId;                                       // determinístico: 1 correção por justificativa
+        for(const reg of vigentes)batch.update(docRef('registros',reg.id),{substituidoPor:regId,substituidoEm:window._serverTimestamp(),substituidoPorJustificativa:justifAtualId});
+        const originais=vigentes.map(r=>({id:r.id,hora:r.hora||null,tipo:r.tipo}));
+        batch.set(docRef('registros',regId),{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,
+          correcaoDe:originais.map(o=>o.id), valorOriginal:originais,                                  // ORIGINAL
+          valorProposto:j.horarioPonto+':00', motivoCorrecao:j.motivo||null, descricaoCorrecao:j.descricao||null,   // PEDIDO / WHY
+          solicitadoPorFuncId:j.funcId, solicitadoEm:j.criadoEm||null,                                 // SOLICITANTE
+          aprovadoPorUid:window._userUid||'', aprovadoPorEmail:window._userEmail||'', aprovadoEm:window._serverTimestamp(),   // APROVADOR / WHEN
+          criadoEm:new Date().toISOString()});
+        auditFields.registroEfetivoId=regId; auditFields.registrosOriginais=originais;
       }else{
         const jornMin=(parseFloat(func?.jornada)||8)*60;
         const minutos=j.motivo==='Folga compensatória'?0:jornadaParaData(j.data,jornMin);
@@ -886,7 +923,8 @@ async function responderJustificativa(status){
     else notif('Justificativa rejeitada.','vermelho');
     renderJustificativas();
   }catch(e){
-    notif('Erro ao responder justificativa. Tente novamente.','vermelho');
+    const negado=String(e&&(e.code||e.message)||'').includes('permission');
+    notif(negado?'Ação não permitida: não é possível decidir sobre o próprio ponto nem sobre uma justificativa já decidida.':'Erro ao responder justificativa. Tente novamente.','vermelho');
     btns.forEach(b=>b.disabled=false);
   }finally{
     _respondendoJustif=false;
@@ -931,17 +969,31 @@ async function gerarEspelho(){
   window._espelhoSnapshot=snap;
 
   const espelhos=await fbGet('espelhos');
-  const espExist=espelhos.find(e=>e.funcId===funcId&&e.mes===mes&&!e.invalidado)
-               ||espelhos.find(e=>e.funcId===funcId&&e.mes===mes);
+  // versão ativa = maior versão não invalidada (mesmo critério de enviarParaAssinar)
+  const doPeriodo=espelhos.filter(e=>e.funcId===funcId&&e.mes===mes);
+  const espExist=doPeriodo.filter(e=>!e.invalidado).sort((a,b)=>(b.versao||1)-(a.versao||1))[0]||doPeriodo[0];
   const espId=espExist?.id||uid();
-  const rows=renderEspelhoRowsHTML(snap);
-  const saldoTotal=snap.totais.saldo;
+  // SIGNED_SNAPSHOT: espelho assinado mostra os números CONGELADOS na assinatura — nunca o recálculo atual.
+  // O recálculo (snap) continua disponível só para "Revisar Período".
+  const congelado=espExist?.assinado&&espExist.snapshot?espExist.snapshot:null;
+  const legadoSemSnapshot=!!(espExist?.assinado&&!espExist.snapshot);   // LEGACY_SIGNED_NO_SNAPSHOT
+  const snapExib=congelado||snap;
+  const fExib=congelado?{...func,...(congelado.funcionario||{})}:func;
+  const avisoEspelho=congelado
+    ?`<div style="margin:8px 0;padding:8px 10px;border:1px solid #1a73e8;border-radius:6px;background:#eef4ff;color:#123;font-size:11px;">Documento assinado — números congelados no momento do envio para assinatura (motor ${esc(congelado.engineVersao||'?')}). Mudanças posteriores nas regras ou nos registros não alteram este documento.</div>`
+    :legadoSemSnapshot
+    ?`<div style="margin:8px 0;padding:8px 10px;border:1px solid #c0392b;border-radius:6px;background:#fdecea;color:#611;font-size:11px;"><strong>Espelho assinado sem cópia congelada (LEGACY_SIGNED_NO_SNAPSHOT).</strong> A tabela abaixo é um RECÁLCULO com as regras atuais (motor ${esc(snap.engineVersao)}) e não reproduz necessariamente o documento assinado.</div>`
+    :snap.totais.pendencias>0
+    ?`<div style="margin:8px 0;padding:8px 10px;border:1px solid #e67e22;border-radius:6px;background:#fff4e5;color:#633;font-size:11px;">${snap.totais.pendencias} pendência(s) no período (ponto incompleto ou inconsistência administrativa). O funcionário não conseguirá assinar enquanto houver pendência.</div>`
+    :'';
+  const rows=renderEspelhoRowsHTML(snapExib);
+  const saldoTotal=snapExib.totais.saldo;
   const saldoColor=saldoTotal>=0?'#4ade80':'#f87171';
-  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div></div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snap.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${espExist.assinaturaImg}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${func.nome}<br>${espExist?.assinado?'Assinado em '+fmtData(espExist.assinadoEm?.slice(0,10)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
-  const statusAssin=espExist?.assinado?`<span class="badge assinado">✓ Assinado por ${espExist.assinadoPor}</span>`:`<span class="badge aguardando">Aguardando assinatura</span>`;
+  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${esc(fExib.nome)} · ${esc(fExib.cargo||'')} · Jornada: ${esc(fExib.jornada||8)}h/dia</div></div>${avisoEspelho}<table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snapExib.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${esc(espExist.assinaturaImg)}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${esc(fExib.nome)}<br>${espExist?.assinado?'Assinado em '+fmtData(dataIsoDe(espExist.assinadoEm)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
+  const statusAssin=espExist?.assinado?`<span class="badge assinado">✓ Assinado por ${esc(espExist.assinadoPor)}</span>`:`<span class="badge aguardando">Aguardando assinatura</span>`;
   const btnAcao=espExist?.assinado
-    ?`<button class="btn-ghost" style="border-color:#1a73e8;color:#1a73e8;" onclick="iniciarRevisaoPeriodo('${funcId}','${mes}')">Revisar Período (Gestor)</button>`
-    :`<button class="btn-ghost" onclick="enviarParaAssinar('${espId}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button>`;
+    ?`<button class="btn-ghost" style="border-color:#1a73e8;color:#1a73e8;" onclick="iniciarRevisaoPeriodo('${sid(funcId)}','${mes}')">Revisar Período (Gestor)</button>`
+    :`<button class="btn-ghost" onclick="enviarParaAssinar('${sid(espId)}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button>`;
   document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button>${btnAcao}</div>${espelhoHTML}`;
 }
 window.gerarEspelho=gerarEspelho;
@@ -1043,7 +1095,7 @@ async function renderFuncionarios(){
   document.getElementById('lista-funcionarios').innerHTML=funcs.map(f=>{
     const av=avals.find(a=>a.id===f.id);const estrelas=av?.nota?'★'.repeat(av.nota)+'☆'.repeat(5-av.nota):'☆☆☆☆☆';
     const temFoto=f.foto?`<span style="font-size:11px;color:var(--verde);">✓ Foto</span>`:`<span style="font-size:11px;color:var(--vermelho);">⚠ Sem foto</span>`;
-    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div class="ficha-nome">${f.nome}</div><div class="ficha-cargo">${f.cargo||'Sem cargo'} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${f.cpf||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${f.telefone||'—'}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${f.jornada||8}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${f.endereco||'—'}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${f.id}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${f.id}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${f.id}')">Remover</button></div></div>`;
+    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div><div class="ficha-nome">${esc(f.nome)}</div><div class="ficha-cargo">${esc(f.cargo||'Sem cargo')} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${esc(f.cpf||'—')}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${esc(f.telefone||'—')}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${esc(f.jornada||8)}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${esc(f.endereco||'—')}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${sid(f.id)}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${sid(f.id)}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${sid(f.id)}')">Remover</button></div></div>`;
   }).join('');
   aplicarLazyFotos(document.getElementById('lista-funcionarios'));
   // detecta perfil monitor pelo email do usuário logado
@@ -1057,8 +1109,9 @@ async function renderFuncionarios(){
     const sel=document.getElementById(sid);if(!sel)return;
     const val=sel.value;
     // no select gest-func, exclui o próprio funcionário monitor
-    const lista=sid==='gest-func'&&window._monitorFuncId?funcs.filter(f=>f.id!==window._monitorFuncId):funcs;
-    sel.innerHTML='<option value="">'+( sid==='esp-func'?'Selecione funcionário':'Todos')+'</option>'+lista.map(f=>`<option value="${f.id}">${f.nome}</option>`).join('');
+    // F0 (P1-05): em lançamentos (gest-func) o próprio vínculo também sai — ninguém lança ocorrência no próprio ponto
+    const lista=sid==='gest-func'?funcs.filter(f=>f.id!==window._monitorFuncId&&f.id!==window._meuFuncId):funcs;
+    sel.innerHTML='<option value="">'+( sid==='esp-func'?'Selecione funcionário':'Todos')+'</option>'+lista.map(f=>`<option value="${esc(f.id)}">${esc(f.nome)}</option>`).join('');
     sel.value=val;
   });
 }
@@ -1067,7 +1120,7 @@ async function renderLinks(){
   const funcs=await fbGet('funcionarios');
   const funcUrl=new URL('./ponto-func.html',window.location.href).href;
   if(!funcs.length){document.getElementById('lista-links').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Cadastre funcionários primeiro.</div>';return;}
-  document.getElementById('lista-links').innerHTML=funcs.map(f=>{const url=`${funcUrl}?f=${f.id}`;return `<div class="link-card"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">${f.nome}</div><div class="link-url">${url}</div></div><button class="btn-copiar" onclick="copiarLink('${url}',this)">Copiar</button></div>`;}).join('');
+  document.getElementById('lista-links').innerHTML=funcs.map(f=>{const url=`${funcUrl}?f=${f.id}`;return `<div class="link-card"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">${esc(f.nome)}</div><div class="link-url">${esc(url)}</div></div><button class="btn-copiar" onclick="copiarLink('${sjs(url)}',this)">Copiar</button></div>`;}).join('');
 }
 function copiarLink(url,btn){navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copiado!';setTimeout(()=>btn.textContent='Copiar',2000);});}
 window.copiarLink=copiarLink;
@@ -1077,7 +1130,7 @@ async function abrirModalFunc(id){
   document.getElementById('modal-func-titulo').textContent=id?'Editar funcionário':'Novo funcionário';
   // mostra seção de perfil só para quem não é monitor
   document.getElementById('campo-perfil-func').style.display=window._monitorFuncId?'none':'';
-  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';document.getElementById('f-email').value=f.email||'';document.getElementById('f-perfil').value=f.perfil||'';document.getElementById('f-modalidade').value=f.modalidade||'PRESENCIAL';document.getElementById('f-jornada').value=f.jornada||'8';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${f.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
+  if(id){const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();document.getElementById('f-nome').value=f.nome||'';document.getElementById('f-cpf').value=f.cpf||'';document.getElementById('f-rg').value=f.rg||'';document.getElementById('f-nasc').value=f.nascimento||'';document.getElementById('f-tel').value=f.telefone||'';document.getElementById('f-end').value=f.endereco||'';document.getElementById('f-cargo').value=f.cargo||'';document.getElementById('f-admissao').value=f.admissao||'';document.getElementById('f-salario').value=f.salario||'';document.getElementById('f-obs').value=f.obs||'';document.getElementById('f-email').value=f.email||'';document.getElementById('f-perfil').value=f.perfil||'';document.getElementById('f-modalidade').value=f.modalidade||'PRESENCIAL';document.getElementById('f-jornada').value=f.jornada||'8';if(f.foto){document.getElementById('foto-preview').innerHTML=`<img src="${esc(f.foto)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;document.getElementById('foto-status').textContent='Foto cadastrada';document.getElementById('foto-status').style.color='var(--verde)';}}
   else{['f-nome','f-cpf','f-rg','f-nasc','f-tel','f-end','f-cargo','f-admissao','f-salario','f-obs','f-email'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-perfil').value='';document.getElementById('f-modalidade').value='PRESENCIAL';document.getElementById('foto-preview').innerHTML=`<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;document.getElementById('foto-status').textContent='Nenhuma foto cadastrada';document.getElementById('foto-status').style.color='var(--cinza-texto)';}
   document.getElementById('modal-func').classList.add('aberto');
 }
@@ -1126,7 +1179,7 @@ async function abrirFicha(id){
   avalFuncId=id;const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();
   const avSnap=await window._getDoc(docRef('avaliacoes',id));const av=avSnap.exists()?avSnap.data():{};
   notaAv=av.nota||0;
-  document.getElementById('ficha-conteudo').innerHTML=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding:14px;background:var(--cinza-medio);border-radius:10px;"><div class="ficha-avatar" style="width:54px;height:54px;font-size:18px;flex-shrink:0;">${f.foto?`<img src="${f.foto}">`:''}${!f.foto?iniciais(f.nome):''}</div><div><div style="font-size:17px;font-weight:700;">${f.nome}</div><div style="font-size:12px;color:var(--cinza-texto);">${f.cargo||''}</div></div></div>`;
+  document.getElementById('ficha-conteudo').innerHTML=`<div style="display:flex;align-items:center;gap:14px;margin-bottom:1rem;padding:14px;background:var(--cinza-medio);border-radius:10px;"><div class="ficha-avatar" style="width:54px;height:54px;font-size:18px;flex-shrink:0;">${f.foto?`<img src="${esc(f.foto)}">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div><div style="font-size:17px;font-weight:700;">${esc(f.nome)}</div><div style="font-size:12px;color:var(--cinza-texto);">${esc(f.cargo||'')}</div></div></div>`;
   renderEstrelas();document.getElementById('inp-metas').value=av.metas||'';document.getElementById('inp-obs-av').value=av.obs||'';document.getElementById('inp-adv').value=av.advertencias||'';
   document.getElementById('modal-ficha').classList.add('aberto');
 }
@@ -1155,9 +1208,9 @@ async function renderContas(){
     const statusHtml=u
       ?`<span class="badge aprovado">Conta ativa</span><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">${u.email||''}</div>`
       :'<span class="badge pendente">Sem conta</span>';
-    const btnHtml=!u?`<div style="margin-top:6px;"><button class="btn-acao success" onclick="criarContaFunc('${f.id}','${f.nome.replace(/'/g,"\\'")}')">Criar conta</button></div>`:'';
+    const btnHtml=!u?`<div style="margin-top:6px;"><button class="btn-acao success" onclick="criarContaFunc('${sid(f.id)}','${sjs(f.nome)}')">Criar conta</button></div>`:'';
     return `<div style="background:var(--cinza-escuro);border:1px solid var(--cinza-borda);border-radius:10px;padding:1rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
-      <div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${f.foto}" class="lazy-foto">`:''}${!f.foto?iniciais(f.nome):''}</div><div class="func-cell-info"><div class="nome">${f.nome}</div><div class="cargo">${f.cargo||''} · ${f.modalidade||'PRESENCIAL'}</div></div></div>
+      <div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div class="func-cell-info"><div class="nome">${esc(f.nome)}</div><div class="cargo">${esc(f.cargo||'')} · ${esc(f.modalidade||'PRESENCIAL')}</div></div></div>
       <div style="text-align:right;">${statusHtml}${btnHtml}</div></div>`;
   }).join('');
   aplicarLazyFotos(el);

@@ -137,6 +137,8 @@ header{
 
 /* Botões de ação */
 .card-foot{display:flex;align-items:center;gap:.5rem}
+.card.processando{opacity:.6}.btn-act:disabled{opacity:.45;cursor:progress}
+.reabrir-motivo{width:100%;min-height:64px;margin:0 0 1rem;padding:.55rem .7rem;border-radius:8px;border:1px solid var(--border,#333);background:transparent;color:inherit;font:inherit;font-size:.82rem;resize:vertical}
 .btn-act{flex:1;padding:.6rem .75rem;border:none;border-radius:9px;font-size:.84rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .14s;letter-spacing:.2px;color:#fff}
 .b-iniciar {background:var(--btn)}
 .b-iniciar:hover{background:var(--btn-hv);transform:translateY(-1px)}
@@ -219,7 +221,7 @@ header{
   <div class="hd-sep"></div>
   <span class="hd-date" id="hdDate"></span>
   <div class="live-badge"><span class="live-dot"></span>Ao vivo</div>
-  <span class="countdown" id="countdown">↻ 15s</span>
+  <span class="countdown" id="countdown">⏳ conectando…</span>
   <a class="hd-back" id="btnSyncManual" href="https://github.com/murilorodrigueslima-maker/mr4-sistema/actions/workflows/sync-dados.yml" target="_blank" title="Forçar sincronização agora">⚡ Sync</a>
   <a class="hd-back" href="../index.html">← Sistema</a>
 </header>
@@ -290,7 +292,8 @@ header{
   <div class="modal">
     <div class="modal-title">↩ Reabrir Pedido</div>
     <div class="modal-info" id="reabrirInfo"></div>
-    <div style="font-size:.82rem;color:var(--sub);margin-bottom:1.3rem;">O pedido voltará para <strong style="color:var(--ag)">Aguardando Separação</strong> e poderá ser processado novamente.</div>
+    <div style="font-size:.82rem;color:var(--sub);margin-bottom:.8rem;">O pedido voltará para <strong style="color:var(--ag)">Aguardando Separação</strong> e poderá ser processado novamente. Ação de gestor, registrada na auditoria.</div>
+    <textarea class="reabrir-motivo" id="reabrirMotivo" maxlength="200" placeholder="Motivo da reabertura (obrigatório, mínimo 5 caracteres)"></textarea>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="fecharReabrirModal()">Cancelar</button>
       <button class="btn-confirm" onclick="confirmarReabrir()" style="background:var(--ag)">↩ Sim, reabrir</button>
@@ -300,12 +303,14 @@ header{
 
 <div class="toast-wrap" id="toastWrap"></div>
 
-<!-- Firebase: Auth + Firestore state -->
+<!-- Núcleo da máquina de estados (mesmo código dos testes) -->
+<script src="../js/expedicao-core.js"></script>
+
+<!-- Firebase: Auth + Firestore (listeners do conjunto operacional + transações) -->
 <script type="module">
 import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { getFirestore, collection, doc, getDoc, query, where, onSnapshot, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { verificarAcessoModulo } from '../js/guard.js';
 
 const app  = initializeApp({
@@ -314,31 +319,44 @@ const app  = initializeApp({
   messagingSenderId:"848211361584",appId:"1:848211361584:web:2732e1893122f4a23452f5"
 });
 const auth=getAuth(app), db=getFirestore(app);
-window._gcQuery = httpsCallable(getFunctions(app,'southamerica-east1'),'gcQuery');
+const COL='expedicao_pedidos';
 
-// Expõe helpers para o script regular
-window._fsGetAll = async (colName) => {
-  const snap = await getDocs(collection(db, colName));
-  return snap.docs.map(d => d.data());
+// Adaptador da transação para o núcleo (js/expedicao-core.js). Transação = lê no servidor antes de gravar;
+// não funciona offline (nada fica enfileirado com estado antigo).
+window._expAdapter = {
+  transacao: fn => runTransaction(db, t => fn({
+    ler: async n => { const s = await t.get(doc(db, COL, n)); return s.exists() ? s.data() : null; },
+    atualizar: (n, campos) => t.update(doc(db, COL, n), campos),
+    criarEvento: (n, id, dados) => t.set(doc(db, COL, n, 'eventos', id), dados),
+  })),
 };
-window._fsSet = async (colName, id, data, opts) => {
-  await setDoc(doc(db, colName, String(id)), data, opts || {});
+window._expServerTimestamp = () => serverTimestamp();
+
+// Listeners do conjunto OPERACIONAL (não da coleção inteira):
+//   1) ativos: coluna in [ag, se, pr]  2) despachados hoje: saidaEm >= início do dia (Fortaleza)  3) estado do sync central
+window._expOuvir = (inicioDiaMs, h) => {
+  const u1 = onSnapshot(query(collection(db, COL), where('coluna', 'in', ['ag', 'se', 'pr'])),
+    snap => h.ativos(snap.docs.map(d => d.data()), snap.docChanges().filter(c => c.type === 'added').map(c => c.doc.data()), snap.metadata.fromCache),
+    e => h.erro('ativos', e));
+  const u2 = onSnapshot(query(collection(db, COL), where('saidaEm', '>=', inicioDiaMs)),
+    snap => h.hoje(snap.docs.map(d => d.data())), e => h.erro('hoje', e));
+  return () => { u1(); u2(); };
 };
-window._fsGetOne = async (colName, id) => {
-  const snap = await getDoc(doc(db, colName, String(id)));
-  return snap.exists() ? snap.data() : null;
-};
+window._expOuvirSync = cb => onSnapshot(doc(db, 'expedicao_sync', 'estado'), s => cb(s.exists() ? s.data() : null), () => cb(null));
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href='../login.html'; return; }
   // FAIL CLOSED dual-role (P0 fix 2026-09-22)
   if (!await verificarAcessoModulo(db, user.uid, 'expedicao')) { window.location.href='../login.html'; return; }
-  let ok=false;
+  let ok=false, papel='';
   try {
     const s=await getDoc(doc(db,'sistema_usuarios',user.uid));
     if(s.exists()){const d=s.data();ok=d.admin||(d.modulos||[]).includes('expedicao');}
+    const u=await getDoc(doc(db,'users',user.uid));
+    papel=u.exists()&&u.data().ativo===true?(u.data().role||''):'';
   } catch(e){ok=false;}
   if(!ok){window.location.href='../index.html';return;}
+  window._expUsuario={uid:user.uid,papel};
   document.getElementById('loadingScreen').style.display='none';
   ['mainHeader','mainSummary','mainKanban'].forEach(id=>document.getElementById(id).style.display='');
   window.iniciarPainel();
@@ -348,10 +366,10 @@ onAuthStateChanged(auth, async user => {
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────────────────
 const CFG={
-  api_url:'../data/pedidos.json',  // fallback final legado
-  intervalo:15,          // 15 segundos entre syncs
   alerta_horas:2,
+  sync_atrasado_s:180,   // sem sync central há mais de 3 min → aviso na tela
 };
+const EXP=window.ExpedicaoCore;
 
 // ── ENVIOS ────────────────────────────────────────────────────────────────────
 const ENVIO={
@@ -362,11 +380,18 @@ const ENVIO={
   'rota-manha':   {label:'Rota Manhã',             icon:'🌅',cls:'e-rota-manha'},
   'rota-tarde':   {label:'Rota Tarde',             icon:'🌆',cls:'e-rota-tarde'},
 };
+const NOME_COL={ag:'Aguardando',se:'Separando',pr:'Pronto p/ Despacho',de:'Despachado',cancelado:'Cancelado'};
 
-// ── ESTADO (carregado do Firestore, não localStorage) ─────────────────────────
+// ── ESTADO — só o servidor muda o estado local (listeners); ações nunca movem card antes de confirmar ──
 const S={
-  pedidos:{},     // { [numero]: pedido }
-  cd:CFG.intervalo,
+  ativos:{},        // { [numero]: pedido } ← listener coluna in [ag,se,pr]
+  hoje:{},          // { [numero]: pedido } ← listener saidaEm >= início do dia
+  pedidos:{},       // união exibida no board
+  processando:new Set(),
+  inicioDia:0,
+  desligar:null,
+  primeiroAtivos:true,
+  sync:null,
   cdAtual:null,
   envioSel:null,
   modalMode:null,
@@ -423,147 +448,81 @@ function beep(qtd=1){
   }catch(e){}
 }
 
-// ── FIRESTORE ─────────────────────────────────────────────────────────────────
-async function fsSalvar(p){
-  await window._fsSet('expedicao_pedidos', p.numero, p);
+// ── ESTADO VINDO DO SERVIDOR ──────────────────────────────────────────────────
+function recompor(){
+  const agora=Date.now(), u={};
+  for(const p of Object.values(S.hoje)) if(EXP.noBoard(p,agora)) u[String(p.numero)]=p;
+  for(const p of Object.values(S.ativos)) u[String(p.numero)]=p;   // ativos prevalecem
+  S.pedidos=u;
+  render();
 }
-async function fsAtualizar(numero,campos){
-  await window._fsSet('expedicao_pedidos', String(numero), campos, {merge:true});
+function ouvir(){
+  if(S.desligar)S.desligar();
+  S.inicioDia=EXP.inicioDoDiaFortaleza(Date.now());
+  S.desligar=window._expOuvir(S.inicioDia,{
+    ativos:(lista,adicionados,doCache)=>{
+      S.ativos={}; lista.forEach(p=>{S.ativos[String(p.numero)]=p;});
+      const novos=S.primeiroAtivos?[]:adicionados.filter(p=>p.coluna==='ag'&&(p.versao||0)===0&&!doCache);
+      S.primeiroAtivos=false;
+      recompor();
+      if(novos.length){toast(`📬 ${novos.length} novo${novos.length>1?'s':''} pedido${novos.length>1?'s':''} chegou!`,'t-info');beep(novos.length);}
+    },
+    hoje:lista=>{S.hoje={}; lista.forEach(p=>{S.hoje[String(p.numero)]=p;}); recompor();},
+    erro:(q,e)=>{toast('⚠️ Conexão com o servidor interrompida ('+q+'). Recarregue a página.','t-error',8000);},
+  });
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-window.iniciarPainel = async function(){
+window.iniciarPainel = function(){
   toast('⏳ Carregando pedidos...','t-info',2000);
-
-  try{
-    const todos = await window._fsGetAll('expedicao_pedidos');
-    const hojeStr = hoje();
-
-    todos.forEach(p=>{
-      // Cancelados nunca aparecem no board (mas ficam no Firestore como histórico)
-      if(p.coluna==='cancelado')return;
-      // Todos os demais (ag, se, pr, de) entram em S.pedidos para que
-      // fetchPedidos() saiba que eles já existem e não os re-adicione como 'ag'.
-      // O render() já filtra 'de' para exibir somente os despachados hoje.
-      S.pedidos[String(p.numero)]=p;
-    });
-  }catch(e){
-    toast('⚠️ Erro ao carregar Firestore: '+e.message,'t-error');
-  }
-
+  ouvir();
+  window._expOuvirSync(d=>{S.sync=d;atualizarSync();});
   atualizarHeader();
-  render();
   setInterval(tickElapsed,8000);
   setInterval(atualizarHeader,30000);
-  iniciarContagem();
-  fetchPedidos(); // busca imediato ao abrir
+  setInterval(()=>{atualizarSync(); if(EXP.inicioDoDiaFortaleza(Date.now())!==S.inicioDia)ouvir();},15000);   // virada do dia: novo listener
 };
 
-// ── FETCH ─────────────────────────────────────────────────────────────────────
-// Busca pedidos: gcQuery (primário) → pedidos_cache Firestore (fallback S1)
-async function fetchPedidos(){
+// Status do sync CENTRAL (a tela não consulta o GestãoClick)
+function atualizarSync(){
+  const el=document.getElementById('countdown');if(!el)return;
+  const ms=S.sync&&S.sync.ultima_ok_ms;
+  if(!ms){el.textContent='⚠ sync de pedidos indisponível';el.classList.add('syncing');return;}
+  const s=Math.max(0,Math.round((Date.now()-ms)/1000));
+  if(s>CFG.sync_atrasado_s){el.textContent=`⚠ pedidos novos atrasados (${Math.round(s/60)} min)`;el.classList.add('syncing');}
+  else{el.textContent=`↻ sincronizado há ${s}s`;el.classList.remove('syncing');}
+}
+
+// ── AÇÕES (transação no servidor; o card só muda quando o listener confirmar) ──
+async function executar(numero,acao,dados){
+  const p=S.pedidos[numero];
+  if(!p||S.processando.has(numero))return false;
+  S.processando.add(numero);render();
   try{
-    let pedidosRaw = [];
-
-    try{
-      // ── Modo primário: gcQuery autenticado ──
-      pedidosRaw = await fetchViaGcQuery();
-    } catch(gcErr){
-      console.warn('gcQuery indisponível, tentando pedidos_cache:', gcErr.message);
-      // ── Fallback: pedidos_cache/latest do Firestore (S1) ──
-      try {
-        const snap = await window._fsGetOne('pedidos_cache', 'latest');
-        if (snap && Array.isArray(snap.pedidos)) {
-          pedidosRaw = snap.pedidos;
-        } else {
-          throw new Error('pedidos_cache/latest não encontrado ou vazio');
-        }
-      } catch(fsErr) {
-        console.warn('pedidos_cache indisponível:', fsErr.message);
-        pedidosRaw = [];
-      }
-    }
-
-    const nums = new Set(Object.keys(S.pedidos));
-    let n = 0;
-
-    for(const p of pedidosRaw){
-      const num = String(p.numero||p.id||'');
-      if(!num || nums.has(num)) continue;
-
-      // Verifica no Firestore — se já existe com QUALQUER status, não recria
-      let jaExiste=null;
-      try{jaExiste=await window._fsGetOne('expedicao_pedidos',num);}
-      catch(fe){console.warn('fetchPedidos #'+num+':',fe.message);continue;}
-      if(jaExiste){S.pedidos[num]=jaExiste;continue;}
-
-      const now = Date.now();
-      const novo = {
-        numero:      num,
-        data:        p.data   || hoje(),
-        hora:        p.hora   || '',
-        ingresadoEm: now,
-        movidoEm:    now,
-        coluna:      'ag',
-        cliente:     p.cliente  || '—',
-        vendedor:    p.vendedor || '—',
-        itens:       Number(p.itens  || 1),
-        valor:       Number(p.valor  || 0),
-        cidade:      p.cidade  || '',
-        envio:       null,
-        saidaEm:     null,
-      };
-      S.pedidos[num] = novo;
-      await fsSalvar(novo);
-      n++;
-    }
-
-    if(n){
-      toast(`📬 ${n} novo${n>1?'s':''} pedido${n>1?'s':''} chegou!`, 't-info');
-      beep(n);
-      render();
-    }
+    await EXP.executarAcao(window._expAdapter,numero,acao,p.coluna,dados||{},
+      {uid:window._expUsuario.uid,papel:window._expUsuario.papel,agoraMs:Date.now(),origem:'expedicao.html',serverTimestamp:window._expServerTimestamp});
+    return true;
   }catch(e){
-    console.warn('fetchPedidos:', e.message);
+    if(e.codigo==='STALE_STATE'){
+      if(e.atual){ // verdade lida no servidor dentro da transação
+        const n=String(e.atual.numero);
+        if(EXP.ATIVAS.includes(e.atual.coluna))S.ativos[n]=e.atual; else delete S.ativos[n];
+        recompor();
+      }
+      toast(`↻ Pedido #${numero} foi atualizado em outra tela — agora: ${NOME_COL[e.atual&&e.atual.coluna]||'—'}.`,'t-warn',5000);
+    }else if(EXP.MENSAGEM[e.codigo]){
+      toast(`⚠️ Pedido #${numero}: ${EXP.MENSAGEM[e.codigo]}.`,'t-warn',5000);
+    }else{
+      toast(`❌ Não foi possível salvar o pedido #${numero} — nada foi alterado. Tente de novo.`,'t-error',6000);
+    }
+    return false;
+  }finally{
+    S.processando.delete(numero);render();
   }
 }
 
-// Busca os últimos 2 dias de vendas via gcQuery autenticado
-async function fetchViaGcQuery(){
-  function diasAtras(n){
-    const d=new Date(); d.setDate(d.getDate()-n);
-    return d.toLocaleDateString('sv-SE',{timeZone:'America/Fortaleza'});
-  }
-  const inicio = diasAtras(2);
-  const fim    = hoje();
-
-  let todos=[], pagina=1;
-  while(true){
-    const r    = await window._gcQuery({ operacao:'LISTAR_VENDAS', dados:{ data_inicio:inicio, data_fim:fim, pagina, limite:100 } });
-    const batch = Array.isArray(r.data?.data) ? r.data.data : [];
-    todos = todos.concat(batch);
-    const meta = r.data?.meta || {};
-    if(pagina >= (Number(meta.total_paginas)||1)) break;
-    pagina++;
-  }
-
-  // DTO já normalizado pelo servidor
-  return todos.map(v=>({
-    numero:  v.numero || String(v.id || ''),
-    data:    v.data   || hoje(),
-    hora:    v.hora   || '',
-    cliente: v.cliente  || '—',
-    vendedor:v.vendedor || '—',
-    valor:   Number(v.valor || 0),
-    itens:   Number(v.itens || 0),
-    cidade:  v.cidade || '',
-  }));
-}
-
-// ── AÇÕES ─────────────────────────────────────────────────────────────────────
 window.marcarSeparado=async function(numero){
-  await mover(numero,'se','pr');
-  toast(`✅ Pedido #${numero} pronto para despacho`,'t-success');
+  if(await executar(numero,'MARCAR_SEPARADO'))toast(`✅ Pedido #${numero} pronto para despacho`,'t-success');
 };
 
 function abrirModal(numero,modo){
@@ -604,17 +563,12 @@ window.fecharModal=function(){
 
 window.confirmarModal=async function(){
   if(!S.envioSel||!S.cdAtual)return;
-  const p=S.pedidos[S.cdAtual];
-  p.envio=S.envioSel;
-  if(S.modalMode==='separacao'){
-    await mover(p.numero,'ag','se');
-    fecharModal();
-    toast(`📦 Separação iniciada — #${p.numero} · ${ENVIO[p.envio]?.label}`,'t-success');
+  const numero=S.cdAtual, envio=S.envioSel, modo=S.modalMode;
+  fecharModal();
+  if(modo==='separacao'){
+    if(await executar(numero,'INICIAR_SEPARACAO',{envio}))toast(`📦 Separação iniciada — #${numero} · ${ENVIO[envio]?.label}`,'t-success');
   }else{
-    p.saidaEm=Date.now();
-    await mover(p.numero,'pr','de');
-    fecharModal();
-    toast(`🚀 Pedido #${p.numero} despachado — ${ENVIO[p.envio]?.label||p.envio}`,'t-success');
+    if(await executar(numero,'DESPACHAR',{envio}))toast(`🚀 Pedido #${numero} despachado — ${ENVIO[envio]?.label||envio}`,'t-success');
   }
 };
 
@@ -633,24 +587,20 @@ window.fecharCancelModal=function(){
 };
 window.confirmarCancel=async function(){
   if(!S.cancelNum)return;
-  const p=S.pedidos[S.cancelNum];
-  // Salva como cancelado no Firestore
-  await fsAtualizar(p.numero,{coluna:'cancelado',canceladoEm:Date.now()});
-  // Remove do board
-  delete S.pedidos[S.cancelNum];
+  const numero=S.cancelNum, cliente=S.pedidos[numero]&&S.pedidos[numero].cliente;
   fecharCancelModal();
-  toast(`❌ Pedido #${p.numero} cancelado — ${limparNome(p.cliente)}`,'t-error');
-  render();
+  if(await executar(numero,'CANCELAR'))toast(`❌ Pedido #${numero} cancelado — ${limparNome(cliente)}`,'t-error');
 };
 
 document.getElementById('modalOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('modalOverlay'))fecharModal();});
 document.getElementById('cancelOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('cancelOverlay'))fecharCancelModal();});
 document.getElementById('reabrirOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('reabrirOverlay'))fecharReabrirModal();});
 
-// ── REABRIR PEDIDO ────────────────────────────────────────────────────────────
+// ── REABRIR PEDIDO (ação explícita de gestor, com motivo, auditada) ────────────
 window.abrirReabrirModal=function(numero){
   S.cancelNum=numero; // reutiliza o campo de referência
   const p=S.pedidos[numero];
+  document.getElementById('reabrirMotivo').value='';
   document.getElementById('reabrirInfo').innerHTML=
     `<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}<br>
      <span style="opacity:.7;font-size:.72rem">Despachado em: ${p.saidaEm?new Date(p.saidaEm).toLocaleString('pt-BR'):'—'} · Envio: ${ENVIO[p.envio]?.label||p.envio||'—'}</span>`;
@@ -662,34 +612,20 @@ window.fecharReabrirModal=function(){
 };
 window.confirmarReabrir=async function(){
   if(!S.cancelNum)return;
-  const p=S.pedidos[S.cancelNum];
-  const now=Date.now();
-  // Reseta para aguardando separação
-  p.coluna='ag'; p.saidaEm=null; p.envio=null; p.ingresadoEm=now; p.movidoEm=now;
-  await fsAtualizar(p.numero,{coluna:'ag',saidaEm:null,envio:null,ingresadoEm:now,movidoEm:now});
+  const motivo=document.getElementById('reabrirMotivo').value.trim();
+  if(motivo.length<EXP.MOTIVO_MIN){toast(`Informe o motivo (mínimo ${EXP.MOTIVO_MIN} caracteres).`,'t-warn');return;}
+  const numero=S.cancelNum, cliente=S.pedidos[numero]&&S.pedidos[numero].cliente;
   fecharReabrirModal();
-  toast(`↩ Pedido #${p.numero} reaberto — ${limparNome(p.cliente)}`,'t-warn');
-  render();
+  if(await executar(numero,'REABRIR',{motivo}))toast(`↩ Pedido #${numero} reaberto — ${limparNome(cliente)}`,'t-warn');
 };
-
-// ── MOVER ─────────────────────────────────────────────────────────────────────
-async function mover(numero,de,para){
-  const p=S.pedidos[numero];
-  if(!p)return;
-  p.coluna=para;
-  p.movidoEm=Date.now();
-  await fsAtualizar(numero,{coluna:para,movidoEm:p.movidoEm,envio:p.envio||null,saidaEm:p.saidaEm||null});
-  render();
-}
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render(){
-  const hojeStr=hoje();
   const ag=getColuna('ag');
   const se=getColuna('se');
   const pr=getColuna('pr');
-  // Despachados: só mostra de hoje
-  const de=getColuna('de').filter(p=>p.data===hojeStr||p.saidaEm&&new Date(p.saidaEm).toLocaleDateString('sv-SE',{timeZone:'America/Fortaleza'})===hojeStr);
+  // Despachados: só os de hoje (o listener já traz só saidaEm >= início do dia)
+  const de=getColuna('de');
 
   const total=ag.length+se.length+pr.length;
   document.getElementById('sumTotal').textContent=total;
@@ -720,6 +656,8 @@ function renderCard(p){
   const ec=elapsedCls(p.ingresadoEm,p.coluna);
   const hojeStr=hoje();
   const ehDiaAnterior=p.data&&p.data!==hojeStr;
+  const proc=S.processando.has(String(p.numero));
+  const dis=proc?' disabled':'';
 
   // Linha de data/hora do pedido
   let dataHoraHtml='';
@@ -736,20 +674,21 @@ function renderCard(p){
   let botao='';
   let cancelBtn='';
   if(p.coluna==='ag'){
-    botao=`<button class="btn-act b-iniciar" onclick="iniciarSeparacao('${p.numero}')">▶ Iniciar Separação</button>`;
-    cancelBtn=`<button class="btn-cancel-card" onclick="abrirCancelModal('${p.numero}')">✕</button>`;
+    botao=`<button class="btn-act b-iniciar"${dis} onclick="iniciarSeparacao('${p.numero}')">${proc?'⏳ Salvando…':'▶ Iniciar Separação'}</button>`;
+    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${p.numero}')">✕</button>`;
   }else if(p.coluna==='se'){
-    botao=`<button class="btn-act b-separado" onclick="marcarSeparado('${p.numero}')">✓ Marcar Separado</button>`;
-    cancelBtn=`<button class="btn-cancel-card" onclick="abrirCancelModal('${p.numero}')">✕</button>`;
+    botao=`<button class="btn-act b-separado"${dis} onclick="marcarSeparado('${p.numero}')">${proc?'⏳ Salvando…':'✓ Marcar Separado'}</button>`;
+    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${p.numero}')">✕</button>`;
   }else if(p.coluna==='pr'){
-    botao=`<button class="btn-act b-despachar" onclick="abrirDespacho('${p.numero}')">🚀 Despachar</button>`;
-    cancelBtn=`<button class="btn-cancel-card" onclick="abrirCancelModal('${p.numero}')">✕</button>`;
+    botao=`<button class="btn-act b-despachar"${dis} onclick="abrirDespacho('${p.numero}')">${proc?'⏳ Salvando…':'🚀 Despachar'}</button>`;
+    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${p.numero}')">✕</button>`;
   }else if(p.coluna==='de'){
     botao=`<span class="dispatch-time">🕐 Saiu ${horaFmt(p.saidaEm)}</span>`;
-    cancelBtn=`<button class="btn-reabrir-card" onclick="abrirReabrirModal('${p.numero}')">↩ Reabrir</button>`;
+    // Reabrir: só para gestor (as Rules também exigem gestor + motivo)
+    if(window._expUsuario&&window._expUsuario.papel==='gestor')cancelBtn=`<button class="btn-reabrir-card"${dis} onclick="abrirReabrirModal('${p.numero}')">↩ Reabrir</button>`;
   }
 
-  return`<div class="card${al?' alerta':''}" id="card-${p.numero}">
+  return`<div class="card${al?' alerta':''}${proc?' processando':''}" id="card-${p.numero}">
   <div class="card-top">
     <span class="card-num">#${numCurto(p.numero)}</span>
     ${dataHoraHtml}
@@ -774,21 +713,6 @@ function tickElapsed(){
     if(el){el.textContent=elapsedFmt(p.ingresadoEm);el.className='card-elapsed '+elapsedCls(p.ingresadoEm,p.coluna);}
     if(card)card.classList.toggle('alerta',isAlerta(p));
   });
-}
-
-// ── COUNTDOWN ────────────────────────────────────────────────────────────────
-function iniciarContagem(){
-  S.cd=CFG.intervalo;
-  setInterval(async()=>{
-    S.cd--;
-    const el=document.getElementById('countdown');if(!el)return;
-    if(S.cd<=0){
-      el.classList.add('syncing');el.textContent='↻ Sincronizando...';
-      await fetchPedidos();
-      S.cd=CFG.intervalo;el.classList.remove('syncing');
-    }
-    if(!el.classList.contains('syncing'))el.textContent=`↻ ${S.cd}s`;
-  },1000);
 }
 
 // ── HEADER ────────────────────────────────────────────────────────────────────

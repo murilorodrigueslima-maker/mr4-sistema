@@ -37,7 +37,7 @@ describe('persistência por geração — encolher, manter, crescer', () => {
     expect(meta(db).base_ativa.vendas).toBe(5); expect(baseIds(db)).toHaveLength(5);
     const b = await gravarBase(db, 4, 'VB-');
     const m = meta(db);
-    expect(m.base_ativa).toMatchObject({ geracao: b.sn.persistencia.geracao, vendas: 4, compras: 0, formato: 'tuplas-json-v1' });
+    expect(m.base_ativa).toMatchObject({ geracao: b.sn.persistencia.geracao, vendas: 4, compras: 0, formato: 'tuplas-json-v2' });
     expect(m.base_docs).toEqual({ vendas: 4, compras: 0 }); expect(m.base_orfas).toBeNull();
     expect(baseIds(db)).toEqual(S.idsDaBase(m.base_ativa).sort());
     expect(baseIds(db).every(id => id.startsWith(m.base_ativa.geracao + '_'))).toBe(true);
@@ -229,6 +229,6 @@ describe('escopo da exclusão, trava e legado', () => {
   test('NESTED_ARRAY_GUARD preservado: fatias são texto JSON; nenhum documento gravado tem array aninhado', async () => {
     const db = dbFalso(); await gravarBase(db, 2, 'VB-');
     for (const [c, docs] of Object.entries(db.st)) for (const d of Object.values(docs)) expect(S.temArrayAninhado(JSON.parse(d))).toBe(false);
-    for (const d of Object.values(db.st.compras_n0_base)) { const x = JSON.parse(d); expect(x.formato).toBe('tuplas-json-v1'); expect(typeof x.registros_json).toBe('string'); }
+    for (const d of Object.values(db.st.compras_n0_base)) { const x = JSON.parse(d); expect(['tuplas-json-v1', 'tuplas-json-v2']).toContain(x.formato); expect(x.formato).toBe('tuplas-json-v2'); expect(typeof x.registros_json).toBe('string'); }
   }, 60000);
 });

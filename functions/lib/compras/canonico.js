@@ -81,6 +81,27 @@ function origemDemanda(venda) {
   if (n === 'reservado' || n === 'reservada') return 'RESERVED';
   return 'OTHER_STOCK_MOVED';
 }
+/**
+ * Desconto do CABEÇALHO da venda em centavos (Política 1.2 — comprovado na API: o total da venda = produtos − desconto + frete,
+ * e o desconto do cabeçalho NÃO está embutido no valor_total dos itens). Vem em valor OU em percentual: valor > 0 vence;
+ * senão percentual × valor_produtos. Ausente/zero → 0. Frete e serviços nunca entram.
+ */
+function descontoCabecalhoVenda(raw) {
+  const dv = centavos(raw.desconto_valor);
+  if (dv !== null && dv > 0) return dv;
+  const pct = numero(raw.desconto_porcentagem), vp = centavos(raw.valor_produtos);
+  return pct !== null && pct > 0 && vp !== null && vp > 0 ? Math.round(vp * pct / 100) : 0;
+}
+/**
+ * Valor BRUTO da linha (antes do desconto do item), em centavos. Só é diferente do total quando houve desconto REAL
+ * (qtd × preço de tabela > total + 1 centavo; o preço unitário da API pode ter mais casas que o total e gerar diferenças de centavos).
+ * Regra idêntica para o registro completo e para o compacto (que só guarda o preço de tabela quando há desconto).
+ */
+function brutoDaLinha(qtd, precoCents, totalCents) {
+  if (!(qtd > 0) || precoCents === null || totalCents === null) return totalCents;
+  const bruto = Math.round(qtd * precoCents);
+  return bruto > totalCents + 1 ? bruto : totalCents;
+}
 /** Fatos de venda (1 por item). Linhas repetidas do mesmo produto na mesma venda são somadas depois pelo motor. */
 function fatosDeVenda(raw) {
   const data = parseData(raw.data);
@@ -94,6 +115,9 @@ function fatosDeVenda(raw) {
       product_id: it.produto_id != null ? String(it.produto_id) : null, variation_id: it.variacao_id != null ? String(it.variacao_id) : null,
       qty: numero(it.quantidade), unit: it.sigla_unidade || null,
       unit_price_cents: centavos(it.valor_venda), unit_cost_snapshot_cents: centavos(it.valor_custo), line_total_cents: centavos(it.valor_total),
+      // Política 1.2 (rentabilidade): total de produtos e desconto do cabeçalho, para o rateio proporcional por linha
+      sale_products_total_cents: centavos(raw.valor_produtos), header_discount_cents: descontoCabecalhoVenda(raw),
+      line_gross_cents: brutoDaLinha(numero(it.quantidade), centavos(it.valor_venda), centavos(it.valor_total)),
     };
   });
 }
@@ -105,18 +129,32 @@ function situacaoCompra(nome) {
   if (n === 'a receber' || n === 'em aberto') return 'PENDENTE';
   return 'DESCONHECIDA';
 }
+/**
+ * Custo unitário com RATEIO do cabeçalho da compra (Política 1.2). Evidência (produção, 30/09/2026): o custo cadastrado do ERP
+ * coincide (±0,5 %) com este valor para a última compra confirmada em 94 % dos produtos com compra:
+ *   landed = custo_do_item × (valor_produtos + frete + impostos − desconto) / valor_produtos   (rateio proporcional ao valor)
+ * Cabeçalho ausente (base antiga, anterior à Política 1.2) → null: nunca se inventa rateio.
+ */
+function custoComRateio(unitCents, hp, fr, im, de) {
+  if (!(unitCents > 0) || hp === null || !(hp > 0)) return null;
+  return Math.round(unitCents * (hp + (fr || 0) + (im || 0) - (de || 0)) / hp);
+}
 function fatosDeCompra(rawWrap) {
   const raw = rawWrap.Compra || rawWrap;
   const st = situacaoCompra(raw.nome_situacao);
+  const hp = centavos(raw.valor_produtos), fr = centavos(raw.valor_frete), im = centavos(raw.valor_impostos), de = centavos(raw.desconto_valor);
   return (raw.produtos || []).map((p, i) => {
     const it = p.produto || p;
+    const unit = centavos(it.valor_custo);
     return {
       purchase_id: raw.id != null ? String(raw.id) : null, line: i, issue_date: parseData(raw.data_emissao), registered_date: parseData(raw.cadastrado_em),
       status: st, supplier_id: raw.fornecedor_id ? String(raw.fornecedor_id) : null,
       product_id: it.produto_id != null ? String(it.produto_id) : null, qty: numero(it.quantidade), unit_cost_cents: centavos(it.valor_custo),
       freight_taxes_not_allocated: !!(Number(raw.valor_frete) || Number(raw.valor_impostos)),
+      header_products_total_cents: hp, header_freight_cents: fr, header_taxes_cents: im, header_discount_cents: de,
+      landed_unit_cost_cents: custoComRateio(unit, hp, fr, im, de),
     };
   });
 }
 
-module.exports = { TZ_COMERCIAL, DATAS_DE_CARGA, dataComercial, parseData, somarDias, diffDias, centavos, numero, mapearProduto, contaComoDemanda, origemDemanda, fatosDeVenda, situacaoCompra, fatosDeCompra, RE_CANCELADA };
+module.exports = { TZ_COMERCIAL, DATAS_DE_CARGA, dataComercial, parseData, somarDias, diffDias, centavos, numero, mapearProduto, contaComoDemanda, origemDemanda, brutoDaLinha, descontoCabecalhoVenda, custoComRateio, fatosDeVenda, situacaoCompra, fatosDeCompra, RE_CANCELADA };

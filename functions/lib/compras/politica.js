@@ -120,6 +120,68 @@ const POLITICA_1_1 = congelar(JSON.parse(JSON.stringify({
   },
 })));
 
+/**
+ * Política 1.2 — RENTABILIDADE (RELEASE CANDIDATE, NÃO APROVADA, NÃO VIGENTE). Herda a 1.1 sem alterar nada da decisão de compra:
+ * demanda, cobertura, quantidade, ABC, ruptura e prioridade P1–P4 ficam idênticos (QTD_1_2 ≤ QTD_1_1; no RC, igual). Acrescenta a
+ * camada financeira (custo, preço realizado, margem, capital, retorno, eficiência do capital) em `profitability`.
+ * `thresholds` são PROPOSTAS derivadas da distribuição real (ver relatório) e só classificam sinais — não definem quantidade.
+ */
+const POLITICA_1_2 = congelar(JSON.parse(JSON.stringify({
+  ...POLITICA_1_1,
+  policy_version: '1.2',
+  inherits_from: '1.1',
+  status: 'RELEASE_CANDIDATE_NOT_APPROVED',
+  approved_on: null,
+  changes_from_parent: ['profitability'],
+  profitability: {
+    enabled: true,
+    policy_version: '1.2',
+    windows_days: [30, 60, 90],
+    scale: { bps: 10000, pct_divisor: 100, ratio_digits: 10000 },        // bps = 1/100 de 1 %; razões com 4 casas
+    price: {
+      window_days: 90,                                                     // preço realizado usado na reposição (= janela de velocidade)
+      completed_only: true,                                                // só "Concretizada" (reservado não é receita realizada)
+      exclude_non_positive_net: true,                                      // bonificação/brinde/desconto ≥ 100 %: fora do preço e do lucro
+      header_discount: 'PROPORTIONAL_TO_LINE_TOTAL',
+      outlier_fence: { min_lines: 5, low: 0.5, high: 2, basis: 'PRODUCT_MEDIAN_UNIT_NET_PRICE_IN_WINDOW' },
+      fallback: 'REGISTERED_PRICE',                                        // só sem venda elegível na janela; sempre marcado
+      strong_min_lines: 3, strong_min_sale_days: 2,
+    },
+    cost: {
+      source: 'ERP_REGISTERED_COST',
+      semantics: 'LAST_CONFIRMED_PURCHASE_LANDED_COST_INFERRED_NOT_DOCUMENTED',
+      reference: 'LAST_CONFIRMED_PURCHASE_LANDED',
+      tolerance_high: 0.005, tolerance_medium: 0.02, high_max_reference_age_days: 365,
+      imported_supplier_ids: [],                                           // a API não identifica importados: lista é decisão do gestor (vazia = nenhum marcado)
+    },
+    efficiency: { base_days: 30 },                                         // EFICIENCIA_DO_CAPITAL = retorno bruto por 30 dias de capital imobilizado
+    decision: { high_need_priorities: ['P1', 'P2', 'P3'], priorities: ['P1', 'P2', 'P3', 'P4'], signal_names: ['NEGATIVE_MARGIN', 'MISSING_COST', 'LOW_COST_CONFIDENCE', 'HIGH_DEMAND_LOW_MARGIN', 'HIGH_DEMAND_HIGH_MARGIN', 'LOW_DEMAND_HIGH_MARGIN'] },
+    // PROPOSTAS (30/09/2026, distribuição real do catálogo: margem P25 ≈ 23,9 % / P75 ≈ 38,9 %; eficiência das sugestões P25 ≈ 0,20 / P75 ≈ 0,98;
+    // 10 % de desconto médio ≈ P98 dos produtos vendidos). Só classificam sinais e atratividade — NÃO definem quantidade. Não aprovadas.
+    thresholds: { status: 'PROPOSED_NOT_APPROVED', margin_low_pct: 24, margin_high_pct: 39, efficiency_low: 0.2, efficiency_high: 1, deep_discount_bps: 1000 },
+    distribution_percentiles: [0.1, 0.25, 0.5, 0.75, 0.9],
+    budget: { default_strategy: 'LAYERED_P1_FLOOR', strategies: ['OPERATIONAL', 'EFFICIENCY', 'PROTECT_P1_THEN_EFFICIENCY', 'LAYERED', 'LAYERED_P1_FLOOR'], p1_floor_days: 7 },   // estratégia padrão e piso de 7 dias: PROPOSTAS, não aprovadas
+  },
+})));
+
+/** Validação do bloco de rentabilidade (Política 1.2). */
+function validarRentabilidade(r) {
+  const e = [];
+  if (!r || typeof r !== 'object') return ['profitability ausente'];
+  if (!Array.isArray(r.windows_days) || !r.windows_days.length || r.windows_days.some(d => !(Number.isInteger(d) && d > 0))) e.push('profitability.windows_days inválido');
+  else if (!r.windows_days.includes(r.price && r.price.window_days)) e.push('profitability.price.window_days precisa estar em windows_days');
+  const c = r.cost || {};
+  if (!(c.tolerance_high > 0 && c.tolerance_high < c.tolerance_medium)) e.push('profitability.cost tolerâncias fora de ordem');
+  if (!Array.isArray(c.imported_supplier_ids)) e.push('profitability.cost.imported_supplier_ids deve ser lista');
+  const f = r.price && r.price.outlier_fence;
+  if (!(f && f.low > 0 && f.low < 1 && f.high > 1 && Number.isInteger(f.min_lines) && f.min_lines >= 3)) e.push('profitability.price.outlier_fence inválida');
+  const t = r.thresholds || {};
+  if (t.margin_low_pct !== null && t.margin_high_pct !== null && !(t.margin_low_pct < t.margin_high_pct)) e.push('profitability.thresholds margem fora de ordem');
+  if (t.efficiency_low !== null && t.efficiency_high !== null && !(t.efficiency_low < t.efficiency_high)) e.push('profitability.thresholds eficiência fora de ordem');
+  if (!(r.budget && r.budget.strategies.includes(r.budget.default_strategy))) e.push('profitability.budget.default_strategy inválida');
+  return e;
+}
+
 /** Validação estrutural (versão, classes, janelas, limiares coerentes). Devolve lista de erros. */
 function validarPolitica(p) {
   const e = [];
@@ -133,6 +195,7 @@ function validarPolitica(p) {
   pos(p.velocity && p.velocity.window_days, 'velocity.window_days');
   pos(p.new_product && p.new_product.window_days, 'new_product.window_days');
   if (p.new_product && p.new_product.proven_demand !== undefined) e.push(...validarRegraProdutoNovo(p.new_product.proven_demand));
+  if (p.profitability !== undefined) e.push(...validarRentabilidade(p.profitability));
   const ci = p.coverage_indicators || {};
   if (!(ci.critical_below_days < ci.low_below_days && ci.low_below_days < ci.excess_above_days)) e.push('coverage_indicators fora de ordem');
   if (!['CEIL', 'ROUND'].includes(p.rounding)) e.push('rounding inválido');
@@ -144,6 +207,6 @@ function validarPolitica(p) {
 }
 
 /** Registro de versões (nunca sobrescrever uma versão publicada). */
-const POLITICAS = congelar({ '1.0': POLITICA_1_0, '1.1': POLITICA_1_1 });
+const POLITICAS = congelar({ '1.0': POLITICA_1_0, '1.1': POLITICA_1_1, '1.2': POLITICA_1_2 });
 
-module.exports = { POLITICA_1_0, POLITICA_1_1, POLITICAS, POLITICA_VIGENTE: POLITICA_1_1, CENARIOS_EXPERIMENTAIS, METODOS_QTD_PRODUTO_NOVO, REGRAS_EXPERIMENTAIS_PRODUTO_NOVO, validarRegraProdutoNovo, politicaExperimental, validarPolitica };
+module.exports = { POLITICA_1_0, POLITICA_1_1, POLITICA_1_2, POLITICAS, POLITICA_VIGENTE: POLITICA_1_1, CENARIOS_EXPERIMENTAIS, METODOS_QTD_PRODUTO_NOVO, REGRAS_EXPERIMENTAIS_PRODUTO_NOVO, validarRegraProdutoNovo, politicaExperimental, validarPolitica, validarRentabilidade };

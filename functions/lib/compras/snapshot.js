@@ -8,10 +8,11 @@
 //   compras_n0_custos/bloco_NNN    custo cadastrado/último custo de compra/faturamento/valor INDICATIVO — só gestor
 //   compras_n0_base/{v_NNN,c_NNN}  base compacta p/ o incremental (itens de venda/compra SEM cliente) — ninguém lê pelo app
 //   estoque_snapshots/{YYYY-MM-DD} snapshot COMPLETO diário do saldo bruto (dia comercial America/Fortaleza)
-const { dataComercial, mapearProduto, fatosDeVenda, fatosDeCompra } = require('./canonico');
+const { dataComercial, mapearProduto, fatosDeVenda, fatosDeCompra, centavos, brutoDaLinha } = require('./canonico');
 const { calcularTudo, RULES_VERSION } = require('./motor');
 const { resumoCalibracao, resumoPolitica } = require('./calibracao');
 const { POLITICA_VIGENTE } = require('./politica');
+const Rent = require('./rentabilidade');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -56,21 +57,32 @@ function frescor(ultimoSucessoISO, agora = new Date(), limiarHoras = POLITICA_VI
 
 // ── Base compacta: SÓ o que o motor usa (sem cliente, vendedor, documento, endereço, observação) ────────────────────
 // Em memória: objetos. No Firestore: tuplas (formato 'tuplas-v1') — ~5× menor.
+// Formato v2 (Política 1.2): além do que o motor usa, guarda o necessário para a RENTABILIDADE SEM refazer a leitura completa:
+//   venda  — valor_produtos e desconto do cabeçalho (só se > 0) e, por item, o custo gravado na venda (custo DA ÉPOCA no ERP);
+//   compra — valor_produtos, frete, impostos e desconto do cabeçalho (rateio do custo). Ainda SEM cliente/vendedor/documento.
+// Leitura retrocompatível: tuplas v1 (sem esses campos) decodificam com os campos ausentes → a rentabilidade marca "dado ausente".
+const nz = v => (v !== undefined && v !== null && v !== '' && Number(v) > 0 ? String(v) : null);
 function compactarVenda(v) {
   return { id: String(v.id), data: v.data || null, nome_situacao: v.nome_situacao || null, situacao_estoque: v.situacao_estoque != null ? String(v.situacao_estoque) : null, modificado_em: v.modificado_em || null,
-    produtos: (v.produtos || []).map(p => { const it = p.produto || p; return { produto_id: it.produto_id != null ? String(it.produto_id) : null, quantidade: it.quantidade, valor_total: it.valor_total }; }) };
+    valor_produtos: v.valor_produtos !== undefined && v.valor_produtos !== null && v.valor_produtos !== '' ? String(v.valor_produtos) : null, desconto_valor: nz(v.desconto_valor), desconto_porcentagem: nz(v.desconto_porcentagem),
+    produtos: (v.produtos || []).map(p => { const it = p.produto || p; return { produto_id: it.produto_id != null ? String(it.produto_id) : null, quantidade: it.quantidade, valor_total: it.valor_total, valor_custo: it.valor_custo !== undefined && it.valor_custo !== null && it.valor_custo !== '' ? String(it.valor_custo) : null,
+      // preço de tabela só quando houve desconto REAL no item (≈ 3 % dos itens): suficiente e idêntico ao cálculo com o registro completo
+      valor_venda: brutoDaLinha(Number(it.quantidade), centavos(it.valor_venda), centavos(it.valor_total)) !== centavos(it.valor_total) ? String(it.valor_venda) : null }; }) };
 }
+const str = v => (v !== undefined && v !== null && v !== '' ? String(v) : null);
 function compactarCompra(w) {
   const c = w.Compra || w;
-  const frete = !!(Number(c.valor_frete) || Number(c.valor_impostos));
   return { id: String(c.id), data_emissao: c.data_emissao || null, modificado_em: c.modificado_em || null, nome_situacao: c.nome_situacao || null,
-    fornecedor_id: c.fornecedor_id ? String(c.fornecedor_id) : null, valor_frete: frete ? '1' : null, valor_impostos: null,
+    fornecedor_id: c.fornecedor_id ? String(c.fornecedor_id) : null, valor_frete: str(c.valor_frete), valor_impostos: str(c.valor_impostos), valor_produtos: str(c.valor_produtos), desconto_valor: str(c.desconto_valor),
     produtos: (c.produtos || []).map(p => { const it = p.produto || p; return { produto_id: it.produto_id != null ? String(it.produto_id) : null, quantidade: it.quantidade, valor_custo: it.valor_custo }; }) };
 }
-const codificarVenda = v => [v.id, v.data, v.nome_situacao, v.situacao_estoque, v.modificado_em, v.produtos.map(i => [i.produto_id, i.quantidade, i.valor_total])];
-const decodificarVenda = t => ({ id: t[0], data: t[1], nome_situacao: t[2], situacao_estoque: t[3], modificado_em: t[4], produtos: (t[5] || []).map(i => ({ produto_id: i[0], quantidade: i[1], valor_total: i[2] })) });
-const codificarCompra = c => [c.id, c.data_emissao, c.nome_situacao, c.fornecedor_id, c.modificado_em, c.valor_frete ? 1 : 0, c.produtos.map(i => [i.produto_id, i.quantidade, i.valor_custo])];
-const decodificarCompra = t => ({ id: t[0], data_emissao: t[1], nome_situacao: t[2], fornecedor_id: t[3], modificado_em: t[4], valor_frete: t[5] ? '1' : null, valor_impostos: null, produtos: (t[6] || []).map(i => ({ produto_id: i[0], quantidade: i[1], valor_custo: i[2] })) });
+const codificarVenda = v => [v.id, v.data, v.nome_situacao, v.situacao_estoque, v.modificado_em, v.produtos.map(i => [i.produto_id, i.quantidade, i.valor_total, i.valor_custo === undefined ? null : i.valor_custo, i.valor_venda === undefined ? null : i.valor_venda]), v.valor_produtos === undefined ? null : v.valor_produtos, v.desconto_valor || null, v.desconto_porcentagem || null];
+const decodificarVenda = t => ({ id: t[0], data: t[1], nome_situacao: t[2], situacao_estoque: t[3], modificado_em: t[4], valor_produtos: t[6] === undefined ? null : t[6], desconto_valor: t[7] === undefined ? null : t[7], desconto_porcentagem: t[8] === undefined ? null : t[8],
+  produtos: (t[5] || []).map(i => ({ produto_id: i[0], quantidade: i[1], valor_total: i[2], valor_custo: i[3] === undefined ? null : i[3], valor_venda: i[4] === undefined ? null : i[4] })) });
+const codificarCompra = c => [c.id, c.data_emissao, c.nome_situacao, c.fornecedor_id, c.modificado_em, c.valor_frete === undefined ? null : c.valor_frete, c.produtos.map(i => [i.produto_id, i.quantidade, i.valor_custo]), c.valor_produtos === undefined ? null : c.valor_produtos, c.valor_impostos === undefined ? null : c.valor_impostos, c.desconto_valor === undefined ? null : c.desconto_valor];
+// posição 5: texto (v2) ou 1/0 (v1 — sinalizador de frete/imposto, sem valores → o landed fica indisponível)
+const decodificarCompra = t => ({ id: t[0], data_emissao: t[1], nome_situacao: t[2], fornecedor_id: t[3], modificado_em: t[4], valor_frete: typeof t[5] === 'number' ? (t[5] ? '1' : null) : (t[5] === undefined ? null : t[5]), valor_impostos: t[8] === undefined ? null : t[8],
+  valor_produtos: t[7] === undefined ? null : t[7], desconto_valor: t[9] === undefined ? null : t[9], produtos: (t[6] || []).map(i => ({ produto_id: i[0], quantidade: i[1], valor_custo: i[2] })) });
 function fatiarPorBytes(lista, max = BASE_BYTES_MAX) {
   const out = []; let atual = [], tam = 2;
   for (const x of lista) { const b = Buffer.byteLength(JSON.stringify(x)) + 1; if (atual.length && tam + b > max) { out.push(atual); atual = []; tam = 2; } atual.push(x); tam += b; }
@@ -121,7 +133,7 @@ function motivosAtencao(m) {
   return out;
 }
 
-function montarView(r, porId, custos, agora, hoje) {
+function montarView(r, porId, custos, agora, hoje, financeiro = null, blocoPorId = {}) {
   // conjunto da Fase D (sugestão ∪ negativo ∪ novo) — o documento de custos continua restrito a ele
   const incluirSugestao = m => m.suggestion.suggested_qty > 0 || m.raw_stock < 0 || m.new_product;
   const linha = m => {
@@ -162,9 +174,14 @@ function montarView(r, porId, custos, agora, hoje) {
         atencao: { produtos: soAtencao.length, por_motivo: Object.fromEntries(ATENCAO_MOTIVOS.map(k => [k, soAtencao.filter(l => l.attention_reasons.includes(k)).length])) } },
       linhas },
     custos: { policy_version: r.policy_version, gerado_em: agora.toISOString(), aviso: 'CUSTO INDICATIVO (cadastrado no ERP; confiança baixa; sem frete/impostos rateados) — não é necessidade financeira',
-      linhas: Object.fromEntries(linhas.filter(l => idsSugestao.has(l.id)).map(l => { const k = custoPorId[l.id] || {}; return [l.id, { custo_cadastrado_cents: k.registered_cost_cents ?? null, ultimo_custo_compra_cents: k.last_purchase_cost_cents ?? null, confianca: k.cost_confidence || null, valor_sugestao_custo_conhecido_cents: k.suggestion_value_known_cost_only_cents ?? null }]; })) },
+      // Política 1.2 (só quando ativa): rentabilidade por linha e resumo agregado — ficam SÓ neste documento (leitura de gestor)
+      ...(financeiro ? { resumo_financeiro: financeiro.resumo } : {}),
+      linhas: Object.fromEntries(linhas.filter(l => idsSugestao.has(l.id)).map(l => { const k = custoPorId[l.id] || {}; return [l.id, { custo_cadastrado_cents: k.registered_cost_cents ?? null, ultimo_custo_compra_cents: k.last_purchase_cost_cents ?? null, confianca: k.cost_confidence || null, valor_sugestao_custo_conhecido_cents: k.suggestion_value_known_cost_only_cents ?? null, ...(financeiro ? { fin: Rent.fichaDaLista(financeiro.porProduto.get(l.id), blocoPorId[l.id]) } : {}) }]; })) },
   };
 }
+
+/** O resumo é lido por quem tem o módulo estoque: a política publicada ali NÃO leva o bloco de rentabilidade (limiares de margem, fornecedores importados). */
+function semRentabilidade(politica) { if (!politica.profitability) return politica; const { profitability, ...resto } = politica; return resto; }   // 1.0/1.1: o próprio objeto (identidade preservada)
 
 function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = new Date(), estatisticas = {}, politica = POLITICA_VIGENTE, modo = 'FULL' }) {
   const hoje = dataComercial(agora);
@@ -187,18 +204,21 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
       suggestion_value_known_cost_only_cents: m.cost_confidence === 'KNOWN_COST' && m.suggestion.suggested_qty > 0 ? m.suggestion.suggested_qty * p.registered_cost_cents : null,
       scenario_purchase_value_known_cost_only_cents: Object.fromEntries(Object.entries(m.scenarios).map(([n, sc]) => [n, m.cost_confidence === 'KNOWN_COST' && sc.suggested_qty > 0 ? sc.suggested_qty * p.registered_cost_cents : null])) };
   });
+  // Política 1.2 (rentabilidade): só se a política tiver o bloco ativo. A decisão de compra (1.1) já está calculada e NÃO é tocada.
+  const financeiro = politica.profitability && politica.profitability.enabled ? Rent.calcularFinanceiro({ produtos, metricas: r.metricas, fatosVenda, fatosCompra, hoje, politica }) : null;
+  if (financeiro) { for (const [id, f] of financeiro.porProduto) financeiro.porProduto.set(id, Rent.compactarFin(f)); for (const k of custos) k.fin = financeiro.porProduto.get(k.product_id); }   // grava a forma compacta (decisões já calculadas)
   const cont = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? v.length : cont(v)]));
   const pol = resumoPolitica(r);
   delete pol.stockout_not_suggested_detail;   // detalhe por produto fica fora do resumo compartilhado
   return {
-    resumo: { versao: RULES_VERSION, policy_version: r.policy_version, politica: r.politica, gerado_em: agora.toISOString(), data_comercial: hoje, fuso: politica.stock_snapshot.timezone, modo_sync: modo,
+    resumo: { versao: RULES_VERSION, policy_version: r.policy_version, politica: semRentabilidade(r.politica), gerado_em: agora.toISOString(), data_comercial: hoje, fuso: politica.stock_snapshot.timezone, modo_sync: modo,
       produtos: produtos.length, contagens: cont(r.agregados), listas: r.agregados, data_venda_mais_antiga: r.data_venda_mais_antiga,
       produtos_de_venda_nao_encontrados: r.produtos_de_venda_nao_encontrados.length, limitacoes: LIMITACOES,
       resumo_politica: pol, calibracao: resumoCalibracao(r) },
     operacional, custos,
     meta: { versao: RULES_VERSION, policy_version: r.policy_version, modo_sync: modo, ultima_sincronizacao_ok: agora.toISOString(), data_comercial: hoje, estatisticas: { ...estatisticas, duplicatas_de_linha: r.duplicatas } },
     snapshotEstoque: montarSnapshotEstoque(produtos, agora, politica),
-    view: montarView(r, porId, custos, agora, hoje),
+    view: montarView(r, porId, custos, agora, hoje, financeiro, Object.fromEntries(custos.map((k, i) => [k.product_id, Math.floor(i / BLOCO)]))),
     base: { vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
   };
 }
@@ -212,7 +232,8 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
 //      (ativa anterior, pendente de tentativa que falhou, órfãs de limpeza interrompida). Nunca lista/apaga por prefixo.
 // O leitor usa SÓ o ponteiro: busca cada fatia pelo id, confere geração/índice/quantidade e falha FECHADO se faltar.
 // Legado (antes das gerações): ids v_NNN/c_NNN com meta.base_docs; lido e substituído pela mesma regra.
-const FORMATO_BASE = 'tuplas-json-v1';
+const FORMATO_BASE = 'tuplas-json-v2';                          // escrita
+const FORMATOS_BASE_ACEITOS = ['tuplas-json-v1', 'tuplas-json-v2'];   // leitura (gerações antigas continuam legíveis)
 const RE_ID_FATIA = /^(g\d+x[0-9a-f]{6}_)?[vc]_\d{3}$/;
 // geração ÚNICA por tentativa (instante + sufixo aleatório): duas gravações nunca compartilham ids, nem no mesmo instante
 const idGeracao = quando => 'g' + String(quando).replace(/\D/g, '') + 'x' + require('crypto').randomBytes(3).toString('hex');
@@ -335,7 +356,7 @@ async function carregarBase(db) {
     if (!d.exists) throw erroBase('BASE_INCOMPLETA', 'fatia ausente ' + id);
     const x = d.data() || {};
     const indice = Number(id.slice(-3));
-    if (x.formato !== FORMATO_BASE || x.indice !== indice || (ref.geracao ? x.geracao !== ref.geracao : x.gerado_em !== ref.gerado_em)) throw erroBase('BASE_INCOMPLETA', 'fatia de outra geração ' + id);
+    if (!FORMATOS_BASE_ACEITOS.includes(x.formato) || x.indice !== indice || (ref.geracao ? x.geracao !== ref.geracao : x.gerado_em !== ref.gerado_em)) throw erroBase('BASE_INCOMPLETA', 'fatia de outra geração ' + id);
     let regs; try { regs = JSON.parse(x.registros_json); } catch (e) { throw erroBase('BASE_INCOMPLETA', 'fatia ilegível ' + id); }
     if (!Array.isArray(regs) || regs.length !== x.n) throw erroBase('BASE_INCOMPLETA', 'quantidade divergente ' + id);
     if (id.includes('v_')) vendas.push(...regs.map(decodificarVenda)); else compras.push(...regs.map(decodificarCompra));
@@ -437,4 +458,4 @@ function estimarArmazenamento({ produtos, bytesPorProduto, mudancasPorDia, anos,
   return { opcao_A_bytes: Math.round(a), opcao_B_bytes: Math.round(b), produtos_no_fim: n };
 }
 
-module.exports = { FORMATO_BASE, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };
+module.exports = { FORMATO_BASE, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };

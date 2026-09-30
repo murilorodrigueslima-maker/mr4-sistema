@@ -133,7 +133,7 @@ function motivosAtencao(m) {
   return out;
 }
 
-function montarView(r, porId, custos, agora, hoje, financeiro = null, blocoPorId = {}) {
+function montarView(r, porId, custos, agora, hoje, financeiro = null, softLimitBytes = null) {
   // conjunto da Fase D (sugestão ∪ negativo ∪ novo) — o documento de custos continua restrito a ele
   const incluirSugestao = m => m.suggestion.suggested_qty > 0 || m.raw_stock < 0 || m.new_product;
   const linha = m => {
@@ -168,15 +168,18 @@ function montarView(r, porId, custos, agora, hoje, financeiro = null, blocoPorId
   const cont = f => linhas.filter(f).length;
   const soAtencao = linhas.filter(l => !(l.qtd > 0) && l.attention_reasons.some(k => !ATENCAO_ANOTACAO.includes(k)));
   const custoPorId = Object.fromEntries(custos.map(k => [k.product_id, k]));
+  const docCustos = completa => ({ policy_version: r.policy_version, gerado_em: agora.toISOString(), aviso: 'CUSTO INDICATIVO (cadastrado no ERP; confiança baixa; sem frete/impostos rateados) — não é necessidade financeira',
+      // Política 1.2 (só quando ativa): rentabilidade por linha e resumo agregado — ficam SÓ neste documento (leitura de gestor)
+      ...(financeiro ? { resumo_financeiro: financeiro.resumo, detalhe_financeiro: completa ? 'COMPLETO' : 'RESUMIDO' } : {}),
+      linhas: Object.fromEntries(linhas.filter(l => idsSugestao.has(l.id)).map(l => { const k = custoPorId[l.id] || {}; return [l.id, { custo_cadastrado_cents: k.registered_cost_cents ?? null, ultimo_custo_compra_cents: k.last_purchase_cost_cents ?? null, confianca: k.cost_confidence || null, valor_sugestao_custo_conhecido_cents: k.suggestion_value_known_cost_only_cents ?? null, ...(financeiro ? { fin: Rent.fichaDaLista(financeiro.porProduto.get(l.id), completa) } : {}) }]; })) });
+  let viewCustos = docCustos(true);
+  if (financeiro && softLimitBytes !== null && Buffer.byteLength(JSON.stringify(viewCustos)) > softLimitBytes) viewCustos = docCustos(false);   // degrau de segurança: ficha enxuta
   return {
     sugestoes: { policy_version: r.policy_version, gerado_em: agora.toISOString(), data_comercial: hoje, total_linhas: linhas.length,
       contagens: { sugeridos: cont(l => l.qtd > 0), unidades: linhas.reduce((t, l) => t + (l.qtd || 0), 0), P1: cont(l => l.prioridade === 'P1'), P2: cont(l => l.prioridade === 'P2'), P3: cont(l => l.prioridade === 'P3'), P4: cont(l => l.prioridade === 'P4'), estoque_negativo: cont(l => l.estoque_negativo), novo_com_demanda: cont(l => l.novo_com_demanda), novo_protegido: cont(l => l.novo_protegido),
         atencao: { produtos: soAtencao.length, por_motivo: Object.fromEntries(ATENCAO_MOTIVOS.map(k => [k, soAtencao.filter(l => l.attention_reasons.includes(k)).length])) } },
       linhas },
-    custos: { policy_version: r.policy_version, gerado_em: agora.toISOString(), aviso: 'CUSTO INDICATIVO (cadastrado no ERP; confiança baixa; sem frete/impostos rateados) — não é necessidade financeira',
-      // Política 1.2 (só quando ativa): rentabilidade por linha e resumo agregado — ficam SÓ neste documento (leitura de gestor)
-      ...(financeiro ? { resumo_financeiro: financeiro.resumo } : {}),
-      linhas: Object.fromEntries(linhas.filter(l => idsSugestao.has(l.id)).map(l => { const k = custoPorId[l.id] || {}; return [l.id, { custo_cadastrado_cents: k.registered_cost_cents ?? null, ultimo_custo_compra_cents: k.last_purchase_cost_cents ?? null, confianca: k.cost_confidence || null, valor_sugestao_custo_conhecido_cents: k.suggestion_value_known_cost_only_cents ?? null, ...(financeiro ? { fin: Rent.fichaDaLista(financeiro.porProduto.get(l.id), blocoPorId[l.id]) } : {}) }]; })) },
+    custos: viewCustos,
   };
 }
 
@@ -218,7 +221,7 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
     operacional, custos,
     meta: { versao: RULES_VERSION, policy_version: r.policy_version, modo_sync: modo, ultima_sincronizacao_ok: agora.toISOString(), data_comercial: hoje, estatisticas: { ...estatisticas, duplicatas_de_linha: r.duplicatas } },
     snapshotEstoque: montarSnapshotEstoque(produtos, agora, politica),
-    view: montarView(r, porId, custos, agora, hoje, financeiro, Object.fromEntries(custos.map((k, i) => [k.product_id, Math.floor(i / BLOCO)]))),
+    view: montarView(r, porId, custos, agora, hoje, financeiro, financeiro ? politica.profitability.view.soft_limit_bytes : null),
     base: { vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
   };
 }

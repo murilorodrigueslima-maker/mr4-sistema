@@ -371,7 +371,10 @@ describe('dados financeiros: só nos documentos protegidos; tamanho sob controle
     let maior = 0; for (let i = 0; i < sn.custos.length; i += S.BLOCO) maior = Math.max(maior, t({ produtos: sn.custos.slice(i, i + S.BLOCO) }));
     // PIOR CASO: quase todo o catálogo na visão — bloco e visão ficam folgados frente à guarda (DOC_BYTES_MAX)
     expect(Object.keys(sn.view.custos.linhas).length).toBeGreaterThan(700);
-    expect(maior).toBeLessThan(S.DOC_BYTES_MAX / 2); expect(t(sn.view.custos)).toBeLessThan(S.DOC_BYTES_MAX * 0.6);
+    expect(maior).toBeLessThan(S.DOC_BYTES_MAX / 2); expect(t(sn.view.custos)).toBeLessThan(S.DOC_BYTES_MAX * 0.65);   // pior caso absoluto (877 linhas): ~62 % do limite duro
+    expect(sn.view.custos.detalhe_financeiro).toBe('RESUMIDO');                        // degrau de segurança acionado; nada abortou
+    const linha0 = Object.values(sn.view.custos.linhas)[0].fin; expect(linha0.windows).toBeUndefined(); expect(linha0.margin).toBeDefined(); expect(linha0.decision).toBeDefined();   // enxuta, mas ainda com margem e decisão
+    const pequeno = rodar(cen).sn.view.custos; expect(pequeno.detalhe_financeiro).toBe('COMPLETO'); expect(Object.values(pequeno.linhas)[0].fin.windows).toBeDefined();   // caso real: completa
   });
   test('base v1 (antiga) lida sem quebrar: itens sem custo da época → lucro histórico indisponível, nunca inventado', () => {
     const v1 = S.decodificarVenda(['V-ANTIGA', X.dia(5), 'Concretizada', '1', X.dia(5) + ' 10:00:00', [['PV', '2', '50.00']]]);

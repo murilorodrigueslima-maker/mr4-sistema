@@ -92,13 +92,29 @@
   details.mot code { font-family: 'JetBrains Mono', monospace; font-size: .68rem; background: var(--bg); padding: .05rem .3rem; border-radius: 3px; margin: .15rem .2rem 0 0; display: inline-block; }
   .vazio { padding: 2rem; text-align: center; color: var(--muted); font-size: .9rem; }
   .lbl { display: none; }
+  /* Política 1.2 — rentabilidade (só aparece para perfil com custo e servidor com a política 1.2) */
+  .resumo-fin { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .75rem .9rem; margin-bottom: 1rem; }
+  .resumo-fin .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem .9rem; }
+  .resumo-fin .k { font-size: .68rem; font-weight: 700; letter-spacing: .4px; color: var(--muted); text-transform: uppercase; }
+  .resumo-fin .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .resumo-fin .nota { font-size: .72rem; color: var(--muted); margin-top: .55rem; line-height: 1.45; }
+  .lista { overflow-x: auto; }
+  .row.fin-on { grid-template-columns: 52px minmax(0, 2.2fr) 64px 100px 96px 40px 84px 92px 76px 92px 72px; min-width: 1060px; }
+  .margem-neg { color: var(--red); font-weight: 700; } .margem-alta { color: var(--green); font-weight: 600; }
+  .fin-est { font-size: .66rem; color: var(--muted); }
+  details.fin { grid-column: 2 / -1; font-size: .74rem; color: var(--muted); }
+  details.fin summary { cursor: pointer; }
+  details.fin .grade-fin { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .35rem 1.2rem; margin-top: .45rem; color: var(--text); }
+  details.fin .grade-fin div span { color: var(--muted); display: block; font-size: .66rem; text-transform: uppercase; letter-spacing: .3px; }
+  details.fin .aviso-fin { margin-top: .45rem; color: var(--muted); font-size: .7rem; }
 
   @media (max-width: 900px) {
     .sidebar { display: none !important; }
     .main { margin-left: 0; padding: 1rem 1rem 3rem; }
     .chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .row.head { display: none; }
-    .row, .row.custo-on { grid-template-columns: 1fr 1fr; gap: .35rem .75rem; }
+    .row, .row.custo-on, .row.fin-on { grid-template-columns: 1fr 1fr; gap: .35rem .75rem; min-width: 0; }
+    details.fin { grid-column: 1 / -1; }
     .row > .prod { grid-column: 1 / -1; }
     .row > .c-pr { grid-column: 1 / -1; justify-self: start; }
     .lbl { display: inline; color: var(--muted); font-size: .7rem; margin-right: .3rem; }
@@ -145,6 +161,8 @@
     (sem lead time). Prioridade P1 = maior prioridade para análise. Estoque negativo não gera unidades extras.
   </div>
 
+  <div class="resumo-fin" id="resumoFin" hidden></div>
+
   <div class="chips" id="chips"></div>
 
   <div class="tabs" id="tabs">
@@ -158,6 +176,14 @@
     <label class="tog"><input type="checkbox" id="fNovo"> Novo com demanda</label>
     <label class="tog"><input type="checkbox" id="fNeg"> Estoque negativo</label>
     <select id="fMotivo" hidden aria-label="Motivo de atenção"><option value="">Todos os motivos</option></select>
+    <select id="fFin" hidden aria-label="Filtro financeiro">
+      <option value="">Financeiro: todos</option><option value="neg">Margem negativa</option><option value="indisp">Margem indisponível</option><option value="alta">Margem alta</option><option value="baixa">Margem baixa</option>
+      <option value="ret_alto">Retorno alto</option><option value="ret_baixo">Retorno baixo</option><option value="custo_incerto">Custo sem confiança</option>
+    </select>
+    <select id="fOrdem" hidden aria-label="Ordenar por">
+      <option value="">Ordem: Política 1.1 (padrão)</option><option value="margem">Margem (maior)</option><option value="lucro90">Lucro bruto 90 dias (maior)</option><option value="capital">Capital necessário (maior)</option>
+      <option value="lucropot">Lucro potencial (maior)</option><option value="retorno">Retorno bruto sobre compra (maior)</option><option value="eficiencia">Eficiência do capital (maior)</option>
+    </select>
   </div>
   <div class="contagem" id="contagem"></div>
   <div class="lista" id="lista"></div>
@@ -183,7 +209,7 @@ const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false, motivo: '' };
+const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false, motivo: '', finOn: false, fin: {}, fFin: '', ordem: '' };
 // Motivos de ATENÇÃO calculados no servidor (Fase D.1). Visibilidade apenas: nenhum deles gera sugestão.
 const ATENCAO = { NEVER_SOLD: 'NUNCA VENDIDO', NO_SALE_365D: 'SEM VENDA HÁ 365+ DIAS', NO_SALE_180D: 'SEM VENDA HÁ 180+ DIAS', NO_SALE_120D: 'SEM VENDA HÁ 120+ DIAS',
   EXCESS_COVERAGE: 'COBERTURA EM EXCESSO', INACTIVE_PRODUCT: 'PRODUTO INATIVO', NEW_PRODUCT_PROTECTED: 'PRODUTO NOVO · EM PROTEÇÃO', NEGATIVE_STOCK: 'ESTOQUE NEGATIVO',
@@ -208,7 +234,10 @@ onAuthStateChanged(auth, async user => {
     try { const c = await getDoc(doc(db, 'compras_n0_view', 'custos')); estado.custos = c.exists() ? c.data() : null; }
     catch (_) { estado.custos = null; }   // perfil sem permissão de custo: Rules negam; nada é baixado
     window.__comprasPerf.load_ms = Math.round(performance.now() - t0);
+    estado.fin = Object.fromEntries(Object.entries((estado.custos && estado.custos.linhas) || {}).filter(([, k]) => k && k.fin).map(([id, k]) => [id, k.fin]));
+    estado.finOn = Object.keys(estado.fin).length > 0;   // só com custo liberado E servidor na Política 1.2
     montarCabecalho(vSnap.exists() ? vSnap.data() : null, mSnap.exists() ? mSnap.data() : null);
+    montarResumoFin();
     estado.linhas = vSnap.exists() ? (vSnap.data().linhas || []) : [];
     render();
   } catch (e) {
@@ -240,35 +269,112 @@ function montarCabecalho(v, meta) {
   }
 }
 
+// ── Política 1.2 · textos legíveis (os códigos vêm do servidor; a tela não calcula nem define limiares) ──
+const pct = v => (v === null || v === undefined) ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+const CONF = { HIGH: 'alta', MEDIUM: 'média', LOW: 'baixa', UNKNOWN: 'desconhecida', UNAVAILABLE: 'indisponível' };
+const MOTIVO_CUSTO = { MATCHES_LAST_PURCHASE_LANDED: 'bate com a última compra (frete, impostos e desconto rateados)', MATCHES_OLD_PURCHASE_LANDED: 'bate com a última compra, que é antiga', SMALL_DIVERGENCE_FROM_LAST_PURCHASE_LANDED: 'pequena diferença para a última compra',
+  LARGE_DIVERGENCE_FROM_LAST_PURCHASE_LANDED: 'grande diferença para a última compra', NO_PURCHASE_REFERENCE: 'sem compra de referência', PURCHASE_HEADER_DATA_MISSING: 'dados da compra ausentes (executar sincronização completa)',
+  IMPORTED_COMPONENTS_UNPROVEN: 'importado: custos de importação não comprovados', COST_MISSING: 'sem custo cadastrado', COST_ZERO: 'custo zerado' };
+const ORIGEM_PRECO = { REALIZED_90D: 'preço médio realizado nos últimos 90 dias', REGISTERED_FALLBACK: 'preço cadastrado (sem venda nos últimos 90 dias)', UNAVAILABLE: 'indisponível' };
+const DICAS = { COST_MAY_BE_WRONG_OR_STALE: 'o custo pode estar errado ou desatualizado', REGISTERED_PRICE_BELOW_COST: 'o preço cadastrado está abaixo do custo', DEEP_DISCOUNT: 'desconto médio alto', PROFITABLE_AT_SALE_COST_COST_ROSE_SINCE: 'lucrava ao custo da época; o custo subiu depois', SOLD_BELOW_COST: 'vendido abaixo do custo' };
+const SINAIS = { NEGATIVE_MARGIN: ['MARGEM NEGATIVA', 'neg'], MISSING_COST: ['SEM CUSTO', 'prot'], LOW_COST_CONFIDENCE: ['CUSTO DE BAIXA CONFIANÇA', 'at'], HIGH_DEMAND_LOW_MARGIN: ['ALTA DEMANDA · MARGEM BAIXA', 'at'], HIGH_DEMAND_HIGH_MARGIN: ['ALTA DEMANDA · MARGEM ALTA', 'novo'], LOW_DEMAND_HIGH_MARGIN: ['BAIXA DEMANDA · MARGEM ALTA', 'at'] };
+const SINAIS_NA_LISTA = ['NEGATIVE_MARGIN', 'MISSING_COST', 'LOW_COST_CONFIDENCE', 'HIGH_DEMAND_LOW_MARGIN'];   // a lista mostra só os que pedem atenção; os demais ficam no detalhe
+const MATRIZ = { BUY_STRONG: 'forte candidata: alta necessidade e margem alta', BUY_NEED: 'comprar por necessidade', BUY_NEED_FLAG_MARGIN: 'comprar por necessidade — atenção à margem', BUY_NEED_MARGIN_UNKNOWN: 'comprar por necessidade — margem indisponível',
+  BUY_LOW_NEED: 'baixa necessidade', OBSERVE_DEMAND_COVERAGE: 'margem alta com baixa necessidade — observar demanda e cobertura', LOW_CAPITAL_ATTRACTIVENESS: 'baixa necessidade e margem baixa — pouco atrativo para o capital', BUY_LOW_NEED_MARGIN_UNKNOWN: 'baixa necessidade — margem indisponível' };
+const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+function montarResumoFin() {
+  const box = document.getElementById('resumoFin');
+  const r = estado.custos && estado.custos.resumo_financeiro;
+  for (const id of ['fFin', 'fOrdem']) document.getElementById(id).hidden = !estado.finOn;
+  if (!estado.finOn || !r || !r.purchase) { box.hidden = true; return; }
+  const p = r.purchase;
+  const item = (k, v) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  box.innerHTML = `<div class="grade">${item('Capital necessário', brl(p.capital_cents))}${item('Receita potencial', brl(p.revenue_potential_cents))}${item('Lucro bruto potencial', brl(p.gross_profit_potential_cents))}${item('Margem ponderada da compra', pct(p.weighted_margin_pct))}${item('Retorno bruto sobre compra', pct(p.gross_return_on_capital === null ? null : p.gross_return_on_capital * 100))}</div>
+    <div class="nota"><b>Estimativas, não promessa.</b> Custo cadastrado no ERP e preço médio realizado nos últimos 90 dias (descontos incluídos); sem impostos sobre a venda, comissões e frete de entrega.
+    ${p.complete ? '' : `${fmt(p.unpriced_products)} produto(s) sem custo ficam fora destes totais. `}Margem ponderada = lucro total ÷ receita total, não média de percentuais.
+    Política ${esc(r.policy_version)} em avaliação: faixas de margem e de retorno ainda são propostas.</div>`;
+  box.hidden = false;
+}
+
 function filtrar() {
   const q = estado.busca.trim().toLowerCase();
-  return estado.linhas.filter(l => {
+  const out = estado.linhas.filter(l => {
     if (estado.aba === 'sug' ? !(l.qtd > 0) : l.qtd > 0) return false;
     if (estado.prioridade && l.prioridade !== estado.prioridade) return false;
     if (estado.abc && l.abc !== estado.abc) return false;
     if (estado.novo && !l.novo_com_demanda) return false;
     if (estado.neg && !l.estoque_negativo) return false;
     if (estado.aba === 'aten' && estado.motivo && !(l.attention_reasons || []).includes(estado.motivo)) return false;
+    if (estado.finOn && estado.fFin && !passaFin(estado.fin[l.id], estado.fFin)) return false;
     if (q && !(String(l.nome || '').toLowerCase().includes(q) || String(l.codigo || '').toLowerCase().includes(q))) return false;
     return true;
   });
+  return estado.finOn && estado.ordem ? ordenarFin(out, estado.ordem) : out;
+}
+// filtros financeiros: só igualdades com as FAIXAS calculadas no servidor (nenhum limiar no navegador)
+function passaFin(f, tipo) {
+  if (!f) return false;
+  const d = f.decision || {}, m = f.margin || {};
+  switch (tipo) {
+    case 'neg': return m.negative === true;
+    case 'indisp': return m.status === 'UNAVAILABLE';
+    case 'alta': return d.margin_tier === 'HIGH';
+    case 'baixa': return d.margin_tier === 'LOW';
+    case 'ret_alto': return d.attractiveness === 'HIGH';
+    case 'ret_baixo': return d.attractiveness === 'LOW';
+    case 'custo_incerto': return !f.cost || !(f.cost.unit_cents > 0) || f.cost.confidence === 'LOW' || f.cost.confidence === 'UNKNOWN';
+    default: return true;
+  }
+}
+const CHAVE_ORDEM = { margem: f => num(f.unit && f.unit.margin_pct), lucro90: f => num(f.windows && f.windows['90'] ? f.windows['90'].profit_cents : f.gross_profit_90d_cents), capital: f => num(f.purchase && f.purchase.capital_cents),
+  lucropot: f => num(f.purchase && f.purchase.profit_potential_cents), retorno: f => num(f.purchase && f.purchase.return_on_capital), eficiencia: f => num(f.purchase && f.purchase.efficiency) };
+function ordenarFin(lista, chave) {
+  const valor = l => { const f = estado.fin[l.id]; return f ? CHAVE_ORDEM[chave](f) : null; };
+  return lista.map((l, i) => ({ l, i, v: valor(l) })).sort((a, b) => (a.v === null) - (b.v === null) || (a.v !== null && b.v !== null ? b.v - a.v : 0) || a.i - b.i).map(x => x.l);   // sem valor vai para o fim; estável
+}
+
+function detalheFin(l, f) {
+  const c = f.cost || {}, pr = f.price || {}, u = f.unit || {}, m = f.margin || {}, p = f.purchase, w = f.windows || {}, d = f.decision || {};
+  const cel = (k, v) => `<div><span>${k}</span>${v}</div>`;
+  const origemCusto = c.unit_cents > 0 ? `${brl(c.unit_cents)} · custo cadastrado no ERP · confiança ${CONF[c.confidence] || '—'} (${esc(MOTIVO_CUSTO[c.reason] || c.reason || '—')})` : `indisponível (${esc(MOTIVO_CUSTO[c.reason] || c.reason || 'sem custo')})`;
+  const ref = c.reference_cents > 0 ? `${brl(c.reference_cents)} na última compra${c.reference_age_days !== undefined ? ` (há ${fmt(c.reference_age_days)} dias)` : ''}${c.divergence_bps !== undefined ? ` · diferença ${pct(c.divergence_bps / 100)}` : ''}` : '—';
+  const janela = k => (w[k] && w[k].profit_cents !== undefined) ? brl(w[k].profit_cents) : (w[k] && w[k].lines === 0 ? 'sem vendas' : '—');
+  const dicas = (m.hints || []).map(h => DICAS[h] || h);
+  const sinais = (d.signals || []).map(sg => (SINAIS[sg] ? SINAIS[sg][0] : sg));
+  return `<details class="fin"><summary>Financeiro</summary><div class="grade-fin">
+    ${cel('Custo unitário', origemCusto)}${cel('Referência do custo', ref)}
+    ${cel('Preço médio realizado', pr.unit_cents > 0 ? `${brl(pr.unit_cents)} · ${esc(ORIGEM_PRECO[pr.source] || pr.source)}${pr.lines !== undefined ? ` · ${fmt(pr.lines)} venda(s)` : ''}` : 'indisponível')}${cel('Desconto médio (90 d)', pr.discount_bps !== undefined ? pct(pr.discount_bps / 100) : '—')}
+    ${cel('Lucro bruto unitário', u.profit_cents !== undefined ? brl(u.profit_cents) : '—')}${cel('Margem bruta', m.status === 'AVAILABLE' ? `${pct(u.margin_pct)} · confiança ${CONF[m.confidence] || '—'}` : 'indisponível')}
+    ${cel('Markup realizado', u.markup !== undefined ? fmt(u.markup) + '×' : '—')}${cel('Lucro bruto estimado 30 / 60 / 90 dias', `${janela('30')} / ${janela('60')} / ${janela('90')}`)}
+    ${p ? `${cel('Capital necessário', brl(p.capital_cents))}${cel('Receita potencial', brl(p.revenue_potential_cents))}${cel('Lucro bruto potencial', brl(p.profit_potential_cents))}${cel('Retorno bruto sobre compra', p.return_on_capital !== undefined ? pct(p.return_on_capital * 100) : '—')}${cel('Eficiência do capital', p.efficiency !== undefined ? `${fmt(p.efficiency)} (retorno por 30 dias de capital imobilizado)` : '—')}` : ''}
+    ${d.matrix ? cel('Leitura', esc(MATRIZ[d.matrix] || d.matrix)) : ''}${sinais.length ? cel('Sinais', sinais.map(esc).join(' · ')) : ''}${dicas.length ? cel('Margem negativa — possíveis causas', dicas.map(esc).join(' · ')) : ''}
+  </div><div class="aviso-fin">Estimativas. O lucro bruto 30/60/90 d usa o custo registrado no ERP na data de cada venda; o potencial da compra usa o custo atual.</div></details>`;
 }
 
 function render() {
   const t0 = performance.now();
   const itens = filtrar();
   const comCusto = !!estado.custos;
-  const cls = 'row' + (comCusto ? ' custo-on' : '');
-  const cab = `<div class="${cls} head"><div>Prior.</div><div>Produto</div><div class="num">Estoque</div><div class="num">Vendas 30/60/90</div><div>Cobertura</div><div>ABC</div><div class="num">Sugestão</div>${comCusto ? '<div class="num">Custo indicativo</div>' : ''}</div>`;
+  const fin = estado.finOn;
+  const cls = 'row' + (fin ? ' fin-on' : comCusto ? ' custo-on' : '');
+  const cab = `<div class="${cls} head"><div>Prior.</div><div>Produto</div><div class="num">Estoque</div><div class="num">Vendas 30/60/90</div><div>Cobertura</div><div>ABC</div><div class="num">Sugestão</div>${fin ? '<div class="num">Capital necessário</div><div class="num">Margem</div><div class="num">Lucro potencial</div><div class="num">Retorno</div>' : comCusto ? '<div class="num">Custo indicativo</div>' : ''}</div>`;
   const linha = l => {
     const cob = COB[l.cobertura_estado] || [l.cobertura_estado || '—', ''];
     const ja = new Set([l.novo_protegido ? 'NEW_PRODUCT_PROTECTED' : '', l.estoque_negativo ? 'NEGATIVE_STOCK' : '']);
+    const f = fin ? estado.fin[l.id] : null;
+    const selosFin = f ? (f.decision && f.decision.signals || []).filter(sg => SINAIS_NA_LISTA.includes(sg) && SINAIS[sg]).map(sg => `<span class="bd ${SINAIS[sg][1]}">${esc(SINAIS[sg][0])}</span>`) : [];
     const b = [l.novo_com_demanda ? '<span class="bd novo">NOVO COM DEMANDA COMPROVADA</span>' : '', l.novo_protegido ? '<span class="bd prot">PRODUTO NOVO · EM PROTEÇÃO</span>' : '', l.estoque_negativo ? '<span class="bd neg">ESTOQUE NEGATIVO</span>' : '',
-      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k)).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`)].join('');
+      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k)).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`), ...selosFin].join('');
     const porque = [...(l.motivos || l.sem_sugestao_por || []), ...(l.motivos ? [] : (l.attention_reasons || []))];
     const ult = !(l.qtd > 0) && l.ultima_venda ? ' · última venda ' + esc(l.ultima_venda.split('-').reverse().join('/')) : '';
     const k = comCusto ? (estado.custos.linhas || {})[l.id] : null;
     const v = l.vendas || {};
+    const p = f && f.purchase, mg = f && f.margin, u = f && f.unit;
+    const celFin = fin ? `<div class="num"><span class="lbl">Capital</span>${p ? brl(p.capital_cents) : '—'}</div>
+      <div class="num"><span class="lbl">Margem</span>${mg && mg.status === 'AVAILABLE' ? `<span class="${mg.negative ? 'margem-neg' : (f.decision && f.decision.margin_tier === 'HIGH' ? 'margem-alta' : '')}">${pct(u.margin_pct)}</span><div class="fin-est" title="confiança da margem">conf. ${CONF[mg.confidence] || '—'}</div>` : '<span title="sem custo confiável para calcular">—</span>'}</div>
+      <div class="num"><span class="lbl">Lucro potencial</span>${p && p.profit_potential_cents !== undefined ? brl(p.profit_potential_cents) : '—'}</div>
+      <div class="num"><span class="lbl">Retorno</span>${p && p.return_on_capital !== undefined ? pct(p.return_on_capital * 100) : '—'}</div>` : '';
     return `<div class="${cls}">
       <div class="c-pr"><span class="pr ${l.prioridade || 'none'}">${l.prioridade || '—'}</span></div>
       <div class="prod"><div class="nome">${esc(l.nome || 'Produto ' + l.id)}</div><div class="meta">${esc(l.codigo || l.id)}${l.grupo ? ' · ' + esc(l.grupo) : ''}${ult}</div>${b ? `<div class="badges">${b}</div>` : ''}</div>
@@ -277,13 +383,16 @@ function render() {
       <div><span class="lbl">Cobertura</span><span class="cob-${cob[1]}">${l.cobertura_dias !== null && l.cobertura_dias !== undefined ? fmt(l.cobertura_dias) + ' d · ' : ''}${cob[0]}</span></div>
       <div><span class="lbl">ABC</span>${esc(l.abc)}</div>
       <div class="num"><span class="lbl">Sugestão</span><span class="qtd ${l.qtd > 0 ? '' : 'zero'}">${l.qtd > 0 ? fmt(l.qtd) + ' un' : 'sem sugestão'}</span>${l.alvo_dias ? `<div class="meta" style="font-size:.68rem;color:var(--muted)">alvo ${l.alvo_dias} d</div>` : ''}</div>
-      ${comCusto ? `<div class="num"><span class="lbl">Custo</span>${k ? brl(k.custo_cadastrado_cents) + (k.valor_sugestao_custo_conhecido_cents ? `<div style="font-size:.68rem;color:var(--muted)">sugestão ${brl(k.valor_sugestao_custo_conhecido_cents)}</div>` : '') : '—'}</div>` : ''}
+      ${fin ? celFin : comCusto ? `<div class="num"><span class="lbl">Custo</span>${k ? brl(k.custo_cadastrado_cents) + (k.valor_sugestao_custo_conhecido_cents ? `<div style="font-size:.68rem;color:var(--muted)">sugestão ${brl(k.valor_sugestao_custo_conhecido_cents)}</div>` : '') : '—'}</div>` : ''}
       <details class="mot"><summary>Por quê?</summary>${[...new Set(porque)].map(m => `<code>${esc(m)}</code>`).join('')}${!(l.qtd > 0) && l.sem_sugestao_por && !l.sem_sugestao_por.length ? '<code>ESTOQUE_COBRE_O_ALVO</code>' : ''}</details>
+      ${f ? detalheFin(l, f) : ''}
     </div>`;
   };
   document.getElementById('lista').innerHTML = itens.length ? cab + itens.map(linha).join('') : `<div class="vazio">Nenhum item com os filtros atuais.</div>`;
   const un = itens.reduce((t, l) => t + (l.qtd || 0), 0);
-  document.getElementById('contagem').textContent = `${itens.length} produto(s)` + (estado.aba === 'sug' ? ` · ${fmt(un)} unidade(s) sugerida(s)` : '') + (comCusto ? ' · custo indicativo (cadastrado no ERP, confiança baixa)' : '');
+  const capF = fin && estado.aba === 'sug' ? itens.reduce((t, l) => { const f = estado.fin[l.id]; return f && f.purchase && f.purchase.capital_cents !== undefined ? t + f.purchase.capital_cents : t; }, 0) : null;
+  const lucF = fin && estado.aba === 'sug' ? itens.reduce((t, l) => { const f = estado.fin[l.id]; return f && f.purchase && f.purchase.profit_potential_cents !== undefined ? t + f.purchase.profit_potential_cents : t; }, 0) : null;
+  document.getElementById('contagem').textContent = `${itens.length} produto(s)` + (estado.aba === 'sug' ? ` · ${fmt(un)} unidade(s) sugerida(s)` : '') + (capF !== null ? ` · capital ${brl(capF)} · lucro bruto potencial ${brl(lucF)} (estimativa, itens com custo)` : '') + (comCusto ? ' · custo indicativo (cadastrado no ERP, confiança baixa)' : '');
   document.querySelectorAll('.chip').forEach(b => b.classList.toggle('sel', b.dataset.p === estado.prioridade));
   window.__comprasPerf.renders.push(Math.round((performance.now() - t0) * 10) / 10);
 }
@@ -295,6 +404,8 @@ let tBusca; document.getElementById('busca').addEventListener('input', e => { cl
 document.getElementById('fNovo').addEventListener('change', e => { estado.novo = e.target.checked; render(); });
 document.getElementById('fNeg').addEventListener('change', e => { estado.neg = e.target.checked; render(); });
 document.getElementById('fMotivo').addEventListener('change', e => { estado.motivo = e.target.value; render(); });
+document.getElementById('fFin').addEventListener('change', e => { estado.fFin = e.target.value; render(); });
+document.getElementById('fOrdem').addEventListener('change', e => { estado.ordem = e.target.value; render(); });
 document.getElementById('btnSair').addEventListener('click', async () => { await signOut(auth); window.location.href = '../login.html'; });
 </script>
 </body>

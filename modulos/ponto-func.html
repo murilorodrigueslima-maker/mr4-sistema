@@ -947,6 +947,22 @@ window._fbGetAll = async (c, funcId) => {
   const s = await getDocs(q);
   return s.docs.map(d => ({id: d.id, ...d.data()}));
 };
+// PERFORMANCE P0: registros do PRÓPRIO funcionário só nos dias pedidos (funcId == + data in ≤30 dias por consulta; sem índice
+// composto). Se o servidor recusar a consulta, cai no comportamento anterior (todos os registros dele) e filtra em memória.
+window._fbRegistrosDias = async (funcId, dias) => {
+  try {
+    const out = [];
+    for (let i = 0; i < dias.length; i += 30) {
+      const q = query(collection(db, 'registros'), where('funcId', '==', funcId), where('data', 'in', dias.slice(i, i + 30)));
+      out.push(...(await getDocs(q)).docs.map(d => ({id: d.id, ...d.data()})));
+    }
+    return out;
+  } catch (e) {
+    console.warn('[ponto] consulta por dias indisponível, usando a leitura completa:', e && e.code);
+    const set = new Set(dias);
+    return (await window._fbGetAll('registros', funcId)).filter(r => set.has(r.data));
+  }
+};
 window._fbGetOne = async (c, id) => {
   const s = await getDoc(doc(db, c, id));
   return s.exists() ? {id: s.id, ...s.data()} : null;
@@ -1032,19 +1048,31 @@ function sjs(v){return String(v==null?'':v).replace(/['"\\<>`]/g,'');}
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
 // Cache de leitura — TTL 30s. Invalidado explicitamente após cada escrita na coleção.
+// PERFORMANCE P0: guarda a PROMESSA — Histórico do dia e Banco pedem ao mesmo tempo e antes baixavam tudo DUAS vezes.
 const _funcCache={};const _FUNC_CACHE_TTL=30000;
-async function fbGet(c,fid){
+function _cacheGet(chave,carregar){
   const now=Date.now();
-  if(_funcCache[c]&&(now-_funcCache[c].ts)<_FUNC_CACHE_TTL)return _funcCache[c].data;
-  let data=await window._fbGetAll(c,fid!==undefined?fid:(funcAtivo&&funcAtivo.id));
-  if(c==='registros')data=registrosEfetivos(data);   // PONTO 2.0 F0 (P0-02): substituídos não contam (continuam gravados)
-  _funcCache[c]={data,ts:now};
-  return data;
+  if(_funcCache[chave]&&(now-_funcCache[chave].ts)<_FUNC_CACHE_TTL)return _funcCache[chave].p;
+  const p=carregar().catch(e=>{delete _funcCache[chave];throw e;});
+  _funcCache[chave]={p,ts:now};
+  return p;
 }
+function invalidarCache(c){for(const k of Object.keys(_funcCache))if(k===c||k.startsWith(c+':')||k.startsWith(c+'@'))delete _funcCache[k];}
+async function fbGet(c,fid){
+  const f=fid!==undefined?fid:(funcAtivo&&funcAtivo.id);
+  return _cacheGet(fid!==undefined?c+'@'+fid:c,async()=>{
+    let data=await window._fbGetAll(c,f);
+    if(c==='registros')data=registrosEfetivos(data);   // PONTO 2.0 F0 (P0-02): substituídos não contam (continuam gravados)
+    return data;
+  });
+}
+function diasDoMes(mes){const[y,m]=mes.split('-').map(Number);const n=new Date(Date.UTC(y,m,0)).getUTCDate();return Array.from({length:n},(_,i)=>mes+'-'+String(i+1).padStart(2,'0'));}
+// registros do funcionário ativo no mês (hoje está no mês corrente): 1 download compartilhado pelas telas iniciais
+function fbRegistrosMes(mes){const f=funcAtivo&&funcAtivo.id;return _cacheGet('registros:mes:'+mes+'@'+f,async()=>registrosEfetivos(await window._fbRegistrosDias(f,diasDoMes(mes))));}
 // Escritas: registros via Cloud Function (server-side); demais via _fbSetOwn
 async function fbSet(c,id,data){
   await window._fbSetOwn(c,id,data);
-  delete _funcCache[c]; // invalida cache da coleção modificada
+  invalidarCache(c); // invalida cache da coleção modificada (e as consultas dela)
 }
 
 // toMin, fmtMin, calcTotal, jornadaParaData, JORNADA_SABADO_MIN vêm de ponto-regras.js
@@ -1120,7 +1148,7 @@ function obterLoc(){
 }
 
 async function proxPonto(regsAll){
-  if(!regsAll)regsAll=await fbGet('registros');
+  if(!regsAll)regsAll=await fbRegistrosMes(mesAtual());   // PERFORMANCE P0: hoje ⊂ mês corrente
   const regHoje=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const ult=regHoje[regHoje.length-1];
   if(!ult)return{tipo:'entrada',label:'Registrar Entrada',classe:''};
@@ -1199,7 +1227,7 @@ async function finalizarBatida(intencao){
     const result=await window._registrarPonto(payload);
     const reg=result.data;
     limparIntencao();
-    delete _funcCache['registros']; // novo registro — invalida cache antes de renderizar
+    invalidarCache('registros'); // novo registro — invalida cache antes de renderizar
     mostrarEstado(null);
     mostrarComp(reg,reg.dentroRaio);renderHistDia();renderBancoFunc();
   }catch(e){
@@ -1211,7 +1239,7 @@ async function finalizarBatida(intencao){
       return;
     }
     limparIntencao();                                       // resposta definitiva do servidor: a intenção terminou
-    delete _funcCache['registros'];
+    invalidarCache('registros');
     mostrarEstado('est-aguardando');
     let msg=e?.message||'Erro ao salvar ponto.';
     if(codigo==='TIPO_ESPERADO_DIVERGENTE')msg='Seu ponto mudou desde que a tela abriu (talvez registrado em outro aparelho). Confira as batidas de hoje antes de continuar.';
@@ -1233,7 +1261,7 @@ async function reconciliarIntencao(){
   document.getElementById('btn-incerto-retentar').style.display='none';
   document.getElementById('btn-incerto-descartar').style.display='none';
   try{
-    delete _funcCache['registros'];
+    invalidarCache('registros');
     const regs=await fbGet('registros');
     const gravado=regs.find(r=>r.requestId===i.requestId);
     if(gravado){limparIntencao();mostrarEstado(null);mostrarComp(gravado,gravado.dentroRaio);renderHistDia();renderBancoFunc();return;}
@@ -1311,7 +1339,7 @@ const ICONS={
 
 async function renderHistDia(){
   if(!funcAtivo)return;
-  const regsAll=await fbGet('registros'); // uma única leitura; reutilizada por proxPonto
+  const regsAll=await fbRegistrosMes(mesAtual()); // PERFORMANCE P0: só o mês corrente (hoje ⊂ mês); reutilizada por proxPonto
   const regs=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const el=document.getElementById('hist-dia');
   // Monta mapa tipo → hora
@@ -1372,7 +1400,7 @@ async function renderBancoFunc(){
   popularMeses('mes-banco',6);
   const sel=document.getElementById('mes-banco');
   const mes=sel?sel.value:mesAtual();
-  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));
+  const regs=(await fbRegistrosMes(mes)).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));   // PERFORMANCE P0: só o mês
   const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
   const justF=(await fbGet('justificativas')).filter(j=>j.funcId===funcAtivo.id&&j.data&&j.data.startsWith(mes));
   const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justF);

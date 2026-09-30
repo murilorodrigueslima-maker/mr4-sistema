@@ -465,7 +465,7 @@ tr:hover td{background:rgba(26,115,232,.04);}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, writeBatch, query, where } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, writeBatch, query, where, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 const firebaseConfig = {
@@ -486,6 +486,8 @@ window._db=db; window._col=collection; window._doc=doc;
 window._setDoc=setDoc; window._getDoc=getDoc; window._getDocs=getDocs;
 // PONTO 2.0 F0: leitura FRESCA dos registros de um funcionário em um dia (sem o cache de 30 s — evita correção duplicada, P1-07)
 window._getRegistrosDia=async(funcId,data)=>{const q=query(collection(db,'registros'),where('funcId','==',funcId),where('data','==',data));return (await getDocs(q)).docs.map(d=>({id:d.id,...d.data()}));};
+// PERFORMANCE P0: consulta filtrada no servidor (só índices automáticos de campo único) — filtros [[campo,op,valor]], ordem [campo,dir], lim
+window._qDocs=async(c,filtros,ordem,lim)=>{const partes=(filtros||[]).map(([f,o,v])=>where(f,o,v));if(ordem)partes.push(orderBy(ordem[0],ordem[1]||'asc'));if(lim)partes.push(limit(lim));return (await getDocs(query(collection(db,c),...partes))).docs.map(d=>({id:d.id,...d.data()}));};
 window._deleteDoc=deleteDoc; window._serverTimestamp=serverTimestamp;
 window._writeBatch=()=>writeBatch(db);
 
@@ -568,20 +570,32 @@ function sid(v){v=String(v==null?'':v);return /^[A-Za-z0-9_.:-]{1,160}$/.test(v)
 // texto curto dentro de onclick (ex.: rótulo de mês): remove aspas, barra invertida e sinais de tag
 function sjs(v){return String(v==null?'':v).replace(/['"\\<>`]/g,'');}
 
-// Cache local com TTL de 30s para reduzir leituras ao Firestore
+// Cache local com TTL de 30s para reduzir leituras ao Firestore.
+// PERFORMANCE P0: guarda a PROMESSA (duas telas pedindo a mesma coleção ao mesmo tempo = 1 download) e aceita
+// chaves de consulta filtrada ('registros:periodo:…'); escrever numa coleção invalida a coleção e as consultas dela.
 const _fbCache={};const _FB_TTL=30000;
-async function fbGet(c){
+function _cacheGet(chave,carregar){
   const now=Date.now();
-  if(_fbCache[c]&&(now-_fbCache[c].ts)<_FB_TTL)return _fbCache[c].data;
-  const s=await window._getDocs(col(c));
-  let data=s.docs.map(d=>({id:d.id,...d.data()}));
-  // PONTO 2.0 F0 (P0-02): telas e cálculos usam só registros efetivos; o substituído fica no Firestore (auditoria)
-  if(c==='registros')data=registrosEfetivos(data);
-  _fbCache[c]={data,ts:now};
-  return data;
+  if(_fbCache[chave]&&(now-_fbCache[chave].ts)<_FB_TTL)return _fbCache[chave].p;
+  const p=carregar().catch(e=>{delete _fbCache[chave];throw e;});
+  _fbCache[chave]={p,ts:now};
+  return p;
 }
-async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});delete _fbCache[c];}
-async function fbDel(c,id){await window._deleteDoc(docRef(c,id));delete _fbCache[c];}
+function invalidarCache(...cols){for(const k of Object.keys(_fbCache))if(cols.some(c=>k===c||k.startsWith(c+':')))delete _fbCache[k];}
+// PONTO 2.0 F0 (P0-02): telas e cálculos usam só registros efetivos; o substituído fica no Firestore (auditoria)
+const _efetivosSe=(c,data)=>c==='registros'?registrosEfetivos(data):data;
+async function fbGet(c){
+  return _cacheGet(c,async()=>{const s=await window._getDocs(col(c));return _efetivosSe(c,s.docs.map(d=>({id:d.id,...d.data()})));});
+}
+// consultas filtradas no servidor (mesma semântica dos filtros que as telas faziam em memória)
+function fbQuery(c,chave,filtros,ordem,lim){return _cacheGet(c+':'+chave,async()=>_efetivosSe(c,await window._qDocs(c,filtros,ordem,lim)));}
+function limitesMes(mes){return [mes+'-01',mes+'-31'];}   // data é sempre 'YYYY-MM-DD' (conferido em produção)
+const fbRegistrosDia=d=>fbQuery('registros','dia:'+d,[['data','==',d]]);
+const fbRegistrosMes=mes=>{const[i,f]=limitesMes(mes);return fbQuery('registros','mes:'+mes,[['data','>=',i],['data','<=',f]]);};
+const fbJustifMes=mes=>{const[i,f]=limitesMes(mes);return fbQuery('justificativas','mes:'+mes,[['data','>=',i],['data','<=',f]]);};
+const fbJustifPendentes=()=>fbQuery('justificativas','pendentes',[['status','==','pendente']]);
+async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});invalidarCache(c);}
+async function fbDel(c,id){await window._deleteDoc(docRef(c,id));invalidarCache(c);}
 
 // Navegar meses com ◀ ▶
 function mudarMes(inputId,delta){
@@ -640,16 +654,15 @@ function atualizarData(){
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 async function atualizarBadgeJustif(){
-  const justifs=await fbGet('justificativas');
-  const pendentes=justifs.filter(j=>j.status==='pendente').length;
+  const pendentes=(await fbJustifPendentes()).length;   // PERFORMANCE P0: só as pendentes (antes: coleção inteira, com anexos)
   const badge=document.getElementById('badge-justif');
   if(pendentes>0){badge.textContent=pendentes;badge.style.display='flex';}else{badge.style.display='none';}
 }
 
 async function renderHoje(){
-  const funcsAll=await fbGet('funcionarios');const regs=await fbGet('registros');
+  // PERFORMANCE P0: só os registros de hoje (antes: TODOS os registros, com a foto de cada batida)
+  const funcsAll=await fbGet('funcionarios');const regsHoje=await fbRegistrosDia(hoje());
   const funcs=funcsAll.filter(f=>f.controleBancoHoras!==false);
-  const regsHoje=regs.filter(r=>r.data===hoje());
   let presentes=0,ausentes=0,atrasados=0;
   funcs.forEach(f=>{
     const rf=regsHoje.filter(r=>r.funcId===f.id);
@@ -674,7 +687,11 @@ async function renderHoje(){
     return `<tr><td><div class="func-cell"><div class="avatar">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div class="func-cell-info"><div class="nome">${esc(f.nome)}</div><div class="cargo">${esc(f.cargo||'')}</div></div></div></td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${fmtMin(total)}</td><td><span class="badge ${status}">${labels[status]}</span></td></tr>`;
   }).join('');
   aplicarLazyFotos(document.getElementById('tbody-hoje'));
-  const ultimas=[...regs].sort((a,b)=>a.criadoEm>b.criadoEm?-1:1).slice(0,5);
+  // Últimas batidas: por data+hora (criadoEm mistura texto e Timestamp e ordenava errado). Hoje basta na maioria dos casos;
+  // senão, as 40 mais recentes por data (índice automático) cobrem o último dia com batidas.
+  const _ord=(a,b)=>(a.data+' '+a.hora)>(b.data+' '+b.hora)?-1:1;
+  const recentes=regsHoje.length>=5?regsHoje:await fbQuery('registros','recentes',[],['data','desc'],40);
+  const ultimas=[...recentes].sort(_ord).slice(0,5);
   document.getElementById('ultimas-batidas').innerHTML=ultimas.length?`<div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Tipo</th><th>Horário</th><th>GPS</th></tr></thead><tbody>${ultimas.map(r=>`<tr><td>${esc(r.funcNome)}</td><td>${esc(r.tipoLabel)}</td><td>${fmtData(r.data)} ${r.hora.slice(0,5)}</td><td>${r.dentroRaio===true?'<span class="badge dentro">Dentro</span>':r.dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td></tr>`).join('')}</tbody></table></div>`:'<div style="color:var(--cinza-texto);font-size:13px;">Nenhuma batida ainda.</div>';
 }
 
@@ -689,7 +706,7 @@ window.verFoto=verFoto;
 async function renderRegistros(){
   const funcFil=document.getElementById('fil-func-reg').value;
   const mesFil=document.getElementById('fil-mes').value;
-  let regs=await fbGet('registros');
+  let regs=mesFil?await fbRegistrosMes(mesFil):await fbGet('registros');   // PERFORMANCE P0: mês filtrado no servidor
   if(funcFil)regs=regs.filter(r=>r.funcId===funcFil);
   if(mesFil)regs=regs.filter(r=>r.data.startsWith(mesFil));
   const grupos={};
@@ -716,8 +733,9 @@ async function renderRegistros(){
 window.renderRegistros=renderRegistros;
 
 async function renderBanco(){
-  const funcs=await fbGet('funcionarios');const regs=await fbGet('registros');const creditos=await fbGet('creditos_jornada');
-  const justifsTodas=await fbGet('justificativas');   // motor único: justificativas participam do resultado do dia (R3/R5)
+  // PERFORMANCE P0: o Banco usa só o mês corrente (e hoje, que está nele) — busca só o mês
+  const funcs=await fbGet('funcionarios');const regs=await fbRegistrosMes(mesAtual());const creditos=await fbGet('creditos_jornada');
+  const justifsTodas=await fbJustifMes(mesAtual());   // motor único: justificativas participam do resultado do dia (R3/R5)
   if(!funcs.length){document.getElementById('banco-cards').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Nenhum funcionário.</div>';document.getElementById('metrics-banco').innerHTML='';return;}
   let totalPos=0,totalNeg=0;
   const funcsAtivas=funcs.filter(f=>f.controleBancoHoras!==false);
@@ -918,6 +936,7 @@ async function responderJustificativa(status){
       }
     }
     await batch.commit();
+    invalidarCache('registros','justificativas','creditos_jornada');   // o lote grava nas três
     fecharModal('modal-justif-gestor');
     if(status==='aprovado')notif(j.tipoPonto?'Batida corrigida e lançada automaticamente!':'Justificativa aprovada — jornada creditada!','verde');
     else notif('Justificativa rejeitada.','vermelho');
@@ -952,8 +971,8 @@ async function gerarEspelho(){
   const funcId=document.getElementById('esp-func').value,mes=document.getElementById('esp-mes').value;
   if(!funcId||!mes){notif('Selecione funcionário e mês','vermelho');return;}
   const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===funcId);if(!func)return;
-  const regs=await fbGet('registros');
-  const justifs=await fbGet('justificativas');
+  const regs=await fbRegistrosMes(mes);   // PERFORMANCE P0: só o mês do espelho
+  const justifs=await fbJustifMes(mes);
   const creditosTodos=await fbGet('creditos_jornada');
   const regsDoMes=regs.filter(r=>r.funcId===funcId&&r.data.startsWith(mes));
   const creditosFuncMes=creditosTodos.filter(c=>c.funcId===funcId&&c.data.startsWith(mes));

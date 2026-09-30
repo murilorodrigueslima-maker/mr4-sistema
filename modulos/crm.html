@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM · Hoje — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a73e8;--blue-dk:#1557b0;--blue-lt:#e8f0fe;
+  --bg:#f5f6f8;--white:#fff;--text:#202124;--muted:#5f6368;--faint:#80868b;
+  --border:#dadce0;--border-lt:#e8eaed;
+  --green:#0d904f;--green-lt:#e6f4ea;--amber:#b06000;--amber-lt:#fef3e2;--red:#c5221f;--red-lt:#fce8e6;--purple:#7b1fa2;--purple-lt:#f3e8fd;
+  --radius:10px;
+}
+html,body{min-height:100%}
+body{font-family:'Inter',system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.4}
+.ms{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:18px;line-height:1;display:inline-block;vertical-align:middle}
+button{font-family:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.55}
+/* topbar */
+.topbar{position:sticky;top:0;z-index:20;height:56px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem;padding:0 1.25rem}
+.back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.3rem;padding:.35rem .65rem;border:1px solid var(--border);border-radius:8px}
+.back:hover{color:var(--text)}
+.brand{font-weight:700;font-size:.98rem;display:flex;align-items:center;gap:.4rem}
+.brand .ms{color:var(--blue)}
+.tabs{display:flex;gap:.25rem;margin-left:.75rem}
+.tab{border:0;background:transparent;padding:.5rem .85rem;border-radius:8px;font-weight:600;color:var(--muted);font-size:.86rem}
+.tab[aria-selected="true"]{background:var(--blue-lt);color:var(--blue-dk)}
+.spacer{flex:1}
+.user{font-size:.8rem;color:var(--muted)}
+.legacy{font-size:.75rem;color:var(--faint);text-decoration:none}
+/* layout */
+main{max-width:1180px;margin:0 auto;padding:1.1rem 1.25rem 3rem}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;margin-bottom:1.25rem}
+.kpi{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:.7rem .9rem}
+.kpi-l{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.kpi-v{font-size:1.35rem;font-weight:700;margin-top:.15rem}
+.kpi-s{font-size:.74rem;color:var(--faint)}
+.kpi.alerta .kpi-v{color:var(--red)}
+.bar{height:6px;background:var(--border-lt);border-radius:99px;margin-top:.35rem;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--green);border-radius:99px}
+.sec{margin-bottom:1.3rem}
+.sec-h{display:flex;align-items:center;gap:.5rem;margin:0 0 .55rem}
+.sec-h h2{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.sec-h .n{font-size:.75rem;font-weight:700;background:var(--white);border:1px solid var(--border);border-radius:99px;padding:0 .5rem;color:var(--muted)}
+.sec.atrasados .sec-h h2{color:var(--red)}
+.sec-vazia{font-size:.8rem;color:var(--faint);padding:.2rem 0 .4rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.7rem}
+.aviso{background:var(--amber-lt);border:1px solid #f6d7a7;color:var(--amber);border-radius:var(--radius);padding:.6rem .8rem;font-size:.82rem;margin-bottom:1rem}
+/* card */
+.card{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:.8rem .9rem;display:flex;flex-direction:column;gap:.45rem}
+.card.atrasado{border-left:3px solid var(--red)}
+.card.hoje{border-left:3px solid var(--amber)}
+.card.andamento{border-left:3px solid var(--blue)}
+.card-top{display:flex;align-items:flex-start;gap:.5rem}
+.card-nome{font-weight:700;font-size:.93rem;flex:1;min-width:0;overflow-wrap:anywhere}
+.pill{font-size:.68rem;font-weight:700;padding:.12rem .45rem;border-radius:99px;background:var(--blue-lt);color:var(--blue-dk);white-space:nowrap}
+.pill.valor{background:var(--purple-lt);color:var(--purple)}
+.motivo{font-size:.82rem;color:var(--text)}
+.dados{display:flex;flex-wrap:wrap;gap:.25rem .8rem;font-size:.76rem;color:var(--muted)}
+.dados b{color:var(--text);font-weight:600}
+.hist{font-size:.76rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.2rem .7rem}
+.hist .nota{color:var(--text);font-style:italic}
+.st{font-size:.72rem;font-weight:700;padding:.1rem .45rem;border-radius:6px;background:#f1f3f4;color:var(--muted)}
+.st.EM_ATENDIMENTO_MEU{background:var(--blue-lt);color:var(--blue-dk)}
+.st.RETORNO_AGENDADO{background:var(--amber-lt);color:var(--amber)}
+.st.CONCLUIDA,.st.PAUSA{background:var(--green-lt);color:var(--green)}
+.acoes{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.1rem}
+.btn{border:1px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;padding:.42rem .75rem;font-size:.8rem;font-weight:600;display:inline-flex;align-items:center;gap:.3rem}
+.btn:hover:not(:disabled){border-color:#bdc1c6}
+.btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn.pri:hover:not(:disabled){background:var(--blue-dk)}
+.btn.link{border:0;background:transparent;color:var(--blue);padding:.42rem .3rem}
+/* registro rápido */
+.reg{border-top:1px solid var(--border-lt);padding-top:.55rem;display:flex;flex-direction:column;gap:.5rem}
+.chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.chip{border:1px solid var(--border);background:var(--white);border-radius:99px;padding:.32rem .7rem;font-size:.78rem;font-weight:600;color:var(--text)}
+.chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+.reg label{font-size:.74rem;font-weight:600;color:var(--muted)}
+.reg input[type=date]{border:1px solid var(--border);border-radius:8px;padding:.35rem .5rem;font:inherit;font-size:.82rem}
+.reg textarea{border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem;font:inherit;font-size:.82rem;resize:vertical;min-height:52px;width:100%}
+.cont{font-size:.7rem;color:var(--faint);text-align:right}
+.cont.excede{color:var(--red);font-weight:700}
+.erro{font-size:.76rem;color:var(--red)}
+/* agenda */
+.agenda{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem}
+.col{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:.7rem;min-height:120px}
+.col h3{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.5rem;display:flex;justify-content:space-between}
+.col.atrasados h3{color:var(--red)}
+.ag-item{border:1px solid var(--border-lt);border-radius:8px;padding:.5rem .55rem;margin-bottom:.4rem;cursor:pointer;background:var(--white);width:100%;text-align:left;display:block}
+.ag-item:hover{border-color:var(--blue)}
+.ag-nome{font-weight:600;font-size:.82rem}
+.ag-sub{font-size:.72rem;color:var(--muted);margin-top:.1rem}
+.depois{margin-top:.8rem;font-size:.78rem;color:var(--muted)}
+/* cliente 360 */
+.drawer-bg{position:fixed;inset:0;background:rgba(32,33,36,.35);z-index:40;display:none}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,100%);background:var(--bg);z-index:41;display:none;flex-direction:column;box-shadow:-6px 0 24px rgba(0,0,0,.12)}
+.drawer.aberto,.drawer-bg.aberto{display:flex}
+.dr-h{background:var(--white);border-bottom:1px solid var(--border);padding:.9rem 1.1rem;display:flex;gap:.75rem;align-items:flex-start}
+.dr-h h2{font-size:1.05rem;font-weight:700}
+.dr-sub{font-size:.8rem;color:var(--muted);margin-top:.15rem;display:flex;flex-wrap:wrap;gap:.3rem .8rem;align-items:center}
+.dr-nav{display:flex;gap:.25rem;overflow-x:auto;background:var(--white);border-bottom:1px solid var(--border);padding:0 .8rem}
+.dr-nav a{font-size:.78rem;font-weight:600;color:var(--muted);text-decoration:none;padding:.55rem .6rem;white-space:nowrap}
+.dr-nav a:hover{color:var(--blue)}
+.dr-body{overflow-y:auto;padding:1rem 1.1rem 3rem;display:flex;flex-direction:column;gap:.9rem}
+.blk{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:.85rem .95rem}
+.blk h3{font-size:.76rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.6rem}
+.kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem .9rem}
+.kv div{font-size:.74rem;color:var(--muted)}
+.kv b{display:block;font-size:.92rem;color:var(--text);font-weight:600;margin-top:.1rem}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{text-align:left;font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;padding:.3rem .4rem;border-bottom:1px solid var(--border-lt)}
+td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
+.tl{list-style:none;position:relative;padding-left:1.1rem}
+.tl::before{content:'';position:absolute;left:.3rem;top:.2rem;bottom:.2rem;width:2px;background:var(--border-lt)}
+.tl li{position:relative;padding:.25rem 0 .55rem}
+.tl li::before{content:'';position:absolute;left:-1.02rem;top:.45rem;width:10px;height:10px;border-radius:50%;background:var(--faint);border:2px solid var(--white)}
+.tl li.VENDEDOR::before{background:var(--blue)}
+.tl li.VENDA::before{background:var(--green)}
+.tl li.SISTEMA::before{background:#9aa0a6}
+.tl li.futuro{opacity:.75}
+.tl-q{font-size:.7rem;color:var(--faint)}
+.tl-t{font-size:.83rem;font-weight:600}
+.tl-d{font-size:.76rem;color:var(--muted)}
+.tag{font-size:.64rem;font-weight:700;padding:.05rem .35rem;border-radius:5px;margin-left:.35rem;vertical-align:middle}
+.tag.VENDEDOR{background:var(--blue-lt);color:var(--blue-dk)}.tag.VENDA{background:var(--green-lt);color:var(--green)}.tag.SISTEMA{background:#f1f3f4;color:var(--muted)}
+.vac{font-size:.8rem;padding:.4rem 0;border-bottom:1px solid var(--border-lt)}
+.vac:last-child{border-bottom:0}
+.vac .rel{font-weight:700}.vac .rel.APOS{color:var(--green)}.vac .rel.INDETERMINADO{color:var(--amber)}
+.nota-item{font-size:.82rem;padding:.4rem 0;border-bottom:1px solid var(--border-lt)}
+.nota-item:last-child{border-bottom:0}
+.muted{color:var(--muted)}
+.carregando{padding:3rem;text-align:center;color:var(--muted)}
+.toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#202124;color:#fff;padding:.6rem 1rem;border-radius:8px;font-size:.82rem;z-index:60;display:none}
+.toast.err{background:var(--red)}
+@media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.agenda{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){main{padding:.8rem .8rem 3rem}.topbar{padding:0 .7rem}.tabs{margin-left:0}.user,.legacy{display:none}.grid{grid-template-columns:1fr}.agenda{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="../index.html"><span class="ms">arrow_back</span> Sistema</a>
+  <div class="brand"><span class="ms">support_agent</span> CRM</div>
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tabHoje" aria-selected="true">Hoje</button>
+    <button class="tab" role="tab" id="tabAgenda" aria-selected="false">Agenda</button>
+  </nav>
+  <div class="spacer"></div>
+  <a class="legacy" href="fila-comercial.html">Fila (versão anterior)</a>
+  <span class="user" id="user"></span>
+</header>
+
+<main id="app"><div class="carregando" id="carregando">Carregando…</div>
+  <section id="viewHoje" hidden>
+    <div class="kpis" id="kpis"></div>
+    <div id="avisoHoje"></div>
+    <div id="secoes"></div>
+  </section>
+  <section id="viewAgenda" hidden>
+    <div class="agenda" id="agenda"></div>
+    <div class="depois" id="agendaDepois"></div>
+  </section>
+</main>
+
+<div class="drawer-bg" id="drawerBg"></div>
+<aside class="drawer" id="drawer" aria-label="Cliente 360">
+  <div class="dr-h">
+    <div style="flex:1;min-width:0"><h2 id="drNome">Cliente</h2><div class="dr-sub" id="drSub"></div></div>
+    <button class="btn" id="drFechar" aria-label="Fechar"><span class="ms">close</span></button>
+  </div>
+  <nav class="dr-nav" id="drNav">
+    <a href="#c-resumo">Resumo</a><a href="#c-compras">Compras</a><a href="#c-produtos">Produtos</a><a href="#c-oport">Oportunidades</a>
+    <a href="#c-timeline">Timeline</a><a href="#c-fu">Follow-ups</a><a href="#c-obs">Observações</a>
+  </nav>
+  <div class="dr-body" id="drBody"></div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script src="fila-worklist-view.js"></script>
+<script src="crm-view.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, collection, onSnapshot, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+
+// Configuração pública do app Firebase (não é segredo; mesma de fila-comercial.html)
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app), db = getFirestore(app), funcs = getFunctions(app, 'southamerica-east1');
+const _isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+if (_isLocal) {
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+  connectFunctionsEmulator(funcs, 'localhost', 5001);
+}
+const fnClaim = httpsCallable(funcs, 'claimOpportunity');
+const fnOutcome = httpsCallable(funcs, 'registerOutcome');
+const fnRelease = httpsCallable(funcs, 'releaseOpportunity');
+const fnConsulta = httpsCallable(funcs, 'crmConsulta');
+const V = window.CrmView;
+
+const S = { uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
+  indicadores: null, aba: 'hoje', aberto: null, sel: {}, enviando: new Set(), erros: {} };
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+function toast(msg, err) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3200); }
+const hoje = () => V.dataComercial(new Date());
+const msgErro = e => (e && e.message ? String(e.message).replace(/^.*?:\s*/, '') : 'Erro inesperado.');
+
+// ── Render: HOJE ─────────────────────────────────────────────────────────────────────────────────────
+function renderKpis() {
+  const k = S.indicadores, h = S.visao ? S.visao.contagens : null;
+  const meta = !k
+    ? `<div class="kpi"><div class="kpi-l">Meta do mês</div><div class="kpi-v muted">…</div></div>`
+    : k.meta
+    ? `<div class="kpi"><div class="kpi-l">Meta do mês</div><div class="kpi-v">${k.meta.pct}%</div><div class="bar"><i style="width:${Math.min(100, k.meta.pct)}%"></i></div></div>`
+    : `<div class="kpi"><div class="kpi-l">Meta do mês</div><div class="kpi-v muted">—</div><div class="kpi-s">sem meta cadastrada para você</div></div>`;
+  const atras = k ? k.retornosAtrasados : (h ? h.atrasados : 0);
+  document.getElementById('kpis').innerHTML = meta
+    + `<div class="kpi"><div class="kpi-l">Contatos hoje</div><div class="kpi-v">${k ? k.contatosHoje : '…'}</div></div>`
+    + `<div class="kpi ${atras ? 'alerta' : ''}"><div class="kpi-l">Retornos atrasados</div><div class="kpi-v">${atras}</div></div>`
+    + `<div class="kpi"><div class="kpi-l">Vendas após contato · 7d</div><div class="kpi-v">${k ? k.vendasAposContato7d : '…'}</div>`
+    + `${k && k.indeterminadas7d ? `<div class="kpi-s">+${k.indeterminadas7d} no mesmo dia (indeterminado)</div>` : '<div class="kpi-s">sem afirmar causa</div>'}</div>`;
+}
+
+const SECOES = [
+  ['atrasados', 'Atrasados', 'atrasado', 'Nenhum retorno atrasado.'],
+  ['retornosHoje', 'Retornos de hoje', 'hoje', 'Nenhum retorno para hoje.'],
+  ['emAtendimento', 'Em atendimento', 'andamento', 'Nada em atendimento agora.'],
+  ['pendentes', 'Pendentes de dias anteriores', '', 'Sem pendências anteriores.'],
+  ['novas', 'Novas', '', 'Sem novas oportunidades hoje.'],
+  ['trabalhadasHoje', 'Trabalhados hoje', '', 'Nada trabalhado ainda hoje.'],
+];
+
+function renderHoje() {
+  if (!S.docCarregado || !S.opCarregado) {                      // ainda carregando: não afirmar que a lista "não foi gerada"
+    document.getElementById('avisoHoje').innerHTML = ''; document.getElementById('secoes').innerHTML = '<div class="carregando">Carregando a sua lista…</div>';
+    renderKpis(); return;
+  }
+  const agoraMs = Date.now();
+  S.visao = V.montarHoje({ doc: S.doc, opMap: S.opMap, uid: S.uid, hoje: hoje(), agoraMs, podeOperar: S.podeOperar });
+  const v = S.visao;
+  document.getElementById('avisoHoje').innerHTML = v.worklistDeHoje ? '' :
+    '<div class="aviso">A lista de hoje ainda não foi gerada (ela sai às 06:00, de segunda a sexta). Abaixo aparecem só os seus retornos.</div>';
+  const html = SECOES.map(([k, titulo, cls, vazio]) => {
+    const itens = v[k] || [];
+    if (k === 'trabalhadasHoje' && !itens.length) return '';
+    return `<section class="sec ${k}"><div class="sec-h"><h2>${titulo}</h2><span class="n">${itens.length}</span></div>`
+      + (itens.length ? `<div class="grid">${itens.map(x => cartao(x, cls)).join('')}</div>` : `<div class="sec-vazia">${vazio}</div>`) + '</section>';
+  }).join('');
+  document.getElementById('secoes').innerHTML = html;
+  renderKpis();
+  pedirExtras([].concat(v.atrasados, v.retornosHoje, v.emAtendimento, v.pendentes, v.novas).map(x => x.item.commercialEntityId));
+}
+
+function cartao(v, cls) {
+  const op = S.opMap.get(v.item.opportunityInstanceId) || null;
+  const m = V.modeloCartao(v, op, S.extras[v.item.commercialEntityId]);
+  const id = m.opportunityInstanceId, e = v.estado || {};
+  const aberto = S.sel[id], enviando = S.enviando.has(id);
+  const ativo = e.podeIniciar || e.podeRegistrar;
+  const dados = m.linhas.map(l => `<span>${esc(l.k)} <b>${esc(l.v)}</b></span>`).join('');
+  const hist = [
+    m.ultimoResultado ? `<span>Último: <b>${esc(m.ultimoResultado.rotulo)}</b> · ${esc(V.rotuloDia(V.dataComercial(new Date(m.ultimoResultado.em)), hoje()))} ${esc(V.horaBR(m.ultimoResultado.em))}</span>` : '',
+    m.ultimoResultado && m.ultimoResultado.nota ? `<span class="nota">“${esc(m.ultimoResultado.nota)}”</span>` : '',
+    m.proximoRetorno ? `<span>Retorno: <b>${esc(V.rotuloDia(m.proximoRetorno, hoje()))}</b></span>` : '',
+    m.pendenteDesde && v.grupoOrigem === 'pendentes' ? `<span>Pendente desde <b>${esc(V.dataBR(m.pendenteDesde))}</b></span>` : '',
+  ].filter(Boolean).join('');
+  let acoes = '';
+  if (S.podeOperar && ativo && !aberto) {
+    acoes += `<button class="btn pri" data-a="registrar" data-id="${esc(id)}"><span class="ms">task_alt</span> Registrar resultado</button>`;
+    if (e.podeIniciar) acoes += `<button class="btn" data-a="iniciar" data-id="${esc(id)}" ${enviando ? 'disabled' : ''}>Iniciar</button>`;
+    if (e.podeCancelar) acoes += `<button class="btn" data-a="cancelar" data-id="${esc(id)}" ${enviando ? 'disabled' : ''}>Cancelar atendimento</button>`;
+  }
+  acoes += `<button class="btn link" data-a="cliente" data-ent="${esc(m.entidade)}">Ver cliente</button>`;
+  return `<article class="card ${cls}" data-id="${esc(id)}">
+    <div class="card-top"><div class="card-nome">${esc(m.nome)}</div>${m.altoValor ? '<span class="pill valor">alto valor</span>' : ''}${m.tipo ? `<span class="pill">${esc(m.tipo)}</span>` : ''}</div>
+    ${m.motivo ? `<div class="motivo">${esc(m.motivo)}</div>` : ''}
+    ${dados ? `<div class="dados">${dados}</div>` : ''}
+    ${hist ? `<div class="hist">${hist}</div>` : ''}
+    ${e.rotulo && e.codigo !== 'DISPONIVEL' ? `<div><span class="st ${esc(e.codigo)}">${esc(e.rotulo)}</span></div>` : ''}
+    <div class="acoes">${acoes}</div>
+    ${aberto ? painelRegistro(id) : ''}
+  </article>`;
+}
+
+function painelRegistro(id) {
+  const sel = S.sel[id] || {}, h = hoje(), lim = V.limitesRetorno(h);
+  const nota = V.validarNota(sel.nota || '');
+  const r = V.RESULTADOS.find(x => x.codigo === sel.resultado);
+  const podeSalvar = r && nota.ok && (!r.exigeData || (sel.data && sel.data >= lim.min && sel.data <= lim.max)) && !S.enviando.has(id);
+  return `<div class="reg" data-reg="${esc(id)}">
+    <div class="chips">${V.RESULTADOS.map(x => `<button class="chip" data-a="res" data-id="${esc(id)}" data-res="${x.codigo}" aria-pressed="${sel.resultado === x.codigo}">${esc(x.rotulo)}</button>`).join('')}</div>
+    ${r && r.exigeData ? `<div><label for="dt-${esc(id)}">Retornar em</label><br><input type="date" id="dt-${esc(id)}" data-a="data" data-id="${esc(id)}" min="${lim.min}" max="${lim.max}" value="${esc(sel.data || '')}"></div>` : ''}
+    <div><label for="nt-${esc(id)}">Observação (opcional)</label>
+      <textarea id="nt-${esc(id)}" data-a="nota" data-id="${esc(id)}" maxlength="400" placeholder="Ex.: estoque alto de LED, pediu para ver multimídia no mês que vem">${esc(sel.nota || '')}</textarea>
+      <div class="cont ${nota.ok ? '' : 'excede'}" id="ct-${esc(id)}">${nota.tamanho}/${V.NOTA_MAX}</div></div>
+    ${S.erros[id] ? `<div class="erro">${esc(S.erros[id])}</div>` : ''}
+    <div class="acoes"><button class="btn pri" data-a="salvar" data-id="${esc(id)}" ${podeSalvar ? '' : 'disabled'}>${S.enviando.has(id) ? 'Salvando…' : 'Salvar resultado'}</button>
+      <button class="btn" data-a="fecharReg" data-id="${esc(id)}" ${S.enviando.has(id) ? 'disabled' : ''}>Cancelar</button></div>
+  </div>`;
+}
+
+// ── Render: AGENDA ───────────────────────────────────────────────────────────────────────────────────
+function renderAgenda() {
+  if (!S.opCarregado) { document.getElementById('agenda').innerHTML = '<div class="carregando">Carregando a agenda…</div>'; document.getElementById('agendaDepois').textContent = ''; return; }
+  const a = V.montarAgenda({ opMap: S.opMap, uid: S.uid, hoje: hoje(), agoraMs: Date.now() });
+  const col = (k, titulo) => `<div class="col ${k}"><h3>${titulo}<span>${a[k].length}</span></h3>${a[k].length ? a[k].map(it =>
+    `<button class="ag-item" data-a="cliente" data-ent="${esc(it.commercialEntityId)}"><div class="ag-nome">${esc(it.nomeCliente || 'Cliente')}</div>
+     <div class="ag-sub">${esc(V.rotuloDia(it.data, hoje()))}${it.ultimoResultado ? ' · ' + esc(it.ultimoResultado.rotulo) : ''}</div>
+     ${it.ultimoResultado && it.ultimoResultado.nota ? `<div class="ag-sub">“${esc(it.ultimoResultado.nota)}”</div>` : ''}</button>`).join('') : '<div class="sec-vazia">Nada aqui.</div>'}</div>`;
+  document.getElementById('agenda').innerHTML = col('atrasados', 'Atrasados') + col('hoje', 'Hoje') + col('amanha', 'Amanhã') + col('semana', 'Esta semana');
+  document.getElementById('agendaDepois').textContent = a.depois.length ? `${a.depois.length} retorno(s) marcado(s) para depois desta semana.` : '';
+}
+
+// re-render sem roubar o foco de quem está digitando (observação/data)
+function render() {
+  const a = document.activeElement, id = a && a.id, ini = a && a.selectionStart, fim = a && a.selectionEnd;
+  if (S.aba === 'hoje') renderHoje(); else renderAgenda();
+  if (id) { const n = document.getElementById(id); if (n && n !== document.activeElement) { n.focus(); try { if (ini != null) n.setSelectionRange(ini, fim); } catch (e) {} } }
+}
+
+// ── Dados do servidor (somente leitura) ──────────────────────────────────────────────────────────────
+async function pedirExtras(ents) {
+  const faltam = [...new Set(ents.filter(e => e && !S.extrasPedidos.has(e)))].slice(0, 80);
+  if (!faltam.length) return;
+  faltam.forEach(e => S.extrasPedidos.add(e));
+  try {
+    const r = await fnConsulta({ acao: 'cartoes', entidades: faltam });
+    Object.assign(S.extras, r.data.cartoes || {});
+    if (S.aba === 'hoje') renderHoje();
+  } catch (e) { console.warn('[crm] cartoes:', e.code || e.message); }
+}
+let _indT = null;
+function atualizarIndicadores() {
+  clearTimeout(_indT);
+  _indT = setTimeout(async () => {
+    try { const r = await fnConsulta({ acao: 'indicadores' }); S.indicadores = r.data; if (S.aba === 'hoje') renderKpis(); }
+    catch (e) { console.warn('[crm] indicadores:', e.code || e.message); }
+  }, 400);
+}
+
+// ── Ações (servidor valida tudo: dono, payload, datas, observação) ──────────────────────────────────
+async function iniciar(id) {
+  if (S.enviando.has(id)) return;
+  S.enviando.add(id); render();
+  try { await fnClaim({ opportunityInstanceId: id }); toast('Atendimento iniciado.'); }
+  catch (e) { toast(msgErro(e), true); }
+  finally { S.enviando.delete(id); render(); }
+}
+async function cancelar(id) {
+  if (S.enviando.has(id)) return;
+  S.enviando.add(id); render();
+  try { await fnRelease({ opportunityInstanceId: id }); toast('Atendimento cancelado.'); }
+  catch (e) { toast(msgErro(e), true); }
+  finally { S.enviando.delete(id); render(); }
+}
+async function salvar(id) {
+  const sel = S.sel[id] || {}; if (S.enviando.has(id) || !sel.resultado) return;       // trava de duplo clique
+  const nota = V.validarNota(sel.nota || '');
+  if (!nota.ok) { S.erros[id] = `Observação passa de ${V.NOTA_MAX} caracteres.`; render(); return; }
+  S.enviando.add(id); delete S.erros[id]; render();
+  try {
+    const op = S.opMap.get(id);
+    const meu = op && op.estado === 'EM_ATENDIMENTO' && op.claimAtual && op.claimAtual.operadorId === S.uid;
+    if (!meu) await fnClaim({ opportunityInstanceId: id });                           // iniciar + registrar num gesto só
+    const payload = { opportunityInstanceId: id, outcome: sel.resultado };
+    if (sel.resultado === 'PEDIU_RETORNO') payload.scheduledFor = sel.data;
+    if (nota.texto) payload.nota = nota.texto;
+    const r = await fnOutcome(payload);
+    delete S.sel[id];
+    toast(r.data.nextFollowUpAt ? `Resultado salvo. Retorno: ${V.rotuloDia(r.data.nextFollowUpAt, hoje())}.` : 'Resultado salvo.');
+    atualizarIndicadores();
+  } catch (e) { S.erros[id] = msgErro(e); }
+  finally { S.enviando.delete(id); render(); }                                         // o listener de interacoes_fila atualiza o cartão
+}
+
+// ── Cliente 360 ──────────────────────────────────────────────────────────────────────────────────────
+async function abrirCliente(ent) {
+  S.aberto = ent;
+  document.getElementById('drawer').classList.add('aberto'); document.getElementById('drawerBg').classList.add('aberto');
+  document.getElementById('drNome').textContent = 'Carregando…'; document.getElementById('drSub').innerHTML = '';
+  document.getElementById('drBody').innerHTML = '<div class="carregando">Carregando cliente…</div>';
+  try {
+    const r = await fnConsulta({ acao: 'cliente', entidade: ent });
+    if (S.aberto !== ent) return;
+    renderCliente(r.data);
+  } catch (e) { document.getElementById('drBody').innerHTML = `<div class="blk">${esc(e.code === 'functions/permission-denied' ? 'Este cliente não está na sua carteira ou lista.' : msgErro(e))}</div>`; document.getElementById('drNome').textContent = 'Cliente'; }
+}
+function fecharCliente() { S.aberto = null; document.getElementById('drawer').classList.remove('aberto'); document.getElementById('drawerBg').classList.remove('aberto'); }
+
+const ROT_TIPO = { REATIVACAO_120D: 'Retomar contato', JANELA_DE_RECOMPRA: 'Janela de recompra', QUEDA_DE_COMPRAS: 'Queda no ritmo' };
+const ROT_ESTADO = { DISPONIVEL: 'disponível', EM_ATENDIMENTO: 'em atendimento', AGUARDANDO_RETORNO: 'aguardando retorno', CONCLUIDA: 'concluída' };
+const ROT_TEND = { CRESCENDO: 'Em alta', ESTAVEL: 'Estável', CAINDO: 'Em queda', SEM_BASE: 'Sem base', NUNCA_COMPROU: 'Nunca comprou' };
+const ROT_REC = { DENTRO_DO_PADRAO: 'Dentro do padrão', PROXIMO_DA_JANELA: 'Perto da recompra', ATRASADO_VS_HISTORICO: 'Atrasado vs. histórico', SEM_BASE: 'Sem base', NUNCA_COMPROU: 'Nunca comprou' };
+function renderCliente(c) {
+  const r = c.resumo || {}, cl = c.cliente || {};
+  document.getElementById('drNome').textContent = cl.nome || 'Cliente';
+  document.getElementById('drSub').innerHTML = [cl.cidade ? esc(cl.cidade) : '', cl.gestaoClickId ? 'GC ' + esc(cl.gestaoClickId) : '',
+    cl.responsavelCarteira ? 'Carteira: ' + esc(cl.responsavelCarteira) : '',
+    cl.telefone ? `<span>${esc(cl.telefone)} <button class="btn link" data-a="copiar" data-v="${esc(cl.telefone)}">copiar</button></span>` : '',
+    r.faixaValor === 'ALTO_VALOR' ? '<span class="pill valor">alto valor</span>' : ''].filter(Boolean).join(' · ');
+  const kv = (l, v) => v == null || v === '' ? '' : `<div>${esc(l)}<b>${esc(v)}</b></div>`;
+  const val = r.valores || null;
+  const resumo = `<div class="blk" id="c-resumo"><h3>Resumo</h3><div class="kv">
+    ${kv('Última compra', r.ultimaCompraEm ? V.dataBR(r.ultimaCompraEm) : (r.nuncaComprou ? 'nunca comprou' : null))}
+    ${kv('Dias sem comprar', r.diasSemComprar)}${kv('Pedidos (total)', r.pedidosTotal)}
+    ${kv('Pedidos 30 / 90 / 180d', [r.pedidos30d, r.pedidos90d, r.pedidos180d].every(x => x != null) ? `${r.pedidos30d} / ${r.pedidos90d} / ${r.pedidos180d}` : null)}
+    ${kv('Frequência', r.frequenciaDias != null ? `a cada ~${r.frequenciaDias} dias` : null)}
+    ${kv('Recompra', ROT_REC[r.recorrencia] || null)}${kv('Tendência', ROT_TEND[r.tendencia] || null)}
+    ${val ? kv('Faturamento 30d', V.moedaBR(val.faturamento30d)) + kv('Faturamento 60d', V.moedaBR(val.faturamento60d)) + kv('Faturamento 90d', V.moedaBR(val.faturamento90d))
+      + kv('Faturamento 180d', V.moedaBR(val.faturamento180d)) + kv('Ticket médio 180d', V.moedaBR(val.ticketMedio180d)) : ''}
+    </div>${!c.podeVerValores ? '<div class="kpi-s" style="margin-top:.5rem">Valores em R$ ficam visíveis só para a gestão.</div>' : ''}
+    ${c.recuperado ? `<div class="vac" style="margin-top:.6rem"><span class="rel ${c.recuperado.status === 'INDETERMINADO' ? 'INDETERMINADO' : 'APOS'}">${c.recuperado.status === 'INDETERMINADO' ? 'Recuperação indeterminada (venda no mesmo dia do contato)' : 'Cliente recuperado'}</span>
+      — estava há ${esc(c.recuperado.diasParadoNoContato)} dias sem comprar no contato de ${esc(V.dataBR(c.recuperado.dataContato))} (${esc(c.recuperado.contatoPor)}); comprou em ${esc(V.dataBR(c.recuperado.dataVenda))}${c.recuperado.valorVenda != null ? ' · ' + esc(V.moedaBR(c.recuperado.valorVenda)) : ''}${c.recuperado.vendedorVenda ? ' · vendedor ' + esc(c.recuperado.vendedorVenda) : ''}. <span class="muted">Sequência temporal, não causa.</span></div>` : ''}
+  </div>`;
+  const compras = `<div class="blk" id="c-compras"><h3>Compras</h3>${c.compras && c.compras.length ? `<table><thead><tr><th>Data</th><th>Itens</th><th>Vendedor</th>${c.podeVerValores ? '<th>Valor</th>' : ''}</tr></thead><tbody>
+    ${c.compras.map(v => `<tr><td>${esc(V.dataBR(v.data))}</td><td>${esc(v.itens ?? '')}</td><td>${esc(v.vendedor || '')}</td>${c.podeVerValores ? `<td>${esc(V.moedaBR(v.valor))}</td>` : ''}</tr>`).join('')}</tbody></table>` : '<div class="sec-vazia">Sem compras registradas.</div>'}
+    ${c.vendaAposContato && c.vendaAposContato.length ? `<h3 style="margin-top:.8rem">Venda após contato</h3>${c.vendaAposContato.map(x => `<div class="vac"><span class="rel ${x.relacao}">${x.relacao === 'APOS' ? 'Venda após contato' : 'Indeterminado'}</span> — pedido em ${esc(V.dataBR(x.dataVenda))}${x.valor != null ? ' · ' + esc(V.moedaBR(x.valor)) : ''}; contato de ${esc(x.contato.por)} (${esc(V.ROTULO_RESULTADO[x.contato.outcome] || x.contato.outcome)}) em ${esc(V.dataBR(V.dataComercial(new Date(x.contato.em))))}${x.relacao === 'APOS' ? `, ${esc(x.diasAposContato)} dia(s) antes` : ' (mesmo dia; sem hora da venda)'}.</div>`).join('')}` : ''}
+  </div>`;
+  const p = c.produtos || {};
+  const produtos = `<div class="blk" id="c-produtos"><h3>Produtos</h3>
+    ${p.categorias && p.categorias.length ? `<div class="dados" style="margin-bottom:.5rem">${p.categorias.map(x => `<span>${esc(x.categoria)}${x.pedidos != null ? ` <b>${esc(x.pedidos)} ped.</b>` : ''}</span>`).join('')}</div>` : ''}
+    ${p.maisComprados && p.maisComprados.length ? `<table><thead><tr><th>Mais comprados</th><th>Pedidos</th><th>Unid.</th></tr></thead><tbody>${p.maisComprados.map(x => `<tr><td>${esc(x.nome)}</td><td>${esc(x.pedidos ?? '')}</td><td>${esc(x.unidades ?? '')}</td></tr>`).join('')}</tbody></table>` : '<div class="sec-vazia">Sem itens de pedido disponíveis.</div>'}
+  </div>`;
+  const oport = `<div class="blk" id="c-oport"><h3>Oportunidades</h3>${c.oportunidades && c.oportunidades.length ? c.oportunidades.map(o => `<div class="nota-item"><b>${esc(ROT_TIPO[o.tipoOportunidade] || 'Oportunidade')}</b> · ${esc(o.responsavel)} · desde ${esc(V.dataBR(o.desde))} · ${esc(ROT_ESTADO[o.estado] || '')}${o.ultimoResultado ? ' · último: ' + esc(V.ROTULO_RESULTADO[o.ultimoResultado.outcome] || o.ultimoResultado.outcome) : ''}${o.nextFollowUpAt ? ' · retorno ' + esc(V.dataBR(o.nextFollowUpAt)) : ''}</div>`).join('') : '<div class="sec-vazia">Nenhuma oportunidade aberta na lista de hoje.</div>'}</div>`;
+  const tl = `<div class="blk" id="c-timeline"><h3>Timeline</h3>${c.timeline && c.timeline.length ? `<ul class="tl">${c.timeline.map(e => `<li class="${esc(e.ator)} ${e.futuro ? 'futuro' : ''}">
+    <div class="tl-q">${esc(V.dataBR(e.dia))}${e.precisao === 'HORA' ? ' ' + esc(V.horaBR(e.quando)) : ''}<span class="tag ${esc(e.ator)}">${e.ator === 'VENDEDOR' ? 'Vendedor' : e.ator === 'VENDA' ? 'Venda' : 'Sistema'}</span></div>
+    <div class="tl-t">${esc(e.titulo)}${e.valor != null ? ' · ' + esc(V.moedaBR(e.valor)) : ''}</div>${e.detalhe ? `<div class="tl-d">${esc(e.detalhe)}</div>` : ''}${e.nota ? `<div class="tl-d">“${esc(e.nota)}”</div>` : ''}</li>`).join('')}</ul>` : '<div class="sec-vazia">Sem eventos.</div>'}</div>`;
+  const fu = `<div class="blk" id="c-fu"><h3>Follow-ups</h3>${c.followUps && c.followUps.length ? c.followUps.map(f => `<div class="nota-item"><b>${esc(V.dataBR(f.data))}</b> · ${f.situacao === 'ATRASADO' ? '<span style="color:var(--red);font-weight:700">atrasado</span>' : f.situacao === 'HOJE' ? 'hoje' : 'agendado'}${f.responsavel ? ' · ' + esc(f.responsavel) : ''}</div>`).join('') : '<div class="sec-vazia">Nenhum retorno marcado.</div>'}</div>`;
+  const obs = `<div class="blk" id="c-obs"><h3>Observações</h3>${c.observacoes && c.observacoes.length ? c.observacoes.map(o => `<div class="nota-item"><div class="tl-q">${esc(V.dataBR(V.dataComercial(new Date(o.em))))} ${esc(V.horaBR(o.em))} · ${esc(o.por)} · ${esc(V.ROTULO_RESULTADO[o.outcome] || o.outcome)}</div>“${esc(o.nota)}”</div>`).join('') : '<div class="sec-vazia">Nenhuma observação registrada.</div>'}</div>`;
+  document.getElementById('drBody').innerHTML = resumo + compras + produtos + oport + tl + fu + obs;
+}
+
+// ── Eventos (delegação) ─────────────────────────────────────────────────────────────────────────────
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const a = b.dataset.a, id = b.dataset.id;
+  if (a === 'registrar') { S.sel[id] = S.sel[id] || {}; render(); const r = document.querySelector(`[data-reg="${CSS.escape(id)}"] .chip`); if (r) r.focus(); }
+  else if (a === 'res') { S.sel[id] = { ...(S.sel[id] || {}), resultado: b.dataset.res }; delete S.erros[id]; render(); }
+  else if (a === 'salvar') salvar(id);
+  else if (a === 'fecharReg') { delete S.sel[id]; delete S.erros[id]; render(); }
+  else if (a === 'iniciar') iniciar(id);
+  else if (a === 'cancelar') cancelar(id);
+  else if (a === 'cliente') abrirCliente(b.dataset.ent);
+  else if (a === 'copiar') { navigator.clipboard && navigator.clipboard.writeText(b.dataset.v).then(() => toast('Telefone copiado.'), () => {}); }
+});
+document.addEventListener('input', e => {
+  const t = e.target; if (!t.dataset || !t.dataset.a) return;
+  const id = t.dataset.id;
+  if (t.dataset.a === 'nota') {
+    S.sel[id] = { ...(S.sel[id] || {}), nota: t.value };
+    const n = V.validarNota(t.value), ct = document.getElementById('ct-' + id);
+    if (ct) { ct.textContent = `${n.tamanho}/${V.NOTA_MAX}`; ct.className = 'cont' + (n.ok ? '' : ' excede'); }
+    const bt = document.querySelector(`[data-a="salvar"][data-id="${CSS.escape(id)}"]`);
+    const sel = S.sel[id], rr = V.RESULTADOS.find(x => x.codigo === sel.resultado), lim = V.limitesRetorno(hoje());
+    if (bt) bt.disabled = !(rr && n.ok && (!rr.exigeData || (sel.data && sel.data >= lim.min && sel.data <= lim.max)) && !S.enviando.has(id));
+  } else if (t.dataset.a === 'data') { S.sel[id] = { ...(S.sel[id] || {}), data: t.value }; render(); const d = document.getElementById('dt-' + id); if (d) d.focus(); }
+});
+document.getElementById('drFechar').addEventListener('click', fecharCliente);
+document.getElementById('drawerBg').addEventListener('click', fecharCliente);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharCliente(); });
+function trocarAba(aba) {
+  S.aba = aba;
+  document.getElementById('tabHoje').setAttribute('aria-selected', aba === 'hoje'); document.getElementById('tabAgenda').setAttribute('aria-selected', aba === 'agenda');
+  document.getElementById('viewHoje').hidden = aba !== 'hoje'; document.getElementById('viewAgenda').hidden = aba !== 'agenda';
+  render();
+}
+document.getElementById('tabHoje').addEventListener('click', () => trocarAba('hoje'));
+document.getElementById('tabAgenda').addEventListener('click', () => trocarAba('agenda'));
+
+// ── Auth + listeners (mesmas leituras que a fila atual já faz; Rules inalteradas) ────────────────────
+function semAcesso(msg) { document.getElementById('carregando').innerHTML = `${esc(msg)}<br><a href="../index.html" style="color:var(--blue);font-weight:600">← Voltar ao sistema</a>`; }
+onAuthStateChanged(auth, async u => {
+  if (!u) { location.href = '../login.html'; return; }
+  S.uid = u.uid;
+  try {
+    const us = await getDoc(doc(db, 'users', u.uid)); const ud = us.exists() ? us.data() : null;
+    if (!ud || !ud.ativo || (ud.role !== 'gestor' && ud.role !== 'funcionario')) { location.href = '../login.html'; return; }
+    const ss = await getDoc(doc(db, 'sistema_usuarios', u.uid));
+    if (!ss.exists() || ss.data().bloqueado === true) { semAcesso('Você não tem acesso ao CRM.'); return; }
+    const mods = Array.isArray(ss.data().modulos) ? ss.data().modulos : [];
+    S.podeOperar = mods.includes('fila-comercial-operar');
+    S.gestao = ud.role === 'gestor' || mods.includes('fila-comercial-gestao');
+    if (!S.podeOperar && !S.gestao) { semAcesso('Você não tem acesso ao CRM.'); return; }
+    S.nome = ss.data().nome || (u.email || '').split('@')[0];
+    document.getElementById('user').textContent = S.nome;
+  } catch (e) { location.href = '../login.html'; return; }
+  document.getElementById('carregando').hidden = true;
+  document.getElementById('viewHoje').hidden = false;
+  onSnapshot(doc(db, 'fila_comercial', 'worklist'), s => { S.doc = s.exists() ? s.data() : null; S.docCarregado = true; render(); },
+    err => { console.warn('[crm] worklist:', err.code); S.docCarregado = true; render(); toast('Não foi possível carregar a lista de hoje.', true); });
+  onSnapshot(collection(db, 'interacoes_fila'), s => {
+    s.docChanges().forEach(ch => { if (ch.type === 'removed') S.opMap.delete(ch.doc.id); else S.opMap.set(ch.doc.id, ch.doc.data()); });
+    S.opCarregado = true; render();
+  }, err => { console.warn('[crm] interacoes:', err.code); S.opCarregado = true; render(); toast('Não foi possível carregar os atendimentos.', true); });
+  setInterval(render, 60000);          // virada de dia / expiração de claim sem recarregar
+  atualizarIndicadores();
+});
+</script>
+</body>
+</html>

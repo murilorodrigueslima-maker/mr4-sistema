@@ -341,8 +341,90 @@ service cloud.firestore {
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
 
+    // P0 (máquina de estados): coluna só muda por transição válida, com compare-and-set de versão e evento de
+    // auditoria no MESMO commit. Espelha js/expedicao-core.js. Escrita antiga (setDoc/merge sem protocolo, de abas
+    // abertas antes da atualização) é RECUSADA — não consegue regredir nem sobrescrever pedido.
+    //   Fluxo: ag → se → pr → de · Cancelar: ag|se|pr → cancelado · de e cancelado terminais
+    //   Reabrir (de → ag): só gestor, motivo 5–200 caracteres, auditado.
+    function expAcesso() {
+      return isGestor() || temAcessoModulo('expedicao');
+    }
+    function isValidExpeditionTransition(de, para) {
+      return (de == 'ag' && para == 'se') || (de == 'se' && para == 'pr') || (de == 'pr' && para == 'de') ||
+             (de in ['ag', 'se', 'pr'] && para == 'cancelado');
+    }
+    function expEnvioValido(e) {
+      return e in ['uber-mr4', 'uber-cliente', 'retirada', 'retirada-terc', 'rota-manha', 'rota-tarde'];
+    }
+    // horário informado pelo navegador (ms) precisa estar a ±10 min do relógio do servidor
+    function expMsOk(ms) {
+      return ms is int && ms > request.time.toMillis() - 600000 && ms < request.time.toMillis() + 600000;
+    }
+    function expSoMudou(extras) {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly(['coluna', 'versao', 'ultimoEventoId', 'atualizadoEm', 'atualizadoPor', 'movidoEm'].concat(extras));
+    }
+    // compare-and-set: versão = atual + 1, evento v{versão} criado no mesmo commit, carimbo e autor do servidor
+    function expProtocolo(pedidoId) {
+      let v = resource.data.get('versao', 0) + 1;
+      let n = request.resource.data;
+      return n.versao == v && n.ultimoEventoId == 'v' + string(v) &&
+             n.atualizadoEm == request.time && n.atualizadoPor == request.auth.uid && expMsOk(n.movidoEm) &&
+             existsAfter(/databases/$(database)/documents/expedicao_pedidos/$(pedidoId)/eventos/$('v' + string(v)));
+    }
+    function expTransicaoOk() {
+      let de = resource.data.coluna;
+      let n = request.resource.data;
+      return (isValidExpeditionTransition(de, n.coluna) && (
+                (de == 'ag' && n.coluna == 'se' && expSoMudou(['envio']) && expEnvioValido(n.envio)) ||
+                (de == 'se' && n.coluna == 'pr' && expSoMudou([])) ||
+                (de == 'pr' && n.coluna == 'de' && expSoMudou(['envio', 'saidaEm']) && expEnvioValido(n.envio) && expMsOk(n.saidaEm)) ||
+                (n.coluna == 'cancelado' && expSoMudou(['canceladoEm']) && expMsOk(n.canceladoEm))
+             )) ||
+             (de == 'de' && n.coluna == 'ag' && isGestor() &&
+                expSoMudou(['envio', 'saidaEm', 'ingresadoEm', 'reabertura']) &&
+                n.envio == null && n.saidaEm == null && expMsOk(n.ingresadoEm) &&
+                n.reabertura.keys().hasOnly(['motivo', 'por', 'em']) && n.reabertura.motivo is string &&
+                n.reabertura.motivo.size() >= 5 && n.reabertura.motivo.size() <= 200 &&
+                n.reabertura.por == request.auth.uid && n.reabertura.em == request.time);
+    }
+    // criação: só 'ag', só se o documento NÃO existe (create), com o formato conhecido; nunca sobrescreve
+    function expCriacaoOk(pedidoId) {
+      let n = request.resource.data;
+      return n.coluna == 'ag' && n.numero == pedidoId && n.envio == null && n.saidaEm == null &&
+             n.keys().hasOnly(['numero', 'data', 'hora', 'ingresadoEm', 'movidoEm', 'coluna', 'cliente', 'vendedor',
+                               'itens', 'valor', 'cidade', 'envio', 'saidaEm', 'versao', 'ultimoEventoId', 'criadoEm', 'origem']) &&
+             n.get('versao', 0) == 0;
+    }
+
     match /expedicao_pedidos/{pedidoId} {
-      allow read, write: if isGestor() || temAcessoModulo('expedicao');
+      allow read:   if expAcesso();
+      allow create: if expAcesso() && expCriacaoOk(pedidoId);
+      allow update: if expAcesso() && expProtocolo(pedidoId) && expTransicaoOk();
+      allow delete: if false;
+
+      // trilha imutável de transições: eventos/v{versão}, criada no mesmo commit da transição
+      match /eventos/{eventoId} {
+        allow read:   if expAcesso();
+        allow create: if expAcesso() && expEventoOk(pedidoId, eventoId);
+        allow update, delete: if false;
+      }
+    }
+    function expEventoOk(pedidoId, eventoId) {
+      let antes = get(/databases/$(database)/documents/expedicao_pedidos/$(pedidoId)).data;
+      let depois = getAfter(/databases/$(database)/documents/expedicao_pedidos/$(pedidoId)).data;
+      let e = request.resource.data;
+      return depois.ultimoEventoId == eventoId && depois.versao == antes.get('versao', 0) + 1 &&
+             e.keys().hasOnly(['pedido', 'de', 'para', 'acao', 'versao', 'em', 'por', 'origem', 'motivo']) &&
+             e.pedido == pedidoId && e.de == antes.coluna && e.para == depois.coluna && e.versao == depois.versao &&
+             e.em == request.time && e.por == request.auth.uid &&
+             e.acao in ['INICIAR_SEPARACAO', 'MARCAR_SEPARADO', 'DESPACHAR', 'CANCELAR', 'REABRIR'];
+    }
+
+    // estado do sync central de pedidos novos (escrito só pela Function expedicaoSyncPedidos, Admin SDK)
+    match /expedicao_sync/{docId} {
+      allow read:  if expAcesso();
+      allow write: if false;
     }
 
     // ── Coleções: marketing ────────────────────────────────────────────────────

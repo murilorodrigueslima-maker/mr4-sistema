@@ -767,6 +767,16 @@ html,body{overflow-x:hidden;}
         </button>
       </div>
 
+      <!-- Estado: não confirmado (PONTO 2.0 F0) — verifica o estado real antes de permitir nova intenção -->
+      <div id="est-incerto" style="display:none;">
+        <div class="comprovante" role="status" aria-live="polite">
+          <div class="comp-titulo" id="incerto-titulo">Não foi possível confirmar. Verificando o estado…</div>
+          <div class="comp-row" id="incerto-msg" style="display:block"></div>
+        </div>
+        <button class="btn-ok" id="btn-incerto-retentar" style="display:none" onclick="retentarIntencao()">Tentar novamente</button>
+        <button class="btn-ok" id="btn-incerto-descartar" style="display:none;background:#fff;color:#5f6368;border:1px solid #dadce0" onclick="descartarIntencao()">Não registrar</button>
+      </div>
+
       <!-- Estado: comprovante -->
       <div id="est-comp" style="display:none;">
         <div class="comprovante" id="comp-content"></div>
@@ -937,6 +947,22 @@ window._fbGetAll = async (c, funcId) => {
   const s = await getDocs(q);
   return s.docs.map(d => ({id: d.id, ...d.data()}));
 };
+// PERFORMANCE P0: registros do PRÓPRIO funcionário só nos dias pedidos (funcId == + data in ≤30 dias por consulta; sem índice
+// composto). Se o servidor recusar a consulta, cai no comportamento anterior (todos os registros dele) e filtra em memória.
+window._fbRegistrosDias = async (funcId, dias) => {
+  try {
+    const out = [];
+    for (let i = 0; i < dias.length; i += 30) {
+      const q = query(collection(db, 'registros'), where('funcId', '==', funcId), where('data', 'in', dias.slice(i, i + 30)));
+      out.push(...(await getDocs(q)).docs.map(d => ({id: d.id, ...d.data()})));
+    }
+    return out;
+  } catch (e) {
+    console.warn('[ponto] consulta por dias indisponível, usando a leitura completa:', e && e.code);
+    const set = new Set(dias);
+    return (await window._fbGetAll('registros', funcId)).filter(r => set.has(r.data));
+  }
+};
 window._fbGetOne = async (c, id) => {
   const s = await getDoc(doc(db, c, id));
   return s.exists() ? {id: s.id, ...s.data()} : null;
@@ -944,7 +970,7 @@ window._fbGetOne = async (c, id) => {
 
 // Registro de ponto via Cloud Function (server-side: uid, hora, GPS, sequência)
 // Funcionário NÃO grava diretamente em registros — regra FAIL CLOSED nas Firestore Rules.
-window._registrarPonto = httpsCallable(functions, 'registrarPonto');
+window._registrarPonto = httpsCallable(functions, 'registrarPonto', { timeout: 20000 }); // F0: 20 s → deadline-exceeded → reconcilia pela intenção (antes: 70 s)
 
 // Escrita genérica própria — valida funcId quando presente, injeta authUid
 window._fbSetOwn = async function(colName, id, data) {
@@ -1004,29 +1030,49 @@ onAuthStateChanged(auth, async user => {
 });
 </script>
 
-<script src="ponto-regras.js"></script>
+<script src="ponto-regras.js?v=4.0.0"></script>
 
 <script>
 const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200;
 // JORNADA_SABADO_MIN vem de ponto-regras.js
 let funcAtivo=null, locAtual=null;
-let justifAtualId=null, espelhoAtualFuncId=null;
+let justifAtualId=null, espelhoAtualFuncId=null, hashEspelhoAberto=null;  // hash do espelho exibido na assinatura (SIGNED_SNAPSHOT)
 let batidaEmProgresso=false; // guard: evita duplo-toque em btn-bater
+// PONTO 2.0 F0 (P1-04): texto do usuário nunca vira HTML/JS
+function esc(v){return String(v==null?'':v).replace(/[&<>"'`]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'}[c]));}
+// id usado dentro de onclick="...('ID')": só formato seguro (entidades HTML seriam decodificadas antes do JS)
+function sid(v){v=String(v==null?'':v);return /^[A-Za-z0-9_.:-]{1,160}$/.test(v)?v:'';}
+// texto curto dentro de onclick (ex.: rótulo de mês): remove aspas, barra invertida e sinais de tag
+function sjs(v){return String(v==null?'':v).replace(/['"\\<>`]/g,'');}
+
 let assinaturaCanvas=null, assinaturaCtx=null, desenhando=false;
 
 // Cache de leitura — TTL 30s. Invalidado explicitamente após cada escrita na coleção.
+// PERFORMANCE P0: guarda a PROMESSA — Histórico do dia e Banco pedem ao mesmo tempo e antes baixavam tudo DUAS vezes.
 const _funcCache={};const _FUNC_CACHE_TTL=30000;
-async function fbGet(c,fid){
+function _cacheGet(chave,carregar){
   const now=Date.now();
-  if(_funcCache[c]&&(now-_funcCache[c].ts)<_FUNC_CACHE_TTL)return _funcCache[c].data;
-  const data=await window._fbGetAll(c,fid!==undefined?fid:(funcAtivo&&funcAtivo.id));
-  _funcCache[c]={data,ts:now};
-  return data;
+  if(_funcCache[chave]&&(now-_funcCache[chave].ts)<_FUNC_CACHE_TTL)return _funcCache[chave].p;
+  const p=carregar().catch(e=>{delete _funcCache[chave];throw e;});
+  _funcCache[chave]={p,ts:now};
+  return p;
 }
+function invalidarCache(c){for(const k of Object.keys(_funcCache))if(k===c||k.startsWith(c+':')||k.startsWith(c+'@'))delete _funcCache[k];}
+async function fbGet(c,fid){
+  const f=fid!==undefined?fid:(funcAtivo&&funcAtivo.id);
+  return _cacheGet(fid!==undefined?c+'@'+fid:c,async()=>{
+    let data=await window._fbGetAll(c,f);
+    if(c==='registros')data=registrosEfetivos(data);   // PONTO 2.0 F0 (P0-02): substituídos não contam (continuam gravados)
+    return data;
+  });
+}
+function diasDoMes(mes){const[y,m]=mes.split('-').map(Number);const n=new Date(Date.UTC(y,m,0)).getUTCDate();return Array.from({length:n},(_,i)=>mes+'-'+String(i+1).padStart(2,'0'));}
+// registros do funcionário ativo no mês (hoje está no mês corrente): 1 download compartilhado pelas telas iniciais
+function fbRegistrosMes(mes){const f=funcAtivo&&funcAtivo.id;return _cacheGet('registros:mes:'+mes+'@'+f,async()=>registrosEfetivos(await window._fbRegistrosDias(f,diasDoMes(mes))));}
 // Escritas: registros via Cloud Function (server-side); demais via _fbSetOwn
 async function fbSet(c,id,data){
   await window._fbSetOwn(c,id,data);
-  delete _funcCache[c]; // invalida cache da coleção modificada
+  invalidarCache(c); // invalida cache da coleção modificada (e as consultas dela)
 }
 
 // toMin, fmtMin, calcTotal, jornadaParaData, JORNADA_SABADO_MIN vêm de ponto-regras.js
@@ -1060,9 +1106,10 @@ function iniciarApp(){
   if(funcAtivo.cargo)document.getElementById('func-cargo-top').textContent=funcAtivo.cargo;
   // Avatar no header
   const av=document.getElementById('func-avatar-header');
-  if(funcAtivo.foto){av.innerHTML=`<img src="${funcAtivo.foto}" alt="Foto de ${funcAtivo.nome}" loading="lazy">`;}
+  if(funcAtivo.foto){av.innerHTML=`<img src="${esc(funcAtivo.foto)}" alt="Foto de ${esc(funcAtivo.nome)}" loading="lazy">`;}
   else{av.textContent=iniciais(funcAtivo.nome);}
   iniciarRelogio();obterLoc();renderHistDia();renderBancoFunc();
+  if(lerIntencaoPendente())reconciliarIntencao();                 // PONTO 2.0 F0: refresh após enviar
   document.getElementById('justif-data').value=hoje();
   document.getElementById('justif-anexo').addEventListener('change',e=>{
     const f=e.target.files[0];document.getElementById('justif-anexo-nome').textContent=f?f.name:'';
@@ -1101,7 +1148,7 @@ function obterLoc(){
 }
 
 async function proxPonto(regsAll){
-  if(!regsAll)regsAll=await fbGet('registros');
+  if(!regsAll)regsAll=await fbRegistrosMes(mesAtual());   // PERFORMANCE P0: hoje ⊂ mês corrente
   const regHoje=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const ult=regHoje[regHoje.length-1];
   if(!ult)return{tipo:'entrada',label:'Registrar Entrada',classe:''};
@@ -1111,33 +1158,47 @@ async function proxPonto(regsAll){
   return null;
 }
 
+// ── PONTO 2.0 F0 — intenção da batida (idempotência no servidor) ────────────────
+// Um toque = uma intenção {requestId, tipoEsperado}. Reenviar a MESMA intenção nunca gera outra batida:
+// o servidor responde JA_PROCESSADO. A intenção fica guardada até ser confirmada, para sobreviver a refresh/timeout.
+const INTENCAO_TTL_MS=10*60*1000;
+function chaveIntencao(){return 'ponto_intencao_'+(funcAtivo&&funcAtivo.id);}
+function novoRequestId(){
+  try{if(window.crypto&&crypto.randomUUID)return crypto.randomUUID().replace(/-/g,'');}catch(e){}
+  return Date.now().toString(36)+Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2);
+}
+function lerIntencaoPendente(){try{const v=JSON.parse(localStorage.getItem(chaveIntencao())||'null');return v&&v.requestId?v:null;}catch(e){return null;}}
+function salvarIntencao(i){try{localStorage.setItem(chaveIntencao(),JSON.stringify(i));}catch(e){}}
+function limparIntencao(){try{localStorage.removeItem(chaveIntencao());}catch(e){}}
+function mostrarEstado(id){['est-aguardando','est-proc','est-comp','est-gps-bloqueado','est-incerto'].forEach(x=>{const el=document.getElementById(x);if(el)el.style.display=(x===id?'block':'none');});}
+const ERROS_INCERTOS=['functions/unavailable','functions/deadline-exceeded','functions/internal','functions/unknown','functions/cancelled','functions/aborted'];
+
 async function iniciarBatida(){
   if(batidaEmProgresso)return;
   batidaEmProgresso=true;
-  const prox=await proxPonto();
-  if(!prox){notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
+  if(lerIntencaoPendente()){batidaEmProgresso=false;reconciliarIntencao();return;}   // há uma batida não confirmada: verificar antes
+  mostrarEstado('est-proc');                                                          // feedback imediato
+  const prox=await proxPonto().catch(()=>null);
+  if(!prox){mostrarEstado('est-aguardando');notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
   // GPS bloqueante: PRESENCIAL exige localização dentro do raio
   if((funcAtivo.modalidade||'PRESENCIAL')==='PRESENCIAL'){
     if(locAtual===null){
       document.getElementById('gps-erro-msg').textContent='Localização GPS ainda não obtida. Certifique-se de permitir o acesso à localização e tente novamente.';
-      document.getElementById('est-aguardando').style.display='none';
-      document.getElementById('est-gps-bloqueado').style.display='block';
+      mostrarEstado('est-gps-bloqueado');
       batidaEmProgresso=false;
       return;
     }
     const dist=distM(locAtual.lat,locAtual.lng,EMP_LAT,EMP_LNG);
     if(dist>RAIO){
       document.getElementById('gps-erro-msg').textContent=`Você está a ${Math.round(dist)}m da empresa (raio permitido: ${RAIO}m). Aproxime-se para bater o ponto.`;
-      document.getElementById('est-aguardando').style.display='none';
-      document.getElementById('est-gps-bloqueado').style.display='block';
+      mostrarEstado('est-gps-bloqueado');
       batidaEmProgresso=false;
       return;
     }
   }
-  // Mudar botão para estado de processamento
-  document.getElementById('est-aguardando').style.display='none';
-  document.getElementById('est-proc').style.display='block';
-  finalizarBatida();
+  const intencao={requestId:novoRequestId(),tipoEsperado:prox.tipo,criadoEm:Date.now(),data:hoje()};
+  salvarIntencao(intencao);
+  finalizarBatida(intencao);
 }
 window.iniciarBatida=iniciarBatida;
 
@@ -1149,30 +1210,80 @@ function tentarNovamenteLoc(){
 }
 window.tentarNovamenteLoc=tentarNovamenteLoc;
 
-async function finalizarBatida(){
-  // Chama Cloud Function — server valida uid, hora, GPS, sequência
+async function finalizarBatida(intencao){
+  // Chama Cloud Function — server valida uid, hora, GPS, sequência e a INTENÇÃO (requestId + tipoEsperado)
   // horaCliente é enviada apenas para auditoria de desvio de relógio
+  mostrarEstado('est-proc');
   const payload={
     lat:         locAtual?.lat ?? null,
     lng:         locAtual?.lng ?? null,
     horaCliente: hojeHora(),
     facialScore: null,
     foto:        null,
+    requestId:   intencao.requestId,
+    tipoEsperado:intencao.tipoEsperado,
   };
   try{
     const result=await window._registrarPonto(payload);
     const reg=result.data;
-    delete _funcCache['registros']; // novo registro — invalida cache antes de renderizar
-    document.getElementById('est-proc').style.display='none';
+    limparIntencao();
+    invalidarCache('registros'); // novo registro — invalida cache antes de renderizar
+    mostrarEstado(null);
     mostrarComp(reg,reg.dentroRaio);renderHistDia();renderBancoFunc();
   }catch(e){
-    document.getElementById('est-proc').style.display='none';
-    document.getElementById('est-aguardando').style.display='block';
-    const msg=e?.details?.message||e?.message||'Erro ao salvar ponto.';
+    const codigo=e?.details?.codigo||null;
+    if(!codigo&&(ERROS_INCERTOS.includes(e?.code)||!e?.code)){
+      // Não sabemos se o servidor gravou: NÃO liberar nova intenção antes de verificar
+      batidaEmProgresso=false;
+      reconciliarIntencao();
+      return;
+    }
+    limparIntencao();                                       // resposta definitiva do servidor: a intenção terminou
+    invalidarCache('registros');
+    mostrarEstado('est-aguardando');
+    let msg=e?.message||'Erro ao salvar ponto.';
+    if(codigo==='TIPO_ESPERADO_DIVERGENTE')msg='Seu ponto mudou desde que a tela abriu (talvez registrado em outro aparelho). Confira as batidas de hoje antes de continuar.';
+    else if(codigo==='JA_REGISTRADO'||codigo==='DIA_COMPLETO')msg='Esta batida já estava registrada. Confira as batidas de hoje.';
     notif(msg,'vermelho');
     batidaEmProgresso=false;
+    voltarPonto();renderHistDia();
   }
 }
+
+// Verifica no Firestore se a intenção pendente foi gravada (refresh, timeout, resposta perdida)
+async function reconciliarIntencao(){
+  const i=lerIntencaoPendente();
+  if(!i){mostrarEstado('est-aguardando');return;}
+  if(Date.now()-i.criadoEm>INTENCAO_TTL_MS||i.data!==hoje()){limparIntencao();mostrarEstado('est-aguardando');voltarPonto();return;}
+  mostrarEstado('est-incerto');
+  document.getElementById('incerto-titulo').textContent='Não foi possível confirmar. Verificando o estado…';
+  document.getElementById('incerto-msg').textContent='';
+  document.getElementById('btn-incerto-retentar').style.display='none';
+  document.getElementById('btn-incerto-descartar').style.display='none';
+  try{
+    invalidarCache('registros');
+    const regs=await fbGet('registros');
+    const gravado=regs.find(r=>r.requestId===i.requestId);
+    if(gravado){limparIntencao();mostrarEstado(null);mostrarComp(gravado,gravado.dentroRaio);renderHistDia();renderBancoFunc();return;}
+    document.getElementById('incerto-titulo').textContent='A batida não foi confirmada.';
+    document.getElementById('incerto-msg').textContent='Nenhuma batida foi gravada para esta tentativa. Você pode tentar de novo (sem risco de registrar duas vezes).';
+  }catch(e){
+    document.getElementById('incerto-titulo').textContent='Sem conexão para verificar agora.';
+    document.getElementById('incerto-msg').textContent='Tentar de novo usa a mesma tentativa: o servidor não registra duas vezes.';
+  }
+  document.getElementById('btn-incerto-retentar').style.display='block';
+  document.getElementById('btn-incerto-descartar').style.display='block';
+}
+window.reconciliarIntencao=reconciliarIntencao;
+function retentarIntencao(){
+  const i=lerIntencaoPendente();
+  if(!i||batidaEmProgresso){reconciliarIntencao();return;}
+  batidaEmProgresso=true;
+  finalizarBatida(i);                                        // MESMO requestId: idempotente no servidor
+}
+window.retentarIntencao=retentarIntencao;
+function descartarIntencao(){limparIntencao();mostrarEstado('est-aguardando');voltarPonto();}
+window.descartarIntencao=descartarIntencao;
 
 function mostrarComp(reg,dentroRaio){
   const locTxt=dentroRaio===true?'Dentro do raio':dentroRaio===false?'Fora do raio':'Não obtida';
@@ -1183,8 +1294,8 @@ function mostrarComp(reg,dentroRaio){
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
       Ponto registrado
     </div>
-    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${funcAtivo.nome}</span></div>
-    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${reg.tipoLabel||reg.tipo||'—'}</span></div>
+    <div class="comp-row"><span class="comp-label">Funcionário</span><span class="comp-val">${esc(funcAtivo.nome)}</span></div>
+    <div class="comp-row"><span class="comp-label">Tipo</span><span class="comp-val">${esc(reg.tipoLabel||reg.tipo||'—')}</span></div>
     <div class="comp-row"><span class="comp-label">Horário (servidor)</span><span class="comp-val">${horaExib}</span></div>
     <div class="comp-row"><span class="comp-label">Localização</span><span class="comp-val ${locClass}">${locTxt}</span></div>`;
   document.getElementById('est-comp').style.display='block';
@@ -1192,8 +1303,7 @@ function mostrarComp(reg,dentroRaio){
 
 async function voltarPonto(){
   batidaEmProgresso=false;
-  document.getElementById('est-comp').style.display='none';
-  document.getElementById('est-aguardando').style.display='block';
+  mostrarEstado('est-aguardando');
   obterLoc();
   const prox=await proxPonto();
   const btn=document.getElementById('btn-bater');
@@ -1229,7 +1339,7 @@ const ICONS={
 
 async function renderHistDia(){
   if(!funcAtivo)return;
-  const regsAll=await fbGet('registros'); // uma única leitura; reutilizada por proxPonto
+  const regsAll=await fbRegistrosMes(mesAtual()); // PERFORMANCE P0: só o mês corrente (hoje ⊂ mês); reutilizada por proxPonto
   const regs=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const el=document.getElementById('hist-dia');
   // Monta mapa tipo → hora
@@ -1290,14 +1400,17 @@ async function renderBancoFunc(){
   popularMeses('mes-banco',6);
   const sel=document.getElementById('mes-banco');
   const mes=sel?sel.value:mesAtual();
-  const regs=(await fbGet('registros')).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));
+  const regs=(await fbRegistrosMes(mes)).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));   // PERFORMANCE P0: só o mês
   const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
-  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
+  const justF=(await fbGet('justificativas')).filter(j=>j.funcId===funcAtivo.id&&j.data&&j.data.startsWith(mes));
+  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justF);
   const saldoCls=saldo>=0?'positivo':'negativo';
   const saldoStr=(saldo>=0?'+':'')+fmtMin(saldo);
   let pendHtml='';
   if(pendencias.length>0){
-    pendHtml=`<div class="banco-aviso"><strong>⚠ ${pendencias.length} dia${pendencias.length>1?'s':''} com ponto incompleto</strong>${pendencias.map(p=>fmtData(p.data)).join(' · ')} — Regularize com seu gestor.</div>`;
+    const nInc=pendencias.filter(p=>p.tipo==='DATA_INCONSISTENCY').length;
+    const rotulo=nInc&&nInc===pendencias.length?'com inconsistência administrativa':nInc?'com pendência (ponto incompleto ou inconsistência)':'com ponto incompleto';
+    pendHtml=`<div class="banco-aviso"><strong>⚠ ${pendencias.length} dia${pendencias.length>1?'s':''} ${rotulo}</strong>${pendencias.map(p=>fmtData(p.data)).join(' · ')} — Regularize com seu gestor.</div>`;
   }
   document.getElementById('banco-func').innerHTML=`
     <div class="banco-grid">
@@ -1339,11 +1452,11 @@ async function renderJustifFunc(){
   el.innerHTML=justifs.map(j=>`
     <div class="justif-item">
       <div class="justif-header">
-        <span class="justif-titulo">${fmtData(j.data)} — ${j.motivo}</span>
+        <span class="justif-titulo">${fmtData(j.data)} — ${esc(j.motivo)}</span>
         <span class="badge ${j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado'}">${j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovada':'Rejeitada'}</span>
       </div>
-      ${j.descricao?`<div class="justif-desc">${j.descricao}</div>`:''}
-      ${j.obsGestor?`<div class="justif-gestor">Gestor: ${j.obsGestor}</div>`:''}
+      ${j.descricao?`<div class="justif-desc">${esc(j.descricao)}</div>`:''}
+      ${j.obsGestor?`<div class="justif-gestor">Gestor: ${esc(j.obsGestor)}</div>`:''}
     </div>`).join('');
 }
 
@@ -1362,15 +1475,15 @@ async function verMinhaFolha(){
     const html=await gerarEspelhoFuncHTML(funcAtivo.id,mes,mesLabel,espExist);
     let btnAssin='';
     if(espExist&&espExist.assinado){
-      btnAssin=`<div class="assinado-ok">✓ Espelho assinado em ${fmtData(espExist.assinadoEm?.slice(0,10))}</div>`;
+      btnAssin=`<div class="assinado-ok">✓ Espelho assinado em ${fmtData(dataIsoDe(espExist.assinadoEm))}</div>`;
     }else if(espExist){
-      btnAssin=`<div style="margin-top:10px;"><button class="btn-primary" onclick="abrirAssinar('${espExist.id}','${funcAtivo.id}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
+      btnAssin=`<div style="margin-top:10px;"><button class="btn-primary" onclick="abrirAssinar('${sid(espExist.id)}','${sid(funcAtivo.id)}','${mes}','${mesLabel}')">Assinar este espelho</button></div>`;
     }else{
       btnAssin=`<div class="sem-espelho-aviso">Espelho ainda não gerado pelo gestor para este mês. Solicite ao gestor que gere o espelho.</div>`;
     }
     cont.innerHTML=html+btnAssin;
   }catch(err){
-    cont.innerHTML=`<div style="font-size:12px;color:var(--danger);">Erro ao carregar: ${err.message}</div>`;
+    cont.innerHTML=`<div style="font-size:12px;color:var(--danger);">Erro ao carregar: ${esc(err.message)}</div>`;
   }
 }
 window.verMinhaFolha=verMinhaFolha;
@@ -1384,12 +1497,12 @@ async function renderEspelhosFunc(){
   el.innerHTML=espelhos.map(e=>`
     <div class="espelho-func-card">
       <div>
-        <div class="espelho-info-mes">${e.mesLabel||e.mes}</div>
-        <div class="espelho-info-status">${e.assinado?'Assinado em '+fmtData(e.assinadoEm?.slice(0,10)):'Aguardando sua assinatura'}</div>
+        <div class="espelho-info-mes">${esc(e.mesLabel||e.mes)}</div>
+        <div class="espelho-info-status">${e.assinado?'Assinado em '+fmtData(dataIsoDe(e.assinadoEm)):'Aguardando sua assinatura'}</div>
       </div>
       ${e.assinado
         ?`<span class="badge assinado">✓ Assinado</span>`
-        :`<button class="btn-assinar" onclick="abrirAssinar('${e.id}','${e.funcId}','${e.mes}','${e.mesLabel||e.mes}')">Assinar</button>`
+        :`<button class="btn-assinar" onclick="abrirAssinar('${sid(e.id)}','${sid(e.funcId)}','${sjs(e.mes)}','${sjs(e.mesLabel||e.mes)}')">Assinar</button>`
       }
     </div>`).join('');
 }
@@ -1407,9 +1520,15 @@ async function abrirAssinar(espelhoId,funcId,mes,mesLabel){
       fbGet('creditos_jornada'),
       fbGet('justificativas'),
     ]);
-    const {pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje());
+    const {pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justifs);
     const resultado=podeAssinarEspelho(pendencias,justifs,mes);
     if(!resultado.pode){notif(resultado.motivo,'vermelho');return;}
+    // SIGNED_SNAPSHOT: só assina se o documento enviado ainda corresponde ao cálculo atual do motor
+    const atual=buildEspelhoSnapshot(funcAtivo,regs,credF,justifs,mes,hoje());atual.funcId=funcAtivo.id;
+    if(!exist.snapshot||!exist.hashSnapshot||!snapshotsEquivalentes(exist.snapshot,atual)){
+      notif('Este espelho está desatualizado em relação aos seus registros. Peça ao gestor para gerar e enviar novamente.','vermelho');return;
+    }
+    hashEspelhoAberto=exist.hashSnapshot;
   }catch(err){
     console.error('Erro ao verificar pré-condições de assinatura:',err);
     notif('Erro ao verificar condições. Tente novamente.','vermelho');
@@ -1455,7 +1574,7 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
     <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">
       <div style="font-size:13px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div>
       <div style="font-size:15px;font-weight:700;">Espelho de Ponto — ${nomeMes}/${ano}</div>
-      <div style="font-size:11px;color:#555;">${func.nome} · ${func.cargo||''} · Jornada: ${func.jornada||8}h/dia</div>
+      <div style="font-size:11px;color:#555;">${esc(func.nome)} · ${esc(func.cargo||'')} · Jornada: ${esc(func.jornada||8)}h/dia</div>
       ${snap.geradoEm?`<div style="font-size:10px;color:#888;margin-top:2px;">Gerado em ${new Date(snap.geradoEm).toLocaleString('pt-BR')}</div>`:''}
     </div>
     <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:480px;">
@@ -1532,6 +1651,7 @@ async function confirmarAssinatura(){
   // do gestor em ponto.html. Enquanto isso, v1 continua com revisaoEmAndamento:true.
   await setDoc(doc(db, 'espelhos', espelhoAtualFuncId), {
     assinado: true, assinaturaImg, status: 'assinado',
+    hashAssinado: hashEspelhoAberto,  // prova do conteúdo visto: as Rules exigem == hashSnapshot atual do documento
     assinadoEm: serverTimestamp(),  // serverTimestamp validado pelas Rules (request.time)
     assinadoPor: funcAtivo.nome
   }, {merge: true});

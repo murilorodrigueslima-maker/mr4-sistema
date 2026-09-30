@@ -76,3 +76,19 @@ test('snapshot gravado de verdade no Firestore (lote atômico) e lido pelas Rule
   await assertFails(ler('gestorEst', 'compras_n0_base/v_000'));            // base do incremental: ninguém pelo app
   await assertFails(ler('gestorEst', 'compras_n0/lock'));
 });
+
+test('POLÍTICA 1.2 gravada de verdade + Rules: custo, margem, lucro, capital e revisão só para quem já vê custo; funcionário com estoque recebe só a operação', async () => {
+  const S = require('../lib/compras/snapshot'), D = require('./fixtures/compras-ui-dados');
+  const sn = D.dados(40).sn;
+  await S.persistirSnapshot(db, sn);
+  const ler = async (uid, p) => { const r = await (uid ? env.authenticatedContext(uid) : env.unauthenticatedContext()).firestore().doc(p).get(); return r.data(); };
+  const DOCS_OPER = ['compras_n0_view/sugestoes', 'compras_n0/resumo', 'compras_n0/meta', 'compras_n0_produtos/bloco_000', 'estoque_snapshots/' + sn.snapshotEstoque.data_comercial];
+  const FIN = /"fin"|resumo_financeiro|"revisao"|capital_cents|profit_|margin_pct|margin_tier|class_reasons|threshold|p1_floor|"simulator"|custo_cadastrado_cents|"price"/;
+  for (const p of DOCS_OPER) { const d = await assertSucceeds(ler('funcEst', p)); expect([p, FIN.test(JSON.stringify(d))]).toEqual([p, false]); }       // o que o funcionário lê não tem financeiro
+  for (const p of ['compras_n0_view/custos', 'compras_n0_custos/bloco_000']) { await assertFails(ler('funcEst', p)); await assertFails(ler('semMod', p)); await assertFails(ler(null, p)); }   // UNAUTHORIZED_COST_ACCESS=DENIED
+  const custos = await assertSucceeds(ler('gestorEst', 'compras_n0_view/custos'));
+  expect(custos.resumo_financeiro.simulator.strategy).toBe('LAYERED_P1_FLOOR'); expect(Object.values(custos.linhas)[0].fin.decision.class).toBeDefined(); expect(Array.isArray(custos.revisao)).toBe(true);
+  expect(Buffer.byteLength(JSON.stringify(custos))).toBeLessThan(750000);
+  await assertFails(env.authenticatedContext('gestorEst').firestore().doc('compras_n0_view/custos').set({ x: 1 }));   // ninguém escreve pelo app
+  await assertFails(env.authenticatedContext('funcEst').firestore().doc('compras_n0_view/sugestoes').update({ x: 1 }));
+});

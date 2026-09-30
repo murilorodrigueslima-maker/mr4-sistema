@@ -192,6 +192,7 @@ test('H/E4 — funcionario assina espelho com snapshot+hash + 5 campos → ALLOW
       assinaturaImg:'data:image/png;base64,SIG',
       assinadoEm:   serverTimestamp(),
       assinadoPor:  'Func Teste',
+      hashAssinado: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',  // SIGNED_SNAPSHOT: hash do espelho visto == hashSnapshot
       status:       'assinado',
     })
   );

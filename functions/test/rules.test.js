@@ -250,6 +250,7 @@ test('K — funcionario pode atualizar espelho com campos de assinatura', async 
       assinaturaImg:'data:image/png;base64,abc',
       assinadoEm:   serverTimestamp(),
       assinadoPor:  'Func Teste',
+      hashAssinado: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',  // SIGNED_SNAPSHOT: hash do espelho visto == hashSnapshot
       status:       'assinado',
     })
   );

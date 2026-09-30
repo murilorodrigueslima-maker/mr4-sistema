@@ -48,7 +48,10 @@ function worklist(dataReferencia, extra = {}) {
     pendenciasRetidas: {}, canarios: [], ...extra,
   };
 }
-async function limparOps() { for (const o of Object.values(OPP)) await db.collection('interacoes_fila').doc(o).delete(); }
+async function limparOps() {
+  for (const o of Object.values(OPP)) await db.collection('interacoes_fila').doc(o).delete();
+  const ns = await db.collection('crm_notas_privadas').get(); for (const d of ns.docs) if (d.id.startsWith('c1f1')) await d.ref.delete();
+}
 
 beforeAll(async () => {
   const w = await db.doc('fila_comercial/worklist').get(); wlAntes = w.exists ? w.data() : null;
@@ -86,14 +89,16 @@ describe('Observação (puro)', () => {
     expect(F.normalizarNota('a\u0000b\u0007')).toBe('ab');
     expect(V.validarNota('  x ').texto).toBe('x'); expect(V.validarNota('y'.repeat(281)).ok).toBe(false); expect(V.validarNota('').ok).toBe(true);
   });
-  test('OB-02 registrarOutcome guarda meta.nota no evento e mantém as anteriores (histórico)', () => {
+  test('OB-02 registrarOutcome NÃO grava o texto no evento: só meta.temNota; eventos anteriores preservados (histórico)', () => {
     let e = F.criarEstadoInicial(ENT.a, OPP.a, 'REATIVACAO_120D', T_MANHA);
     e = F.claimOportunidade(e, FAB, T_MANHA);
     e = F.registrarOutcome(e, FAB, 'SEM_RESPOSTA', T_MANHA, { nota: '  tentei às 10h ' });
     e = F.claimOportunidade(e, FAB, '2026-09-29T13:00:00.000Z');
     e = F.registrarOutcome(e, FAB, 'PEDIU_RETORNO', '2026-09-29T13:05:00.000Z', { scheduledFor: '2026-10-05', nota: 'ligar dia 5' });
     const outs = e.eventos.filter(x => x.tipo === 'OUTCOME_REGISTERED');
-    expect(outs.map(x => x.meta && x.meta.nota)).toEqual(['tentei às 10h', 'ligar dia 5']);
+    expect(outs.map(x => x.meta && x.meta.nota)).toEqual([undefined, undefined]);
+    expect(outs.map(x => x.meta && x.meta.temNota)).toEqual([true, true]);
+    expect(JSON.stringify(e)).not.toMatch(/tentei às 10h|ligar dia 5/);
     expect(e.nextFollowUpAt).toBe('2026-10-05');
     const sem = F.registrarOutcome(F.claimOportunidade(F.criarEstadoInicial(ENT.a, OPP.a, 'REATIVACAO_120D', T_MANHA), FAB, T_MANHA), FAB, 'CONVERSA_REALIZADA', T_MANHA, { nota: '   ' });
     expect(sem.eventos.pop().meta).toBeUndefined();
@@ -147,10 +152,10 @@ describe('Hoje / Agenda / Cartão (puro)', () => {
   });
   test('CA-01 cartão: só campos com dado; categorias/alto valor vindos do servidor; último resultado com observação', () => {
     const doc = worklist('2026-09-28'); const v = { item: doc.vendedores[FAB].novas[0], grupoOrigem: 'novas', estado: { codigo: 'DISPONIVEL' } };
-    const opx = op(OPP.a, ENT.a, { eventos: [outcome(FAB, 'SEM_RESPOSTA', '2026-09-25T12:00:00Z', { nota: 'caixa postal' })], nextFollowUpAt: '2026-09-29', estado: 'DISPONIVEL' });
+    const opx = op(OPP.a, ENT.a, { eventos: [outcome(FAB, 'SEM_RESPOSTA', '2026-09-25T12:00:00Z', { temNota: true })], nextFollowUpAt: '2026-09-29', estado: 'DISPONIVEL' });
     const m = V.modeloCartao(v, opx, { categorias: ['ILUMINAÇÃO', 'SOM'], faixaValor: 'ALTO_VALOR' });
     expect(m.linhas.map(l => l.k)).toEqual(['Dias sem comprar', 'Última compra', 'Pedidos', 'Compra a cada', 'Tendência', 'Categorias']);
-    expect(m.altoValor).toBe(true); expect(m.ultimoResultado).toMatchObject({ rotulo: 'Sem resposta', nota: 'caixa postal' }); expect(m.proximoRetorno).toBe('2026-09-29');
+    expect(m.altoValor).toBe(true); expect(m.ultimoResultado).toMatchObject({ rotulo: 'Sem resposta', temNota: true }); expect(m.ultimoResultado.nota).toBeUndefined(); expect(m.proximoRetorno).toBe('2026-09-29');
     const vazio = V.modeloCartao({ item: { opportunityInstanceId: OPP.a, commercialEntityId: ENT.a, nomeCliente: 'X' }, estado: {} }, null, null);
     expect(vazio.linhas).toEqual([]); expect(vazio.altoValor).toBe(false); expect(vazio.ultimoResultado).toBeNull();
   });
@@ -192,12 +197,18 @@ describe('Timeline / venda após contato / recuperado (puro)', () => {
 
 // ── EMULADOR: callables ────────────────────────────────────────────────────────────────────────────
 describe('Registro rápido (registerOutcome) + observação + duplicidade', () => {
-  test('RO-01 claim → resultado com observação: gravada no evento, com vendedor e horário; resposta traz retorno', async () => {
+  test('RO-01 claim → resultado com observação: texto só em crm_notas_privadas (mesma transação); evento só com temNota; resposta traz retorno', async () => {
     await C.claimOpportunityHandler(req(FAB, { opportunityInstanceId: OPP.a }), at(T_MANHA));
     const r = await C.registerOutcomeHandler(req(FAB, { opportunityInstanceId: OPP.a, outcome: 'SEM_RESPOSTA', nota: '  caixa postal  ' }), at(T_MANHA));
     expect(r).toMatchObject({ estado: 'DISPONIVEL', nextFollowUpAt: '2026-09-29' });
     const ev = (await db.doc('interacoes_fila/' + OPP.a).get()).data().eventos.filter(e => e.tipo === 'OUTCOME_REGISTERED');
-    expect(ev[0]).toMatchObject({ operadorId: FAB, outcome: 'SEM_RESPOSTA', timestamp: T_MANHA, meta: { nota: 'caixa postal' } });
+    expect(ev[0]).toMatchObject({ operadorId: FAB, outcome: 'SEM_RESPOSTA', timestamp: T_MANHA, meta: { temNota: true } });
+    const n = await db.doc('crm_notas_privadas/' + OPP.a + '__' + ev[0].eventoIndex).get().catch(() => null);
+    const all = (await db.collection('crm_notas_privadas').get()).docs.filter(d => d.id.startsWith(OPP.a));
+    expect(all).toHaveLength(1);
+    expect(all[0].data()).toMatchObject({ texto: 'caixa postal', operadorId: FAB, opportunityInstanceId: OPP.a, eventoEm: T_MANHA });
+    expect(JSON.stringify((await db.doc('interacoes_fila/' + OPP.a).get()).data())).not.toContain('caixa postal');
+    expect(JSON.stringify(r)).not.toContain('caixa postal');
   });
   test('RO-02 observação > 280 / não-texto → invalid-argument sem gravar; vazia permitida (sem meta.nota)', async () => {
     await C.claimOpportunityHandler(req(FAB, { opportunityInstanceId: OPP.a }), at(T_MANHA));
@@ -207,6 +218,7 @@ describe('Registro rápido (registerOutcome) + observação + duplicidade', () =
     await C.registerOutcomeHandler(req(FAB, { opportunityInstanceId: OPP.a, outcome: 'CONVERSA_REALIZADA', nota: '   ' }), at(T_MANHA));
     const ev = (await db.doc('interacoes_fila/' + OPP.a).get()).data().eventos.pop();
     expect(ev.meta).toBeUndefined();
+    expect((await db.collection('crm_notas_privadas').get()).docs.filter(d => d.id.startsWith(OPP.a))).toHaveLength(0);
   });
   test('RO-03 submissão duplicada (duplo clique / 2 abas): só um resultado é gravado', async () => {
     await C.claimOpportunityHandler(req(FAB, { opportunityInstanceId: OPP.a }), at(T_MANHA));
@@ -223,7 +235,9 @@ describe('Registro rápido (registerOutcome) + observação + duplicidade', () =
     await C.claimOpportunityHandler(req(FAB, { opportunityInstanceId: OPP.a }), at('2026-09-29T13:00:00.000Z'));
     await C.registerOutcomeHandler(req(FAB, { opportunityInstanceId: OPP.a, outcome: 'PEDIU_RETORNO', scheduledFor: '2026-10-05', nota: 'segunda' }), at('2026-09-29T13:10:00.000Z'));
     const d = (await db.doc('interacoes_fila/' + OPP.a).get()).data();
-    expect(d.eventos.filter(e => e.tipo === 'OUTCOME_REGISTERED').map(e => e.meta.nota)).toEqual(['primeira', 'segunda']);
+    expect(d.eventos.filter(e => e.tipo === 'OUTCOME_REGISTERED').map(e => e.meta.temNota)).toEqual([true, true]);
+    const ns = (await db.collection('crm_notas_privadas').get()).docs.filter(x => x.id.startsWith(OPP.a)).map(x => x.data()).sort((a, b) => a.eventoIndex - b.eventoIndex);
+    expect(ns.map(x => x.texto)).toEqual(['primeira', 'segunda']);
     expect(d).toMatchObject({ estado: 'AGUARDANDO_RETORNO', nextFollowUpAt: '2026-10-05' });
   });
 });

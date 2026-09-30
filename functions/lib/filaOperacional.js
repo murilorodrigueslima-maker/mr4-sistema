@@ -315,7 +315,7 @@ function releaseExpiredClaim(estado, now, timeoutHours) {
 
 // ── Registrar Outcome ─────────────────────────────────────────────────────────
 
-// CRM 2.0 F1 — observação opcional do vendedor, guardada no próprio evento OUTCOME_REGISTERED (meta.nota).
+// CRM 2.0 F1 — observação opcional do vendedor, guardada em crm_notas_privadas (só backend); o evento OUTCOME_REGISTERED leva apenas meta.temNota.
 // Histórica por construção: cada resultado é um evento novo em eventos[]; nada é sobrescrito.
 const NOTA_MAX_CHARS = 280;
 /**
@@ -393,10 +393,14 @@ function registrarOutcome(estado, operadorId, outcome, isoNow, meta = {}) {
 
   // CRM 2.0 F1: meta.nota validada aqui também (defesa em profundidade; o callable já valida)
   const metaFinal = { ...(meta || {}) };
+  // Privacidade (CRM 2.0 RC): o TEXTO da nota nunca entra no evento (documento legível por outros vendedores);
+  // o callable grava o texto em crm_notas_privadas e aqui fica só a marca temNota.
   if ('nota' in metaFinal) {
     const nota = normalizarNota(metaFinal.nota);
-    if (nota) metaFinal.nota = nota; else delete metaFinal.nota;
+    delete metaFinal.nota;
+    if (nota) metaFinal.temNota = true;
   }
+  if (metaFinal.temNota !== true) delete metaFinal.temNota;
   const evento = {
     tipo:         EVENT_TYPES.OUTCOME_REGISTERED,
     operadorId:   operadorId.trim(),

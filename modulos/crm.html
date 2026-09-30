@@ -269,7 +269,7 @@ function cartao(v, cls) {
   const dados = m.linhas.map(l => `<span>${esc(l.k)} <b>${esc(l.v)}</b></span>`).join('');
   const hist = [
     m.ultimoResultado ? `<span>Último: <b>${esc(m.ultimoResultado.rotulo)}</b> · ${esc(V.rotuloDia(V.dataComercial(new Date(m.ultimoResultado.em)), hoje()))} ${esc(V.horaBR(m.ultimoResultado.em))}</span>` : '',
-    m.ultimoResultado && m.ultimoResultado.nota ? `<span class="nota">“${esc(m.ultimoResultado.nota)}”</span>` : '',
+    m.ultimoResultado && m.ultimoResultado.temNota ? `<span class="nota">com observação (abra o cliente para ler)</span>` : '',
     m.proximoRetorno ? `<span>Retorno: <b>${esc(V.rotuloDia(m.proximoRetorno, hoje()))}</b></span>` : '',
     m.pendenteDesde && v.grupoOrigem === 'pendentes' ? `<span>Pendente desde <b>${esc(V.dataBR(m.pendenteDesde))}</b></span>` : '',
   ].filter(Boolean).join('');
@@ -315,7 +315,7 @@ function renderAgenda() {
   const col = (k, titulo) => `<div class="col ${k}"><h3>${titulo}<span>${a[k].length}</span></h3>${a[k].length ? a[k].map(it =>
     `<button class="ag-item" data-a="cliente" data-ent="${esc(it.commercialEntityId)}"><div class="ag-nome">${esc(it.nomeCliente || 'Cliente')}</div>
      <div class="ag-sub">${esc(V.rotuloDia(it.data, hoje()))}${it.ultimoResultado ? ' · ' + esc(it.ultimoResultado.rotulo) : ''}</div>
-     ${it.ultimoResultado && it.ultimoResultado.nota ? `<div class="ag-sub">“${esc(it.ultimoResultado.nota)}”</div>` : ''}</button>`).join('') : '<div class="sec-vazia">Nada aqui.</div>'}</div>`;
+     ${it.ultimoResultado && it.ultimoResultado.temNota ? `<div class="ag-sub">com observação</div>` : ''}</button>`).join('') : '<div class="sec-vazia">Nada aqui.</div>'}</div>`;
   document.getElementById('agenda').innerHTML = col('atrasados', 'Atrasados') + col('hoje', 'Hoje') + col('amanha', 'Amanhã') + col('semana', 'Esta semana');
   document.getElementById('agendaDepois').textContent = a.depois.length ? `${a.depois.length} retorno(s) marcado(s) para depois desta semana.` : '';
 }

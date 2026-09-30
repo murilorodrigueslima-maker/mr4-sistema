@@ -207,6 +207,9 @@ async function claimOpportunityHandler(request, opts = {}) {
  * PEDIU_RETORNO exige scheduledFor no futuro.
  * Cooldown calculado server-side (SEM_INTERESSE_AGORA / 3× SEM_RESPOSTA).
  */
+const COLL_NOTAS = 'crm_notas_privadas';
+const notaDocId = (opp, idx) => `${opp}__${idx}`;
+
 async function registerOutcomeHandler(request, opts = {}) {
   if (!request.auth) throw new HttpsError('unauthenticated', 'Login necessário.');
   const uid = request.auth.uid;
@@ -266,10 +269,18 @@ async function registerOutcomeHandler(request, opts = {}) {
     if (outcome === OUTCOMES.PEDIU_RETORNO && scheduledFor) {
       meta.scheduledFor = scheduledFor;
     }
-    if (notaLimpa) meta.nota = notaLimpa;
+    if (notaLimpa) meta.temNota = true;          // o texto vai só para crm_notas_privadas (nunca para o documento da fila)
 
     novoEstado = registrarOutcome(estado, uid, outcome, isoNow, meta);
     tx.set(ref, novoEstado);
+    if (notaLimpa) {
+      // id determinístico = oportunidade + índice do evento (append-only) → 1 nota por resultado; create() recusa duplicata
+      const idx = novoEstado.eventos.length - 1;
+      tx.create(store.collection(COLL_NOTAS).doc(notaDocId(opportunityInstanceId, idx)), {
+        opportunityInstanceId, eventoIndex: idx, eventoEm: isoNow, operadorId: uid,
+        commercialEntityId: estado.commercialEntityId || null, texto: notaLimpa, criadoEm: isoNow,
+      });
+    }
   });
 
   return {
@@ -323,6 +334,8 @@ async function releaseOpportunityHandler(request, opts = {}) {
 }
 
 module.exports = {
+  COLL_NOTAS,
+  notaDocId,
   claimOpportunityHandler,
   registerOutcomeHandler,
   releaseOpportunityHandler,

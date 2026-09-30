@@ -111,6 +111,33 @@ function faixaValor(faturamentoTotal) {
   return Number(faturamentoTotal) >= REF_FATURAMENTO_ALTO ? 'ALTO_VALOR' : null;   // mesma régua do priorizador
 }
 
+/**
+ * Notas livres ficam em crm_notas_privadas (Rules: nenhum acesso do cliente). Busca por id determinístico (opp__índice),
+ * sem query/índice, apenas dos eventos marcados meta.temNota. Autorização no servidor: gestão vê todas; vendedor só as próprias
+ * (nota.operadorId === uid E evento.operadorId === uid). O texto é posto em memória no evento só para montar a resposta.
+ */
+async function hidratarNotasPrivadas(store, acesso, estados) {
+  const pedidos = [];
+  for (const e of estados) (e.eventos || []).forEach((x, i) => {
+    if (x && x.tipo === 'OUTCOME_REGISTERED' && x.meta && x.meta.temNota === true && (acesso.gestao || x.operadorId === acesso.uid)) pedidos.push({ e, i });
+  });
+  if (!pedidos.length) return estados;
+  const snaps = await store.getAll(...pedidos.map(p => store.collection('crm_notas_privadas').doc(`${p.e.opportunityInstanceId}__${p.i}`)));
+  const texto = new Map();
+  snaps.forEach((s, k) => {
+    if (!s.exists) return;
+    const n = s.data(), { e, i } = pedidos[k];
+    if (n.operadorId !== e.eventos[i].operadorId || (!acesso.gestao && n.operadorId !== acesso.uid)) return;
+    if (typeof n.texto === 'string' && n.texto) texto.set(k, n.texto);
+  });
+  const porEstado = new Map();
+  pedidos.forEach((p, k) => { if (texto.has(k)) { if (!porEstado.has(p.e)) porEstado.set(p.e, new Map()); porEstado.get(p.e).set(p.i, texto.get(k)); } });
+  return estados.map(e => {
+    const m = porEstado.get(e); if (!m) return e;
+    return { ...e, eventos: e.eventos.map((x, i) => (m.has(i) ? { ...x, meta: { ...x.meta, nota: m.get(i) } } : x)) };
+  });
+}
+
 // ── ação: cliente (Cliente 360) ─────────────────────────────────────────────────────────────────────────
 async function consultarCliente(store, acesso, entidade, agoraIso) {
   const hoje = hojeFortaleza(agoraIso);
@@ -120,7 +147,7 @@ async function consultarCliente(store, acesso, entidade, agoraIso) {
     resolverCliente(store, entidade),
   ]);
   const wl = wlSnap.exists ? wlSnap.data() : null;
-  const estados = estSnap.docs.map(d => d.data());
+  let estados = estSnap.docs.map(d => d.data());
   if (!acesso.gestao) {
     // atalho: cliente da worklist / estados do próprio cliente já decidem; só então varre interacoes_fila
     let permitido = (await escopoVendedor(store, acesso.uid, wl, estados)).has(entidade);
@@ -134,6 +161,7 @@ async function consultarCliente(store, acesso, entidade, agoraIso) {
     }
     if (!permitido) falha('permission-denied', 'CLIENTE_FORA_DO_SEU_ESCOPO');
   }
+  estados = await hidratarNotasPrivadas(store, acesso, estados);      // só após a checagem de escopo; só notas permitidas
   const [vendas, perfilSnap, cartSnap, histSnap] = await Promise.all([
     vendasDoCliente(store, cli.gcId),
     cli.clienteMr4Id ? store.collection('perfis_360').doc(cli.clienteMr4Id).get() : Promise.resolve(null),

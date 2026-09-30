@@ -19,7 +19,8 @@ beforeAll(async () => {
     await user(U.adminFlag, 'funcionario'); await su(U.adminFlag, true, []);
     await user(U.dual, 'gestor'); await su(U.dual, true, ['fila-comercial-operar']);
     await user(U.func, 'funcionario');
-    await W('interacoes_fila/opp1', { commercialEntityId: 'GC_NATIVE:1', eventos: [{ tipo: 'OUTCOME_REGISTERED', operadorId: U.fabA, meta: { nota: 'nota sintética da vendedora A' } }] });
+    await W('interacoes_fila/opp1', { commercialEntityId: 'GC_NATIVE:1', eventos: [{ tipo: 'OUTCOME_REGISTERED', operadorId: U.fabA, meta: { temNota: true } }] });
+    await W('crm_notas_privadas/opp1__0', { opportunityInstanceId: 'opp1', eventoIndex: 0, operadorId: U.fabA, texto: 'nota sintética da vendedora A' });
     await W('fila_comercial/worklist', { vendedores: {} });
     await W('perfis_360/GC_NATIVE:1', { x: 1 }); await W('vendas_gc/1', { valor_total: '10' }); await W('carteira_comercial/GC_NATIVE:1', { responsavelUid: U.fabA });
     await W('clientes/c1', { nome: 'Sintético' });
@@ -53,9 +54,13 @@ describe('leitura direta (Rules reais)', () => {
   });
 });
 
-describe('ACHADO documentado: nota livre em interacoes_fila', () => {
-  test('vendedor B lê, direto no Firestore, a nota que o vendedor A gravou (Rules vigentes: operar lê toda a coleção) — decisão de negócio pendente', async () => {
+describe('notas privadas (correção do achado da auditoria anterior)', () => {
+  test('nenhum usuário — inclusive vendedor B, gestor e admin — lê ou escreve crm_notas_privadas direto; o evento público não contém texto', async () => {
+    for (const uid of [null, ...Object.values(U)]) {
+      await assertFails(as(uid).doc('crm_notas_privadas/opp1__0').get());
+      await assertFails(as(uid).doc('crm_notas_privadas/opp1__0').set({ texto: 'x' }));
+    }
     const snap = await assertSucceeds(as(U.adeB).doc('interacoes_fila/opp1').get());
-    expect(snap.data().eventos[0].meta.nota).toMatch(/vendedora A/);
+    expect(JSON.stringify(snap.data())).not.toMatch(/vendedora A/);
   });
 });

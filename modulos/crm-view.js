@@ -92,7 +92,7 @@
       if (!dono || (p.uid && dono !== p.uid)) return;
       var u = ultimoOutcome(op);
       var it = { opportunityInstanceId: oppId, commercialEntityId: op.commercialEntityId, nomeCliente: op.nomeCliente || null, tipoOportunidade: op.tipoOportunidade,
-        data: op.nextFollowUpAt, estado: op.estado, donoUid: dono, ultimoResultado: u ? { outcome: u.outcome, rotulo: ROTULO_RESULTADO[u.outcome] || u.outcome, em: u.timestamp, nota: (u.meta && u.meta.nota) || null } : null };
+        data: op.nextFollowUpAt, estado: op.estado, donoUid: dono, ultimoResultado: u ? { outcome: u.outcome, rotulo: ROTULO_RESULTADO[u.outcome] || u.outcome, em: u.timestamp, temNota: !!(u.meta && u.meta.temNota) } : null };
       var d = op.nextFollowUpAt;
       if (d < hoje) out.atrasados.push(it);
       else if (d === hoje) out.hoje.push(it);
@@ -127,7 +127,7 @@
       opportunityInstanceId: item.opportunityInstanceId, entidade: item.commercialEntityId,
       nome: item.nomeCliente || 'Cliente', tipo: ctx.rotuloTipo || item.labelOp || null, motivo: base && base.motivo ? base.motivo : null,
       linhas: linhas, altoValor: !!(extras && extras.faixaValor === 'ALTO_VALOR'),
-      ultimoResultado: u ? { rotulo: ROTULO_RESULTADO[u.outcome] || u.outcome, em: u.timestamp, nota: (u.meta && u.meta.nota) || null } : null,
+      ultimoResultado: u ? { rotulo: ROTULO_RESULTADO[u.outcome] || u.outcome, em: u.timestamp, temNota: !!(u.meta && u.meta.temNota) } : null,
       proximoRetorno: (op && op.nextFollowUpAt && op.estado !== 'CONCLUIDA') ? op.nextFollowUpAt : (v.dataRetorno || null),
       estado: v.estado, grupoOrigem: v.grupoOrigem, pendenteDesde: item.atribuidoDesde || null,
     };

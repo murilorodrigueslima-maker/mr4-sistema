@@ -14,7 +14,7 @@
  * NÃO PUBLICAR EM PRODUÇÃO sem passar pelos testes A-T no emulador.
  */
 
-const { onCall, HttpsError }  = require('firebase-functions/v2/https');
+const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule }          = require('firebase-functions/v2/scheduler');
 const { onDocumentUpdated }   = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
@@ -23,6 +23,8 @@ const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapsho
 const { executarGeracaoWorklist }                   = require('./lib/worklistGenerator');
 const { criarLookupNomeGC }                         = require('./lib/filaNomes');
 const { carteiraRegraJobHandler }                   = require('./lib/carteiraRegraJob');
+const comprasEntrypoints                            = require('./lib/compras/entrypoints');
+const expedicaoSync                                 = require('./lib/expedicao/sync');
 const {
   claimOpportunityHandler,
   registerOutcomeHandler,
@@ -799,6 +801,29 @@ exports.criarContaFuncionario   = onCall({ region: REGION }, criarContaFuncionar
 // Credenciais GC via Secret Manager (definidas com firebase functions:secrets:set).
 exports.gcQuery         = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, gcQueryHandler);
 exports._gcQueryHandler = gcQueryHandler;
+exports._gcOperacoes   = GC_OPERACOES;   // testes: normalizador oficial (identidade do pedido)
+
+// Expedição P0 — sync CENTRAL de pedidos novos (GestãoClick SOMENTE GET), a cada 1 min.
+// Substitui o gcQuery de 15 s por navegador: cria só pedidos inexistentes (create-if-not-exists, nunca sobrescreve);
+// as telas recebem pelo listener. FUNCTION_DEPLOYED=NO — publicar só com --only functions:expedicaoSyncPedidos.
+exports.expedicaoSyncPedidos = onSchedule({
+  schedule:        'every 1 minutes',
+  timeZone:        'America/Fortaleza',
+  region:          REGION,
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+  timeoutSeconds:  55,
+  memory:          '256MiB',
+  retryCount:      0,
+  maxInstances:    1,
+}, async () => {
+  try {
+    const leitor = expedicaoSync.criarLeitorVendas({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN });
+    const r = await expedicaoSync.sincronizar({ db, leitor, dto: GC_OPERACOES.LISTAR_VENDAS.dto, serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp() });
+    console.log(JSON.stringify({ evento: 'expedicao_sync', status: 'OK', ...r }));
+  } catch (err) {
+    console.error(JSON.stringify({ evento: 'expedicao_sync', status: 'FAILED', erro: String(err.message).slice(0, 200) }));
+  }
+});
 
 // S3 — Etapa 2: sincronização agendada do Painel Comercial.
 // Executa a cada 30 minutos; usa os mesmos secrets GC já configurados no Secret Manager.
@@ -868,6 +893,42 @@ exports.processarCarteiraComercial = onSchedule({
     console.error('[carteira-regra] ERRO:', err.message);
   }
 });
+
+// Agente Compras & Estoque — Política 1.1 (motor determinístico; GestãoClick SOMENTE GET).
+// Manual: HTTP PRIVADO (IAM; sem acesso público), POST { tipo: 'FULL' | 'INCREMENTAL' }.
+// Agendados: completo diário (reconciliação) + incremental a cada 3 h — agenda aprovada, America/Fortaleza.
+// Trava compartilhada (compras_n0/lock) impede execuções simultâneas; falha preserva o último snapshot válido.
+exports.comprasSyncManual = onRequest({
+  region:          REGION,
+  invoker:         'private',
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+  timeoutSeconds:  1800,
+  memory:          '1GiB',
+  concurrency:     1,
+  maxInstances:    1,
+}, (req, res) => comprasEntrypoints.syncManualHandler(req, res, { db }));
+
+exports.comprasSyncCompleto = onSchedule({
+  schedule:        comprasEntrypoints.AGENDA.FULL,
+  timeZone:        comprasEntrypoints.AGENDA.TIMEZONE,
+  region:          REGION,
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+  timeoutSeconds:  1800,
+  memory:          '1GiB',
+  retryCount:      0,
+  maxInstances:    1,
+}, () => comprasEntrypoints.syncAgendadoHandler('FULL', { db }));
+
+exports.comprasSyncIncremental = onSchedule({
+  schedule:        comprasEntrypoints.AGENDA.INCREMENTAL,
+  timeZone:        comprasEntrypoints.AGENDA.TIMEZONE,
+  region:          REGION,
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+  timeoutSeconds:  900,
+  memory:          '1GiB',
+  retryCount:      0,
+  maxInstances:    1,
+}, () => comprasEntrypoints.syncAgendadoHandler('INCREMENTAL', { db }));
 
 // N35.11 — Callables da Fila Comercial (canário operacional)
 exports.claimOpportunity   = onCall({ region: REGION }, claimOpportunityHandler);

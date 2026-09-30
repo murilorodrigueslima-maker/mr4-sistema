@@ -174,9 +174,9 @@ describe('VISÃO DA TELA — compras_n0_view', () => {
     await expect(S.persistirSnapshot(db, ruim)).rejects.toThrow(/DOC_INCOMPATIVEL_FIRESTORE/); expect(db.st).toEqual({});
   });
   test('base do incremental gravada como texto JSON (sem array aninhado) e recarregada idêntica', async () => {
-    const db = dbFalso(); await S.persistirSnapshot(db, { ...snap, base: { ...snap.base, formato: S.FORMATO_BASE } });   // v2 (Política 1.2): ida e volta completa
+    const db = dbFalso(); await S.persistirSnapshot(db, { ...snap, base: { ...snap.base, layout: S.LAYOUT_BASE_V2 } });   // layout 2 (Política 1.2): ida e volta completa
     const doc0 = le(db, 'compras_n0_base', S.idFatia(le(db, 'compras_n0', 'meta').base_ativa, 'v', 0));   // id da fatia vem do ponteiro da geração ativa
-    expect(doc0.formato).toBe('tuplas-json-v2'); expect(typeof doc0.registros_json).toBe('string'); expect(S.temArrayAninhado(doc0)).toBe(false);
+    expect(doc0.formato).toBe('tuplas-json-v1'); expect(doc0.layout).toBe(2); expect(typeof doc0.registros_json).toBe('string'); expect(S.temArrayAninhado(doc0)).toBe(false);
     expect((await S.carregarBase(db)).vendas).toEqual(snap.base.vendas);
   });
   test('a visão é persistida junto do snapshot (mesmo lote)', async () => {

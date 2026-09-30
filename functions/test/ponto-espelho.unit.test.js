@@ -33,7 +33,7 @@ const {
 
 // VERSAO_ENGINE é const no vm script — não exposta via ctx;
 // comparar diretamente contra o valor conhecido.
-const VERSAO_ENGINE = '3.0.0';
+const VERSAO_ENGINE = '4.0.0'; // motor único (calcDia/calcMes); snapshots 3.x seguem com canonical/render 3.x
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function hashStr(str) {
@@ -330,11 +330,12 @@ test('snapshot: crédito sem ponto → status credito', () => {
   expect(dia.ocorrencia).toBe('Atestado médico');
 });
 
-test('snapshot: falta → status falta, saldoDia null, esperMin aumenta', () => {
+test('snapshot: falta → status falta, saldoDia = −jornada (igual ao Banco), esperMin aumenta', () => {
   const snap = buildEspelhoSnapshot(func(), [], [], [], MES, HOJE);
   const segunda = snap.dias.find(d => d.data === '2026-05-04'); // segunda
   expect(segunda.status).toBe('falta');
-  expect(segunda.saldoDia).toBeNull();
+  // Motor único 4.0.0: a falta mostra o mesmo débito do Banco (−jornada) em vez de "—"
+  expect(segunda.saldoDia).toBe(-8 * 60);
   // esperMin deveria acumular jornadaDia para cada falta
   const faltas = snap.dias.filter(d => d.status === 'falta');
   expect(snap.totais.esperMin).toBe(faltas.length * 8 * 60 + snap.dias.filter(d=>d.diaSemana===6&&d.status==='falta').length * (210 - 480));

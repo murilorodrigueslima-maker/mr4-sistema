@@ -568,6 +568,7 @@ describe('assinatura de espelho — Rule hasOnly([...4 campos])', () => {
       assinadoEm:   serverTimestamp(),
       assinadoPor:  'Func Sec',
       status:       'assinado',
+      hashAssinado: 'a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2',  // SIGNED_SNAPSHOT
     }));
   });
 

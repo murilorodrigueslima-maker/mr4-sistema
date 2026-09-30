@@ -239,7 +239,7 @@ describe('matriz de decisão e sinais (explicativos; não mudam quantidade)', ()
     expect(Pol.POLITICA_1_2).toMatchObject({ policy_version: '1.2', inherits_from: '1.1', status: 'RELEASE_CANDIDATE_NOT_APPROVED', approved_on: null });
     for (const k of ['target_days', 'abc', 'demand', 'velocity', 'new_product', 'coverage_indicators', 'rounding', 'priority']) expect(Pol.POLITICA_1_2[k]).toEqual(Pol.POLITICA_1_1[k]);
     expect(Pol.validarPolitica(Pol.POLITICA_1_2)).toEqual([]);
-    expect(PF.thresholds.status).toBe('PROPOSED_NOT_APPROVED');
+    expect(PF.thresholds.status).toBe('APPROVED_FOR_RC'); expect(PF.thresholds.threshold_source).toBe('distribution_rc_2026_09'); expect(PF.thresholds.negative_margin_auto_block).toBe(false); expect(PF.thresholds.efficiency_status).toBe('PROPOSED_NOT_APPROVED');
     const ruim = JSON.parse(JSON.stringify(Pol.POLITICA_1_2)); ruim.profitability.cost.tolerance_high = 0.5;
     expect(Pol.validarPolitica(ruim).join()).toMatch(/tolerâncias fora de ordem/);
   });

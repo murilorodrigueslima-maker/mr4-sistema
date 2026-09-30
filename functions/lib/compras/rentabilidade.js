@@ -173,7 +173,7 @@ function rentabilidadeProduto({ produto, metrica, fatosVenda, comprasConfirmadas
   // economia da compra sugerida (Política 1.1 define a quantidade; aqui só se precifica)
   const qty = metrica.suggestion.suggested_qty;
   if (qty > 0) {
-    const p = { qty, capital_cents: null, revenue_potential_cents: null, profit_potential_cents: null, return_on_capital: null, turnover_days: null, efficiency: null };
+    const p = { qty, velocity: metrica.policy_velocity > 0 ? metrica.policy_velocity : null, capital_cents: null, revenue_potential_cents: null, profit_potential_cents: null, return_on_capital: null, turnover_days: null, efficiency: null };
     if (custo.unit_cents > 0) p.capital_cents = qty * custo.unit_cents;
     if (preco.unit_cents > 0) p.revenue_potential_cents = qty * preco.unit_cents;
     if (p.capital_cents !== null && p.revenue_potential_cents !== null) {
@@ -209,6 +209,23 @@ function atratividade(fin, T) {
   if (T.efficiency_high !== null && e >= T.efficiency_high) return 'HIGH';
   return 'MEDIUM';
 }
+/**
+ * CLASSIFICAÇÃO FINANCEIRA para a tela (sem score opaco): ATENÇÃO > ALTA > BAIXA > MÉDIA, sempre com os MOTIVOS em códigos.
+ *   ATENCAO: margem negativa, margem indisponível ou custo de confiança baixa/desconhecida (antes de qualquer elogio)
+ *   ALTA:    margem alta e retorno não-baixo · BAIXA: margem baixa ou retorno baixo · MEDIA: o restante
+ * Não muda quantidade, prioridade nem elegibilidade; não bloqueia compra.
+ */
+function classificar(fin, mt, atr, T) {
+  const r = [];
+  if (mt === 'NEGATIVE') r.push('MARGIN_NEGATIVE');
+  if (mt === 'UNAVAILABLE') r.push('MARGIN_UNAVAILABLE');
+  if (fin.cost.confidence === 'LOW') r.push('COST_CONFIDENCE_LOW');
+  if (fin.cost.confidence === 'UNKNOWN') r.push('COST_CONFIDENCE_UNKNOWN');
+  if (r.length) return { class: 'ATENCAO', reasons: r };
+  if (mt === 'HIGH' && atr !== 'LOW') return { class: 'ALTA', reasons: ['MARGIN_HIGH', ...(atr === 'HIGH' ? ['RETURN_HIGH'] : [])] };
+  if (mt === 'LOW' || atr === 'LOW') return { class: 'BAIXA', reasons: [...(mt === 'LOW' ? ['MARGIN_LOW'] : []), ...(atr === 'LOW' ? ['RETURN_LOW'] : [])] };
+  return { class: 'MEDIA', reasons: [mt === 'HIGH' ? 'MARGIN_HIGH' : 'MARGIN_MID', ...(atr === 'HIGH' ? ['RETURN_HIGH'] : atr === 'MEDIUM' ? ['RETURN_MID'] : [])] };
+}
 function decidir(fin, metrica, P) {
   const T = P.thresholds, prio = metrica.suggestion.priority, qty = metrica.suggestion.suggested_qty;
   const mt = faixaMargem(fin, T);
@@ -227,7 +244,9 @@ function decidir(fin, metrica, P) {
     else if (need === 'HIGH') matriz = mt === 'HIGH' ? 'BUY_STRONG' : (mt === 'LOW' || mt === 'NEGATIVE') ? 'BUY_NEED_FLAG_MARGIN' : 'BUY_NEED';
     else matriz = mt === 'HIGH' ? 'OBSERVE_DEMAND_COVERAGE' : (mt === 'LOW' || mt === 'NEGATIVE') ? 'LOW_CAPITAL_ATTRACTIVENESS' : 'BUY_LOW_NEED';
   }
-  return { need, demand: demanda, margin_tier: mt, attractiveness: atratividade(fin, T), matrix: matriz, signals: sinais };
+  const atr = atratividade(fin, T);
+  const cls = classificar(fin, mt, atr, T);
+  return { need, demand: demanda, margin_tier: mt, attractiveness: atr, matrix: matriz, signals: sinais, class: cls.class, class_reasons: cls.reasons };
 }
 
 // ── ARMAZENAMENTO COMPACTO: o que vai para o Firestore (sem nulos nem constantes; o motor continua com o objeto completo) ──────
@@ -256,8 +275,8 @@ function fichaDaLista(fin, completa) {
   const d = fin.decision || {};
   const ficha = { cost: pick(fin.cost, completa ? ['unit_cents', 'confidence', 'reason', 'reference_cents', 'divergence_bps', 'reference_age_days', 'last_purchase_date'] : ['unit_cents', 'confidence', 'reason']),
     price: pick(fin.price, completa ? ['unit_cents', 'source', 'quality', 'registered_cents', 'lines', 'qty', 'discount_bps'] : ['unit_cents', 'source', 'quality']),
-    unit: fin.unit, margin: fin.margin, decision: pick(d, ['margin_tier', 'attractiveness', 'matrix', 'signals']) };
-  if (fin.purchase) ficha.purchase = pick(fin.purchase, ['capital_cents', 'revenue_potential_cents', 'profit_potential_cents', 'return_on_capital', 'efficiency', 'turnover_days']);
+    unit: fin.unit, margin: fin.margin, decision: pick(d, completa ? ['margin_tier', 'attractiveness', 'matrix', 'signals', 'class', 'class_reasons'] : ['margin_tier', 'attractiveness', 'matrix', 'signals', 'class']) };
+  if (fin.purchase) ficha.purchase = pick(fin.purchase, ['capital_cents', 'revenue_potential_cents', 'profit_potential_cents', 'return_on_capital', 'efficiency', 'turnover_days', 'velocity']);
   if (completa && fin.windows) ficha.windows = Object.fromEntries(Object.entries(fin.windows).map(([k, w]) => [k, pick(w, ['lines', 'revenue_cents', 'profit_cents', 'profit_base_cents'])]));
   else if (fin.windows && fin.windows['90'] && fin.windows['90'].profit_cents !== undefined) ficha.gross_profit_90d_cents = fin.windows['90'].profit_cents;
   return ficha;
@@ -274,6 +293,7 @@ function calcularFinanceiro({ produtos, metricas, fatosVenda, fatosCompra, hoje,
   for (const m of metricas) out.set(m.product_id, rentabilidadeProduto({ produto: porId.get(m.product_id), metrica: m, fatosVenda: vendasPor.get(m.product_id) || [], comprasConfirmadas: comprasPor.get(m.product_id) || [], hoje, P }));
   return { porProduto: out, resumo: resumoFinanceiro(out, metricas, P) };
 }
+const tiers = L => Object.fromEntries(['NEGATIVE', 'LOW', 'MID', 'HIGH', 'UNAVAILABLE'].map(k => [k, L.filter(x => x.fin.decision.margin_tier === k).length]));
 function resumoFinanceiro(mapa, metricas, P) {
   const L = [...mapa.entries()].map(([id, fin]) => ({ id, fin, m: metricas.find(x => x.product_id === id) }));
   const conta = f => L.filter(f).length;
@@ -300,66 +320,28 @@ function resumoFinanceiro(mapa, metricas, P) {
       weighted_margin_pct: rec > 0 ? arredonda((rec - cap) * P.scale.bps / rec) / P.scale.pct_divisor : null,
       gross_return_on_capital: cap > 0 ? arredonda((rec - cap) * P.scale.ratio_digits / cap) / P.scale.ratio_digits : null },
     signals: Object.fromEntries(P.decision.signal_names.map(s => [s, conta(x => x.fin.decision.signals.includes(s))])),
+    thresholds: { status: P.thresholds.status, source: P.thresholds.threshold_source, margin_low_pct: P.thresholds.margin_low_pct, margin_high_pct: P.thresholds.margin_high_pct, negative_margin_auto_block: P.thresholds.negative_margin_auto_block },
+    margin_tiers: tiers(L), margin_tiers_suggested: tiers(sug),
+    classes: Object.fromEntries(['ALTA', 'MEDIA', 'BAIXA', 'ATENCAO'].map(k => [k, conta(x => x.fin.decision.class === k)])),
+    review: { negative_margin: conta(x => x.fin.margin.negative), suggested_negative_margin: sug.filter(x => x.fin.margin.negative).length,
+      low_cost_confidence: conta(x => x.fin.cost.confidence === 'LOW'), suggested_low_cost_confidence: sug.filter(x => x.fin.cost.confidence === 'LOW' || x.fin.cost.confidence === 'UNKNOWN').length,
+      missing_cost: conta(x => !(x.fin.cost.unit_cents > 0)), high_demand_low_margin: conta(x => x.fin.decision.signals.includes('HIGH_DEMAND_LOW_MARGIN')),
+      registered_price_fallback: conta(x => x.fin.price.source === 'REGISTERED_FALLBACK'), suggested_registered_price_fallback: sug.filter(x => x.fin.price.source === 'REGISTERED_FALLBACK').length },
+    by_priority: Object.fromEntries(P.decision.priorities.map(pr => { const g = sugCompletos.filter(x => x.m.suggestion.priority === pr); return [pr, { suggested_products: sug.filter(x => x.m.suggestion.priority === pr).length, priced_products: g.length, capital_cents: g.reduce((t, x) => t + x.fin.purchase.capital_cents, 0), gross_profit_potential_cents: g.reduce((t, x) => t + x.fin.purchase.profit_potential_cents, 0) }]; })),
+    p1_floor: { days: P.budget.p1_floor_days, ...Sim.capitalMinimoP1(itensParaSimulador(mapa, metricas), cfgSim(P)) },
+    simulator: { strategy: P.budget.default_strategy, ...cfgSim(P) },
     matrix: L.reduce((o, x) => { const k = x.fin.decision.matrix; if (k) o[k] = (o[k] || 0) + 1; return o; }, {}),
   };
 }
 
-// ── SIMULADOR DE ORÇAMENTO (local, determinístico, quantidades inteiras, qtd_1_2 ≤ qtd_1_1) ────────────────────────────
-const ordemPrioridade = p => ({ P1: 1, P2: 2, P3: 3, P4: 4 }[p] || 9);
-// maior eficiência primeiro; quem não tem eficiência calculável vai para o fim (nunca NaN)
-const eficienciaDesc = (a, b) => { const x = ehNum(a.efficiency), y = ehNum(b.efficiency); return x && y ? b.efficiency - a.efficiency : x ? -1 : y ? 1 : 0; };
-const ORDENS = {
-  // ordem da Política 1.1 (prioridade, maior quantidade, id)
-  OPERATIONAL: (a, b) => ordemPrioridade(a.priority) - ordemPrioridade(b.priority) || b.qty - a.qty || cmpId(a.id, b.id),
-  // só retorno (mostra o que a ganância por eficiência faria: pode deixar P1 sem verba)
-  EFFICIENCY: (a, b) => eficienciaDesc(a, b) || ordemPrioridade(a.priority) - ordemPrioridade(b.priority) || cmpId(a.id, b.id),
-  // P1 inteiro primeiro (ordem operacional); depois tudo por eficiência
-  PROTECT_P1_THEN_EFFICIENCY: (a, b) => (a.priority === 'P1' ? 0 : 1) - (b.priority === 'P1' ? 0 : 1) || (a.priority === 'P1' ? ORDENS.OPERATIONAL(a, b) : eficienciaDesc(a, b) || ordemPrioridade(a.priority) - ordemPrioridade(b.priority) || cmpId(a.id, b.id)),
-  // camadas: mantém a prioridade operacional e ordena por eficiência DENTRO de cada prioridade
-  LAYERED: (a, b) => ordemPrioridade(a.priority) - ordemPrioridade(b.priority) || eficienciaDesc(a, b) || b.qty - a.qty || cmpId(a.id, b.id),
-};
-// Estratégias = lista de FASES. Cada fase escolhe itens (filtro), a ordem e o teto de unidades do item naquela fase; fases seguintes
-// completam até a sugestão operacional (1.1). Nunca passa de qtd_1_1 e nunca fraciona unidade.
-const pisoP1 = (i, P) => Math.min(i.qty, Math.max(1, Math.ceil((i.velocity > 0 ? i.velocity : 0) * P.budget.p1_floor_days)));
-const FASES = {
-  OPERATIONAL: () => [{ ordem: 'OPERATIONAL' }],
-  EFFICIENCY: () => [{ ordem: 'EFFICIENCY' }],
-  PROTECT_P1_THEN_EFFICIENCY: () => [{ filtro: i => i.priority === 'P1', ordem: 'OPERATIONAL' }, { ordem: 'EFFICIENCY' }],
-  LAYERED: () => [{ ordem: 'LAYERED' }],
-  // piso mínimo para TODO P1 (cobre `p1_floor_days` de demanda, ≥ 1 un) antes de qualquer otimização; depois camadas por eficiência
-  LAYERED_P1_FLOOR: P => [{ filtro: i => i.priority === 'P1', ordem: 'OPERATIONAL', teto: i => pisoP1(i, P) }, { ordem: 'LAYERED' }],
-};
-function simularOrcamento(itens, orcamentoCents, estrategia, P) {
-  if (!FASES[estrategia]) throw new Error('ESTRATEGIA_INVALIDA: ' + estrategia);
-  if (!(Number.isInteger(orcamentoCents) && orcamentoCents >= 0)) throw new Error('ORCAMENTO_INVALIDO');
-  const orcaveis = itens.filter(i => i.qty > 0 && i.cost_cents > 0), semCusto = itens.filter(i => i.qty > 0 && !(i.cost_cents > 0));
-  let resto = orcamentoCents; const aloc = new Map(), sequencia = [];
-  for (const fase of FASES[estrategia](P)) {
-    const lista = orcaveis.filter(fase.filtro || (() => true)).sort(ORDENS[fase.ordem]);
-    for (const i of lista) {
-      const ja = aloc.get(i.id) || 0, teto = Math.min(i.qty, fase.teto ? fase.teto(i) : i.qty);
-      const q = Math.min(teto - ja, Math.floor(resto / i.cost_cents));      // inteiro; nunca acima da sugestão operacional (1.1)
-      if (q >= 1) { if (!aloc.has(i.id)) sequencia.push(i.id); aloc.set(i.id, ja + q); resto -= q * i.cost_cents; }
-    }
-  }
-  // itens na ORDEM EM QUE FORAM FINANCIADOS (os comparadores desempatam por id ⇒ resultado independe da ordem de entrada)
-  const alocados = sequencia.map(id => orcaveis.find(i => i.id === id)).map(i => ({ id: i.id, priority: i.priority, qty_1_1: i.qty, qty_1_2: aloc.get(i.id), capital_cents: aloc.get(i.id) * i.cost_cents, revenue_cents: i.price_cents > 0 ? aloc.get(i.id) * i.price_cents : null }));
-  const soma = (l, f) => l.reduce((t, x) => t + (f(x) || 0), 0);
-  const precificados = alocados.filter(a => a.revenue_cents !== null);
-  const rec = soma(precificados, a => a.revenue_cents), capP = soma(precificados, a => a.capital_cents);
-  const porPrio = {};
-  for (const pr of P.decision.priorities) {
-    const tot = orcaveis.filter(i => i.priority === pr), al = alocados.filter(a => a.priority === pr);
-    porPrio[pr] = { products: tot.length, units_needed: soma(tot, i => i.qty), units_funded: soma(al, a => a.qty_1_2), products_fully_funded: al.filter(a => a.qty_1_2 === a.qty_1_1).length, products_unfunded: tot.length - al.length, capital_needed_cents: soma(tot, i => i.qty * i.cost_cents), capital_funded_cents: soma(al, a => a.capital_cents) };
-  }
-  return { strategy: estrategia, budget_cents: orcamentoCents, spent_cents: orcamentoCents - resto, left_cents: resto, products_funded: alocados.length, units_funded: soma(alocados, a => a.qty_1_2),
-    units_needed: soma(orcaveis, i => i.qty), capital_needed_cents: soma(orcaveis, i => i.qty * i.cost_cents), revenue_potential_cents: rec, gross_profit_potential_cents: rec - capP,
-    gross_return_on_capital: capP > 0 ? arredonda((rec - capP) * P.scale.ratio_digits / capP) / P.scale.ratio_digits : null,
-    by_priority: porPrio, unbudgeted_no_cost: semCusto.map(i => i.id).sort(), items: alocados };
-}
+// ── SIMULADOR DE ORÇAMENTO: módulo próprio (simulador.js), o MESMO arquivo que a tela usa ────────────────────────────
+const Sim = require('./simulador');
+const ORDENS = Sim.ORDENS;
+const cfgSim = P => ({ p1_floor_days: P.budget.p1_floor_days, priorities: P.decision.priorities, scale: P.scale });
+const simularOrcamento = (itens, orcamentoCents, estrategia, P) => Sim.simular(itens, orcamentoCents, estrategia, cfgSim(P));
 /** Itens do simulador a partir do resultado financeiro + métrica 1.1 (só produtos com sugestão). */
 function itensParaSimulador(mapaFin, metricas) {
   return metricas.filter(m => m.suggestion.suggested_qty > 0).map(m => { const f = mapaFin.get(m.product_id); return { id: m.product_id, qty: m.suggestion.suggested_qty, priority: m.suggestion.priority, abc: m.abc_revenue, velocity: m.policy_velocity, cost_cents: f.cost.unit_cents, price_cents: f.price.unit_cents, efficiency: f.purchase ? f.purchase.efficiency : null }; });
 }
 
-module.exports = { fichaDaLista, compactarFin, arredonda, percentil, distribuicao, liquidoDaLinha, motivoInelegivel, classificarCusto, linhasDoProduto, agregar, rentabilidadeProduto, decidir, faixaMargem, atratividade, calcularFinanceiro, resumoFinanceiro, ORDENS, simularOrcamento, itensParaSimulador };
+module.exports = { fichaDaLista, compactarFin, arredonda, percentil, distribuicao, liquidoDaLinha, motivoInelegivel, classificarCusto, linhasDoProduto, agregar, rentabilidadeProduto, decidir, faixaMargem, atratividade, calcularFinanceiro, resumoFinanceiro, ORDENS, simularOrcamento, cfgSim, itensParaSimulador };

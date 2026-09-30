@@ -76,10 +76,11 @@ function compactarCompra(w) {
     fornecedor_id: c.fornecedor_id ? String(c.fornecedor_id) : null, valor_frete: str(c.valor_frete), valor_impostos: str(c.valor_impostos), valor_produtos: str(c.valor_produtos), desconto_valor: str(c.desconto_valor),
     produtos: (c.produtos || []).map(p => { const it = p.produto || p; return { produto_id: it.produto_id != null ? String(it.produto_id) : null, quantidade: it.quantidade, valor_custo: it.valor_custo }; }) };
 }
-const codificarVenda = v => [v.id, v.data, v.nome_situacao, v.situacao_estoque, v.modificado_em, v.produtos.map(i => [i.produto_id, i.quantidade, i.valor_total, i.valor_custo === undefined ? null : i.valor_custo, i.valor_venda === undefined ? null : i.valor_venda]), v.valor_produtos === undefined ? null : v.valor_produtos, v.desconto_valor || null, v.desconto_porcentagem || null];
+// `formato` v1 grava o layout v1 IDÊNTICO ao do backend anterior (o anterior só lê v1): assim o rollback do backend nunca encontra base que não entenda.
+const codificarVenda = (v, formato) => formato === 'tuplas-json-v1' ? [v.id, v.data, v.nome_situacao, v.situacao_estoque, v.modificado_em, v.produtos.map(i => [i.produto_id, i.quantidade, i.valor_total])] : [v.id, v.data, v.nome_situacao, v.situacao_estoque, v.modificado_em, v.produtos.map(i => [i.produto_id, i.quantidade, i.valor_total, i.valor_custo === undefined ? null : i.valor_custo, i.valor_venda === undefined ? null : i.valor_venda]), v.valor_produtos === undefined ? null : v.valor_produtos, v.desconto_valor || null, v.desconto_porcentagem || null];
 const decodificarVenda = t => ({ id: t[0], data: t[1], nome_situacao: t[2], situacao_estoque: t[3], modificado_em: t[4], valor_produtos: t[6] === undefined ? null : t[6], desconto_valor: t[7] === undefined ? null : t[7], desconto_porcentagem: t[8] === undefined ? null : t[8],
   produtos: (t[5] || []).map(i => ({ produto_id: i[0], quantidade: i[1], valor_total: i[2], valor_custo: i[3] === undefined ? null : i[3], valor_venda: i[4] === undefined ? null : i[4] })) });
-const codificarCompra = c => [c.id, c.data_emissao, c.nome_situacao, c.fornecedor_id, c.modificado_em, c.valor_frete === undefined ? null : c.valor_frete, c.produtos.map(i => [i.produto_id, i.quantidade, i.valor_custo]), c.valor_produtos === undefined ? null : c.valor_produtos, c.valor_impostos === undefined ? null : c.valor_impostos, c.desconto_valor === undefined ? null : c.desconto_valor];
+const codificarCompra = (c, formato) => formato === 'tuplas-json-v1' ? [c.id, c.data_emissao, c.nome_situacao, c.fornecedor_id, c.modificado_em, (Number(c.valor_frete) || Number(c.valor_impostos)) ? 1 : 0, c.produtos.map(i => [i.produto_id, i.quantidade, i.valor_custo])] : [c.id, c.data_emissao, c.nome_situacao, c.fornecedor_id, c.modificado_em, c.valor_frete === undefined ? null : c.valor_frete, c.produtos.map(i => [i.produto_id, i.quantidade, i.valor_custo]), c.valor_produtos === undefined ? null : c.valor_produtos, c.valor_impostos === undefined ? null : c.valor_impostos, c.desconto_valor === undefined ? null : c.desconto_valor];
 // posição 5: texto (v2) ou 1/0 (v1 — sinalizador de frete/imposto, sem valores → o landed fica indisponível)
 const decodificarCompra = t => ({ id: t[0], data_emissao: t[1], nome_situacao: t[2], fornecedor_id: t[3], modificado_em: t[4], valor_frete: typeof t[5] === 'number' ? (t[5] ? '1' : null) : (t[5] === undefined ? null : t[5]), valor_impostos: t[8] === undefined ? null : t[8],
   valor_produtos: t[7] === undefined ? null : t[7], desconto_valor: t[9] === undefined ? null : t[9], produtos: (t[6] || []).map(i => ({ produto_id: i[0], quantidade: i[1], valor_custo: i[2] })) });
@@ -168,12 +169,22 @@ function montarView(r, porId, custos, agora, hoje, financeiro = null, softLimitB
   const cont = f => linhas.filter(f).length;
   const soAtencao = linhas.filter(l => !(l.qtd > 0) && l.attention_reasons.some(k => !ATENCAO_ANOTACAO.includes(k)));
   const custoPorId = Object.fromEntries(custos.map(k => [k.product_id, k]));
-  const docCustos = completa => ({ policy_version: r.policy_version, gerado_em: agora.toISOString(), aviso: 'CUSTO INDICATIVO (cadastrado no ERP; confiança baixa; sem frete/impostos rateados) — não é necessidade financeira',
+  // REVISÃO DE RENTABILIDADE (Política 1.2): produtos FORA da lista operacional que precisam de olhar financeiro (margem negativa, custo de baixa
+  // confiança/ausente, alta demanda + margem baixa, preço cadastrado em vez de realizado). Linhas ENXUTAS (sem estoque/cobertura) que ficam só
+  // neste documento — `sugestoes.linhas` (e a aba Atenção) não mudam. Se o documento passar do limite brando, as de "só preço cadastrado" saem primeiro.
+  const precisaRevisao = f => !!f && ((f.margin && f.margin.negative === true) || !(f.cost && f.cost.unit_cents > 0) || (f.cost && (f.cost.confidence === 'LOW' || f.cost.confidence === 'UNKNOWN')) || ((f.decision && f.decision.signals) || []).includes('HIGH_DEMAND_LOW_MARGIN'));
+  const soFallback = f => f.price && f.price.source === 'REGISTERED_FALLBACK';
+  const revisaoLinhas = (incluirFallback, completa) => !financeiro ? [] : r.metricas.filter(m => !idsSugestao.has(m.product_id)).map(m => ({ m, f: financeiro.porProduto.get(m.product_id) }))
+    .filter(x => x.f && (precisaRevisao(x.f) || (incluirFallback && soFallback(x.f)))).sort((a, b) => String(a.m.product_id).localeCompare(String(b.m.product_id)))
+    .map(({ m, f }) => { const p = porId[m.product_id] || {}; const o = { id: m.product_id, codigo: p.code || null, nome: p.name || null, abc: m.abc_revenue, fin: Rent.fichaDaLista(f, completa && precisaRevisao(f)) }; if (p.group_name) o.grupo = p.group_name; return o; });
+  const docCustos = (completa, revFallback = true) => ({ policy_version: r.policy_version, gerado_em: agora.toISOString(), aviso: 'CUSTO INDICATIVO (cadastrado no ERP; confiança baixa; sem frete/impostos rateados) — não é necessidade financeira',
       // Política 1.2 (só quando ativa): rentabilidade por linha e resumo agregado — ficam SÓ neste documento (leitura de gestor)
-      ...(financeiro ? { resumo_financeiro: financeiro.resumo, detalhe_financeiro: completa ? 'COMPLETO' : 'RESUMIDO' } : {}),
+      ...(financeiro ? { resumo_financeiro: financeiro.resumo, detalhe_financeiro: completa ? 'COMPLETO' : 'RESUMIDO', revisao: revisaoLinhas(revFallback, completa), revisao_parcial: !revFallback } : {}),
       linhas: Object.fromEntries(linhas.filter(l => idsSugestao.has(l.id)).map(l => { const k = custoPorId[l.id] || {}; return [l.id, { custo_cadastrado_cents: k.registered_cost_cents ?? null, ultimo_custo_compra_cents: k.last_purchase_cost_cents ?? null, confianca: k.cost_confidence || null, valor_sugestao_custo_conhecido_cents: k.suggestion_value_known_cost_only_cents ?? null, ...(financeiro ? { fin: Rent.fichaDaLista(financeiro.porProduto.get(l.id), completa) } : {}) }]; })) });
   let viewCustos = docCustos(true);
-  if (financeiro && softLimitBytes !== null && Buffer.byteLength(JSON.stringify(viewCustos)) > softLimitBytes) viewCustos = docCustos(false);   // degrau de segurança: ficha enxuta
+  const passou = d => Buffer.byteLength(JSON.stringify(d)) > softLimitBytes;
+  if (financeiro && softLimitBytes !== null && passou(viewCustos)) viewCustos = docCustos(false);                       // degrau 1: ficha enxuta
+  if (financeiro && softLimitBytes !== null && passou(viewCustos)) viewCustos = docCustos(false, false);                // degrau 2: sai a revisão de "só preço cadastrado" (contagem continua no resumo)
   return {
     sugestoes: { policy_version: r.policy_version, gerado_em: agora.toISOString(), data_comercial: hoje, total_linhas: linhas.length,
       contagens: { sugeridos: cont(l => l.qtd > 0), unidades: linhas.reduce((t, l) => t + (l.qtd || 0), 0), P1: cont(l => l.prioridade === 'P1'), P2: cont(l => l.prioridade === 'P2'), P3: cont(l => l.prioridade === 'P3'), P4: cont(l => l.prioridade === 'P4'), estoque_negativo: cont(l => l.estoque_negativo), novo_com_demanda: cont(l => l.novo_com_demanda), novo_protegido: cont(l => l.novo_protegido),
@@ -222,7 +233,7 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
     meta: { versao: RULES_VERSION, policy_version: r.policy_version, modo_sync: modo, ultima_sincronizacao_ok: agora.toISOString(), data_comercial: hoje, estatisticas: { ...estatisticas, duplicatas_de_linha: r.duplicatas } },
     snapshotEstoque: montarSnapshotEstoque(produtos, agora, politica),
     view: montarView(r, porId, custos, agora, hoje, financeiro, financeiro ? politica.profitability.view.soft_limit_bytes : null),
-    base: { vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
+    base: { formato: formatoDaPolitica(politica), vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
   };
 }
 
@@ -235,7 +246,9 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
 //      (ativa anterior, pendente de tentativa que falhou, órfãs de limpeza interrompida). Nunca lista/apaga por prefixo.
 // O leitor usa SÓ o ponteiro: busca cada fatia pelo id, confere geração/índice/quantidade e falha FECHADO se faltar.
 // Legado (antes das gerações): ids v_NNN/c_NNN com meta.base_docs; lido e substituído pela mesma regra.
-const FORMATO_BASE = 'tuplas-json-v2';                          // escrita
+const FORMATO_BASE_V1 = 'tuplas-json-v1';
+const FORMATO_BASE = 'tuplas-json-v2';                          // formato da Política 1.2 (rentabilidade)
+const formatoDaPolitica = politica => (politica && politica.profitability && politica.profitability.enabled ? FORMATO_BASE : FORMATO_BASE_V1);   // 1.0/1.1 continuam gravando v1
 const FORMATOS_BASE_ACEITOS = ['tuplas-json-v1', 'tuplas-json-v2'];   // leitura (gerações antigas continuam legíveis)
 const RE_ID_FATIA = /^(g\d+x[0-9a-f]{6}_)?[vc]_\d{3}$/;
 // geração ÚNICA por tentativa (instante + sufixo aleatório): duas gravações nunca compartilham ids, nem no mesmo instante
@@ -249,7 +262,7 @@ function idsDaBase(ref) {
 function refBaseAtiva(meta) {
   if (!meta) return null;
   if (meta.base_ativa && meta.base_ativa.geracao) return meta.base_ativa;
-  if (meta.base_docs && (meta.base_docs.vendas || meta.base_docs.compras)) return { geracao: null, formato: FORMATO_BASE, vendas: meta.base_docs.vendas || 0, compras: meta.base_docs.compras || 0, gerado_em: meta.ultima_sincronizacao_ok, legado: true };
+  if (meta.base_docs && (meta.base_docs.vendas || meta.base_docs.compras)) return { geracao: null, formato: FORMATO_BASE_V1, vendas: meta.base_docs.vendas || 0, compras: meta.base_docs.compras || 0, gerado_em: meta.ultima_sincronizacao_ok, legado: true };
   return null;
 }
 function erroBase(codigo, detalhe) { const e = new Error(codigo + (detalhe ? ' ' + detalhe : '')); e.codigo = codigo; return e; }
@@ -264,15 +277,16 @@ function erroBase(codigo, detalhe) { const e = new Error(codigo + (detalhe ? ' '
 async function persistirSnapshot(db, snap, { runId, loteBytesMax = LOTE_BYTES_MAX } = {}) {   // loteBytesMax: só testes
   const blocos = (lista) => { const b = []; for (let i = 0; i < lista.length; i += BLOCO) b.push(lista.slice(i, i + BLOCO)); return b; };
   const op = blocos(snap.operacional), ct = blocos(snap.custos);
-  const bv = snap.base ? fatiarPorBytes(snap.base.vendas.map(codificarVenda)) : [], bc = snap.base ? fatiarPorBytes(snap.base.compras.map(codificarCompra)) : [];
+  const fmtBase = snap.base ? (snap.base.formato || FORMATO_BASE) : null;   // montarSnapshot sempre informa o formato (v1 na 1.0/1.1, v2 na 1.2)
+  const bv = snap.base ? fatiarPorBytes(snap.base.vendas.map(x => codificarVenda(x, fmtBase))) : [], bc = snap.base ? fatiarPorBytes(snap.base.compras.map(x => codificarCompra(x, fmtBase))) : [];
   const pv = snap.meta.policy_version, quando = snap.meta.ultima_sincronizacao_ok;
   const refMeta = db.collection('compras_n0').doc('meta'), refLock = db.collection('compras_n0').doc('lock');
   const metaAnt = (await refMeta.get()).data() || {};
   const ativaAnt = refBaseAtiva(metaAnt);
-  const refNova = snap.base ? { geracao: idGeracao(quando), formato: FORMATO_BASE, vendas: bv.length, compras: bc.length, gerado_em: quando } : null;
+  const refNova = snap.base ? { geracao: idGeracao(quando), formato: fmtBase, vendas: bv.length, compras: bc.length, gerado_em: quando } : null;
   // Firestore NÃO aceita arrays aninhados: cada fatia de tuplas vai como UMA string JSON (campo texto).
-  const docsBase = refNova ? [...bv.map((b, i) => ['compras_n0_base', idFatia(refNova, 'v', i), { geracao: refNova.geracao, gerado_em: quando, formato: FORMATO_BASE, indice: i, n: b.length, registros_json: JSON.stringify(b) }]),
-    ...bc.map((b, i) => ['compras_n0_base', idFatia(refNova, 'c', i), { geracao: refNova.geracao, gerado_em: quando, formato: FORMATO_BASE, indice: i, n: b.length, registros_json: JSON.stringify(b) }])] : [];
+  const docsBase = refNova ? [...bv.map((b, i) => ['compras_n0_base', idFatia(refNova, 'v', i), { geracao: refNova.geracao, gerado_em: quando, formato: fmtBase, indice: i, n: b.length, registros_json: JSON.stringify(b) }]),
+    ...bc.map((b, i) => ['compras_n0_base', idFatia(refNova, 'c', i), { geracao: refNova.geracao, gerado_em: quando, formato: fmtBase, indice: i, n: b.length, registros_json: JSON.stringify(b) }])] : [];
   const baseBytes = docsBase.reduce((s, d) => s + Buffer.byteLength(JSON.stringify(d[2])), 0);
   // gerações substituídas (allowlist): ativa anterior + pendente de tentativa que falhou + órfãs de limpeza interrompida
   const substituidas = refNova ? [ativaAnt, metaAnt.base_pendente, ...(metaAnt.base_orfas || [])].filter(r => r && (r.legado || r.geracao !== refNova.geracao)) : [];
@@ -364,7 +378,7 @@ async function carregarBase(db) {
     if (!Array.isArray(regs) || regs.length !== x.n) throw erroBase('BASE_INCOMPLETA', 'quantidade divergente ' + id);
     if (id.includes('v_')) vendas.push(...regs.map(decodificarVenda)); else compras.push(...regs.map(decodificarCompra));
   }
-  return { vendas, compras };
+  return { vendas, compras, formato: ref.formato || FORMATO_BASE_V1 };
 }
 
 async function registrarFalha(db, agora, e, modo) {
@@ -400,6 +414,8 @@ async function executarSyncIncremental({ cli, db, agora = new Date(), fetchMod =
   try {
     const base = await carregarBase(db);
     if (!base) { const e = new Error('BASE_AUSENTE: executar sync completo primeiro'); e.codigo = 'BASE_AUSENTE_EXIGE_FULL'; throw e; }
+    // Política 1.2 precisa dos campos de rentabilidade que só a base v2 guarda; base v1 ⇒ falha FECHADA antes de qualquer leitura no ERP (o COMPLETO regrava em v2)
+    if (politica.profitability && politica.profitability.enabled && base.formato !== FORMATO_BASE) { const e = new Error('BASE_V1_EXIGE_FULL: a Política 1.2 exige sync completo para gravar a base v2'); e.codigo = 'BASE_V1_EXIGE_FULL'; throw e; }
     const metaAnterior = (await db.collection('compras_n0').doc('meta').get()).data() || {};
     const plano = fetchMod.planoIncremental(hoje, politica.sync.incremental_lookback_days);
     const pr = await fetchMod.buscarProdutos(cli);
@@ -461,4 +477,4 @@ function estimarArmazenamento({ produtos, bytesPorProduto, mudancasPorDia, anos,
   return { opcao_A_bytes: Math.round(a), opcao_B_bytes: Math.round(b), produtos_no_fim: n };
 }
 
-module.exports = { FORMATO_BASE, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };
+module.exports = { FORMATO_BASE, FORMATO_BASE_V1, formatoDaPolitica, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };

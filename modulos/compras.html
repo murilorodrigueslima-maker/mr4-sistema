@@ -95,19 +95,56 @@
   /* Política 1.2 — rentabilidade (só aparece para perfil com custo e servidor com a política 1.2) */
   .resumo-fin { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .75rem .9rem; margin-bottom: 1rem; }
   .resumo-fin .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem .9rem; }
-  .resumo-fin .k { font-size: .68rem; font-weight: 700; letter-spacing: .4px; color: var(--muted); text-transform: uppercase; }
-  .resumo-fin .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .resumo-fin .k, .orc-res .k { font-size: .68rem; font-weight: 700; letter-spacing: .4px; color: var(--muted); text-transform: uppercase; }
+  .resumo-fin .v, .orc-res .v { font-size: 1.05rem; font-weight: 700; font-variant-numeric: tabular-nums; }
   .resumo-fin .nota { font-size: .72rem; color: var(--muted); margin-top: .55rem; line-height: 1.45; }
+  .faixas { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; font-size: .74rem; color: var(--muted); align-items: center; }
+  .faixas .f { border: 1px solid var(--border); border-radius: 999px; padding: .1rem .55rem; font-variant-numeric: tabular-nums; color: var(--text); background: var(--bg); }
+  .faixas .f b { font-weight: 700; }
+  .aviso-conf { margin-top: .5rem; font-size: .74rem; color: var(--yellow); }
   .lista { overflow-x: auto; }
-  .row.fin-on { grid-template-columns: 52px minmax(0, 2.2fr) 64px 100px 96px 40px 84px 92px 76px 92px 72px; min-width: 1060px; }
+  .row.fin-on { grid-template-columns: 52px minmax(0, 2fr) 76px 92px 82px 92px 70px 88px; min-width: 860px; }
+  .row.fin-on .prod .st { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
   .margem-neg { color: var(--red); font-weight: 700; } .margem-alta { color: var(--green); font-weight: 600; }
   .fin-est { font-size: .66rem; color: var(--muted); }
+  .cl { font-size: .68rem; font-weight: 700; letter-spacing: .3px; padding: .2rem .4rem; border-radius: 6px; text-align: center; display: inline-block; white-space: nowrap; }
+  .cl.ALTA { background: var(--green-bg); color: var(--green); } .cl.MEDIA { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .cl.BAIXA { background: var(--yellow-bg); color: var(--yellow); } .cl.ATENCAO { background: var(--red-bg); color: var(--red); }
   details.fin { grid-column: 2 / -1; font-size: .74rem; color: var(--muted); }
   details.fin summary { cursor: pointer; }
-  details.fin .grade-fin { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: .35rem 1.2rem; margin-top: .45rem; color: var(--text); }
+  details.fin .sec { margin-top: .6rem; color: var(--text); }
+  details.fin .sec h4 { font-size: .68rem; font-weight: 700; letter-spacing: .4px; text-transform: uppercase; color: var(--muted); margin-bottom: .3rem; }
+  details.fin .grade-fin { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .35rem 1.2rem; }
   details.fin .grade-fin div span { color: var(--muted); display: block; font-size: .66rem; text-transform: uppercase; letter-spacing: .3px; }
+  details.fin .expl { background: var(--bg); border-radius: 6px; padding: .5rem .65rem; font-size: .78rem; line-height: 1.45; }
+  details.fin code.cod { font-family: 'JetBrains Mono', monospace; font-size: .68rem; background: var(--bg); padding: .05rem .3rem; border-radius: 3px; margin: .15rem .2rem 0 0; display: inline-block; }
   details.fin .aviso-fin { margin-top: .45rem; color: var(--muted); font-size: .7rem; }
+  .revchips { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .7rem; }
+  .revchips button { border: 1px solid var(--border); background: var(--white); border-radius: 999px; padding: .4rem .75rem; font: inherit; font-size: .78rem; cursor: pointer; color: var(--text); }
+  .revchips button.sel { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); font-weight: 600; }
+  .revchips .n { font-variant-numeric: tabular-nums; font-weight: 700; margin-left: .25rem; }
+  .orc { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; }
+  .orc h2 { font-size: 1rem; margin-bottom: .2rem; }
+  .orc .ctl { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .8rem 0; }
+  .orc .ctl button { border: 1px solid var(--border); background: var(--white); border-radius: 8px; padding: .5rem .8rem; font: inherit; font-size: .82rem; cursor: pointer; font-variant-numeric: tabular-nums; }
+  .orc .ctl button.sel { border-color: var(--blue); background: var(--blue-bg); color: var(--blue); font-weight: 600; }
+  .orc .ctl input { width: 150px; padding: .5rem .65rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .85rem; font-variant-numeric: tabular-nums; }
+  .orc-res .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem .9rem; margin-bottom: .8rem; }
+  .orc-alerta { border-left: 4px solid var(--yellow); background: var(--yellow-bg); color: var(--yellow); border-radius: 6px; padding: .55rem .8rem; font-size: .8rem; margin-bottom: .7rem; }
+  .orc-info { font-size: .78rem; color: var(--muted); margin-bottom: .7rem; line-height: 1.5; }
+  .orc table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; }
+  .orc th { text-align: right; font-size: .68rem; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); padding: .35rem .5rem; border-bottom: 1px solid var(--border); }
+  .orc td { text-align: right; padding: .35rem .5rem; border-top: 1px solid var(--border); }
+  .orc th:first-child, .orc td:first-child { text-align: left; }
+  .orc .rolagem { max-height: 340px; overflow: auto; margin-top: .5rem; border: 1px solid var(--border); border-radius: 8px; }
+  .orc .comp { overflow-x: auto; }
 
+  @media (max-width: 1180px) {   /* notebooks da operação: a tabela financeira cabe sem rolagem horizontal */
+    :root { --sidebar-w: 200px; }
+    .main { padding: 1.25rem 1.1rem 3rem; }
+    .row.fin-on { grid-template-columns: 44px minmax(0, 1.5fr) 62px 80px 70px 80px 58px 74px; gap: .5rem; padding: .65rem .6rem; min-width: 0; }
+    .row.fin-on .qtd { font-size: .95rem; }
+  }
   @media (max-width: 900px) {
     .sidebar { display: none !important; }
     .main { margin-left: 0; padding: 1rem 1rem 3rem; }
@@ -115,6 +152,8 @@
     .row.head { display: none; }
     .row, .row.custo-on, .row.fin-on { grid-template-columns: 1fr 1fr; gap: .35rem .75rem; min-width: 0; }
     details.fin { grid-column: 1 / -1; }
+    .lista { overflow-x: visible; }
+    .row.fin-on .prod .st { display: block; }
     .row > .prod { grid-column: 1 / -1; }
     .row > .c-pr { grid-column: 1 / -1; justify-self: start; }
     .lbl { display: inline; color: var(--muted); font-size: .7rem; margin-right: .3rem; }
@@ -168,16 +207,20 @@
   <div class="tabs" id="tabs">
     <button data-aba="sug" class="sel">Sugestões</button>
     <button data-aba="aten">Atenção (sem sugestão)</button>
+    <button data-aba="rev" id="tabRev" hidden>Revisar rentabilidade</button>
+    <button data-aba="orc" id="tabOrc" hidden>Planejar orçamento</button>
   </div>
+  <div class="revchips" id="revChips" hidden></div>
+  <div class="orc" id="painelOrc" hidden></div>
 
-  <div class="filtros">
+  <div class="filtros" id="barraFiltros">
     <input type="search" id="busca" placeholder="Buscar produto ou código…" autocomplete="off">
     <div class="seg" id="segAbc"><button data-v="" class="sel">ABC</button><button data-v="A">A</button><button data-v="B">B</button><button data-v="C">C</button></div>
     <label class="tog"><input type="checkbox" id="fNovo"> Novo com demanda</label>
     <label class="tog"><input type="checkbox" id="fNeg"> Estoque negativo</label>
     <select id="fMotivo" hidden aria-label="Motivo de atenção"><option value="">Todos os motivos</option></select>
     <select id="fFin" hidden aria-label="Filtro financeiro">
-      <option value="">Financeiro: todos</option><option value="neg">Margem negativa</option><option value="indisp">Margem indisponível</option><option value="alta">Margem alta</option><option value="baixa">Margem baixa</option>
+      <option value="">Financeiro: todos</option><option value="cls_ALTA">Classe alta</option><option value="cls_MEDIA">Classe média</option><option value="cls_BAIXA">Classe baixa</option><option value="cls_ATENCAO">Classe atenção</option><option value="neg">Margem negativa</option><option value="indisp">Margem indisponível</option><option value="alta">Margem alta</option><option value="mid">Margem intermediária</option><option value="baixa">Margem baixa</option>
       <option value="ret_alto">Retorno alto</option><option value="ret_baixo">Retorno baixo</option><option value="custo_incerto">Custo sem confiança</option>
     </select>
     <select id="fOrdem" hidden aria-label="Ordenar por">
@@ -189,6 +232,7 @@
   <div class="lista" id="lista"></div>
 </main>
 
+<script src="../js/compras-simulador.js"></script>
 <script type="module">
 import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -209,7 +253,7 @@ const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false, motivo: '', finOn: false, fin: {}, fFin: '', ordem: '' };
+const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false, motivo: '', finOn: false, fin: {}, revisao: [], fFin: '', ordem: '', revGrupo: 'neg', revSoSug: false, orcValor: 10000 };
 // Motivos de ATENÇÃO calculados no servidor (Fase D.1). Visibilidade apenas: nenhum deles gera sugestão.
 const ATENCAO = { NEVER_SOLD: 'NUNCA VENDIDO', NO_SALE_365D: 'SEM VENDA HÁ 365+ DIAS', NO_SALE_180D: 'SEM VENDA HÁ 180+ DIAS', NO_SALE_120D: 'SEM VENDA HÁ 120+ DIAS',
   EXCESS_COVERAGE: 'COBERTURA EM EXCESSO', INACTIVE_PRODUCT: 'PRODUTO INATIVO', NEW_PRODUCT_PROTECTED: 'PRODUTO NOVO · EM PROTEÇÃO', NEGATIVE_STOCK: 'ESTOQUE NEGATIVO',
@@ -236,6 +280,9 @@ onAuthStateChanged(auth, async user => {
     window.__comprasPerf.load_ms = Math.round(performance.now() - t0);
     estado.fin = Object.fromEntries(Object.entries((estado.custos && estado.custos.linhas) || {}).filter(([, k]) => k && k.fin).map(([id, k]) => [id, k.fin]));
     estado.finOn = Object.keys(estado.fin).length > 0;   // só com custo liberado E servidor na Política 1.2
+    // produtos fora da lista operacional que pedem revisão financeira (linhas enxutas, só no documento de custos)
+    estado.revisao = ((estado.custos && estado.custos.revisao) || []).filter(r => r && r.fin).map(r => ({ ...r, qtd: 0, prioridade: null }));
+    for (const r of estado.revisao) estado.fin[r.id] = r.fin;
     montarCabecalho(vSnap.exists() ? vSnap.data() : null, mSnap.exists() ? mSnap.data() : null);
     montarResumoFin();
     estado.linhas = vSnap.exists() ? (vSnap.data().linhas || []) : [];
@@ -269,38 +316,81 @@ function montarCabecalho(v, meta) {
   }
 }
 
-// ── Política 1.2 · textos legíveis (os códigos vêm do servidor; a tela não calcula nem define limiares) ──
+// ── Política 1.2 · textos legíveis (os códigos e as faixas vêm do servidor; a tela não calcula margem nem define limiar) ──
 const pct = v => (v === null || v === undefined) ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 const CONF = { HIGH: 'alta', MEDIUM: 'média', LOW: 'baixa', UNKNOWN: 'desconhecida', UNAVAILABLE: 'indisponível' };
+const TIER = { NEGATIVE: 'Margem negativa', LOW: 'Margem baixa', MID: 'Margem intermediária', HIGH: 'Margem alta', UNAVAILABLE: 'Margem indisponível' };
+const CLASSE = { ALTA: 'ALTA', MEDIA: 'MÉDIA', BAIXA: 'BAIXA', ATENCAO: 'ATENÇÃO' };
+const CLASSE_MOTIVO = { MARGIN_NEGATIVE: 'margem negativa', MARGIN_UNAVAILABLE: 'margem indisponível', COST_CONFIDENCE_LOW: 'custo de baixa confiança', COST_CONFIDENCE_UNKNOWN: 'custo desconhecido', MARGIN_HIGH: 'margem alta', RETURN_HIGH: 'retorno alto',
+  MARGIN_LOW: 'margem baixa', RETURN_LOW: 'retorno baixo', MARGIN_MID: 'margem intermediária', RETURN_MID: 'retorno intermediário' };
 const MOTIVO_CUSTO = { MATCHES_LAST_PURCHASE_LANDED: 'bate com a última compra (frete, impostos e desconto rateados)', MATCHES_OLD_PURCHASE_LANDED: 'bate com a última compra, que é antiga', SMALL_DIVERGENCE_FROM_LAST_PURCHASE_LANDED: 'pequena diferença para a última compra',
-  LARGE_DIVERGENCE_FROM_LAST_PURCHASE_LANDED: 'grande diferença para a última compra', NO_PURCHASE_REFERENCE: 'sem compra de referência', PURCHASE_HEADER_DATA_MISSING: 'dados da compra ausentes (executar sincronização completa)',
+  LARGE_DIVERGENCE_FROM_LAST_PURCHASE_LANDED: 'grande diferença para a última compra', NO_PURCHASE_REFERENCE: 'sem compra de referência', PURCHASE_HEADER_DATA_MISSING: 'dados da compra ausentes (aguardando sincronização completa)',
   IMPORTED_COMPONENTS_UNPROVEN: 'importado: custos de importação não comprovados', COST_MISSING: 'sem custo cadastrado', COST_ZERO: 'custo zerado' };
-const ORIGEM_PRECO = { REALIZED_90D: 'preço médio realizado nos últimos 90 dias', REGISTERED_FALLBACK: 'preço cadastrado (sem venda nos últimos 90 dias)', UNAVAILABLE: 'indisponível' };
 const DICAS = { COST_MAY_BE_WRONG_OR_STALE: 'o custo pode estar errado ou desatualizado', REGISTERED_PRICE_BELOW_COST: 'o preço cadastrado está abaixo do custo', DEEP_DISCOUNT: 'desconto médio alto', PROFITABLE_AT_SALE_COST_COST_ROSE_SINCE: 'lucrava ao custo da época; o custo subiu depois', SOLD_BELOW_COST: 'vendido abaixo do custo' };
-const SINAIS = { NEGATIVE_MARGIN: ['MARGEM NEGATIVA', 'neg'], MISSING_COST: ['SEM CUSTO', 'prot'], LOW_COST_CONFIDENCE: ['CUSTO DE BAIXA CONFIANÇA', 'at'], HIGH_DEMAND_LOW_MARGIN: ['ALTA DEMANDA · MARGEM BAIXA', 'at'], HIGH_DEMAND_HIGH_MARGIN: ['ALTA DEMANDA · MARGEM ALTA', 'novo'], LOW_DEMAND_HIGH_MARGIN: ['BAIXA DEMANDA · MARGEM ALTA', 'at'] };
-const SINAIS_NA_LISTA = ['NEGATIVE_MARGIN', 'MISSING_COST', 'LOW_COST_CONFIDENCE', 'HIGH_DEMAND_LOW_MARGIN'];   // a lista mostra só os que pedem atenção; os demais ficam no detalhe
-const MATRIZ = { BUY_STRONG: 'forte candidata: alta necessidade e margem alta', BUY_NEED: 'comprar por necessidade', BUY_NEED_FLAG_MARGIN: 'comprar por necessidade — atenção à margem', BUY_NEED_MARGIN_UNKNOWN: 'comprar por necessidade — margem indisponível',
-  BUY_LOW_NEED: 'baixa necessidade', OBSERVE_DEMAND_COVERAGE: 'margem alta com baixa necessidade — observar demanda e cobertura', LOW_CAPITAL_ATTRACTIVENESS: 'baixa necessidade e margem baixa — pouco atrativo para o capital', BUY_LOW_NEED_MARGIN_UNKNOWN: 'baixa necessidade — margem indisponível' };
+// textos explicativos da matriz necessidade × rentabilidade (a regra é matemática, calculada no servidor; isto só descreve)
+const MATRIZ = { BUY_STRONG: 'Comprar — forte necessidade e bom retorno', BUY_NEED: 'Comprar por necessidade', BUY_NEED_FLAG_MARGIN: 'Compra necessária — margem baixa', BUY_NEED_MARGIN_UNKNOWN: 'Compra necessária — margem indisponível',
+  BUY_LOW_NEED: 'Baixa necessidade imediata', OBSERVE_DEMAND_COVERAGE: 'Bom retorno, mas sem necessidade imediata', LOW_CAPITAL_ATTRACTIVENESS: 'Baixa prioridade de capital', BUY_LOW_NEED_MARGIN_UNKNOWN: 'Baixa necessidade — margem indisponível' };
+const PRIO_TXT = { P1: 'P1 (curva A: ruptura ou estoque negativo com demanda)', P2: 'P2 (curva A abaixo do alvo de cobertura)', P3: 'P3 (curva B: ruptura ou estoque negativo com demanda)', P4: 'P4 (demais produtos com necessidade)' };
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+const RES = () => (estado.custos && estado.custos.resumo_financeiro) || null;
+const faixaTxt = () => { const t = (RES() || {}).thresholds || {}; return { baixa: t.margin_low_pct, alta: t.margin_high_pct }; };
 
 function montarResumoFin() {
   const box = document.getElementById('resumoFin');
-  const r = estado.custos && estado.custos.resumo_financeiro;
+  const r = RES();
   for (const id of ['fFin', 'fOrdem']) document.getElementById(id).hidden = !estado.finOn;
+  document.getElementById('tabRev').hidden = !estado.finOn; document.getElementById('tabOrc').hidden = !estado.finOn;
   if (!estado.finOn || !r || !r.purchase) { box.hidden = true; return; }
-  const p = r.purchase;
+  const p = r.purchase, t = r.thresholds || {}, mt = r.margin_tiers_suggested || {}, rv = r.review || {};
   const item = (k, v) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
-  box.innerHTML = `<div class="grade">${item('Capital necessário', brl(p.capital_cents))}${item('Receita potencial', brl(p.revenue_potential_cents))}${item('Lucro bruto potencial', brl(p.gross_profit_potential_cents))}${item('Margem ponderada da compra', pct(p.weighted_margin_pct))}${item('Retorno bruto sobre compra', pct(p.gross_return_on_capital === null ? null : p.gross_return_on_capital * 100))}</div>
-    <div class="nota"><b>Estimativas, não promessa.</b> Custo cadastrado no ERP e preço médio realizado nos últimos 90 dias (descontos incluídos); sem impostos sobre a venda, comissões e frete de entrega.
-    ${p.complete ? '' : `${fmt(p.unpriced_products)} produto(s) sem custo ficam fora destes totais. `}Margem ponderada = lucro total ÷ receita total, não média de percentuais.
-    Política ${esc(r.policy_version)} em avaliação: faixas de margem e de retorno ainda são propostas.</div>`;
+  const f = (k, n) => `<span class="f">${k} <b>${fmt(n)}</b></span>`;
+  box.innerHTML = `<div class="grade">${item('Capital necessário', brl(p.capital_cents))}${item('Receita potencial (estimada)', brl(p.revenue_potential_cents))}${item('Lucro bruto potencial (estimado)', brl(p.gross_profit_potential_cents))}${item('Margem agregada', pct(p.weighted_margin_pct))}${item('Retorno sobre a compra', pct(p.gross_return_on_capital === null ? null : p.gross_return_on_capital * 100))}</div>
+    <div class="faixas">Margem dos ${fmt(p.suggested_products)} produtos sugeridos: ${f('negativa', mt.NEGATIVE)}${f('baixa &lt;' + fmt(t.margin_low_pct) + '%', mt.LOW)}${f('intermediária', mt.MID)}${f('alta ≥' + fmt(t.margin_high_pct) + '%', mt.HIGH)}${mt.UNAVAILABLE ? f('indisponível', mt.UNAVAILABLE) : ''}</div>
+    ${rv.suggested_low_cost_confidence > 0 ? `<div class="aviso-conf">Alguns custos precisam de revisão antes da decisão final (${fmt(rv.suggested_low_cost_confidence)} produto(s) da compra sugerida com custo de baixa confiança ou ausente).</div>` : ''}
+    <div class="nota"><b>Valores estimados, não resultado garantido.</b> Custo cadastrado no ERP (parece ser o custo da última compra com frete e impostos; ainda não confirmado pelo ERP) e preço médio realizado em 90 dias; sem impostos sobre a venda, comissões e frete de entrega.
+    ${p.complete ? '' : `${fmt(p.unpriced_products)} produto(s) sem custo ficam fora destes totais. `}Margem agregada = lucro total ÷ receita total. Faixas de margem aprovadas para esta versão (origem: distribuição do catálogo em 2026-09), não são parâmetros contábeis.</div>`;
   box.hidden = false;
+  iniciarOrcamento();
+}
+
+// ── filtros / grupos de revisão (só igualdades com códigos do servidor) ──
+const classeDe = f => (f && f.decision && f.decision.class) || null;
+function passaFin(f, tipo) {
+  if (!f) return false;
+  const d = f.decision || {}, m = f.margin || {};
+  if (tipo.startsWith('cls_')) return d.class === tipo.slice(4);
+  switch (tipo) {
+    case 'neg': return m.negative === true;
+    case 'indisp': return m.status === 'UNAVAILABLE';
+    case 'alta': return d.margin_tier === 'HIGH';
+    case 'mid': return d.margin_tier === 'MID';
+    case 'baixa': return d.margin_tier === 'LOW';
+    case 'ret_alto': return d.attractiveness === 'HIGH';
+    case 'ret_baixo': return d.attractiveness === 'LOW';
+    case 'custo_incerto': return !f.cost || !(f.cost.unit_cents > 0) || f.cost.confidence === 'LOW' || f.cost.confidence === 'UNKNOWN';
+    default: return true;
+  }
+}
+const REV = [['neg', 'Margem negativa', f => f.margin && f.margin.negative === true], ['lowcost', 'Custo de baixa confiança', f => f.cost && f.cost.confidence === 'LOW'], ['nocost', 'Sem custo', f => !(f.cost && f.cost.unit_cents > 0)],
+  ['hdlm', 'Alta demanda + margem baixa', f => ((f.decision && f.decision.signals) || []).includes('HIGH_DEMAND_LOW_MARGIN')], ['fallback', 'Preço cadastrado (sem vendas em 90 d)', f => f.price && f.price.source === 'REGISTERED_FALLBACK']];
+const linhasRev = () => estado.linhas.filter(l => ((estado.custos && estado.custos.linhas) || {})[l.id]).concat(estado.revisao);   // (as linhas de Atenção sem custo liberado vêm pela revisão, sem duplicar)   // lista operacional com financeiro + produtos só-revisão
+function montarRevChips() {
+  const box = document.getElementById('revChips');
+  box.innerHTML = REV.map(([k, nome, fn]) => {
+    const todos = linhasRev().filter(l => estado.fin[l.id] && fn(estado.fin[l.id])), naCompra = todos.filter(l => l.qtd > 0).length;
+    return `<button data-rev="${k}" class="${estado.revGrupo === k ? 'sel' : ''}">${esc(nome)}<span class="n">${fmt(todos.length)}</span>${naCompra ? `<span class="fin-est"> · ${fmt(naCompra)} na compra</span>` : ''}</button>`;
+  }).join('') + `<label class="tog"><input type="checkbox" id="revSoSug"${estado.revSoSug ? ' checked' : ''}> Só itens da compra sugerida</label>` + (estado.custos && estado.custos.revisao_parcial ? '<span class="fin-est">Lista parcial: produtos só com preço cadastrado não foram listados (contagem no resumo).</span>' : '');
+  box.querySelectorAll('button[data-rev]').forEach(b => b.addEventListener('click', () => { estado.revGrupo = b.dataset.rev; render(); }));
+  const c = document.getElementById('revSoSug'); if (c) c.addEventListener('change', e => { estado.revSoSug = e.target.checked; render(); });
 }
 
 function filtrar() {
   const q = estado.busca.trim().toLowerCase();
-  const out = estado.linhas.filter(l => {
-    if (estado.aba === 'sug' ? !(l.qtd > 0) : l.qtd > 0) return false;
+  const grupo = estado.aba === 'rev' ? REV.find(g => g[0] === estado.revGrupo) : null;
+  const out = (grupo ? linhasRev() : estado.linhas).filter(l => {
+    if (estado.aba === 'sug' && !(l.qtd > 0)) return false;
+    if (estado.aba === 'aten' && l.qtd > 0) return false;
+    if (grupo) { const f = estado.fin[l.id]; if (!f || !grupo[2](f)) return false; if (estado.revSoSug && !(l.qtd > 0)) return false; }
     if (estado.prioridade && l.prioridade !== estado.prioridade) return false;
     if (estado.abc && l.abc !== estado.abc) return false;
     if (estado.novo && !l.novo_com_demanda) return false;
@@ -312,21 +402,6 @@ function filtrar() {
   });
   return estado.finOn && estado.ordem ? ordenarFin(out, estado.ordem) : out;
 }
-// filtros financeiros: só igualdades com as FAIXAS calculadas no servidor (nenhum limiar no navegador)
-function passaFin(f, tipo) {
-  if (!f) return false;
-  const d = f.decision || {}, m = f.margin || {};
-  switch (tipo) {
-    case 'neg': return m.negative === true;
-    case 'indisp': return m.status === 'UNAVAILABLE';
-    case 'alta': return d.margin_tier === 'HIGH';
-    case 'baixa': return d.margin_tier === 'LOW';
-    case 'ret_alto': return d.attractiveness === 'HIGH';
-    case 'ret_baixo': return d.attractiveness === 'LOW';
-    case 'custo_incerto': return !f.cost || !(f.cost.unit_cents > 0) || f.cost.confidence === 'LOW' || f.cost.confidence === 'UNKNOWN';
-    default: return true;
-  }
-}
 const CHAVE_ORDEM = { margem: f => num(f.unit && f.unit.margin_pct), lucro90: f => num(f.windows && f.windows['90'] ? f.windows['90'].profit_cents : f.gross_profit_90d_cents), capital: f => num(f.purchase && f.purchase.capital_cents),
   lucropot: f => num(f.purchase && f.purchase.profit_potential_cents), retorno: f => num(f.purchase && f.purchase.return_on_capital), eficiencia: f => num(f.purchase && f.purchase.efficiency) };
 function ordenarFin(lista, chave) {
@@ -334,47 +409,95 @@ function ordenarFin(lista, chave) {
   return lista.map((l, i) => ({ l, i, v: valor(l) })).sort((a, b) => (a.v === null) - (b.v === null) || (a.v !== null && b.v !== null ? b.v - a.v : 0) || a.i - b.i).map(x => x.l);   // sem valor vai para o fim; estável
 }
 
-function detalheFin(l, f) {
-  const c = f.cost || {}, pr = f.price || {}, u = f.unit || {}, m = f.margin || {}, p = f.purchase, w = f.windows || {}, d = f.decision || {};
-  const cel = (k, v) => `<div><span>${k}</span>${v}</div>`;
-  const origemCusto = c.unit_cents > 0 ? `${brl(c.unit_cents)} · custo cadastrado no ERP · confiança ${CONF[c.confidence] || '—'} (${esc(MOTIVO_CUSTO[c.reason] || c.reason || '—')})` : `indisponível (${esc(MOTIVO_CUSTO[c.reason] || c.reason || 'sem custo')})`;
+// ── explicação determinística (sem IA): monta frases a partir dos códigos e números já calculados ──
+function explicar(l, f) {
+  const d = f.decision || {}, u = f.unit || {}, m = f.margin || {}, c = f.cost || {}, p = f.purchase, faixa = faixaTxt(), partes = [];
+  if (l.qtd > 0) partes.push(`${PRIO_TXT[l.prioridade] || esc(l.prioridade)} — ${fmt(l.qtd)} un sugeridas pela política de compras.`);
+  else partes.push('Sem sugestão de compra pela política de compras.' + (l.cobertura_dias !== null && l.cobertura_dias !== undefined ? ` Cobertura atual de ${fmt(l.cobertura_dias)} dias.` : ''));
+  if (m.status !== 'AVAILABLE') partes.push(`Margem indisponível (${MOTIVO_CUSTO[m.reason] || (m.reason === 'PRICE_UNAVAILABLE' ? 'sem preço de referência' : 'sem custo confiável')}).`);
+  else if (d.margin_tier === 'NEGATIVE') partes.push(`Margem negativa (${pct(u.margin_pct)}): o custo atual supera o preço de referência. Revisar rentabilidade antes de decidir; nada é bloqueado automaticamente.`);
+  else if (d.margin_tier === 'LOW') partes.push(`Margem de ${pct(u.margin_pct)}, abaixo da faixa intermediária (${fmt(faixa.baixa)}% a ${fmt(faixa.alta)}%).`);
+  else if (d.margin_tier === 'HIGH') partes.push(`Margem de ${pct(u.margin_pct)}, acima de ${fmt(faixa.alta)}% (faixa alta).`);
+  else partes.push(`Margem de ${pct(u.margin_pct)}, na faixa intermediária.`);
+  if (p && p.return_on_capital !== undefined && m.status === 'AVAILABLE') partes.push(`Retorno bruto estimado de ${pct(p.return_on_capital * 100)} sobre o capital da compra.`);
+  if (l.qtd > 0 && (d.matrix === 'BUY_NEED_FLAG_MARGIN' || d.matrix === 'BUY_NEED_MARGIN_UNKNOWN')) partes.push('A compra continua recomendada por necessidade operacional.');
+  if (d.matrix === 'OBSERVE_DEMAND_COVERAGE') partes.push('O retorno é bom, mas a cobertura atual reduz a urgência.');
+  if (d.matrix === 'LOW_CAPITAL_ATTRACTIVENESS') partes.push('Com pouca necessidade e margem baixa, o capital rende mais em outros itens.');
+  if (c.confidence === 'LOW' || c.confidence === 'UNKNOWN') partes.push(`Custo de confiança ${CONF[c.confidence]}: ${MOTIVO_CUSTO[c.reason] || 'verificar cadastro'}.`);
+  if (f.price && f.price.source === 'REGISTERED_FALLBACK') partes.push('Preço cadastrado (sem vendas suficientes em 90 dias), não preço médio vendido.');
+  return partes.join(' ');
+}
+
+function detalheFin(l, f, tecnicos = []) {
+  const c = f.cost || {}, pr = f.price || {}, u = f.unit || {}, m = f.margin || {}, p = f.purchase, w = f.windows || {}, d = f.decision || {}, v = l.vendas || {};
+  const cel = (k, x) => `<div><span>${k}</span>${x}</div>`;
+  const origemCusto = c.unit_cents > 0 ? `${brl(c.unit_cents)} · cadastrado no ERP` : `indisponível (${esc(MOTIVO_CUSTO[c.reason] || 'sem custo')})`;
+  const confCusto = c.unit_cents > 0 ? `${CONF[c.confidence] || '—'} — ${esc(MOTIVO_CUSTO[c.reason] || c.reason || '—')}` : '—';
   const ref = c.reference_cents > 0 ? `${brl(c.reference_cents)} na última compra${c.reference_age_days !== undefined ? ` (há ${fmt(c.reference_age_days)} dias)` : ''}${c.divergence_bps !== undefined ? ` · diferença ${pct(c.divergence_bps / 100)}` : ''}` : '—';
+  const precoTxt = pr.unit_cents > 0 ? `${brl(pr.unit_cents)} · ${pr.source === 'REGISTERED_FALLBACK' ? '<b>Preço cadastrado — sem vendas suficientes em 90d</b>' : 'Preço médio realizado 90d' + (pr.lines !== undefined ? ` (${fmt(pr.lines)} venda(s))` : '')}` : 'indisponível';
   const janela = k => (w[k] && w[k].profit_cents !== undefined) ? brl(w[k].profit_cents) : (w[k] && w[k].lines === 0 ? 'sem vendas' : '—');
   const dicas = (m.hints || []).map(h => DICAS[h] || h);
-  const sinais = (d.signals || []).map(sg => (SINAIS[sg] ? SINAIS[sg][0] : sg));
-  return `<details class="fin"><summary>Financeiro</summary><div class="grade-fin">
-    ${cel('Custo unitário', origemCusto)}${cel('Referência do custo', ref)}
-    ${cel('Preço médio realizado', pr.unit_cents > 0 ? `${brl(pr.unit_cents)} · ${esc(ORIGEM_PRECO[pr.source] || pr.source)}${pr.lines !== undefined ? ` · ${fmt(pr.lines)} venda(s)` : ''}` : 'indisponível')}${cel('Desconto médio (90 d)', pr.discount_bps !== undefined ? pct(pr.discount_bps / 100) : '—')}
-    ${cel('Lucro bruto unitário', u.profit_cents !== undefined ? brl(u.profit_cents) : '—')}${cel('Margem bruta', m.status === 'AVAILABLE' ? `${pct(u.margin_pct)} · confiança ${CONF[m.confidence] || '—'}` : 'indisponível')}
-    ${cel('Markup realizado', u.markup !== undefined ? fmt(u.markup) + '×' : '—')}${cel('Lucro bruto estimado 30 / 60 / 90 dias', `${janela('30')} / ${janela('60')} / ${janela('90')}`)}
-    ${p ? `${cel('Capital necessário', brl(p.capital_cents))}${cel('Receita potencial', brl(p.revenue_potential_cents))}${cel('Lucro bruto potencial', brl(p.profit_potential_cents))}${cel('Retorno bruto sobre compra', p.return_on_capital !== undefined ? pct(p.return_on_capital * 100) : '—')}${cel('Eficiência do capital', p.efficiency !== undefined ? `${fmt(p.efficiency)} (retorno por 30 dias de capital imobilizado)` : '—')}` : ''}
-    ${d.matrix ? cel('Leitura', esc(MATRIZ[d.matrix] || d.matrix)) : ''}${sinais.length ? cel('Sinais', sinais.map(esc).join(' · ')) : ''}${dicas.length ? cel('Margem negativa — possíveis causas', dicas.map(esc).join(' · ')) : ''}
-  </div><div class="aviso-fin">Estimativas. O lucro bruto 30/60/90 d usa o custo registrado no ERP na data de cada venda; o potencial da compra usa o custo atual.</div></details>`;
+  const motivos = (d.class_reasons || []).map(k => CLASSE_MOTIVO[k] || k);
+  return `<details class="fin"><summary>Detalhe e explicação</summary>
+    <div class="sec"><h4>Explicação</h4><div class="expl">${esc(explicar(l, f))}</div></div>
+    <div class="sec"><h4>Compra</h4><div class="grade-fin">${cel('Estoque', fmt(l.estoque))}${cel('Vendas 30 / 60 / 90 dias', `${fmt(v.d30)} / ${fmt(v.d60)} / ${fmt(v.d90)}`)}${cel('Cobertura', l.cobertura_dias !== null && l.cobertura_dias !== undefined ? fmt(l.cobertura_dias) + ' dias' : '—')}${cel('Curva ABC', esc(l.abc))}${cel('Prioridade', esc(l.prioridade || '—'))}${cel('Quantidade sugerida', l.qtd > 0 ? fmt(l.qtd) + ' un' : 'sem sugestão')}</div></div>
+    <div class="sec"><h4>Rentabilidade</h4><div class="grade-fin">
+      ${cel('Custo unitário', origemCusto)}${cel('Confiança do custo', confCusto)}${cel('Referência do custo', ref)}
+      ${cel('Preço de referência', precoTxt)}${cel('Desconto médio (90 d)', pr.discount_bps !== undefined ? pct(pr.discount_bps / 100) : '—')}
+      ${cel('Lucro bruto unitário', u.profit_cents !== undefined ? brl(u.profit_cents) : '—')}${cel('Margem (lucro ÷ preço)', m.status === 'AVAILABLE' ? `${pct(u.margin_pct)} · ${esc(TIER[d.margin_tier] || '')}` : 'indisponível')}${cel('Markup (preço ÷ custo)', u.markup !== undefined ? fmt(u.markup) + '×' : '—')}
+      ${cel('Confiança da margem', CONF[m.confidence] || '—')}
+      ${p ? `${cel('Capital necessário', brl(p.capital_cents))}${cel('Receita potencial', brl(p.revenue_potential_cents))}${cel('Lucro potencial da reposição', brl(p.profit_potential_cents))}${cel('Retorno bruto', p.return_on_capital !== undefined ? pct(p.return_on_capital * 100) : '—')}${cel('Eficiência do capital', p.efficiency !== undefined ? `${fmt(p.efficiency)} (retorno por 30 dias de capital imobilizado)` : '—')}` : ''}
+      ${cel('Lucro histórico 30 / 60 / 90 dias', `${janela('30')} / ${janela('60')} / ${janela('90')}`)}
+      ${d.matrix ? cel('Leitura', esc(MATRIZ[d.matrix] || d.matrix)) : ''}${d.class ? cel('Classificação financeira', `${esc(CLASSE[d.class])}${motivos.length ? ' — ' + motivos.map(esc).join(', ') : ''}`) : ''}${dicas.length ? cel('Margem negativa — possíveis causas', dicas.map(esc).join(' · ')) : ''}
+    </div></div>
+    ${tecnicos.length ? `<div class="sec"><h4>Códigos da política de compras (técnico)</h4>${tecnicos.map(m => `<code class="cod">${esc(m)}</code>`).join('')}</div>` : ''}
+    <div class="aviso-fin">Estimativas. <b>Lucro histórico</b> = vendas realizadas com o custo da época registrado no ERP. <b>Lucro potencial da reposição</b> = quantidade sugerida vendida ao preço de referência, com o custo atual.</div></details>`;
 }
 
 function render() {
   const t0 = performance.now();
+  const aba = estado.aba, orc = aba === 'orc';
+  document.getElementById('painelOrc').hidden = !orc;
+  document.getElementById('revChips').hidden = aba !== 'rev';
+  for (const id of ['lista', 'contagem', 'barraFiltros']) document.getElementById(id).style.display = orc ? 'none' : '';
+  document.getElementById('chips').style.display = (aba === 'rev' || orc) ? 'none' : '';   // P1–P4 filtram só Sugestões/Atenção
+  if (aba === 'rev') montarRevChips();
+  if (orc) { atualizarOrcamento(); window.__comprasPerf.renders.push(Math.round((performance.now() - t0) * 10) / 10); return; }
   const itens = filtrar();
   const comCusto = !!estado.custos;
   const fin = estado.finOn;
   const cls = 'row' + (fin ? ' fin-on' : comCusto ? ' custo-on' : '');
-  const cab = `<div class="${cls} head"><div>Prior.</div><div>Produto</div><div class="num">Estoque</div><div class="num">Vendas 30/60/90</div><div>Cobertura</div><div>ABC</div><div class="num">Sugestão</div>${fin ? '<div class="num">Capital necessário</div><div class="num">Margem</div><div class="num">Lucro potencial</div><div class="num">Retorno</div>' : comCusto ? '<div class="num">Custo indicativo</div>' : ''}</div>`;
+  const cab = fin ? `<div class="${cls} head"><div>Prior.</div><div>Produto</div><div class="num">Qtd</div><div class="num">Capital</div><div class="num">Margem</div><div class="num">Lucro potencial</div><div class="num">Retorno</div><div>Sinal</div></div>`
+    : `<div class="${cls} head"><div>Prior.</div><div>Produto</div><div class="num">Estoque</div><div class="num">Vendas 30/60/90</div><div>Cobertura</div><div>ABC</div><div class="num">Sugestão</div>${comCusto ? '<div class="num">Custo indicativo</div>' : ''}</div>`;
+  const grupoRev = aba === 'rev' ? estado.revGrupo : null;
   const linha = l => {
     const cob = COB[l.cobertura_estado] || [l.cobertura_estado || '—', ''];
     const ja = new Set([l.novo_protegido ? 'NEW_PRODUCT_PROTECTED' : '', l.estoque_negativo ? 'NEGATIVE_STOCK' : '']);
     const f = fin ? estado.fin[l.id] : null;
-    const selosFin = f ? (f.decision && f.decision.signals || []).filter(sg => SINAIS_NA_LISTA.includes(sg) && SINAIS[sg]).map(sg => `<span class="bd ${SINAIS[sg][1]}">${esc(SINAIS[sg][0])}</span>`) : [];
     const b = [l.novo_com_demanda ? '<span class="bd novo">NOVO COM DEMANDA COMPROVADA</span>' : '', l.novo_protegido ? '<span class="bd prot">PRODUTO NOVO · EM PROTEÇÃO</span>' : '', l.estoque_negativo ? '<span class="bd neg">ESTOQUE NEGATIVO</span>' : '',
-      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k)).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`), ...selosFin].join('');
+      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k) && !(fin && (k === 'NO_COST'))).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`)].join('');
     const porque = [...(l.motivos || l.sem_sugestao_por || []), ...(l.motivos ? [] : (l.attention_reasons || []))];
     const ult = !(l.qtd > 0) && l.ultima_venda ? ' · última venda ' + esc(l.ultima_venda.split('-').reverse().join('/')) : '';
     const k = comCusto ? (estado.custos.linhas || {})[l.id] : null;
     const v = l.vendas || {};
-    const p = f && f.purchase, mg = f && f.margin, u = f && f.unit;
-    const celFin = fin ? `<div class="num"><span class="lbl">Capital</span>${p ? brl(p.capital_cents) : '—'}</div>
-      <div class="num"><span class="lbl">Margem</span>${mg && mg.status === 'AVAILABLE' ? `<span class="${mg.negative ? 'margem-neg' : (f.decision && f.decision.margin_tier === 'HIGH' ? 'margem-alta' : '')}">${pct(u.margin_pct)}</span><div class="fin-est" title="confiança da margem">conf. ${CONF[mg.confidence] || '—'}</div>` : '<span title="sem custo confiável para calcular">—</span>'}</div>
+    if (fin) {
+      const p = f && f.purchase, mg = f && f.margin, u = f && f.unit, d = (f && f.decision) || {};
+      const fallback = f && f.price && f.price.source === 'REGISTERED_FALLBACK';
+      const nota = grupoRev === 'lowcost' || grupoRev === 'nocost' ? `Custo: ${esc(MOTIVO_CUSTO[(f.cost || {}).reason] || '—')}` : grupoRev === 'fallback' ? 'Preço cadastrado (sem vendas em 90 d)' : '';
+      const motivosCl = (d.class_reasons || []).map(x => CLASSE_MOTIVO[x] || x).join(', ');
+      return `<div class="${cls}">
+      <div class="c-pr"><span class="pr ${l.prioridade || 'none'}">${l.prioridade || '—'}</span></div>
+      <div class="prod"><div class="nome">${esc(l.nome || 'Produto ' + l.id)}</div><div class="meta">${esc(l.codigo || l.id)}${l.grupo ? ' · ' + esc(l.grupo) : ''}${ult}</div>
+        <div class="st">Estoque ${fmt(l.estoque)} · cobertura ${l.cobertura_dias !== null && l.cobertura_dias !== undefined ? fmt(l.cobertura_dias) + ' d' : '—'} (${cob[0]}) · ABC ${esc(l.abc)}${nota ? ' · ' + nota : ''}</div>${b ? `<div class="badges">${b}</div>` : ''}</div>
+      <div class="num"><span class="lbl">Qtd</span><span class="qtd ${l.qtd > 0 ? '' : 'zero'}">${l.qtd > 0 ? fmt(l.qtd) + ' un' : 'sem sugestão'}</span></div>
+      <div class="num"><span class="lbl">Capital</span>${p && p.capital_cents !== undefined ? brl(p.capital_cents) : '—'}</div>
+      <div class="num"><span class="lbl">Margem</span>${mg && mg.status === 'AVAILABLE' ? `<span class="${mg.negative ? 'margem-neg' : (d.margin_tier === 'HIGH' ? 'margem-alta' : '')}" title="${esc(TIER[d.margin_tier] || '')}">${pct(u.margin_pct)}</span><div class="fin-est">${fallback ? 'preço cadastrado · ' : ''}conf. ${CONF[mg.confidence] || '—'}</div>` : '<span title="sem custo confiável para calcular">—</span>'}</div>
       <div class="num"><span class="lbl">Lucro potencial</span>${p && p.profit_potential_cents !== undefined ? brl(p.profit_potential_cents) : '—'}</div>
-      <div class="num"><span class="lbl">Retorno</span>${p && p.return_on_capital !== undefined ? pct(p.return_on_capital * 100) : '—'}</div>` : '';
+      <div class="num"><span class="lbl">Retorno</span>${p && p.return_on_capital !== undefined ? pct(p.return_on_capital * 100) : '—'}</div>
+      <div><span class="lbl">Sinal</span>${d.class ? `<span class="cl ${esc(d.class)}" title="${esc((MATRIZ[d.matrix] ? MATRIZ[d.matrix] + ' · ' : '') + motivosCl)}">${esc(CLASSE[d.class])}</span>${d.class === 'ATENCAO' && (d.class_reasons || [])[0] ? `<div class="fin-est">${esc(CLASSE_MOTIVO[d.class_reasons[0]] || '')}</div>` : ''}` : '—'}</div>
+      ${f ? detalheFin(l, f, [...new Set([...porque, ...(!(l.qtd > 0) && l.sem_sugestao_por && !l.sem_sugestao_por.length ? ['ESTOQUE_COBRE_O_ALVO'] : [])])]) : ''}
+    </div>`;
+    }
     return `<div class="${cls}">
       <div class="c-pr"><span class="pr ${l.prioridade || 'none'}">${l.prioridade || '—'}</span></div>
       <div class="prod"><div class="nome">${esc(l.nome || 'Produto ' + l.id)}</div><div class="meta">${esc(l.codigo || l.id)}${l.grupo ? ' · ' + esc(l.grupo) : ''}${ult}</div>${b ? `<div class="badges">${b}</div>` : ''}</div>
@@ -383,18 +506,68 @@ function render() {
       <div><span class="lbl">Cobertura</span><span class="cob-${cob[1]}">${l.cobertura_dias !== null && l.cobertura_dias !== undefined ? fmt(l.cobertura_dias) + ' d · ' : ''}${cob[0]}</span></div>
       <div><span class="lbl">ABC</span>${esc(l.abc)}</div>
       <div class="num"><span class="lbl">Sugestão</span><span class="qtd ${l.qtd > 0 ? '' : 'zero'}">${l.qtd > 0 ? fmt(l.qtd) + ' un' : 'sem sugestão'}</span>${l.alvo_dias ? `<div class="meta" style="font-size:.68rem;color:var(--muted)">alvo ${l.alvo_dias} d</div>` : ''}</div>
-      ${fin ? celFin : comCusto ? `<div class="num"><span class="lbl">Custo</span>${k ? brl(k.custo_cadastrado_cents) + (k.valor_sugestao_custo_conhecido_cents ? `<div style="font-size:.68rem;color:var(--muted)">sugestão ${brl(k.valor_sugestao_custo_conhecido_cents)}</div>` : '') : '—'}</div>` : ''}
+      ${comCusto ? `<div class="num"><span class="lbl">Custo</span>${k ? brl(k.custo_cadastrado_cents) + (k.valor_sugestao_custo_conhecido_cents ? `<div style="font-size:.68rem;color:var(--muted)">sugestão ${brl(k.valor_sugestao_custo_conhecido_cents)}</div>` : '') : '—'}</div>` : ''}
       <details class="mot"><summary>Por quê?</summary>${[...new Set(porque)].map(m => `<code>${esc(m)}</code>`).join('')}${!(l.qtd > 0) && l.sem_sugestao_por && !l.sem_sugestao_por.length ? '<code>ESTOQUE_COBRE_O_ALVO</code>' : ''}</details>
-      ${f ? detalheFin(l, f) : ''}
     </div>`;
   };
   document.getElementById('lista').innerHTML = itens.length ? cab + itens.map(linha).join('') : `<div class="vazio">Nenhum item com os filtros atuais.</div>`;
   const un = itens.reduce((t, l) => t + (l.qtd || 0), 0);
-  const capF = fin && estado.aba === 'sug' ? itens.reduce((t, l) => { const f = estado.fin[l.id]; return f && f.purchase && f.purchase.capital_cents !== undefined ? t + f.purchase.capital_cents : t; }, 0) : null;
-  const lucF = fin && estado.aba === 'sug' ? itens.reduce((t, l) => { const f = estado.fin[l.id]; return f && f.purchase && f.purchase.profit_potential_cents !== undefined ? t + f.purchase.profit_potential_cents : t; }, 0) : null;
-  document.getElementById('contagem').textContent = `${itens.length} produto(s)` + (estado.aba === 'sug' ? ` · ${fmt(un)} unidade(s) sugerida(s)` : '') + (capF !== null ? ` · capital ${brl(capF)} · lucro bruto potencial ${brl(lucF)} (estimativa, itens com custo)` : '') + (comCusto ? ' · custo indicativo (cadastrado no ERP, confiança baixa)' : '');
+  const somaF = campo => itens.reduce((t, l) => { const f = estado.fin[l.id]; return f && f.purchase && f.purchase[campo] !== undefined ? t + f.purchase[campo] : t; }, 0);
+  const tot = fin && aba === 'sug' ? ` · capital ${brl(somaF('capital_cents'))} · lucro bruto potencial ${brl(somaF('profit_potential_cents'))} (estimativa, itens com custo)` : '';
+  document.getElementById('contagem').textContent = `${itens.length} produto(s)` + (aba === 'sug' ? ` · ${fmt(un)} unidade(s) sugerida(s)` : '') + tot + (comCusto && !fin ? ' · custo indicativo (cadastrado no ERP, confiança baixa)' : '');
   document.querySelectorAll('.chip').forEach(b => b.classList.toggle('sel', b.dataset.p === estado.prioridade));
   window.__comprasPerf.renders.push(Math.round((performance.now() - t0) * 10) / 10);
+}
+
+// ── Planejar orçamento: simulação LOCAL (mesmo módulo do servidor); não cria pedido, não grava nada ──
+const brlTxt = c => brl(c);
+function itensOrcamento() {
+  return estado.linhas.filter(l => l.qtd > 0).map(l => { const f = estado.fin[l.id] || {}, c = f.cost || {}, p = f.price || {}, pu = f.purchase || {};
+    return { id: String(l.id), name: l.nome, priority: l.prioridade, qty: l.qtd, cost_cents: c.unit_cents > 0 ? c.unit_cents : null, price_cents: p.unit_cents > 0 ? p.unit_cents : null, velocity: pu.velocity || 0, efficiency: pu.efficiency === undefined ? null : pu.efficiency }; });
+}
+function lerReais(txt) {
+  const t = String(txt || '').replace(/[^\d.,]/g, '');
+  if (!t) return null;
+  const n = t.includes(',') ? Number(t.replace(/\./g, '').replace(',', '.')) : /^\d{1,3}(\.\d{3})+$/.test(t) ? Number(t.replace(/\./g, '')) : Number(t);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+}
+function iniciarOrcamento() {
+  const box = document.getElementById('painelOrc'), r = RES();
+  if (!r || !r.simulator || !window.ComprasSimulador) { box.innerHTML = '<div class="vazio">Simulador indisponível nesta versão.</div>'; return; }
+  const presets = [5000, 10000, 20000, 30000, 50000];
+  box.innerHTML = `<h2>Planejar orçamento</h2><div class="orc-info">Quanto você tem disponível para comprar? A simulação distribui o valor entre os produtos sugeridos: primeiro cobre ${fmt(r.simulator.p1_floor_days)} dias de demanda dos P1 e, depois, segue a prioridade operacional e o retorno. Não cria pedido, não altera sugestões, estoque nem política.</div>
+    <div class="ctl" id="orcCtl">${presets.map(v => `<button data-v="${v}">${brl(v * 100)}</button>`).join('')}<input id="orcValor" inputmode="decimal" placeholder="Outro valor (R$)" aria-label="Orçamento em reais" autocomplete="off"></div><div class="orc-res" id="orcRes"></div>`;
+  box.querySelectorAll('#orcCtl button').forEach(b => b.addEventListener('click', () => { estado.orcValor = Number(b.dataset.v); document.getElementById('orcValor').value = ''; atualizarOrcamento(); }));
+  document.getElementById('orcValor').addEventListener('input', e => { const c = lerReais(e.target.value); if (c !== null) { estado.orcValor = c / 100; } estado.orcInvalido = c === null && e.target.value.trim() !== ''; atualizarOrcamento(); });
+}
+function atualizarOrcamento() {
+  const res = document.getElementById('orcRes'), r = RES();
+  if (!res || !r || !r.simulator || !window.ComprasSimulador) return;
+  document.querySelectorAll('#orcCtl button').forEach(b => b.classList.toggle('sel', Number(b.dataset.v) === estado.orcValor && !document.getElementById('orcValor').value));
+  if (estado.orcInvalido) { res.innerHTML = '<div class="orc-alerta">Valor inválido. Informe o orçamento em reais (ex.: 12500 ou 12.500,50).</div>'; return; }
+  const cents = Math.round(estado.orcValor * 100), itens = itensOrcamento();
+  const s = window.ComprasSimulador.simular(itens, cents, r.simulator.strategy, r.simulator);
+  const nome = new Map(itens.map(i => [i.id, i.name]));
+  const item = (k, v) => `<div><div class="k">${k}</div><div class="v">${v}</div></div>`;
+  const p1 = s.p1, fu = s.full;
+  const alerts = [];
+  if (s.alerts.includes('P1_FLOOR_INSUFFICIENT')) alerts.push(`Orçamento insuficiente para garantir ${fmt(r.simulator.p1_floor_days)} dias de cobertura de todos os P1.`);
+  if (s.unbudgeted_no_cost.length) alerts.push(`${fmt(s.unbudgeted_no_cost.length)} produto(s) sugerido(s) sem custo ficam fora da simulação e precisam de decisão manual.`);
+  const nP1Fora = s.by_priority.P1 ? s.by_priority.P1.products_unfunded : 0;
+  const p1Fora = itens.filter(i => i.priority === 'P1' && i.cost_cents > 0 && !s.items.some(a => a.id === i.id));
+  const linhaC = (k, a, b, pc) => `<tr><td>${k}</td><td>${a}</td><td>${b}</td><td>${pc === null ? '—' : pct(pc)}</td></tr>`;
+  const razao = (a, b) => (b > 0 ? a * 100 / b : null);
+  res.innerHTML = `${alerts.map(a => `<div class="orc-alerta">${esc(a)}</div>`).join('')}
+    <div class="grade">${item('Orçamento informado', brl(s.budget_cents))}${item('Capital utilizado', brl(s.spent_cents))}${item('Saldo', brl(s.left_cents))}${item('Produtos contemplados', `${fmt(s.products_funded)} de ${fmt(fu.products)}`)}${item('Unidades', `${fmt(s.units_funded)} de ${fmt(fu.units)}`)}
+      ${item('P1 contemplados', `${fmt(p1.funded)} de ${fmt(p1.products_with_cost)}`)}${item('P1 não contemplados', fmt(p1.unfunded))}${item('Receita potencial (estimada)', brl(s.revenue_potential_cents))}${item('Lucro bruto potencial (estimado)', brl(s.gross_profit_potential_cents))}${item('Margem agregada', pct(s.gross_margin_pct))}${item('Retorno bruto sobre capital', pct(s.gross_return_on_capital === null ? null : s.gross_return_on_capital * 100))}</div>
+    <div class="orc-info">Capital mínimo para cobrir ${fmt(r.simulator.p1_floor_days)} dias de todos os P1: <b>${brl(p1.minimum_capital_floor_cents)}</b> · capital total dos P1: <b>${brl(p1.total_capital_cents)}</b>. Com este orçamento, ${fmt(p1.floor_covered)} de ${fmt(p1.products_with_cost)} P1 atingem a cobertura mínima.${p1Fora.length ? `<details><summary>P1 não contemplados (${fmt(nP1Fora)})</summary>${p1Fora.map(i => esc(i.name)).join(' · ')}</details>` : ''}</div>
+    <div class="comp"><table><thead><tr><th>Comparação</th><th>Compra completa sugerida</th><th>Com seu orçamento</th><th>Preservado</th></tr></thead><tbody>
+      ${linhaC('Capital', brl(fu.capital_cents), brl(s.spent_cents), razao(s.spent_cents, fu.capital_cents))}${linhaC('Produtos', fmt(fu.products), fmt(s.products_funded), razao(s.products_funded, fu.products))}${linhaC('Unidades', fmt(fu.units), fmt(s.units_funded), razao(s.units_funded, fu.units))}
+      ${linhaC('Receita potencial', brl(fu.revenue_potential_cents), brl(s.revenue_potential_cents), razao(s.revenue_potential_cents, fu.revenue_potential_cents))}${linhaC('Lucro bruto potencial', brl(fu.gross_profit_potential_cents), brl(s.gross_profit_potential_cents), razao(s.gross_profit_potential_cents, fu.gross_profit_potential_cents))}
+      ${linhaC('Margem agregada', pct(fu.gross_margin_pct), pct(s.gross_margin_pct), null)}${linhaC('Retorno bruto', pct(fu.gross_return_on_capital === null ? null : fu.gross_return_on_capital * 100), pct(s.gross_return_on_capital === null ? null : s.gross_return_on_capital * 100), null)}</tbody></table></div>
+    <details class="fin" style="margin-top:.8rem"><summary>Produtos contemplados (${fmt(s.products_funded)})</summary><div class="rolagem"><table><thead><tr><th>Produto</th><th>Prior.</th><th>Qtd simulada / sugerida</th><th>Capital</th></tr></thead><tbody>
+      ${s.items.map(a => `<tr><td>${esc(nome.get(a.id) || a.id)}</td><td>${esc(a.priority)}</td><td>${fmt(a.qty_1_2)} / ${fmt(a.qty_1_1)}</td><td>${brl(a.capital_cents)}</td></tr>`).join('')}</tbody></table></div></details>
+    <div class="aviso-fin" style="margin-top:.6rem;font-size:.72rem;color:var(--muted)">Simulação com os valores estimados desta tela. A quantidade nunca passa da sugerida pela política de compras e o gasto nunca passa do orçamento.</div>`;
 }
 
 function sincronizarAbas() { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('sel', b.dataset.aba === estado.aba)); document.getElementById('fMotivo').hidden = estado.aba !== 'aten'; }

@@ -156,9 +156,10 @@ const POLITICA_1_2 = congelar(JSON.parse(JSON.stringify({
     },
     efficiency: { base_days: 30 },                                         // EFICIENCIA_DO_CAPITAL = retorno bruto por 30 dias de capital imobilizado
     decision: { high_need_priorities: ['P1', 'P2', 'P3'], priorities: ['P1', 'P2', 'P3', 'P4'], signal_names: ['NEGATIVE_MARGIN', 'MISSING_COST', 'LOW_COST_CONFIDENCE', 'HIGH_DEMAND_LOW_MARGIN', 'HIGH_DEMAND_HIGH_MARGIN', 'LOW_DEMAND_HIGH_MARGIN'] },
-    // PROPOSTAS (30/09/2026, distribuição real do catálogo: margem P25 ≈ 23,9 % / P75 ≈ 38,9 %; eficiência das sugestões P25 ≈ 0,20 / P75 ≈ 0,98;
-    // 10 % de desconto médio ≈ P98 dos produtos vendidos). Só classificam sinais e atratividade — NÃO definem quantidade. Não aprovadas.
-    thresholds: { status: 'PROPOSED_NOT_APPROVED', margin_low_pct: 24, margin_high_pct: 39, efficiency_low: 0.2, efficiency_high: 1, deep_discount_bps: 1000 },
+    // FAIXAS DE MARGEM APROVADAS PARA O RC (30/09/2026; decisão de negócio): negativa < 0 · baixa 0–24 · intermediária 24–39 · alta ≥ 39 (% de margem bruta).
+    // Origem: distribuição real do catálogo (margem P25 ≈ 23,9 % / P75 ≈ 38,9 %) — NÃO são parâmetros contábeis universais; continuam versionadas e configuráveis.
+    // Eficiência (0,2 / 1,0) e desconto profundo (10 %) seguem PROPOSTAS. Os limiares só classificam sinais e atratividade — NÃO definem quantidade nem bloqueiam compra.
+    thresholds: { status: 'APPROVED_FOR_RC', threshold_source: 'distribution_rc_2026_09', margin_low_pct: 24, margin_high_pct: 39, efficiency_status: 'PROPOSED_NOT_APPROVED', efficiency_low: 0.2, efficiency_high: 1, deep_discount_bps: 1000, negative_margin_auto_block: false },
     distribution_percentiles: [0.1, 0.25, 0.5, 0.75, 0.9],
     view: { soft_limit_bytes: 500000 },                                    // acima disso a visão de custos usa a ficha enxuta (limite duro de documento = 900 KB)
     budget: { default_strategy: 'LAYERED_P1_FLOOR', strategies: ['OPERATIONAL', 'EFFICIENCY', 'PROTECT_P1_THEN_EFFICIENCY', 'LAYERED', 'LAYERED_P1_FLOOR'], p1_floor_days: 7 },   // estratégia padrão e piso de 7 dias: PROPOSTAS, não aprovadas

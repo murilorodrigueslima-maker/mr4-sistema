@@ -23,7 +23,9 @@ const LIMITACOES = [
   'SETTLEMENT_AMOUNT é derivado (= valor final do título liquidado), não um registro de baixa',
   'LIQUIDADO = baixa registrada no ERP, não extrato bancário',
   'TITULO VENCIDO ≠ CLIENTE INADIMPLENTE — nenhuma classificação comportamental',
-  'PAYABLE_TO_PURCHASE_LINK=NO',
+  'PAYABLE_TO_PURCHASE_LINK: sem campo estruturado; vínculo só por texto exato "Compra de nº X" + fornecedor igual (por compra, não por parcela)',
+  'CENTRO_DE_CUSTO: não utilizado no ERP (sem dado)',
+  'ENVELHECIMENTO = dias de atraso do título, fato aritmético; não é avaliação do cliente',
 ];
 
 /** Frescor a partir do último sucesso. */
@@ -42,6 +44,7 @@ function resumoNatureza(r) {
     buckets_exclusivos: mapa(r.buckets),
     janelas_acumuladas_sem_vencidos: mapa(r.janelas),
     vencido_mais_60d: semIds(r.vencido_mais_60d),
+    envelhecimento_vencidos: mapa(r.envelhecimento_vencidos),
     liquidado: mapa(r.liquidado),
     por_plano: r.por_plano.map(p => ({ plano_id: p.plano_id, plano_nome: p.plano_nome, aberto: semIds(p.aberto), liquidado_30d: semIds(p.liquidado_30d) })),
     por_forma: r.por_forma.map(f => ({ raw: f.raw, normalizada: f.normalizada, ambigua: f.ambigua, aberto: semIds(f.aberto), liquidado_30d: semIds(f.liquidado_30d) })),
@@ -54,7 +57,7 @@ function auditoriaNatureza(r) {
   const ids = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, v.ids]));
   return {
     abertos: r.abertos.ids, buckets_exclusivos: ids(r.buckets), janelas: ids(r.janelas), vencido_mais_60d: r.vencido_mais_60d.ids,
-    liquidado: ids(r.liquidado), maiores: r.maiores.map(m => m.id), desconhecidos: r.desconhecidos,
+    envelhecimento_vencidos: ids(r.envelhecimento_vencidos), liquidado: ids(r.liquidado), maiores: r.maiores.map(m => m.id), desconhecidos: r.desconhecidos,
   };
 }
 

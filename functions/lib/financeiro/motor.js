@@ -16,6 +16,7 @@ function status(t, hoje) {
   if (t.final_amount_cents < 0) return { status: 'UNKNOWN', motivo: 'VALOR_FINAL_NEGATIVO' };
   if (t.settled_flag === true) {
     if (!t.settlement_date) return { status: 'UNKNOWN', motivo: t.settlement_date_raw ? 'DATA_LIQUIDACAO_INVALIDA' : 'LIQUIDADO_SEM_DATA' };
+    if (t.settlement_date > hoje) return { status: 'UNKNOWN', motivo: 'DATA_LIQUIDACAO_FUTURA' };   // baixa registrada com data que ainda não chegou: contradição, não decidir
     return { status: 'SETTLED', motivo: null };
   }
   if (t.settled_flag === false) {
@@ -43,7 +44,14 @@ function bucketExclusivo(t, hoje) {
 }
 // ── JANELAS ACUMULADAS (NÃO incluem vencidos; incluem hoje) ────────────────
 //   A_VENCER_ATE_7D  = vencimento em [hoje, hoje+7]   ·  A_VENCER_ATE_15D  ·  A_VENCER_ATE_30D
-const JANELAS = { A_VENCER_ATE_7D: 7, A_VENCER_ATE_15D: 15, A_VENCER_ATE_30D: 30 };
+const JANELAS = { A_VENCER_ATE_3D: 3, A_VENCER_ATE_7D: 7, A_VENCER_ATE_15D: 15, A_VENCER_ATE_30D: 30 };
+// ── ENVELHECIMENTO DE VENCIDOS (faixas exclusivas de dias em atraso; fato aritmético, não avaliação de ninguém)
+const FAIXAS_ATRASO = [['D1_A_7', 1, 7], ['D8_A_15', 8, 15], ['D16_A_30', 16, 30], ['D31_A_60', 31, 60], ['D61_A_90', 61, 90], ['D91_A_365', 91, 365], ['ACIMA_365', 366, Infinity]];
+function faixaAtraso(t, hoje) {
+  const d = diffDias(t.due_date, hoje);
+  if (d < 1) return null;
+  return FAIXAS_ATRASO.find(([, lo, hi]) => d >= lo && d <= hi)[0];
+}
 
 function novoAgregado() { return { quantidade: 0, total_cents: 0, ids: [] }; }
 function somar(ag, t) { ag.quantidade++; ag.total_cents += t.final_amount_cents; ag.ids.push(t.source_id); }
@@ -59,6 +67,7 @@ function calcularNatureza(titulos, natureza, hoje, opcoes = {}) {
   const buckets = { VENCIDO: novoAgregado(), HOJE: novoAgregado(), AMANHA: novoAgregado(), D2_A_7: novoAgregado(), D8_A_15: novoAgregado(), D16_A_30: novoAgregado(), ACIMA_30: novoAgregado() };
   const janelas = Object.fromEntries(Object.keys(JANELAS).map(k => [k, novoAgregado()]));
   const vencido60 = novoAgregado();
+  const envelhecimento = Object.fromEntries(FAIXAS_ATRASO.map(([k]) => [k, novoAgregado()]));
   const abertosTotal = novoAgregado();
   // realizado (liquidações) — separado de previsto
   const liquidado = { HOJE: novoAgregado(), ULTIMOS_7D: novoAgregado(), ULTIMOS_30D: novoAgregado(), MES_CORRENTE: novoAgregado() };
@@ -85,6 +94,7 @@ function calcularNatureza(titulos, natureza, hoje, opcoes = {}) {
       const d = diffDias(hoje, t.due_date);
       for (const [k, n] of Object.entries(JANELAS)) if (d >= 0 && d <= n) somar(janelas[k], t);
       if (d < -60) somar(vencido60, t);
+      if (s.status === 'OVERDUE') somar(envelhecimento[faixaAtraso(t, hoje)], t);
       somar(porPlano[planoKey].aberto, t);
       somar(porForma[formaKey].aberto, t);
       const ek = t.entity_id ? t.entity_type + ':' + t.entity_id : 'SEM_ENTIDADE:' + t.entity_type;
@@ -113,6 +123,7 @@ function calcularNatureza(titulos, natureza, hoje, opcoes = {}) {
     buckets,                 // exclusivos: somam exatamente "abertos"
     janelas,                 // acumuladas, sem vencidos
     vencido_mais_60d: vencido60,
+    envelhecimento_vencidos: envelhecimento,   // faixas exclusivas; somam exatamente buckets.VENCIDO
     liquidado,               // realizado (quando/quanto a API registra a baixa); não é extrato bancário
     por_plano: Object.values(porPlano).sort((a, b) => b.aberto.total_cents - a.aberto.total_cents || String(a.plano_id).localeCompare(String(b.plano_id))),
     por_forma: Object.values(porForma).sort((a, b) => b.aberto.total_cents - a.aberto.total_cents || String(a.raw).localeCompare(String(b.raw))),
@@ -149,4 +160,21 @@ function vincularVenda(titulo, vendasPorCodigo) {
   return { estado: 'CONFIRMADO', codigo: m[1], venda_id: String(v.id) };
 }
 
-module.exports = { status, bucketExclusivo, JANELAS, calcularNatureza, recorrencias, vincularVenda, RE_VENDA };
+// ── Vínculo pagar → compra (determinístico, mesma régua do recebível → venda)
+// Só confirma quando: descrição EXATAMENTE "Compra de nº <código>" E existe UMA compra com esse código E o fornecedor é o mesmo
+// (título da entidade FORNECEDOR). Parcelas: a API não garante 1 título por parcela → o vínculo é por COMPRA, não por parcela.
+// Qualquer outra coisa (sem referência, código duplicado, fornecedor divergente) NÃO é vínculo; fornecedor+valor parecido é HEURISTIC_ONLY e nunca confirma.
+const RE_COMPRA = /^Compra de nº (\d+)$/;
+function vincularCompra(titulo, comprasPorCodigo) {
+  const m = typeof titulo.description === 'string' ? titulo.description.match(RE_COMPRA) : null;
+  if (!m) return { estado: /^Devolução de nº \d+$/.test(titulo.description || '') ? 'DEVOLUCAO_OUTRA_REFERENCIA' : 'SEM_REFERENCIA', codigo: null };
+  const lista = comprasPorCodigo[m[1]];
+  if (!lista || (Array.isArray(lista) && lista.length === 0)) return { estado: 'NAO_RESOLVIDO', codigo: m[1] };
+  const cs = Array.isArray(lista) ? lista : [lista];
+  if (cs.length > 1) return { estado: 'CODIGO_DUPLICADO', codigo: m[1] };
+  if (titulo.entity_type !== 'FORNECEDOR' || !titulo.entity_id) return { estado: 'FORNECEDOR_AUSENTE', codigo: m[1] };
+  if (String(cs[0].fornecedor_id) !== String(titulo.entity_id)) return { estado: 'CONFLITO_FORNECEDOR', codigo: m[1] };
+  return { estado: 'CONFIRMADO', codigo: m[1], compra_id: String(cs[0].id) };
+}
+
+module.exports = { status, bucketExclusivo, JANELAS, FAIXAS_ATRASO, faixaAtraso, calcularNatureza, recorrencias, vincularVenda, RE_VENDA, vincularCompra, RE_COMPRA };

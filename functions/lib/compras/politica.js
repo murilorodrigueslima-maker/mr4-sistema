@@ -130,8 +130,8 @@ const POLITICA_1_2 = congelar(JSON.parse(JSON.stringify({
   ...POLITICA_1_1,
   policy_version: '1.2',
   inherits_from: '1.1',
-  status: 'RELEASE_CANDIDATE_NOT_APPROVED',
-  approved_on: null,
+  status: 'APPROVED',                                                        // ativada em 30/09/2026 (decisão do gestor); faixas de margem aprovadas, eficiência ainda proposta
+  approved_on: '2026-09-30',
   changes_from_parent: ['profitability'],
   profitability: {
     enabled: true,
@@ -211,4 +211,4 @@ function validarPolitica(p) {
 /** Registro de versões (nunca sobrescrever uma versão publicada). */
 const POLITICAS = congelar({ '1.0': POLITICA_1_0, '1.1': POLITICA_1_1, '1.2': POLITICA_1_2 });
 
-module.exports = { POLITICA_1_0, POLITICA_1_1, POLITICA_1_2, POLITICAS, POLITICA_VIGENTE: POLITICA_1_1, CENARIOS_EXPERIMENTAIS, METODOS_QTD_PRODUTO_NOVO, REGRAS_EXPERIMENTAIS_PRODUTO_NOVO, validarRegraProdutoNovo, politicaExperimental, validarPolitica, validarRentabilidade };
+module.exports = { POLITICA_1_0, POLITICA_1_1, POLITICA_1_2, POLITICAS, POLITICA_VIGENTE: POLITICA_1_2, CENARIOS_EXPERIMENTAIS, METODOS_QTD_PRODUTO_NOVO, REGRAS_EXPERIMENTAIS_PRODUTO_NOVO, validarRegraProdutoNovo, politicaExperimental, validarPolitica, validarRentabilidade };

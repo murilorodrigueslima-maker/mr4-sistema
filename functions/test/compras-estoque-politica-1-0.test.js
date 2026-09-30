@@ -17,9 +17,9 @@ const diario = (id, n = 90) => X.serie(id, { de: n - 1, passo: 1, qtd: 1 });   /
 
 // ═════════════════════════════════════════ POLICY ═════════════════════════════════════════
 describe('POLICY — configuração central versionada', () => {
-  test('Política 1.0 válida, congelada e preservada no registro (a vigente agora é 1.1)', () => {
+  test('Política 1.0 válida, congelada e preservada no registro (a vigente agora é 1.2)', () => {
     expect(validarPolitica(POLITICA_1_0)).toEqual([]);
-    expect(require('../lib/compras/politica').POLITICAS['1.0']).toBe(POLITICA_1_0); expect(POLITICA_VIGENTE.policy_version).toBe('1.1');
+    expect(require('../lib/compras/politica').POLITICAS['1.0']).toBe(POLITICA_1_0); expect(POLITICA_VIGENTE.policy_version).toBe('1.2');
     expect(Object.isFrozen(POLITICA_1_0) && Object.isFrozen(POLITICA_1_0.target_days) && Object.isFrozen(POLITICA_1_0.velocity.signal)).toBe(true);
     expect(() => { POLITICA_1_0.target_days.A = 45; }).toThrow(TypeError);
   });

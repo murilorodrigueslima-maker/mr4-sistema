@@ -48,8 +48,8 @@ describe('POLICY 1.1 — versão, herança e preservação da 1.0', () => {
     expect(POLITICA_1_1.new_product.proven_demand).toEqual({ enabled: true, minimum_age_days: 7, minimum_units: 5, minimum_distinct_sale_days: 3, rate_rule: { type: 'NONE', min_daily_rate: null }, count_reserved: true, require_active: true, quantity_velocity: 'MIN_OBSERVED_AND_SIGNAL' });
     expect(Pol.validarPolitica(POLITICA_1_1)).toEqual([]); expect(Object.isFrozen(POLITICA_1_1.new_product.proven_demand)).toBe(true);
   });
-  test('registro de versões: 1.0 e 1.1 disponíveis; vigente = 1.1; 1.0 intocada', () => {
-    expect(POLITICAS['1.0']).toBe(POLITICA_1_0); expect(POLITICAS['1.1']).toBe(POLITICA_1_1); expect(POLITICA_VIGENTE).toBe(POLITICA_1_1);
+  test('registro de versões: 1.0 e 1.1 disponíveis e intocadas; vigente = 1.2 (ativada em 30/09/2026)', () => {
+    expect(POLITICAS['1.0']).toBe(POLITICA_1_0); expect(POLITICAS['1.1']).toBe(POLITICA_1_1); expect(POLITICA_VIGENTE).toBe(Pol.POLITICA_1_2);
     expect(POLITICA_1_0.policy_version).toBe('1.0'); expect(POLITICA_1_0.new_product.proven_demand).toBeUndefined();
   });
   test.each([['cenario', 'produtos'], ['cenarioProdutoNovo', 'produto_novo'], ['cenarioProdutoNovoABC', 'produto_novo_abc']])('golden da 1.0 (gerado com b3b13dc) continua idêntico — %s', (fn, k) => {
@@ -159,9 +159,9 @@ describe('POLICY 1.1 — classes ABC e prioridade', () => {
 
 // ═════════════════════════ SNAPSHOT / SYNC / FUSO ═════════════════════════
 describe('SNAPSHOT/SYNC 1.1 — versão registrada; fuso', () => {
-  test('snapshot de estoque, resumo, meta, blocos e custos registram policy_version 1.1 (vigente)', () => {
+  test('snapshot de estoque, resumo, meta, blocos e custos registram policy_version 1.1 quando a 1.1 é pedida', () => {
     const c = bordas();
-    const s = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora: X.AGORA });
+    const s = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora: X.AGORA, politica: POLITICA_1_1 });
     expect([s.resumo.policy_version, s.meta.policy_version, s.snapshotEstoque.policy_version]).toEqual(['1.1', '1.1', '1.1']);
     for (const m of s.operacional) expect(m.suggestion.policy_version).toBe('1.1');
     for (const k of s.custos) expect(k.policy_version).toBe('1.1');
@@ -173,7 +173,7 @@ describe('SNAPSHOT/SYNC 1.1 — versão registrada; fuso', () => {
     const rodar = tz => JSON.parse(execFileSync(process.execPath, ['-e', `
       const S = require(${JSON.stringify(LIB + '/snapshot')}); const X = require(${JSON.stringify(FIX)});
       const c = X.cenarioProdutoNovo();
-      const s = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora: new Date('2026-09-29T02:30:00Z') });
+      const s = S.montarSnapshot({ brutosProdutos: c.produtos, brutosVendas: c.vendas, brutosCompras: c.compras, agora: new Date('2026-09-29T02:30:00Z'), politica: require(${JSON.stringify(LIB + '/politica')}).POLITICA_1_1 });
       process.stdout.write(JSON.stringify({ d: s.snapshotEstoque.data_comercial, pv: s.snapshotEstoque.policy_version, sug: s.operacional.map(m => [m.product_id, m.suggestion.suggested_qty, m.suggestion.priority, m.suggestion.eligibility_path]) }));`], { env: { ...process.env, TZ: tz } }).toString());
     const u = rodar('UTC');
     expect(u.d).toBe('2026-09-28'); expect(u.pv).toBe('1.1');

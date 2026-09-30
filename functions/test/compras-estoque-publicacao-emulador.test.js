@@ -66,7 +66,7 @@ test('duas execuções simultâneas (sobreposição garantida): exatamente uma r
 });
 
 test('snapshot gravado de verdade no Firestore (lote atômico) e lido pelas Rules conforme o perfil', async () => {
-  expect((await db.doc('compras_n0_view/sugestoes').get()).data().policy_version).toBe('1.1');
+  expect((await db.doc('compras_n0_view/sugestoes').get()).data().policy_version).toBe('1.2');
   const ler = (uid, p) => (uid ? env.authenticatedContext(uid) : env.unauthenticatedContext()).firestore().doc(p).get();
   await assertSucceeds(ler('funcEst', 'compras_n0_view/sugestoes'));
   await assertFails(ler('funcEst', 'compras_n0_view/custos'));            // funcionário operacional: sem custo

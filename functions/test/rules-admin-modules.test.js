@@ -122,12 +122,38 @@ suitesGestorOnly(
 // BLOCO B — expedicao_pedidos
 // ══════════════════════════════════════════════════════
 
-suitesGestorOnly(
-  'expedicao_pedidos',
-  'expedicao_pedidos',
-  'ped-001',
-  { numero: 1, cliente: 'Cliente X', status: 'pendente' }
-);
+// Expedição P0: a coleção deixou de ser CRUD livre. Leitura igual; criação só em 'ag' com formato conhecido;
+// update só por transição com protocolo (coberto em expedicao-p0-emulador.test.js); delete proibido.
+describe('expedicao_pedidos — acesso (P0: máquina de estados)', () => {
+  const col = 'expedicao_pedidos';
+  const pedido = id => ({ numero: id, data: '2026-09-29', hora: '09:00', ingresadoEm: Date.now(), movidoEm: Date.now(), coluna: 'ag', cliente: 'Cliente X', vendedor: 'V', itens: 1, valor: 10, cidade: '', envio: null, saidaEm: null });
+  test(`${col}:A — sem auth NÃO lê nem escreve`, async () => {
+    await seed(col, 'ped-001', pedido('ped-001'));
+    await assertFails(db(null).collection(col).doc('ped-001').get());
+    await assertFails(db(null).collection(col).doc('ped-002').set(pedido('ped-002')));
+  });
+  test(`${col}:B — funcionário sem módulo NÃO lê nem cria`, async () => {
+    await seed(col, 'ped-001', pedido('ped-001'));
+    await assertFails(db(UID_FUNC).collection(col).doc('ped-001').get());
+    await assertFails(db(UID_FUNC).collection(col).doc('ped-002').set(pedido('ped-002')));
+  });
+  test(`${col}:D — sem perfil NÃO lê nem escreve`, async () => {
+    await seed(col, 'ped-001', pedido('ped-001'));
+    await assertFails(db(UID_NOPROFILE).collection(col).doc('ped-001').get());
+    await assertFails(db(UID_NOPROFILE).collection(col).doc('ped-002').set(pedido('ped-002')));
+  });
+  test(`${col}:C — gestor lê e cria pedido novo em 'ag'`, async () => {
+    await seed(col, 'ped-001', pedido('ped-001'));
+    await assertSucceeds(db(UID_GESTOR).collection(col).doc('ped-001').get());
+    await assertSucceeds(db(UID_GESTOR).collection(col).doc('novo-ped-001').set(pedido('novo-ped-001')));
+  });
+  test(`${col}:C — gestor NÃO faz update livre, NÃO cria fora do formato e NÃO deleta`, async () => {
+    await seed(col, 'ped-001', pedido('ped-001'));
+    await assertFails(db(UID_GESTOR).collection(col).doc('ped-001').update({ _ts: Date.now() }));
+    await assertFails(db(UID_GESTOR).collection(col).doc('ped-003').set({ numero: 1, cliente: 'Cliente X', status: 'pendente' }));
+    await assertFails(db(UID_GESTOR).collection(col).doc('ped-001').delete());
+  });
+});
 
 // ══════════════════════════════════════════════════════
 // BLOCO C — marketing_conteudos / marketing_ideias / marketing_legendas

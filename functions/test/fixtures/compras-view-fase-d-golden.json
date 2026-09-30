@@ -1,0 +1,1243 @@
+{
+ "_origem": "Gerado com o código de ae468d7 (Fase D, antes da Atenção). NÃO editar à mão.",
+ "cenario": {
+  "decisao": {
+   "PX-BASE": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-FORTE": [
+    true,
+    16,
+    "P2",
+    0.667,
+    "A",
+    false
+   ],
+   "PX-BAIXO": [
+    true,
+    6,
+    "P2",
+    0.667,
+    "A",
+    false
+   ],
+   "PX-EXCESSO": [
+    true,
+    0,
+    null,
+    0.667,
+    "A",
+    false
+   ],
+   "PX-SEM30": [
+    true,
+    0,
+    null,
+    0.04,
+    "C",
+    false
+   ],
+   "PX-SEM60": [
+    true,
+    0,
+    null,
+    0.033,
+    "C",
+    false
+   ],
+   "PX-SEM90": [
+    false,
+    0,
+    null,
+    0,
+    "C",
+    false
+   ],
+   "PX-SEM120": [
+    false,
+    0,
+    null,
+    0,
+    "C",
+    false
+   ],
+   "PX-SEM180": [
+    false,
+    0,
+    null,
+    0,
+    "C",
+    false
+   ],
+   "PX-SEM365": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-SEMINCERTO": [
+    false,
+    0,
+    null,
+    0,
+    "C",
+    false
+   ],
+   "PX-ZEROALTO": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-NUNCA-REC": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-NUNCA-LOW": [
+    false,
+    0,
+    null,
+    null,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-NUNCA-ANTIGO": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-NOVO": [
+    false,
+    0,
+    null,
+    0.25,
+    "C",
+    false
+   ],
+   "PX-RUPTURA": [
+    true,
+    5,
+    "P3",
+    0.2,
+    "B",
+    false
+   ],
+   "PX-NEGATIVO": [
+    true,
+    6,
+    "P1",
+    0.2,
+    "A",
+    false
+   ],
+   "PX-INATIVO": [
+    false,
+    0,
+    null,
+    0.2,
+    "A",
+    false
+   ],
+   "PX-KIT": [
+    false,
+    0,
+    null,
+    0.2,
+    "A",
+    false
+   ],
+   "PX-SEMCUSTO": [
+    true,
+    0,
+    null,
+    0.1,
+    "B",
+    false
+   ],
+   "PX-CANCEL": [
+    true,
+    0,
+    null,
+    0.033,
+    "C",
+    false
+   ],
+   "PX-SOCANCEL": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "PX-PENDENTE": [
+    true,
+    5,
+    "P2",
+    0.2,
+    "A",
+    false
+   ],
+   "PX-ACELERA": [
+    true,
+    0,
+    null,
+    0.367,
+    "A",
+    false
+   ],
+   "PX-QUEDA": [
+    true,
+    0,
+    null,
+    0.344,
+    "B",
+    false
+   ]
+  },
+  "linhas_fase_d": {
+   "PX-NEGATIVO": {
+    "id": "PX-NEGATIVO",
+    "codigo": "COD-PX-NEGATIVO",
+    "nome": "Produto sintético PX-NEGATIVO",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": -2,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 12,
+     "d90": 18
+    },
+    "velocidade": 0.2,
+    "cobertura_dias": null,
+    "cobertura_estado": "NEGATIVE_STOCK",
+    "alvo_dias": 30,
+    "qtd": 6,
+    "prioridade": "P1",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": true,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEGATIVE_STOCK",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-28",
+    "fornecedor": "FX-1"
+   },
+   "PX-FORTE": {
+    "id": "PX-FORTE",
+    "codigo": "COD-PX-FORTE",
+    "nome": "Produto sintético PX-FORTE",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 5,
+    "disponivel": 5,
+    "vendas": {
+     "d30": 20,
+     "d60": 40,
+     "d90": 60
+    },
+    "velocidade": 0.667,
+    "cobertura_dias": 7.5,
+    "cobertura_estado": "COVERAGE_CRITICAL",
+    "alvo_dias": 30,
+    "qtd": 16,
+    "prioridade": "P2",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "LOW_COVERAGE",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-28",
+    "fornecedor": "FX-2"
+   },
+   "PX-BAIXO": {
+    "id": "PX-BAIXO",
+    "codigo": "COD-PX-BAIXO",
+    "nome": "Produto sintético PX-BAIXO",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 15,
+    "disponivel": 15,
+    "vendas": {
+     "d30": 20,
+     "d60": 40,
+     "d90": 60
+    },
+    "velocidade": 0.667,
+    "cobertura_dias": 22.5,
+    "cobertura_estado": "COVERAGE_LOW",
+    "alvo_dias": 30,
+    "qtd": 6,
+    "prioridade": "P2",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "LOW_COVERAGE",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-28",
+    "fornecedor": "FX-1"
+   },
+   "PX-PENDENTE": {
+    "id": "PX-PENDENTE",
+    "codigo": "COD-PX-PENDENTE",
+    "nome": "Produto sintético PX-PENDENTE",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 1,
+    "disponivel": 1,
+    "vendas": {
+     "d30": 6,
+     "d60": 12,
+     "d90": 18
+    },
+    "velocidade": 0.2,
+    "cobertura_dias": 5,
+    "cobertura_estado": "COVERAGE_CRITICAL",
+    "alvo_dias": 30,
+    "qtd": 5,
+    "prioridade": "P2",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "LOW_COVERAGE",
+     "PENDING_PURCHASE_EXISTS",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-28",
+    "fornecedor": "FX-3"
+   },
+   "PX-RUPTURA": {
+    "id": "PX-RUPTURA",
+    "codigo": "COD-PX-RUPTURA",
+    "nome": "Produto sintético PX-RUPTURA",
+    "grupo": "Grupo sintético",
+    "abc": "B",
+    "abc_unidades": "B",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 12,
+     "d90": 18
+    },
+    "velocidade": 0.2,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 21,
+    "qtd": 5,
+    "prioridade": "P3",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-28",
+    "fornecedor": "FX-1"
+   },
+   "PX-NOVO": {
+    "id": "PX-NOVO",
+    "codigo": "COD-PX-NOVO",
+    "nome": "Produto sintético PX-NOVO",
+    "grupo": "Grupo sintético",
+    "abc": "C",
+    "abc_unidades": "C",
+    "estoque": 6,
+    "disponivel": 6,
+    "vendas": {
+     "d30": 2,
+     "d60": 2,
+     "d90": 2
+    },
+    "velocidade": 0.25,
+    "cobertura_dias": null,
+    "cobertura_estado": "INSUFFICIENT_HISTORY",
+    "alvo_dias": 15,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_UNITS_NOT_MET",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-25",
+    "fornecedor": "FX-1"
+   },
+   "PX-NUNCA-REC": {
+    "id": "PX-NUNCA-REC",
+    "codigo": "COD-PX-NUNCA-REC",
+    "nome": "Produto sintético PX-NUNCA-REC",
+    "grupo": "Grupo sintético",
+    "abc": "SEM_VENDA",
+    "abc_unidades": "SEM_VENDA",
+    "estoque": 4,
+    "disponivel": 4,
+    "vendas": {
+     "d30": 0,
+     "d60": 0,
+     "d90": 0
+    },
+    "velocidade": 0,
+    "cobertura_dias": null,
+    "cobertura_estado": "INSUFFICIENT_HISTORY",
+    "alvo_dias": 15,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "NEVER_SOLD",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_UNITS_NOT_MET",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": null,
+    "fornecedor": "FX-1"
+   }
+  },
+  "custos": {
+   "PX-NEGATIVO": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 6000
+   },
+   "PX-FORTE": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 16000
+   },
+   "PX-BAIXO": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 6000
+   },
+   "PX-PENDENTE": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 5000
+   },
+   "PX-RUPTURA": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 5000
+   },
+   "PX-NOVO": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "PX-NUNCA-REC": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   }
+  }
+ },
+ "cenarioProdutoNovo": {
+  "decisao": {
+   "MA": [
+    true,
+    0,
+    null,
+    0.2,
+    "A",
+    false
+   ],
+   "NV-SEM": [
+    false,
+    0,
+    null,
+    0,
+    "SEM_VENDA",
+    false
+   ],
+   "NV-UMA": [
+    false,
+    0,
+    null,
+    0.05,
+    "C",
+    false
+   ],
+   "NV-DIA1": [
+    false,
+    0,
+    null,
+    0.5,
+    "A",
+    false
+   ],
+   "NV-DOIS": [
+    false,
+    0,
+    null,
+    0.15,
+    "C",
+    false
+   ],
+   "NV-TRES": [
+    true,
+    7,
+    "P3",
+    0.3,
+    "B",
+    true
+   ],
+   "NV-CANC": [
+    false,
+    0,
+    null,
+    0.1,
+    "C",
+    false
+   ],
+   "NV-RES": [
+    true,
+    7,
+    "P3",
+    0.3,
+    "B",
+    true
+   ],
+   "NV-MISTO": [
+    true,
+    9,
+    "P1",
+    0.3,
+    "A",
+    true
+   ],
+   "NV-NEG": [
+    true,
+    5,
+    "P3",
+    0.2,
+    "B",
+    true
+   ],
+   "NV-POS": [
+    true,
+    2,
+    "P4",
+    0.2,
+    "B",
+    true
+   ],
+   "NV-INAT": [
+    false,
+    0,
+    null,
+    0.3,
+    "A",
+    false
+   ],
+   "NV-I6": [
+    false,
+    0,
+    null,
+    1,
+    "A",
+    false
+   ],
+   "NV-I7": [
+    true,
+    26,
+    "P1",
+    0.857,
+    "A",
+    true
+   ],
+   "NV-I59": [
+    true,
+    4,
+    "P1",
+    0.102,
+    "A",
+    true
+   ],
+   "NV-I60": [
+    true,
+    3,
+    "P1",
+    0.1,
+    "A",
+    false
+   ],
+   "NV-I61": [
+    true,
+    3,
+    "P1",
+    0.098,
+    "A",
+    false
+   ]
+  },
+  "linhas_fase_d": {
+   "NV-I7": {
+    "id": "NV-I7",
+    "codigo": "COD-NV-I7",
+    "nome": "Produto sintético NV-I7",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.857,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 26,
+    "prioridade": "P1",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-27",
+    "fornecedor": "FX-1"
+   },
+   "NV-MISTO": {
+    "id": "NV-MISTO",
+    "codigo": "COD-NV-MISTO",
+    "nome": "Produto sintético NV-MISTO",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.3,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 9,
+    "prioridade": "P1",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "RESERVED_DEMAND_INCLUDED",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-26",
+    "fornecedor": "FX-1"
+   },
+   "NV-I59": {
+    "id": "NV-I59",
+    "codigo": "COD-NV-I59",
+    "nome": "Produto sintético NV-I59",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 4,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.102,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 4,
+    "prioridade": "P1",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-27",
+    "fornecedor": "FX-1"
+   },
+   "NV-I60": {
+    "id": "NV-I60",
+    "codigo": "COD-NV-I60",
+    "nome": "Produto sintético NV-I60",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 2,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.1,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 3,
+    "prioridade": "P1",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-27",
+    "fornecedor": "FX-1"
+   },
+   "NV-I61": {
+    "id": "NV-I61",
+    "codigo": "COD-NV-I61",
+    "nome": "Produto sintético NV-I61",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 2,
+     "d60": 4,
+     "d90": 6
+    },
+    "velocidade": 0.098,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 3,
+    "prioridade": "P1",
+    "novo_com_demanda": false,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-27",
+    "fornecedor": "FX-1"
+   },
+   "NV-RES": {
+    "id": "NV-RES",
+    "codigo": "COD-NV-RES",
+    "nome": "Produto sintético NV-RES",
+    "grupo": "Grupo sintético",
+    "abc": "B",
+    "abc_unidades": "B",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.3,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 21,
+    "qtd": 7,
+    "prioridade": "P3",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "RESERVED_DEMAND_INCLUDED",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-26",
+    "fornecedor": "FX-1"
+   },
+   "NV-TRES": {
+    "id": "NV-TRES",
+    "codigo": "COD-NV-TRES",
+    "nome": "Produto sintético NV-TRES",
+    "grupo": "Grupo sintético",
+    "abc": "B",
+    "abc_unidades": "B",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.3,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 21,
+    "qtd": 7,
+    "prioridade": "P3",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-26",
+    "fornecedor": "FX-1"
+   },
+   "NV-NEG": {
+    "id": "NV-NEG",
+    "codigo": "COD-NV-NEG",
+    "nome": "Produto sintético NV-NEG",
+    "grupo": "Grupo sintético",
+    "abc": "B",
+    "abc_unidades": "B",
+    "estoque": -2,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.2,
+    "cobertura_dias": null,
+    "cobertura_estado": "NEGATIVE_STOCK",
+    "alvo_dias": 21,
+    "qtd": 5,
+    "prioridade": "P3",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": true,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEGATIVE_STOCK",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-25",
+    "fornecedor": "FX-1"
+   },
+   "NV-POS": {
+    "id": "NV-POS",
+    "codigo": "COD-NV-POS",
+    "nome": "Produto sintético NV-POS",
+    "grupo": "Grupo sintético",
+    "abc": "B",
+    "abc_unidades": "B",
+    "estoque": 3,
+    "disponivel": 3,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.2,
+    "cobertura_dias": 15,
+    "cobertura_estado": "COVERAGE_LOW",
+    "alvo_dias": 21,
+    "qtd": 2,
+    "prioridade": "P4",
+    "novo_com_demanda": true,
+    "novo_protegido": false,
+    "estoque_negativo": false,
+    "motivos": [
+     "LOW_COVERAGE",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_WITH_PROVEN_DEMAND",
+     "INSUFFICIENT_HISTORY",
+     "LEAD_TIME_UNKNOWN"
+    ],
+    "ultima_venda": "2026-09-25",
+    "fornecedor": "FX-1"
+   },
+   "NV-CANC": {
+    "id": "NV-CANC",
+    "codigo": "COD-NV-CANC",
+    "nome": "Produto sintético NV-CANC",
+    "grupo": "Grupo sintético",
+    "abc": "C",
+    "abc_unidades": "C",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 2,
+     "d60": 2,
+     "d90": 2
+    },
+    "velocidade": 0.1,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 15,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_UNITS_NOT_MET",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-16",
+    "fornecedor": "FX-1"
+   },
+   "NV-DIA1": {
+    "id": "NV-DIA1",
+    "codigo": "COD-NV-DIA1",
+    "nome": "Produto sintético NV-DIA1",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 10,
+     "d60": 10,
+     "d90": 10
+    },
+    "velocidade": 0.5,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-25",
+    "fornecedor": "FX-1"
+   },
+   "NV-DOIS": {
+    "id": "NV-DOIS",
+    "codigo": "COD-NV-DOIS",
+    "nome": "Produto sintético NV-DOIS",
+    "grupo": "Grupo sintético",
+    "abc": "C",
+    "abc_unidades": "C",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 3,
+     "d60": 3,
+     "d90": 3
+    },
+    "velocidade": 0.15,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 15,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_UNITS_NOT_MET",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-24",
+    "fornecedor": "FX-1"
+   },
+   "NV-I6": {
+    "id": "NV-I6",
+    "codigo": "COD-NV-I6",
+    "nome": "Produto sintético NV-I6",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 1,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_AGE_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-27",
+    "fornecedor": "FX-1"
+   },
+   "NV-INAT": {
+    "id": "NV-INAT",
+    "codigo": "COD-NV-INAT",
+    "nome": "Produto sintético NV-INAT",
+    "grupo": "Grupo sintético",
+    "abc": "A",
+    "abc_unidades": "A",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 6,
+     "d60": 6,
+     "d90": 6
+    },
+    "velocidade": 0.3,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 30,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_NOT_ACTIVE",
+     "INACTIVE_PRODUCT",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-26",
+    "fornecedor": "FX-1"
+   },
+   "NV-SEM": {
+    "id": "NV-SEM",
+    "codigo": "COD-NV-SEM",
+    "nome": "Produto sintético NV-SEM",
+    "grupo": "Grupo sintético",
+    "abc": "SEM_VENDA",
+    "abc_unidades": "SEM_VENDA",
+    "estoque": 5,
+    "disponivel": 5,
+    "vendas": {
+     "d30": 0,
+     "d60": 0,
+     "d90": 0
+    },
+    "velocidade": 0,
+    "cobertura_dias": null,
+    "cobertura_estado": "INSUFFICIENT_HISTORY",
+    "alvo_dias": 15,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "NEVER_SOLD",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_UNITS_NOT_MET",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": null,
+    "fornecedor": "FX-1"
+   },
+   "NV-UMA": {
+    "id": "NV-UMA",
+    "codigo": "COD-NV-UMA",
+    "nome": "Produto sintético NV-UMA",
+    "grupo": "Grupo sintético",
+    "abc": "C",
+    "abc_unidades": "C",
+    "estoque": 0,
+    "disponivel": 0,
+    "vendas": {
+     "d30": 1,
+     "d60": 1,
+     "d90": 1
+    },
+    "velocidade": 0.05,
+    "cobertura_dias": 0,
+    "cobertura_estado": "CURRENT_STOCKOUT",
+    "alvo_dias": 15,
+    "qtd": 0,
+    "prioridade": null,
+    "novo_com_demanda": false,
+    "novo_protegido": true,
+    "estoque_negativo": false,
+    "motivos": [
+     "STOCKOUT_RECENT_DEMAND",
+     "NEW_PRODUCT",
+     "NEW_PRODUCT_MIN_UNITS_NOT_MET",
+     "NEW_PRODUCT_DISTINCT_DAYS_NOT_MET",
+     "INSUFFICIENT_HISTORY"
+    ],
+    "ultima_venda": "2026-09-23",
+    "fornecedor": "FX-1"
+   }
+  },
+  "custos": {
+   "NV-I7": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 26000
+   },
+   "NV-MISTO": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 9000
+   },
+   "NV-I59": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 4000
+   },
+   "NV-I60": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 3000
+   },
+   "NV-I61": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 3000
+   },
+   "NV-RES": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 7000
+   },
+   "NV-TRES": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 7000
+   },
+   "NV-NEG": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 5000
+   },
+   "NV-POS": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": 2000
+   },
+   "NV-CANC": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "NV-DIA1": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "NV-DOIS": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "NV-I6": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "NV-INAT": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "NV-SEM": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   },
+   "NV-UMA": {
+    "custo_cadastrado_cents": 1000,
+    "ultimo_custo_compra_cents": 1000,
+    "confianca": "KNOWN_COST",
+    "valor_sugestao_custo_conhecido_cents": null
+   }
+  }
+ }
+}

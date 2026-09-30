@@ -160,6 +160,7 @@ const POLITICA_1_2 = congelar(JSON.parse(JSON.stringify({
     // 10 % de desconto médio ≈ P98 dos produtos vendidos). Só classificam sinais e atratividade — NÃO definem quantidade. Não aprovadas.
     thresholds: { status: 'PROPOSED_NOT_APPROVED', margin_low_pct: 24, margin_high_pct: 39, efficiency_low: 0.2, efficiency_high: 1, deep_discount_bps: 1000 },
     distribution_percentiles: [0.1, 0.25, 0.5, 0.75, 0.9],
+    view: { soft_limit_bytes: 500000 },                                    // acima disso a visão de custos usa a ficha enxuta (limite duro de documento = 900 KB)
     budget: { default_strategy: 'LAYERED_P1_FLOOR', strategies: ['OPERATIONAL', 'EFFICIENCY', 'PROTECT_P1_THEN_EFFICIENCY', 'LAYERED', 'LAYERED_P1_FLOOR'], p1_floor_days: 7 },   // estratégia padrão e piso de 7 dias: PROPOSTAS, não aprovadas
   },
 })));

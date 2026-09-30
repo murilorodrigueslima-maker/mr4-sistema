@@ -246,18 +246,20 @@ function compactarFin(fin) {
 }
 
 /**
- * Ficha ENXUTA para a lista da tela (compras_n0_view/custos): o pior caso (todos os produtos na visão) precisa caber com folga
- * no limite de documento. O detalhe completo (janelas 30/60/90, referência de custo, estoque a custo…) fica no bloco
- * compras_n0_custos/bloco_{bloco} (mesmas Rules de custo) e a tela o lê só ao abrir o detalhe.
+ * Ficha da LISTA da tela (compras_n0_view/custos). A tela só lê as visões (nunca os blocos de custos), então a ficha precisa trazer o que o
+ * detalhe mostra. `completa` inclui janelas 30/60/90 e a referência do custo (~0,8 KB/linha); a ficha ENXUTA (~0,5 KB/linha) é o
+ * degrau de segurança usado pelo servidor quando o documento passaria do limite brando (ver montarView): o pior caso nunca se aproxima
+ * do limite de 1 MiB e o sync nunca aborta por tamanho.
  */
-function fichaDaLista(fin, bloco) {
-  const w90 = (fin.windows && fin.windows['90']) || {};
+function fichaDaLista(fin, completa) {
   const pick = (o, ks) => { const r = {}; if (o) for (const k of ks) if (o[k] !== undefined) r[k] = o[k]; return r; };
   const d = fin.decision || {};
-  const ficha = { bloco, cost: pick(fin.cost, ['unit_cents', 'confidence', 'reason']), price: pick(fin.price, ['unit_cents', 'source', 'quality']), unit: fin.unit, margin: fin.margin,
-    decision: pick(d, ['margin_tier', 'attractiveness', 'matrix', 'signals']) };
-  if (fin.purchase) ficha.purchase = pick(fin.purchase, ['capital_cents', 'revenue_potential_cents', 'profit_potential_cents', 'return_on_capital', 'efficiency']);
-  if (w90.profit_cents !== undefined) ficha.gross_profit_90d_cents = w90.profit_cents;
+  const ficha = { cost: pick(fin.cost, completa ? ['unit_cents', 'confidence', 'reason', 'reference_cents', 'divergence_bps', 'reference_age_days', 'last_purchase_date'] : ['unit_cents', 'confidence', 'reason']),
+    price: pick(fin.price, completa ? ['unit_cents', 'source', 'quality', 'registered_cents', 'lines', 'qty', 'discount_bps'] : ['unit_cents', 'source', 'quality']),
+    unit: fin.unit, margin: fin.margin, decision: pick(d, ['margin_tier', 'attractiveness', 'matrix', 'signals']) };
+  if (fin.purchase) ficha.purchase = pick(fin.purchase, ['capital_cents', 'revenue_potential_cents', 'profit_potential_cents', 'return_on_capital', 'efficiency', 'turnover_days']);
+  if (completa && fin.windows) ficha.windows = Object.fromEntries(Object.entries(fin.windows).map(([k, w]) => [k, pick(w, ['lines', 'revenue_cents', 'profit_cents', 'profit_base_cents'])]));
+  else if (fin.windows && fin.windows['90'] && fin.windows['90'].profit_cents !== undefined) ficha.gross_profit_90d_cents = fin.windows['90'].profit_cents;
   return ficha;
 }
 

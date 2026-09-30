@@ -81,6 +81,8 @@
   .badges { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
   .bd { font-size: .64rem; font-weight: 700; letter-spacing: .3px; padding: .15rem .4rem; border-radius: 4px; }
   .bd.novo { background: var(--purple-bg); color: var(--purple); } .bd.neg { background: var(--red-bg); color: var(--red); } .bd.prot { background: var(--bg); color: var(--muted); }
+  .bd.at { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .filtros select { padding: .5rem .6rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .8rem; background: var(--white); color: var(--text); max-width: 100%; }
   .neg-num { color: var(--red); font-weight: 700; }
   .qtd { font-size: 1.05rem; font-weight: 700; color: var(--green); }
   .qtd.zero { color: var(--muted); font-weight: 500; font-size: .85rem; }
@@ -155,6 +157,7 @@
     <div class="seg" id="segAbc"><button data-v="" class="sel">ABC</button><button data-v="A">A</button><button data-v="B">B</button><button data-v="C">C</button></div>
     <label class="tog"><input type="checkbox" id="fNovo"> Novo com demanda</label>
     <label class="tog"><input type="checkbox" id="fNeg"> Estoque negativo</label>
+    <select id="fMotivo" hidden aria-label="Motivo de atenção"><option value="">Todos os motivos</option></select>
   </div>
   <div class="contagem" id="contagem"></div>
   <div class="lista" id="lista"></div>
@@ -180,7 +183,12 @@ const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false };
+const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false, motivo: '' };
+// Motivos de ATENÇÃO calculados no servidor (Fase D.1). Visibilidade apenas: nenhum deles gera sugestão.
+const ATENCAO = { NEVER_SOLD: 'NUNCA VENDIDO', NO_SALE_365D: 'SEM VENDA HÁ 365+ DIAS', NO_SALE_180D: 'SEM VENDA HÁ 180+ DIAS', NO_SALE_120D: 'SEM VENDA HÁ 120+ DIAS',
+  EXCESS_COVERAGE: 'COBERTURA EM EXCESSO', INACTIVE_PRODUCT: 'PRODUTO INATIVO', NEW_PRODUCT_PROTECTED: 'PRODUTO NOVO · EM PROTEÇÃO', NEGATIVE_STOCK: 'ESTOQUE NEGATIVO',
+  NO_COST: 'SEM CUSTO CADASTRADO', LOW_COST_CONFIDENCE: 'CUSTO DE BAIXA CONFIANÇA' };
+const SO_DETALHE = ['LOW_COST_CONFIDENCE'];   // anotação: aparece no "Por quê?", não como selo
 window.__comprasPerf = { renders: [] };   // diagnóstico de desempenho (sem dados)
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -224,6 +232,12 @@ function montarCabecalho(v, meta) {
   const chip = (k, cls, qtd, un) => `<button class="chip ${cls}" data-p="${k}"><div class="k">${k}</div><div class="v">${fmt(qtd)}</div><div class="u">${un}</div></button>`;
   document.getElementById('chips').innerHTML = chip('P1', 'p1', c.P1, 'A · ruptura/negativo c/ demanda') + chip('P2', 'p2', c.P2, 'A · abaixo do alvo') + chip('P3', 'p3', c.P3, 'B · ruptura/negativo c/ demanda') + chip('P4', 'p4', c.P4, 'demais com necessidade');
   document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => { estado.prioridade = estado.prioridade === b.dataset.p ? '' : b.dataset.p; estado.aba = 'sug'; sincronizarAbas(); render(); }));
+  const at = c.atencao;
+  if (at && at.por_motivo) {
+    document.querySelector('#tabs button[data-aba="aten"]').textContent = `Atenção (${fmt(at.produtos)})`;
+    document.getElementById('fMotivo').innerHTML = `<option value="">Todos os motivos (${fmt(at.produtos)})</option>` +
+      Object.keys(ATENCAO).filter(k => at.por_motivo[k] > 0).map(k => `<option value="${k}">${esc(ATENCAO[k])} (${fmt(at.por_motivo[k])})</option>`).join('');
+  }
 }
 
 function filtrar() {
@@ -234,6 +248,7 @@ function filtrar() {
     if (estado.abc && l.abc !== estado.abc) return false;
     if (estado.novo && !l.novo_com_demanda) return false;
     if (estado.neg && !l.estoque_negativo) return false;
+    if (estado.aba === 'aten' && estado.motivo && !(l.attention_reasons || []).includes(estado.motivo)) return false;
     if (q && !(String(l.nome || '').toLowerCase().includes(q) || String(l.codigo || '').toLowerCase().includes(q))) return false;
     return true;
   });
@@ -247,19 +262,23 @@ function render() {
   const cab = `<div class="${cls} head"><div>Prior.</div><div>Produto</div><div class="num">Estoque</div><div class="num">Vendas 30/60/90</div><div>Cobertura</div><div>ABC</div><div class="num">Sugestão</div>${comCusto ? '<div class="num">Custo indicativo</div>' : ''}</div>`;
   const linha = l => {
     const cob = COB[l.cobertura_estado] || [l.cobertura_estado || '—', ''];
-    const b = [l.novo_com_demanda ? '<span class="bd novo">NOVO COM DEMANDA COMPROVADA</span>' : '', l.novo_protegido ? '<span class="bd prot">PRODUTO NOVO · EM PROTEÇÃO</span>' : '', l.estoque_negativo ? '<span class="bd neg">ESTOQUE NEGATIVO</span>' : ''].join('');
+    const ja = new Set([l.novo_protegido ? 'NEW_PRODUCT_PROTECTED' : '', l.estoque_negativo ? 'NEGATIVE_STOCK' : '']);
+    const b = [l.novo_com_demanda ? '<span class="bd novo">NOVO COM DEMANDA COMPROVADA</span>' : '', l.novo_protegido ? '<span class="bd prot">PRODUTO NOVO · EM PROTEÇÃO</span>' : '', l.estoque_negativo ? '<span class="bd neg">ESTOQUE NEGATIVO</span>' : '',
+      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k)).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`)].join('');
+    const porque = [...(l.motivos || l.sem_sugestao_por || []), ...(l.motivos ? [] : (l.attention_reasons || []))];
+    const ult = !(l.qtd > 0) && l.ultima_venda ? ' · última venda ' + esc(l.ultima_venda.split('-').reverse().join('/')) : '';
     const k = comCusto ? (estado.custos.linhas || {})[l.id] : null;
     const v = l.vendas || {};
     return `<div class="${cls}">
       <div class="c-pr"><span class="pr ${l.prioridade || 'none'}">${l.prioridade || '—'}</span></div>
-      <div class="prod"><div class="nome">${esc(l.nome || 'Produto ' + l.id)}</div><div class="meta">${esc(l.codigo || l.id)}${l.grupo ? ' · ' + esc(l.grupo) : ''}</div>${b ? `<div class="badges">${b}</div>` : ''}</div>
+      <div class="prod"><div class="nome">${esc(l.nome || 'Produto ' + l.id)}</div><div class="meta">${esc(l.codigo || l.id)}${l.grupo ? ' · ' + esc(l.grupo) : ''}${ult}</div>${b ? `<div class="badges">${b}</div>` : ''}</div>
       <div class="num"><span class="lbl">Estoque</span><span class="${l.estoque < 0 ? 'neg-num' : ''}">${fmt(l.estoque)}</span></div>
       <div class="num"><span class="lbl">Vendas</span>${fmt(v.d30)} / ${fmt(v.d60)} / ${fmt(v.d90)}</div>
       <div><span class="lbl">Cobertura</span><span class="cob-${cob[1]}">${l.cobertura_dias !== null && l.cobertura_dias !== undefined ? fmt(l.cobertura_dias) + ' d · ' : ''}${cob[0]}</span></div>
       <div><span class="lbl">ABC</span>${esc(l.abc)}</div>
       <div class="num"><span class="lbl">Sugestão</span><span class="qtd ${l.qtd > 0 ? '' : 'zero'}">${l.qtd > 0 ? fmt(l.qtd) + ' un' : 'sem sugestão'}</span>${l.alvo_dias ? `<div class="meta" style="font-size:.68rem;color:var(--muted)">alvo ${l.alvo_dias} d</div>` : ''}</div>
       ${comCusto ? `<div class="num"><span class="lbl">Custo</span>${k ? brl(k.custo_cadastrado_cents) + (k.valor_sugestao_custo_conhecido_cents ? `<div style="font-size:.68rem;color:var(--muted)">sugestão ${brl(k.valor_sugestao_custo_conhecido_cents)}</div>` : '') : '—'}</div>` : ''}
-      <details class="mot"><summary>Por quê?</summary>${(l.motivos || []).map(m => `<code>${esc(m)}</code>`).join('')}</details>
+      <details class="mot"><summary>Por quê?</summary>${[...new Set(porque)].map(m => `<code>${esc(m)}</code>`).join('')}${!(l.qtd > 0) && l.sem_sugestao_por && !l.sem_sugestao_por.length ? '<code>ESTOQUE_COBRE_O_ALVO</code>' : ''}</details>
     </div>`;
   };
   document.getElementById('lista').innerHTML = itens.length ? cab + itens.map(linha).join('') : `<div class="vazio">Nenhum item com os filtros atuais.</div>`;
@@ -269,12 +288,13 @@ function render() {
   window.__comprasPerf.renders.push(Math.round((performance.now() - t0) * 10) / 10);
 }
 
-function sincronizarAbas() { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('sel', b.dataset.aba === estado.aba)); }
+function sincronizarAbas() { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('sel', b.dataset.aba === estado.aba)); document.getElementById('fMotivo').hidden = estado.aba !== 'aten'; }
 document.querySelectorAll('#tabs button').forEach(b => b.addEventListener('click', () => { estado.aba = b.dataset.aba; if (estado.aba === 'aten') estado.prioridade = ''; sincronizarAbas(); render(); }));
 document.querySelectorAll('#segAbc button').forEach(b => b.addEventListener('click', () => { estado.abc = b.dataset.v; document.querySelectorAll('#segAbc button').forEach(x => x.classList.toggle('sel', x === b)); render(); }));
 let tBusca; document.getElementById('busca').addEventListener('input', e => { clearTimeout(tBusca); tBusca = setTimeout(() => { estado.busca = e.target.value; render(); }, 120); });
 document.getElementById('fNovo').addEventListener('change', e => { estado.novo = e.target.checked; render(); });
 document.getElementById('fNeg').addEventListener('change', e => { estado.neg = e.target.checked; render(); });
+document.getElementById('fMotivo').addEventListener('change', e => { estado.motivo = e.target.value; render(); });
 document.getElementById('btnSair').addEventListener('click', async () => { await signOut(auth); window.location.href = '../login.html'; });
 </script>
 </body>

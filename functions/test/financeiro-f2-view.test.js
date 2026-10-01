@@ -64,6 +64,18 @@ describe('listas: filtros e paginação (nunca a base inteira)', () => {
     expect(est.itens).toHaveLength(g.resumo.pagar.prox_7d.n); expect(est.itens.reduce((a, i) => a + i.val, 0)).toBe(g.resumo.pagar.prox_7d.c);
     const totalFuturo = g.resumo.pagar.detalhe.FUTURO.fatias + g.resumo.pagar.detalhe.HOJE.fatias; expect(lidas.length).toBeLessThanOrEqual(totalFuturo);
   });
+  test('REGRESSÃO (achada em produção): "Próximos 7/30 dias" com poucos títulos hoje não pode parar no 1º grupo — a lista carrega fatias até ter itens suficientes (ou acabar) e mostra TODOS os títulos do card', () => {
+    const lista = (nat, filtro) => { const est = V.novaLista('gV', nat, filtro, g.resumo, HOJE); let n = 0; do { const f = V.proximaFatia(est); if (!f) break; V.aplicarFatia(est, porId[f.id]); n++; } while (V.precisaMais(est, 50)); return { est, n }; };
+    const ps = [...Array(3).fill(0).map((_, i) => titulo({ id: 'h' + i, data_vencimento: HOJE, valor: '10.00', valor_total: '10.00' })), ...Array(20).fill(0).map((_, i) => titulo({ id: 'f' + i, data_vencimento: C.somarDias(HOJE, 1 + (i % 6)), valor: '5.00', valor_total: '5.00' })), ...Array(10).fill(0).map((_, i) => titulo({ id: 'l' + i, data_vencimento: C.somarDias(HOJE, 20 + i), valor: '1.00', valor_total: '1.00' }))];
+    const mini = A.construirGeracao({ canon: canonDe(ps, []), agora: AGORA, geracao: 'gM', hoje: HOJE, tamFatia: 5 }); const pm = Object.fromEntries(mini.fatias.map(f => [f.id, f.doc]));
+    const est = V.novaLista('gM', 'PAGAR', 'd7', mini.resumo, HOJE); let n = 0; do { const f = V.proximaFatia(est); if (!f) break; V.aplicarFatia(est, pm[f.id]); n++; } while (V.precisaMais(est, 50));
+    expect(est.itens).toHaveLength(23); expect(est.itens).toHaveLength(mini.resumo.pagar.prox_7d.n); expect(n).toBeGreaterThanOrEqual(2); expect(est.itens.every(i => i.v <= C.somarDias(HOJE, 7))).toBe(true);   // HOJE (3) + FUTURO até 7 dias (20); os 10 mais distantes ficam de fora
+    // sem a regra (parar no 1º grupo) só apareceriam os 3 de hoje
+    const so1 = V.novaLista('gM', 'PAGAR', 'd7', mini.resumo, HOJE); V.aplicarFatia(so1, pm[V.proximaFatia(so1).id]); expect(so1.itens.length).toBeLessThan(23);
+    const d30 = lista('RECEBER', 'd30'); expect(d30.est.itens.reduce((a, i) => a + i.val, 0)).toBe(g.resumo.receber.prox_30d.c);
+    expect(V.precisaMais({ fim: true, itens: [] }, 50)).toBe(false); expect(V.precisaMais({ fim: false, itens: new Array(50) }, 50)).toBe(false); expect(V.precisaMais({ fim: false, itens: new Array(3) }, 50)).toBe(true);
+    expect(HTML).toMatch(/V\.precisaMais\(/);
+  });
   test('"Próximos 30 dias" bate com o card; "Requer conferência" bate com a contagem; "Pagas" é paginado por fatias recentes primeiro', () => {
     const a = carregaTudo('RECEBER', 'd30').est; expect(a.itens.reduce((x, i) => x + i.val, 0)).toBe(g.resumo.receber.prox_30d.c);
     const u = carregaTudo('PAGAR', 'conferencia').est; expect(u.itens).toHaveLength(g.resumo.pagar.requer_conferencia.n);

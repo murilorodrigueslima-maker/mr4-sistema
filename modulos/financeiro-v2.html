@@ -131,13 +131,19 @@ function renderGeral() {
 
 // ── listas paginadas (uma fatia por vez; nunca a base inteira) ──
 function chaveLista(nat) { return nat + ':' + S.filtro[nat]; }
+const PAGINA_MIN = 50;       // quantos itens tentar mostrar por vez (lê fatias em sequência até chegar nisso ou acabar)
 async function carregarMais(nat, reiniciar) {
   const k = chaveLista(nat);
   if (reiniciar || !S.listas[k]) S.listas[k] = V.novaLista(S.ativo.geracao, nat, S.filtro[nat], S.resumo, V.dataComercial(new Date()));
-  const est = S.listas[k]; const f = V.proximaFatia(est);
-  if (!f) { render(); return; }
-  try { const d = await lerDoc('fin_n1_titulos', f.id); if (!d || d.geracao !== S.ativo.geracao) throw new Error('fatia ausente'); V.aplicarFatia(est, d); est.erro = null; }
-  catch (e) { est.erro = 'Não foi possível carregar esta página. Tente novamente.'; }
+  const est = S.listas[k]; const minimo = reiniciar ? PAGINA_MIN : est.itens.length + 1;
+  try {
+    do {
+      const f = V.proximaFatia(est); if (!f) break;
+      const d = await lerDoc('fin_n1_titulos', f.id); if (!d || d.geracao !== S.ativo.geracao) throw new Error('fatia ausente');
+      V.aplicarFatia(est, d);
+    } while (V.precisaMais(est, minimo));
+    est.erro = null;
+  } catch (e) { est.erro = 'Não foi possível carregar esta página. Tente novamente.'; }
   render();
 }
 function linhaHtml(m, nat) {
@@ -181,8 +187,10 @@ function confLista(nat) {
 }
 async function carregarConf(nat, maisUma) {
   const k = nat + ':conferencia'; if (!S.listas[k]) S.listas[k] = V.novaLista(S.ativo.geracao, nat, 'conferencia', S.resumo, V.dataComercial(new Date()));
-  const est = S.listas[k]; const f = V.proximaFatia(est); if (!f) { render(); return; }
-  try { const d = await lerDoc('fin_n1_titulos', f.id); if (!d || d.geracao !== S.ativo.geracao) throw new Error('x'); V.aplicarFatia(est, d); } catch (e) { est.erro = 'Não foi possível carregar.'; est.fim = true; }
+  const est = S.listas[k]; const minimo = maisUma ? est.itens.length + 1 : PAGINA_MIN;
+  try {
+    do { const f = V.proximaFatia(est); if (!f) break; const d = await lerDoc('fin_n1_titulos', f.id); if (!d || d.geracao !== S.ativo.geracao) throw new Error('x'); V.aplicarFatia(est, d); } while (V.precisaMais(est, minimo));
+  } catch (e) { est.erro = 'Não foi possível carregar.'; est.fim = true; }
   render();
 }
 

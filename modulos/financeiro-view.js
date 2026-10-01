@@ -77,6 +77,8 @@
   function novaLista(geracao, natureza, filtroId, resumo, hoje) {
     return { natureza: natureza, filtro: filtroId, hoje: hoje, plano: planoLeitura(geracao, natureza, filtroId, resumo), proxima: 0, itens: [], fim: false, lidas: 0 };
   }
+  /** Há mais a carregar E ainda faltam itens para atingir o mínimo desejado na tela? (evita parar no 1º grupo quando ele é pequeno) */
+  function precisaMais(est, minimo) { return !est.fim && est.itens.length < minimo; }
   function proximaFatia(est) { return est.fim || est.proxima >= est.plano.length ? null : est.plano[est.proxima]; }
   function aplicarFatia(est, fatia) {
     var f = FILTROS[est.filtro], lim = f.dias != null ? somarDias(est.hoje, f.dias) : null, cheguei = false;
@@ -121,6 +123,6 @@
   function linhasFormas(nat) { return (nat.por_forma || []).map(function (f) { return { forma: f.forma, ambigua: !!f.ambigua, aberto: f.aberto, vencido: f.vencido }; }); }
 
   return { TZ: TZ, STALE_HORAS: STALE_HORAS, TAM_PAGINA_FATIA: TAM_PAGINA_FATIA, FAIXAS: FAIXAS, FILTROS: FILTROS, esc: esc, brl: brl, dataBR: dataBR, dataComercial: dataComercial, dataHoraBR: dataHoraBR, somarDias: somarDias, frescor: frescor,
-    linhasEnvelhecimento: linhasEnvelhecimento, modeloCards: modeloCards, rotuloFiltro: rotuloFiltro, planoLeitura: planoLeitura, novaLista: novaLista, proximaFatia: proximaFatia, aplicarFatia: aplicarFatia,
+    linhasEnvelhecimento: linhasEnvelhecimento, modeloCards: modeloCards, rotuloFiltro: rotuloFiltro, planoLeitura: planoLeitura, novaLista: novaLista, precisaMais: precisaMais, proximaFatia: proximaFatia, aplicarFatia: aplicarFatia,
     statusRotulo: statusRotulo, textoVinculo: textoVinculo, modeloLinha: modeloLinha, validarGeracao: validarGeracao, linhasFormas: linhasFormas };
 });

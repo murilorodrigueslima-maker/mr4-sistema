@@ -21,7 +21,7 @@ async function autorizar(store, uid, falhaG) {
 
 const agente = {
   agentType: 'finance', modulo: 'financeiro', generico: true, schemaName: 'agente_financeiro_resposta',
-  perguntaResumo: 'Resumo financeiro: o que vence hoje, próximos 7 e 30 dias, vencidos, concentrações e o que merece atenção. Não informe saldo, caixa nem capacidade de compra.',
+  perguntaResumo: 'Resumo financeiro: o que vence hoje, próximos 7 e 30 dias, vencidos, concentrações e o que merece atenção.',   // sem termos de caixa: a pergunta interna não pode acionar o classificador de pedido não atendível (as instruções já proíbem saldo/caixa)
   instructions: P.INSTRUCTIONS, motivos: P.MOTIVOS, acoes: P.ACOES, schema: criarSchemaAgente({ motivos: P.MOTIVOS, acoes: P.ACOES }), refPattern: /\b(?:G00[12]|[FC]\d{3})\b/g, rotulos: P.ROTULOS,
   avisoDesatualizado: 'Dados financeiros desatualizados: confira o ERP antes de decidir.',
   msgSemDados: 'O Financeiro ainda não tem dados sincronizados para analisar.',

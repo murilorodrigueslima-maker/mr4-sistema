@@ -338,3 +338,5 @@ async function crmConsultaHandler(request, opts = {}) {
 }
 
 module.exports = { crmConsulta, crmConsultaHandler, validarPedido, faixaValor, categoriasConfiaveis, ACOES, MAX_CARTOES, JANELA_VENDA_APOS_CONTATO_DIAS };
+// Reuso interno pelo AI Gateway (mesma autorização e mesmo escopo do CRM — nada é reimplementado)
+module.exports.__internals = { perfilDeAcesso, escopoVendedor, ErroCrm, CAMPOS_VENDA };

@@ -137,6 +137,25 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 .carregando{padding:3rem;text-align:center;color:var(--muted)}
 .toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#202124;color:#fff;padding:.6rem 1rem;border-radius:8px;font-size:.82rem;z-index:60;display:none}
 .toast.err{background:var(--red)}
+/* Agente Comercial (IA) */
+.ag-box{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:1rem}
+.ag-h{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.02rem}.ag-h .ms{color:var(--blue)}
+.ag-beta{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-dk);background:var(--blue-lt);border-radius:999px;padding:.1rem .5rem}
+.ag-sub{font-size:.8rem;color:var(--muted);margin:.25rem 0 .8rem}
+.ag-cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.55rem;margin-bottom:.9rem}
+.ag-card{background:var(--bg);border-radius:10px;padding:.5rem .65rem}.ag-card b{display:block;font-size:1.25rem}.ag-card span{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.ag-chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.7rem}
+.ag-chip{border:1px solid var(--border);background:var(--white);border-radius:999px;padding:.38rem .8rem;font-size:.8rem;font-weight:600;color:var(--text)}
+.ag-chip:hover:not(:disabled){border-color:var(--blue);color:var(--blue-dk)}
+.ag-form{display:flex;gap:.5rem;align-items:flex-start;margin-bottom:.9rem}.ag-form textarea{flex:1;border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;font:inherit;min-height:44px;resize:vertical}
+.ag-resp{border-top:1px solid var(--border-lt);padding-top:.9rem}.ag-resp .txt{white-space:pre-wrap;font-size:.92rem;margin-bottom:.8rem}
+.ag-msg{background:#fef7e0;border:1px solid #fde293;border-radius:10px;padding:.55rem .75rem;font-size:.85rem;margin-bottom:.7rem}
+.ag-cli{border:1px solid var(--border-lt);border-radius:10px;padding:.65rem .8rem;margin-bottom:.55rem}.ag-cli .n{font-weight:700;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.ag-tag{font-size:.68rem;font-weight:700;border-radius:6px;padding:.1rem .45rem}.ag-tag.alta{background:#fce8e6;color:#b31412}.ag-tag.media{background:#fef7e0;color:#92400e}.ag-tag.baixa{background:#e8f0fe;color:#1557b0}
+.ag-mot{display:flex;flex-wrap:wrap;gap:.3rem;margin:.35rem 0}.ag-mot span{font-size:.75rem;background:var(--bg);border-radius:6px;padding:.1rem .45rem}
+.ag-ev{font-size:.76rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.2rem .9rem}.ag-ev b{color:var(--text)}
+.ag-foot{font-size:.72rem;color:var(--faint);margin-top:.6rem}
+@media (max-width:900px){.ag-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.agenda{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){main{padding:.8rem .8rem 3rem}.topbar{padding:0 .7rem}.tabs{margin-left:0}.user,.legacy{display:none}.grid{grid-template-columns:1fr}.agenda{grid-template-columns:1fr}}
 </style>
@@ -148,6 +167,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tabHoje" aria-selected="true">Hoje</button>
     <button class="tab" role="tab" id="tabAgenda" aria-selected="false">Agenda</button>
+    <button class="tab" role="tab" id="tabAgente" aria-selected="false">Agente</button>
   </nav>
   <div class="spacer"></div>
   <a class="legacy" href="fila-comercial.html">Fila (versão anterior)</a>
@@ -163,6 +183,16 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
   <section id="viewAgenda" hidden>
     <div class="agenda" id="agenda"></div>
     <div class="depois" id="agendaDepois"></div>
+  </section>
+  <section id="viewAgente" hidden>
+    <div class="ag-box">
+      <div class="ag-h"><span class="ms">smart_toy</span> Agente Comercial <span class="ag-beta">beta</span></div>
+      <div class="ag-sub">Analisa somente os clientes do seu escopo, a partir de fatos calculados pelo sistema. Recomenda — não envia mensagens e não altera nada.</div>
+      <div class="ag-cards" id="agCards"></div>
+      <div class="ag-chips" id="agChips"></div>
+      <form class="ag-form" id="agForm"><textarea id="agPergunta" maxlength="400" rows="2" placeholder="Pergunte sobre sua carteira (ex.: por que devo falar com este cliente?)" aria-label="Pergunta ao Agente Comercial"></textarea><button class="btn pri" id="agEnviar" type="submit">Perguntar</button></form>
+      <div class="ag-resp" id="agResp" aria-live="polite"></div>
+    </div>
   </section>
 </main>
 
@@ -182,6 +212,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 
 <script src="fila-worklist-view.js"></script>
 <script src="crm-view.js"></script>
+<script src="agente-comercial-view.js?v=20261001a"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -204,6 +235,8 @@ const fnClaim = httpsCallable(funcs, 'claimOpportunity');
 const fnOutcome = httpsCallable(funcs, 'registerOutcome');
 const fnRelease = httpsCallable(funcs, 'releaseOpportunity');
 const fnConsulta = httpsCallable(funcs, 'crmConsulta');
+const fnAgente = httpsCallable(funcs, 'aiAgente');          // IA SOMENTE no backend (chave no Secret Manager); o navegador nunca vê chave nem dados fora do escopo
+const AV = window.AgenteComercialView;
 const V = window.CrmView;
 
 const S = { uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
@@ -323,7 +356,7 @@ function renderAgenda() {
 // re-render sem roubar o foco de quem está digitando (observação/data)
 function render() {
   const a = document.activeElement, id = a && a.id, ini = a && a.selectionStart, fim = a && a.selectionEnd;
-  if (S.aba === 'hoje') renderHoje(); else renderAgenda();
+  if (S.aba === 'agente') return; if (S.aba === 'hoje') renderHoje(); else renderAgenda();
   if (id) { const n = document.getElementById(id); if (n && n !== document.activeElement) { n.focus(); try { if (ini != null) n.setSelectionRange(ini, fim); } catch (e) {} } }
 }
 
@@ -469,12 +502,46 @@ document.getElementById('drawerBg').addEventListener('click', fecharCliente);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharCliente(); });
 function trocarAba(aba) {
   S.aba = aba;
-  document.getElementById('tabHoje').setAttribute('aria-selected', aba === 'hoje'); document.getElementById('tabAgenda').setAttribute('aria-selected', aba === 'agenda');
-  document.getElementById('viewHoje').hidden = aba !== 'hoje'; document.getElementById('viewAgenda').hidden = aba !== 'agenda';
-  render();
+  document.getElementById('tabHoje').setAttribute('aria-selected', aba === 'hoje'); document.getElementById('tabAgenda').setAttribute('aria-selected', aba === 'agenda'); document.getElementById('tabAgente').setAttribute('aria-selected', aba === 'agente');
+  document.getElementById('viewHoje').hidden = aba !== 'hoje'; document.getElementById('viewAgenda').hidden = aba !== 'agenda'; document.getElementById('viewAgente').hidden = aba !== 'agente';
+  if (aba === 'agente') abrirAgente(); else render();
 }
 document.getElementById('tabHoje').addEventListener('click', () => trocarAba('hoje'));
 document.getElementById('tabAgenda').addEventListener('click', () => trocarAba('agenda'));
+document.getElementById('tabAgente').addEventListener('click', () => trocarAba('agente'));
+
+// ── Agente Comercial (IA no backend; só leitura/recomendação) ──────────────────────────────────────
+const AG = { carregado: false, ocupado: false };
+function agChips() { document.getElementById('agChips').innerHTML = AV.SUGESTOES.map(x => `<button type="button" class="ag-chip" data-ag="${esc(x.id)}" ${AG.ocupado ? 'disabled' : ''}>${esc(x.rotulo)}</button>`).join(''); }
+async function abrirAgente() {
+  agChips();
+  if (AG.carregado) return; AG.carregado = true;
+  try { const r = (await fnAgente({ agentType: 'commercial', modo: 'contagens' })).data; document.getElementById('agCards').innerHTML = AV.cardsResumo(r.resumoDia).map(c => `<div class="ag-card"><b>${esc(c.valor)}</b><span>${esc(c.rotulo)}</span></div>`).join(''); }
+  catch (e) { AG.carregado = false; document.getElementById('agCards').innerHTML = ''; }
+}
+function agRender(resp) {
+  const m = AV.modeloResposta(resp); const h = [];
+  if (m.mensagem) h.push(`<div class="ag-msg">${esc(m.mensagem)}</div>`);
+  if (m.resposta) h.push(`<div class="txt">${esc(m.resposta)}</div>`);
+  if (m.clientes.length) { if (!m.iaOk) h.push('<div class="sub" style="margin-bottom:.4rem">Prioridades calculadas pelo sistema (sem IA):</div>'); h.push(m.clientes.map(c => `<div class="ag-cli"><div class="n">${esc(c.nome)} <span class="ag-tag ${esc(c.prioridade.classe)}">Prioridade ${esc(c.prioridade.rotulo)}</span>${c.responsavel ? `<span class="sub">· ${esc(c.responsavel)}</span>` : ''}<button type="button" class="btn link" data-ag-cli="${esc(c.entidade)}">Abrir cliente</button></div>
+    <div class="ag-mot">${c.motivos.map(x => `<span>${esc(x)}</span>`).join('')}</div>${c.evidencias.length ? `<div class="ag-ev">${c.evidencias.map(e => `<span>${esc(e.rotulo)}: <b>${esc(e.valor)}</b></span>`).join('')}</div>` : ''}</div>`).join('')); }
+  if (m.indisponivel.length) h.push(`<div class="sub">Não disponível: ${m.indisponivel.map(esc).join('; ')}</div>`);
+  if (m.avisos.length) h.push(`<div class="sub">${m.avisos.map(esc).join(' · ')}</div>`);
+  if (m.frescor) h.push(`<div class="ag-foot">${esc(m.frescor)}</div>`);
+  if (m.rodape) h.push(`<div class="ag-foot">${esc(m.rodape)}</div>`);
+  document.getElementById('agResp').innerHTML = h.join('');
+}
+async function agPerguntar(modo, pergunta) {
+  if (AG.ocupado) return;
+  if (modo === 'pergunta') { const v = AV.validarPergunta(pergunta); if (!v.ok) { toast(v.tamanho ? `Pergunta passa de ${AV.PERGUNTA_MAX} caracteres.` : 'Escreva uma pergunta.', true); return; } pergunta = v.texto; }
+  AG.ocupado = true; agChips(); document.getElementById('agEnviar').disabled = true; document.getElementById('agResp').innerHTML = '<div class="carregando">Analisando sua carteira…</div>';
+  try { const r = (await fnAgente(modo === 'resumo' ? { agentType: 'commercial', modo: 'resumo' } : { agentType: 'commercial', modo: 'pergunta', pergunta })).data; agRender(r); if (r.resumoDia) document.getElementById('agCards').innerHTML = AV.cardsResumo(r.resumoDia).map(c => `<div class="ag-card"><b>${esc(c.valor)}</b><span>${esc(c.rotulo)}</span></div>`).join(''); }
+  catch (e) { const cod = e && e.code ? String(e.code) : ''; document.getElementById('agResp').innerHTML = `<div class="ag-msg">${esc(cod.includes('resource-exhausted') ? 'Muitas perguntas em pouco tempo. Aguarde um instante e tente de novo.' : cod.includes('permission-denied') ? 'Você não tem acesso ao Agente Comercial.' : 'Não foi possível consultar o agente agora. O CRM continua funcionando normalmente.')}</div>`; }
+  finally { AG.ocupado = false; agChips(); document.getElementById('agEnviar').disabled = false; }
+}
+document.getElementById('agForm').addEventListener('submit', e => { e.preventDefault(); agPerguntar('pergunta', document.getElementById('agPergunta').value); });
+document.getElementById('agChips').addEventListener('click', e => { const b = e.target.closest('[data-ag]'); if (!b) return; const s = AV.SUGESTOES.find(x => x.id === b.dataset.ag); if (!s) return; if (s.pergunta) document.getElementById('agPergunta').value = s.pergunta; agPerguntar(s.modo, s.pergunta); });
+document.getElementById('agResp').addEventListener('click', e => { const b = e.target.closest('[data-ag-cli]'); if (b) abrirCliente(b.dataset.agCli); });
 
 // ── Auth + listeners (mesmas leituras que a fila atual já faz; Rules inalteradas) ────────────────────
 function semAcesso(msg) { document.getElementById('carregando').innerHTML = `${esc(msg)}<br><a href="../index.html" style="color:var(--blue);font-weight:600">← Voltar ao sistema</a>`; }

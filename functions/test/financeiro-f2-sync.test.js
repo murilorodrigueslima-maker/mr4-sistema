@@ -139,3 +139,17 @@ describe('logs, GET-only e escopo temporal', () => {
     const { r } = await rodar(db); expect(r).toMatchObject({ ok: false, motivo: 'LOCK_ERRO' });
   });
 });
+
+describe('rollback de dados (ponteiro volta para a geração anterior, sem apagar nada)', () => {
+  test('publica 2 gerações, reverte: ativa = primeira, segunda preservada como anterior; sem anterior → recusa; trava respeitada', async () => {
+    const db = dbFalso(); const g = [];
+    for (let i = 0; i < 2; i++) { const gc = gcFalso(dados); const r = await S.executarSyncFinanceiro({ cli: gc.cli, db, agora: depois(i * 10), log: () => {} }); g.push(r.geracao); }
+    const antes = Object.keys(db.st.fin_n1_titulos).length;
+    const rv = await P.reverterParaAnterior(db, { runId: 'rb1', agora: depois(30) });
+    expect(rv).toEqual({ ok: true, geracao: g[0] }); const a = ativo(db);
+    expect(a.geracao).toBe(g[0]); expect(a.anterior.geracao).toBe(g[1]); expect(a.resumo_id).toBe(g[0] + '__resumo'); expect(db.ler('fin_n1_resumo', a.resumo_id).geracao).toBe(g[0]);
+    expect(Object.keys(db.st.fin_n1_titulos).length).toBe(antes); expect(db.ler('fin_n1_ctl', 'lock')).toBeUndefined();
+    const db2 = dbFalso(); await rodar(db2); expect((await P.reverterParaAnterior(db2, { runId: 'rb2' })).motivo).toBe('SEM_GERACAO_ANTERIOR');
+    await P.adquirirLock(db2, { runId: 'outro', agora: AGORA }); expect((await P.reverterParaAnterior(db2, { runId: 'rb3', agora: depois(1) })).motivo).toBe('LOCK_ATIVO');
+  });
+});

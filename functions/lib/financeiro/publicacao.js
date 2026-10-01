@@ -110,7 +110,26 @@ async function publicarGeracao(db, { geracao, resumo, entidades, fatias, runId, 
   }
 }
 
+/**
+ * ROLLBACK DE DADOS: volta o ponteiro para a geração anterior (que continua gravada). Só com a trava; a geração substituída vira "anterior"
+ * (pode-se desfazer o rollback) e nada é apagado. Retorna { ok, geracao } ou { ok:false, motivo }.
+ */
+async function reverterParaAnterior(db, { runId, agora = new Date() }) {
+  const l = await adquirirLock(db, { runId, tipo: 'ROLLBACK', agora });
+  if (!l.ok) return { ok: false, motivo: l.motivo };
+  try {
+    return await db.runTransaction(async tx => {
+      const ta = await tx.get(refAtivo(db)); const a = ta.exists ? ta.data() : null;
+      if (!a || !a.anterior || !a.anterior.geracao) return { ok: false, motivo: 'SEM_GERACAO_ANTERIOR' };
+      const g = a.anterior.geracao, ids = a.anterior.ids || [];
+      tx.set(refAtivo(db), { versao: a.versao, geracao: g, publicado_em: a.anterior.publicado_em, data_comercial: null, run_id: runId, resumo_id: idResumo(g), entidades_id: idEntidades(g), fatias: ids.filter(i => /__(PAGAR|RECEBER)__/.test(i)).length, ids,
+        anterior: { geracao: a.geracao, ids: a.ids, publicado_em: a.publicado_em }, revertido_de: a.geracao, revertido_em: agora.toISOString() });
+      return { ok: true, geracao: g };
+    });
+  } finally { await liberarLock(db, runId); }
+}
+
 /** Lê o ponteiro ativo (mesmo caminho do painel). */
 async function lerAtivo(db) { const s = await refAtivo(db).get(); return s.exists ? s.data() : null; }
 
-module.exports = { COL, LEASE_MS, adquirirLock, renovarLock, liberarLock, publicarGeracao, lerAtivo, apagarIds };
+module.exports = { COL, LEASE_MS, adquirirLock, renovarLock, liberarLock, publicarGeracao, reverterParaAnterior, lerAtivo, apagarIds };

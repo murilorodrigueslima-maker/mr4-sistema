@@ -195,3 +195,11 @@ describe('previsão de demanda: resposta DETERMINÍSTICA (sem modelo, sem dados,
     for (const u of [null, UID.INAT, UID.SEM, UID.ADM, UID.FUNC]) { const x = await rodar(u, { modo: 'pergunta', pergunta: 'Qual produto vai vender amanhã?' }, modelo()); expect(x.e).toBeTruthy(); }
   });
 });
+
+describe('UI do Estoque: ao abrir a aba o widget desenha cartões e chips (abrir())', () => {
+  test('estoque.html chama window.__agenteEstoque.abrir() no clique da aba, isolado em try/catch', () => {
+    const html = fs.readFileSync(path.join(__dirname, '../../modulos/estoque.html'), 'utf8');
+    expect(html).toMatch(/getElementById\('tabBtnAgente'\)\.addEventListener\('click'[\s\S]{0,160}window\.__agenteEstoque\.abrir\(\)/);
+    expect(html).toMatch(/try \{ window\.__agenteEstoque\.abrir\(\); \} catch/);
+  });
+});

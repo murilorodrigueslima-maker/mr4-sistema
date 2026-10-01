@@ -604,6 +604,8 @@
         sugestoes: [{ rotulo: 'O que merece atenção?', modo: 'resumo' }, { rotulo: 'Produtos parados', pergunta: 'Quais produtos estão parados?' }, { rotulo: 'Risco de ruptura', pergunta: 'Quais produtos estão perto de faltar?' }, { rotulo: 'Capital parado', pergunta: 'Quanto dinheiro tenho em produtos sem giro?' }, { rotulo: 'Sem venda +120 dias', pergunta: 'Quais não vendem há +120 dias?' }],
         msgSemDados: 'Ainda não há dados de estoque sincronizados.',
       });
+      // Cartões do resumo + chips só são desenhados por abrir(): chamar ao abrir a aba (1ª vez carrega o resumo determinístico, sem IA).
+      document.getElementById('tabBtnAgente').addEventListener('click', () => { try { window.__agenteEstoque.abrir(); } catch (e) { console.warn('Agente indisponível:', (e && e.code) || e); } });
     });
   }
 

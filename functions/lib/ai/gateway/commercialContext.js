@@ -83,6 +83,9 @@ function construirContexto({ candidatos, vendasPorGc, estadosPorEntidade, hoje, 
   const q = norm(pergunta); const achados = q ? todos.filter(x => x.f.nome && norm(x.f.nome).length >= 4 && ` ${q} `.includes(` ${norm(x.f.nome)} `)) : [];
   const maxLen = achados.reduce((m, x) => Math.max(m, norm(x.f.nome).length), 0); const melhores = achados.filter(x => norm(x.f.nome).length === maxLen);
   const foco = melhores.length === 1 ? melhores[0] : null; const ambiguo = melhores.length > 1;
+  // A pergunta pode citar um nome: o texto enviado ao modelo troca o nome pela ref opaca (ou por [cliente] quando ambíguo). Nome nunca vai ao provedor.
+  let perguntaSegura = String(pergunta || '');
+  for (const x of achados.sort((a, b) => norm(b.f.nome).length - norm(a.f.nome).length)) { const re = new RegExp(norm(x.f.nome).split(' ').map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\W_]+'), 'gi'); const ref = melhores.length === 1 ? x.ref : '[cliente]'; perguntaSegura = perguntaSegura.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(re, ref); }
   const incluidos = new Map(); for (const x of [...prioridade, ...semComprar, ...queda, ...recompra]) incluidos.set(x.ref, x);
   const ctxClientes = {}; for (const [ref, x] of incluidos) { const c = filtrarCliente({ ...x.f, ref }, { gestao }); delete c.produtosMaisComprados; delete c.categorias; ctxClientes[ref] = c; }
   let emFoco = null; if (foco) { const c = filtrarCliente({ ...foco.f, ref: foco.ref, ultimosContatos: foco.f._ultimos }, { gestao }); emFoco = c; delete ctxClientes[foco.ref]; }
@@ -91,7 +94,7 @@ function construirContexto({ candidatos, vendasPorGc, estadosPorEntidade, hoje, 
     recompraProvavel: conta(x => ['ATRASADO_VS_HISTORICO', 'PROXIMO_DA_JANELA'].includes(x.f.recorrencia)), followUpsAtrasados: conta(x => x.f.situacaoRetorno === 'ATRASADO'), followUpsHoje: conta(x => x.f.situacaoRetorno === 'HOJE'), semContatoRecente: conta(x => x.f.sinais.includes('SEM_CONTATO_RECENTE')) };
   const refs = r => r.map(x => x.ref);
   const defasagem = meta.vendasAte ? diasEntre(meta.vendasAte, hoje) : null; const desatualizado = defasagem != null && defasagem > LIMITES.DIAS_DADOS_DESATUALIZADOS;
-  const limitacoes = ['Análise baseada em fila comercial + carteira dentro do seu escopo.', 'Notas privadas, telefone, e-mail, endereço e documentos não são enviados ao agente.', 'Produtos e categorias só estão disponíveis para o cliente em foco.']
+  const limitacoes = ['Análise baseada em fila comercial + carteira dentro do seu escopo.', 'Nomes de clientes, notas privadas, telefone, e-mail, endereço e documentos não são enviados ao agente (clientes aparecem por referência).', 'Produtos e categorias só estão disponíveis para o cliente em foco.']
     .concat(gestao ? [] : ['Valores em R$ não estão disponíveis para o perfil de vendedor.']).concat(desatualizado ? [`Dados de vendas desatualizados: a última venda conhecida é de ${defasagem} dias atrás.`] : []).concat(meta.truncado ? [`Análise limitada a ${todos.length} clientes (teto por pedido).`] : []).concat(ambiguo ? ['A pergunta cita mais de um cliente com nome parecido; nenhum foi selecionado.'] : []);
   const contexto = { agenteVersao: VERSAO, geradoEm: meta.geradoEm || null, hoje, escopo: gestao ? 'GESTAO_TODOS_OS_VENDEDORES' : 'VENDEDOR_PROPRIO', resumoDia, rankings: { prioridade: refs(prioridade), maisTempoSemComprar: refs(semComprar), maiorQueda: refs(queda), recompra: refs(recompra) },
     clientes: ctxClientes, ...(emFoco ? { clienteEmFoco: emFoco } : {}), limitacoes,
@@ -100,7 +103,7 @@ function construirContexto({ candidatos, vendasPorGc, estadosPorEntidade, hoje, 
   const mapa = {}; for (const x of todos) mapa[x.ref] = { entidade: x.cand.entidade, nome: x.f.nome || null, gcId: x.cand.gcId, responsavel: x.f.responsavel || null, prioridade: x.f.prioridadeSugerida, sinais: x.f.sinais, fatos: x.f };
   const bytes = Buffer.byteLength(JSON.stringify(contexto));
   const fallback = prioridade.slice(0, 10).map(x => ({ ref: x.ref, prioridade: x.f.prioridadeSugerida, reasonCodes: x.f.sinais.filter(s => s !== 'OPORTUNIDADE_NA_FILA') }));
-  return { contexto, mapa, resumoDia, fallback, bytes, truncado: !!meta.truncado };
+  return { contexto, mapa, resumoDia, fallback, bytes, truncado: !!meta.truncado, perguntaSegura };
 }
 
 function chunk(a, n) { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; }

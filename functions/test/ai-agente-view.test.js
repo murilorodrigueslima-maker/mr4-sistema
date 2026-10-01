@@ -43,3 +43,12 @@ describe('XSS e integração no CRM', () => {
     expect(HTML).toMatch(/agente-comercial-view\.js\?v=\w+/);
   });
 });
+
+describe('gate do piloto no frontend (a proteção real é o backend)', () => {
+  const html = require('fs').readFileSync(require('path').join(__dirname, '../../modulos/crm.html'), 'utf8');
+  test('aba Agente nasce oculta e só aparece quando o backend confirma o acesso (modo acesso)', () => {
+    expect(html).toMatch(/id="tabAgente"[^>]*\shidden/);
+    expect(html).toMatch(/modo: 'acesso'[\s\S]{0,200}r\.data\.acesso === true[\s\S]{0,120}tabAgente'\)\.hidden = false/);
+    expect(html).toMatch(/if \(S\.gestao\) fnAgente\(/);
+  });
+});

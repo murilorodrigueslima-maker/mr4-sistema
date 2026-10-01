@@ -1,7 +1,7 @@
 'use strict';
 // AI GATEWAY — AI_DATA_ALLOWLIST. Nada fora desta lista entra no contexto enviado ao provedor de IA (OpenAI).
 // Princípios: minimização (sem CPF/CNPJ, telefone, e-mail, endereço, documentos, tokens, observações/notas livres, dados de outros módulos);
-// referência opaca por requisição (C01, C02…) no lugar de qualquer ID interno; nome comercial só quando necessário para o usuário reconhecer o cliente.
+// referência opaca por requisição (C001, C002…) no lugar de qualquer ID interno e de qualquer nome de cliente (o nome só é resolvido no backend, depois da validação).
 // R$ só para a gestão (mesma regra do CRM: vendedor não vê valores em R$ — segregação N35.20.1).
 const { escaneiarTextoParaPII } = require('../../n29/piiGuard');
 
@@ -9,7 +9,7 @@ const TIPOS = { N: 'number', S: 'string', B: 'boolean' };
 // campo → [tipo, tamanho máximo (strings), somenteGestao]
 const CLIENTE = {
   ref: ['S', 8, false],                     // C01… (opaco, por requisição)
-  nome: ['S', 60, false],                   // nome comercial (truncado; sanitizado contra instruções/PII)
+  // SEND_CUSTOMER_NAME_TO_MODEL=NO: o nome do cliente NÃO faz parte da allowlist; o vínculo ref→cliente fica só no backend.
   responsavel: ['S', 20, false],            // primeiro nome do vendedor responsável (só visão de gestão)
   ultimaCompraEm: ['S', 10, false], diasSemComprar: ['N', 0, false], primeiraCompraEm: ['S', 10, false],
   pedidosTotal: ['N', 0, false], pedidos30d: ['N', 0, false], pedidos60d: ['N', 0, false], pedidos90d: ['N', 0, false], pedidos180d: ['N', 0, false],
@@ -49,7 +49,7 @@ function filtrarCliente(c, { gestao }) {
     const v = c[k];
     if (v === null) { out[k] = null; continue; }
     if (tipo === 'N') { if (typeof v === 'number' && Number.isFinite(v)) out[k] = Math.round(v * 100) / 100; continue; }
-    if (tipo === 'S') { const t = k === 'nome' ? sanitizarTexto(v, max) : String(v).slice(0, max); if (t !== null && t !== '') out[k] = t; else if (k === 'nome') out.nome = null; }
+    if (tipo === 'S') { const t = String(v).slice(0, max); if (t !== '') out[k] = t; }
   }
   if (!gestao) delete out.responsavel;
   for (const [k, cfg] of Object.entries(LISTAS_CLIENTE)) {

@@ -133,6 +133,7 @@ describe('XSS e privacidade da página', () => {
     expect(HTML).not.toMatch(/\bfetch\s*\(|XMLHttpRequest|\bsetDoc\b|\bupdateDoc\b|\baddDoc\b|\bdeleteDoc\b|writeBatch|runTransaction|localStorage|sessionStorage|indexedDB/);
     const botoes = [...HTML.matchAll(/<button[^>]*>([^<]*)</g)].map(x => x[1].trim()); for (const b of botoes) expect(b).not.toMatch(/^(Pagar|Receber|Dar baixa|Baixar|Editar|Excluir|Alterar vencimento|Criar t[ií]tulo|Novo t[ií]tulo|Salvar)$/i);
   });
+  test('o script de lógica é carregado com versão no endereço (cache do Pages não mistura HTML novo com JS velho)', () => { expect(HTML).toMatch(/<script src="financeiro-view\.js\?v=\w+"><\/script>/); });
   test('o aviso de saldo está na página, sem alerta vermelho permanente', () => {
     expect(HTML).toMatch(/O Financeiro acompanha títulos e compromissos programados\. O saldo bancário real ainda não está integrado\./);
     expect(HTML).toMatch(/class="aviso"/);

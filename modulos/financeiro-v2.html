@@ -67,14 +67,17 @@ details summary{cursor:pointer;font-weight:600;font-size:.85rem}
   <button role="tab" data-aba="conferir" aria-selected="false">Requer conferência</button>
   <button role="tab" data-aba="fornec" aria-selected="false">Fornecedores</button>
   <button role="tab" data-aba="clientes" aria-selected="false">Clientes</button>
+  <button role="tab" data-aba="agente" id="tabAgente" aria-selected="false" hidden>Agente</button>
 </nav>
 <main id="main"><div class="carregando" id="carregando">Carregando o Financeiro…</div></main>
 
+<script src="agente-ia-widget.js?v=20261001a"></script>
 <script src="financeiro-view.js?v=20261001a"></script>   <!-- versão no endereço: o Pages guarda arquivos por 10 min; mudou a lógica → troque o sufixo -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 // Configuração pública do app Firebase (não é segredo; igual às demais páginas). Esta página só LÊ o Firestore protegido:
 // nenhum acesso ao ERP, nenhum segredo, nenhuma escrita financeira.
@@ -82,10 +85,11 @@ const app = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto",
   storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5"
 });
-const auth = getAuth(app), db = getFirestore(app);
+const auth = getAuth(app), db = getFirestore(app), funcs = getFunctions(app, 'southamerica-east1');
 if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+  connectFunctionsEmulator(funcs, 'localhost', 5001);
 }
 const V = window.FinanceiroView, esc = V.esc;
 const S = { ativo: null, resumo: null, entidades: null, aba: 'geral', listas: {}, filtro: { PAGAR: 'vencidas', RECEBER: 'vencidas' }, busca: '', erro: null };
@@ -210,12 +214,33 @@ function renderEntidades(nat) {
   <div class="scroll"><table><thead><tr><th>${nat === 'PAGAR' ? 'Fornecedor' : 'Cliente'}</th><th class="n">Em aberto</th><th class="n">Vencido</th><th class="n">Próx. 7 dias</th><th class="n">Próx. 30 dias</th><th class="n">Vencido +365 dias</th></tr></thead><tbody>${fil.map(e => `<tr><td>${esc(e.nome || (e.tipo === 'FUNCIONARIO' ? 'Funcionário' : e.tipo === 'OUTROS' ? 'Outros (sem cadastro)' : 'Sem cadastro'))}</td><td class="n">${esc(V.brl(e.aberto.c))}</td><td class="n">${esc(V.brl(e.vencido.c))}</td><td class="n">${esc(V.brl(e.prox_7d.c))}</td><td class="n">${esc(V.brl(e.prox_30d.c))}</td><td class="n">${esc(V.brl(ac(e).c))}</td></tr>`).join('') || '<tr><td colspan="6" class="vazio">Nada encontrado.</td></tr>'}</tbody></table></div></div>`;
 }
 
+// ── Agente Financeiro (IA no backend; SOMENTE leitura/recomendação). Aba oculta por padrão: só aparece quando o BACKEND confirma o acesso (modo 'acesso'). ──
+const chamarAgente = async p => (await httpsCallable(funcs, 'aiAgente')(p)).data;
+const AGENTE_CFG = {
+  agentType: 'finance', titulo: 'Agente Financeiro', sub: 'Interpreta os títulos e vencimentos já calculados pelo Financeiro. Recomenda revisões; não paga, não transfere, não altera nada. O saldo bancário não está integrado: o agente não informa saldo nem estima quanto dá para comprar.',
+  placeholder: 'Pergunte sobre vencimentos, vencidos, concentração…', chamar: chamarAgente,
+  cartoes: [{ chave: 'pagar_hoje', rotulo: 'A pagar hoje' }, { chave: 'receber_hoje', rotulo: 'A receber hoje' }, { chave: 'pagar_7d', rotulo: 'A pagar · 7 dias' }, { chave: 'receber_7d', rotulo: 'A receber · 7 dias' }, { chave: 'pagar_30d', rotulo: 'A pagar · 30 dias' }, { chave: 'receber_30d', rotulo: 'A receber · 30 dias' }, { chave: 'pagar_vencido', rotulo: 'Vencido a pagar' }, { chave: 'receber_vencido', rotulo: 'Vencido a receber' }],
+  formatos: Object.assign({ pagar_hoje: 'brl', receber_hoje: 'brl', pagar_7d: 'brl', receber_7d: 'brl', pagar_30d: 'brl', receber_30d: 'brl', pagar_vencido: 'brl', receber_vencido: 'brl', open_share_pct: 'pct', open_count: 'int', overdue_count: 'int', needs_review_count: 'int' },
+    ...['payables', 'receivables'].map(p => ({ [p + '_open']: 'brl', [p + '_today']: 'brl', [p + '_7d']: 'brl', [p + '_30d']: 'brl', [p + '_overdue']: 'brl', [p + '_overdue_over_60d']: 'brl', [p + '_overdue_share_of_open_pct']: 'pct', [p + '_open_count']: 'int', [p + '_today_count']: 'int', [p + '_7d_count']: 'int', [p + '_30d_count']: 'int', [p + '_overdue_count']: 'int', [p + '_overdue_over_60d_count']: 'int' })),
+    { open_value: 'brl', overdue_value: 'brl', due_7d_value: 'brl', due_30d_value: 'brl', programmed_net_7d: 'brl', programmed_net_30d: 'brl' }),
+  rotulosValor: { oldest_overdue_band: { D1_A_7: '1–7 dias', D8_A_15: '8–15 dias', D16_A_30: '16–30 dias', D31_A_60: '31–60 dias', D61_A_90: '61–90 dias', D91_A_180: '91–180 dias', D181_A_365: '181–365 dias', ACIMA_365: 'mais de 365 dias' } },
+  msgSemDados: 'O Financeiro ainda não tem dados sincronizados.',
+  sugestoes: [{ rotulo: 'Resumo financeiro', modo: 'resumo' }, { rotulo: 'Vencimentos de hoje', modo: 'pergunta', pergunta: 'O que vence hoje?' }, { rotulo: 'Próximos 7 dias', modo: 'pergunta', pergunta: 'Como estão os próximos 7 dias?' }, { rotulo: 'Valores vencidos', modo: 'pergunta', pergunta: 'Quais vencimentos estão atrasados?' }, { rotulo: 'Pressão financeira', modo: 'pergunta', pergunta: 'Onde há maior pressão financeira?' }],
+};
+let agenteWidget = null;
+function renderAgente() {
+  const m = $('main'); m.innerHTML = '<div id="agenteBox"></div>';
+  document.querySelectorAll('#abas button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.aba === 'agente')));
+  agenteWidget = window.AgenteIaWidget.montar($('agenteBox'), AGENTE_CFG); agenteWidget.abrir();
+}
+
 function render() {
   renderFresco();
   const m = $('main');
   if (S.erro) { m.innerHTML = `<div class="erro">${esc(S.erro)}</div>`; return; }
   if (!S.resumo) return;
   document.querySelectorAll('#abas button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.aba === S.aba)));
+  if (S.aba === 'agente') { renderAgente(); return; }
   let h;
   if (S.aba === 'geral') h = renderGeral();
   else if (S.aba === 'pagar') { if (!S.listas[chaveLista('PAGAR')]) carregarMais('PAGAR', true); h = renderLista('PAGAR'); }
@@ -246,6 +271,8 @@ onAuthStateChanged(auth, async u => {
     const ss = await getDoc(doc(db, 'sistema_usuarios', u.uid)); const sd = ss.exists() ? ss.data() : null;
     const mods = sd && Array.isArray(sd.modulos) ? sd.modulos : [];
     if (!sd || sd.bloqueado === true || !(sd.admin === true || mods.includes('financeiro'))) { $('main').innerHTML = '<div class="erro">Você não tem acesso ao Financeiro. <a href="../index.html">Voltar</a></div>'; $('fresco').textContent = ''; return; }
+    // Gate do piloto (frontend): a aba só aparece se o BACKEND confirmar (a proteção real fica em aiAgente; esconder a aba nunca é a proteção).
+    window.AgenteIaWidget.liberarSePermitido(chamarAgente, 'finance', () => { $('tabAgente').hidden = false; });
   } catch (e) { location.href = '../login.html'; return; }
   try {
     S.ativo = await lerDoc('fin_n1', 'active');

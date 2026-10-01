@@ -239,3 +239,7 @@ describe('ALUCINAÇÃO e INJEÇÃO', () => {
     expect((await rodar(UID.GER, Q, m, { db })).e.code).toMatch(/resource-exhausted/);
   });
 });
+
+describe('prompt de Compras: a palavra "fornecedor" fica restrita ao unavailable', () => {
+  test('instrução presente no prompt final', () => { const P = require('../lib/ai/agents/purchasing/prompt'); expect(P.INSTRUCTIONS).toMatch(/NÃO use a palavra "fornecedor" em answer, warnings nem rationale/); });
+});

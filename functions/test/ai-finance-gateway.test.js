@@ -167,14 +167,14 @@ describe('estático: nenhum código de escrita; módulo existente intacto; UI co
     const so = fs.readFileSync(path.join(DIR, 'prompt.js'), 'utf8'); expect(so).toMatch(/não paga, não transfere, não concilia, não edita, não apaga/);
   });
   const sh = c => execSync(c, { cwd: path.join(__dirname, '../..'), encoding: 'utf8' }).trim();
-  test('git diff vs ff37013: só arquivos do agente + financeiro-v2.html; motor/Functions/Rules/gateway/widget/outros módulos intactos', () => {
-    const mudados = [...sh('git diff --name-only ff37013').split('\n'), ...sh('git ls-files --others --exclude-standard').split('\n')].filter(f => f && !f.startsWith('functions/node_modules'));
+  test('git diff vs c79ad64: só arquivos do agente + financeiro-v2.html; motor/Functions/Rules/gateway/widget/outros módulos intactos', () => {
+    const mudados = [...sh('git diff --name-only c79ad64').split('\n'), ...sh('git ls-files --others --exclude-standard').split('\n')].filter(f => f && !f.startsWith('functions/node_modules'));
     const permitido = f => /^functions\/lib\/ai\/agents\/finance\//.test(f) || /^functions\/test\/(ai-finance-[\w-]+\.test\.js|fixtures\/ai-finance\.js)$/.test(f) || f === 'modulos/financeiro-v2.html';
     expect(mudados.filter(f => !permitido(f))).toEqual([]);
-    for (const f of ['functions/lib/financeiro/motor.js', 'functions/lib/financeiro/agregados.js', 'functions/lib/financeiro/sync.js', 'functions/index.js', 'modulos/firestore.rules', 'modulos/financeiro-view.js', 'modulos/financeiro.html', 'modulos/agente-ia-widget.js', 'functions/lib/ai/agents/index.js']) expect(sh('git diff --name-only ff37013 -- ' + f)).toBe('');
+    for (const f of ['functions/lib/financeiro/motor.js', 'functions/lib/financeiro/agregados.js', 'functions/lib/financeiro/sync.js', 'functions/index.js', 'modulos/firestore.rules', 'modulos/financeiro-view.js', 'modulos/financeiro.html', 'modulos/agente-ia-widget.js', 'functions/lib/ai/agents/index.js']) expect(sh('git diff --name-only c79ad64 -- ' + f)).toBe('');
   });
   test('financeiro-v2.html: só acréscimos do agente (única linha original trocada = instância do SDK com Functions)', () => {
-    const antes = sh('git show ff37013:modulos/financeiro-v2.html').split('\n'), depois = fs.readFileSync(path.join(__dirname, '../../modulos/financeiro-v2.html'), 'utf8').split('\n');
+    const antes = sh('git show c79ad64:modulos/financeiro-v2.html').split('\n'), depois = fs.readFileSync(path.join(__dirname, '../../modulos/financeiro-v2.html'), 'utf8').split('\n');
     const faltando = antes.filter(l => !depois.includes(l)); expect(faltando).toEqual(["const auth = getAuth(app), db = getFirestore(app);"]);
   });
   const H = fs.readFileSync(path.join(__dirname, '../../modulos/financeiro-v2.html'), 'utf8');

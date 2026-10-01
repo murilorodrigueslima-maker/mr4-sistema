@@ -139,6 +139,10 @@
   .orc .rolagem { max-height: 340px; overflow: auto; margin-top: .5rem; border: 1px solid var(--border); border-radius: 8px; }
   .orc .comp { overflow-x: auto; }
 
+  .agc-orc { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .6rem .8rem; margin-bottom: .7rem; font-size: .85rem; }
+  .agc-orc input { width: 130px; padding: .45rem .6rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-variant-numeric: tabular-nums; }
+  .agc-orc button { border: 1px solid var(--blue); background: var(--blue-bg); color: var(--blue); border-radius: 8px; padding: .45rem .8rem; font: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; }
+  .agc-orc .agc-nota { flex-basis: 100%; font-size: .72rem; color: var(--muted); }
   @media (max-width: 1180px) {   /* notebooks da operação: a tabela financeira cabe sem rolagem horizontal */
     :root { --sidebar-w: 200px; }
     .main { padding: 1.25rem 1.1rem 3rem; }
@@ -209,9 +213,15 @@
     <button data-aba="aten">Atenção (sem sugestão)</button>
     <button data-aba="rev" id="tabRev" hidden>Revisar rentabilidade</button>
     <button data-aba="orc" id="tabOrc" hidden>Planejar orçamento</button>
+    <button data-aba="agente" id="tabAgente" hidden>Agente</button>
   </div>
   <div class="revchips" id="revChips" hidden></div>
   <div class="orc" id="painelOrc" hidden></div>
+  <div id="painelAgente" hidden>
+    <div class="agc-orc"><label for="agcValor">Tenho R$</label> <input id="agcValor" inputmode="decimal" value="10.000" autocomplete="off" aria-label="Valor disponível para comprar, em reais"> <button type="button" id="agcOrc">Onde priorizar?</button>
+      <span class="agc-nota">O agente só explica: a cesta é calculada pelo sistema (mesmo simulador de "Planejar orçamento"). Não cria pedido nem altera sugestões.</span></div>
+    <div id="agenteBox"></div>
+  </div>
 
   <div class="filtros" id="barraFiltros">
     <input type="search" id="busca" placeholder="Buscar produto ou código…" autocomplete="off">
@@ -233,6 +243,7 @@
 </main>
 
 <script src="../js/compras-simulador.js"></script>
+<script src="agente-ia-widget.js"></script>
 <script type="module">
 import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -252,6 +263,7 @@ const FRESCO_HORAS = 6;   // igual ao limiar de frescor do servidor
 const app = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(app);
 const db = getFirestore(app);
+let fnAgente = null;   // callable aiAgente (carregada sob demanda, isolada): IA SOMENTE no backend; o navegador nunca vê chave nem calcula cesta
 
 const estado = { linhas: [], custos: null, aba: 'sug', prioridade: '', abc: '', busca: '', novo: false, neg: false, motivo: '', finOn: false, fin: {}, revisao: [], fFin: '', ordem: '', revGrupo: 'neg', revSoSug: false, orcValor: 10000 };
 // Motivos de ATENÇÃO calculados no servidor (Fase D.1). Visibilidade apenas: nenhum deles gera sugestão.
@@ -259,6 +271,7 @@ const ATENCAO = { NEVER_SOLD: 'NUNCA VENDIDO', NO_SALE_365D: 'SEM VENDA HÁ 365+
   EXCESS_COVERAGE: 'COBERTURA EM EXCESSO', INACTIVE_PRODUCT: 'PRODUTO INATIVO', NEW_PRODUCT_PROTECTED: 'PRODUTO NOVO · EM PROTEÇÃO', NEGATIVE_STOCK: 'ESTOQUE NEGATIVO',
   NO_COST: 'SEM CUSTO CADASTRADO', LOW_COST_CONFIDENCE: 'CUSTO DE BAIXA CONFIANÇA' };
 const SO_DETALHE = ['LOW_COST_CONFIDENCE'];   // anotação: aparece no "Por quê?", não como selo
+let agenteWidget = null;
 window.__comprasPerf = { renders: [] };   // diagnóstico de desempenho (sem dados)
 
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -293,6 +306,7 @@ onAuthStateChanged(auth, async user => {
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
   document.getElementById('mainContent').style.display = '';
+  liberarAgente();   // segundo plano: a página nunca espera nem depende do agente
 });
 
 function montarCabecalho(v, meta) {
@@ -456,8 +470,15 @@ function detalheFin(l, f, tecnicos = []) {
 
 function render() {
   const t0 = performance.now();
-  const aba = estado.aba, orc = aba === 'orc';
+  const aba = estado.aba, orc = aba === 'orc', agt = aba === 'agente';
   document.getElementById('painelOrc').hidden = !orc;
+  document.getElementById('painelAgente').hidden = !agt;
+  if (agt) {
+    for (const id of ['lista', 'contagem', 'barraFiltros', 'chips']) document.getElementById(id).style.display = 'none';
+    document.getElementById('revChips').hidden = true;
+    if (agenteWidget) agenteWidget.abrir();
+    window.__comprasPerf.renders.push(Math.round((performance.now() - t0) * 10) / 10); return;
+  }
   document.getElementById('revChips').hidden = aba !== 'rev';
   for (const id of ['lista', 'contagem', 'barraFiltros']) document.getElementById(id).style.display = orc ? 'none' : '';
   document.getElementById('chips').style.display = (aba === 'rev' || orc) ? 'none' : '';   // P1–P4 filtram só Sugestões/Atenção
@@ -568,6 +589,40 @@ function atualizarOrcamento() {
     <details class="fin" style="margin-top:.8rem"><summary>Produtos contemplados (${fmt(s.products_funded)})</summary><div class="rolagem"><table><thead><tr><th>Produto</th><th>Prior.</th><th>Qtd simulada / sugerida</th><th>Capital</th></tr></thead><tbody>
       ${s.items.map(a => `<tr><td>${esc(nome.get(a.id) || a.id)}</td><td>${esc(a.priority)}</td><td>${fmt(a.qty_1_2)} / ${fmt(a.qty_1_1)}</td><td>${brl(a.capital_cents)}</td></tr>`).join('')}</tbody></table></div></details>
     <div class="aviso-fin" style="margin-top:.6rem;font-size:.72rem;color:var(--muted)">Simulação com os valores estimados desta tela. A quantidade nunca passa da sugerida pela política de compras e o gasto nunca passa do orçamento.</div>`;
+}
+
+// ── Agente de Compras (IA): aba OCULTA por padrão; só aparece depois que o BACKEND confirma o acesso (modo 'acesso'). Esconder a aba nunca é a proteção. ──
+const AGENTE_FORMATOS = { capitalSugerido: 'brl', receitaPotencial: 'brl', lucroBrutoPotencial: 'brl', capitalNecessario: 'brl', custoUnitario: 'brl', precoUnitario: 'brl', impactoReceitaDia: 'brl', lucroPotencial: 'brl', cestaCapital: 'brl',
+  margemPct: 'pct', retornoPct: 'pct', coberturaDias: 'dias', qtdSugerida: 'int', estoque: 'int', cestaQtd: 'int' };
+const AGENTE_ROTULOS_VALOR = { coberturaEstado: { CURRENT_STOCKOUT: 'ruptura', NEGATIVE_STOCK: 'negativo', COVERAGE_CRITICAL: 'crítica', COVERAGE_LOW: 'baixa', COVERAGE_OK: 'ok', COVERAGE_EXCESS: 'excesso', INSUFFICIENT_HISTORY: 'histórico insuficiente', NO_DEMAND_OBSERVED: 'sem demanda', UNKNOWN: 'desconhecida' },
+  custoConfianca: { HIGH: 'alta', MEDIUM: 'média', LOW: 'baixa', UNKNOWN: 'desconhecida' } };
+function perguntaOrcamento() {
+  const c = lerReais(document.getElementById('agcValor').value);
+  if (c === null || c <= 0) return null;
+  return 'Se eu tiver R$ ' + (c / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ', onde priorizar?';
+}
+function montarAgente() {
+  document.getElementById('tabAgente').hidden = false;
+  agenteWidget = window.AgenteIaWidget.montar(document.getElementById('agenteBox'), {
+    agentType: 'purchasing', titulo: 'Agente de Compras', sub: 'Interpreta o resultado do motor de Compras (sugestões, prioridades, capital). Recomenda — não cria pedido nem altera nada.', placeholder: 'Ex.: O que preciso comprar hoje? · Se eu tiver R$ 10.000, onde priorizar?',
+    chamar: p => fnAgente(p), formatos: AGENTE_FORMATOS, rotulosValor: AGENTE_ROTULOS_VALOR, rotuloAbrir: 'Ver na lista', msgSemDados: 'O motor de Compras ainda não tem sugestões geradas para analisar.',
+    cartoes: [{ chave: 'produtosParaRepor', rotulo: 'Produtos para repor' }, { chave: 'capitalSugerido', rotulo: 'Capital sugerido' }, { chave: 'itensCriticos', rotulo: 'Itens críticos (P1)' }, { chave: 'podemAguardar', rotulo: 'Podem aguardar' }, { chave: 'riscoRuptura', rotulo: 'Risco de ruptura' }],
+    sugestoes: [{ rotulo: 'O que comprar?', modo: 'pergunta', pergunta: 'O que preciso comprar hoje?' }, { rotulo: 'Compras urgentes', modo: 'pergunta', pergunta: 'Quais são as compras mais urgentes?' }, { rotulo: 'Compras que podem esperar', modo: 'pergunta', pergunta: 'Quais compras posso adiar?' },
+      { rotulo: 'Risco de ruptura', modo: 'pergunta', pergunta: 'O que pode faltar? Quais produtos têm maior impacto se faltarem?' }, { rotulo: 'Estou comprando demais?', modo: 'pergunta', pergunta: 'Estou comprando demais?' }, { rotulo: 'Revisar sugestões', modo: 'pergunta', pergunta: 'Quais sugestões merecem revisão?' },
+      { rotulo: 'Resumo de compras', modo: 'resumo' }],
+    onAbrir: id => { estado.busca = String(id); document.getElementById('busca').value = estado.busca; estado.aba = 'sug'; estado.prioridade = ''; sincronizarAbas(); render(); },
+  });
+  document.getElementById('agcOrc').addEventListener('click', () => { const q = perguntaOrcamento(); if (q) agenteWidget.perguntar('pergunta', q); else document.getElementById('agenteBox').querySelector('[data-r="resp"]').textContent = 'Informe um valor em reais (ex.: 10.000).'; });
+}
+// Chamado só depois do login + guard do módulo. Falha isolada: se o SDK de Functions/widget não carregar, a página de Compras segue 100% normal (aba permanece oculta).
+async function liberarAgente() {
+  try {
+    if (!window.AgenteIaWidget) return;
+    const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
+    const chamar = httpsCallable(getFunctions(app, 'southamerica-east1'), 'aiAgente');
+    fnAgente = async p => (await chamar(p)).data;
+    await window.AgenteIaWidget.liberarSePermitido(fnAgente, 'purchasing', montarAgente);
+  } catch (_) { /* sem agente: nada muda na página */ }
 }
 
 function sincronizarAbas() { document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('sel', b.dataset.aba === estado.aba)); document.getElementById('fMotivo').hidden = estado.aba !== 'aten'; }

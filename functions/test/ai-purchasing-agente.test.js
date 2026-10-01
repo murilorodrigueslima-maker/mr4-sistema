@@ -122,7 +122,7 @@ describe('SEGURANÇA: permissão do módulo real + piloto + forja', () => {
   test('forja: module/entityId/ownerId/agentType alheio não ampliam escopo', async () => {
     const m = modeloCom(respBoa);
     for (const extra of [{ module: 'financeiro' }, { modulo: 'financeiro' }, { entityId: 'SYN-001' }, { ownerId: 'x' }, { uid: UID.GER }, { gestao: true }]) expect(await erro(rodar(UID.FEST, { ...Q, ...extra }, m))).toMatch(/invalid-argument|permission-denied/);
-    expect(await erro(rodar(UID.GER, { ...Q, module: 'financeiro' }, m))).toMatch(/CAMPOS_NAO_PERMITIDOS/); expect(await erro(rodar(UID.GER, { ...Q, agentType: 'finance' }, m))).toMatch(/AGENTE_INVALIDO/);
+    expect(await erro(rodar(UID.GER, { ...Q, module: 'financeiro' }, m))).toMatch(/CAMPOS_NAO_PERMITIDOS/); expect(await erro(rodar(UID.GER, { ...Q, agentType: 'agente_inexistente' }, m))).toMatch(/AGENTE_INVALIDO/); expect(await erro(rodar(UID.GER, { ...Q, agentType: 'finance' }, m))).toMatch(/AGENTE_INVALIDO|permission-denied/);   // com o agente Financeiro registrado, forjar o tipo continua DENY (módulo próprio)
     expect(m.chamadas).toHaveLength(0);
   });
   test('somente leitura: nenhuma escrita em compras_*; só ai_* (uso sem conteúdo)', async () => {

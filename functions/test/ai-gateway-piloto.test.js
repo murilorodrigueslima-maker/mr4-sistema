@@ -76,7 +76,7 @@ describe('PAYLOAD FINAL enviado ao modelo (capturado) — sem identidade', () =>
   test('refs são reidratadas SÓ no backend: a resposta ao usuário mostra o cliente real depois da validação', async () => {
     const m = F.fetchModelo(b => { const c = JSON.parse(b.input).contexto; const a = Object.values(c.clientes).concat(c.clienteEmFoco || []).find(x => x.diasSemComprar === 65);
       return { status: 'completed', model: 'm-teste', usage: { input_tokens: 10, output_tokens: 10 }, output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify({ answer: `Priorize ${a.ref}: ${a.diasSemComprar} dias sem comprar.`, customers: [{ ref: a.ref, reasonCodes: ['ATRASADO_VS_CICLO'], evidence: [{ metric: 'diasSemComprar', value: a.diasSemComprar }] }], warnings: [], unavailable: [], dataFreshness: 'ok' }) }] }] }; });
-    const x = await rodar(UID.GER, P, m, { piloto: PREVIEW }); expect(x.r.ia.status).toBe('OK'); expect(x.r.customers[0]).toMatchObject({ nome: 'Auto Peças Alfa', entidade: 'GC_NATIVE:1001' });
+    const x = await rodar(UID.GER, P, m, { piloto: PREVIEW }); expect(x.r.ia.status).toBe('OK'); expect(x.r.customers[0]).toMatchObject({ nome: 'Auto Peças Alfa', entidade: 'GC_NATIVE:1001' }); expect(x.r.answer).toMatch(/^Priorize Auto Peças Alfa: 65 dias/); expect(x.r.answer).not.toMatch(/\bC\d{3}\b/);   // texto ao usuário com nome real; ao modelo só ref
     expect(JSON.stringify(m.chamadas[0].body)).not.toContain('Auto Peças Alfa');
   });
   test('vendedor (quando liberado no futuro): payload sem nome, sem R$, sem responsável', async () => {

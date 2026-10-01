@@ -137,7 +137,7 @@ describe('CUSTO e AUDITORIA', () => {
     const semPreco = F.criarDb(F.dataset()); await rodar(UID.FAB, P, modeloOk(), { db: semPreco }); expect(Object.values(semPreco.st.ai_chamadas)[0].custoUSD).toBeNull();
   });
   test('falhas também são registradas (código, sem conteúdo)', async () => { const db = F.criarDb(F.dataset()); await rodar(UID.FAB, P, F.fetchModelo({}, { status: 500 }), { db }); expect(Object.values(db.st.ai_chamadas)[0]).toMatchObject({ resultado: 'FALHA', erro: 'ERRO_5XX' }); });
-  test('limites documentados: contexto ≤ 24 KB, saída ≤ 1200 tokens, timeout 25 s, pergunta ≤ 400', () => { expect(GW.LIMITES).toEqual({ MAX_CONTEXTO_BYTES: 24000, MAX_OUTPUT_TOKENS: 1200, TIMEOUT_MS: 25000 }); expect(GW.PERGUNTA_MAX).toBe(400); });
+  test('limites documentados: contexto ≤ 24 KB, saída ≤ 2000 tokens, timeout 25 s, pergunta ≤ 400', () => { expect(GW.LIMITES).toEqual({ MAX_CONTEXTO_BYTES: 24000, MAX_OUTPUT_TOKENS: 2000, TIMEOUT_MS: 25000 }); expect(GW.PERGUNTA_MAX).toBe(400); });
 });
 
 describe('SEGURANÇA ESTRUTURAL', () => {

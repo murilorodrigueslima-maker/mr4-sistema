@@ -70,15 +70,16 @@ function fatosDoCliente({ cand, vendas, estados, hoje, gestao }) {
 }
 
 /** Núcleo PURO: dados carregados → contexto filtrado + mapa de refs + resumo do dia + fallback sem IA. */
-function construirContexto({ candidatos, vendasPorGc, estadosPorEntidade, hoje, gestao, pergunta = '', meta = {} }) {
+function construirUma({ candidatos, vendasPorGc, estadosPorEntidade, hoje, gestao, pergunta = '', meta = {} }, escala) {
+  const kk = n => Math.max(3, Math.floor(LIMITES[n] * escala));
   const ordenados = [...candidatos].sort((a, b) => String(a.gcId).localeCompare(String(b.gcId), 'en', { numeric: true }));
   const refDe = new Map(); ordenados.forEach((c, i) => refDe.set(c.gcId, 'C' + String(i + 1).padStart(3, '0')));
   const todos = ordenados.map(cand => ({ cand, ref: refDe.get(cand.gcId), f: fatosDoCliente({ cand, vendas: vendasPorGc[cand.gcId] || [], estados: estadosPorEntidade[cand.entidade] || estadosPorEntidade['GC:' + cand.gcId] || [], hoje, gestao }) }));
   const cmp = (a, b) => b.f._tier - a.f._tier || b.f.sinais.length - a.f.sinais.length || (b.f.diasSemComprar || 0) - (a.f.diasSemComprar || 0) || a.ref.localeCompare(b.ref);
-  const prioridade = todos.filter(x => x.f._tier > 0).sort(cmp).slice(0, LIMITES.K_PRIORIDADE);
-  const semComprar = todos.filter(x => x.f.diasSemComprar != null && x.f.pedidosTotal >= 1).sort((a, b) => b.f.diasSemComprar - a.f.diasSemComprar || a.ref.localeCompare(b.ref)).slice(0, LIMITES.K_SEM_COMPRAR);
-  const queda = todos.filter(x => x.f.tendencia === 'CAINDO').sort((a, b) => (a.f.variacaoPedidosPct ?? 0) - (b.f.variacaoPedidosPct ?? 0) || a.ref.localeCompare(b.ref)).slice(0, LIMITES.K_QUEDA);
-  const recompra = todos.filter(x => ['ATRASADO_VS_HISTORICO', 'PROXIMO_DA_JANELA'].includes(x.f.recorrencia)).sort((a, b) => (b.f.diasSemComprar || 0) - (a.f.diasSemComprar || 0) || a.ref.localeCompare(b.ref)).slice(0, LIMITES.K_RECOMPRA);
+  const prioridade = todos.filter(x => x.f._tier > 0).sort(cmp).slice(0, kk('K_PRIORIDADE'));
+  const semComprar = todos.filter(x => x.f.diasSemComprar != null && x.f.pedidosTotal >= 1).sort((a, b) => b.f.diasSemComprar - a.f.diasSemComprar || a.ref.localeCompare(b.ref)).slice(0, kk('K_SEM_COMPRAR'));
+  const queda = todos.filter(x => x.f.tendencia === 'CAINDO').sort((a, b) => (a.f.variacaoPedidosPct ?? 0) - (b.f.variacaoPedidosPct ?? 0) || a.ref.localeCompare(b.ref)).slice(0, kk('K_QUEDA'));
+  const recompra = todos.filter(x => ['ATRASADO_VS_HISTORICO', 'PROXIMO_DA_JANELA'].includes(x.f.recorrencia)).sort((a, b) => (b.f.diasSemComprar || 0) - (a.f.diasSemComprar || 0) || a.ref.localeCompare(b.ref)).slice(0, kk('K_RECOMPRA'));
   // cliente em foco (pergunta cita o nome de UM cliente do escopo)
   const q = norm(pergunta); const achados = q ? todos.filter(x => x.f.nome && norm(x.f.nome).length >= 4 && ` ${q} `.includes(` ${norm(x.f.nome)} `)) : [];
   const maxLen = achados.reduce((m, x) => Math.max(m, norm(x.f.nome).length), 0); const melhores = achados.filter(x => norm(x.f.nome).length === maxLen);
@@ -94,7 +95,7 @@ function construirContexto({ candidatos, vendasPorGc, estadosPorEntidade, hoje, 
     recompraProvavel: conta(x => ['ATRASADO_VS_HISTORICO', 'PROXIMO_DA_JANELA'].includes(x.f.recorrencia)), followUpsAtrasados: conta(x => x.f.situacaoRetorno === 'ATRASADO'), followUpsHoje: conta(x => x.f.situacaoRetorno === 'HOJE'), semContatoRecente: conta(x => x.f.sinais.includes('SEM_CONTATO_RECENTE')) };
   const refs = r => r.map(x => x.ref);
   const defasagem = meta.vendasAte ? diasEntre(meta.vendasAte, hoje) : null; const desatualizado = defasagem != null && defasagem > LIMITES.DIAS_DADOS_DESATUALIZADOS;
-  const limitacoes = ['Análise baseada em fila comercial + carteira dentro do seu escopo.', 'Nomes de clientes, notas privadas, telefone, e-mail, endereço e documentos não são enviados ao agente (clientes aparecem por referência).', 'Produtos e categorias só estão disponíveis para o cliente em foco.']
+  const limitacoes = (escala < 1 ? ['Listas de clientes reduzidas para caber no limite de contexto do agente.'] : []).concat(['Análise baseada em fila comercial + carteira dentro do seu escopo.', 'Nomes de clientes, notas privadas, telefone, e-mail, endereço e documentos não são enviados ao agente (clientes aparecem por referência).', 'Produtos e categorias só estão disponíveis para o cliente em foco.'])
     .concat(gestao ? [] : ['Valores em R$ não estão disponíveis para o perfil de vendedor.']).concat(desatualizado ? [`Dados de vendas desatualizados: a última venda conhecida é de ${defasagem} dias atrás.`] : []).concat(meta.truncado ? [`Análise limitada a ${todos.length} clientes (teto por pedido).`] : []).concat(ambiguo ? ['A pergunta cita mais de um cliente com nome parecido; nenhum foi selecionado.'] : []);
   const contexto = { agenteVersao: VERSAO, geradoEm: meta.geradoEm || null, hoje, escopo: gestao ? 'GESTAO_TODOS_OS_VENDEDORES' : 'VENDEDOR_PROPRIO', resumoDia, rankings: { prioridade: refs(prioridade), maisTempoSemComprar: refs(semComprar), maiorQueda: refs(queda), recompra: refs(recompra) },
     clientes: ctxClientes, ...(emFoco ? { clienteEmFoco: emFoco } : {}), limitacoes,
@@ -104,6 +105,12 @@ function construirContexto({ candidatos, vendasPorGc, estadosPorEntidade, hoje, 
   const bytes = Buffer.byteLength(JSON.stringify(contexto));
   const fallback = prioridade.slice(0, 10).map(x => ({ ref: x.ref, prioridade: x.f.prioridadeSugerida, reasonCodes: x.f.sinais.filter(s => s !== 'OPORTUNIDADE_NA_FILA') }));
   return { contexto, mapa, resumoDia, fallback, bytes, truncado: !!meta.truncado, perguntaSegura };
+}
+
+const ALVO_BYTES = 23000;   // abaixo do teto de 24 KB do gateway: se o contexto real for maior, as listas encolhem (nunca falha por tamanho)
+function construirContexto(args) {
+  let r; for (const escala of [1, 0.75, 0.55, 0.4, 0.3]) { r = construirUma(args, escala); if (r.bytes <= ALVO_BYTES) break; }
+  return r;
 }
 
 function chunk(a, n) { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; }
@@ -144,6 +151,8 @@ async function carregarDados(store, acesso, agoraIso, { usarCache = true } = {})
       const s = await store.collection('vendas_gc').where('cliente_id', 'in', variante).select(...CRM.CAMPOS_VENDA).get();
       for (const d of s.docs) { const v = d.data(); const k = String(v.cliente_id); (vendasPorGc[k] = vendasPorGc[k] || []).push(v); if (v.data && (!vendasAte || String(v.data) > vendasAte)) vendasAte = String(v.data).slice(0, 10); } }
   });
+  // frescor = venda mais recente da BASE (não só dos clientes do escopo, que podem estar inativos há meses)
+  try { const g = await store.collection('vendas_gc').orderBy('data', 'desc').limit(1).select('data').get(); const gd = g.docs && g.docs[0] && g.docs[0].data().data; if (gd) vendasAte = String(gd).slice(0, 10); } catch (_) { /* mantém a data máxima dos clientes do escopo */ }
   const estadosPorEntidade = {}; for (const e of todosEstados) if (e && e.commercialEntityId) (estadosPorEntidade[e.commercialEntityId] = estadosPorEntidade[e.commercialEntityId] || []).push(e);
   const dados = { candidatos: lista, vendasPorGc, estadosPorEntidade, hoje, meta: { truncado, vendasAte, listaDoDia: wl ? wl.dataReferencia || null : null, geradoEm: agoraIso } };
   CACHE.set(chave, { em: Date.now(), dados });

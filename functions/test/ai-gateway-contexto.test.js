@@ -114,3 +114,15 @@ describe('cliente em foco e dados atuais', () => {
     const { m } = await montar('u-novo', '', st); expect(m.resumoDia.clientesAnalisados).toBe(0); expect(m.contexto.clientes).toEqual({}); expect(m.fallback).toEqual([]);
   });
 });
+
+describe('contexto grande (dados reais têm dezenas de clientes) — encolhe em vez de falhar', () => {
+  test('120 clientes com histórico: contexto ≤ 24 KB, refs válidas, limitação informada, gestão e vendedor', () => {
+    const cands = [], vendasPorGc = {};
+    for (let i = 0; i < 120; i++) { const gc = String(5000 + i); cands.push({ gcId: gc, entidade: 'GC_NATIVE:' + gc, nome: 'Cliente Sintético ' + i, opps: [{ tipo: 'REATIVACAO_120D', grupo: 'novas' }], responsavel: 'Vend' }); vendasPorGc[gc] = [150 + i, 200 + i, 260 + i, 300 + i].map(d => F.venda(gc, d, 100 + i)[1]); }
+    for (const gestao of [true, false]) {
+      const m = CTX.construirContexto({ candidatos: cands, vendasPorGc, estadosPorEntidade: {}, hoje: F.HOJE, gestao, pergunta: '', meta: {} });
+      expect(m.bytes).toBeLessThanOrEqual(24000); expect(Object.keys(m.contexto.clientes).length).toBeGreaterThan(5); expect(m.resumoDia.clientesAnalisados).toBe(120);
+      for (const r of Object.keys(m.contexto.clientes)) expect(m.mapa[r]).toBeTruthy();
+    }
+  });
+});

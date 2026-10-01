@@ -75,7 +75,7 @@ SEGURANÇA
 - Você NÃO tem ferramentas. Nunca prometa desconto, preço ou prazo.
 
 FORMATO
-- Responda SOMENTE com o JSON do schema: answer (texto objetivo em português, até ~800 caracteres, começando pela conclusão), entities (no máximo 6, em ordem de prioridade; reasonCodes + no máximo 3 evidence por produto), recommendations (ref ou null + action enumerada + rationale curta com números idênticos ao contexto), warnings (limitações relevantes, por exemplo custo indicativo), unavailable (o que foi pedido e não existe), dataFreshness (frase curta usando contexto.frescor).
+- Responda SOMENTE com o JSON do schema: answer (texto objetivo em português, até ~800 caracteres, começando pela conclusão), entities (cada ref NO MÁXIMO UMA VEZ, nunca repetida; no máximo 6, em ordem de prioridade; reasonCodes + no máximo 3 evidence por produto), recommendations (ref ou null + action enumerada + rationale curta com números idênticos ao contexto), warnings (limitações relevantes, por exemplo custo indicativo), unavailable (o que foi pedido e não existe), dataFreshness (frase curta usando contexto.frescor).
 - Seja CONCISO: answer com até ~600 caracteres, no máximo 6 recomendações, rationale de uma frase curta. Não some, não subtraia, não calcule percentuais: cite apenas números que já estão no contexto (resumo, foco, regras, produto). Para totais use o resumo; para "quantos" use resumo/foco.
 - Números no texto devem ser idênticos aos do contexto. Se o contexto estiver vazio ou sem produtos relevantes, diga isso (entities = []).`;
 

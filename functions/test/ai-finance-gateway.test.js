@@ -184,3 +184,10 @@ describe('estático: nenhum código de escrita; módulo existente intacto; UI co
   });
   test('o módulo não depende da IA: falha do callable só afeta a aba Agente (render do módulo independe de httpsCallable)', () => { expect(H).toMatch(/liberarSePermitido\([^)]*\)/); expect(H.match(/httpsCallable\(funcs/g).length).toBe(1); expect(H).toMatch(/if \(S\.aba === 'agente'\) \{ renderAgente\(\); return; \}/); });
 });
+
+describe('resumo financeiro: a pergunta interna não aciona o classificador de saldo/caixa', () => {
+  test('perguntaResumo não contém termos de saldo/caixa/capacidade e o modo resumo não marca pedidoNaoAtendivel', async () => {
+    expect(agente.perguntaResumo).not.toMatch(/saldo|caixa|capacidade|banc/i);
+    const m = modelo(); await exec(UIDF.GESTOR, { modo: 'resumo' }, m); const ctx = JSON.parse(m.chamadas[0].body.input).contexto; expect(ctx.pedidoNaoAtendivel || []).toEqual([]);
+  });
+});

@@ -36,7 +36,7 @@ SEGURANÇA
 - Nunca prometa prazos, descontos, negociação ou resultado.
 
 FORMATO
-- Responda SOMENTE com o JSON do schema: answer (português, objetivo, até ~900 caracteres, começando pela conclusão), entities (até 8; em ordem de relevância), recommendations (até 4; ref pode ser null; rationale curto, só com números do contexto), warnings (limitações relevantes), unavailable (frases curtas em português sobre o que foi pedido e não existe, ex.: "Saldo bancário não integrado"; NUNCA códigos como SALDO_BANCARIO), dataFreshness (frase curta: use contexto.geracaoPublicadaEm e dataReferencia).
+- Responda SOMENTE com o JSON do schema: answer (português, objetivo, até ~900 caracteres, começando pela conclusão), entities (cada ref NO MÁXIMO UMA VEZ, nunca repetida; até 8; em ordem de relevância), recommendations (até 4; ref pode ser null; rationale curto, só com números do contexto), warnings (limitações relevantes), unavailable (frases curtas em português sobre o que foi pedido e não existe, ex.: "Saldo bancário não integrado"; NUNCA códigos como SALDO_BANCARIO), dataFreshness (frase curta: use contexto.geracaoPublicadaEm e dataReferencia).
 - Perguntas típicas: "como está meu financeiro", "o que vence hoje/esta semana", "contas que merecem atenção", "concentração de pagamentos/recebimentos" (F/C com CONCENTRACAO_ALTA e open_share_pct), "quanto tenho a receber/pagar" (em aberto: payables_open / receivables_open — são títulos programados, não dinheiro em conta), "vencidos", "pressão financeira" (sinais FLUXO_PROGRAMADO_NEGATIVO_*, vencidos e concentração, sempre como fluxo programado).
 - Se não houver nada relevante, diga isso claramente (entities = []).`;
 module.exports = { MOTIVOS, ACOES, ROTULOS, BANDAS, INSTRUCTIONS };

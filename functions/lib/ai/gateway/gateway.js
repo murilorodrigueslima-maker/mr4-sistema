@@ -12,7 +12,7 @@ const U = require('./usage');
 const INSTR = require('./instructions');
 
 const PERGUNTA_MAX = 400;
-const LIMITES = Object.freeze({ MAX_CONTEXTO_BYTES: CTX.LIMITES.MAX_CONTEXTO_BYTES, MAX_OUTPUT_TOKENS: 1200, TIMEOUT_MS: 25000 });
+const LIMITES = Object.freeze({ MAX_CONTEXTO_BYTES: CTX.LIMITES.MAX_CONTEXTO_BYTES, MAX_OUTPUT_TOKENS: 2000, TIMEOUT_MS: 25000 });
 const PERGUNTA_RESUMO = 'Faça o resumo comercial do dia: quantos clientes merecem contato, quedas relevantes, clientes perto de 120 dias e oportunidades de recompra, e liste quem contatar primeiro e por quê.';
 const METRICA_ROTULO = { diasSemComprar: 'Dias sem comprar', ultimaCompraEm: 'Última compra', pedidosTotal: 'Pedidos (total)', pedidos30d: 'Pedidos 30d', pedidos60d: 'Pedidos 60d', pedidos90d: 'Pedidos 90d', pedidos180d: 'Pedidos 180d', frequenciaDias: 'Compra a cada (dias)', status120Dias: 'Situação 120 dias',
   recorrencia: 'Recompra', tendencia: 'Tendência', variacaoPedidosPct: 'Variação de pedidos (%)', ultimoOutcome: 'Último resultado', ultimoContatoEm: 'Último contato', diasDesdeUltimoContato: 'Dias desde o último contato', proximoRetornoEm: 'Próximo retorno', situacaoRetorno: 'Situação do retorno', emCooldownAte: 'Em espera até',

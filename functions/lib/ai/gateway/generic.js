@@ -60,6 +60,13 @@ async function executarGenerico({ uid, data, ag, deps }) {
   const acesso = await ag.autorizar(store, uid, falhaG);                                       // permissão do MÓDULO (backend)
   portaoPilotoAgente(acesso, uid, deps.piloto && deps.piloto[ag.agentType] ? deps.piloto[ag.agentType] : configPilotoAgente(ag.agentType));
   if (pedido.modo === 'acesso') return { ok: true, acesso: true, agentType: ag.agentType, modulo: ag.modulo };   // gate do frontend: sem dados, sem IA, sem limite
+  // Resposta DETERMINÍSTICA prévia (opcional por agente): perguntas que o sistema sabe que não pode responder (ex.: previsão de demanda) não chamam o modelo,
+  // não carregam dados e não consomem limite. Fica registrada como uso técnico (sem conteúdo).
+  const previa = pedido.modo === 'pergunta' && typeof ag.respostaPrevia === 'function' ? ag.respostaPrevia(pedido.pergunta) : null;
+  if (previa) {
+    await U.registrarUso(store, { uid, agentType: ag.agentType, modulo: ag.modulo, modo: pedido.modo, agora, perguntaChars: pedido.pergunta.length, resultado: 'OK', erro: 'RESPOSTA_DETERMINISTICA' }).catch(() => {});
+    return { ok: true, agentType: ag.agentType, modulo: ag.modulo, modo: pedido.modo, geradoEm: agoraIso, escopo: null, resumo: null, limitacoes: [], frescor: { contextBuiltAt: agoraIso }, avisoFrescor: null, limitesUso: null, ia: { status: 'NAO_SOLICITADA', motivo: previa.motivo || 'RESPOSTA_DETERMINISTICA' }, answer: previa.answer, entities: [], recommendations: [], warnings: [], unavailable: previa.unavailable || [], dataFreshness: null, fallback: [] };
+  }
   let uso = null;
   if (pedido.modo !== 'contagens') { try { uso = await U.verificarLimite(store, uid, agora, deps.limites, ag.agentType); } catch (e) { if (e instanceof U.LimiteExcedido) falhaG('resource-exhausted', e.codigo); throw e; } }
   const dados = await ag.carregar(store, acesso, agoraIso);

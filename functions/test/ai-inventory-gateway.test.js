@@ -119,6 +119,8 @@ describe('validação pós-modelo (fail closed): entidade/motivo/métrica/valor/
 });
 
 describe('alucinação: previsão, preço/margem/custo inexistente, demanda futura', () => {
+  // A resposta determinística prévia é a 1ª camada; aqui exercitamos a 2ª (contexto marca pedido não suportado + validador rejeita previsão) desligando a prévia.
+  let prevSalva; beforeAll(() => { prevSalva = A.agente.respostaPrevia; A.agente.respostaPrevia = undefined; }); afterAll(() => { A.agente.respostaPrevia = prevSalva; });
   test('"Qual produto vai vender amanhã?": contexto marca pedido não suportado; resposta que PREVÊ é rejeitada; resposta com unavailable é aceita', async () => {
     const P1 = { modo: 'pergunta', pergunta: 'Qual produto vai vender amanhã?' };
     const m = modelo(); const ok = await rodar(UID.GER, P1, m, {}); const ctx = JSON.parse(m.chamadas[0].body.input).contexto; expect(ctx.pedidoNaoSuportado).toEqual(['PREVISAO_DE_DEMANDA']); expect(ok.r.ia.motivo).toBe('RESPOSTA_INVALIDA');   // modelo falso respondeu SEM unavailable → barrado
@@ -179,3 +181,17 @@ describe('UI: aba "Agente" oculta por padrão, gate pelo backend, integrada sem 
 });
 
 // (removido na integração) guard de escopo do RC 'git diff vs base c79ad64': só fazia sentido com os três agentes ainda isolados.
+
+describe('previsão de demanda: resposta DETERMINÍSTICA (sem modelo, sem dados, sem limite)', () => {
+  const PREV = ['Qual produto vai vender amanhã?', 'Qual produto vai vender mais na próxima semana?', 'Quanto vou vender no mês que vem?', 'Faça uma previsão de vendas dos produtos', 'Quais produtos irão vender no próximo mês?', 'Projeção de demanda para a semana que vem', 'qual item venderá mais amanha'];
+  const FATOS = ['Quais produtos estão perto de faltar?', 'Quais produtos estão vendendo mais rápido?', 'Quais produtos estão perdendo giro?', 'O que merece atenção hoje?', 'Quais produtos não vendem há mais de 120 dias?', 'Quais produtos eu deveria tentar liquidar?', 'Quanto dinheiro tenho em produtos sem giro?'];
+  test('perguntas preditivas: sem chamada de IA, sem consumir limite, com unavailable e texto determinístico', async () => {
+    for (const q of PREV) { const m = modelo(); const x = await rodar(UID.GER, { modo: 'pergunta', pergunta: q }, m); expect(m.chamadas.length).toBe(0); expect(x.r.ia).toEqual({ status: 'NAO_SOLICITADA', motivo: 'PREVISAO_INDISPONIVEL' }); expect(x.r.unavailable).toEqual(['Previsão de demanda / vendas futuras']); expect(x.r.answer).toMatch(/não possui previsão de demanda confiável/); expect(x.r.entities).toEqual([]); expect(x.db.st.ai_rate).toBeUndefined(); const log = Object.values(x.db.st.ai_chamadas)[0]; expect(log).toMatchObject({ resultado: 'OK', erro: 'RESPOSTA_DETERMINISTICA', tokensEntrada: null }); expect(JSON.stringify(log)).not.toContain(q.slice(0, 15)); }
+  });
+  test('perguntas sobre FATOS do motor (cobertura, ruptura, giro, parados) continuam indo ao modelo', async () => {
+    for (const q of FATOS) { const m = modelo(); const x = await rodar(UID.GER, { modo: 'pergunta', pergunta: q }, m); expect(m.chamadas.length).toBe(1); expect(x.r.ia.status).toBe('OK'); }
+  });
+  test('a prévia também respeita o gate: anônimo/sem módulo/fora do piloto não recebem nem a resposta determinística', async () => {
+    for (const u of [null, UID.INAT, UID.SEM, UID.ADM, UID.FUNC]) { const x = await rodar(u, { modo: 'pergunta', pergunta: 'Qual produto vai vender amanhã?' }, modelo()); expect(x.e).toBeTruthy(); }
+  });
+});

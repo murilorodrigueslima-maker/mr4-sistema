@@ -135,11 +135,30 @@ function validacoesExtras(resp, ctx) {
   }
 }
 
+/**
+ * Previsão de demanda NÃO existe (não há dado confiável): perguntas explicitamente preditivas são respondidas de forma DETERMINÍSTICA, sem modelo.
+ * Não transforma tendência histórica em previsão factual. Perguntas sobre cobertura/ruptura/giro (fatos do motor) NÃO entram aqui.
+ */
+const norm = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const PADROES_PREVISAO = [
+  /\b(vai|vao|ira|irao|devera|deverao|podera|poderao|vamos)\s+(vender|sair|girar)/,
+  /\bvender(a|ao|ia|iam)\b/,
+  /\bquanto\s+(vou|vamos|vao|ira|irei)\s+vender/,
+  /\b(previsao|prever|previsto|projecao|projetar|estimativa|estimar|forecast)\b.{0,25}\b(venda|vendas|demanda|giro|consumo|saida)/,
+  /\b(venda|vendas|demanda|giro|consumo|saida)\b.{0,25}\b(previs\w+|futur\w+)/,
+  /\bvend\w*\b.{0,30}\b(amanha|semana que vem|mes que vem|proxim[oa]s?\s+(dia|dias|semana|semanas|mes|meses))\b/,
+  /\b(amanha|semana que vem|mes que vem|proxim[oa]s?\s+(dia|dias|semana|semanas|mes|meses))\b.{0,30}\bvend\w*/,
+];
+function respostaPrevia(pergunta) {
+  const q = norm(pergunta); if (!PADROES_PREVISAO.some(r => r.test(q))) return null;
+  return { motivo: 'PREVISAO_INDISPONIVEL', answer: 'O sistema não possui previsão de demanda confiável, então não vou prever vendas futuras (nem transformar a tendência histórica em previsão). Posso mostrar fatos já calculados: giro, cobertura em dias, produtos acelerando ou perdendo giro e risco de ruptura.', unavailable: ['Previsão de demanda / vendas futuras'] };
+}
+
 const agente = {
   agentType: 'inventory', modulo: 'estoque', generico: true, schemaName: 'estoque_resposta', perguntaResumo: C.PERGUNTA_RESUMO, instructions: C.INSTRUCTIONS,
   motivos: [...C.MOTIVOS], acoes: [...C.ACOES], schema: C.SCHEMA, refPattern: /\bP\d{3}\b/g, rotulos: C.ROTULOS,
-  autorizar, carregar, montar, auditar, apresentar, validacoesExtras,
+  autorizar, carregar, montar, auditar, apresentar, validacoesExtras, respostaPrevia,
   avisoDesatualizado: 'Dados de estoque desatualizados: a última sincronização passou do limite. Confira a data da fonte antes de decidir.',
   msgSemDados: 'Ainda não há dados de estoque sincronizados. Aguarde a próxima sincronização do módulo Compras & Estoque.',
 };
-module.exports = { agente, autorizar, carregar, montar, montarComEscala, auditar, apresentar, validacoesExtras, frescorDe, LIMITACOES, MAX_CANDIDATOS, ALVO_BYTES, ROTULOS_VALOR: C.ROTULOS_VALOR, METRICAS: C.METRICAS };
+module.exports = { agente, respostaPrevia, autorizar, carregar, montar, montarComEscala, auditar, apresentar, validacoesExtras, frescorDe, LIMITACOES, MAX_CANDIDATOS, ALVO_BYTES, ROTULOS_VALOR: C.ROTULOS_VALOR, METRICAS: C.METRICAS };

@@ -191,7 +191,9 @@ describe('TELA — verificações estáticas (compras.html)', () => {
   test('lê SÓ a visão já processada + meta; nada de GestãoClick, base, blocos ou coleções inteiras no navegador', () => {
     const docs = [...js.matchAll(/doc\(db,\s*'([a-z0-9_]+)',\s*'([a-z0-9_]+)'\)/g)].map(m => m[1] + '/' + m[2]).sort();
     expect(docs).toEqual(['compras_n0/meta', 'compras_n0_view/custos', 'compras_n0_view/sugestoes']);
-    expect(js).not.toMatch(/gcQuery|httpsCallable|getFunctions|collection\(|getDocs|compras_n0_base|compras_n0_produtos|compras_n0_custos|api\.gestaoclick/);
+    expect(js).not.toMatch(/gcQuery|collection\(|getDocs|compras_n0_base|compras_n0_produtos|compras_n0_custos|api\.gestaoclick/);
+    // Agente de Compras (IA): ÚNICO callable permitido no navegador é o aiAgente (somente leitura; permissão e escopo no backend). Qualquer outro continua proibido.
+    const chamadas = js.split('\n').filter(l => /httpsCallable\(/.test(l)); expect(chamadas.length).toBeGreaterThan(0); for (const l of chamadas) expect(l).toMatch(/'aiAgente'/);
   });
   test('linguagem: sugestão de compra, não pedido; nenhuma ação que envie algo a fornecedor', () => {
     expect(html).toMatch(/Sugestões de compra/); expect(html).toMatch(/Sugestão de compra não é pedido/);

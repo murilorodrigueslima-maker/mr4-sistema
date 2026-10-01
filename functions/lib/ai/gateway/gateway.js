@@ -87,7 +87,10 @@ async function executarAgente({ uid, data, deps }) {
     const custo = U.estimarCustoUSD(r.tokens, deps.precos);
     await registrar('OK', { latenciaMs: r.latenciaMs, modelo: r.modelo, tokens: r.tokens, custoUSD: custo });
     const customers = v.customers.map(c => { const m = montado.mapa[c.ref]; return { entidade: m.entidade, nome: m.nome, prioridade: m.prioridade, responsavel: acesso.gestao ? m.responsavel : null, reasonCodes: c.reasonCodes.map(x => ({ code: x, label: MOTIVOS[x] })), evidence: c.evidence.map(e => ({ metric: e.metric, label: METRICA_ROTULO[e.metric] || e.metric, value: e.value })) }; });
-    return { ok: true, ...base, ia: { status: 'OK', modelo: r.modelo, latenciaMs: r.latenciaMs }, answer: v.answer, customers, warnings: v.warnings, unavailable: v.unavailable, dataFreshness: v.dataFreshness, fallback: [] };
+    // Reidratação controlada (DEPOIS da validação): refs opacas no texto viram o nome do cliente SÓ para o usuário autorizado; o provedor nunca recebeu o nome.
+    const nomeDe = ref => { const m = montado.mapa[ref]; return m && m.nome ? m.nome : 'cliente ' + ref; };
+    const reidratar = t => typeof t === 'string' ? t.replace(/\bC\d{3}\b/g, ref => montado.mapa[ref] ? nomeDe(ref) : ref) : t;
+    return { ok: true, ...base, ia: { status: 'OK', modelo: r.modelo, latenciaMs: r.latenciaMs }, answer: reidratar(v.answer), customers, warnings: v.warnings.map(reidratar), unavailable: v.unavailable.map(reidratar), dataFreshness: v.dataFreshness, fallback: [] };
   } catch (e) {
     const codigo = e instanceof ErroModelo || e instanceof RespostaInvalida ? e.codigo : 'ERRO_INTERNO_IA';
     await registrar('FALHA', { erro: String(codigo).slice(0, 60), latenciaMs: r ? r.latenciaMs : null, modelo: r ? r.modelo : null, tokens: r ? r.tokens : null });

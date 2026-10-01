@@ -113,6 +113,7 @@ function construirGeracao({ canon, vendasPorCodigo = {}, comprasPorCodigo = {}, 
       if (grupo === 'VENCIDO') rec.ag = M.faixaAtraso(t, hoje);
       if (grupo === 'PAGO') rec.sd = t.settlement_date;
       if (grupo === 'UNKNOWN') { rec.mot = st.motivo; rec.motx = MOTIVO_TEXTO[st.motivo] || 'Dados contraditórios no ERP'; rec.sd = t.settlement_date || undefined; }
+      for (const k of Object.keys(rec)) if (rec[k] === undefined) delete rec[k];        // Firestore (Admin SDK) recusa `undefined`
       grupos[nat][grupo].push(rec);
     }
   }

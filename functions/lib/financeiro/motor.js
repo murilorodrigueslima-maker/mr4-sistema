@@ -159,6 +159,7 @@ function vincularVenda(titulo, vendasPorCodigo) {
   if (!vs.length) return { estado: 'NAO_RESOLVIDO', codigo: m[1] };
   if (vs.length > 1) return { estado: 'CODIGO_DUPLICADO', codigo: m[1] };          // mesmo código em mais de uma venda: ambíguo, nunca vínculo
   const v = vs[0];
+  if (!titulo.entity_id) return { estado: 'CLIENTE_AUSENTE', codigo: m[1] };           // sem cliente no título não há como conferir: só o código não basta
   if (String(v.cliente_id) !== String(titulo.entity_id)) return { estado: 'CONFLITO_CLIENTE', codigo: m[1] };
   return { estado: 'CONFIRMADO', codigo: m[1], venda_id: String(v.id) };
 }

@@ -7,8 +7,8 @@ const S = require('./sync');
 // STALE_THRESHOLD = 6 h = 2 ciclos perdidos (+ folga) → painel sinaliza "dados desatualizados" depois disso.
 const AGENDA = { CRON: '40 */3 * * *', TIMEZONE: 'America/Fortaleza', STALE_HORAS: 6 };
 
-async function syncAgendadoHandler({ db, env = process.env, fetchImpl = fetch, log = () => {} }) {
-  const cli = F.criarClienteGC({ fetchImpl, accessToken: env.GC_ACCESS_TOKEN, secretToken: env.GC_SECRET_ACCESS_TOKEN });
+async function syncAgendadoHandler({ db, env = process.env, fetchImpl = fetch, log = () => {}, pausaMs = 350 }) {
+  const cli = F.criarClienteGC({ fetchImpl, accessToken: env.GC_ACCESS_TOKEN, secretToken: env.GC_SECRET_ACCESS_TOKEN, pausaMs });
   return S.executarSyncFinanceiro({ cli, db, log });
 }
 module.exports = { AGENDA, syncAgendadoHandler };

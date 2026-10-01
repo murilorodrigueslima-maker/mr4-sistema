@@ -79,6 +79,16 @@ describe('vínculos (nunca heurística como fato)', () => {
   });
 });
 
+describe('compatibilidade com o Firestore real', () => {
+  const temUndefined = o => o !== null && typeof o === 'object' ? Object.values(o).some(temUndefined) : o === undefined;
+  test('nenhum documento da geração contém `undefined` (o Admin SDK recusaria a gravação inteira)', () => {
+    const m = massa({ hoje: HOJE, nPagar: 120, nReceber: 300 });
+    m.pagamentos.push(titulo({ id: 'U1', liquidado: '0', data_liquidacao: d(-2) }), titulo({ id: 'U2', entidade: 'O', fornecedor_id: '' }));
+    const g = gera(m.pagamentos, m.recebimentos, { vendasPorCodigo: {}, comprasPorCodigo: {} });
+    expect(temUndefined(g.resumo)).toBe(false); expect(temUndefined(g.entidades)).toBe(false); for (const f of g.fatias) expect(temUndefined(f.doc)).toBe(false);
+  });
+});
+
 describe('fuso America/Fortaleza e calendário', () => {
   test.each([
     ['23:59 de 30/09 em Fortaleza (02:59Z de 01/10)', '2026-10-01T02:59:00Z', '2026-09-30'], ['00:00 de 01/10 em Fortaleza (03:00Z)', '2026-10-01T03:00:00Z', '2026-10-01'],

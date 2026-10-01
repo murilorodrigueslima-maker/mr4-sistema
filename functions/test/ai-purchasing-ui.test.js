@@ -39,7 +39,7 @@ describe('o motor e o módulo existentes NÃO foram alterados (diff vs base c79a
     const arquivos = execSync(`git diff --name-only ${BASE_COMMIT}`, { cwd: RAIZ }).toString().split('\n').filter(Boolean);
     const untracked = execSync('git ls-files --others --exclude-standard', { cwd: RAIZ }).toString().split('\n').filter(Boolean).filter(f => !f.startsWith('functions/node_modules'));
     const todos = [...new Set([...arquivos, ...untracked])];
-    const permitido = f => f === 'modulos/compras.html' || f.startsWith('functions/lib/ai/agents/purchasing/') || /^functions\/test\/ai-purchasing-.*\.test\.js$/.test(f) || f === 'functions/test/fixtures/ai-compras.js';
+    const permitido = f => f === 'modulos/compras.html' || f.startsWith('functions/lib/ai/agents/purchasing/') || /^functions\/test\/ai-purchasing-.*\.test\.js$/.test(f) || f === 'functions/test/fixtures/ai-compras.js' || f === 'functions/test/compras-estoque-publicacao.test.js';   // este último: único callable permitido na tela de Compras = aiAgente
     expect(todos.filter(f => !permitido(f))).toEqual([]);
     for (const proibido of ['functions/lib/compras/', 'functions/index.js', 'modulos/firestore.rules', 'functions/lib/ai/gateway/', 'functions/lib/ai/agents/index.js', 'modulos/agente-ia-widget.js', 'js/compras-simulador.js']) expect(todos.filter(f => f.startsWith(proibido))).toEqual([]);
   });

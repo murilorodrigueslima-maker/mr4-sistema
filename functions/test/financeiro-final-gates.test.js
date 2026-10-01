@@ -4,7 +4,7 @@
 const fs = require('fs'), path = require('path');
 const C = require('../lib/financeiro/canonico');
 const M = require('../lib/financeiro/motor');
-const S = require('../lib/financeiro/snapshot');
+const A = require('../lib/financeiro/agregados');
 const { HOJE, FORMAS, titulo, receber } = require('./fixtures/financeiro-f1');
 const refs = { formasPorId: FORMAS };
 const pag = o => C.mapearTitulo(titulo(o), 'PAGAR', refs);
@@ -12,7 +12,7 @@ const rec = o => C.mapearTitulo(receber(o), 'RECEBER', refs);
 const d = n => C.somarDias(HOJE, n);
 
 describe('envelhecimento de vencidos (faixas exclusivas)', () => {
-  const casos = [[1, 'D1_A_7'], [7, 'D1_A_7'], [8, 'D8_A_15'], [15, 'D8_A_15'], [16, 'D16_A_30'], [30, 'D16_A_30'], [31, 'D31_A_60'], [60, 'D31_A_60'], [61, 'D61_A_90'], [90, 'D61_A_90'], [91, 'D91_A_365'], [365, 'D91_A_365'], [366, 'ACIMA_365'], [1200, 'ACIMA_365']];
+  const casos = [[1, 'D1_A_7'], [7, 'D1_A_7'], [8, 'D8_A_15'], [15, 'D8_A_15'], [16, 'D16_A_30'], [30, 'D16_A_30'], [31, 'D31_A_60'], [60, 'D31_A_60'], [61, 'D61_A_90'], [90, 'D61_A_90'], [91, 'D91_A_180'], [180, 'D91_A_180'], [181, 'D181_A_365'], [365, 'D181_A_365'], [366, 'ACIMA_365'], [1200, 'ACIMA_365']];
   test.each(casos)('%i dias de atraso → %s', (dias, faixa) => {
     expect(M.faixaAtraso(rec({ data_vencimento: d(-dias) }), HOJE)).toBe(faixa);
   });
@@ -94,25 +94,26 @@ describe('vínculo pagar → compra (determinístico; heurística nunca confirma
   });
 });
 
-describe('snapshot: sem caixa/saldo, privacidade e determinismo', () => {
+describe('geração: sem caixa/saldo, privacidade e determinismo', () => {
   const brutosP = [titulo({ id: 'A', data_vencimento: d(-10) }), titulo({ id: 'B', data_vencimento: d(2), nome_fornecedor: 'Fornecedor Fictício Um' })];
   const brutosR = [receber({ id: 'R1', data_vencimento: d(-40), nome_cliente: 'Cliente Fictício Um' }), receber({ id: 'R2', data_vencimento: d(5) })];
   const agora = new Date('2026-09-28T15:00:00Z');
-  const monta = () => S.montarSnapshot({ brutosPagar: brutosP, brutosReceber: brutosR, refs, agora });
+  const canon = (ps, rs) => [...ps.map(b => C.mapearTitulo(b, 'PAGAR', refs)), ...rs.map(b => C.mapearTitulo(b, 'RECEBER', refs))];
+  const monta = (ps = brutosP, rs = brutosR) => A.construirGeracao({ canon: canon(ps, rs), agora, geracao: 'gTeste', hoje: HOJE });
   test('resumo não traz nomes de pessoas/empresas nem IDs de título; traz envelhecimento e janela de 3 dias', () => {
     const s = monta(); const txt = JSON.stringify(s.resumo);
     expect(txt).not.toMatch(/Fictício|nome_fornecedor|nome_cliente/); expect(txt).not.toContain('"R1"');
-    expect(s.resumo.receber.envelhecimento_vencidos.D31_A_60.quantidade).toBe(1);
-    expect(s.resumo.pagar.janelas_acumuladas_sem_vencidos.A_VENCER_ATE_3D.quantidade).toBe(1);
+    expect(s.resumo.receber.envelhecimento.D31_A_60.n).toBe(1);
+    expect(s.resumo.pagar.prox_3d.n).toBe(1);
   });
   test('saldo bancário, caixa disponível e capacidade de compra continuam BLOQUEADOS e não existem como números', () => {
     const s = monta();
     for (const k of ['SALDO_BANCARIO', 'CAIXA_REAL', 'CAPACIDADE_DE_COMPRA', 'PROJECAO_DE_CAIXA']) expect(s.resumo.metricas_bloqueadas).toContain(k);
+    expect(s.resumo.bankBalance.available).toBe(false); expect(s.resumo.purchaseCapacity.status).toBe('BLOCKED');
     expect(JSON.stringify(s.resumo)).not.toMatch(/"(saldo|caixa_disponivel|capacidade_de_compra|free_cash|runway)[a-z_]*"\s*:\s*-?\d/i);
-    expect(s.resumo.limitacoes.join(' ')).toMatch(/REAL_BANK_BALANCE_AVAILABLE=NO/);
   });
   test('mesmo insumo → mesmo resultado (determinístico, independe da ordem de entrada)', () => {
-    const a = JSON.stringify(monta().resumo), b = JSON.stringify(S.montarSnapshot({ brutosPagar: [...brutosP].reverse(), brutosReceber: [...brutosR].reverse(), refs, agora }).resumo);
+    const a = JSON.stringify(monta().resumo), b = JSON.stringify(monta([...brutosP].reverse(), [...brutosR].reverse()).resumo);
     expect(b).toBe(a);
   });
   test('cliente GestãoClick: só GET, só hosts/recursos permitidos', async () => {

@@ -16,7 +16,7 @@ const PERFIS = {
   inativo:          { users: { role: 'funcionario', ativo: false }, sys: { modulos: ['financeiro'] } },
 };
 const PODE = { admin: true, gestorComFin: true, funcComFin: true };   // demais: negado
-const DOCS = [['fin_n1', 'resumo'], ['fin_n1', 'auditoria'], ['fin_n1', 'meta'], ['fin_n1_titulos_abertos', 'bloco_000']];
+const DOCS = [['fin_n1', 'active'], ['fin_n1', 'meta'], ['fin_n1_resumo', 'g1__resumo'], ['fin_n1_resumo', 'g1__entidades'], ['fin_n1_titulos', 'g1__PAGAR__VENCIDO__000']];
 
 beforeAll(async () => {
   env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
@@ -26,6 +26,7 @@ beforeAll(async () => {
     for (const [uid, p] of Object.entries(PERFIS)) { await db.doc('users/' + uid).set(p.users); if (p.sys) await db.doc('sistema_usuarios/' + uid).set(p.sys); }
     for (const [col, id] of DOCS) await db.doc(`${col}/${id}`).set({ fixture: true });
     await db.doc('fin_n1/outro').set({ fixture: true });
+    await db.doc('fin_n1_ctl/lock').set({ run_id: 'x' });
   });
 });
 afterAll(async () => { await env.clearFirestore(); await env.cleanup(); });
@@ -42,8 +43,13 @@ describe('AUTHORIZATION_MATRIX (backend)', () => {
   }
   test('ninguém escreve (nem admin) e docId fora da lista é negado', async () => {
     const db = env.authenticatedContext('admin').firestore();
-    await assertFails(db.doc('fin_n1/resumo').set({ x: 1 }));
-    await assertFails(db.doc('fin_n1_titulos_abertos/bloco_000').update({ x: 1 }));
+    await assertFails(db.doc('fin_n1/active').set({ x: 1 }));
+    await assertFails(db.doc('fin_n1_titulos/g1__PAGAR__VENCIDO__000').update({ x: 1 }));
+    await assertFails(db.doc('fin_n1_resumo/g2__resumo').set({ x: 1 }));
+    await assertFails(db.doc('fin_n1_ctl/lock').get());                       // trava: nunca do navegador
+    await assertFails(db.doc('fin_n1_ctl/lock').set({ run_id: 'y' }));
+    await assertFails(db.collection('fin_n1_titulos').get());                  // listar a coleção inteira é negado (só get por id)
+    await assertFails(db.collection('fin_n1_resumo').get());
     await assertFails(db.doc('fin_n1/meta').delete());
     await assertFails(db.doc('fin_n1/outro').get());
   });

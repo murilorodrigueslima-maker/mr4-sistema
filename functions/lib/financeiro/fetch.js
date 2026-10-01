@@ -14,32 +14,44 @@
 // vencimento mais antigo em aberto (ver OLDEST_OPEN_* no relatório).
 
 const BASE = 'https://api.gestaoclick.com';
-const RECURSOS_PERMITIDOS = ['/pagamentos', '/recebimentos', '/formas_pagamentos', '/planos_contas', '/vendas'];
+const RECURSOS_PERMITIDOS = ['/pagamentos', '/recebimentos', '/formas_pagamentos', '/planos_contas', '/vendas', '/compras'];
 const LIMITE = 100;
 
 /** Cliente GET-only. Qualquer outro método, host ou recurso → erro (GET_ONLY_GUARD). */
-function criarClienteGC({ fetchImpl, accessToken, secretToken, pausaMs = 350, timeoutMs = 30000, dormir }) {
+function criarClienteGC({ fetchImpl, accessToken, secretToken, pausaMs = 350, timeoutMs = 30000, dormir, tentativas = 3, backoffMs = 1500 }) {
   if (typeof fetchImpl !== 'function') throw new Error('fetchImpl obrigatório');
   const esperar = dormir || (ms => new Promise(r => setTimeout(r, ms)));
-  let chamadas = 0;
+  let chamadas = 0, retries = 0;
+  const transitorio = e => e && (e.transitorio === true || e.name === 'AbortError' || /fetch failed|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(String(e.message)));
   async function get(caminho, opcoes = {}) {
     const metodo = (opcoes.method || 'GET').toUpperCase();
     if (metodo !== 'GET') throw new Error('GET_ONLY_GUARD: método ' + metodo + ' bloqueado');
     const url = new URL(BASE + caminho);
     if (url.origin !== BASE) throw new Error('GET_ONLY_GUARD: host bloqueado');
-    if (!RECURSOS_PERMITIDOS.some(p => url.pathname === p || url.pathname.startsWith(p + '/'))) throw new Error('GET_ONLY_GUARD: recurso não permitido ' + url.pathname);
-    chamadas++;
-    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const tm = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
-    try {
-      const r = await fetchImpl(url.toString(), { method: 'GET', headers: { 'access-token': accessToken, 'secret-access-token': secretToken }, signal: ctl ? ctl.signal : undefined });
-      if (!r.ok) throw new Error('GC HTTP ' + r.status + ' em ' + url.pathname);
-      const j = await r.json();
-      if (pausaMs) await esperar(pausaMs);
-      return j;
-    } finally { if (tm) clearTimeout(tm); }
+    if (!RECURSOS_PERMITIDOS.includes(url.pathname)) throw new Error('GET_ONLY_GUARD: recurso não permitido ' + url.pathname);
+    let ultimo;
+    for (let t = 1; t <= tentativas; t++) {
+      chamadas++;
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const tm = ctl ? setTimeout(() => ctl.abort(), timeoutMs) : null;
+      try {
+        const r = await fetchImpl(url.toString(), { method: 'GET', headers: { 'access-token': accessToken, 'secret-access-token': secretToken }, signal: ctl ? ctl.signal : undefined });
+        if (!r.ok) { const e = new Error('GC HTTP ' + r.status + ' em ' + url.pathname); e.transitorio = r.status === 429 || r.status >= 500; e.status = r.status; throw e; }
+        let j;
+        try { j = await r.json(); } catch (_) { const e = new Error('GC JSON inválido em ' + url.pathname); e.transitorio = true; throw e; }
+        if (j === null || typeof j !== 'object') { const e = new Error('GC resposta vazia em ' + url.pathname); e.transitorio = true; throw e; }
+        if (pausaMs) await esperar(pausaMs);
+        return j;
+      } catch (e) {
+        ultimo = e;
+        if (!transitorio(e) || t === tentativas) throw e;      // erro definitivo (4xx) não é repetido; transitório: backoff exponencial
+        retries++;
+        await esperar(backoffMs * Math.pow(2, t - 1));
+      } finally { if (tm) clearTimeout(tm); }
+    }
+    throw ultimo;
   }
-  return { get, chamadas: () => chamadas };
+  return { get, chamadas: () => chamadas, retries: () => retries };
 }
 
 /** Janelas mensais [{inicio, fim}] cobrindo [inicio, fim] (datas só-data). */
@@ -56,6 +68,9 @@ function janelasMensais(inicio, fim) {
   return out;
 }
 
+/** Compras/vendas vêm embrulhadas ({Compra:{…}} / {Venda:{…}}); títulos vêm planos. */
+const desembrulha = x => (x && (x.Compra || x.Venda)) || x;
+
 /** Busca uma janela inteira, paginando; confere completude. */
 async function buscarJanela(cli, recurso, janela) {
   const q = p => `/${recurso}?pagina=${p}&limite=${LIMITE}&data_inicio=${janela.inicio}&data_fim=${janela.fim}`;
@@ -63,15 +78,20 @@ async function buscarJanela(cli, recurso, janela) {
   const meta = primeira.meta || {};
   const total = meta.total_registros == null ? 0 : Number(meta.total_registros);
   const paginas = meta.total_paginas == null ? (total ? 1 : 0) : Number(meta.total_paginas);
+  if (paginas > 5000) { const e = new Error('PAGINAS_DEMAIS'); e.codigo = 'PAGINAS_DEMAIS'; throw e; }
   const itens = [...(Array.isArray(primeira.data) ? primeira.data : [])];
   let p = 2;
+  let assinaturaAnterior = JSON.stringify(desembrulha(itens[0] || {}).id) + '|' + JSON.stringify(desembrulha(itens[itens.length - 1] || {}).id);
   for (; p <= paginas; p++) {
     const r = await cli.get(q(p));
     const d = Array.isArray(r.data) ? r.data : [];
     if (!d.length) break;
+    const assinatura = JSON.stringify(desembrulha(d[0]).id) + '|' + JSON.stringify(desembrulha(d[d.length - 1]).id);
+    if (assinatura === assinaturaAnterior) { const e = new Error(`PAGINA_REPETIDA ${recurso} ${janela.inicio}..${janela.fim} pág ${p}`); e.codigo = 'PAGINA_REPETIDA'; throw e; }   // API devolvendo a mesma página: não segue em loop nem conta em dobro
+    assinaturaAnterior = assinatura;
     itens.push(...d);
   }
-  const unicos = new Set(itens.map(x => String(x.id)));
+  const unicos = new Set(itens.map(x => String(desembrulha(x).id)));
   if (unicos.size !== total) {
     const e = new Error(`JANELA_INCOMPLETA ${recurso} ${janela.inicio}..${janela.fim}: únicos=${unicos.size} total_registros=${total}`);
     e.codigo = 'JANELA_INCOMPLETA'; throw e;
@@ -106,4 +126,18 @@ async function buscarReferencias(cli) {
   return { formasPorId, planos };
 }
 
-module.exports = { criarClienteGC, janelasMensais, buscarJanela, buscarTitulos, buscarReferencias, RECURSOS_PERMITIDOS, LIMITE };
+/** Índices mínimos para vínculos (só campos necessários; nada de PII): compras {id,codigo,fornecedor_id}, vendas {id,codigo,cliente_id}. */
+async function buscarIndicesComerciais(cli, { inicio, fim }) {
+  const out = { compras: [], vendas: [], estatisticas: {} };
+  for (const [recurso, chave, bloco, campoEnt] of [['compras', 'compras', 'Compra', 'fornecedor_id'], ['vendas', 'vendas', 'Venda', 'cliente_id']]) {
+    const porId = new Map(); let paginas = 0;
+    for (const j of janelasMensais(inicio, fim)) {
+      const r = await buscarJanela(cli, recurso, j); paginas += r.paginas;
+      for (const x of r.itens) { const o = x[bloco] || x; porId.set(String(o.id), { id: String(o.id), codigo: o.codigo != null ? String(o.codigo) : null, [campoEnt]: o[campoEnt] != null && o[campoEnt] !== '' ? String(o[campoEnt]) : null }); }
+    }
+    out[chave] = [...porId.values()]; out.estatisticas[recurso] = { paginas, unique: porId.size };
+  }
+  return out;
+}
+
+module.exports = { criarClienteGC, buscarIndicesComerciais, janelasMensais, buscarJanela, buscarTitulos, buscarReferencias, RECURSOS_PERMITIDOS, LIMITE };

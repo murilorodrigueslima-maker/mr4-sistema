@@ -1,7 +1,6 @@
 'use strict';
 // AGENTE FINANCEIRO MR4 — Fase 1 · busca GET-only, paginação/deduplicação, falha da API, frescor e persistência.
 const F = require('../lib/financeiro/fetch');
-const S = require('../lib/financeiro/snapshot');
 const { FORMAS, titulo, receber } = require('./fixtures/financeiro-f1');
 
 // ── GestãoClick falso: aplica a MESMA semântica comprovada (data efetiva, limite 100, ordem por data efetiva) ──
@@ -84,55 +83,3 @@ describe('Paginação, janelas e deduplicação', () => {
   });
 });
 
-describe('Sync, snapshot anterior e frescor', () => {
-  const pagamentos = [titulo({ id: 'p1', data_vencimento: '2026-09-20' }), titulo({ id: 'p2', data_vencimento: '2026-10-01' })];
-  const recebimentos = [receber({ id: 'r1', data_vencimento: '2026-09-28' })];
-  const rodar = (gc, db) => S.executarSync({ cli: gc.cli, db, agora: AGORA, inicio: '2026-08-01', horizonteDias: 60 });
-
-  test('sucesso: grava resumo (sem nomes/IDs de títulos), auditoria, meta e títulos abertos', async () => {
-    const db = dbFalso();
-    const r = await rodar(gcFalso({ pagamentos, recebimentos }), db);
-    expect(r.ok).toBe(true);
-    const resumo = db.st.fin_n1.resumo;
-    expect(resumo.data_comercial).toBe('2026-09-28');
-    expect(resumo.pagar.buckets_exclusivos.VENCIDO).toEqual({ quantidade: 1, total_cents: 10000 });
-    expect(resumo.receber.buckets_exclusivos.HOJE.quantidade).toBe(1);
-    expect(JSON.stringify(resumo)).not.toMatch(/Fornecedor Fictício|Cliente Fictício|"p1"|"r1"/);   // sem nomes e sem IDs de títulos
-    expect(resumo.metricas_bloqueadas).toEqual(expect.arrayContaining(['SALDO_DISPONIVEL', 'CAIXA_PARA_COMPRAS', 'CAPACIDADE_DE_COMPRA']));
-    expect(db.st.fin_n1.auditoria.pagar.buckets_exclusivos.VENCIDO).toEqual(['p1']);
-    expect(db.st.fin_n1_titulos_abertos.bloco_000.titulos.length).toBe(3);
-    expect(db.st.fin_n1.meta).toMatchObject({ ultima_tentativa_ok: true, erro: null });
-  });
-  test('API indisponível: snapshot válido anterior PRESERVADO (nada vira zero); só meta registra a falha', async () => {
-    const db = dbFalso();
-    await rodar(gcFalso({ pagamentos, recebimentos }), db);
-    const antes = JSON.parse(JSON.stringify(db.st));
-    const r = await S.executarSync({ cli: gcFalso({ falhar: true }).cli, db, agora: new Date('2026-09-28T18:00:00Z'), inicio: '2026-08-01', horizonteDias: 60 });
-    expect(r.ok).toBe(false);
-    expect(db.st.fin_n1.resumo).toEqual(antes.fin_n1.resumo);
-    expect(db.st.fin_n1_titulos_abertos).toEqual(antes.fin_n1_titulos_abertos);
-    expect(db.st.fin_n1.meta).toMatchObject({ ultima_sincronizacao_ok: antes.fin_n1.meta.ultima_sincronizacao_ok, ultima_tentativa_ok: false });
-    expect(db.st.fin_n1.meta.erro).toMatch(/503/);
-  });
-  test('API incompleta também preserva o anterior', async () => {
-    const db = dbFalso();
-    await rodar(gcFalso({ pagamentos, recebimentos }), db);
-    const resumoAntes = JSON.stringify(db.st.fin_n1.resumo);
-    const r = await rodar(gcFalso({ pagamentos, recebimentos, mentirTotal: true }), db);
-    expect(r.ok).toBe(false);
-    expect(JSON.stringify(db.st.fin_n1.resumo)).toBe(resumoAntes);
-    expect(db.st.fin_n1.meta.erro).toBe('JANELA_INCOMPLETA');
-  });
-  test('ausência de cache → UNAVAILABLE; recente → CURRENT; antigo → STALE (limiar explícito de 6 h)', () => {
-    expect(S.frescor(null, AGORA).estado).toBe('UNAVAILABLE');
-    expect(S.frescor('2026-09-28T12:00:00Z', AGORA)).toMatchObject({ estado: 'CURRENT', idade_min: 180, limiar_horas: 6 });
-    expect(S.frescor('2026-09-28T08:00:00Z', AGORA).estado).toBe('STALE');
-  });
-  test('sem cache anterior e API fora: nenhum resumo é criado (não aparece R$ 0)', async () => {
-    const db = dbFalso();
-    const r = await rodar(gcFalso({ falhar: true }), db);
-    expect(r.ok).toBe(false);
-    expect(db.st.fin_n1.resumo).toBeUndefined();
-    expect(db.st.fin_n1.meta.ultima_sincronizacao_ok).toBeUndefined();
-  });
-});

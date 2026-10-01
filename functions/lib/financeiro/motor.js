@@ -46,7 +46,7 @@ function bucketExclusivo(t, hoje) {
 //   A_VENCER_ATE_7D  = vencimento em [hoje, hoje+7]   ·  A_VENCER_ATE_15D  ·  A_VENCER_ATE_30D
 const JANELAS = { A_VENCER_ATE_3D: 3, A_VENCER_ATE_7D: 7, A_VENCER_ATE_15D: 15, A_VENCER_ATE_30D: 30 };
 // ── ENVELHECIMENTO DE VENCIDOS (faixas exclusivas de dias em atraso; fato aritmético, não avaliação de ninguém)
-const FAIXAS_ATRASO = [['D1_A_7', 1, 7], ['D8_A_15', 8, 15], ['D16_A_30', 16, 30], ['D31_A_60', 31, 60], ['D61_A_90', 61, 90], ['D91_A_365', 91, 365], ['ACIMA_365', 366, Infinity]];
+const FAIXAS_ATRASO = [['D1_A_7', 1, 7], ['D8_A_15', 8, 15], ['D16_A_30', 16, 30], ['D31_A_60', 31, 60], ['D61_A_90', 61, 90], ['D91_A_180', 91, 180], ['D181_A_365', 181, 365], ['ACIMA_365', 366, Infinity]];   // Fase 2: 91–365 aberto em 91–180 e 181–365; >365 sempre explícito
 function faixaAtraso(t, hoje) {
   const d = diffDias(t.due_date, hoje);
   if (d < 1) return null;
@@ -154,8 +154,11 @@ const RE_VENDA = /^Venda de nº (\d+)$/;
 function vincularVenda(titulo, vendasPorCodigo) {
   const m = typeof titulo.description === 'string' ? titulo.description.match(RE_VENDA) : null;
   if (!m) return { estado: 'SEM_REFERENCIA', codigo: null };
-  const v = vendasPorCodigo[m[1]];
-  if (!v) return { estado: 'NAO_RESOLVIDO', codigo: m[1] };
+  const lv = vendasPorCodigo[m[1]];
+  const vs = lv == null ? [] : (Array.isArray(lv) ? lv : [lv]);
+  if (!vs.length) return { estado: 'NAO_RESOLVIDO', codigo: m[1] };
+  if (vs.length > 1) return { estado: 'CODIGO_DUPLICADO', codigo: m[1] };          // mesmo código em mais de uma venda: ambíguo, nunca vínculo
+  const v = vs[0];
   if (String(v.cliente_id) !== String(titulo.entity_id)) return { estado: 'CONFLITO_CLIENTE', codigo: m[1] };
   return { estado: 'CONFIRMADO', codigo: m[1], venda_id: String(v.id) };
 }

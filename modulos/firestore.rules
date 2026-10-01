@@ -555,17 +555,25 @@ service cloud.firestore {
       allow write: if false;
     }
 
-    // ── AGENTE FINANCEIRO MR4 — Fase 1 (motor Nível 1: contas a pagar / a receber) ─────────────
-    // Gravado só pelo sync server-side (Admin SDK). Leitura: módulo 'financeiro' (ou admin), perfil ativo e
-    // não bloqueado (temAcessoModulo = dual-role: gestor OU funcionário com o módulo). Ser gestor sozinho não basta.
-    //   fin_n1/resumo | fin_n1/auditoria | fin_n1/meta   e   fin_n1_titulos_abertos/{bloco}
-    // Qualquer outro docId em fin_n1: negado.
+    // ── AGENTE FINANCEIRO MR4 — Fase 2 (fin_n1: contas a pagar / a receber; SOMENTE LEITURA no navegador) ─────────────
+    // Gravado só pelo sync server-side (Admin SDK). Leitura: módulo 'financeiro' ou admin=true, perfil ativo e não bloqueado
+    // (temAcessoModulo = dual-role). Ser gestor sozinho NÃO basta; vendedor sem o módulo não lê nada.
+    //   fin_n1/{active,meta}          ponteiro da geração ativa + frescor
+    //   fin_n1_resumo/{id}            agregados e entidades da geração (leitura por id)
+    //   fin_n1_titulos/{id}           detalhes protegidos em fatias (leitura por id, sob demanda)
+    //   fin_n1_ctl/*                  trava do sync — SEM acesso do navegador (cai no "negado por padrão")
     match /fin_n1/{docId} {
-      allow read:  if docId in ['resumo', 'auditoria', 'meta'] && temAcessoModulo('financeiro');
+      allow read:  if docId in ['active', 'meta'] && temAcessoModulo('financeiro');
       allow write: if false;
     }
-    match /fin_n1_titulos_abertos/{blocoId} {
-      allow read:  if temAcessoModulo('financeiro');
+    match /fin_n1_resumo/{docId} {
+      allow get:   if temAcessoModulo('financeiro');
+      allow list:  if false;
+      allow write: if false;
+    }
+    match /fin_n1_titulos/{docId} {
+      allow get:   if temAcessoModulo('financeiro');
+      allow list:  if false;
       allow write: if false;
     }
 

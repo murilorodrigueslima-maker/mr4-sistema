@@ -871,6 +871,20 @@ exports.comprasSyncIncremental = onSchedule({
   maxInstances:    1,
 }, () => comprasEntrypoints.syncAgendadoHandler('INCREMENTAL', { db }));
 
+// Agente Financeiro MR4 — Fase 2: sync FULL (GestãoClick SOMENTE GET) → fin_n1 protegido (geração + ponteiro). Sem HTTP, sem callable.
+// Agenda 3/3 h (min 40, America/Fortaleza); trava com lease em fin_n1_ctl/lock; falha preserva a geração ativa.
+const financeiroEntrypoints = require('./lib/financeiro/entrypoints');
+exports.financeiroSync = onSchedule({
+  schedule:        financeiroEntrypoints.AGENDA.CRON,
+  timeZone:        financeiroEntrypoints.AGENDA.TIMEZONE,
+  region:          REGION,
+  secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+  timeoutSeconds:  1800,
+  memory:          '1GiB',
+  retryCount:      0,
+  maxInstances:    1,
+}, () => financeiroEntrypoints.syncAgendadoHandler({ db, log: e => console.log(JSON.stringify(e)) }));
+
 // N35.11 — Callables da Fila Comercial (canário operacional)
 // CRM 2.0 F1: handlers recebem SÓ `request` (o 2º argumento do onCall v2 é a resposta de streaming, não opções de teste)
 exports.claimOpportunity   = onCall({ region: REGION }, req => claimOpportunityHandler(req));

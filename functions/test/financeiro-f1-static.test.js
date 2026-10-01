@@ -18,13 +18,13 @@ test('biblioteca não escreve log (nenhum valor, nome ou credencial em console)'
 test('métricas bloqueadas não são calculadas (só listadas como bloqueadas)', () => {
   const motor = fontes.find(([f]) => f === 'motor.js')[1].replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');   // só código, sem comentários
   expect(motor).not.toMatch(/saldo_bancario|caixa_disponivel|capacidade_compra|runway|free_cash/i);
-  const snap = require('../lib/financeiro/snapshot');
+  const snap = require('../lib/financeiro/agregados');
   expect(snap.METRICAS_BLOQUEADAS).toEqual(expect.arrayContaining(['SALDO_DISPONIVEL', 'SALDO_BANCARIO', 'CAIXA_REAL', 'CAIXA_PARA_COMPRAS', 'CAPACIDADE_DE_COMPRA', 'RUNWAY', 'FREE_CASH', 'PROJECAO_DE_CAIXA']));
 });
-test('o motor não é carregado pelo frontend nem publica arquivo', () => {
+test('o motor não é carregado pelo frontend (que só lê os agregados protegidos) nem publica arquivo', () => {
   const html = [];
   const varrer = d => { for (const n of fs.readdirSync(d)) { if (['node_modules', '.git', 'functions', 'artifacts'].includes(n)) continue; const p = path.join(d, n), st = fs.lstatSync(p); if (st.isSymbolicLink()) continue; if (st.isDirectory()) varrer(p); else if (/\.(html|js)$/.test(n)) html.push(p); } };
   varrer(ROOT);
-  for (const f of html) expect([path.relative(ROOT, f), /lib\/financeiro|fin_n1_titulos_abertos/.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), false]);
+  for (const f of html) expect([path.relative(ROOT, f), /lib\/financeiro/.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), false]);
   for (const [f, s] of fontes) expect([f, /writeFile|data\//.test(s)]).toEqual([f, false]);
 });

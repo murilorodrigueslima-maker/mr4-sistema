@@ -32,9 +32,12 @@ dt('Rules: nada fora do bloco fin_n1 mudou em relação ao main aprovado (Ponto,
 });
 dt('somente arquivos do Financeiro mudaram em relação ao main aprovado (UNRELATED_FILES=0); navegação (index.html) intacta', () => {
   const mudou = git(`diff --name-only ${BASE}`).split('\n').filter(Boolean);
-  const permitido = f => /^functions\/lib\/financeiro\//.test(f) || /^functions\/test\/(financeiro-|fixtures\/financeiro-|helpers\/financeiro-)/.test(f) || ['modulos/financeiro-v2.html', 'modulos/financeiro-view.js', 'modulos/firestore.rules', 'functions/index.js'].includes(f);
+  const permitido = f => /^functions\/lib\/financeiro\//.test(f) || /^functions\/test\/(financeiro-|fixtures\/financeiro-|helpers\/financeiro-)/.test(f) || ['modulos/financeiro-v2.html', 'modulos/financeiro-view.js', 'modulos/firestore.rules', 'functions/index.js', 'index.html', 'modulos/financeiro.html'].includes(f);
   expect(mudou.filter(f => !permitido(f))).toEqual([]);
-  expect(mudou).not.toContain('index.html'); expect(mudou).not.toContain('modulos/financeiro.html');            // tela antiga e menu preservados para rollback
+  // index.html: UMA linha acrescentada (entrada do Financeiro novo no menu); nada removido. financeiro.html (tela antiga): só o aviso, nenhum número alterado.
+  const soAdicoes = f => { const l = git(`diff ${BASE} -- ${f}`).split('\n').filter(x => /^[+-]/.test(x) && !/^(\+\+\+|---)/.test(x)); return { rem: l.filter(x => x[0] === '-'), add: l.filter(x => x[0] === '+') }; };
+  if (mudou.includes('index.html')) { const d = soAdicoes('index.html'); expect(d.rem).toEqual([]); expect(d.add.filter(x => /url: '\.\/modulos\/financeiro-v2\.html'/.test(x))).toHaveLength(1); expect(d.add.filter(x => !/^\+\s*\/\//.test(x))).toHaveLength(1); }
+  if (mudou.includes('modulos/financeiro.html')) { const d = soAdicoes('modulos/financeiro.html'); expect(d.rem).toEqual([]); expect(d.add.join('\n')).toMatch(/Indicadores financeiros em atualização/); expect(d.add.join('\n')).toMatch(/Esta versão do painel utiliza uma fonte anterior de dados e pode apresentar valores incompletos\. Consulte o novo Financeiro para os dados atualizados\./); }
   const idxDiff = git(`diff ${BASE} -- functions/index.js`); const adicionadas = idxDiff.split('\n').filter(l => /^[+-]/.test(l) && !/^(\+\+\+|---)/.test(l));
   expect(adicionadas.filter(l => l.startsWith('-'))).toEqual([]);                                              // index.js: só acréscimos (nenhuma Function alterada)
 });

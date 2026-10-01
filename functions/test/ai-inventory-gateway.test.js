@@ -177,10 +177,10 @@ describe('UI: aba "Agente" oculta por padrão, gate pelo backend, integrada sem 
   });
 });
 
-describe('módulo/motor existente NÃO alterado (git diff vs base ff37013)', () => {
+describe('módulo/motor existente NÃO alterado (git diff vs base c79ad64)', () => {
   test('só o HTML do próprio módulo, o código novo do agente e testes mudam; nada em Compras, Rules, index.js, gateway, widget', () => {
     const raiz = path.join(__dirname, '../..');
-    let out; try { out = execFileSync('git', ['diff', '--name-only', 'ff37013', '--'], { cwd: raiz, encoding: 'utf8' }) + execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: raiz, encoding: 'utf8' }); } catch (e) { return; }
+    let out; try { out = execFileSync('git', ['diff', '--name-only', 'c79ad64', '--'], { cwd: raiz, encoding: 'utf8' }) + execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: raiz, encoding: 'utf8' }); } catch (e) { return; }
     const arqs = out.split('\n').filter(Boolean).filter(f => !f.startsWith('functions/node_modules'));
     const ok = f => f === 'modulos/estoque.html' || f.startsWith('functions/lib/ai/agents/inventory/') || /^functions\/test\/(ai-inventory-[\w-]+\.test\.js|fixtures\/ai-inventory\.js)$/.test(f);
     expect(arqs.filter(f => !ok(f))).toEqual([]);

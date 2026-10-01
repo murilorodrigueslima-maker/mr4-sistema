@@ -89,6 +89,9 @@ describe('vínculo pagar → compra (determinístico; heurística nunca confirma
   test('mesmo fornecedor + valor igual + data próxima, SEM referência, não vira vínculo', () => {
     expect(M.vincularCompra(pag({ descricao: 'Mercadoria', fornecedor_id: 'FORN1', valor_total: '500.00' }), compras).estado).toBe('SEM_REFERENCIA');
   });
+  test('vínculo de venda sem cliente no título (ou cliente nulo dos dois lados) NÃO confirma — só o código não basta', () => {
+    expect(M.vincularVenda(rec({ descricao: 'Venda de nº 500', cliente_id: '', nome_cliente: '' }), { 500: [{ id: 'V1', cliente_id: null }] }).estado).toBe('CLIENTE_AUSENTE');
+  });
   test('vínculo de venda (recebível) continua exato: cliente diferente → conflito', () => {
     expect(M.vincularVenda(rec({ descricao: 'Venda de nº 500', cliente_id: 'CLI1' }), { 500: { id: 'V1', cliente_id: 'CLI2' } }).estado).toBe('CONFLITO_CLIENTE');
   });

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financeiro — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#FF6B1A;--bg:#F3F4F6;--card:#fff;--text:#1A1A2E;--muted:#6B7280;--border:#E5E7EB;--border-lt:#F0F1F3;--red:#B91C1C;--red-bg:#FEE2E2;--amber:#92400E;--amber-bg:#FEF3C7;--green:#047857;--green-bg:#D1FAE5;--blue:#1D4ED8}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+header{position:sticky;top:0;z-index:20;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.9rem;padding:.65rem 1.25rem;flex-wrap:wrap}
+header a.volta{color:var(--muted);text-decoration:none;font-size:.82rem;border:1px solid var(--border);border-radius:8px;padding:.3rem .6rem}
+header h1{font-size:1.05rem;font-weight:700}
+.fresco{margin-left:auto;font-size:.78rem;color:var(--muted)}
+.fresco.stale{color:var(--red);font-weight:600}
+nav.abas{display:flex;gap:.25rem;padding:.5rem 1.25rem 0;flex-wrap:wrap;background:var(--card);border-bottom:1px solid var(--border)}
+nav.abas button{border:0;background:none;padding:.55rem .85rem;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent}
+nav.abas button[aria-selected=true]{color:var(--orange);border-bottom-color:var(--orange)}
+main{max-width:1180px;margin:0 auto;padding:1rem 1.25rem 3rem;display:flex;flex-direction:column;gap:1.1rem}
+.aviso{font-size:.8rem;color:var(--muted);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:.55rem .8rem}
+.aviso.stale{background:var(--red-bg);border-color:#FCA5A5;color:var(--red)}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:.7rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.8rem .95rem}
+.card .t{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.card .v{font-size:1.45rem;font-weight:700;margin-top:.15rem;font-variant-numeric:tabular-nums}
+.card .s{font-size:.74rem;color:var(--muted);margin-top:.1rem}
+.card.alerta{border-color:#FCA5A5;background:#FFF7F7}.card.alerta .v{color:var(--red)}
+.card.atencao{border-color:#FCD34D;background:#FFFBEB}.card.atencao .v{color:var(--amber)}
+.card.sec .v{font-size:1.15rem}
+h2{font-size:.9rem;font-weight:700;margin-bottom:.45rem}
+.bloco{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:.9rem 1rem}
+.duas{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:1rem}
+table{width:100%;border-collapse:collapse;font-size:.83rem}
+th{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:.42rem .5rem;border-bottom:1px solid var(--border-lt);vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.destaque td{font-weight:700;background:#FFF7ED}
+.scroll{overflow-x:auto}
+.chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.6rem}
+.chip{border:1px solid var(--border);background:var(--card);border-radius:999px;padding:.3rem .75rem;font:inherit;font-size:.8rem;cursor:pointer;color:var(--text)}
+.chip[aria-pressed=true]{background:var(--orange);border-color:var(--orange);color:#fff;font-weight:600}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;border-radius:6px;padding:.08rem .4rem;white-space:nowrap}
+.tag.alerta{background:var(--red-bg);color:var(--red)}.tag.atencao{background:var(--amber-bg);color:var(--amber)}.tag.ok{background:var(--green-bg);color:var(--green)}.tag.neutro{background:#EEF0F3;color:#374151}
+.sub{font-size:.74rem;color:var(--muted)}
+.vazio,.carregando{padding:1.2rem;text-align:center;color:var(--muted)}
+.erro{padding:1rem;color:var(--red);background:var(--red-bg);border-radius:10px}
+button.mais{margin:.7rem auto 0;display:block;border:1px solid var(--border);background:var(--card);border-radius:8px;padding:.45rem 1rem;font:inherit;cursor:pointer}
+input.busca{border:1px solid var(--border);border-radius:8px;padding:.4rem .6rem;font:inherit;min-width:220px;margin-bottom:.6rem}
+details summary{cursor:pointer;font-weight:600;font-size:.85rem}
+.rodape{font-size:.74rem;color:var(--muted)}
+@media(max-width:640px){main{padding:.8rem .75rem 3rem}.duas{grid-template-columns:1fr}}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <a class="volta" href="../index.html">← Sistema</a>
+  <h1>Financeiro</h1>
+  <span class="fresco" id="fresco">Carregando…</span>
+</header>
+<nav class="abas" id="abas" role="tablist">
+  <button role="tab" data-aba="geral" aria-selected="true">Visão geral</button>
+  <button role="tab" data-aba="pagar" aria-selected="false">A pagar</button>
+  <button role="tab" data-aba="receber" aria-selected="false">A receber</button>
+  <button role="tab" data-aba="conferir" aria-selected="false">Requer conferência</button>
+  <button role="tab" data-aba="fornec" aria-selected="false">Fornecedores</button>
+  <button role="tab" data-aba="clientes" aria-selected="false">Clientes</button>
+</nav>
+<main id="main"><div class="carregando" id="carregando">Carregando o Financeiro…</div></main>
+
+<script src="financeiro-view.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// Configuração pública do app Firebase (não é segredo; igual às demais páginas). Esta página só LÊ o Firestore protegido:
+// nenhum acesso ao ERP, nenhum segredo, nenhuma escrita financeira.
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app), db = getFirestore(app);
+if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+}
+const V = window.FinanceiroView, esc = V.esc;
+const S = { ativo: null, resumo: null, entidades: null, aba: 'geral', listas: {}, filtro: { PAGAR: 'vencidas', RECEBER: 'vencidas' }, busca: '', erro: null };
+const $ = id => document.getElementById(id);
+const lerDoc = async (col, id) => { const s = await getDoc(doc(db, col, id)); return s.exists() ? s.data() : null; };
+
+const AVISO = 'O Financeiro acompanha títulos e compromissos programados. O saldo bancário real ainda não está integrado.';
+const tag = (t, tom) => `<span class="tag ${esc(tom)}">${esc(t)}</span>`;
+const nc = x => `<td class="n">${esc(x.n)}</td><td class="n">${esc(V.brl(x.c))}</td>`;
+
+function renderFresco() {
+  const f = V.frescor(S.ativo && S.ativo.publicado_em, Date.now());
+  const el = $('fresco'); el.textContent = f.texto; el.className = 'fresco' + (f.estado !== 'CURRENT' ? ' stale' : '');
+  return f;
+}
+function cabecalho() {
+  const f = V.frescor(S.ativo && S.ativo.publicado_em, Date.now());
+  return `<div class="aviso">${esc(AVISO)}</div>` + (f.estado !== 'CURRENT' ? `<div class="aviso stale">${esc(f.texto)}</div>` : '');
+}
+const card = c => `<div class="card ${esc(c.tom)}${c.sec ? ' sec' : ''}"><div class="t">${esc(c.titulo)}</div><div class="v">${esc(c.valor)}</div><div class="s">${esc(c.sub)}</div></div>`;
+const tabelaAging = nat => `<table><thead><tr><th>Atraso</th><th class="n">Títulos</th><th class="n">Valor</th></tr></thead><tbody>${V.linhasEnvelhecimento(nat).map(l => `<tr class="${l.destaque ? 'destaque' : ''}"><td>${esc(l.rotulo)}</td><td class="n">${esc(l.n)}</td><td class="n">${esc(V.brl(l.c))}</td></tr>`).join('')}</tbody></table>`;
+const tabelaFormas = nat => { const ls = V.linhasFormas(nat); return ls.length ? `<table><thead><tr><th>Forma</th><th class="n">Em aberto</th><th class="n">Vencido</th></tr></thead><tbody>${ls.map(l => `<tr><td>${esc(l.forma)}${l.ambigua ? ' <span class="sub">(a fonte não distingue boleto de Pix)</span>' : ''}</td><td class="n">${esc(V.brl(l.aberto.c))}</td><td class="n">${esc(V.brl(l.vencido.c))}</td></tr>`).join('')}</tbody></table>` : '<div class="vazio">Sem títulos em aberto.</div>'; };
+const tabelaPlano = nat => { const ls = (nat.por_plano || []).slice(0, 12); return ls.length ? `<table><thead><tr><th>Plano de contas</th><th class="n">Em aberto</th><th class="n">Vencido</th></tr></thead><tbody>${ls.map(l => `<tr><td>${esc(l.nome)}</td><td class="n">${esc(V.brl(l.aberto.c))}</td><td class="n">${esc(V.brl(l.vencido.c))}</td></tr>`).join('')}</tbody></table>` : '<div class="vazio">—</div>'; };
+
+function renderGeral() {
+  const r = S.resumo, m = V.modeloCards(r);
+  const vinc = r.receber.vinculos || {}, vc = r.pagar.vinculos || {};
+  return `${cabecalho()}
+  <div class="grade">${m.principais.map(card).join('')}</div>
+  <div class="grade">${m.secundarios.map(c => card({ ...c, sec: true })).join('')}</div>
+  <div class="rodape">Fluxo programado = ${esc(m.definicaoFluxo)}.</div>
+  <div class="duas">
+    <div class="bloco"><h2>Vencidos a pagar · por atraso</h2><div class="scroll">${tabelaAging(r.pagar)}</div></div>
+    <div class="bloco"><h2>Vencidos a receber · por atraso</h2><div class="scroll">${tabelaAging(r.receber)}</div></div>
+  </div>
+  <div class="duas">
+    <div class="bloco"><h2>A receber em aberto · forma de pagamento</h2><div class="scroll">${tabelaFormas(r.receber)}</div></div>
+    <div class="bloco"><h2>A pagar em aberto · forma de pagamento</h2><div class="scroll">${tabelaFormas(r.pagar)}</div></div>
+  </div>
+  <details class="bloco"><summary>Plano de contas (em aberto)</summary><div class="duas" style="margin-top:.6rem"><div class="scroll"><h2>A pagar</h2>${tabelaPlano(r.pagar)}</div><div class="scroll"><h2>A receber</h2>${tabelaPlano(r.receber)}</div></div></details>
+  <div class="rodape">Títulos analisados: ${esc(r.pagar.total_titulos)} a pagar · ${esc(r.receber.total_titulos)} a receber. Vínculo com venda: ${esc(vinc.CONFIRMADO || 0)} títulos; com compra: ${esc(vc.CONFIRMADO || 0)} títulos (somente quando o ERP traz a referência exata). Dados de ${esc(V.dataBR(r.data_comercial))} (horário de Fortaleza).</div>`;
+}
+
+// ── listas paginadas (uma fatia por vez; nunca a base inteira) ──
+function chaveLista(nat) { return nat + ':' + S.filtro[nat]; }
+async function carregarMais(nat, reiniciar) {
+  const k = chaveLista(nat);
+  if (reiniciar || !S.listas[k]) S.listas[k] = V.novaLista(S.ativo.geracao, nat, S.filtro[nat], S.resumo, V.dataComercial(new Date()));
+  const est = S.listas[k]; const f = V.proximaFatia(est);
+  if (!f) { render(); return; }
+  try { const d = await lerDoc('fin_n1_titulos', f.id); if (!d || d.geracao !== S.ativo.geracao) throw new Error('fatia ausente'); V.aplicarFatia(est, d); est.erro = null; }
+  catch (e) { est.erro = 'Não foi possível carregar esta página. Tente novamente.'; }
+  render();
+}
+function linhaHtml(m, nat) {
+  return `<tr><td>${esc(m.vencimento)}${m.faixa ? `<div class="sub">${esc(m.faixa)}</div>` : ''}${m.pagoEm ? `<div class="sub">${nat === 'RECEBER' ? 'Recebido' : 'Pago'} em ${esc(m.pagoEm)}</div>` : ''}</td>
+  <td>${esc(m.contraparte)}<div class="sub">${esc(m.descricao)}</div></td>
+  <td class="n">${esc(m.valor)}</td>
+  <td>${tag(m.status, m.tom)}${m.acimaDeUmAno ? ' ' + tag('+365 dias', 'alerta') : ''}${m.conferencia ? `<div class="sub">${esc(m.conferencia)}</div>` : ''}</td>
+  <td>${esc(m.plano)}</td>${nat === 'RECEBER' ? `<td>${esc(m.forma)}${m.ambigua ? '<div class="sub">ambígua na fonte</div>' : ''}</td>` : ''}
+  <td>${m.vinculo ? (m.vinculoAmbiguo ? tag(m.vinculo, 'atencao') : esc(m.vinculo)) : '<span class="sub">—</span>'}</td></tr>`;
+}
+function renderLista(nat) {
+  const K = nat === 'PAGAR' ? 'pagar' : 'receber';
+  const chips = Object.keys(V.FILTROS).map(id => `<button class="chip" data-filtro="${esc(id)}" data-nat="${nat}" aria-pressed="${S.filtro[nat] === id}">${esc(V.rotuloFiltro(id, nat))}${contagemFiltro(K, id)}</button>`).join('');
+  const k = chaveLista(nat), est = S.listas[k];
+  let corpo;
+  if (!est) corpo = '<div class="carregando">Carregando…</div>';
+  else if (!est.itens.length && est.erro) corpo = `<div class="erro">${esc(est.erro)}</div>`;
+  else if (!est.itens.length && est.fim) corpo = '<div class="vazio">Nenhum título neste filtro.</div>';
+  else corpo = `<div class="scroll"><table><thead><tr><th>Vencimento</th><th>${nat === 'PAGAR' ? 'Fornecedor' : 'Cliente'} · descrição</th><th class="n">Valor</th><th>Situação</th><th>Plano de contas</th>${nat === 'RECEBER' ? '<th>Forma</th>' : ''}<th>${nat === 'PAGAR' ? 'Compra' : 'Venda'}</th></tr></thead><tbody>${est.itens.map(i => linhaHtml(V.modeloLinha(i, nat), nat)).join('')}</tbody></table></div>` +
+    (est.erro ? `<div class="erro" style="margin-top:.5rem">${esc(est.erro)}</div>` : '') + (!est.fim ? `<button class="mais" data-mais="${nat}">Carregar mais</button>` : `<div class="rodape" style="margin-top:.5rem">${est.itens.length} títulos exibidos.</div>`);
+  return `${cabecalho()}<div class="bloco"><div class="chips">${chips}</div>${corpo}</div>`;
+}
+function contagemFiltro(K, id) {
+  const r = S.resumo[K], d = r.detalhe || {};
+  const n = id === 'vencidas' ? r.vencido.n : id === 'hoje' ? r.hoje.n : id === 'd7' ? r.prox_7d.n : id === 'd30' ? r.prox_30d.n : id === 'conferencia' ? r.requer_conferencia.n : ((d.PAGO || {}).titulos || 0);
+  return ` <span class="sub" style="color:inherit;opacity:.75">${esc(n)}</span>`;
+}
+
+function renderConferir() {
+  const mot = nat => Object.values(nat.requer_conferencia.motivos || {}).map(x => `${x.n} · ${x.texto}`).join('; ') || '—';
+  return `${cabecalho()}<div class="bloco"><h2>Títulos que o sistema não consegue classificar</h2><div class="sub" style="margin-bottom:.5rem">Estes títulos têm dados contraditórios no ERP e não entram nos totais de aberto, vencido ou pago. Nada é corrigido automaticamente.</div>
+  <table><thead><tr><th></th><th class="n">Títulos</th><th class="n">Valor</th><th>Motivos</th></tr></thead><tbody>
+  <tr><td>A pagar</td>${nc(S.resumo.pagar.requer_conferencia)}<td>${esc(mot(S.resumo.pagar))}</td></tr><tr><td>A receber</td>${nc(S.resumo.receber.requer_conferencia)}<td>${esc(mot(S.resumo.receber))}</td></tr></tbody></table></div>
+  ${['PAGAR', 'RECEBER'].map(nat => `<div class="bloco"><h2>${nat === 'PAGAR' ? 'A pagar' : 'A receber'}</h2>${confLista(nat)}</div>`).join('')}`;
+}
+function confLista(nat) {
+  const k = nat + ':conferencia'; const est = S.listas[k];
+  if (!est) { carregarConf(nat); return '<div class="carregando">Carregando…</div>'; }
+  if (!est.itens.length) return est.erro ? `<div class="erro">${esc(est.erro)}</div>` : '<div class="vazio">Nenhum título.</div>';
+  return `<div class="scroll"><table><thead><tr><th>Vencimento</th><th>${nat === 'PAGAR' ? 'Fornecedor' : 'Cliente'} · descrição</th><th class="n">Valor</th><th>Por que requer conferência</th></tr></thead><tbody>${est.itens.map(i => { const m = V.modeloLinha(i, nat); return `<tr><td>${esc(m.vencimento)}${m.pagoEm ? `<div class="sub">Liquidação registrada em ${esc(m.pagoEm)}</div>` : ''}</td><td>${esc(m.contraparte)}<div class="sub">${esc(m.descricao)}</div></td><td class="n">${esc(m.valor)}</td><td>${esc(m.conferencia)}</td></tr>`; }).join('')}</tbody></table></div>` + (!est.fim ? `<button class="mais" data-maisconf="${nat}">Carregar mais</button>` : '');
+}
+async function carregarConf(nat, maisUma) {
+  const k = nat + ':conferencia'; if (!S.listas[k]) S.listas[k] = V.novaLista(S.ativo.geracao, nat, 'conferencia', S.resumo, V.dataComercial(new Date()));
+  const est = S.listas[k]; const f = V.proximaFatia(est); if (!f) { render(); return; }
+  try { const d = await lerDoc('fin_n1_titulos', f.id); if (!d || d.geracao !== S.ativo.geracao) throw new Error('x'); V.aplicarFatia(est, d); } catch (e) { est.erro = 'Não foi possível carregar.'; est.fim = true; }
+  render();
+}
+
+// ── fornecedores / clientes (documento de entidades, sob demanda) ──
+async function garantirEntidades() {
+  if (S.entidades || S.entErro) return;
+  try { S.entidades = await lerDoc('fin_n1_resumo', S.ativo.entidades_id); if (!S.entidades || S.entidades.geracao !== S.ativo.geracao) throw new Error('x'); } catch (e) { S.entErro = 'Não foi possível carregar esta visão.'; }
+  render();
+}
+function renderEntidades(nat) {
+  if (!S.entidades && !S.entErro) { garantirEntidades(); return `${cabecalho()}<div class="carregando">Carregando…</div>`; }
+  if (S.entErro) return `${cabecalho()}<div class="erro">${esc(S.entErro)}</div>`;
+  const lista = (nat === 'PAGAR' ? S.entidades.pagar : S.entidades.receber) || [];
+  const q = S.busca.trim().toLowerCase(); const fil = lista.filter(e => !q || String(e.nome || '').toLowerCase().includes(q)).slice(0, 200);
+  const ac = e => (e.envelhecimento && e.envelhecimento.ACIMA_365) ? e.envelhecimento.ACIMA_365 : { n: 0, c: 0 };
+  return `${cabecalho()}<div class="bloco"><input class="busca" id="busca" placeholder="Filtrar por nome" value="${esc(S.busca)}" aria-label="Filtrar por nome"><div class="sub" style="margin-bottom:.4rem">Ordenado por valor em aberto. Sem ranking de bom/mau: apenas valores programados.</div>
+  <div class="scroll"><table><thead><tr><th>${nat === 'PAGAR' ? 'Fornecedor' : 'Cliente'}</th><th class="n">Em aberto</th><th class="n">Vencido</th><th class="n">Próx. 7 dias</th><th class="n">Próx. 30 dias</th><th class="n">Vencido +365 dias</th></tr></thead><tbody>${fil.map(e => `<tr><td>${esc(e.nome || (e.tipo === 'FUNCIONARIO' ? 'Funcionário' : e.tipo === 'OUTROS' ? 'Outros (sem cadastro)' : 'Sem cadastro'))}</td><td class="n">${esc(V.brl(e.aberto.c))}</td><td class="n">${esc(V.brl(e.vencido.c))}</td><td class="n">${esc(V.brl(e.prox_7d.c))}</td><td class="n">${esc(V.brl(e.prox_30d.c))}</td><td class="n">${esc(V.brl(ac(e).c))}</td></tr>`).join('') || '<tr><td colspan="6" class="vazio">Nada encontrado.</td></tr>'}</tbody></table></div></div>`;
+}
+
+function render() {
+  renderFresco();
+  const m = $('main');
+  if (S.erro) { m.innerHTML = `<div class="erro">${esc(S.erro)}</div>`; return; }
+  if (!S.resumo) return;
+  document.querySelectorAll('#abas button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.aba === S.aba)));
+  let h;
+  if (S.aba === 'geral') h = renderGeral();
+  else if (S.aba === 'pagar') { if (!S.listas[chaveLista('PAGAR')]) carregarMais('PAGAR', true); h = renderLista('PAGAR'); }
+  else if (S.aba === 'receber') { if (!S.listas[chaveLista('RECEBER')]) carregarMais('RECEBER', true); h = renderLista('RECEBER'); }
+  else if (S.aba === 'conferir') h = renderConferir();
+  else if (S.aba === 'fornec') h = renderEntidades('PAGAR');
+  else h = renderEntidades('RECEBER');
+  const foco = document.activeElement && document.activeElement.id === 'busca' ? document.getElementById('busca').selectionStart : null;
+  m.innerHTML = h;
+  const b = document.getElementById('busca'); if (b && foco != null) { b.focus(); b.setSelectionRange(foco, foco); }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.aba) { S.aba = t.dataset.aba; S.busca = ''; render(); return; }
+  if (t.dataset.filtro) { S.filtro[t.dataset.nat] = t.dataset.filtro; render(); return; }
+  if (t.dataset.mais) { carregarMais(t.dataset.mais, false); return; }
+  if (t.dataset.maisconf) { carregarConf(t.dataset.maisconf, true); return; }
+});
+document.addEventListener('input', e => { if (e.target.id === 'busca') { S.busca = e.target.value; render(); } });
+setInterval(renderFresco, 60000);              // o aviso de dados antigos aparece sem recarregar
+
+onAuthStateChanged(auth, async u => {
+  if (!u) { location.href = '../login.html'; return; }
+  try {
+    const us = await getDoc(doc(db, 'users', u.uid)); const ud = us.exists() ? us.data() : null;
+    if (!ud || !ud.ativo || (ud.role !== 'gestor' && ud.role !== 'funcionario')) { location.href = '../login.html'; return; }
+    const ss = await getDoc(doc(db, 'sistema_usuarios', u.uid)); const sd = ss.exists() ? ss.data() : null;
+    const mods = sd && Array.isArray(sd.modulos) ? sd.modulos : [];
+    if (!sd || sd.bloqueado === true || !(sd.admin === true || mods.includes('financeiro'))) { $('main').innerHTML = '<div class="erro">Você não tem acesso ao Financeiro. <a href="../index.html">Voltar</a></div>'; $('fresco').textContent = ''; return; }
+  } catch (e) { location.href = '../login.html'; return; }
+  try {
+    S.ativo = await lerDoc('fin_n1', 'active');
+    if (!S.ativo) { S.erro = 'O Financeiro ainda não tem dados sincronizados.'; render(); return; }
+    S.resumo = await lerDoc('fin_n1_resumo', S.ativo.resumo_id);
+    const v = V.validarGeracao(S.ativo, S.resumo);
+    if (!v.ok) { S.resumo = null; S.erro = 'Os dados financeiros estão indisponíveis no momento (' + v.motivo + ').'; render(); return; }
+  } catch (e) { S.erro = (e && e.code === 'permission-denied') ? 'Você não tem acesso ao Financeiro.' : 'Não foi possível carregar o Financeiro.'; render(); return; }
+  render();
+});
+</script>
+</body>
+</html>

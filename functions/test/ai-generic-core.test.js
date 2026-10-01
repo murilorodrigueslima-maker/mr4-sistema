@@ -91,3 +91,12 @@ describe('redução determinística do contexto', () => {
     const s = V.criarSchemaAgente({ motivos: ['A'], acoes: ['X'] }); expect(s.required).toEqual(['answer', 'entities', 'recommendations', 'warnings', 'unavailable', 'dataFreshness']); expect(s.properties.entities.items.properties.reasonCodes.items.enum).toEqual(['A']); expect(s.additionalProperties).toBe(false);
   });
 });
+
+describe('numerosNaoVerificados: valores em R$ sem ponto de milhar (base)', () => {
+  const { numerosNaoVerificados } = require('../lib/ai/gateway/schema');
+  test('"R$ 9994" é lido inteiro (não "999"); "R$ 9.994,00" e "R$ 1.234,56" idem; número inventado continua barrado', () => {
+    const ctx = { v: 9994, w: 1234.56 };
+    expect(numerosNaoVerificados('Capital de R$ 9994 e R$ 9.994,00 e R$ 1.234,56.', ctx)).toEqual([]);
+    expect(numerosNaoVerificados('Capital de R$ 9995.', ctx)).toEqual(['R$ 9995']); expect(numerosNaoVerificados('Total de 12.345 dias', ctx)).toHaveLength(1);
+  });
+});

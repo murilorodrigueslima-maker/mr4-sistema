@@ -18,8 +18,7 @@ const C = require('./contexto');
 async function autorizar(store, uid) {
   const p = await G.perfilModulo(store, uid);
   if (p.role !== 'gestor' && p.role !== 'funcionario') G.falhaG('permission-denied', 'SEM_MODULO_COMPRAS');
-  const tela = p.role === 'gestor' || p.admin === true || p.modulos.includes('compras'), dados = p.admin === true || p.modulos.includes('estoque');
-  if (!(tela && dados)) G.falhaG('permission-denied', 'SEM_MODULO_COMPRAS');
+  if (!p.modulos.includes('compras')) G.falhaG('permission-denied', 'SEM_MODULO_COMPRAS');   // módulo EXPLÍCITO (decisão de produto): admin=true sozinho NÃO basta para a IA; os dados são lidos no servidor, sempre com o escopo do gateway
   return { ...p, gestao: p.role === 'gestor' };
 }
 

@@ -7,8 +7,8 @@ const AGORA = new Date('2026-09-28T16:00:00.000Z');          // 1 h depois da ge
 function usuarios() {
   const u = {}, s = {};
   const add = (id, role, mods, x = {}) => { u[id] = { role, ativo: x.ativo !== false }; s[id] = { nome: 'Nome ' + id, modulos: mods, bloqueado: !!x.bloqueado, admin: !!x.admin }; };
-  add(UID.GER, 'gestor', ['estoque']); add(UID.GEST2, 'gestor', ['compras', 'estoque']); add(UID.ADM, 'funcionario', [], { admin: true }); add(UID.FEST, 'funcionario', ['estoque']); add(UID.FCOMP, 'funcionario', ['compras', 'estoque']);
-  add(UID.GSEMEST, 'gestor', []); add(UID.CRM, 'funcionario', ['fila-comercial-operar']); add(UID.INAT, 'gestor', ['estoque'], { ativo: false }); add(UID.BLOQ, 'gestor', ['estoque'], { bloqueado: true });
+  add(UID.GER, 'gestor', ['compras', 'estoque']); add(UID.GEST2, 'gestor', ['compras', 'estoque']); add(UID.ADM, 'funcionario', [], { admin: true }); add(UID.FEST, 'funcionario', ['estoque']); add(UID.FCOMP, 'funcionario', ['compras', 'estoque']);
+  add(UID.GSEMEST, 'gestor', []); add(UID.CRM, 'funcionario', ['fila-comercial-operar']); add(UID.INAT, 'gestor', ['compras', 'estoque'], { ativo: false }); add(UID.BLOQ, 'gestor', ['compras', 'estoque'], { bloqueado: true });
   return { users: u, sistema_usuarios: s };
 }
 /** extras: nº de produtos sintéticos adicionais (cenário de referência ≈ 40 + extras). opts.sugestoes/custos permitem adulterar as visões. */

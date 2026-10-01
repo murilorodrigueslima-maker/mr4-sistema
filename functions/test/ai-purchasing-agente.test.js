@@ -107,10 +107,10 @@ describe('SEGURANÇA: permissão do módulo real + piloto + forja', () => {
     for (const u of [UID.INAT, UID.BLOQ, UID.CRM, UID.FEST, UID.GSEMEST, 'c-inexistente']) expect(await erro(rodar(u, Q, m))).toMatch(/^permission-denied/);
     expect(m.chamadas).toHaveLength(0);
   });
-  test('gestão (gestor + estoque) autorizada: acesso, resumo, pergunta; sem gestão (admin/funcionário) fora do piloto MANAGEMENT_ONLY', async () => {
+  test('gestão (gestor + módulo compras explícito) autorizada: acesso, resumo, pergunta; sem gestão (admin/funcionário) fora do piloto MANAGEMENT_ONLY', async () => {
     for (const u of [UID.GER, UID.GEST2]) { const a = await rodar(u, { modo: 'acesso' }, modeloCom(respBoa)); expect(a.r).toEqual({ ok: true, acesso: true, agentType: 'purchasing', modulo: 'compras' }); }
     const m = modeloCom(respBoa);
-    for (const u of [UID.ADM, UID.FCOMP]) { const x = await rodar(u, Q, m); expect(x.e.message).toBe('FORA_DO_PILOTO'); }
+    for (const u of [UID.ADM, UID.FCOMP]) { const x = await rodar(u, Q, m); expect(x.e.message).toBe(u === UID.ADM ? 'SEM_MODULO_COMPRAS' : 'FORA_DO_PILOTO'); }   // admin=true SOZINHO não basta para a IA (módulo explícito); funcionário com módulo fica fora do piloto
     expect(m.chamadas).toHaveLength(0);
   });
   test('fora do piloto desligado/uids; liberação futura (MANAGEMENT_AND_SELLERS): operacional recebe contexto SEM nenhum dado financeiro', async () => {

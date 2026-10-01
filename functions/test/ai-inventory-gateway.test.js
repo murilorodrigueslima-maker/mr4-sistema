@@ -22,12 +22,13 @@ describe('permissão por MÓDULO (regra real do Estoque) + piloto de gestão', (
   });
   test('gestor com módulo estoque = ALLOW (gestão, vê custo); funcionário COM estoque e admin SEM módulo: acesso ao módulo, mas fora do piloto de gestão', async () => {
     const ok = await rodar(UID.GER, Q, modelo()); expect(ok.r.ia.status).toBe('OK');
-    for (const u of [UID.FUNC, UID.ADM]) { const m = modelo(); const x = await rodar(u, { modo: 'acesso' }, m); expect(x.e.message).toBe('FORA_DO_PILOTO'); expect(m.chamadas.length).toBe(0); }
+    for (const u of [UID.FUNC, UID.ADM]) { const m = modelo(); const x = await rodar(u, { modo: 'acesso' }, m); expect(x.e.message).toBe(u === UID.ADM ? 'SEM_MODULO_ESTOQUE' : 'FORA_DO_PILOTO'); expect(m.chamadas.length).toBe(0); }   // admin=true SOZINHO não basta (módulo explícito)
     expect((await rodar(UID.GER, { modo: 'acesso' }, modelo())).r).toEqual({ ok: true, acesso: true, agentType: 'inventory', modulo: 'estoque' });
   });
-  test('piloto liberado para vendedores (MANAGEMENT_AND_SELLERS): funcionário com estoque entra SEM custo; admin sozinho entra pela regra real do módulo (admin=true)', async () => {
+  test('piloto liberado para vendedores (MANAGEMENT_AND_SELLERS): funcionário com estoque entra SEM custo; admin sozinho NÃO entra (módulo explícito)', async () => {
     const P = { inventory: { modo: 'MANAGEMENT_AND_SELLERS', uids: [] } };
-    for (const u of [UID.FUNC, UID.ADM]) { const m = modelo(); const x = await rodar(u, Q, m, { piloto: P }); expect(x.r.ia.status).toBe('OK'); const ctx = JSON.parse(m.chamadas[0].body.input).contexto; expect(JSON.stringify(ctx).match(/"\w*(capital|custo)\w*"\s*:/gi)).toEqual(['"custoVisivel":']); expect(JSON.stringify(ctx.entidades)).not.toMatch(/capital|custo|CAPITAL/i); expect(ctx.permissoes).toEqual({ custoVisivel: false }); expect(x.r.resumo.capitalEmEstoque).toBeUndefined(); }
+    expect((await rodar(UID.ADM, Q, modelo(), { piloto: P })).e.message).toBe('SEM_MODULO_ESTOQUE');
+    for (const u of [UID.FUNC]) { const m = modelo(); const x = await rodar(u, Q, m, { piloto: P }); expect(x.r.ia.status).toBe('OK'); const ctx = JSON.parse(m.chamadas[0].body.input).contexto; expect(JSON.stringify(ctx).match(/"\w*(capital|custo)\w*"\s*:/gi)).toEqual(['"custoVisivel":']); expect(JSON.stringify(ctx.entidades)).not.toMatch(/capital|custo|CAPITAL/i); expect(ctx.permissoes).toEqual({ custoVisivel: false }); expect(x.r.resumo.capitalEmEstoque).toBeUndefined(); }
     expect((await rodar(UID.GER_SEM, Q, modelo(), { piloto: P })).e.message).toBe('SEM_MODULO_ESTOQUE');
   });
   test('forja de campos (module/entityId/ownerId/produto) rejeitada; OFF/uid fora da allowlist = ninguém', async () => {
@@ -177,13 +178,4 @@ describe('UI: aba "Agente" oculta por padrão, gate pelo backend, integrada sem 
   });
 });
 
-describe('módulo/motor existente NÃO alterado (git diff vs base c79ad64)', () => {
-  test('só o HTML do próprio módulo, o código novo do agente e testes mudam; nada em Compras, Rules, index.js, gateway, widget', () => {
-    const raiz = path.join(__dirname, '../..');
-    let out; try { out = execFileSync('git', ['diff', '--name-only', 'c79ad64', '--'], { cwd: raiz, encoding: 'utf8' }) + execFileSync('git', ['ls-files', '--others', '--exclude-standard'], { cwd: raiz, encoding: 'utf8' }); } catch (e) { return; }
-    const arqs = out.split('\n').filter(Boolean).filter(f => !f.startsWith('functions/node_modules'));
-    const ok = f => f === 'modulos/estoque.html' || f.startsWith('functions/lib/ai/agents/inventory/') || /^functions\/test\/(ai-inventory-[\w-]+\.test\.js|fixtures\/ai-inventory\.js)$/.test(f);
-    expect(arqs.filter(f => !ok(f))).toEqual([]);
-    for (const proibido of ['functions/lib/compras/', 'modulos/firestore.rules', 'functions/index.js', 'functions/lib/ai/gateway/', 'functions/lib/ai/agents/index.js', 'modulos/agente-ia-widget.js']) expect(arqs.some(f => f.startsWith(proibido))).toBe(false);
-  });
-});
+// (removido na integração) guard de escopo do RC 'git diff vs base c79ad64': só fazia sentido com os três agentes ainda isolados.

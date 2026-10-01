@@ -146,6 +146,7 @@
   .tab-btn { padding: .65rem 1.35rem; font-size: .85rem; font-weight: 600; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; cursor: pointer; font-family: 'Inter', sans-serif; transition: all .15s; display: flex; align-items: center; gap: .4rem; white-space: nowrap; }
   .tab-btn:hover { color: var(--text); }
   .tab-btn.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 700; }
+  .tab-btn[hidden] { display: none; }
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
@@ -326,6 +327,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="trocarTab('estoque', this)">🗄️ Visão Geral</button>
     <button class="tab-btn" onclick="trocarTab('equivalentes', this)">🔗 Equivalentes</button>
+    <button class="tab-btn" id="tabBtnAgente" hidden onclick="trocarTab('agente', this)">🤖 Agente</button>
   </div>
 
   <!-- ══ PANE: Estoque ══ -->
@@ -433,6 +435,12 @@
 
   </div><!-- /tabEstoque -->
 
+  <!-- ══ PANE: Agente de Estoque (beta; a aba só aparece se o backend liberar — modo 'acesso') ══ -->
+  <div class="tab-pane" id="tabAgente">
+    <div id="agenteEstoqueAlertas" style="margin-bottom:.8rem"></div>
+    <div id="agenteEstoqueBox"></div>
+  </div>
+
   <!-- ══ PANE: Equivalentes ══ -->
   <div class="tab-pane" id="tabEquivalentes">
 
@@ -510,11 +518,13 @@
 
 <div class="toast-wrap" id="toastWrap"></div>
 
+<script src="./agente-ia-widget.js"></script>
 <!-- Firebase + Logic -->
 <script type="module">
   import { initializeApp }                         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged, signOut }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, getDoc }             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFunctions, httpsCallable }           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
   import { verificarAcessoModulo } from '../js/guard.js';
 
   // ── Firebase ──
@@ -567,7 +577,35 @@
 
     // Carrega dados do estoque
     await carregarEstoque();
+
+    // Agente de Estoque (beta): a aba só aparece se o BACKEND confirmar acesso (módulo Estoque + piloto de gestão). Falha = aba continua oculta; o módulo não depende da IA.
+    try { iniciarAgenteEstoque(); } catch (e) { console.warn('Agente indisponível:', (e && e.code) || e); }
   });
+
+  function iniciarAgenteEstoque() {
+    if (!window.AgenteIaWidget) return;
+    const funcs = getFunctions(app, 'southamerica-east1');
+    const chamar = async p => {
+      const r = (await httpsCallable(funcs, 'aiAgente')(p)).data;
+      if (r && r.resumo) {   // sem permissão de custo o capital não vem: mostrar "Restrito" em vez de 0
+        for (const k of ['capitalEmEstoque', 'capitalParado']) if (r.resumo[k] == null) r.resumo[k] = 'Restrito';
+        const al = document.getElementById('agenteEstoqueAlertas');
+        if (al) al.innerHTML = (r.resumo.alertas || []).length ? '<div style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:.8rem 1rem;font-size:.85rem"><b>Principais alertas</b><ul style="margin:.4rem 0 0 1.1rem">' + r.resumo.alertas.map(a => '<li>' + window.AgenteIaWidget.esc(a.texto) + '</li>').join('') + '</ul></div>' : '';
+      }
+      return r;
+    };
+    window.AgenteIaWidget.liberarSePermitido(chamar, 'inventory', () => {
+      document.getElementById('tabBtnAgente').hidden = false;
+      window.__agenteEstoque = window.AgenteIaWidget.montar(document.getElementById('agenteEstoqueBox'), {
+        agentType: 'inventory', titulo: '🤖 Agente de Estoque', sub: 'Interpreta fatos calculados pelo sistema (sem previsão de vendas). Recomenda — não altera estoque, preço nem pedidos.', placeholder: 'Ex.: Quais produtos estão parados?', chamar,
+        cartoes: [{ chave: 'produtosAnalisados', rotulo: 'Produtos analisados' }, { chave: 'riscoRuptura', rotulo: 'Risco de ruptura' }, { chave: 'estoqueParado', rotulo: 'Estoque parado' }, { chave: 'semVenda120d', rotulo: 'Sem venda +120d' }, { chave: 'nuncaVendidos', rotulo: 'Nunca vendidos' }, { chave: 'capitalEmEstoque', rotulo: 'Capital em estoque (indicativo)' }, { chave: 'capitalParado', rotulo: 'Capital parado (indicativo)' }, { chave: 'acelerando', rotulo: 'Acelerando' }, { chave: 'desacelerando', rotulo: 'Desacelerando' }],
+        formatos: { capitalEmEstoque: 'brl', capitalParado: 'brl', custoUnitario: 'brl', capitalImobilizado: 'brl', diasSemVenda: 'dias', coberturaDias: 'dias', giro90d: 'texto' },
+        rotulosValor: { capitalEmEstoque: { Restrito: 'Restrito' }, capitalParado: { Restrito: 'Restrito' }, tendencia: { ESTAVEL: 'Estável', ACELERANDO: 'Acelerando', DESACELERANDO: 'Desacelerando', HISTORICO_INSUFICIENTE: 'Histórico insuficiente' }, confiancaCusto: { CONFIAVEL: 'Confiável', BAIXA: 'Baixa (indicativo)', SEM_CUSTO: 'Sem custo' }, nuncaVendidoConfianca: { ALTA: 'Alta', MEDIA: 'Média', BAIXA: 'Baixa' }, curvaAbc: { A: 'A', B: 'B', C: 'C', SEM_VENDA: 'Sem venda' } },
+        sugestoes: [{ rotulo: 'O que merece atenção?', modo: 'resumo' }, { rotulo: 'Produtos parados', pergunta: 'Quais produtos estão parados?' }, { rotulo: 'Risco de ruptura', pergunta: 'Quais produtos estão perto de faltar?' }, { rotulo: 'Capital parado', pergunta: 'Quanto dinheiro tenho em produtos sem giro?' }, { rotulo: 'Sem venda +120 dias', pergunta: 'Quais não vendem há +120 dias?' }],
+        msgSemDados: 'Ainda não há dados de estoque sincronizados.',
+      });
+    });
+  }
 
   // ── Helpers ──
   function fmtMoeda(v) {

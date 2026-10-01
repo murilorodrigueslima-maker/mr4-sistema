@@ -895,6 +895,10 @@ exports.releaseOpportunity = onCall({ region: REGION }, req => releaseOpportunit
 const { crmConsultaHandler } = require('./lib/crmConsulta');
 exports.crmConsulta        = onCall({ region: REGION }, req => crmConsultaHandler(req));
 
+// AI Gateway interno — Agente Comercial (Fase 1). Chamada ao provedor SOMENTE aqui (chave no Secret Manager). Sem ferramentas de escrita.
+const { aiAgenteHandler } = require('./lib/ai/gateway/gateway');
+exports.aiAgente = onCall({ region: REGION, secrets: ['OPENAI_API_KEY'], timeoutSeconds: 60, memory: '512MiB', maxInstances: 5 }, req => aiAgenteHandler(req));
+
 // Handlers exportados para testes diretos (sem onCall/trigger wrapper)
 exports._registrarPontoHandler             = registrarPontoHandler;
 exports._criarContaFuncionarioHandler      = criarContaFuncionarioHandler;

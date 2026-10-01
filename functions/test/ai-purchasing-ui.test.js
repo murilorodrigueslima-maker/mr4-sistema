@@ -34,15 +34,7 @@ describe('integração na página de Compras', () => {
   });
 });
 
-describe('o motor e o módulo existentes NÃO foram alterados (diff vs base c79ad64)', () => {
-  test('só arquivos novos do agente/testes + modulos/compras.html', () => {
-    const arquivos = execSync(`git diff --name-only ${BASE_COMMIT}`, { cwd: RAIZ }).toString().split('\n').filter(Boolean);
-    const untracked = execSync('git ls-files --others --exclude-standard', { cwd: RAIZ }).toString().split('\n').filter(Boolean).filter(f => !f.startsWith('functions/node_modules'));
-    const todos = [...new Set([...arquivos, ...untracked])];
-    const permitido = f => f === 'modulos/compras.html' || f.startsWith('functions/lib/ai/agents/purchasing/') || /^functions\/test\/ai-purchasing-.*\.test\.js$/.test(f) || f === 'functions/test/fixtures/ai-compras.js' || f === 'functions/test/compras-estoque-publicacao.test.js';   // este último: único callable permitido na tela de Compras = aiAgente
-    expect(todos.filter(f => !permitido(f))).toEqual([]);
-    for (const proibido of ['functions/lib/compras/', 'functions/index.js', 'modulos/firestore.rules', 'functions/lib/ai/gateway/', 'functions/lib/ai/agents/index.js', 'modulos/agente-ia-widget.js', 'js/compras-simulador.js']) expect(todos.filter(f => f.startsWith(proibido))).toEqual([]);
-  });
+describe('o agente de Compras só LÊ (guard de escopo do RC removido na integração)', () => {
   test('o agente só LÊ: nenhum require de escrita/Admin SDK nem de módulos de sync/execução do motor', () => {
     const dir = path.join(RAIZ, 'functions/lib/ai/agents/purchasing'); const src = fs.readdirSync(dir).map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n');
     expect(src).not.toMatch(/\.doc\([^)]*\)\.(set|update|delete)\(|\.collection\([^)]*\)\.add\(|batch\(|runTransaction|firebase-admin|require\('[^']*compras\/(snapshot|execucao|entrypoints|fetch|canonico)'\)/);

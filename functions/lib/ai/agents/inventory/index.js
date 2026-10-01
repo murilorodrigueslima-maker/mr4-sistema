@@ -20,7 +20,7 @@ const COLS = { meta: ['compras_n0', 'meta'], resumo: ['compras_n0', 'resumo'], v
 async function autorizar(store, uid) {
   const p = await G.perfilModulo(store, uid);                                            // ativo, sistema_usuarios existe e não bloqueado
   if (p.role !== 'gestor' && p.role !== 'funcionario') G.falhaG('permission-denied', 'SEM_MODULO_ESTOQUE');
-  if (!(p.admin === true || p.modulos.includes('estoque'))) G.falhaG('permission-denied', 'SEM_MODULO_ESTOQUE');
+  if (!p.modulos.includes('estoque')) G.falhaG('permission-denied', 'SEM_MODULO_ESTOQUE');   // módulo EXPLÍCITO (decisão de produto): admin=true sozinho NÃO basta para a IA, mesmo que as Rules do módulo aceitem
   const gestao = p.role === 'gestor';
   return { uid, role: p.role, gestao, verCusto: gestao };
 }

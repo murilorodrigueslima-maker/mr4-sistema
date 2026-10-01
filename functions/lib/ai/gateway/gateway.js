@@ -25,17 +25,37 @@ const falhaG = (t, c) => { throw new ErroGateway(t, c); };
 const AGENTES = {
   commercial: {
     agentType: 'commercial', instructions: INSTR.COMERCIAL, schema: RESPONSE_SCHEMA, schemaName: 'agente_comercial_resposta',
-    autorizar: async (store, uid) => { try { return await CRM.perfilDeAcesso(store, uid); } catch (e) { if (e instanceof CRM.ErroCrm) falhaG(e.tipo, e.codigo); throw e; } },   // MESMA regra do CRM (gestor ou módulo operar/gestão; ativo; não bloqueado)
+    autorizar: async (store, uid, cfg) => { let acesso; try { acesso = await CRM.perfilDeAcesso(store, uid); } catch (e) { if (e instanceof CRM.ErroCrm) falhaG(e.tipo, e.codigo); throw e; } return portaoPiloto(acesso, uid, cfg); },   // MESMA regra do CRM (gestor ou módulo operar/gestão; ativo; não bloqueado)
     carregar: (store, acesso, agoraIso) => CTX.carregarDados(store, acesso, agoraIso),
     montar: (dados, acesso, pergunta) => CTX.construirContexto({ candidatos: dados.candidatos, vendasPorGc: dados.vendasPorGc, estadosPorEntidade: dados.estadosPorEntidade, hoje: dados.hoje, gestao: acesso.gestao, pergunta, meta: dados.meta }),
   },
 };
 
+/**
+ * FEATURE GATE do piloto (backend). Vem DEPOIS da autorização normal do CRM (que continua valendo, sem enfraquecer) e é independente do frontend.
+ * AI_COMMERCIAL_PILOT: 'MANAGEMENT_ONLY' (padrão; também quando ausente) = só gestão (gestor / módulo de gestão do CRM) · 'OFF' = ninguém ·
+ * 'MANAGEMENT_AND_SELLERS' = liberação FUTURA a vendedores (NÃO configurada; só testes) · qualquer outro valor = ninguém (fail closed). Vendedor NÃO tem acesso na fase de preview (SELLER_AI_ACCESS=NO), mesmo que o isolamento por vendedor
+ * continue implementado e testado. AI_COMMERCIAL_PILOT_UIDS (opcional, lista de uids separados por vírgula): allowlist TEMPORÁRIA de preview;
+ * se definida, só estes uids (que também sejam gestão) entram. Nenhum nome/e-mail fixo no código.
+ */
+function configPiloto(env = process.env) {
+  const modo = String(env.AI_COMMERCIAL_PILOT || 'MANAGEMENT_ONLY').trim().toUpperCase();
+  const uids = String(env.AI_COMMERCIAL_PILOT_UIDS || '').split(',').map(x => x.trim()).filter(Boolean);
+  return { modo, uids };
+}
+function portaoPiloto(acesso, uid, cfg) {
+  const c = cfg || configPiloto();
+  if (c.modo !== 'MANAGEMENT_ONLY' && c.modo !== 'MANAGEMENT_AND_SELLERS') falhaG('permission-denied', 'FORA_DO_PILOTO');
+  if (!acesso.gestao && c.modo !== 'MANAGEMENT_AND_SELLERS') falhaG('permission-denied', 'FORA_DO_PILOTO');   // vendedor: DENY durante o piloto
+  if (c.uids && c.uids.length && !c.uids.includes(String(uid))) falhaG('permission-denied', 'FORA_DO_PILOTO');
+  return acesso;
+}
+
 function validarPedido(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) falhaG('invalid-argument', 'PAYLOAD_INVALIDO');
   const extras = Object.keys(data).filter(k => !['agentType', 'modo', 'pergunta'].includes(k)); if (extras.length) falhaG('invalid-argument', 'CAMPOS_NAO_PERMITIDOS');   // ownerId/sellerId/customerId etc. nunca são aceitos: o servidor decide o escopo
   if (!AGENTES[data.agentType]) falhaG('invalid-argument', 'AGENTE_INVALIDO');
-  if (!['resumo', 'pergunta', 'contagens'].includes(data.modo)) falhaG('invalid-argument', 'MODO_INVALIDO');   // 'contagens' = só o bloco determinístico (sem chamar a IA)
+  if (!['resumo', 'pergunta', 'contagens', 'acesso'].includes(data.modo)) falhaG('invalid-argument', 'MODO_INVALIDO');   // 'contagens' = só o bloco determinístico (sem chamar a IA)
   if (data.modo === 'pergunta') { if (typeof data.pergunta !== 'string' || !data.pergunta.trim()) falhaG('invalid-argument', 'PERGUNTA_OBRIGATORIA'); if (Array.from(data.pergunta).length > PERGUNTA_MAX) falhaG('invalid-argument', 'PERGUNTA_GRANDE_DEMAIS'); }
   return { agentType: data.agentType, modo: data.modo, pergunta: data.modo !== 'pergunta' ? PERGUNTA_RESUMO : data.pergunta.replace(/[\u0000-\u001F\u007F]/g, ' ').trim() };
 }
@@ -47,7 +67,8 @@ function validarPedido(data) {
 async function executarAgente({ uid, data, deps }) {
   const { store } = deps; const agora = deps.agora ? deps.agora() : new Date(); const agoraIso = agora.toISOString();
   const pedido = validarPedido(data); const ag = AGENTES[pedido.agentType];
-  const acesso = await ag.autorizar(store, uid);                                   // identidade e permissão vêm do servidor
+  const acesso = await ag.autorizar(store, uid, deps.piloto);                       // identidade e permissão vêm do servidor (CRM + gate do piloto)
+  if (pedido.modo === 'acesso') return { ok: true, acesso: true, piloto: (deps.piloto || configPiloto()).modo };   // gate do frontend: sem dados, sem IA, sem consumo de limite
   let uso = null;
   if (pedido.modo !== 'contagens') { try { uso = await U.verificarLimite(store, uid, agora, deps.limites); } catch (e) { if (e instanceof U.LimiteExcedido) falhaG('resource-exhausted', e.codigo); throw e; } }   // limite só onde há custo de IA
   const dados = await ag.carregar(store, acesso, agoraIso);
@@ -61,7 +82,7 @@ async function executarAgente({ uid, data, deps }) {
   if (!montado.resumoDia.clientesAnalisados) { await registrar('OK', { erro: null }); return { ok: true, ...base, ia: { status: 'SEM_DADOS' }, answer: 'Não encontrei clientes no seu escopo para analisar agora.', customers: [], warnings: [], unavailable: [], dataFreshness: null, fallback: [] }; }
   let r;
   try {
-    r = await gerarEstruturado({ fetchImpl: deps.fetchImpl, apiKey: deps.apiKey, modelo: deps.modelo || MODELO_PADRAO, instructions: ag.instructions, schema: ag.schema, schemaName: ag.schemaName, input: JSON.stringify({ pergunta: pedido.pergunta, contexto: montado.contexto }), maxOutputTokens: LIMITES.MAX_OUTPUT_TOKENS, timeoutMs: LIMITES.TIMEOUT_MS });
+    r = await gerarEstruturado({ fetchImpl: deps.fetchImpl, apiKey: deps.apiKey, modelo: deps.modelo || MODELO_PADRAO, instructions: ag.instructions, schema: ag.schema, schemaName: ag.schemaName, input: JSON.stringify({ pergunta: montado.perguntaSegura != null ? montado.perguntaSegura : pedido.pergunta, contexto: montado.contexto }), maxOutputTokens: LIMITES.MAX_OUTPUT_TOKENS, timeoutMs: LIMITES.TIMEOUT_MS });
     const v = validarResposta(r.json, montado.contexto, montado.mapa);
     const custo = U.estimarCustoUSD(r.tokens, deps.precos);
     await registrar('OK', { latenciaMs: r.latenciaMs, modelo: r.modelo, tokens: r.tokens, custoUSD: custo });
@@ -78,8 +99,8 @@ async function executarAgente({ uid, data, deps }) {
 async function aiAgenteHandler(request, opts = {}) {
   if (!request || !request.auth || !request.auth.uid) throw new HttpsError('unauthenticated', 'Login necessário.');
   const store = opts.db || require('firebase-admin').firestore();
-  const deps = { store, apiKey: opts.apiKey !== undefined ? opts.apiKey : process.env.OPENAI_API_KEY, fetchImpl: opts.fetchImpl || fetch, agora: opts.agora, modelo: opts.modelo || process.env.AI_MODEL || MODELO_PADRAO, precos: opts.precos, limites: opts.limites };
+  const deps = { store, apiKey: opts.apiKey !== undefined ? opts.apiKey : process.env.OPENAI_API_KEY, fetchImpl: opts.fetchImpl || fetch, agora: opts.agora, modelo: opts.modelo || process.env.AI_MODEL || MODELO_PADRAO, precos: opts.precos, limites: opts.limites, piloto: opts.piloto };
   try { return await executarAgente({ uid: request.auth.uid, data: request.data, deps }); }
   catch (e) { if (e instanceof ErroGateway) throw new HttpsError(e.tipo, e.codigo); throw new HttpsError('internal', 'Falha no agente.'); }
 }
-module.exports = { AGENTES, LIMITES, PERGUNTA_MAX, PERGUNTA_RESUMO, METRICA_ROTULO, ErroGateway, validarPedido, executarAgente, aiAgenteHandler };
+module.exports = { configPiloto, portaoPiloto, AGENTES, LIMITES, PERGUNTA_MAX, PERGUNTA_RESUMO, METRICA_ROTULO, ErroGateway, validarPedido, executarAgente, aiAgenteHandler };

@@ -138,6 +138,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 .toast{position:fixed;bottom:1.2rem;left:50%;transform:translateX(-50%);background:#202124;color:#fff;padding:.6rem 1rem;border-radius:8px;font-size:.82rem;z-index:60;display:none}
 .toast.err{background:var(--red)}
 /* Agente Comercial (IA) */
+.tab[hidden]{display:none}
 .ag-box{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:1rem}
 .ag-h{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.02rem}.ag-h .ms{color:var(--blue)}
 .ag-beta{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-dk);background:var(--blue-lt);border-radius:999px;padding:.1rem .5rem}
@@ -167,7 +168,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tabHoje" aria-selected="true">Hoje</button>
     <button class="tab" role="tab" id="tabAgenda" aria-selected="false">Agenda</button>
-    <button class="tab" role="tab" id="tabAgente" aria-selected="false">Agente</button>
+    <button class="tab" role="tab" id="tabAgente" aria-selected="false" hidden>Agente</button>
   </nav>
   <div class="spacer"></div>
   <a class="legacy" href="fila-comercial.html">Fila (versão anterior)</a>
@@ -557,6 +558,8 @@ onAuthStateChanged(auth, async u => {
     S.podeOperar = mods.includes('fila-comercial-operar');
     S.gestao = ud.role === 'gestor' || mods.includes('fila-comercial-gestao');
     if (!S.podeOperar && !S.gestao) { semAcesso('Você não tem acesso ao CRM.'); return; }
+    // Gate do piloto (frontend): a aba só aparece se o BACKEND confirmar o acesso (gate real fica em aiAgente; esconder a aba nunca é a proteção).
+    if (S.gestao) fnAgente({ agentType: 'commercial', modo: 'acesso' }).then(r => { if (r && r.data && r.data.acesso === true) document.getElementById('tabAgente').hidden = false; }).catch(() => {});
     S.nome = ss.data().nome || (u.email || '').split('@')[0];
     document.getElementById('user').textContent = S.nome;
   } catch (e) { location.href = '../login.html'; return; }

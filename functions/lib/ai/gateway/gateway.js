@@ -10,6 +10,8 @@ const { RESPONSE_SCHEMA, RespostaInvalida, validarResposta, MOTIVOS } = require(
 const { gerarEstruturado, MODELO_PADRAO, ErroModelo } = require('./openaiClient');
 const U = require('./usage');
 const INSTR = require('./instructions');
+const GEN = require('./generic');
+const ESPECIALIZADOS = require('../agents').AGENTES;
 
 const PERGUNTA_MAX = 400;
 const LIMITES = Object.freeze({ MAX_CONTEXTO_BYTES: CTX.LIMITES.MAX_CONTEXTO_BYTES, MAX_OUTPUT_TOKENS: 2000, TIMEOUT_MS: 25000 });
@@ -52,6 +54,7 @@ function portaoPiloto(acesso, uid, cfg) {
 }
 
 function validarPedido(data) {
+  if (data && typeof data === 'object' && ESPECIALIZADOS[data.agentType]) return { agentType: data.agentType, generico: true };   // agentes especializados: validação própria (generic.js)
   if (!data || typeof data !== 'object' || Array.isArray(data)) falhaG('invalid-argument', 'PAYLOAD_INVALIDO');
   const extras = Object.keys(data).filter(k => !['agentType', 'modo', 'pergunta'].includes(k)); if (extras.length) falhaG('invalid-argument', 'CAMPOS_NAO_PERMITIDOS');   // ownerId/sellerId/customerId etc. nunca são aceitos: o servidor decide o escopo
   if (!AGENTES[data.agentType]) falhaG('invalid-argument', 'AGENTE_INVALIDO');
@@ -66,11 +69,12 @@ function validarPedido(data) {
  */
 async function executarAgente({ uid, data, deps }) {
   const { store } = deps; const agora = deps.agora ? deps.agora() : new Date(); const agoraIso = agora.toISOString();
-  const pedido = validarPedido(data); const ag = AGENTES[pedido.agentType];
+  const pedido = validarPedido(data); if (pedido.generico) return GEN.executarGenerico({ uid, data, ag: ESPECIALIZADOS[pedido.agentType], deps });   // inventory / purchasing / finance
+  const ag = AGENTES[pedido.agentType];
   const acesso = await ag.autorizar(store, uid, deps.piloto);                       // identidade e permissão vêm do servidor (CRM + gate do piloto)
   if (pedido.modo === 'acesso') return { ok: true, acesso: true, piloto: (deps.piloto || configPiloto()).modo };   // gate do frontend: sem dados, sem IA, sem consumo de limite
   let uso = null;
-  if (pedido.modo !== 'contagens') { try { uso = await U.verificarLimite(store, uid, agora, deps.limites); } catch (e) { if (e instanceof U.LimiteExcedido) falhaG('resource-exhausted', e.codigo); throw e; } }   // limite só onde há custo de IA
+  if (pedido.modo !== 'contagens') { try { uso = await U.verificarLimite(store, uid, agora, deps.limites, pedido.agentType); } catch (e) { if (e instanceof U.LimiteExcedido) falhaG('resource-exhausted', e.codigo); throw e; } }   // limite só onde há custo de IA
   const dados = await ag.carregar(store, acesso, agoraIso);
   const montado = ag.montar(dados, acesso, pedido.pergunta);
   const aud = auditarContexto(montado.contexto, { gestao: acesso.gestao }); if (!aud.ok) falhaG('internal', 'CONTEXTO_FORA_DA_ALLOWLIST');   // nada fora da allowlist sai da MR4
@@ -104,6 +108,6 @@ async function aiAgenteHandler(request, opts = {}) {
   const store = opts.db || require('firebase-admin').firestore();
   const deps = { store, apiKey: opts.apiKey !== undefined ? opts.apiKey : process.env.OPENAI_API_KEY, fetchImpl: opts.fetchImpl || fetch, agora: opts.agora, modelo: opts.modelo || process.env.AI_MODEL || MODELO_PADRAO, precos: opts.precos, limites: opts.limites, piloto: opts.piloto };
   try { return await executarAgente({ uid: request.auth.uid, data: request.data, deps }); }
-  catch (e) { if (e instanceof ErroGateway) throw new HttpsError(e.tipo, e.codigo); throw new HttpsError('internal', 'Falha no agente.'); }
+  catch (e) { if (e instanceof ErroGateway || e instanceof GEN.ErroGateway) throw new HttpsError(e.tipo, e.codigo); throw new HttpsError('internal', 'Falha no agente.'); }
 }
 module.exports = { configPiloto, portaoPiloto, AGENTES, LIMITES, PERGUNTA_MAX, PERGUNTA_RESUMO, METRICA_ROTULO, ErroGateway, validarPedido, executarAgente, aiAgenteHandler };

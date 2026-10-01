@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), { execSync } = require('child_process');
 const RAIZ = path.join(__dirname, '../..');
 const HTML = fs.readFileSync(path.join(RAIZ, 'modulos/compras.html'), 'utf8');
-const BASE_COMMIT = 'ff37013';
+const BASE_COMMIT = 'c79ad64';
 
 describe('integração na página de Compras', () => {
   test('aba/botão "Agente" OCULTO por padrão; painel oculto; só aparece por montarAgente (depois do backend)', () => {
@@ -34,7 +34,7 @@ describe('integração na página de Compras', () => {
   });
 });
 
-describe('o motor e o módulo existentes NÃO foram alterados (diff vs base ff37013)', () => {
+describe('o motor e o módulo existentes NÃO foram alterados (diff vs base c79ad64)', () => {
   test('só arquivos novos do agente/testes + modulos/compras.html', () => {
     const arquivos = execSync(`git diff --name-only ${BASE_COMMIT}`, { cwd: RAIZ }).toString().split('\n').filter(Boolean);
     const untracked = execSync('git ls-files --others --exclude-standard', { cwd: RAIZ }).toString().split('\n').filter(Boolean).filter(f => !f.startsWith('functions/node_modules'));

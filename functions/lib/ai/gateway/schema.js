@@ -45,7 +45,7 @@ function numerosDoContexto(ctx) { const s = new Set(); (function w(o) { if (num(
 function numerosNaoVerificados(texto, ctx, unidadesExtras = '') {
   const ok = numerosDoContexto(ctx), ruins = [];
   const t = String(texto).replace(/\b\d{1,2}\/\d{1,2}(\/\d{2,4})?\b/g, ' ').replace(/\b\d{4}-\d{2}-\d{2}\b/g, ' ');
-  const re = new RegExp('(R\\$\\s?)?(\\d{1,3}(?:\\.\\d{3})*(?:,\\d+)?|\\d+(?:[.,]\\d+)?)\\s*(%|dias?|pedidos?|compras?|clientes?|oportunidades?|vezes' + (unidadesExtras ? '|' + unidadesExtras : '') + ')?', 'gi');
+  const re = new RegExp('(R\\$\\s?)?(\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?|\\d+(?:[.,]\\d+)?)\\s*(%|dias?|pedidos?|compras?|clientes?|oportunidades?|vezes' + (unidadesExtras ? '|' + unidadesExtras : '') + ')?', 'gi');
   let m;
   while ((m = re.exec(t))) {
     if (!m[1] && !m[3]) continue;                                   // número solto (ordinal, lista) não é afirmação factual

@@ -128,6 +128,24 @@
   .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin .7s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* ── FASE A: busca, filtros, chips ativos e ordenação (Produtos e Margem baixa) ── */
+  .flt-barra { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; margin-bottom: .6rem; }
+  .flt-barra input[type=search] { flex: 1 1 220px; min-width: 0; border: 1px solid var(--border); border-radius: 8px; padding: .5rem .7rem; font: inherit; font-size: .85rem; }
+  .flt-barra select, .flt-painel select { border: 1px solid var(--border); border-radius: 8px; padding: .45rem .55rem; font: inherit; font-size: .82rem; background: var(--white); max-width: 100%; }
+  .flt-barra button, .flt-btn { border: 1px solid var(--border); background: var(--white); border-radius: 8px; padding: .45rem .85rem; font: inherit; font-size: .82rem; cursor: pointer; }
+  .flt-barra button[aria-expanded=true] { border-color: var(--orange); color: var(--orange); font-weight: 600; }
+  .flt-painel { display: none; border: 1px solid var(--border); background: #FAFAFB; border-radius: 10px; padding: .75rem; margin-bottom: .6rem; }
+  .flt-painel.aberto { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .65rem; }
+  .flt-painel label { display: flex; flex-direction: column; gap: .2rem; font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  .flt-ativos { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; margin-bottom: .6rem; }
+  .flt-ativo { display: inline-flex; gap: .3rem; align-items: center; border: 1px solid var(--orange); background: rgba(255,107,26,.07); color: var(--orange-dk); border-radius: 999px; padding: .2rem .35rem .2rem .7rem; font-size: .76rem; }
+  .flt-ativo button { border: 0; background: none; cursor: pointer; font-size: .95rem; line-height: 1; color: inherit; padding: 0 .25rem; }
+  .flt-limpar { border: 0; background: none; color: var(--orange); font: inherit; font-size: .78rem; cursor: pointer; text-decoration: underline; }
+  .flt-info { font-size: .74rem; color: var(--muted); margin: .4rem 0; }
+  .flt-aviso { font-size: .76rem; color: #92400E; background: #FFFBEB; border: 1px solid #FCD34D; border-radius: 8px; padding: .45rem .7rem; margin-bottom: .6rem; }
+  th.flt-ord { cursor: pointer; user-select: none; }
+  .flt-mais { display: block; margin: .8rem auto 0; }
+  @media(max-width: 768px) { .flt-painel.aberto { grid-template-columns: 1fr 1fr; } .flt-barra input[type=search] { flex-basis: 100%; } }
   /* ── RESPONSIVE ── */
   @media(max-width: 1100px) { .cards-row { grid-template-columns: repeat(2, 1fr); } }
   @media(max-width: 768px) {
@@ -327,6 +345,7 @@
   <div class="tab-bar">
     <button class="tab-btn active" onclick="trocarTab('estoque', this)">🗄️ Visão Geral</button>
     <button class="tab-btn" onclick="trocarTab('equivalentes', this)">🔗 Equivalentes</button>
+    <button class="tab-btn" id="tabBtnProdutos" onclick="trocarTab('produtos', this)">📦 Produtos</button>
     <button class="tab-btn" id="tabBtnAgente" hidden onclick="trocarTab('agente', this)">🤖 Agente</button>
   </div>
 
@@ -348,12 +367,12 @@
     <div class="kpi-card red">
       <div class="kpi-label">Abaixo do Mínimo</div>
       <div class="kpi-value" id="kpiAbaixoMinimo">—</div>
-      <div class="kpi-sub">Produtos a repor urgente</div>
+      <div class="kpi-sub" id="kpiAbaixoMinimoSub">Produtos a repor urgente</div>
     </div>
     <div class="kpi-card yellow">
       <div class="kpi-label">Sem Giro +90 dias</div>
       <div class="kpi-value" id="kpiSemGiro">—</div>
-      <div class="kpi-sub">Parados há mais de 90 dias</div>
+      <div class="kpi-sub" id="kpiSemGiroSub">Parados há mais de 90 dias</div>
     </div>
   </div>
 
@@ -441,6 +460,14 @@
     <div id="agenteEstoqueBox"></div>
   </div>
 
+  <!-- ══ PANE: Produtos (Fase A — busca, filtros e ordenação; blocos do motor carregados SOB DEMANDA ao abrir esta aba) ══ -->
+  <div class="tab-pane" id="tabProdutos">
+    <div class="section">
+      <div class="section-header"><div class="section-title">📦 Produtos <span class="section-count" id="cntProdutos">—</span></div></div>
+      <div id="produtosBox"><div class="flt-info">Os dados são carregados ao abrir esta aba.</div></div>
+    </div>
+  </div>
+
   <!-- ══ PANE: Equivalentes ══ -->
   <div class="tab-pane" id="tabEquivalentes">
 
@@ -519,11 +546,12 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script src="./agente-ia-widget.js"></script>
+<script src="./estoque-view.js?v=20261001a"></script>   <!-- versão no endereço: o Pages guarda arquivos por 10 min -->
 <!-- Firebase + Logic -->
 <script type="module">
   import { initializeApp }                         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged, signOut }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc }             from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getFunctions, httpsCallable }           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
   import { verificarAcessoModulo } from '../js/guard.js';
 
@@ -537,6 +565,7 @@
     appId:             "1:848211361884:web:2732e1893122f4a23452f5"
   };
 
+  const EV = window.EstoqueView;
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db   = getFirestore(app);
@@ -640,10 +669,11 @@
   // ── Renderização das tabelas ──
   function renderAbaixoMinimo(itens) {
     const wrap = document.getElementById('tblAbaixoMinimoWrap');
-    document.getElementById('cntAbaixoMinimo').textContent = itens.length;
+    const est = EV.estadoListaLegada('abaixoMinimo', itens);
+    document.getElementById('cntAbaixoMinimo').textContent = est.contagem;
 
-    if (!itens.length) {
-      wrap.innerHTML = emptyState('✅', 'Nenhum produto abaixo do mínimo', 'Sincronizando dados...');
+    if (est.estado === 'INDISPONIVEL') {   // antes: a tela afirmava (com ✅) que nenhum produto estava abaixo do mínimo — algo que a fonte não consegue sustentar
+      wrap.innerHTML = emptyState('⚠️', est.titulo, est.desc);
       return;
     }
 
@@ -673,10 +703,11 @@
 
   function renderSemGiro(itens) {
     const wrap = document.getElementById('tblSemGiroWrap');
-    document.getElementById('cntSemGiro').textContent = itens.length;
+    const est = EV.estadoListaLegada('semGiro', itens);
+    document.getElementById('cntSemGiro').textContent = est.contagem;
 
-    if (!itens.length) {
-      wrap.innerHTML = emptyState('📦', 'Nenhum produto sem giro identificado', 'Sincronizando dados...');
+    if (est.estado === 'INDISPONIVEL') {
+      wrap.innerHTML = emptyState('⚠️', est.titulo, est.desc);
       return;
     }
 
@@ -704,16 +735,31 @@
       </table>`;
   }
 
+  // Margem baixa: a fonte entrega só as 50 menores margens (limite do sincronismo). Busca/ordenação são locais; o aviso deixa claro que NÃO é o universo completo.
+  let _margemItens = [], _margemQ = '', _margemOrdem = 'margem:asc';
   function renderMargemBaixa(itens) {
     const wrap = document.getElementById('tblMargemBaixaWrap');
-    document.getElementById('cntMargemBaixa').textContent = itens.length;
-
+    _margemItens = itens; const info = EV.infoMargem(itens);
+    document.getElementById('cntMargemBaixa').textContent = info.contagem;
     if (!itens.length) {
       wrap.innerHTML = emptyState('📉', 'Nenhum produto com margem baixa identificado', 'Sincronizando dados...');
       return;
     }
-
-    const rows = itens.map(p => {
+    const opcoes = [['margem:asc', 'Margem ↑ (menor primeiro)'], ['margem:desc', 'Margem ↓'], ['preco:desc', 'Preço de venda ↓'], ['preco:asc', 'Preço de venda ↑'], ['custo:desc', 'Custo ↓'], ['custo:asc', 'Custo ↑'], ['nome:asc', 'Produto A–Z'], ['ref:asc', 'Ref']];
+    wrap.innerHTML = `<div class="flt-barra"><input type="search" id="margemBusca" placeholder="Buscar produto ou ref…" aria-label="Buscar na margem baixa" value="${escHtml(_margemQ)}">
+      <select id="margemOrdem" aria-label="Ordenar margem baixa">${opcoes.map(o => `<option value="${o[0]}" ${o[0] === _margemOrdem ? 'selected' : ''}>${o[1]}</option>`).join('')}</select></div>
+      ${info.aviso ? `<div class="flt-aviso">${escHtml(info.aviso)}</div>` : ''}<div id="margemTabela"></div>`;
+    document.getElementById('margemBusca').addEventListener('input', e => { _margemQ = e.target.value; margemTabela(); });
+    document.getElementById('margemOrdem').addEventListener('change', e => { _margemOrdem = e.target.value; margemTabela(); });
+    margemTabela();
+  }
+  function margemTabela() {
+    const el = document.getElementById('margemTabela'); if (!el) return;
+    const [campo, dir] = _margemOrdem.split(':');
+    const lista = EV.ordenarMargem(EV.filtrarMargem(_margemItens, _margemQ), campo, dir);
+    const total = _margemItens.length;
+    if (!lista.length) { el.innerHTML = '<div class="flt-info">Nenhum produto com esta busca.</div>'; return; }
+    const rows = lista.map(p => {
       const m = parseFloat(p.margem) || 0;
       const badgeClass = m < 10 ? 'badge-red' : 'badge-yellow';
       const badgeLabel = m < 10 ? `${m.toFixed(1)}% — Crítica` : `${m.toFixed(1)}% — Baixa`;
@@ -726,8 +772,7 @@
           <td class="mono">${fmtMoeda(p.custo)}</td>
         </tr>`;
     }).join('');
-
-    wrap.innerHTML = `
+    el.innerHTML = `<div class="flt-info">${_margemQ.trim() ? lista.length + ' de ' + total + ' produtos da lista' : total + ' produtos na lista'}</div>
       <table class="data-table">
         <thead>
           <tr>
@@ -744,10 +789,11 @@
 
   function renderListaCompras(itens) {
     const wrap = document.getElementById('listaComprasWrap');
-    document.getElementById('cntListaCompras').textContent = itens.length;
+    const est = EV.estadoListaLegada('listaCompras', itens);
+    document.getElementById('cntListaCompras').textContent = est.contagem;
 
-    if (!itens.length) {
-      wrap.innerHTML = emptyState('🛒', 'Lista de reposição vazia', 'Quando houver produtos abaixo do mínimo, eles aparecerão aqui para facilitar o pedido de compra.');
+    if (est.estado === 'INDISPONIVEL') {
+      wrap.innerHTML = emptyState('⚠️', est.titulo, est.desc);
       return;
     }
 
@@ -811,8 +857,10 @@
     // KPIs
     document.getElementById('kpiTotalProdutos').textContent = (dados.total_produtos ?? 0).toLocaleString('pt-BR');
     document.getElementById('kpiValorEstoque').textContent  = custosRestritos ? 'Restrito' : fmtMoeda(dados.valor_total_estoque);
-    document.getElementById('kpiAbaixoMinimo').textContent  = (dados.abaixo_minimo  ?? []).length;
-    document.getElementById('kpiSemGiro').textContent       = (dados.sem_giro        ?? []).length;
+    // FALSO NEGATIVO corrigido: lista vazia da fonte legada NÃO é "zero produtos" (a fonte não tem estoque mínimo nem última venda): mostrar "—" e dizer por quê.
+    const evAbaixo = EV.estadoListaLegada('abaixoMinimo', dados.abaixo_minimo ?? []), evSemGiro = EV.estadoListaLegada('semGiro', dados.sem_giro ?? []);
+    document.getElementById('kpiAbaixoMinimo').textContent = evAbaixo.kpi;  if (evAbaixo.kpiSub) document.getElementById('kpiAbaixoMinimoSub').textContent = evAbaixo.kpiSub;
+    document.getElementById('kpiSemGiro').textContent      = evSemGiro.kpi; if (evSemGiro.kpiSub) document.getElementById('kpiSemGiroSub').textContent = evSemGiro.kpiSub;
 
     // Timestamp
     const ts = dados.atualizado_em ? fmtDataHora(dados.atualizado_em) : 'não disponível';
@@ -831,6 +879,102 @@
     renderListaCompras(dados.abaixo_minimo  ?? []);
   }
 
+
+  // ── PRODUTOS (Fase A) — só leitura; busca/filtros/ordenação LOCAIS; cache por versão do sincronismo ───────────────────────────────
+  // Fontes (já existentes): compras_n0_produtos (blocos do motor; módulo estoque), painel_cache/produtos_catalogo (nome/código), compras_n0_custos (capital: só
+  // quem JÁ tem leitura permitida pelas Rules), compras_n0/meta (versão). Leituras ao abrir: meta 1 + blocos 6 + catálogo 1 (+ custos 6 se autorizado).
+  const prodCache = EV.criarCacheProdutos();
+  const PR = { linhas: [], crit: EV.criteriosProdutos(), ordem: { campo: 'nome', dir: 'asc' }, painel: false, mostrar: 100, estado: 'idle', erro: null, leituras: 0, versao: null };
+  const PR_PAGINA = 100;
+  const COB_BADGE = { CURRENT_STOCKOUT: 'badge-red', NEGATIVE_STOCK: 'badge-red', COVERAGE_CRITICAL: 'badge-red', COVERAGE_LOW: 'badge-yellow', COVERAGE_OK: 'badge-green', COVERAGE_EXCESS: 'badge-orange', NO_DEMAND_OBSERVED: 'badge-blue', INSUFFICIENT_HISTORY: 'badge-blue' };
+  async function carregarProdutos(forcar) {
+    PR.estado = 'carregando'; PR.erro = null; prodRenderCasca();
+    let leituras = 0;
+    try {
+      const metaS = await getDoc(doc(db, 'compras_n0', 'meta')); leituras++;
+      const versao = metaS.exists() ? (metaS.data().ultima_sincronizacao_ok || null) : null; PR.versao = versao;
+      if (!forcar && versao && prodCache.valido(versao)) { PR.linhas = prodCache.obter(); PR.estado = 'pronto'; prodRenderCasca(); return; }   // mesma versão: NÃO relê os blocos
+      const bs = await getDocs(collection(db, 'compras_n0_produtos')); leituras += bs.size;
+      const blocos = bs.docs.filter(d => /^bloco_\d+$/.test(d.id)).sort((a, b) => a.id.localeCompare(b.id)).flatMap(d => d.data().produtos || []);
+      const cs = await getDoc(doc(db, 'painel_cache', 'produtos_catalogo')); leituras++;
+      const catalogo = cs.exists() ? (cs.data().itens || []) : [];
+      let custos = null;   // capital: só se as Rules já permitem a leitura; sem permissão = sem coluna/ordenação de capital (nenhuma permissão é ampliada)
+      try { const ks = await getDocs(collection(db, 'compras_n0_custos')); leituras += ks.size; custos = ks.docs.filter(d => /^bloco_\d+$/.test(d.id)).sort((a, b) => a.id.localeCompare(b.id)).flatMap(d => d.data().produtos || []); }
+      catch (e) { if (!(e && e.code === 'permission-denied')) console.warn('Custos indisponíveis:', (e && e.code) || e); }
+      PR.linhas = EV.construirLinhas(blocos, catalogo, custos); PR.leituras += leituras;
+      prodCache.definir(versao || ('sessao-' + Date.now()), PR.linhas); PR.estado = 'pronto';
+    } catch (e) { PR.estado = 'erro'; PR.erro = (e && e.code === 'permission-denied') ? 'Sem permissão para os dados de produtos (módulo Estoque).' : 'Não foi possível carregar os produtos. Tente novamente.'; }
+    prodRenderCasca();
+  }
+  function abrirProdutos() { carregarProdutos(false); }
+  function prodVisiveis() { const f = EV.filtrarProdutos(PR.linhas, PR.crit); return { filtradas: f, ordenadas: EV.ordenarProdutos(f, PR.ordem.campo, PR.ordem.dir) }; }
+  const fmtN = v => v == null ? '—' : Number(v).toLocaleString('pt-BR');
+  function prodRenderCasca() {
+    const box = document.getElementById('produtosBox'); if (!box) return;
+    if (PR.estado === 'carregando') { box.innerHTML = '<div class="flt-info">Carregando produtos…</div>'; return; }
+    if (PR.estado === 'erro') { box.innerHTML = emptyState('⚠️', 'Produtos indisponíveis', PR.erro) + '<button class="flt-btn flt-mais" id="prodTentar">Tentar novamente</button>'; return; }
+    if (PR.estado !== 'pronto') return;
+    const L = PR.linhas, c = PR.crit, cap = EV.podeVerCapital(L);
+    const campos = Object.keys(EV.CAMPOS_ORDEM).filter(k => k !== 'capital' || cap);
+    const dirs = [['asc', '↑'], ['desc', '↓']];
+    const sel = (id, opts, val, vazio) => `<select data-pf="${id}"><option value="">${vazio}</option>${opts.map(o => `<option value="${escHtml(o.valor)}" ${o.valor === val ? 'selected' : ''}>${escHtml(o.rotulo)}</option>`).join('')}</select>`;
+    const sit = Object.keys(EV.SITUACOES).map(k => ({ valor: k, rotulo: EV.SITUACOES[k][0] }));
+    const ven = Object.keys(EV.VENDAS).map(k => ({ valor: k, rotulo: EV.VENDAS[k] }));
+    const abc = EV.ABC.map(k => ({ valor: k, rotulo: 'Curva ' + k }));
+    const cob = EV.opcoesCobertura(L).map(o => ({ valor: o.valor, rotulo: `${o.rotulo} (${o.n})` }));
+    const forn = EV.opcoesFornecedor(L).map(o => ({ valor: o.valor, rotulo: `${o.valor} (${o.n})` }));
+    box.innerHTML = `
+      <div class="flt-barra">
+        <input type="search" data-pf="busca" value="${escHtml(c.busca)}" placeholder="Buscar por nome ou código…" aria-label="Buscar produtos por nome ou código">
+        <button type="button" id="prodPainelBtn" aria-expanded="${PR.painel}">Filtros</button>
+        <select data-pf="ordemCampo" aria-label="Ordenar por">${campos.map(k => `<option value="${k}" ${PR.ordem.campo === k ? 'selected' : ''}>${escHtml(EV.CAMPOS_ORDEM[k][0])}</option>`).join('')}</select>
+        <select data-pf="ordemDir" aria-label="Sentido da ordenação">${dirs.map(d => `<option value="${d[0]}" ${PR.ordem.dir === d[0] ? 'selected' : ''}>${d[1]}</option>`).join('')}</select>
+      </div>
+      <div class="flt-painel ${PR.painel ? 'aberto' : ''}" id="prodPainel">
+        <label>Situação${sel('situacao', sit, c.situacao, 'Todas')}</label>
+        <label>Venda / giro${sel('venda', ven, c.venda, 'Todos')}</label>
+        <label>Curva ABC (receita)${sel('abc', abc, c.abc, 'Todas')}</label>
+        <label>Cobertura (estado do motor)${sel('cobertura', cob, c.cobertura, 'Todas')}</label>
+        <label>Fornecedor da última compra (código do ERP)${sel('fornecedor', forn, c.fornecedor, 'Todos')}</label>
+      </div>
+      <div class="flt-ativos" id="prodAtivos"></div>
+      <div id="prodCorpo"></div>`;
+    prodAtualizar();
+  }
+  function prodAtualizar() {
+    const at = document.getElementById('prodAtivos'), co = document.getElementById('prodCorpo'); if (!at || !co) return;
+    const chips = EV.chipsAtivosProdutos(PR.crit);
+    at.innerHTML = chips.map(x => `<span class="flt-ativo">${escHtml(x.rotulo)}<button type="button" data-prm="${escHtml(x.id)}" aria-label="Remover filtro ${escHtml(x.rotulo)}">×</button></span>`).join('') + (chips.length ? '<button type="button" class="flt-limpar" id="prodLimpar">Limpar filtros</button>' : '');
+    const { filtradas, ordenadas } = prodVisiveis(), cap = EV.podeVerCapital(PR.linhas), total = PR.linhas.length;
+    document.getElementById('cntProdutos').textContent = chips.length ? `${filtradas.length}/${total}` : String(total);
+    if (!ordenadas.length) { co.innerHTML = '<div class="flt-info">Nenhum produto com estes filtros.</div>'; return; }
+    const vis = ordenadas.slice(0, PR.mostrar);
+    const rows = vis.map(l => {
+      const cobR = l.coberturaEstado ? `<span class="badge ${COB_BADGE[l.coberturaEstado] || 'badge-blue'}">${escHtml(EV.ESTADO_COBERTURA[l.coberturaEstado] || l.coberturaEstado)}</span>` : '—';
+      const extra = (l.abaixoMinCalc ? ' <span class="badge badge-red">Abaixo do mín. calc.</span>' : '') + (l.nuncaVendido ? ' <span class="badge badge-blue">Nunca vendido</span>' : '') + (l.perdendoGiro ? ' <span class="badge badge-yellow">Perdendo giro</span>' : '');
+      return `<tr><td class="mono">${escHtml(l.codigo ?? '—')}</td><td>${escHtml(l.nome ?? ('Produto #' + l.id))}</td><td class="mono" style="${l.estoque < 0 ? 'color:var(--red);font-weight:600' : ''}">${fmtN(l.estoque)}</td>
+        <td>${l.nuncaVendido ? '—' : fmtData(l.ultimaVenda)}${l.diasSemVenda != null ? `<div class="flt-info" style="margin:0">${fmtN(l.diasSemVenda)} dias</div>` : ''}</td><td class="mono">${l.giro90d == null ? '—' : fmtN(l.giro90d)}</td>
+        <td>${l.coberturaDias == null ? '' : fmtN(l.coberturaDias) + ' d '}${cobR}</td><td>${escHtml(l.abc ?? '—')}</td><td class="mono">${escHtml(l.fornecedorCodigo ?? '—')}</td>${cap ? `<td class="mono">${l.capital == null ? '—' : fmtMoeda(l.capital)}</td>` : ''}<td>${extra || '<span class="flt-info" style="margin:0">—</span>'}</td></tr>`;
+    }).join('');
+    co.innerHTML = `<div class="flt-info">${chips.length ? `${filtradas.length} de ${total} produtos` : `${total} produtos`} · exibindo ${vis.length} · fonte: motor de Compras${PR.versao ? ' · sincronização ' + escHtml(fmtDataHora(PR.versao)) : ''} · <button type="button" class="flt-limpar" id="prodAtualizar">Atualizar dados</button></div>
+      <div class="table-wrap"><table class="data-table"><thead><tr><th>Código</th><th>Produto</th><th>Estoque</th><th>Última venda</th><th>Giro 90d</th><th>Cobertura</th><th>Curva</th><th>Fornecedor (cód. ERP, última compra)</th>${cap ? '<th>Capital</th>' : ''}<th>Sinais</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${ordenadas.length > vis.length ? `<button type="button" class="flt-btn flt-mais" id="prodMais">Mostrar mais (${ordenadas.length - vis.length} restantes)</button>` : ''}`;
+  }
+  (function ligarProdutos() {
+    const box = document.getElementById('produtosBox'); if (!box) return; let t = null;
+    const aplicar = el => { const k = el.dataset.pf, c = PR.crit; if (k === 'ordemCampo') PR.ordem.campo = el.value; else if (k === 'ordemDir') PR.ordem.dir = el.value; else if (k in c) c[k] = el.value; PR.mostrar = PR_PAGINA; };
+    box.addEventListener('input', e => { if (e.target.dataset.pf !== 'busca') return; clearTimeout(t); t = setTimeout(() => { aplicar(e.target); prodAtualizar(); }, 150); });
+    box.addEventListener('change', e => { if (!e.target.dataset.pf || e.target.dataset.pf === 'busca') return; aplicar(e.target); prodAtualizar(); });
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.id === 'prodPainelBtn') { PR.painel = !PR.painel; b.setAttribute('aria-expanded', PR.painel); document.getElementById('prodPainel').classList.toggle('aberto', PR.painel); return; }
+      if (b.dataset.prm) { PR.crit = EV.removerCriterioProdutos(PR.crit, b.dataset.prm); PR.mostrar = PR_PAGINA; prodRenderCasca(); return; }
+      if (b.id === 'prodLimpar') { PR.crit = EV.limparProdutos(); PR.mostrar = PR_PAGINA; prodRenderCasca(); return; }
+      if (b.id === 'prodMais') { PR.mostrar += PR_PAGINA; prodAtualizar(); return; }
+      if (b.id === 'prodAtualizar' || b.id === 'prodTentar') { carregarProdutos(true); return; }
+    });
+  })();
+
   // ── Mobile sidebar toggle ──
   document.getElementById('menuBtn')?.addEventListener('click', () => {
     document.getElementById('sidebar').classList.toggle('open');
@@ -845,6 +989,7 @@
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    if (tab === 'produtos' && !window._prodAberto) { window._prodAberto = true; abrirProdutos(); }   // SOB DEMANDA: nada disto é lido na abertura da tela
     if (tab === 'equivalentes' && !window._eqCarregado) {
       window._eqCarregado = true;
       eqCarregar();

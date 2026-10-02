@@ -64,11 +64,14 @@
     conferencia: { rotulo: 'Requer conferência', grupos: ['UNKNOWN'] },
     pagas: { rotulo: 'Pagas', grupos: ['PAGO'] },
   };
-  function rotuloFiltro(id, natureza) { var f = FILTROS[id]; if (!f) return id; return id === 'pagas' && natureza === 'RECEBER' ? 'Recebidas' : f.rotulo; }
+  /** Filtros de situação ADICIONAIS (fora de FILTROS para não alterar o contrato existente): "Em aberto" = vencidas + hoje + a vencer (poucas fatias; sem limite de dias). */
+  var FILTROS_EXTRA = { abertas: { rotulo: 'Em aberto', grupos: ['VENCIDO', 'HOJE', 'FUTURO'] } };
+  function defFiltro(id) { return FILTROS[id] || FILTROS_EXTRA[id] || null; }
+  function rotuloFiltro(id, natureza) { var f = defFiltro(id); if (!f) return id; return id === 'pagas' && natureza === 'RECEBER' ? 'Recebidas' : f.rotulo; }
 
   /** Plano de leitura: lista de ids de fatia a buscar, em ordem, para um filtro (nunca mais que o necessário). */
   function planoLeitura(geracao, natureza, filtroId, resumo) {
-    var f = FILTROS[filtroId]; if (!f) return [];
+    var f = defFiltro(filtroId); if (!f) return [];
     var det = resumo[natureza === 'PAGAR' ? 'pagar' : 'receber'].detalhe, ids = [];
     f.grupos.forEach(function (g) { var n = (det[g] || {}).fatias || 0; for (var i = 0; i < n; i++) ids.push({ id: geracao + '__' + natureza + '__' + g + '__' + ('00' + i).slice(-3), grupo: g, indice: i }); });
     return ids;
@@ -81,7 +84,7 @@
   function precisaMais(est, minimo) { return !est.fim && est.itens.length < minimo; }
   function proximaFatia(est) { return est.fim || est.proxima >= est.plano.length ? null : est.plano[est.proxima]; }
   function aplicarFatia(est, fatia) {
-    var f = FILTROS[est.filtro], lim = f.dias != null ? somarDias(est.hoje, f.dias) : null, cheguei = false;
+    var f = defFiltro(est.filtro), lim = f.dias != null ? somarDias(est.hoje, f.dias) : null, cheguei = false;
     var itens = (fatia.itens || []).map(function (i) { return Object.assign({ _g: fatia.grupo }, i); });
     if (lim) itens = itens.filter(function (i) { if (i.v > lim) { cheguei = true; return false; } return true; });
     est.itens = est.itens.concat(itens); est.proxima++; est.lidas++;
@@ -112,6 +115,148 @@
       pagoEm: item.sd ? dataBR(item.sd) : null, vinculo: textoVinculo(item.lk), vinculoAmbiguo: !!(item.lk && item.lk.t === 'AMBIGUO'), conferencia: item._g === 'UNKNOWN' ? (item.motx || 'Dados contraditórios no ERP') : null, acimaDeUmAno: item.ag === 'ACIMA_365' };
   }
 
+
+  // ═══ FASE A — busca, período, filtros combináveis, ordenação, chips e cache (TUDO local; nenhuma consulta nova; nenhum dado alterado) ═══
+  /** Texto para comparação: minúsculas, sem acentos, espaços colapsados. */
+  function normalizar(t) { return String(t == null ? '' : t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+  function termosBusca(q) { var n = normalizar(q); return n ? n.split(' ') : []; }
+  /** Campos pesquisáveis (somente os que EXISTEM nas fatias): entidade, descrição, código do título, plano de contas, forma de pagamento. */
+  function textoBuscavel(item) { return normalizar([item.ent, item.desc, item.cod, item.pl, item.fp].filter(function (x) { return x != null && x !== ''; }).join(' ')); }
+  function casaBusca(item, q) { var ts = termosBusca(q); if (!ts.length) return true; var tx = textoBuscavel(item); return ts.every(function (t) { return tx.indexOf(t) >= 0; }); }
+
+  /** Períodos (datas só-data America/Fortaleza; comparação por texto YYYY-MM-DD: nada se desloca de dia). Semana = segunda a domingo. */
+  var PERIODOS = [['hoje', 'Hoje'], ['ontem', 'Ontem'], ['semana', 'Esta semana'], ['mes', 'Este mês'], ['mes_passado', 'Mês passado'], ['ult7', 'Últimos 7 dias'], ['ult30', 'Últimos 30 dias'], ['ult90', 'Últimos 90 dias'], ['personalizado', 'Personalizado']];
+  function diaSemana(ymd) { return new Date(ymd + 'T12:00:00Z').getUTCDay(); }
+  function ultimoDiaDoMes(ano, mes1a12) { return new Date(Date.UTC(ano, mes1a12, 0)).getUTCDate(); }
+  function validaYmd(s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) && !isNaN(new Date(s + 'T12:00:00Z').getTime()) && new Date(s + 'T12:00:00Z').toISOString().slice(0, 10) === s; }
+  /** {de, ate} inclusivo (qualquer ponta pode ser null no personalizado). */
+  function intervaloPeriodo(id, hoje, de, ate) {
+    var y = +hoje.slice(0, 4), m = +hoje.slice(5, 7), pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    if (id === 'hoje') return { de: hoje, ate: hoje };
+    if (id === 'ontem') { var o = somarDias(hoje, -1); return { de: o, ate: o }; }
+    if (id === 'semana') { var dow = diaSemana(hoje), voltar = dow === 0 ? 6 : dow - 1, ini = somarDias(hoje, -voltar); return { de: ini, ate: somarDias(ini, 6) }; }
+    if (id === 'mes') return { de: y + '-' + pad(m) + '-01', ate: y + '-' + pad(m) + '-' + pad(ultimoDiaDoMes(y, m)) };
+    if (id === 'mes_passado') { var yy = m === 1 ? y - 1 : y, mm = m === 1 ? 12 : m - 1; return { de: yy + '-' + pad(mm) + '-01', ate: yy + '-' + pad(mm) + '-' + pad(ultimoDiaDoMes(yy, mm)) }; }
+    if (id === 'ult7') return { de: somarDias(hoje, -6), ate: hoje };
+    if (id === 'ult30') return { de: somarDias(hoje, -29), ate: hoje };
+    if (id === 'ult90') return { de: somarDias(hoje, -89), ate: hoje };
+    if (id === 'personalizado') {
+      var a = validaYmd(de) ? de : null, b = validaYmd(ate) ? ate : null; if (!a && !b) return null;
+      if (a && b && a > b) { var t = a; a = b; b = t; } return { de: a, ate: b };
+    }
+    return null;
+  }
+  function rotuloPeriodo(p) {
+    if (!p) return ''; var nome = (PERIODOS.filter(function (x) { return x[0] === p.id; })[0] || [0, p.id])[1];
+    if (p.id === 'personalizado') nome = (p.de ? dataBR(p.de) : '…') + ' a ' + (p.ate ? dataBR(p.ate) : '…');
+    return nome + ' · ' + (p.ref === 'pagamento' ? 'pagamento/recebimento' : 'vencimento');
+  }
+  /** Data de referência do título: vencimento (v) ou pagamento/recebimento (sd, só existe em pagos). Ausente → fora do período. */
+  function dataRef(item, ref) { return ref === 'pagamento' ? (item.sd || null) : (item.v || null); }
+  function dentroDoPeriodo(item, p, hoje) {
+    if (!p) return true; var iv = intervaloPeriodo(p.id, hoje, p.de, p.ate); if (!iv) return true;
+    var d = dataRef(item, p.ref); if (!d) return false;
+    return (!iv.de || d >= iv.de) && (!iv.ate || d <= iv.ate);
+  }
+
+  /** "1.234,56" | "1234,5" | "1234.56" | "R$ 1.000" → centavos inteiros; vazio/inválido → null. */
+  function parseReais(txt) {
+    var s = String(txt == null ? '' : txt).replace(/R\$|\s/g, ''); if (!s) return null;
+    if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+    else if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+    if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
+    var p = s.split('.'); return parseInt(p[0], 10) * 100 + (p[1] ? parseInt((p[1] + '0').slice(0, 2), 10) : 0);
+  }
+  function vinculoDe(item) { return !item.lk ? 'sem' : item.lk.t === 'AMBIGUO' ? 'ambiguo' : 'com'; }
+  var ROTULO_VINCULO = { com: 'Com vínculo (venda/compra)', ambiguo: 'Vínculo ambíguo', sem: 'Sem vínculo' };
+
+  /** Critérios (todos opcionais e combináveis). periodo = { id, ref: 'vencimento'|'pagamento', de, ate }. min/max em centavos. */
+  function criteriosVazios() { return { busca: '', periodo: null, plano: '', forma: '', vinculo: '', entidade: '', min: null, max: null }; }
+  function periodoAtivo(p) { return !!p && !!intervaloPeriodo(p.id, '2000-01-01', p.de, p.ate); }   // "personalizado" sem datas válidas não restringe nada
+  function temCriterio(c) { return !!(c.busca && termosBusca(c.busca).length) || periodoAtivo(c.periodo) || !!c.plano || !!c.forma || !!c.vinculo || !!(c.entidade && normalizar(c.entidade)) || c.min != null || c.max != null; }
+  function filtrarItens(itens, c, hoje) {
+    var ent = normalizar(c.entidade);
+    return itens.filter(function (i) {
+      if (c.busca && !casaBusca(i, c.busca)) return false;
+      if (periodoAtivo(c.periodo) && !dentroDoPeriodo(i, c.periodo, hoje)) return false;
+      if (c.plano && (i.pl || 'Sem classificação') !== c.plano) return false;
+      if (c.forma && (i.fp || '—') !== c.forma) return false;
+      if (c.vinculo && vinculoDe(i) !== c.vinculo) return false;
+      if (ent && normalizar(i.ent).indexOf(ent) < 0) return false;
+      if (c.min != null && !(typeof i.val === 'number' && i.val >= c.min)) return false;
+      if (c.max != null && !(typeof i.val === 'number' && i.val <= c.max)) return false;
+      return true;
+    });
+  }
+  /** Opções distintas (ordenadas) de um campo, para os seletores; ausente vira o mesmo rótulo usado na tabela. */
+  function opcoesDistintas(itens, campo) {
+    var vistos = {}, fora = campo === 'pl' ? 'Sem classificação' : campo === 'fp' ? '—' : null;
+    itens.forEach(function (i) { var v = i[campo] || fora; if (v != null && v !== '') vistos[v] = (vistos[v] || 0) + 1; });
+    return Object.keys(vistos).sort(function (a, b) { return a.localeCompare(b, 'pt-BR'); }).map(function (k) { return { valor: k, n: vistos[k] }; });
+  }
+
+  /** Ordenação por cabeçalho. Ausentes SEMPRE no fim (nos dois sentidos); desempate estável por vencimento e id. */
+  var ORDEM_SITUACAO = { VENCIDO: 0, HOJE: 1, FUTURO: 2, UNKNOWN: 3, PAGO: 4 };
+  function chaveOrdem(i, campo) {
+    if (campo === 'venc') return i.v || null;
+    if (campo === 'pagamento') return i.sd || null;
+    if (campo === 'valor') return typeof i.val === 'number' ? i.val : null;
+    if (campo === 'entidade') { var e = normalizar(i.ent); return e || null; }
+    if (campo === 'situacao') return ORDEM_SITUACAO[i._g] != null ? ORDEM_SITUACAO[i._g] : null;
+    return null;
+  }
+  function ordenarItens(itens, campo, dir) {
+    if (!campo) return itens.slice(); var f = dir === 'desc' ? -1 : 1;
+    return itens.slice().sort(function (a, b) {
+      var x = chaveOrdem(a, campo), y = chaveOrdem(b, campo);
+      if (x === null && y === null) { /* ambos ausentes: cai no desempate */ }
+      else if (x === null) return 1; else if (y === null) return -1;
+      else if (x !== y) return (x < y ? -1 : 1) * f;
+      var v = String(a.v || '').localeCompare(String(b.v || '')); if (v) return v;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  }
+
+  /** Estado da lista: { situacao, criterios, ordem: { campo, dir } }. Chips ativos = situação + cada critério. */
+  function chipsAtivos(situacao, c, natureza) {
+    var ch = [{ id: 'situacao', rotulo: rotuloFiltro(situacao, natureza) }];
+    if (c.busca && termosBusca(c.busca).length) ch.push({ id: 'busca', rotulo: 'Busca: ' + String(c.busca).trim() });
+    if (periodoAtivo(c.periodo)) ch.push({ id: 'periodo', rotulo: rotuloPeriodo(c.periodo) });
+    if (c.plano) ch.push({ id: 'plano', rotulo: 'Plano: ' + c.plano });
+    if (c.forma) ch.push({ id: 'forma', rotulo: 'Forma: ' + c.forma });
+    if (c.vinculo) ch.push({ id: 'vinculo', rotulo: ROTULO_VINCULO[c.vinculo] || c.vinculo });
+    if (c.entidade && normalizar(c.entidade)) ch.push({ id: 'entidade', rotulo: (natureza === 'PAGAR' ? 'Fornecedor: ' : 'Cliente: ') + String(c.entidade).trim() });
+    if (c.min != null || c.max != null) ch.push({ id: 'valor', rotulo: 'Valor: ' + (c.min != null ? brl(c.min) : '…') + ' a ' + (c.max != null ? brl(c.max) : '…') });
+    return ch;
+  }
+  /** Remove SOMENTE o critério pedido. Remover a situação volta para "Em aberto" (sem recorte de situação). Retorna novo estado (não muta). */
+  function removerCriterio(estado, id) {
+    var c = Object.assign({}, estado.criterios), sit = estado.situacao;
+    if (id === 'situacao') sit = 'abertas'; else if (id === 'busca') c.busca = ''; else if (id === 'periodo') c.periodo = null; else if (id === 'plano') c.plano = ''; else if (id === 'forma') c.forma = '';
+    else if (id === 'vinculo') c.vinculo = ''; else if (id === 'entidade') c.entidade = ''; else if (id === 'valor') { c.min = null; c.max = null; }
+    return { situacao: sit, criterios: c, ordem: estado.ordem };
+  }
+  /** Limpar filtros: zera TODOS os critérios e a situação (volta a "Em aberto"); mantém a ordenação escolhida. */
+  function limparFiltros(estado) { return { situacao: 'abertas', criterios: criteriosVazios(), ordem: estado.ordem }; }
+
+  /** Cache de fatias por id (evita reler ao trocar de chip/filtro). leitor(id) é injetado (a página usa getDoc); conta leituras reais. */
+  function criarCacheFatias() {
+    var m = {}, leituras = 0;
+    return {
+      tem: function (id) { return Object.prototype.hasOwnProperty.call(m, id); },
+      obter: function (id) { return m[id]; },
+      definir: function (id, d) { m[id] = d; },
+      tamanho: function () { return Object.keys(m).length; },
+      leituras: function () { return leituras; },
+      ler: function (id, leitor) { var self = this; if (self.tem(id)) return Promise.resolve(m[id]); leituras++; return Promise.resolve(leitor(id)).then(function (d) { if (d) m[id] = d; return d; }); },
+      limpar: function () { m = {}; },
+    };
+  }
+  /** Quantas fatias de um filtro ainda NÃO estão no cache (para avisar o custo antes de "buscar em todos os pagos"). */
+  function fatiasPendentes(geracao, natureza, filtroId, resumo, cache) {
+    return planoLeitura(geracao, natureza, filtroId, resumo).filter(function (f) { return !cache.tem(f.id); }).length;
+  }
+
   /** Validação defensiva do ponteiro/resumo (falha FECHADA: nada de mostrar números de documento estranho). */
   function validarGeracao(ativo, resumo) {
     if (!ativo || !ativo.geracao || !ativo.resumo_id) return { ok: false, motivo: 'SEM_GERACAO' };
@@ -124,5 +269,8 @@
 
   return { TZ: TZ, STALE_HORAS: STALE_HORAS, TAM_PAGINA_FATIA: TAM_PAGINA_FATIA, FAIXAS: FAIXAS, FILTROS: FILTROS, esc: esc, brl: brl, dataBR: dataBR, dataComercial: dataComercial, dataHoraBR: dataHoraBR, somarDias: somarDias, frescor: frescor,
     linhasEnvelhecimento: linhasEnvelhecimento, modeloCards: modeloCards, rotuloFiltro: rotuloFiltro, planoLeitura: planoLeitura, novaLista: novaLista, precisaMais: precisaMais, proximaFatia: proximaFatia, aplicarFatia: aplicarFatia,
-    statusRotulo: statusRotulo, textoVinculo: textoVinculo, modeloLinha: modeloLinha, validarGeracao: validarGeracao, linhasFormas: linhasFormas };
+    statusRotulo: statusRotulo, textoVinculo: textoVinculo, modeloLinha: modeloLinha, validarGeracao: validarGeracao, linhasFormas: linhasFormas,
+    FILTROS_EXTRA: FILTROS_EXTRA, defFiltro: defFiltro, PERIODOS: PERIODOS, normalizar: normalizar, termosBusca: termosBusca, textoBuscavel: textoBuscavel, casaBusca: casaBusca, intervaloPeriodo: intervaloPeriodo, rotuloPeriodo: rotuloPeriodo,
+    dentroDoPeriodo: dentroDoPeriodo, parseReais: parseReais, vinculoDe: vinculoDe, ROTULO_VINCULO: ROTULO_VINCULO, criteriosVazios: criteriosVazios, periodoAtivo: periodoAtivo, temCriterio: temCriterio, filtrarItens: filtrarItens, opcoesDistintas: opcoesDistintas,
+    ordenarItens: ordenarItens, chipsAtivos: chipsAtivos, removerCriterio: removerCriterio, limparFiltros: limparFiltros, criarCacheFatias: criarCacheFatias, fatiasPendentes: fatiasPendentes };
 });

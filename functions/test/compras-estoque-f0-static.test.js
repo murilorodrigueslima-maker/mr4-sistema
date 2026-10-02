@@ -29,6 +29,17 @@ test('nada do módulo é carregado pelo frontend nem exportado para arquivo púb
   const arqs = [];
   const varrer = d => { for (const n of fs.readdirSync(d)) { if (['node_modules', '.git', 'functions', 'artifacts'].includes(n)) continue; const p = path.join(d, n), st = fs.lstatSync(p); if (st.isSymbolicLink()) continue; if (st.isDirectory()) varrer(p); else if (/\.(html|js)$/.test(n)) arqs.push(p); } };
   varrer(ROOT);
-  for (const f of arqs) expect([path.relative(ROOT, f), /lib\/compras|compras_n0_custos/.test(fs.readFileSync(f, 'utf8'))]).toEqual([path.relative(ROOT, f), false]);
+  // Exceção documentada: modulos/estoque.html (aba Produtos, Fase A) lê compras_n0_custos SOMENTE dentro de carregarProdutos(), em tentativa protegida pelas Rules
+  // (gestor com módulo estoque); sem permissão a página esconde o capital. Nenhum outro arquivo pode referenciar o módulo; lib/compras continua proibido em todos.
+  for (const f of arqs) {
+    const rel = path.relative(ROOT, f), src = fs.readFileSync(f, 'utf8');
+    if (rel === path.join('modulos', 'estoque.html')) {
+      expect([rel, /lib\/compras/.test(src)]).toEqual([rel, false]);
+      const codigo = src.split('\n').filter(l => !/^\s*\/\//.test(l)).join('\n'), usos = [...codigo.matchAll(/compras_n0_custos/g)].length, dentro = (codigo.match(/async function carregarProdutos[\s\S]*?function abrirProdutos/) || [''])[0].match(/compras_n0_custos/g);   // só código (sem comentários)
+      expect([rel, usos, dentro ? dentro.length : 0]).toEqual([rel, usos, usos]);   // todos os usos estão dentro de carregarProdutos()
+      continue;
+    }
+    expect([rel, /lib\/compras|compras_n0_custos/.test(src)]).toEqual([rel, false]);
+  }
   for (const [f, s] of fontes) expect([f, /writeFile|data\//.test(s)]).toEqual([f, false]);
 });

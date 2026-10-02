@@ -167,10 +167,8 @@ describe('estático: nenhum código de escrita; módulo existente intacto; UI co
     const so = fs.readFileSync(path.join(DIR, 'prompt.js'), 'utf8'); expect(so).toMatch(/não paga, não transfere, não concilia, não edita, não apaga/);
   });
   const sh = c => execSync(c, { cwd: path.join(__dirname, '../..'), encoding: 'utf8' }).trim();
-  test('financeiro-v2.html: só acréscimos do agente (única linha original trocada = instância do SDK com Functions)', () => {
-    const antes = sh('git show c79ad64:modulos/financeiro-v2.html').split('\n'), depois = fs.readFileSync(path.join(__dirname, '../../modulos/financeiro-v2.html'), 'utf8').split('\n');
-    const faltando = antes.filter(l => !depois.includes(l)); expect(faltando).toEqual(["const auth = getAuth(app), db = getFirestore(app);"]);
-  });
+  // (guarda do RC isolado "só acréscimos do agente" removido: a Fase A de filtros do Financeiro, autorizada, reescreve linhas originais; as invariantes do agente
+  //  — aba oculta, gate pelo backend, widget — seguem verificadas abaixo, e os filtros têm testes próprios em filtros-financeiro-view.test.js)
   const H = fs.readFileSync(path.join(__dirname, '../../modulos/financeiro-v2.html'), 'utf8');
   test('UI: aba Agente OCULTA por padrão (hidden), liberada só pelo backend (modo acesso); widget genérico; sugestões do módulo', () => {
     expect(H).toMatch(/<button[^>]*id="tabAgente"[^>]*hidden>Agente<\/button>/); expect(H).toMatch(/liberarSePermitido\(chamarAgente, 'finance', \(\) => \{ \$\('tabAgente'\)\.hidden = false; \}\)/);

@@ -177,3 +177,7 @@ describe('página do Financeiro: só filtros locais (sem novas consultas)', () =
     expect(HTML).toMatch(/Limpar filtros/); expect(HTML).toMatch(/@media\(max-width:640px\)\{[^}]*\.painel\.aberto/);   // mobile: painel em 2 colunas, busca em linha própria
   });
 });
+
+describe('cache do navegador (GitHub Pages guarda arquivos por ~10 min)', () => {
+  test('o HTML referencia o financeiro-view.js com versão nova (a lógica mudou na Fase A)', () => { expect(HTML).toMatch(/financeiro-view\.js\?v=20261001b/); expect(HTML).not.toMatch(/financeiro-view\.js\?v=20261001a/); });
+});

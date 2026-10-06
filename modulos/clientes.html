@@ -375,8 +375,6 @@ select.filter-sel:focus{border-color:var(--orange)}
 .painel-bar-fill{height:100%;border-radius:20px;transition:width .4s}
 .painel-bar-count{font-size:.7rem;font-weight:700;color:var(--muted);min-width:22px;text-align:right}
 /* WhatsApp reconnect */
-.wpp-reconnect-btn{width:100%;margin-top:.45rem;padding:.38rem .65rem;background:#FEF2F2;color:#B91C1C;border:1.5px solid #FECACA;border-radius:8px;font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;cursor:pointer;display:none;transition:all .15s}
-.wpp-reconnect-btn:hover{background:#FEE2E2;border-color:#FCA5A5}
 /* ── VENDAS ── */
 .venda-add{display:flex;gap:.45rem;margin-bottom:.85rem;flex-wrap:wrap}
 .venda-add input{padding:.4rem .65rem;border:1.5px solid var(--border);border-radius:8px;font-family:'Inter',sans-serif;font-size:.78rem;outline:none;transition:border .15s}
@@ -405,13 +403,6 @@ select.filter-sel:focus{border-color:var(--orange)}
 .custom-tag-del{background:none;border:none;cursor:pointer;color:rgba(26,115,232,.55);font-size:.6rem;padding:0 .12rem .05rem;margin-left:.2rem;line-height:1;vertical-align:middle}
 .custom-tag-del:hover{color:var(--red)}
 /* QR Code modal */
-.qr-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem}
-.qr-overlay.open{display:flex}
-.qr-box{background:#fff;border-radius:18px;padding:1.75rem;max-width:320px;width:100%;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.25)}
-.qr-box-title{font-size:.95rem;font-weight:800;margin-bottom:.4rem}
-.qr-box-sub{font-size:.76rem;color:var(--muted);margin-bottom:1.1rem;line-height:1.65}
-#qrImg{max-width:200px;width:100%;border-radius:10px;border:3px solid var(--border);margin-bottom:.85rem;display:none}
-.qr-status-txt{font-size:.78rem;font-weight:600;padding:.45rem .75rem;border-radius:8px;display:inline-block}
 </style>
 </head>
 <body>
@@ -442,8 +433,6 @@ select.filter-sel:focus{border-color:var(--orange)}
       <div class="tb-dropdown-item" onclick="exportarClientesExcel();toggleTbDropdown()">📊 Exportar Excel</div>
       <div class="tb-dropdown-sep"></div>
       <div class="tb-dropdown-item" onclick="abrirModalBackup();toggleTbDropdown()" id="btnBackup">🔄 Backups locais</div>
-      <div class="tb-dropdown-sep"></div>
-      <div class="tb-dropdown-item" onclick="abrirReconectarWpp();toggleTbDropdown()">📱 Reconectar WhatsApp</div>
     </div>
   </div>
   <!-- hidden selects mantidos para compatibilidade com filtrar() -->
@@ -476,7 +465,6 @@ select.filter-sel:focus{border-color:var(--orange)}
     <!-- Grade de modos: Clientes / WhatsApp / Pipeline / Painel -->
     <div class="sidebar-modes">
       <button class="sidebar-mode-btn active" id="modoClientes" onclick="setModo('clientes')">👥 Clientes</button>
-      <button class="sidebar-mode-btn" id="modoInbox" onclick="setModo('inbox')">💬 WhatsApp</button>
       <button class="sidebar-mode-btn" id="modoPipeline" onclick="setModo('pipeline')">🏷️ Pipeline</button>
       <button class="sidebar-mode-btn" id="modoPainel" onclick="setModo('painel')">📊 Painel</button>
     </div>
@@ -535,15 +523,6 @@ select.filter-sel:focus{border-color:var(--orange)}
     <div class="sidebar-section" style="margin-top:.35rem">Por Estado</div>
     <div id="sidebarEstados"></div>
 
-    <div class="sidebar-footer">
-      <div style="font-size:.7rem;color:var(--muted);display:flex;align-items:center;gap:.45rem">
-        <span style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;display:inline-block"></span>
-        WhatsApp: <strong style="color:var(--text)" id="wppStatus">Não configurado</strong>
-      </div>
-      <button class="wpp-reconnect-btn" id="wppReconnectBtn" onclick="abrirReconectarWpp()">
-        🔄 Reconectar WhatsApp
-      </button>
-    </div>
   </aside>
 
   <!-- MAIN -->
@@ -582,7 +561,6 @@ select.filter-sel:focus{border-color:var(--orange)}
           <option value="Outro">Outro</option>
         </select>
       </div>
-      <button class="btn btn-ghost" id="btnImportarInbox" onclick="importarTodosDoInbox()" style="display:none;font-size:.73rem;padding:.35rem .75rem">📥 Importar novos</button>
     </div>
 
     <!-- Quick filter pills -->
@@ -782,10 +760,6 @@ select.filter-sel:focus{border-color:var(--orange)}
           </div>
           <div class="chat-msgs" id="chatMsgs" style="display:none"></div>
         </div>
-        <div class="chat-input-area" id="chatInputArea">
-          <input type="text" id="chatInput" placeholder="Digite uma mensagem…" onkeydown="if(event.key==='Enter')enviarMsg()">
-          <button class="chat-send" id="chatSendBtn" onclick="enviarMsg()">➤</button>
-        </div>
       </div>
 
       <!-- GARANTIAS -->
@@ -886,17 +860,6 @@ select.filter-sel:focus{border-color:var(--orange)}
   </div>
 </div>
 
-<!-- QR CODE RECONECTAR WHATSAPP -->
-<div class="qr-overlay" id="qrOverlay">
-  <div class="qr-box">
-    <div class="qr-box-title">📱 Reconectar WhatsApp</div>
-    <div class="qr-box-sub">Abra o WhatsApp no celular → <strong>⋮ Dispositivos conectados → Conectar dispositivo</strong> → escaneie o QR code abaixo.</div>
-    <img id="qrImg" alt="QR Code">
-    <div><span class="qr-status-txt" id="qrStatusTxt" style="background:#F3F4F6;color:#6B7280">⏳ Gerando QR code…</span></div>
-    <button onclick="fecharReconectarWpp()" style="margin-top:1rem;width:100%;padding:.5rem;border:1.5px solid var(--border);border-radius:9px;background:none;cursor:pointer;font-size:.8rem;font-family:'Inter',sans-serif;color:var(--muted)">Fechar</button>
-  </div>
-</div>
-
 <!-- SheetJS (Excel export) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
@@ -952,10 +915,6 @@ let CHATS_UNREAD    = {};   // phone -> unread count (para badges)
 let CHAT_STATUS = {}; // phone -> 'pendente'|'em_atendimento'|'resolvido'
 let CHAT_PINS   = new Set(JSON.parse(localStorage.getItem('mr4_chat_pins')||'[]'));
 let inboxFiltro = 'todas'; // 'todas'|'fila'|'fixadas'
-let PREV_UNREAD     = {};   // phone -> unread count anterior (para som)
-let pollingTimer    = null;
-let chatPollTimer   = null;  // polling de mensagens do chat aberto
-let chatPollTs      = 0;     // timestamp da última mensagem conhecida
 let unsubscribeMsgs = null; // listener Firestore de mensagens
 
 const PIPELINE_STAGES = [
@@ -1237,7 +1196,6 @@ window.abrirDetalhe = function(id) {
   if(detImg) {
     detImg.classList.remove('loaded');
     detImg.src = '';
-    if(wpp) { detImg.dataset.phone = wpp; carregarFoto(detImg); }
   }
 };
 
@@ -1247,7 +1205,6 @@ window.fecharDetalhe = function() {
   inboxPhoneAtual = null;
   document.querySelectorAll('.contact-row').forEach(r=>r.classList.remove('selected'));
   if(unsubscribeMsgs){ unsubscribeMsgs(); unsubscribeMsgs = null; }
-  pararPollChat();
 };
 
 window.abrirWpp = function() {
@@ -1323,12 +1280,8 @@ window.deletarNota = async function(idx) {
   renderNotas(c);
 };
 
-// ── Z-API ─────────────────────────────────────────────────────────────────────
-const ZAPI_BASE         = 'https://api.z-api.io/instances/3F1FE7340C9E81202A93BE4FDF68D33E/token/9949A7D348292074E9FCCE9F';
-const ZAPI_CLIENT_TOKEN = 'F41d9f72c5d6b4353912afcb17896b443S';
-const ZAPI_HEADERS      = { 'Content-Type': 'application/json', 'Client-Token': ZAPI_CLIENT_TOKEN };
-
-function formatarTelZapi(tel) {
+// ── Telefone ──────────────────────────────────────────────────────────────
+function formatarTelefone55(tel) {
   const d = (tel||'').replace(/\D/g,'');
   if(!d) return null;
   if(d.startsWith('55') && d.length >= 12) return d;
@@ -1337,83 +1290,14 @@ function formatarTelZapi(tel) {
 
 function escapeHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
 
-async function checkZapiStatus() {
-  try {
-    const r = await fetch(`${ZAPI_BASE}/status`, { headers: ZAPI_HEADERS });
-    const j = await r.json();
-    const ok = j.connected === true || j.status === 'connected';
-    const el = document.getElementById('wppStatus');
-    el.textContent = ok ? '● Conectado' : '● Desconectado';
-    el.style.color = ok ? 'var(--green)' : 'var(--red)';
-    const btn = document.getElementById('wppReconnectBtn');
-    if(btn) btn.style.display = ok ? 'none' : 'block';
-  } catch(e) {
-    const el = document.getElementById('wppStatus');
-    el.textContent = '● Desconectado';
-    el.style.color = 'var(--red)';
-    const btn = document.getElementById('wppReconnectBtn');
-    if(btn) btn.style.display = 'block';
-  }
-}
 
 // ── Reconectar WhatsApp via QR Code ───────────────────────────────────────────
-window.abrirReconectarWpp = async function() {
-  const overlay = document.getElementById('qrOverlay');
-  const img     = document.getElementById('qrImg');
-  const status  = document.getElementById('qrStatusTxt');
-  overlay.classList.add('open');
-  img.style.display = 'none';
-  status.textContent = '⏳ Gerando QR code…';
-  status.style.background = '#F3F4F6'; status.style.color = '#6B7280';
 
-  try {
-    const r = await fetch(`${ZAPI_BASE}/qr-code`, { headers: ZAPI_HEADERS });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const j = await r.json();
-    const src = j.value || j.base64 || j.qrcode || '';
-    if(!src) throw new Error('QR code não disponível — verifique se a instância está ativa.');
-    img.src = src.startsWith('data:') ? src : 'data:image/png;base64,' + src;
-    img.style.display = 'block';
-    status.textContent = '📱 Escaneie com o WhatsApp';
-    status.style.background = '#D1FAE5'; status.style.color = '#065F46';
-
-    // Verifica conexão a cada 3s por até 90s
-    let tentativas = 0;
-    const pollId = setInterval(async () => {
-      tentativas++;
-      if(tentativas > 30 || !overlay.classList.contains('open')) { clearInterval(pollId); return; }
-      try {
-        const r2 = await fetch(`${ZAPI_BASE}/status`, { headers: ZAPI_HEADERS });
-        const j2 = await r2.json();
-        const ok2 = j2.connected === true || j2.status === 'connected';
-        if(ok2) {
-          clearInterval(pollId);
-          img.style.display = 'none';
-          status.textContent = '✅ WhatsApp conectado com sucesso!';
-          status.style.background = '#D1FAE5'; status.style.color = '#065F46';
-          document.getElementById('wppStatus').textContent = '● Conectado';
-          document.getElementById('wppStatus').style.color = 'var(--green)';
-          document.getElementById('wppReconnectBtn').style.display = 'none';
-          setTimeout(() => fecharReconectarWpp(), 2000);
-        }
-      } catch(_) {}
-    }, 3000);
-
-  } catch(e) {
-    img.style.display = 'none';
-    status.textContent = `❌ ${e.message}`;
-    status.style.background = '#FEE2E2'; status.style.color = '#B91C1C';
-  }
-};
-
-window.fecharReconectarWpp = function() {
-  document.getElementById('qrOverlay').classList.remove('open');
-};
 
 function carregarChat(clienteId) {
   const c = CLIENTES.find(x=>x.id===clienteId);
   if(!c) return;
-  const phone = formatarTelZapi(c.telefone);
+  const phone = formatarTelefone55(c.telefone);
   if(!phone) {
     const empty = document.getElementById('chatEmpty');
     const msgs  = document.getElementById('chatMsgs');
@@ -1439,8 +1323,6 @@ function msgVazioHtml() {
 function subscribeToMsgs(phone) {
   // Cancela listener anterior e polling anterior
   if(unsubscribeMsgs){ unsubscribeMsgs(); unsubscribeMsgs = null; }
-  pararPollChat();
-  if(phone) iniciarPollChat(phone);
 
   const empty = document.getElementById('chatEmpty');
   const msgs  = document.getElementById('chatMsgs');
@@ -1526,7 +1408,7 @@ window.recarregarChat = function() {
 
 // ── Importar histórico do WhatsApp (.txt export) ──────────────────────────────
 window.abrirImportHistorico = function() {
-  const phone = modoAtivo === 'inbox' ? inboxPhoneAtual : (clienteAtualId ? formatarTelZapi(CLIENTES.find(x=>x.id===clienteAtualId)?.telefone||'') : null);
+  const phone = modoAtivo === 'inbox' ? inboxPhoneAtual : (clienteAtualId ? formatarTelefone55(CLIENTES.find(x=>x.id===clienteAtualId)?.telefone||'') : null);
   if(!phone) { alert('Abra uma conversa antes de importar o histórico.'); return; }
   document.getElementById('importHistoricoTxt').value = '';
   document.getElementById('importHistoricoStatus').textContent = '';
@@ -1534,7 +1416,7 @@ window.abrirImportHistorico = function() {
 };
 
 window.executarImportHistorico = async function() {
-  const phone = modoAtivo === 'inbox' ? inboxPhoneAtual : (clienteAtualId ? formatarTelZapi(CLIENTES.find(x=>x.id===clienteAtualId)?.telefone||'') : null);
+  const phone = modoAtivo === 'inbox' ? inboxPhoneAtual : (clienteAtualId ? formatarTelefone55(CLIENTES.find(x=>x.id===clienteAtualId)?.telefone||'') : null);
   if(!phone) return;
   const txt    = document.getElementById('importHistoricoTxt').value.trim();
   const status = document.getElementById('importHistoricoStatus');
@@ -1592,57 +1474,6 @@ window.executarImportHistorico = async function() {
   }, 1500);
 };
 
-window.enviarMsg = async function() {
-  let phone;
-  if(modoAtivo === 'inbox' && inboxPhoneAtual) {
-    phone = inboxPhoneAtual;
-  } else if(clienteAtualId) {
-    const c = CLIENTES.find(x=>x.id===clienteAtualId);
-    if(!c) return;
-    phone = formatarTelZapi(c.telefone);
-  } else { return; }
-  const input = document.getElementById('chatInput');
-  const texto = input.value.trim();
-  if(!texto || !phone) return;
-
-  const btn = document.getElementById('chatSendBtn');
-  btn.disabled = true;
-  input.disabled = true;
-
-  // Adiciona balão imediatamente (otimista)
-  const msgs = document.getElementById('chatMsgs');
-  document.getElementById('chatEmpty').style.display='none';
-  msgs.style.display='flex';
-  const hora = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  const tmpId = 'tmp-'+Date.now();
-  msgs.innerHTML += `<div class="chat-msg sent chat-sending" id="${tmpId}">${escapeHtml(texto)}<span class="chat-msg-time">${hora} ⏳</span></div>`;
-  msgs.scrollTop = msgs.scrollHeight;
-  input.value = '';
-
-  try {
-    const r = await fetch(`${ZAPI_BASE}/send-text`, {
-      method:'POST',
-      headers: ZAPI_HEADERS,
-      body:JSON.stringify({ phone, message: texto })
-    });
-    if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    // Confirma envio
-    const tmp = document.getElementById(tmpId);
-    if(tmp){ tmp.classList.remove('chat-sending'); tmp.querySelector('.chat-msg-time').textContent = hora+' ✓'; }
-    // Registra último contato
-    if(clienteAtualId) {
-      updateDoc(doc(db,'clientes',clienteAtualId),{ ultimoContato: serverTimestamp() }).catch(()=>{});
-    }
-  } catch(e) {
-    const tmp = document.getElementById(tmpId);
-    if(tmp){ tmp.style.background='#fee2e2'; tmp.querySelector('.chat-msg-time').textContent = '❌ Falha ao enviar'; }
-    alert('Erro ao enviar: '+e.message);
-  } finally {
-    btn.disabled = false;
-    input.disabled = false;
-    input.focus();
-  }
-};
 
 // ── INBOX WhatsApp ────────────────────────────────────────────────────────────
 
@@ -1650,7 +1481,6 @@ window.setModo = function(modo) {
   modoAtivo = modo;
   // Atualiza botões da sidebar
   document.getElementById('modoClientes').classList.toggle('active', modo === 'clientes');
-  document.getElementById('modoInbox').classList.toggle('active', modo === 'inbox');
   document.getElementById('modoPipeline').classList.toggle('active', modo === 'pipeline');
   document.getElementById('modoPainel')?.classList.toggle('active', modo === 'painel');
   // Mostra/oculta quick-filters e header-stats apenas no modo clientes
@@ -1664,73 +1494,19 @@ window.setModo = function(modo) {
   fecharDetalhe();
   const titleEl = document.getElementById('listTitle');
   const countEl = document.getElementById('listCount');
-  if(modo === 'inbox') {
-    if(titleEl) titleEl.textContent = 'WhatsApp Inbox';
-    if(countEl) countEl.textContent = '';
-    carregarInbox();
-  } else if(modo === 'pipeline') {
+  if(modo === 'pipeline') {
     if(titleEl) titleEl.textContent = 'Pipeline de Vendas';
     if(countEl) countEl.textContent = '';
     renderPipeline();
   } else if(modo === 'painel') {
     if(titleEl) titleEl.textContent = 'Painel CRM';
     if(countEl) countEl.textContent = '';
-    if(CHATS.length === 0) {
-      carregarChatsParaPainel();
-    } else {
-      renderPainelCRM();
-    }
+    renderPainelCRM();
   } else {
     filtrar();
   }
 };
 
-async function carregarInbox() {
-  const body = document.getElementById('listBody');
-  body.innerHTML = `<div class="inbox-loading"><div style="font-size:1.5rem">⏳</div>Carregando conversas…</div>`;
-  try {
-    // Busca todas as páginas (Z-API retorna 10 por padrão)
-    let todos = [];
-    const PAGE_SIZE = 50;
-    for(let page = 1; page <= 20; page++) {
-      const r = await fetch(`${ZAPI_BASE}/chats?page=${page}&pageSize=${PAGE_SIZE}`, { headers: ZAPI_HEADERS });
-      if(!r.ok) break;
-      const data = await r.json();
-      const pagina = Array.isArray(data) ? data : (data.chats || data.data || []);
-      todos = todos.concat(pagina);
-      if(pagina.length < PAGE_SIZE) break; // última página
-    }
-    CHATS = todos.filter(c => !c.isGroup);
-    CHATS.sort((a, b) => (Number(b.lastMessageTime)||0) - (Number(a.lastMessageTime)||0));
-    // Atualiza mapa de não lidas
-    CHATS_UNREAD = {};
-    CHATS.forEach(c => { CHATS_UNREAD[c.phone] = Number(c.messagesUnread||c.unread||0); });
-
-    // Busca resumos do Firestore para exibir prévia da última mensagem
-    try {
-      const snap = await getDocs(collection(db, 'conversas_resumo'));
-      snap.forEach(d => {
-        const r = d.data();
-        const chat = CHATS.find(c => c.phone === r.phone);
-        if(chat) {
-          chat.lastMessageBody = r.lastMessage || '';
-          chat.lastFromMe      = r.lastFromMe  ?? false;
-        }
-      });
-    } catch(_) {}
-
-    // Carrega status das conversas
-    try {
-      const snapStatus = await getDocs(collection(db, 'chat_status'));
-      CHAT_STATUS = {};
-      snapStatus.forEach(d=>{ const r=d.data(); if(r.phone) CHAT_STATUS[r.phone]=r.status; });
-    } catch(_){}
-
-    renderInbox(CHATS);
-  } catch(e) {
-    body.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Erro ao carregar inbox</div><div class="empty-sub">${e.message}</div><button class="btn btn-ghost" style="margin-top:.75rem" onclick="setModo('inbox')">Tentar novamente</button></div>`;
-  }
-}
 
 function matchClientePorPhone(phone) {
   const phoneNorm = (phone||'').replace(/\D/g,'');
@@ -1858,7 +1634,6 @@ function renderInbox(chats) {
   body.style.flexDirection = 'column';
   body.style.padding = '0';
 
-  iniciarLazyFotos();
 }
 
 function tempoEspera(chat) {
@@ -1905,44 +1680,7 @@ function atualizarChatStatusBar(phone) {
   if(pinBtn) pinBtn.style.borderColor = CHAT_PINS.has(phone)?'var(--orange)':'var(--border)';
 }
 
-// Cache de fotos por sessão
-const FOTO_CACHE = {};
 
-async function carregarFoto(img) {
-  const phone = img.dataset.phone;
-  if(!phone) return;
-  const isDetalhe = img.id === 'detAvatarImg';
-  const semFoto = () => { if(!isDetalhe) img.remove(); }; // detalhe: mantém oculta
-  if(FOTO_CACHE[phone] === null) { semFoto(); return; }
-  if(FOTO_CACHE[phone]) {
-    img.src = FOTO_CACHE[phone];
-    if(isDetalhe) img.onload = () => img.classList.add('loaded');
-    return;
-  }
-  try {
-    const r = await fetch(`${ZAPI_BASE}/profile-picture?phone=55${phone}`, { headers: ZAPI_HEADERS });
-    if(!r.ok) { FOTO_CACHE[phone] = null; semFoto(); return; }
-    const j = await r.json();
-    const url = j.value || j.profilePictureUrl || j.url || '';
-    if(url) {
-      FOTO_CACHE[phone] = url;
-      img.src = url;
-      if(isDetalhe) img.onload = () => img.classList.add('loaded');
-    } else { FOTO_CACHE[phone] = null; semFoto(); }
-  } catch { FOTO_CACHE[phone] = null; semFoto(); }
-}
-
-function iniciarLazyFotos() {
-  if(!('IntersectionObserver' in window)) return;
-  const obs = new IntersectionObserver((entries, o) => {
-    entries.forEach(e => {
-      if(!e.isIntersecting) return;
-      carregarFoto(e.target);
-      o.unobserve(e.target);
-    });
-  }, { rootMargin: '100px' });
-  document.querySelectorAll('.inbox-avatar img[data-phone]').forEach(img => obs.observe(img));
-}
 
 window.abrirChatInbox = function(phone) {
   inboxPhoneAtual = phone;
@@ -2014,7 +1752,7 @@ function carregarChatByPhone(phone) {
 // ── Helpers de badge ─────────────────────────────────────────────────────────
 
 function temMsgNaoLida(c) {
-  const phone = formatarTelZapi(c.telefone||'');
+  const phone = formatarTelefone55(c.telefone||'');
   return phone ? (CHATS_UNREAD[phone]||0) > 0 : false;
 }
 
@@ -2096,24 +1834,7 @@ window.moverPipeline = async function(clienteId, novoStage) {
 };
 
 // ── Carregar CHATS silenciosamente (para o Painel) ─────────────────────────────
-async function carregarChats() {
-  try {
-    const r = await fetch(`${ZAPI_BASE}/chats?page=1&pageSize=100`, { headers: ZAPI_HEADERS });
-    if(!r.ok) return;
-    const data = await r.json();
-    const pagina = (Array.isArray(data) ? data : (data.chats||data.data||[])).filter(c=>!c.isGroup);
-    CHATS = pagina.sort((a,b)=>(Number(b.lastMessageTime)||0)-(Number(a.lastMessageTime)||0));
-    CHATS_UNREAD = {};
-    CHATS.forEach(c=>{ CHATS_UNREAD[c.phone]=Number(c.messagesUnread||c.unread||0); });
-  } catch(_) {}
-}
 
-window.carregarChatsParaPainel = async function() {
-  const btn = document.getElementById('btnCarregarChats');
-  if(btn){ btn.textContent='⏳ Carregando…'; btn.disabled=true; }
-  await carregarChats();
-  if(modoAtivo==='painel') renderPainelCRM();
-};
 
 // ── Painel CRM ─────────────────────────────────────────────────────────────────
 function renderPainelCRM() {
@@ -2169,11 +1890,7 @@ function renderPainelCRM() {
 
   // ── HTML bloco "precisa do WhatsApp" ──
   const semChatsHtml = `<div class="painel-empty">
-    Dados de conversas ainda não carregados.<br>
-    <button id="btnCarregarChats" onclick="carregarChatsParaPainel()"
-      style="margin-top:.5rem;padding:.35rem .85rem;background:var(--orange);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:.73rem;font-family:'Inter',sans-serif;font-weight:700">
-      Carregar WhatsApp
-    </button>
+    Sem dados de conversas (a integração de WhatsApp foi removida).
   </div>`;
 
   body.innerHTML = `
@@ -2385,35 +2102,6 @@ function renderPainelCRM() {
 
 // ── Importar inbox → CRM ──────────────────────────────────────────────────────
 
-window.importarTodosDoInbox = async function() {
-  const naoMapeados = CHATS.filter(c => !matchClientePorPhone(c.phone));
-  if(!naoMapeados.length){ alert('Todos os contatos já estão no CRM!'); return; }
-  if(!confirm(`Importar ${naoMapeados.length} contatos do WhatsApp para o CRM?\nEles entrarão como "Lead" no pipeline.`)) return;
-
-  const btn = document.getElementById('btnImportarInbox');
-  if(btn){ btn.textContent = '⏳ Importando…'; btn.disabled = true; }
-
-  let criados = 0;
-  for(const chat of naoMapeados) {
-    const phone = chat.phone||'';
-    const nome = (chat.name && chat.name !== phone && chat.name !== '0')
-      ? chat.name : fmtPhone(phone);
-    try {
-      await addDoc(collection(db,'clientes'),{
-        nome, tipo:'PF', telefone:fmtPhone(phone),
-        email:'', cidade:'', estado:'', cpf_cnpj:'',
-        tags:[], notas:[], pipeline:'lead', origem:'importado',
-        criado_em:serverTimestamp(), atualizado_em:serverTimestamp(),
-      });
-      criados++;
-    } catch(_){}
-  }
-
-  if(btn){ btn.disabled = false; }
-  await carregar();
-  renderInbox(CHATS);
-  alert(`✅ ${criados} clientes importados como Lead no Pipeline!`);
-};
 
 // ── Som de notificação + Polling ──────────────────────────────────────────────
 
@@ -2432,95 +2120,7 @@ function tocarNotificacao() {
   } catch(_){}
 }
 
-async function pollInbox() {
-  try {
-    const r = await fetch(`${ZAPI_BASE}/chats?page=1&pageSize=50`, { headers: ZAPI_HEADERS });
-    if(!r.ok) return;
-    const data = await r.json();
-    const chats = (Array.isArray(data) ? data : (data.chats||data.data||[])).filter(c=>!c.isGroup);
 
-    let temNova = false;
-    chats.forEach(c => {
-      const unread = Number(c.messagesUnread||c.unread||0);
-      if(unread > 0 && (PREV_UNREAD[c.phone]||0) === 0) temNova = true;
-      PREV_UNREAD[c.phone] = unread;
-      CHATS_UNREAD[c.phone] = unread;
-    });
-
-    if(temNova) {
-      tocarNotificacao();
-      // Atualiza badges sem re-renderizar tudo
-      atualizarContadores();
-      if(modoAtivo==='clientes') filtrar();
-      if(modoAtivo==='inbox') renderInbox(chats.length ? chats : CHATS);
-    }
-  } catch(_){}
-}
-
-function iniciarPolling() {
-  if(pollingTimer) clearInterval(pollingTimer);
-  pollingTimer = setInterval(pollInbox, 10000); // a cada 10 segundos
-}
-
-// ── Polling de mensagens do chat aberto ──────────────────────────────────────
-function iniciarPollChat(phone) {
-  pararPollChat();
-  chatPollTs = 0;
-  // Busca imediata + a cada 8 segundos
-  pollMensagensChat(phone);
-  chatPollTimer = setInterval(() => pollMensagensChat(phone), 8000);
-}
-
-function pararPollChat() {
-  if(chatPollTimer) { clearInterval(chatPollTimer); chatPollTimer = null; }
-  chatPollTs = 0;
-}
-
-async function pollMensagensChat(phone) {
-  if(!phone) return;
-  try {
-    // Tenta endpoint de mensagens do Z-API
-    const r = await fetch(`${ZAPI_BASE}/messages?phone=${phone}&page=1&pageSize=30`, { headers: ZAPI_HEADERS });
-    if(!r.ok) return;
-    const json = await r.json();
-    const lista = Array.isArray(json) ? json : (json.messages || json.data || json.chats || []);
-    if(!lista.length) return;
-
-    // Filtra apenas mensagens mais novas que o último timestamp conhecido
-    const novas = lista.filter(m => {
-      const ts = Number(m.momment || m.timestamp || m.messageTimestamp || 0);
-      const tsMs = ts < 1e12 ? ts * 1000 : ts;
-      return tsMs > chatPollTs;
-    });
-    if(!novas.length) return;
-
-    // Atualiza timestamp máximo
-    chatPollTs = Math.max(...novas.map(m => {
-      const ts = Number(m.momment || m.timestamp || m.messageTimestamp || 0);
-      return ts < 1e12 ? ts * 1000 : ts;
-    }));
-
-    // Salva no Firestore — onSnapshot atualiza o UI automaticamente
-    const colRef = collection(db, `conversas/${phone}/msgs`);
-    for(const msg of novas) {
-      const ts = Number(msg.momment || msg.timestamp || msg.messageTimestamp || 0);
-      const tsMs = ts < 1e12 ? ts * 1000 : ts;
-      try {
-        await addDoc(colRef, {
-          phone,
-          fromMe:      msg.fromMe ?? msg.isFromMe ?? false,
-          message:     msg.text?.message || msg.message || msg.body || msg.caption || '',
-          momment:     tsMs,
-          senderName:  msg.senderName || msg.pushName || '',
-          msgId:       msg.messageId || msg.id || `poll-${phone}-${tsMs}`,
-          criadoEm:    new Date().toISOString(),
-        });
-      } catch(_) {}
-    }
-  } catch(e) {
-    // Silencioso — endpoint pode não existir na versão do Z-API
-  }
-}
 
 // ── Modal Criar/Editar ────────────────────────────────────────────────────────
 window.abrirModalNovo = function() {
@@ -2720,8 +2320,6 @@ window.setModo = function(modo) {
 };
 
 carregar();
-checkZapiStatus();
-iniciarPolling();
 
 /// ── Listener global: notifica qualquer mensagem nova recebida ─────────────────
 function iniciarListenerGlobal() {

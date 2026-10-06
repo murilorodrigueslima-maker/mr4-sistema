@@ -105,12 +105,17 @@ describe('Segredos e GestãoClick', () => {
     const out = execFileSync(process.execPath, ['--input-type=module', '-e', code]).toString().trim();
     expect(JSON.parse(out)).toEqual([410, 410, 410]);
   });
-  test('ZAPI_SCOPE=UNCHANGED: clientes.html não foi tocado por este hotfix', () => {
-    // o hotfix não altera modulos/clientes.html (P0 da Z-API é tratado em outro trabalho)
-    const { execFileSync } = require('child_process');
-    let alterado = '';
-    try { alterado = execFileSync('git', ['-C', ROOT, 'diff', '--name-only', 'd3822fa', '--', 'modulos/clientes.html']).toString().trim(); } catch { alterado = '?'; }
-    expect(alterado).toBe('');
+  test('Z-API removida: nenhuma referência, credencial, URL ou Client-Token no código publicado', () => {
+    // a MR4 abandonou a Z-API (decisão do proprietário, 07/10/2026); o histórico antigo do Git ainda contém as credenciais (pendência separada)
+    const varrer = dir => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap(e => {
+      const rel = dir + '/' + e.name;
+      if (['node_modules', '.git', 'artifacts', 'test'].includes(e.name)) return [];
+      return e.isDirectory() ? varrer(rel) : (/\.(html|js|mjs|json|md|yml|yaml)$/.test(e.name) ? [rel] : []);
+    });
+    const arquivos = ['modulos', 'js', 'worker', 'scripts', 'functions', 'assets', 'tools'].filter(d => fs.existsSync(path.join(ROOT, d))).flatMap(varrer)
+      .concat(['index.html', 'login.html', 'painel-comercial.html'].filter(f => fs.existsSync(path.join(ROOT, f))));
+    const achados = arquivos.filter(f => /z-?api|zapi|api\.z-api\.io|client-?token/i.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+    expect(achados).toEqual([]);
   });
 });
 

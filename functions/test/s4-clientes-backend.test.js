@@ -73,7 +73,7 @@ describe('S4 — pesquisa pontual', () => {
   });
   test('arquivado e inexistente não aparecem; gestão vê completo', async () => {
     expect((await busca(ADE, 'telefone', '85999914444')).resultados).toEqual([]);
-    expect((await busca(ADE, 'telefone', '85900000000')).resultados).toEqual([]);
+    expect((await busca(ADE, 'telefone', '11933330000')).resultados).toEqual([]);
     const g = await busca(GES, 'telefone', '81988882222'); expect(g.resultados[0]).toMatchObject({ id: 's4c2', vinculo: 'GESTAO', notas: [{ texto: 'segredo da Fabiana' }] });
   });
   test('máximo de resultados e limite por hora (anti-enumeração) — 429 depois de 40 buscas', async () => {

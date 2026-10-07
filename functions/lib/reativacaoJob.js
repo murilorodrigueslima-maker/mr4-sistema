@@ -19,7 +19,7 @@ async function executarReativacaoDiaria(store, FieldValue, { hoje, agoraIso, for
     const r = await OPS.liberarReserva(store, FieldValue, { chave: it.chave, portfolioId: it.portfolioId, ciclo: it.ciclo, tipo: it.tipo, ownerUid: it.ownerUid, destinoUid: it.destinoUid, liberadoEm: hoje, prioridade: it.prioridade, agoraIso });
     criadas.push({ chave: it.chave, repetido: r.repetido });
   }
-  const expiradas = await OPS.expirarReservas(store, hoje);
+  const expiradas = await OPS.expirarReservas(store, hoje, FieldValue);
   return { status: 'ATIVO', criadas: criadas.filter(c => !c.repetido).length, repetidas: criadas.filter(c => c.repetido).length, expiradas, plano: { ...plano, liberar: undefined } };
 }
 module.exports = { executarReativacaoDiaria, FORCAR_DRY, REF_CONFIG };

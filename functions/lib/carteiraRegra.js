@@ -258,6 +258,8 @@ async function processarVendaCarteira(store, { vendaId, agoraIso, regraDoc, forc
       : decidirVendaCarteira({ carteira, anteriores, venda, vendedor: { ...rv, situacao: sitVendedor }, dono, regra });
 
     if (!sombra && ALTERA_CARTEIRA.includes(d.decisao)) {                               // SÓ modo ATIVO
+      // B3.1: exclusão mútua — R2 só escreve ownership se carteira_comercial_config/motor.motorAtivo === 'R2'
+      if (!require('./motorCarteira').podeEscreverOwnership(await require('./motorCarteira').motorNaTx(tx, store), 'R2')) throw new Error('MOTOR_R2_NAO_AUTORIZADO');
       const versao = ((carteira && carteira.versao) || 0) + 1;
       const tipoEvento = d.decisao === DECISOES.TRANSFERIR_R2 ? 'REATIVACAO_120D_PRIMEIRA_VENDA'
         : d.decisao === DECISOES.CRIAR_PRIMEIRA_VENDA ? 'CARTEIRA_CRIADA_PRIMEIRA_VENDA' : 'CARTEIRA_CRIADA_REATIVACAO';

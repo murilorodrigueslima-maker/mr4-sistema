@@ -129,4 +129,4 @@ async function resolverConflito(store, FieldValue, p) {
     return { doc: { ...antes, status: 'ATIVA', conflito: { ...antes.conflito, revisao: 'RESOLVIDO' }, atualizadoEm: agoraIso, versao: antes.versao + 1 } };
   } });
 }
-module.exports = { autorizarRevisor, criarCarteira, transferir, reativar, renovarCiclo, liberar, resolverConflito, COLL, COLL_HIST };
+module.exports = { aplicar, exigir, ownerValido, autorizarRevisor, criarCarteira, transferir, reativar, renovarCiclo, liberar, resolverConflito, COLL, COLL_HIST };

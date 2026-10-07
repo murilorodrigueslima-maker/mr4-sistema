@@ -69,6 +69,9 @@ async function escopoVendedor(store, uid, wl, estados) {
     const tocou = (e.claimAtual && e.claimAtual.operadorId === uid) || ((e.eventos || []).some(x => x && x.operadorId === uid));
     if (tocou) ents.add(e.commercialEntityId);
   }
+  // B3.1: reservas de reativação ATIVAS do próprio vendedor autorizam abrir o cliente (reserva ≠ ownership)
+  const rs = await store.collection('carteira_reativacoes').where('destinoUid', '==', uid).where('estado', '==', 'RESERVADA').get();
+  rs.docs.forEach(d => ents.add('GC_NATIVE:' + String(d.data().portfolioId).slice(3)));
   return ents;
 }
 
@@ -88,7 +91,7 @@ async function vendasDoCliente(store, gcId) {
   if (/^\d+$/.test(gcId)) consultas.push(col.where('cliente_id', '==', Number(gcId)).select(...CAMPOS_VENDA).get());
   const snaps = await Promise.all(consultas);
   const porId = new Map();
-  for (const s of snaps) for (const d of s.docs) porId.set(d.id, d.data());
+  for (const s of snaps) for (const d of s.docs) porId.set(d.id, { id: d.id, ...d.data() });      // B3.1: id do documento como fallback (campo `id` pode faltar no espelho)
   return [...porId.values()];
 }
 
@@ -328,12 +331,36 @@ async function consultarIndicadores(store, acesso, vendedorUid, agoraIso) {
  * a própria worklist e as oportunidades dele (na própria worklist, claim próprio ou retorno dele). Eventos de outros operadores
  * em oportunidades compartilhadas são reduzidos ao mínimo (sem operador real, sem meta/nota).
  */
+/** B3.1 — itens de reativação (reservas ATIVAS) no formato dos cartões da worklist. Sem PII além do nome de exibição já usado na fila. */
+async function itensReativacao(store, reservas, hojeYmd) {
+  const R = require('./reativacao120'); const out = [];
+  for (const d of reservas) {
+    const rv = d.data(); const gc = String(rv.portfolioId).slice(3);
+    const [vs, rst] = await Promise.all([vendasDoCliente(store, gc), store.collection('carteira_comercial_restricoes').doc(rv.portfolioId).get()]);
+    const val = R.validas(vs.map(v => ({ ...v })), hojeYmd); const ult = val.length ? String(val[val.length - 1].data).slice(0, 10) : null;
+    const dias = ult ? Math.round((Date.parse(hojeYmd + 'T12:00:00Z') - Date.parse(ult + 'T12:00:00Z')) / 86400000) : null;
+    const semCarteira = rv.tipo === 'SEM_CARTEIRA'; const fim = rv.followUpAte && rv.followUpAte > rv.reservaAte ? rv.followUpAte : rv.reservaAte;
+    out.push({ opportunityInstanceId: rv.opportunityInstanceId, commercialEntityId: 'GC_NATIVE:' + gc, tipoOportunidade: 'REATIVACAO_120D', nomeCliente: rv.nomeCliente || 'Cliente',
+      contextoComercial: { versao: 'V1', rotuloTipo: semCarteira ? 'Reativação 120 dias · sem carteira' : 'Reativação 120 dias',
+        motivo: semCarteira ? 'Cliente sem carteira há mais de 120 dias. A reserva NÃO cria carteira: ela nasce só com a sua primeira venda válida.' : 'Cliente de outra carteira com mais de 120 dias sem comprar. A carteira só muda se você fizer uma venda válida até o fim da reserva.',
+        historico: { ultimaCompraEm: ult, diasSemComprar: dias, pedidosTotal: val.length } },
+      reativacao: { chave: rv.chave, semCarteira, reservaAte: fim, followUpAte: rv.followUpAte || null, estado: rv.estado, bloqueadoContato: rst.exists && rst.data().naoContatar === true } });
+  }
+  return out;
+}
 async function consultarFila(store, acesso) {
   const [wlSnap, intSnap] = await Promise.all([store.collection('fila_comercial').doc('worklist').get(), store.collection('interacoes_fila').get()]);
   const wl = wlSnap.exists ? wlSnap.data() : null;
   const estados = intSnap.docs.map(d => d.data());
-  if (acesso.gestao) return { escopo: 'GESTAO', worklist: wl, interacoes: estados };
+  const hojeYmd = T.diaComercial(new Date().toISOString());
+  if (acesso.gestao) {
+    const todas = await store.collection('carteira_reativacoes').where('estado', '==', 'RESERVADA').get();
+    return { escopo: 'GESTAO', worklist: wl, interacoes: estados, reativacoes: (await itensReativacao(store, todas.docs, hojeYmd)).map((it, i) => ({ ...it, destinoUid: todas.docs[i].data().destinoUid })) };
+  }
   const uid = acesso.uid;
+  const minhasReservas = await store.collection('carteira_reativacoes').where('destinoUid', '==', uid).where('estado', '==', 'RESERVADA').get();
+  const reativacoes = await itensReativacao(store, minhasReservas.docs, hojeYmd);
+  const oppsReativ = new Set(reativacoes.map(r => r.opportunityInstanceId));
   let worklist = null;
   const minhasOpps = new Set();
   if (wl) {
@@ -348,11 +375,11 @@ async function consultarFila(store, acesso) {
   for (const e of estados) {
     const ult = outcomes(e).slice(-1)[0];
     const meu = (e.claimAtual && e.claimAtual.operadorId === uid) || (ult && ult.operadorId === uid && e.estado !== 'CONCLUIDA' && e.nextFollowUpAt);
-    if (!meu && !minhasOpps.has(e.opportunityInstanceId)) continue;
+    if (!meu && !minhasOpps.has(e.opportunityInstanceId) && !oppsReativ.has(e.opportunityInstanceId)) continue;
     const claim = e.claimAtual && e.claimAtual.operadorId !== uid ? { ...e.claimAtual, operadorId: 'OUTRO' } : e.claimAtual;
     interacoes.push({ ...e, claimAtual: claim, eventos: (e.eventos || []).map(x => (x && x.operadorId && x.operadorId !== uid ? { tipo: x.tipo, outcome: x.outcome, timestamp: x.timestamp, operadorId: 'OUTRO' } : x)) });
   }
-  return { escopo: 'VENDEDOR', worklist, interacoes };
+  return { escopo: 'VENDEDOR', worklist, interacoes, reativacoes };
 }
 
 async function crmConsulta(store, { operadorUid, data, agoraIso }) {

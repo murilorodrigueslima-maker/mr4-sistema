@@ -903,6 +903,11 @@ exports.releaseOpportunity = onCall({ region: REGION }, req => releaseOpportunit
 const { crmConsultaHandler } = require('./lib/crmConsulta');
 exports.crmConsulta        = onCall({ region: REGION }, req => crmConsultaHandler(req));
 
+// B3.1 — gestão da reativação (NÃO CONTATAR, devoluções, reversão). Inativa até receber dados: não cria oportunidades nem muda owner sozinha.
+const { reativacaoGestaoHandler } = require('./lib/reativacaoGestaoCallable');
+exports.crmReativacaoGestao = onCall({ region: REGION }, req => reativacaoGestaoHandler(req));
+
+
 // AI Gateway interno — Agente Comercial (Fase 1). Chamada ao provedor SOMENTE aqui (chave no Secret Manager). Sem ferramentas de escrita.
 const { aiAgenteHandler } = require('./lib/ai/gateway/gateway');
 exports.aiAgente = onCall({ region: REGION, secrets: ['OPENAI_API_KEY'], timeoutSeconds: 60, memory: '512MiB', maxInstances: 5 }, req => aiAgenteHandler(req));

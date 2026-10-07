@@ -4,11 +4,11 @@ const R = require('./reativacao120');
 const { normalizeGestaoClickId } = require('./commercialIdentity');
 
 async function carregarContexto(store, { hoje, conflitosGcExtra }) {
-  const [cartSnap, userSnap, sisSnap, vendSnap, intSnap, cliSnap, resSnap, restrSnap, devSnap] = await Promise.all([
+  const [cartSnap, userSnap, sisSnap, vendSnap, intSnap, cliSnap, resSnap, restrSnap, devSnap, regSnap] = await Promise.all([
     store.collection('carteira_comercial').get(), store.collection('users').get(), store.collection('sistema_usuarios').get(),
     store.collection('vendas_gc').select('cliente_id', 'data', 'vendedor_id', 'nome_situacao', 'valor_total').get(), store.collection('interacoes_fila').get(),
     store.collection('clientes').select('gestaoClickId').get(), store.collection('carteira_reativacoes').get(),
-    store.collection('carteira_comercial_restricoes').get(), store.collection('carteira_comercial_devolucoes').get(),
+    store.collection('carteira_comercial_restricoes').get(), store.collection('carteira_comercial_devolucoes').get(), store.collection('identidade_conflitos').where('status', '==', 'PENDENTE').get(),
   ]);
   const users = new Map(userSnap.docs.map(d => [d.id, d.data()]));
   const configs = sisSnap.docs.filter(d => d.data().carteiraComercial).map(d => ({ uid: d.id, user: users.get(d.id) || null, sistema: d.data() }));
@@ -30,10 +30,11 @@ async function carregarContexto(store, { hoje, conflitosGcExtra }) {
   // conflitos: carteiras EM_REVISAO + irmãos citados + (opcional) grupos só-sem-carteira detectados fora (GC)
   const conflitosGc = new Set(conflitosGcExtra || []);
   for (const [id, c] of carteiras) if (c.conflito && c.conflito.revisao === 'PENDENTE') { conflitosGc.add(id.slice(3)); (c.conflito.relacionados || []).forEach(r => conflitosGc.add(String(r).slice(3))); }
+  regSnap.docs.forEach(d => (d.data().membros || []).forEach(m => conflitosGc.add(String(m).replace(/^GC:/, ''))));       // B3.1-E: registro persistente de conflitos
   const reservasExistentes = new Map(resSnap.docs.map(d => [d.data().chave, d.data()]));
   const naoContatar = new Set(restrSnap.docs.filter(d => d.data().naoContatar === true).map(d => d.id.replace(/^GC:/, '')));
-  const devolucoes = new Map(devSnap.docs.map(d => [String(d.data().vendaId), d.data().tipo]));
+  const devolucoes = new Map(); devSnap.docs.forEach(d => { const x = d.data(); if (devolucoes.get(String(x.vendaId)) !== 'TOTAL') devolucoes.set(String(x.vendaId), x.tipo); });
   return { carteiras, vend, vendasPorCliente, semCarteira, cooldowns, followUps, conflitosGc, reservasExistentes, naoContatar, devolucoes,
-    fontes: { naoContatar: !restrSnap.empty ? 'PRESENTE' : 'AUSENTE_OU_VAZIA', devolucoes: !devSnap.empty ? 'PRESENTE' : 'AUSENTE_OU_VAZIA' } };
+    fontes: { naoContatar: !restrSnap.empty ? 'PRESENTE' : 'AUSENTE_OU_VAZIA', devolucoes: !devSnap.empty ? 'PRESENTE' : 'AUSENTE_OU_VAZIA', conflitosRegistrados: regSnap.size } };
 }
 module.exports = { carregarContexto };

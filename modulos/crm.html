@@ -265,6 +265,7 @@ function renderKpis() {
 }
 
 const SECOES = [
+  ['reativacoes', 'Reativação (120 dias)', 'reativacao', 'Nenhuma reativação reservada para você.'],
   ['atrasados', 'Atrasados', 'atrasado', 'Nenhum retorno atrasado.'],
   ['retornosHoje', 'Retornos de hoje', 'hoje', 'Nenhum retorno para hoje.'],
   ['emAtendimento', 'Em atendimento', 'andamento', 'Nada em atendimento agora.'],
@@ -279,13 +280,13 @@ function renderHoje() {
     renderKpis(); return;
   }
   const agoraMs = Date.now();
-  S.visao = V.montarHoje({ doc: S.doc, opMap: S.opMap, uid: S.uid, hoje: hoje(), agoraMs, podeOperar: S.podeOperar });
+  S.visao = V.montarHoje({ doc: S.doc, opMap: S.opMap, uid: S.uid, hoje: hoje(), agoraMs, podeOperar: S.podeOperar, reativacoes: S.reativacoes || [] });
   const v = S.visao;
   document.getElementById('avisoHoje').innerHTML = v.worklistDeHoje ? '' :
     '<div class="aviso">A lista de hoje ainda não foi gerada (ela sai às 06:00, de segunda a sexta). Abaixo aparecem só os seus retornos.</div>';
   const html = SECOES.map(([k, titulo, cls, vazio]) => {
     const itens = v[k] || [];
-    if (k === 'trabalhadasHoje' && !itens.length) return '';
+    if ((k === 'trabalhadasHoje' || k === 'reativacoes') && !itens.length) return '';
     return `<section class="sec ${k}"><div class="sec-h"><h2>${titulo}</h2><span class="n">${itens.length}</span></div>`
       + (itens.length ? `<div class="grid">${itens.map(x => cartao(x, cls)).join('')}</div>` : `<div class="sec-vazia">${vazio}</div>`) + '</section>';
   }).join('');
@@ -299,7 +300,8 @@ function cartao(v, cls) {
   const m = V.modeloCartao(v, op, S.extras[v.item.commercialEntityId]);
   const id = m.opportunityInstanceId, e = v.estado || {};
   const aberto = S.sel[id], enviando = S.enviando.has(id);
-  const ativo = e.podeIniciar || e.podeRegistrar;
+  const rt = v.item.reativacao || null;                                                       // B3.1: oportunidade de reativação (reserva ≠ ownership)
+  const ativo = (e.podeIniciar || e.podeRegistrar) && !(rt && rt.bloqueadoContato);
   const dados = m.linhas.map(l => `<span>${esc(l.k)} <b>${esc(l.v)}</b></span>`).join('');
   const hist = [
     m.ultimoResultado ? `<span>Último: <b>${esc(m.ultimoResultado.rotulo)}</b> · ${esc(V.rotuloDia(V.dataComercial(new Date(m.ultimoResultado.em)), hoje()))} ${esc(V.horaBR(m.ultimoResultado.em))}</span>` : '',
@@ -316,6 +318,7 @@ function cartao(v, cls) {
   acoes += `<button class="btn link" data-a="cliente" data-ent="${esc(m.entidade)}">Ver cliente</button>`;
   return `<article class="card ${cls}" data-id="${esc(id)}">
     <div class="card-top"><div class="card-nome">${esc(m.nome)}</div>${m.altoValor ? '<span class="pill valor">alto valor</span>' : ''}${m.tipo ? `<span class="pill">${esc(m.tipo)}</span>` : ''}</div>
+    ${rt ? `<div class="hist">${rt.semCarteira ? '<span class="pill">Sem carteira — a reserva não cria carteira</span>' : '<span class="pill">Carteira de outro vendedor — só muda com venda válida na reserva</span>'}<span>Reserva até <b>${esc(V.dataBR(rt.reservaAte))}</b></span>${rt.followUpAte ? `<span>Follow-up até <b>${esc(V.dataBR(rt.followUpAte))}</b></span>` : ''}${rt.bloqueadoContato ? '<span class="pill valor">NÃO CONTATAR — bloqueado pela gestão</span>' : ''}</div>` : ''}
     ${m.motivo ? `<div class="motivo">${esc(m.motivo)}</div>` : ''}
     ${dados ? `<div class="dados">${dados}</div>` : ''}
     ${hist ? `<div class="hist">${hist}</div>` : ''}
@@ -329,11 +332,13 @@ function painelRegistro(id) {
   const sel = S.sel[id] || {}, h = hoje(), lim = V.limitesRetorno(h);
   const nota = V.validarNota(sel.nota || '');
   const r = V.RESULTADOS.find(x => x.codigo === sel.resultado);
-  const podeSalvar = r && nota.ok && (!r.exigeData || (sel.data && sel.data >= lim.min && sel.data <= lim.max)) && !S.enviando.has(id);
+  const ehReativ = !!((S.visao && S.visao.reativacoes) || []).find(x => x.item.opportunityInstanceId === id);
+  const exigeMotivo = ehReativ && r && r.exigeData;                                          // B3.1: follow-up de reativação exige data futura + motivo real
+  const podeSalvar = r && nota.ok && (!exigeMotivo || nota.tamanho >= 5) && (!r.exigeData || (sel.data && sel.data >= lim.min && sel.data <= lim.max)) && !S.enviando.has(id);
   return `<div class="reg" data-reg="${esc(id)}">
     <div class="chips">${V.RESULTADOS.map(x => `<button class="chip" data-a="res" data-id="${esc(id)}" data-res="${x.codigo}" aria-pressed="${sel.resultado === x.codigo}">${esc(x.rotulo)}</button>`).join('')}</div>
     ${r && r.exigeData ? `<div><label for="dt-${esc(id)}">Retornar em</label><br><input type="date" id="dt-${esc(id)}" data-a="data" data-id="${esc(id)}" min="${lim.min}" max="${lim.max}" value="${esc(sel.data || '')}"></div>` : ''}
-    <div><label for="nt-${esc(id)}">Observação (opcional)</label>
+    <div><label for="nt-${esc(id)}">${exigeMotivo ? 'Motivo do follow-up (obrigatório)' : 'Observação (opcional)'}</label>
       <textarea id="nt-${esc(id)}" data-a="nota" data-id="${esc(id)}" maxlength="400" placeholder="Ex.: estoque alto de LED, pediu para ver multimídia no mês que vem">${esc(sel.nota || '')}</textarea>
       <div class="cont ${nota.ok ? '' : 'excede'}" id="ct-${esc(id)}">${nota.tamanho}/${V.NOTA_MAX}</div></div>
     ${S.erros[id] ? `<div class="erro">${esc(S.erros[id])}</div>` : ''}
@@ -389,6 +394,7 @@ async function carregarFila(primeira) {
     const r = await fnConsulta({ acao: 'fila' });
     S.doc = (r.data && r.data.worklist) || null;
     S.opMap = new Map(((r.data && r.data.interacoes) || []).map(e => [e.opportunityInstanceId, e]));
+    S.reativacoes = (r.data && r.data.escopo === 'VENDEDOR' && r.data.reativacoes) || [];     // B3.1: reservas de reativação (só as minhas)
   } catch (e) { console.warn('[crm] fila:', e.code || e.message); if (primeira) toast('Não foi possível carregar a lista de hoje.', true); }
   finally { _carregandoFila = false; S.docCarregado = true; S.opCarregado = true; render(); if (_refazerFila) { _refazerFila = false; carregarFila(false); } }
 }

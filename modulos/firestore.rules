@@ -759,6 +759,20 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── B3.1 — registro de conflitos, trilha de NÃO CONTATAR e revisões da gestão (escrita só por backend; leitura só da gestão) ──
+    match /identidade_conflitos/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
+    match /carteira_comercial_restricoes_hist/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
+    match /carteira_comercial_revisoes/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

@@ -61,6 +61,14 @@
       visao.novas.forEach(function (v) { (v.grupoOrigem === 'pendentes' ? out.pendentes : out.novas).push(v); vistos[v.item.opportunityInstanceId] = true; });
       visao.trabalhadasHoje.forEach(function (v) { out.trabalhadasHoje.push(v); vistos[v.item.opportunityInstanceId] = true; });
     }
+    // B3.1 — oportunidades de REATIVAÇÃO (reservas ativas do próprio vendedor), independentes da worklist do dia. Reserva ≠ ownership.
+    out.reativacoes = [];
+    (p.reativacoes || []).forEach(function (item) {
+      if (!item || !item.opportunityInstanceId || vistos[item.opportunityInstanceId]) return;
+      var op = p.opMap && p.opMap.get ? p.opMap.get(item.opportunityInstanceId) : null;
+      out.reativacoes.push({ item: item, grupoOrigem: 'reativacoes', estado: FWV.estadoVisual(op, { uid: uid, hoje: hoje, agoraMs: agoraMs, podeOperar: p.podeOperar }) });
+      vistos[item.opportunityInstanceId] = true;
+    });
     // retornos próprios vencidos que não vieram na worklist do dia (estado real em interacoes_fila)
     if (p.opMap && p.opMap.forEach) {
       p.opMap.forEach(function (op, oppId) {
@@ -74,7 +82,7 @@
     }
     out.atrasados.sort(function (a, b) { return String(a.dataRetorno || '') < String(b.dataRetorno || '') ? -1 : 1; });
     out.contagens = { atrasados: out.atrasados.length, retornosHoje: out.retornosHoje.length, emAtendimento: out.emAtendimento.length,
-      pendentes: out.pendentes.length, novas: out.novas.length, trabalhadasHoje: out.trabalhadasHoje.length };
+      pendentes: out.pendentes.length, novas: out.novas.length, trabalhadasHoje: out.trabalhadasHoje.length, reativacoes: out.reativacoes.length };
     return out;
   }
 

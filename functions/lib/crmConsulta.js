@@ -165,6 +165,7 @@ async function consultarCliente(store, acesso, entidade, agoraIso) {
     if (!permitido) falha('permission-denied', 'CLIENTE_FORA_DO_SEU_ESCOPO');
   }
   estados = await hidratarNotasPrivadas(store, acesso, estados);      // só após a checagem de escopo; só notas permitidas
+  const reservaNome = cli.gcId ? await store.collection('carteira_reativacoes').where('portfolioId', '==', 'GC:' + cli.gcId).where('estado', '==', 'RESERVADA').limit(1).get().then(q => (q.empty ? null : q.docs[0].data().nomeCliente || null)) : null;   // B3.3: nome de exibição da reserva (cliente GC-nativo ainda sem atendimento)
   const [vendas, perfilSnap, cartSnap, histSnap] = await Promise.all([
     vendasDoCliente(store, cli.gcId),
     cli.clienteMr4Id ? store.collection('perfis_360').doc(cli.clienteMr4Id).get() : Promise.resolve(null),
@@ -227,7 +228,7 @@ async function consultarCliente(store, acesso, entidade, agoraIso) {
   const telefone = cad.whatsapp || cad.telefone || cad.celular || null;
   return {
     geradoEm: agoraIso, hoje, podeVerValores,
-    cliente: { entidade, gestaoClickId: cli.gcId, nome: cad.nome || cad.razao_social || (estados[0] && estados[0].nomeCliente) || (cli.gcId ? 'Cliente GC ' + cli.gcId : 'Cliente'),
+    cliente: { entidade, gestaoClickId: cli.gcId, nome: cad.nome || cad.razao_social || (estados[0] && estados[0].nomeCliente) || reservaNome || (cli.gcId ? 'Cliente GC ' + cli.gcId : 'Cliente'),
       cidade: cad.cidade || null, telefone: telefone ? String(telefone) : null,
       responsavelCarteira: carteira ? (nomePorUid[carteira.ownerUid] || 'Vendedor') : null },
     resumo,

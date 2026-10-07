@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-09-24 (P0 fix: Camila dual-role ponto — temAcessoModulo nas collections ponto)
+// Versão: 2026-10-07 (S5: users/sistema_usuarios só escrevem por ADMIN REAL; antes 2026-09-24 Camila dual-role ponto)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -40,6 +40,18 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         meuPerfil().role == 'gestor' &&
         meuPerfil().ativo == true;
+    }
+
+    // S5 (07/10/2026) — ADMIN REAL: único perfil autorizado a conceder/remover privilégios.
+    // Gestor comum NÃO basta: exige users/{uid}.role='gestor' ativo E sistema_usuarios/{uid}.admin == true
+    // (não bloqueado). Usado SÓ nas coleções que controlam autorização (users, sistema_usuarios).
+    // O doc de admin é criado fora das Rules (Admin SDK / console): ninguém se auto-promove por escrita direta.
+    // BILLING: users (cacheado por isGestor) + sistema_usuarios (exists/get no mesmo path = 1 leitura).
+    function isAdminReal() {
+      return isGestor() &&
+        exists(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('admin', false) == true &&
+        get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('bloqueado', false) != true;
     }
 
     // Funcionário ativo: autenticado, role='funcionario', ativo=true
@@ -158,9 +170,11 @@ service cloud.firestore {
 
     // ── Coleção: users ─────────────────────────────────────────────────────────
 
+    // S5: escrita só por ADMIN REAL (gestor comum não altera role/ativo/vínculos de ninguém, nem o próprio).
+    // Criação de contas continua pela Cloud Function criarContaFuncionario (Admin SDK).
     match /users/{uid} {
       allow read: if isAuthed() && (request.auth.uid == uid || isGestor());
-      allow write: if isGestor();
+      allow write: if isAdminReal();
     }
 
     // ── Coleção: funcionarios ──────────────────────────────────────────────────
@@ -295,9 +309,11 @@ service cloud.firestore {
     // Self-read: qualquer usuário autenticado pode ler o próprio perfil
     // (necessário para dual-role: funcionario lê seus próprios módulos).
 
+    // S5: escrita (admin, modulos, bloqueado, filaComercial, carteiraComercial, cargo...) só por ADMIN REAL.
+    // Gestor sem admin==true não concede privilégios a si nem a terceiros.
     match /sistema_usuarios/{uid} {
       allow read: if isAuthed() && (request.auth.uid == uid || isGestor());
-      allow write: if isGestor();
+      allow write: if isAdminReal();
     }
 
     // ── Coleção: produto_equivalentes ──────────────────────────────────────────

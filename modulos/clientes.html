@@ -883,6 +883,7 @@ import {
   getFirestore, collection, collectionGroup, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc,
   query, orderBy, where, limit, serverTimestamp, onSnapshot, Timestamp
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 import { verificarAcessoModulo } from '../js/guard.js';
 
 const app = initializeApp({
@@ -895,6 +896,14 @@ const app = initializeApp({
 });
 const auth = getAuth(app);
 const db   = getFirestore(app);
+const fnConsulta = httpsCallable(getFunctions(app, 'southamerica-east1'), 'crmConsulta');   // S4: leitura do vendedor via backend
+let SOU_GESTOR = null;
+async function descobrirPerfil() {
+  if (SOU_GESTOR !== null) return SOU_GESTOR;
+  await auth.authStateReady();
+  try { const u = await getDoc(doc(db, 'users', auth.currentUser.uid)); SOU_GESTOR = u.exists() && u.data().role === 'gestor'; } catch (_) { SOU_GESTOR = false; }
+  return SOU_GESTOR;
+}
 
 onAuthStateChanged(auth, async u => {
   if(!u){ window.location.href='../login.html'; return; }
@@ -927,6 +936,7 @@ const PIPELINE_STAGES = [
 
 // ── Carregar ──────────────────────────────────────────────────────────────────
 async function carregar() {
+  if (!(await descobrirPerfil())) return carregarVendedor();
   const [snapC, snapG] = await Promise.all([
     getDocs(query(collection(db,'clientes'), orderBy('criado_em','desc'))),
     getDocs(collection(db,'garantias'))
@@ -936,6 +946,43 @@ async function carregar() {
   salvarBackupLocal(); // backup automático sempre que dados são carregados
   atualizarContadores();
   filtrar();
+}
+
+// S4 — vendedor: só a carteira própria (backend) + clientes encontrados por pesquisa pontual; nunca a base inteira.
+let ENCONTRADOS = new Map();
+async function carregarVendedor() {
+  try {
+    const r = await fnConsulta({ acao: 'clientesMeus' });
+    const lista = ((r.data && r.data.clientes) || []);
+    CLIENTES = [...lista, ...[...ENCONTRADOS.values()].filter(e => !lista.some(l => l.id === e.id))];
+    GARANTIAS = [];
+  } catch (e) { console.warn('[clientes] clientesMeus:', e.code || e.message); CLIENTES = [...ENCONTRADOS.values()]; }
+  atualizarContadores(); filtrar();
+  if (!document.getElementById('buscaPontual')) montarBuscaPontual();
+}
+function montarBuscaPontual() {
+  const alvo = document.querySelector('.main-content, main, #app, body');
+  const box = document.createElement('div');
+  box.id = 'buscaPontual';
+  box.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:var(--surface,#fff);border-bottom:1px solid rgba(0,0,0,.08);position:sticky;top:0;z-index:20';
+  box.innerHTML = '<span style="font-weight:600">Localizar cliente</span>' +
+    '<select id="buscaCampo"><option value="telefone">Telefone</option><option value="cpf_cnpj">CPF/CNPJ</option><option value="email">E-mail</option></select>' +
+    '<input id="buscaValor" type="text" maxlength="120" placeholder="valor exato" style="min-width:200px">' +
+    '<button id="buscaBtn" type="button">Buscar</button><span id="buscaMsg" style="font-size:12px;opacity:.75"></span>';
+  alvo.insertBefore(box, alvo.firstChild);
+  const msg = t => { document.getElementById('buscaMsg').textContent = t; };
+  document.getElementById('buscaBtn').onclick = async () => {
+    const campo = document.getElementById('buscaCampo').value, valor = document.getElementById('buscaValor').value.trim();
+    if (!valor) return;
+    msg('Buscando…');
+    try {
+      const r = (await fnConsulta({ acao: 'clienteBusca', campo, valor })).data;
+      r.resultados.forEach(c => ENCONTRADOS.set(c.id, c));
+      CLIENTES = [...CLIENTES.filter(c => !r.resultados.some(x => x.id === c.id)), ...r.resultados];
+      atualizarContadores(); filtrar();
+      msg(r.resultados.length ? `${r.resultados.length} encontrado(s).` : (r.ocupadosPorOutroVendedor ? 'Esse cliente já pertence à carteira de outro vendedor.' : 'Nenhum cliente encontrado.'));
+    } catch (e) { msg(e.code === 'functions/resource-exhausted' ? 'Limite de buscas por hora atingido.' : e.code === 'functions/invalid-argument' ? 'Valor inválido: informe telefone com DDD, CPF/CNPJ completo ou e-mail completo.' : 'Não foi possível buscar agora.'); }
+  };
 }
 
 function atualizarContadores() {

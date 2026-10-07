@@ -50,6 +50,14 @@ describe('B3.3 — piloto: exatamente 5 por vendedor, limites persistentes, só 
   });
 });
 
+describe('B3.3 — cartão e ficha mostram o MESMO nome (inclusive antes de qualquer atendimento)', () => {
+  test('ficha do cliente (360) usa o nome da reserva quando não há cadastro nem atendimento; vendedor sem escopo continua barrado', async () => {
+    await preparar(2); await job({}); const f = await Q.crmConsultaHandler({ auth: { uid: ADE }, data: { acao: 'fila' } }, { db }); const it = f.reativacoes[0];
+    const c = await Q.crmConsultaHandler({ auth: { uid: ADE }, data: { acao: 'cliente', entidade: it.commercialEntityId } }, { db }); expect(c.cliente.nome).toBe(it.nomeCliente); expect(it.nomeCliente).toMatch(/^Cliente /);
+    expect(await erro(Q.crmConsultaHandler({ auth: { uid: ADE }, data: { acao: 'cliente', entidade: 'GC_NATIVE:999999' } }, { db }))).toBe('permission-denied');
+  });
+});
+
 describe('B3.3 — corte por INSTANTE de ativação (nada retroativo)', () => {
   test('vendas cadastradas antes do instante de ativação são ignoradas (mesmo no mesmo dia); depois, processadas', async () => {
     await preparar(2); await db.doc('carteira_comercial/GC:420').set(v2('420', ADE)); const ant = venda(20, 420, HOJE, '222', { cadastrado_em: '2026-10-08 05:59:59' }), dep = venda(21, 420, HOJE, '111', { cadastrado_em: '2026-10-08 06:30:00' }), semTs = venda(22, 420, HOJE, '111');

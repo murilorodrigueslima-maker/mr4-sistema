@@ -66,7 +66,7 @@ const seed = async (col, id, data) => testEnv.withSecurityRulesDisabled(async ct
 // Macro: testa os 4 perfis para uma coleção gestor-only
 // ══════════════════════════════════════════════════════
 
-function suitesGestorOnly(label, col, docId, docData) {
+function suitesGestorOnly(label, col, docId, docData, opts = {}) {
   describe(`${label} — acesso`, () => {
     test(`${col}:A — sem auth NÃO lê`, async () => {
       await seed(col, docId, docData);
@@ -100,9 +100,9 @@ function suitesGestorOnly(label, col, docId, docData) {
       await seed(col, docId, docData);
       await assertSucceeds(db(UID_GESTOR).collection(col).doc(docId).update({ _ts: Date.now() }));
     });
-    test(`${col}:C — gestor deleta`, async () => {
+    test(`${col}:C — gestor ${opts.semDelete ? 'NÃO ' : ''}deleta`, async () => {
       await seed(col, docId, docData);
-      await assertSucceeds(db(UID_GESTOR).collection(col).doc(docId).delete());
+      await (opts.semDelete ? assertFails : assertSucceeds)(db(UID_GESTOR).collection(col).doc(docId).delete());
     });
   });
 }
@@ -193,7 +193,8 @@ suitesGestorOnly(
   'clientes',
   'clientes',
   'cli-001',
-  { nome: 'Cliente CRM', pipeline: 'Lead', criado_em: Date.now() }
+  { nome: 'Cliente CRM', pipeline: 'Lead', criado_em: Date.now() },
+  { semDelete: true } // S3: sem delete físico de cliente
 );
 
 // ══════════════════════════════════════════════════════
@@ -266,7 +267,8 @@ suitesGestorOnly(
   'conversas_resumo',
   'conversas_resumo',
   '5585911110000',
-  { nome: 'Fulano', ultimaMensagem: 'oi', naoLidas: 2 }
+  { nome: 'Fulano', ultimaMensagem: 'oi', naoLidas: 2 },
+  { semDelete: true } // S3
 );
 
 // ══════════════════════════════════════════════════════
@@ -277,5 +279,6 @@ suitesGestorOnly(
   'chat_status',
   'chat_status',
   '5585922220000',
-  { phone: '5585922220000', status: 'connected', atualizadoEm: new Date().toISOString() }
+  { phone: '5585922220000', status: 'connected', atualizadoEm: new Date().toISOString() },
+  { semDelete: true } // S3
 );

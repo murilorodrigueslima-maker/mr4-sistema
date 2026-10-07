@@ -931,7 +931,7 @@ async function carregar() {
     getDocs(query(collection(db,'clientes'), orderBy('criado_em','desc'))),
     getDocs(collection(db,'garantias'))
   ]);
-  CLIENTES = snapC.docs.map(d => ({ id: d.id, ...d.data() }));
+  CLIENTES = snapC.docs.map(d => ({ id: d.id, ...d.data() })).filter(c => c.arquivado !== true);
   GARANTIAS = snapG.docs.map(d => ({ id: d.id, ...d.data() }));
   salvarBackupLocal(); // backup automático sempre que dados são carregados
   atualizarContadores();
@@ -2178,10 +2178,11 @@ window.alterarPipeline = async function(stage) {
 };
 
 window.deletarClienteAtual = async function() {
+  // S3: sem exclusão física (Rules negam delete). "Excluir" = arquivar, preservando vínculo GC e histórico.
   if(!clienteAtualId) return;
   const c = CLIENTES.find(x=>x.id===clienteAtualId);
-  if(!confirm(`Excluir "${c?.nome}"? Esta ação não pode ser desfeita.`)) return;
-  await deleteDoc(doc(db,'clientes',clienteAtualId));
+  if(!confirm(`Arquivar "${c?.nome}"? O cliente sai da lista, mas o histórico é preservado.`)) return;
+  await updateDoc(doc(db,'clientes',clienteAtualId),{ arquivado:true, arquivado_em:new Date().toISOString() });
   fecharDetalhe();
   await carregar();
 };

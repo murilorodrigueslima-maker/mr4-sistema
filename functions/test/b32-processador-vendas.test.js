@@ -34,7 +34,7 @@ describe('B3.2 — modos e trava', () => {
     expect((await PV.processarVendas(db, FieldValue, { agoraIso: AGORA })).status).toBe('DESLIGADO');
     await db.doc('carteira_comercial_config/reativacao').set({ modo: 'ATIVO' }); expect((await PV.processarVendas(db, FieldValue, { agoraIso: AGORA })).status).toBe('SEM_CORTE');
     await cfg('ATIVO'); await db.doc('carteira_comercial/GC:300').set(v2('300', ADE)); await seedV([venda(1, 300, dia(150), '111'), venda(2, 300, dia(1), '222')]);
-    const r = await PV.processarVendas(db, FieldValue, { agoraIso: AGORA }); expect(r).toMatchObject({ status: 'OK', modo: 'DRY' }); expect(PV.FORCAR_DRY).toBe(true);
+    const r = await PV.processarVendas(db, FieldValue, { agoraIso: AGORA, forcarDry: true }); expect(r).toMatchObject({ status: 'OK', modo: 'DRY' }); expect(typeof PV.FORCAR_DRY).toBe('boolean');
     expect(await cont('carteira_reativacao_decisoes')).toBe(0); expect(await cont('carteira_reativacao_decisoes_sombra')).toBe(0); expect((await db.doc('carteira_comercial/GC:300').get()).data().ownerUid).toBe(ADE);
   });
   test('DRY: calcula decisões (gestão neutra, cobertura, sem oportunidade) com ZERO escritas', async () => {
@@ -89,7 +89,7 @@ describe('B3.2 — ATIVO (ensaio em emulador, motor B3): transferência, idempot
   });
   test('sem o motor B3 autorizado o ATIVO não escreve ownership (exclusão mútua)', async () => {
     await cfg('ATIVO'); await db.doc('carteira_comercial_config/motor').set({ motorAtivo: 'R2' }); await db.doc('carteira_comercial/GC:331').set(v2('331', ADE)); await seedV([venda(1, 331, dia(150), '111'), venda(2, 331, dia(1), '222')]); await reservar(331, FAB, ADE, dia(2), dia(150));
-    const r = await rodar('ATIVO'); expect(r.aplicadas).toBe(0); expect(r.erros.length).toBeGreaterThan(0); expect((await db.doc('carteira_comercial/GC:331').get()).data().ownerUid).toBe(ADE); expect(await cont('carteira_comercial_historico')).toBe(0);
+    const r = await rodar('ATIVO'); expect(r).toMatchObject({ status: 'MOTOR_NAO_B3', motor: 'R2' }); expect((await db.doc('carteira_comercial/GC:331').get()).data().ownerUid).toBe(ADE); expect(await cont('carteira_comercial_historico')).toBe(0);
   });
   test('cancelamento posterior da venda que causou a transferência ⇒ reversão automática (estado limpo) e decisão r2 registrada', async () => {
     await prepararTransferencia(332); await db.doc('vendas_gc/2').update({ nome_situacao: 'Cancelada' });

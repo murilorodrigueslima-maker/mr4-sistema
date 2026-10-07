@@ -783,6 +783,31 @@ exports.auditSistemaUsuarios  = onDocumentWrittenWithAuthContext({ document: 'si
 exports.auditClientes         = onDocumentWrittenWithAuthContext({ document: 'clientes/{clienteId}', region: REGION, retry: true }, ev => _aud().clientes(ev));
 exports.auditInteracoesFila   = onDocumentWritten({ document: 'interacoes_fila/{oppId}', region: REGION, retry: true }, ev => _aud().interacoes(ev));
 
+
+// B3.3 — reativação comercial: job diário 06:00 (Fortaleza) e processador de vendas/cancelamentos (de hora em hora). Ambos NASCEM DESLIGADOS:
+// só agem com carteira_comercial_config/reativacao.modo='ATIVO' E carteira_comercial_config/motor.motorAtivo='B3'; verificam a saúde antes de escrever
+// (disjuntor desliga o motor sem apagar nada). Kill switch: scripts/b3_desligar.js.
+exports.reativacaoDiaria = onSchedule({
+  schedule: '0 6 * * *', timeZone: 'America/Fortaleza', region: REGION, timeoutSeconds: 300, memory: '512MiB', retryCount: 0, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
+}, async () => {
+  try {
+    const { executarReativacaoDiaria } = require('./lib/reativacaoJob');
+    const lookupNome = criarLookupNomeGC({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN });
+    const agora = new Date(); const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Fortaleza' }).format(agora);
+    const r = await executarReativacaoDiaria(db, admin.firestore.FieldValue, { hoje, agoraIso: agora.toISOString(), lookupNome });
+    console.log('[reativacao-diaria]', JSON.stringify({ status: r.status, criadas: r.criadas, repetidas: r.repetidas, expiradas: r.expiradas, semNome: r.semNome, violacoes: r.violacoes && r.violacoes.length }));
+  } catch (err) { console.error('[reativacao-diaria] ERRO:', err.message); }
+});
+exports.reativacaoVendas = onSchedule({
+  schedule: '50 * * * *', timeZone: 'America/Fortaleza', region: REGION, timeoutSeconds: 300, memory: '512MiB', retryCount: 0,
+}, async () => {
+  try {
+    const { processarVendas } = require('./lib/reativacaoVendas'); const agora = new Date();
+    const r = await processarVendas(db, admin.firestore.FieldValue, { agoraIso: agora.toISOString(), runId: 'sch-' + agora.toISOString().slice(0, 13) });
+    console.log('[reativacao-vendas]', JSON.stringify({ status: r.status, modo: r.modo, novas: r.novas, aplicadas: r.aplicadas, erros: r.erros && r.erros.length, reversoes: r.reversoes && { executadas: r.reversoes.executadas, ambiguas: r.reversoes.ambiguas } }));
+  } catch (err) { console.error('[reativacao-vendas] ERRO:', err.message); }
+});
+
 exports.concluirRevisaoEspelho = onDocumentUpdated(
   { document: 'espelhos/{espelhoId}', region: REGION, retry: true },
   concluirRevisaoEspelhoHandler,

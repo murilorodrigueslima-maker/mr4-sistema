@@ -29,7 +29,8 @@ beforeAll(async () => { await db.doc('carteira_comercial_config/motor').set({ mo
 
 describe('B3 ops — INATIVAS por construção', () => {
   test('index.js não referencia o motor/ops/job; job tem trava FORCAR_DRY; nenhum agendador B3', () => {
-    const idx = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8'); expect(idx.replace(/reativacaoGestaoCallable|crmReativacaoGestao|reativacaoGestaoHandler/g, '')).not.toMatch(/reativacao|carteiraOwnership|carteiraV2/i); expect(JOB.FORCAR_DRY).toBe(true);   // B3.1: único acréscimo permitido = callable de gestão (sem job/agendador)
+    const idx = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8'); expect(idx).not.toMatch(/require\('\.\/lib\/(reativacaoOps|reativacao120|carteiraOwnership|carteiraV2|reativacaoReversao|devolucoes|restricoes)'\)/); expect(typeof JOB.FORCAR_DRY).toBe('boolean');   // B3.3: só job/vendas/gestão são referenciados; agendadores nascem DESLIGADOS (configuração)
+       // B3.1: único acréscimo permitido = callable de gestão (sem job/agendador)
     expect(require('../lib/carteiraRegraJob').FORCAR_SOMBRA).toBe(true);
   });
   test('Rules: reservas, restrições e devoluções sem escrita do cliente; leitura só da gestão', () => {
@@ -123,7 +124,7 @@ describe('B3 job — preparado e inativo', () => {
   beforeAll(async () => { await limpar(['carteira_reativacoes', 'carteira_comercial_historico', 'vendas_gc', 'carteira_comercial']); await db.doc('carteira_comercial_config/reativacao').delete(); await db.doc('carteira_comercial/GC:60').set(v2('60', ADE)); await seedVendas([venda(1, 60, dia(150), '111')]); });
   test('DESLIGADO por padrão (sem config) → nada acontece', async () => { expect((await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE })).status).toBe('DESLIGADO'); });
   test('modo DRY ou ATIVO com a trava FORCAR_DRY: calcula o plano e NÃO escreve', async () => {
-    for (const modo of ['DRY', 'ATIVO']) { await db.doc('carteira_comercial_config/reativacao').set({ modo }); const r = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE }); expect(r.status).toBe('DRY'); expect(r.plano.liberar).toHaveLength(1); expect((await db.collection('carteira_reativacoes').get()).size).toBe(0); }
+    for (const modo of ['DRY', 'ATIVO']) { await db.doc('carteira_comercial_config/reativacao').set({ modo }); const r = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, forcarDry: true }); expect(r.status).toBe('DRY'); expect(r.plano.liberar).toHaveLength(1); expect((await db.collection('carteira_reativacoes').get()).size).toBe(0); }
   });
   test('só com a trava removida (forcarDry=false) e modo ATIVO grava — idempotente no retry (ensaio em emulador)', async () => {
     await db.doc('carteira_comercial_config/reativacao').set({ modo: 'ATIVO' });

@@ -29,6 +29,7 @@ async function liberarReserva(store, FieldValue, p) {
     if (s.exists) { res = { repetido: true, id: ref.id }; return; }
     const cart = c.exists ? c.data() : null;
     exigir(doDia.size < limite, 'resource-exhausted', 'LIMITE_DIARIO_DO_VENDEDOR');
+    if (Number.isFinite(p.maxAtivas)) { const at = await tx.get(store.collection(COLL).where('destinoUid', '==', p.destinoUid).where('estado', '==', 'RESERVADA')); exigir(at.size < p.maxAtivas, 'resource-exhausted', 'LIMITE_DE_RESERVAS_ATIVAS_DO_PILOTO'); }
     exigir(!(rst.exists && rst.data().naoContatar === true), 'failed-precondition', 'CLIENTE_NAO_CONTATAR');
     exigir(regs.empty, 'failed-precondition', 'CLIENTE_EM_CONFLITO_DE_IDENTIDADE');
     // cliente sem carteira: somente UM vendedor reservado por vez (a chave do ciclo já garante; conferimos reservas ativas do mesmo cliente)

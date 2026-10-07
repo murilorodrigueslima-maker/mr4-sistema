@@ -136,6 +136,12 @@ function montarTimeline({ estados = [], vendas = [], atribuicoes = [], carteiraH
     const t = String(h.tipoEvento || '');
     const titulo = t.startsWith('CARTEIRA_CRIADA') ? 'Carteira criada para ' + (nome(h.ownerNovoUid) || 'vendedor')
       : t === 'ATRIBUICAO_INICIAL_REVERTIDA' ? 'Atribuição de carteira revertida'
+      // B2 (histórico v2): eventos que NÃO trocam o dono não podem aparecer como transferência
+      : t === 'RENOVACAO_CICLO' ? 'Ciclo da carteira renovado'
+      : t === 'CONFLITO_ABERTO' ? 'Cadastro em revisão de identidade (dono mantido)'
+      : t === 'CONFLITO_RESOLVIDO' ? 'Revisão de identidade concluída (dono mantido)'
+      : t === 'MIGRATED_BASELINE' ? 'Estado inicial da carteira migrado'
+      : t === 'LIBERACAO' ? 'Carteira liberada'
       : 'Carteira passou para ' + (nome(h.ownerNovoUid) || 'vendedor');
     ev.push({ quando: typeof h.criadoEm === 'string' ? h.criadoEm : String(h.criadoEm), precisao: 'HORA', ator: 'SISTEMA', tipo: 'CARTEIRA', titulo });
   }

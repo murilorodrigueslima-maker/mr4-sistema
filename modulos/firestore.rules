@@ -513,7 +513,9 @@ service cloud.firestore {
       allow read:   if isGestor() || temAcessoModulo('clientes');
       allow create: if (isGestor() || temAcessoModulo('clientes')) && noGcFieldsOnCreate();
       allow update: if (isGestor() || temAcessoModulo('clientes')) && gcFieldsIntact();
-      allow delete: if isGestor() || temAcessoModulo('clientes');
+      // S3 (07/10/2026): SEM delete físico por ninguém no cliente. Cliente carrega vínculo GC,
+      // titularidade e histórico comercial; remoção = arquivar (update arquivado=true).
+      allow delete: if false;
     }
 
     // ── Coleção: conversas (e subcoleção msgs) ─────────────────────────────────
@@ -521,10 +523,13 @@ service cloud.firestore {
     // conversas/{phone} — documento raiz (metadados, se existir).
     // conversas/{phone}/msgs/{msgId} — mensagens da conversa.
 
+    // S3: histórico de conversa é append-only para o cliente — sem delete; mensagem é imutável (create-only).
     match /conversas/{phone} {
-      allow read, write: if isGestor() || temAcessoModulo('clientes');
+      allow read, create, update: if isGestor() || temAcessoModulo('clientes');
+      allow delete: if false;
       match /msgs/{msgId} {
-        allow read, write: if isGestor() || temAcessoModulo('clientes');
+        allow read, create: if isGestor() || temAcessoModulo('clientes');
+        allow update, delete: if false;
       }
     }
 
@@ -532,14 +537,16 @@ service cloud.firestore {
     // Resumos de conversas para exibição no painel de inbox.
 
     match /conversas_resumo/{phone} {
-      allow read, write: if isGestor() || temAcessoModulo('clientes');
+      allow read, create, update: if isGestor() || temAcessoModulo('clientes');
+      allow delete: if false;   // S3
     }
 
     // ── Coleção: chat_status ───────────────────────────────────────────────────
     // Status de conexão do WhatsApp por número de telefone.
 
     match /chat_status/{phone} {
-      allow read, write: if isGestor() || temAcessoModulo('clientes');
+      allow read, create, update: if isGestor() || temAcessoModulo('clientes');
+      allow delete: if false;   // S3
     }
 
     // ── Coleção: display_metrics ───────────────────────────────────────────────

@@ -191,16 +191,16 @@ describe('GC-RULE10 — gestor tenta remover gestaoClickId com deleteField()', (
 
 // ── GC-RULE11, GC-RULE12 — Delete ─────────────────────────────────────────────
 describe('GC-RULE11 — gestor deleta cliente-unlinked', () => {
-  test('delete de cliente sem vínculo GC é permitido', async () => {
-    await assertSucceeds(
+  test('S3: delete de cliente sem vínculo GC é NEGADO (arquivar em vez de excluir)', async () => {
+    await assertFails(
       db(UID_GESTOR).collection('clientes').doc(DOC_UNLINKED).delete()
     );
   });
 });
 
 describe('GC-RULE12 — gestor deleta cliente-linked', () => {
-  test('delete de cliente com vínculo GC é permitido (controle por política, não Rules)', async () => {
-    await assertSucceeds(
+  test('S3: delete de cliente com vínculo GC é NEGADO', async () => {
+    await assertFails(
       db(UID_GESTOR).collection('clientes').doc(DOC_LINKED).delete()
     );
   });

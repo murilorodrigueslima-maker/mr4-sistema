@@ -175,8 +175,8 @@ describe('CM-C — Camila (admin=true)', () => {
   test('CM-C2: Camila LÊ garantias', async () => {
     await assertSucceeds(db(UID_CAMILA).collection('garantias').doc('doc-c2').get());
   });
-  test('CM-C3: Camila LÊ clientes', async () => {
-    await assertSucceeds(db(UID_CAMILA).collection('clientes').doc('doc-c3').get());
+  test('CM-C3 (S4): Camila (admin-flag, não gestor) NÃO lê clientes direto — legado só para a gestão (role gestor)', async () => {
+    await assertFails(db(UID_CAMILA).collection('clientes').doc('doc-c3').get());
   });
   test('CM-C4: Camila LÊ compras_config', async () => {
     await assertSucceeds(db(UID_CAMILA).collection('compras_config').doc('cfg-c').get());
@@ -208,8 +208,8 @@ describe('CM-S — Swyanne (modulos=[clientes])', () => {
     await seed('garantias',         'doc-s3', { cliente: 'X' });
   });
 
-  test('CM-S1: Swyanne LÊ clientes', async () => {
-    await assertSucceeds(db(UID_SWYANNE).collection('clientes').doc('doc-s1').get());
+  test('CM-S1 (S4): Swyanne (módulo clientes) NÃO lê clientes direto — usa crmConsulta', async () => {
+    await assertFails(db(UID_SWYANNE).collection('clientes').doc('doc-s1').get());
   });
   test('CM-S2: Swyanne CRIA cliente (sem campos GC)', async () => {
     await assertSucceeds(
@@ -221,11 +221,11 @@ describe('CM-S — Swyanne (modulos=[clientes])', () => {
       db(UID_SWYANNE).collection('clientes').doc('cli-gc').set({ nome: 'X', gestaoClickId: 'GC-1' })
     );
   });
-  test('CM-S4: Swyanne LÊ conversas_resumo', async () => {
-    await assertSucceeds(db(UID_SWYANNE).collection('conversas_resumo').doc('conv-s').get());
+  test('CM-S4 (S4): Swyanne NÃO lê conversas_resumo (sem dono confiável)', async () => {
+    await assertFails(db(UID_SWYANNE).collection('conversas_resumo').doc('conv-s').get());
   });
-  test('CM-S5: Swyanne LÊ chat_status', async () => {
-    await assertSucceeds(db(UID_SWYANNE).collection('chat_status').doc('chat-s').get());
+  test('CM-S5 (S4): Swyanne NÃO lê chat_status', async () => {
+    await assertFails(db(UID_SWYANNE).collection('chat_status').doc('chat-s').get());
   });
   test('CM-S6: Swyanne NÃO lê demandas (módulo errado) → ESCAPE=0', async () => {
     await assertFails(db(UID_SWYANNE).collection('demandas').doc('doc-s2').get());

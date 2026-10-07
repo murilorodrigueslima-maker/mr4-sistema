@@ -408,6 +408,7 @@ async function cancelar(id) {
   catch (e) { toast(msgErro(e), true); }
   finally { S.enviando.delete(id); await carregarFila(false); }
 }
+function novoRequestId() { return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12); }
 async function salvar(id) {
   const sel = S.sel[id] || {}; if (S.enviando.has(id) || !sel.resultado) return;       // trava de duplo clique
   const nota = V.validarNota(sel.nota || '');
@@ -417,7 +418,7 @@ async function salvar(id) {
     const op = S.opMap.get(id);
     const meu = op && op.estado === 'EM_ATENDIMENTO' && op.claimAtual && op.claimAtual.operadorId === S.uid;
     if (!meu) await fnClaim({ opportunityInstanceId: id });                           // iniciar + registrar num gesto só
-    const payload = { opportunityInstanceId: id, outcome: sel.resultado };
+    const payload = { opportunityInstanceId: id, outcome: sel.resultado, requestId: (sel.rid = sel.rid || novoRequestId()) };   // S6: retry seguro (mesmo id até salvar)
     if (sel.resultado === 'PEDIU_RETORNO') payload.scheduledFor = sel.data;
     if (nota.texto) payload.nota = nota.texto;
     const r = await fnOutcome(payload);

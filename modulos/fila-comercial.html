@@ -1205,11 +1205,12 @@ async function confirmarOutcome() {
   okBtn.textContent = 'Aguarde…';
 
   try {
-    const payload = { opportunityInstanceId: modalOppId, outcome: modalOutcomeSel };
+    if (!window.__outcomeRid || window.__outcomeRid.k !== modalOppId + '|' + modalOutcomeSel) window.__outcomeRid = { k: modalOppId + '|' + modalOutcomeSel, id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) };
+    const payload = { opportunityInstanceId: modalOppId, outcome: modalOutcomeSel, requestId: window.__outcomeRid.id };   // S6: retry seguro
     if (scheduledFor) payload.scheduledFor = scheduledFor;
     await _registerOutcome(payload);
     fecharModal();
-    toast('Resultado registrado!', 'ok'); carregarFilaEscopo();
+    window.__outcomeRid = null; toast('Resultado registrado!', 'ok'); carregarFilaEscopo();
   } catch (e) {
     const msg = e?.message || 'Erro ao registrar resultado.';
     errEl.textContent = msg;

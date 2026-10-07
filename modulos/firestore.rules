@@ -743,6 +743,22 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── B3 (preparado; coleções ainda não existem) — reativação de 120 dias ───────────────────────────
+    // Reservas de reativação, restrições (NÃO CONTATAR) e devoluções: escrita SÓ pelo backend (Admin SDK); leitura só da gestão.
+    // O vendedor recebe suas oportunidades liberadas por backend (worklist/crmConsulta), nunca por leitura direta.
+    match /carteira_reativacoes/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
+    match /carteira_comercial_restricoes/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
+    match /carteira_comercial_devolucoes/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

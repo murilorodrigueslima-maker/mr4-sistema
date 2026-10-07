@@ -40,6 +40,7 @@ async function aplicar(store, FieldValue, p, regras) {
   let res;
   await store.runTransaction(async tx => {
     const [sc, se] = await Promise.all([tx.get(refC), tx.get(refE)]);
+    const lido = p.lerTx ? await p.lerTx(tx) : null;                                    // B3: leituras extras ANTES de qualquer escrita (ex.: reserva de reativação)
     if (se.exists) {                                                                   // retry: mesmo evento já aplicado → mesmo resultado, nada novo
       const ev = se.data();
       exigir(ev.portfolioId === p.portfolioId && ev.tipoEvento === regras.tipoEvento, 'already-exists', 'chaveIdempotencia já usada em outra operação');
@@ -57,6 +58,7 @@ async function aplicar(store, FieldValue, p, regras) {
       versaoCarteiraDepois: doc.versao, seq, referencias: p.referencias || null, chaveIdempotencia: p.chaveIdempotencia });
     doc.ultimoEventoId = eventoId;
     tx.set(refC, doc); tx.create(refE, evento);
+    if (p.escreverTx) p.escreverTx(tx, lido, { antes, doc, evento, eventoId });         // escritas complementares na MESMA transação
     res = { repetido: false, antes, depois: doc, evento, eventoId };
   });
   if (!res.repetido && p.auditar !== false) {                                           // auditoria S7 SÓ depois do commit

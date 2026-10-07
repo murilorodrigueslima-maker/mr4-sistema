@@ -117,8 +117,8 @@ describe('S2 — gestão e anônimo', () => {
     await assertFails(cli(anon(), 'novo').set({ nome: 'x' }));
     await assertFails(cli(anon(), 'cLegado').get());
   });
-  test('acesso direto: vendedor lê o cliente do outro (leitura inalterada), mas não escreve', async () => {
-    await assertSucceeds(cli(as(A), 'cB').get());
+  test('acesso direto (S4): vendedor nem lê o cliente do outro pelo SDK, e não escreve', async () => {
+    await assertFails(cli(as(A), 'cB').get());
     await assertFails(cli(as(A), 'cB').update({ pipeline: 'x' }));
   });
 });

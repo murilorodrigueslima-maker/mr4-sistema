@@ -529,7 +529,9 @@ service cloud.firestore {
         .hasAny(['ownerUid', 'ownerDesde', 'vendedor', 'vendedorUid', 'responsavel', 'responsavelUid', 'carteira', 'carteiraId', 'portfolioId', 'permissoes']);
     }
     match /clientes/{clienteId} {
-      allow read:   if isGestor() || temAcessoModulo('clientes');
+      // S4 (07/10/2026): leitura direta SÓ da gestão (role gestor). Vendedor com módulo `clientes` obtém a carteira própria e
+      // pesquisas pontuais por crmConsulta { clientesMeus | clienteBusca } (escopo, limite e auditoria no servidor).
+      allow read:   if isGestor();
       allow create: if (isGestor() || temAcessoModulo('clientes')) && noGcFieldsOnCreate() && semOwnershipNaCriacao();
       allow update: if (isGestor() || (temAcessoModulo('clientes') && (!clienteDeOutroDono() || temModuloGestaoFilaExplicito())))
                     && gcFieldsIntact() && semCamposDeOwnership();
@@ -544,11 +546,12 @@ service cloud.firestore {
     // conversas/{phone}/msgs/{msgId} — mensagens da conversa.
 
     // S3: histórico de conversa é append-only para o cliente — sem delete; mensagem é imutável (create-only).
+    // S4: conversas são indexadas por telefone SEM dono confiável → só a gestão (role gestor); o vendedor não lê nem escreve.
     match /conversas/{phone} {
-      allow read, create, update: if isGestor() || temAcessoModulo('clientes');
+      allow read, create, update: if isGestor();
       allow delete: if false;
       match /msgs/{msgId} {
-        allow read, create: if isGestor() || temAcessoModulo('clientes');
+        allow read, create: if isGestor();
         allow update, delete: if false;
       }
     }
@@ -557,7 +560,7 @@ service cloud.firestore {
     // Resumos de conversas para exibição no painel de inbox.
 
     match /conversas_resumo/{phone} {
-      allow read, create, update: if isGestor() || temAcessoModulo('clientes');
+      allow read, create, update: if isGestor();   // S4
       allow delete: if false;   // S3
     }
 
@@ -565,7 +568,7 @@ service cloud.firestore {
     // Status de conexão do WhatsApp por número de telefone.
 
     match /chat_status/{phone} {
-      allow read, create, update: if isGestor() || temAcessoModulo('clientes');
+      allow read, create, update: if isGestor();   // S4
       allow delete: if false;   // S3
     }
 

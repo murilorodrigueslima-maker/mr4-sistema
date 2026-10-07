@@ -62,16 +62,18 @@ describe('S3 — fluxos legítimos continuam', () => {
     await assertSucceeds(as(SELLER).doc('clientes/c1').update({ arquivado: true, arquivado_em: 'x' }));
     await assertSucceeds(as(GESTOR).doc('clientes/c-gc').update({ arquivado: true }));
   });
-  test('conversa: criar/atualizar conversa, resumo e chat_status; enviar mensagem nova', async () => {
-    await assertSucceeds(as(SELLER).doc('conversas/5585000000000').set({ nome: 'n' }));
-    await assertSucceeds(as(SELLER).doc('conversas/' + PHONE).update({ nome: 'y' }));
-    await assertSucceeds(as(SELLER).doc('conversas_resumo/' + PHONE).set({ ultima: 'novo' }));
-    await assertSucceeds(as(SELLER).doc('chat_status/' + PHONE).set({ status: 'aberto' }));
+  test('conversa (S4): só a gestão cria/atualiza conversa, resumo e chat_status e envia mensagem; vendedor não', async () => {
+    await assertSucceeds(as(GESTOR).doc('conversas/5585000000000').set({ nome: 'n' }));
+    await assertSucceeds(as(GESTOR).doc('conversas/' + PHONE).update({ nome: 'y' }));
+    await assertSucceeds(as(GESTOR).doc('conversas_resumo/' + PHONE).set({ ultima: 'novo' }));
+    await assertSucceeds(as(GESTOR).doc('chat_status/' + PHONE).set({ status: 'aberto' }));
     await assertSucceeds(as(GESTOR).collection(`conversas/${PHONE}/msgs`).add({ texto: 'nova' }));
+    await assertFails(as(SELLER).doc('conversas/5585000000000').set({ nome: 'n' }));
   });
-  test('leitura de histórico segue permitida a quem tem acesso e negada a anônimo/sem módulo', async () => {
-    await assertSucceeds(as(SELLER).doc('clientes/c1').get());
+  test('leitura de histórico (S4): gestão lê; vendedor, anônimo e sem módulo não leem direto', async () => {
+    await assertSucceeds(as(GESTOR).doc('clientes/c1').get());
     await assertSucceeds(as(GESTOR).doc('conversas/' + PHONE).get());
+    await assertFails(as(SELLER).doc('clientes/c1').get());
     await assertFails(anon().doc('clientes/c1').get());
     await assertFails(as(FILA).doc('clientes/c1').get());
   });

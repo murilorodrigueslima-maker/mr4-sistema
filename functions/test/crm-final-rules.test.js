@@ -31,7 +31,7 @@ const as = uid => (uid ? env.authenticatedContext(uid) : env.unauthenticatedCont
 const ok = async (uid, path) => { try { await assertSucceeds(as(uid).doc(path).get()); return true; } catch (_) { return false; } };
 
 const matriz = {   // [interacoes_fila, fila_comercial/worklist, perfis_360, vendas_gc]
-  anonimo: [null, [0, 0, 0, 0]], vendedorA: [U.fabA, [1, 1, 0, 0]], vendedorB: [U.adeB, [1, 1, 0, 0]], semModulo: [U.semMod, [0, 0, 0, 0]], inativo: [U.inativo, [0, 0, 0, 0]],
+  anonimo: [null, [0, 0, 0, 0]], vendedorA: [U.fabA, [0, 0, 0, 0]], vendedorB: [U.adeB, [0, 0, 0, 0]]   /* S1: vendedor NÃO lê worklist/interacoes direto (usa crmConsulta 'fila') */, semModulo: [U.semMod, [0, 0, 0, 0]], inativo: [U.inativo, [0, 0, 0, 0]],
   funcionarioComum: [U.func, [0, 0, 0, 0]], gestorRole: [U.gestor, [1, 1, 1, 0]], gestaoModulo: [U.gestaoMod, [1, 1, 0, 0]], adminFlagSemModulo: [U.adminFlag, [1, 1, 0, 0]], dualRole: [U.dual, [1, 1, 1, 0]],
 };
 const paths = ['interacoes_fila/opp1', 'fila_comercial/worklist', 'perfis_360/GC_NATIVE:1', 'vendas_gc/1'];
@@ -60,7 +60,8 @@ describe('notas privadas (correção do achado da auditoria anterior)', () => {
       await assertFails(as(uid).doc('crm_notas_privadas/opp1__0').get());
       await assertFails(as(uid).doc('crm_notas_privadas/opp1__0').set({ texto: 'x' }));
     }
-    const snap = await assertSucceeds(as(U.adeB).doc('interacoes_fila/opp1').get());
+    await assertFails(as(U.adeB).doc('interacoes_fila/opp1').get());                      // S1: vendedor não lê interacoes direto
+    const snap = await assertSucceeds(as(U.gestor).doc('interacoes_fila/opp1').get());
     expect(JSON.stringify(snap.data())).not.toMatch(/vendedora A/);
   });
 });

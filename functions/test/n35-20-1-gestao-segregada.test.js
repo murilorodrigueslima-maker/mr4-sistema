@@ -63,9 +63,9 @@ beforeAll(async () => {
 afterAll(async () => { await env.clearFirestore(); await env.cleanup(); });
 
 describe('Rules — leitura', () => {
-  test('SEC-01 vendedora lê a worklist operacional = ALLOW', async () => {
-    await assertSucceeds(leitor('fab').doc('fila_comercial/worklist').get());
-    await assertSucceeds(leitor('ade').doc('fila_comercial/worklist').get());
+  test('SEC-01 (S1) vendedora NÃO lê a worklist direto = DENY (recebe a própria via crmConsulta fila)', async () => {
+    await assertFails(leitor('fab').doc('fila_comercial/worklist').get());
+    await assertFails(leitor('ade').doc('fila_comercial/worklist').get());
   });
   test('SEC-02 vendedora lê o documento gerencial = DENY (get e list)', async () => {
     await assertFails(leitor('fab').doc('fila_comercial_gestao/worklist').get());
@@ -158,7 +158,9 @@ describe('Estrutura gerada pelo backend', () => {
 });
 
 describe('RAW / DevTools — o que o navegador da vendedora recebe', () => {
-  test('RAW-01 leitura bruta da worklist pela vendedora: nenhum campo ou valor gerencial', async () => {
+  test('RAW-01 (S1) leitura bruta da worklist pela vendedora é negada; o conteúdo escopado é verificado em s1-fila-escopo', async () => {
+    for (const uid of ['fab', 'ade']) await assertFails(leitor(uid).doc('fila_comercial/worklist').get());
+    return;
     for (const uid of ['fab', 'ade']) {
       const snap = await assertSucceeds(leitor(uid).doc('fila_comercial/worklist').get());
       const achados = [];

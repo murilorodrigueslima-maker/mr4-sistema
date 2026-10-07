@@ -381,20 +381,32 @@ function atualizarIndicadores() {
   }, 400);
 }
 
+// S1 — substitui os antigos listeners diretos (worklist + interacoes_fila): chamada única, escopo aplicado no backend.
+let _carregandoFila = false, _refazerFila = false;
+async function carregarFila(primeira) {
+  if (_carregandoFila) { _refazerFila = true; return; } _carregandoFila = true;
+  try {
+    const r = await fnConsulta({ acao: 'fila' });
+    S.doc = (r.data && r.data.worklist) || null;
+    S.opMap = new Map(((r.data && r.data.interacoes) || []).map(e => [e.opportunityInstanceId, e]));
+  } catch (e) { console.warn('[crm] fila:', e.code || e.message); if (primeira) toast('Não foi possível carregar a lista de hoje.', true); }
+  finally { _carregandoFila = false; S.docCarregado = true; S.opCarregado = true; render(); if (_refazerFila) { _refazerFila = false; carregarFila(false); } }
+}
+
 // ── Ações (servidor valida tudo: dono, payload, datas, observação) ──────────────────────────────────
 async function iniciar(id) {
   if (S.enviando.has(id)) return;
   S.enviando.add(id); render();
   try { await fnClaim({ opportunityInstanceId: id }); toast('Atendimento iniciado.'); }
   catch (e) { toast(msgErro(e), true); }
-  finally { S.enviando.delete(id); render(); }
+  finally { S.enviando.delete(id); await carregarFila(false); }
 }
 async function cancelar(id) {
   if (S.enviando.has(id)) return;
   S.enviando.add(id); render();
   try { await fnRelease({ opportunityInstanceId: id }); toast('Atendimento cancelado.'); }
   catch (e) { toast(msgErro(e), true); }
-  finally { S.enviando.delete(id); render(); }
+  finally { S.enviando.delete(id); await carregarFila(false); }
 }
 async function salvar(id) {
   const sel = S.sel[id] || {}; if (S.enviando.has(id) || !sel.resultado) return;       // trava de duplo clique
@@ -413,7 +425,7 @@ async function salvar(id) {
     toast(r.data.nextFollowUpAt ? `Resultado salvo. Retorno: ${V.rotuloDia(r.data.nextFollowUpAt, hoje())}.` : 'Resultado salvo.');
     atualizarIndicadores();
   } catch (e) { S.erros[id] = msgErro(e); }
-  finally { S.enviando.delete(id); render(); }                                         // o listener de interacoes_fila atualiza o cartão
+  finally { S.enviando.delete(id); await carregarFila(false); }                        // recarrega a fila (já com escopo) após salvar
 }
 
 // ── Cliente 360 ──────────────────────────────────────────────────────────────────────────────────────
@@ -544,7 +556,7 @@ document.getElementById('agForm').addEventListener('submit', e => { e.preventDef
 document.getElementById('agChips').addEventListener('click', e => { const b = e.target.closest('[data-ag]'); if (!b) return; const s = AV.SUGESTOES.find(x => x.id === b.dataset.ag); if (!s) return; if (s.pergunta) document.getElementById('agPergunta').value = s.pergunta; agPerguntar(s.modo, s.pergunta); });
 document.getElementById('agResp').addEventListener('click', e => { const b = e.target.closest('[data-ag-cli]'); if (b) abrirCliente(b.dataset.agCli); });
 
-// ── Auth + listeners (mesmas leituras que a fila atual já faz; Rules inalteradas) ────────────────────
+// ── Auth + listeners (S1: fila lida via crmConsulta com escopo no servidor) ────────────────────
 function semAcesso(msg) { document.getElementById('carregando').innerHTML = `${esc(msg)}<br><a href="../index.html" style="color:var(--blue);font-weight:600">← Voltar ao sistema</a>`; }
 onAuthStateChanged(auth, async u => {
   if (!u) { location.href = '../login.html'; return; }
@@ -565,12 +577,10 @@ onAuthStateChanged(auth, async u => {
   } catch (e) { location.href = '../login.html'; return; }
   document.getElementById('carregando').hidden = true;
   document.getElementById('viewHoje').hidden = false;
-  onSnapshot(doc(db, 'fila_comercial', 'worklist'), s => { S.doc = s.exists() ? s.data() : null; S.docCarregado = true; render(); },
-    err => { console.warn('[crm] worklist:', err.code); S.docCarregado = true; render(); toast('Não foi possível carregar a lista de hoje.', true); });
-  onSnapshot(collection(db, 'interacoes_fila'), s => {
-    s.docChanges().forEach(ch => { if (ch.type === 'removed') S.opMap.delete(ch.doc.id); else S.opMap.set(ch.doc.id, ch.doc.data()); });
-    S.opCarregado = true; render();
-  }, err => { console.warn('[crm] interacoes:', err.code); S.opCarregado = true; render(); toast('Não foi possível carregar os atendimentos.', true); });
+  // S1: leitura da fila com ESCOPO NO SERVIDOR (crmConsulta 'fila'); as Rules não permitem mais ao vendedor ler worklist/interacoes direto.
+  carregarFila(true);
+  setInterval(() => { if (!document.hidden) carregarFila(false); }, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) carregarFila(false); });
   setInterval(render, 60000);          // virada de dia / expiração de claim sem recarregar
   atualizarIndicadores();
 });

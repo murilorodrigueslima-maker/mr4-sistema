@@ -92,6 +92,22 @@ async function verificarPermissaoFila(uid) {
   return sys.nome || user.email?.split('@')[0] || uid;
 }
 
+// S6 — payload estrito: a identidade vem SEMPRE de request.auth.uid; qualquer campo extra (inclusive actorUid/operadorUid/sellerUid)
+// é recusado, nunca ignorado em silêncio.
+const REQUEST_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
+const CAMPOS_IDENTIDADE = ['actorUid', 'operadorUid', 'operadorId', 'sellerUid', 'vendedorUid', 'uid', 'ownerUid'];
+function validarPayload(data, permitidos) {
+  if (data === undefined || data === null || typeof data !== 'object' || Array.isArray(data)) throw new HttpsError('invalid-argument', 'Payload inválido.');
+  const extras = Object.keys(data).filter(k => !permitidos.includes(k));
+  if (extras.length) {
+    const ident = extras.filter(k => CAMPOS_IDENTIDADE.includes(k));
+    throw new HttpsError('invalid-argument', ident.length
+      ? 'A identidade do operador vem da autenticação; campo não aceito: ' + ident.join(', ') + '.'
+      : 'Campos não permitidos: ' + extras.join(', ') + '.');
+  }
+  if (data.requestId !== undefined && (typeof data.requestId !== 'string' || !REQUEST_ID_RE.test(data.requestId))) throw new HttpsError('invalid-argument', 'requestId inválido (8–64 caracteres [A-Za-z0-9_-]).');
+}
+
 function validarOppId(id) {
   if (!id || typeof id !== 'string' || !OPP_ID_RE.test(id)) {
     throw new HttpsError('invalid-argument', 'opportunityInstanceId inválido (esperado: 16 hex chars).');
@@ -114,6 +130,7 @@ async function claimOpportunityHandler(request, opts = {}) {
 
   const operadorNome = await verificarPermissaoFila(uid);
 
+  validarPayload(request.data, ['opportunityInstanceId', 'requestId']);
   const { opportunityInstanceId } = request.data || {};
   validarOppId(opportunityInstanceId);
 
@@ -124,6 +141,13 @@ async function claimOpportunityHandler(request, opts = {}) {
 
   await store.runTransaction(async tx => {
     const snap = await tx.get(ref);
+    // S6 idempotência: retry do MESMO operador sobre claim próprio ainda válido devolve o estado atual (sem novo evento)
+    if (snap.exists) {
+      const atual = snap.data();
+      if (atual.estado === ESTADOS.EM_ATENDIMENTO && atual.claimAtual && atual.claimAtual.operadorId === uid && !isClaimExpired(atual, isoNow)) {
+        novoEstado = atual; return;
+      }
+    }
     // N35.14: worklist do dia define atribuição. Lida na MESMA transação (antes de qualquer write).
     const wlSnap = await tx.get(store.collection(WORKLIST_COLL).doc(WORKLIST_DOC));
     const wl = wlSnap.exists ? wlSnap.data() : null;
@@ -216,7 +240,8 @@ async function registerOutcomeHandler(request, opts = {}) {
 
   await verificarPermissaoFila(uid);
 
-  const { opportunityInstanceId, outcome, scheduledFor, nota } = request.data || {};
+  validarPayload(request.data, ['opportunityInstanceId', 'outcome', 'scheduledFor', 'nota', 'requestId']);
+  const { opportunityInstanceId, outcome, scheduledFor, nota, requestId } = request.data || {};
   validarOppId(opportunityInstanceId);
 
   if (!outcome || !OUTCOMES[outcome]) {
@@ -249,12 +274,19 @@ async function registerOutcomeHandler(request, opts = {}) {
   const store  = db();
   const ref    = store.collection(COLL).doc(opportunityInstanceId);
   let novoEstado;
+  let repetido = false;
 
   await store.runTransaction(async tx => {
+    repetido = false;
     const snap = await tx.get(ref);
     if (!snap.exists) throw new HttpsError('not-found', 'Oportunidade não encontrada.');
 
     const estado = snap.data();
+
+    // S6 idempotência: o mesmo requestId do mesmo operador já aplicado → devolve o resultado original, sem novo evento nem nova nota
+    if (requestId && (estado.eventos || []).some(e => e && e.tipo === EVENT_TYPES.OUTCOME_REGISTERED && e.operadorId === uid && e.meta && e.meta.requestId === requestId)) {
+      novoEstado = estado; repetido = true; return;
+    }
 
     if (estado.estado !== ESTADOS.EM_ATENDIMENTO) {
       throw new HttpsError('failed-precondition', 'Oportunidade não está em atendimento.');
@@ -269,6 +301,7 @@ async function registerOutcomeHandler(request, opts = {}) {
     if (outcome === OUTCOMES.PEDIU_RETORNO && scheduledFor) {
       meta.scheduledFor = scheduledFor;
     }
+    if (requestId) meta.requestId = requestId;
     if (notaLimpa) meta.temNota = true;          // o texto vai só para crm_notas_privadas (nunca para o documento da fila)
 
     novoEstado = registrarOutcome(estado, uid, outcome, isoNow, meta);
@@ -283,6 +316,11 @@ async function registerOutcomeHandler(request, opts = {}) {
     }
   });
 
+  if (repetido) {
+    const orig = (novoEstado.eventos || []).filter(e => e && e.tipo === EVENT_TYPES.OUTCOME_REGISTERED && e.operadorId === uid && e.meta && e.meta.requestId === requestId).pop();
+    return { estado: orig.estadoDepois, outcome: orig.outcome, nextFollowUpAt: (orig.meta && orig.meta.scheduledFor) || null,
+      cooledUntil: novoEstado.cooledUntil || null, repetido: true };
+  }
   return {
     estado:         novoEstado.estado,
     outcome,
@@ -304,6 +342,7 @@ async function releaseOpportunityHandler(request, opts = {}) {
 
   await verificarPermissaoFila(uid);
 
+  validarPayload(request.data, ['opportunityInstanceId', 'requestId']);
   const { opportunityInstanceId } = request.data || {};
   validarOppId(opportunityInstanceId);
 
@@ -317,6 +356,10 @@ async function releaseOpportunityHandler(request, opts = {}) {
     if (!snap.exists) throw new HttpsError('not-found', 'Oportunidade não encontrada.');
 
     const estado = snap.data();
+
+    // S6 idempotência: retry de uma liberação já feita pelo mesmo operador (último evento = RELEASED dele) devolve o estado atual
+    const ult = (estado.eventos || []).slice(-1)[0];
+    if (estado.estado !== ESTADOS.EM_ATENDIMENTO && ult && ult.tipo === EVENT_TYPES.RELEASED && ult.operadorId === uid) { novoEstado = estado; return; }
 
     if (estado.estado !== ESTADOS.EM_ATENDIMENTO) {
       throw new HttpsError('failed-precondition', 'Oportunidade não está em atendimento.');

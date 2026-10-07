@@ -509,10 +509,30 @@ service cloud.firestore {
     //   Apenas Admin SDK pode criar/modificar esses campos.
     //   O Admin SDK ignora Rules — proteção só afeta chamadas de cliente.
 
+    // S2 (07/10/2026): isolamento de escrita entre vendedores, SEM antecipar a arquitetura definitiva de ownership.
+    // Vínculo hoje: clientes.gestaoClickId == id da carteira_comercial 'GC:<id>' (ownerUid = dono oficial).
+    //  - cliente COM carteira de outro dono → vendedor (módulo clientes) NÃO escreve; gestor (role) e gestão explícita sim.
+    //  - cliente COM carteira própria, GC sem carteira, ou sem vínculo GC (CRM legado manual) → comportamento anterior
+    //    (não há como provar posse; limitação documentada — solução definitiva = ownership/oportunidades).
+    //  - campos de ownership NUNCA são escritos pelo cliente SDK em clientes (hoje o modelo não os possui).
+    function clienteDeOutroDono() {
+      return resource.data.get('gestaoClickId', '') != '' &&
+        exists(/databases/$(database)/documents/carteira_comercial/$('GC:' + string(resource.data.gestaoClickId))) &&
+        get(/databases/$(database)/documents/carteira_comercial/$('GC:' + string(resource.data.gestaoClickId))).data.get('ownerUid', '') != request.auth.uid;
+    }
+    function semCamposDeOwnership() {
+      return !request.resource.data.diff(resource.data).affectedKeys()
+        .hasAny(['ownerUid', 'ownerDesde', 'vendedor', 'vendedorUid', 'responsavel', 'responsavelUid', 'carteira', 'carteiraId', 'portfolioId', 'permissoes']);
+    }
+    function semOwnershipNaCriacao() {
+      return !request.resource.data.keys()
+        .hasAny(['ownerUid', 'ownerDesde', 'vendedor', 'vendedorUid', 'responsavel', 'responsavelUid', 'carteira', 'carteiraId', 'portfolioId', 'permissoes']);
+    }
     match /clientes/{clienteId} {
       allow read:   if isGestor() || temAcessoModulo('clientes');
-      allow create: if (isGestor() || temAcessoModulo('clientes')) && noGcFieldsOnCreate();
-      allow update: if (isGestor() || temAcessoModulo('clientes')) && gcFieldsIntact();
+      allow create: if (isGestor() || temAcessoModulo('clientes')) && noGcFieldsOnCreate() && semOwnershipNaCriacao();
+      allow update: if (isGestor() || (temAcessoModulo('clientes') && (!clienteDeOutroDono() || temModuloGestaoFilaExplicito())))
+                    && gcFieldsIntact() && semCamposDeOwnership();
       // S3 (07/10/2026): SEM delete físico por ninguém no cliente. Cliente carrega vínculo GC,
       // titularidade e histórico comercial; remoção = arquivar (update arquivado=true).
       allow delete: if false;

@@ -6,7 +6,7 @@ const { normalizeGestaoClickId } = require('./commercialIdentity');
 async function carregarContexto(store, { hoje, conflitosGcExtra }) {
   const [cartSnap, userSnap, sisSnap, vendSnap, intSnap, cliSnap, resSnap, restrSnap, devSnap, regSnap] = await Promise.all([
     store.collection('carteira_comercial').get(), store.collection('users').get(), store.collection('sistema_usuarios').get(),
-    store.collection('vendas_gc').select('cliente_id', 'data', 'vendedor_id', 'nome_situacao', 'valor_total').get(), store.collection('interacoes_fila').get(),
+    store.collection('vendas_gc').select('cliente_id', 'data', 'vendedor_id', 'nome_situacao', 'valor_total', 'cadastrado_em').get(), store.collection('interacoes_fila').get(),
     store.collection('clientes').select('gestaoClickId').get(), store.collection('carteira_reativacoes').get(),
     store.collection('carteira_comercial_restricoes').get(), store.collection('carteira_comercial_devolucoes').get(), store.collection('identidade_conflitos').where('status', '==', 'PENDENTE').get(),
   ]);

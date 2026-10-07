@@ -65,9 +65,9 @@ describe('B3.2 — CENÁRIO CONTROLADO (sintético): gestão + vendedor, do bloq
     const r = await G.reativacaoGestaoHandler(req(CAM, { acao: 'naoContatar', portfolioId: 'GC:901', naoContatar: true, motivoCodigo: 'PEDIDO_DO_CLIENTE', motivo: 'cliente pediu para não ser contatado', requestId: rid('b') }), { db }); expect(r.naoContatar).toBe(true);
   });
   test('2. dry-run do job (trava ativa): planeja 900 e 902; bloqueia 901; ZERO escritas', async () => {
-    const r = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, agoraIso: AGORA }); expect(r.status).toBe('DRY');        // config=ATIVO, mas a trava FORCAR_DRY impede qualquer escrita
+    const r = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, agoraIso: AGORA, forcarDry: true }); expect(r.status).toBe('DRY');        // config=ATIVO, mas a trava FORCAR_DRY impede qualquer escrita
     expect((await db.collection('carteira_reativacoes').get()).size).toBe(0);
-    await db.doc('carteira_comercial_config/reativacao').set({ modo: 'DRY', corte: CORTE }); const d = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, agoraIso: AGORA }); expect(d.status).toBe('DRY');
+    await db.doc('carteira_comercial_config/reativacao').set({ modo: 'DRY', corte: CORTE }); const d = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, agoraIso: AGORA, forcarDry: true }); expect(d.status).toBe('DRY');
     expect(d.plano.liberar.map(x => x.id).sort()).toEqual(['900', '902']); expect(d.plano.bloqueados.NAO_CONTATAR).toEqual(['901']); expect((await db.collection('carteira_reativacoes').get()).size).toBe(0);
     await db.doc('carteira_comercial_config/reativacao').set({ modo: 'ATIVO', corte: CORTE });
   });

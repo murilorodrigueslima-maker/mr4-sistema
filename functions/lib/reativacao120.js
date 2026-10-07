@@ -132,9 +132,11 @@ function planejarLiberacao(p) {
     const alvo = [...c.destinos].sort((a, b) => carga.get(a) - carga.get(b) || (a < b ? -1 : 1))[0]; c.destinoUid = alvo; carga.set(alvo, carga.get(alvo) + 1); fila.get(alvo).push(c);
   }
   const jaHoje = uid => [...(p.reservasExistentes ? p.reservasExistentes.values() : [])].filter(r => r.destinoUid === uid && r.liberadoEm === hoje).length;
+  // B3.3 piloto: teto de reservas ATIVAS (RESERVADA) por vendedor; persistente no servidor (configuração + checagem transacional em liberarReserva)
+  const ativas = uid => [...(p.reservasExistentes ? p.reservasExistentes.values() : [])].filter(r => r.destinoUid === uid && r.estado === 'RESERVADA').length;
   const liberar = []; const backlog = {}; const dias = {};
   for (const [uid, lista] of fila) {
-    const cap = Math.min(limite, (vend.porUid.get(uid) || {}).limiteDiario || limite), livre = Math.max(0, cap - jaHoje(uid));
+    const cap = Math.min(limite, (vend.porUid.get(uid) || {}).limiteDiario || limite), livre = Math.max(0, Math.min(cap - jaHoje(uid), Number.isFinite(p.maxAtivas) ? p.maxAtivas - ativas(uid) : Infinity));
     lista.slice(0, livre).forEach(c => liberar.push({ ...c, liberadoEm: hoje, reservaAte: somarDias(hoje, RESERVA_DIAS) }));
     backlog[uid] = Math.max(0, lista.length - livre); dias[uid] = lista.length ? Math.ceil(lista.length / cap) : 0;
   }

@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const R = require('./reativacao120'); const OPS = require('./reativacaoOps'); const REV = require('./reativacaoReversao'); const { carregarContexto } = require('./reativacaoContexto');
 const { validarVenda } = require('./carteiraRegra'); const { normalizeGestaoClickId } = require('./commercialIdentity'); const A = require('./auditoria');
 
-const FORCAR_DRY = true;
+const FORCAR_DRY = false;      // B3.3: trava removida — segurança = configuração (modo/motor/corte) + disjuntor de saúde + kill switch
 const REF_CONFIG = ['carteira_comercial_config', 'reativacao'];
 const COLL_DEC = 'carteira_reativacao_decisoes', COLL_DEC_SOMBRA = 'carteira_reativacao_decisoes_sombra';
 const REGRA_VERSAO = 'B3.2';
@@ -42,13 +42,22 @@ async function processarVendas(store, FieldValue, { agoraIso, forcarDry = FORCAR
   if (modo === 'DESLIGADO') return { status: 'DESLIGADO' };
   const corte = cfg && YMD.test(String(cfg.corte)) ? cfg.corte : null;
   if (!corte) return { status: 'SEM_CORTE', modo: 'DESLIGADO', motivo: 'carteira_comercial_config/reativacao.corte ausente — sem corte não há processamento (nada retroativo)' };
-  const hoje = agoraIso.slice(0, 10); const ctx = await carregarContexto(store, { hoje });
+  const hoje = agoraIso.slice(0, 10);
+  if (modo === 'ATIVO') {                                                               // saúde e motor ANTES de qualquer escrita
+    const SA = require('./reativacaoSaude'); const MOTOR = require('./motorCarteira'); const h = await SA.verificarSaude(store, { cfg: cfg || {}, desde: (cfg && cfg.ativadoEm) || null });
+    if (!h.ok) { await SA.dispararDisjuntor(store, FieldValue, h.violacoes, { agoraIso, origem: 'PROCESSADOR_VENDAS' }); return { status: 'DISJUNTOR', violacoes: h.violacoes }; }
+    const m = MOTOR.lerMotor((await store.doc(MOTOR.REF.join('/')).get()).data()); if (m !== 'B3') return { status: 'MOTOR_NAO_B3', motor: m };
+  }
+  const corteTs = cfg && cfg.corteTs && !isNaN(Date.parse(cfg.corteTs)) ? Date.parse(cfg.corteTs) : null;
+  /** Venda posterior ao instante de ativação: cadastrado_em (hora de Fortaleza, UTC-3) >= corteTs; sem cadastrado_em ⇒ só se a DATA for posterior ao dia do corte (conservador). */
+  const depoisDoCorte = v => { if (!corteTs) return true; const c = String(v.cadastrado_em || ''); if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(c)) return Date.parse(c.replace(' ', 'T') + '-03:00') >= corteTs; return String(v.data).slice(0, 10) > corte; };
+  const ctx = await carregarContexto(store, { hoje });
   const decSnap = await store.collection(modo === 'ATIVO' ? COLL_DEC : COLL_DEC_SOMBRA).get(); const feitas = new Map();               // vendaId → { revisao, revisaoVenda }
   decSnap.docs.forEach(d => { const x = d.data(); const k = String(x.vendaId); if (!feitas.has(k) || x.revisao > feitas.get(k).revisao) feitas.set(k, x); });
   const out = { status: 'OK', modo, corte, hoje, vendasAvaliadas: 0, ignoradasAntesDoCorte: 0, jaProcessadas: 0, novas: 0, novasRevisoes: 0, foraDeOrdem: [], decisoes: {}, aplicadas: 0, erros: [], porClienteComRevisao: [] };
   const aGravar = [];
   for (const [gc, todas] of ctx.vendasPorCliente) {
-    const posCorte = todas.filter(v => String(v.data || '').slice(0, 10) >= corte && String(v.data || '').length >= 10).sort((a, b) => (R.chaveOrdem(a) < R.chaveOrdem(b) ? -1 : 1));
+    const posCorte = todas.filter(v => String(v.data || '').slice(0, 10) >= corte && String(v.data || '').length >= 10 && depoisDoCorte(v)).sort((a, b) => (R.chaveOrdem(a) < R.chaveOrdem(b) ? -1 : 1));
     out.ignoradasAntesDoCorte += todas.length - posCorte.length; if (!posCorte.length) continue;
     const pend = posCorte.filter(v => { const f = feitas.get(String(v.id)); return !f || f.revisaoVenda !== revisaoVenda(v, hoje, ctx.devolucoes); });
     out.vendasAvaliadas += posCorte.length; out.jaProcessadas += posCorte.length - pend.length; if (!pend.length) continue;
@@ -81,6 +90,7 @@ async function processarVendas(store, FieldValue, { agoraIso, forcarDry = FORCAR
     }
   }
   // invalidações: transferências/criações cuja venda deixou de valer ⇒ reversão (DRY: só relata; ATIVO: executa/encaminha à gestão); renovações invalidadas ⇒ revisão
+  if (modo === 'ATIVO' && out.erros.length) { const SA = require('./reativacaoSaude'); await SA.dispararDisjuntor(store, FieldValue, out.erros.map(e => ({ tipo: 'ERRO_NO_PROCESSAMENTO_DE_VENDAS', vendaId: e.vendaId })), { agoraIso, origem: 'PROCESSADOR_VENDAS' }); out.status = 'DISJUNTOR_ERRO'; return out; }
   out.reversoes = await varrerInvalidacoes(store, FieldValue, { hoje, agoraIso, executar: modo === 'ATIVO', devolucoes: ctx.devolucoes });
   return out;
 }

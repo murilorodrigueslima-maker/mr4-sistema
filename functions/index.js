@@ -16,7 +16,7 @@
 
 const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule }          = require('firebase-functions/v2/scheduler');
-const { onDocumentUpdated }   = require('firebase-functions/v2/firestore');
+const { onDocumentUpdated, onDocumentWritten, onDocumentWrittenWithAuthContext } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapshotGenerator');
@@ -774,6 +774,14 @@ exports.syncPainelDisplay = onSchedule({
   secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
   timeoutSeconds:  120,
 }, syncPainelDisplayHandler);
+
+// S7 — trilha de auditoria append-only (audit_log). Autor derivado do contexto de autenticação do evento / operador gravado no servidor.
+// Escrita só por estas Functions (create); Rules negam toda escrita do cliente. Sem TTL/limpeza.
+const _aud = () => require('./lib/auditoriaTriggers').fabrica(require('firebase-admin').firestore(), require('firebase-admin').firestore.FieldValue);
+exports.auditUsers            = onDocumentWrittenWithAuthContext({ document: 'users/{uid}', region: REGION, retry: true }, ev => _aud().users(ev));
+exports.auditSistemaUsuarios  = onDocumentWrittenWithAuthContext({ document: 'sistema_usuarios/{uid}', region: REGION, retry: true }, ev => _aud().sistemaUsuarios(ev));
+exports.auditClientes         = onDocumentWrittenWithAuthContext({ document: 'clientes/{clienteId}', region: REGION, retry: true }, ev => _aud().clientes(ev));
+exports.auditInteracoesFila   = onDocumentWritten({ document: 'interacoes_fila/{oppId}', region: REGION, retry: true }, ev => _aud().interacoes(ev));
 
 exports.concluirRevisaoEspelho = onDocumentUpdated(
   { document: 'espelhos/{espelhoId}', region: REGION, retry: true },

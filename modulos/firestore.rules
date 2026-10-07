@@ -730,6 +730,16 @@ service cloud.firestore {
     }
 
     // ── Tudo mais: negado por padrão ───────────────────────────────────────────
+    // ── audit_log (S7) — trilha de auditoria APPEND-ONLY ───────────────────────
+    // Escrita SOMENTE pelas Cloud Functions (Admin SDK, create com id determinístico). Nenhum cliente escreve, altera ou apaga —
+    // nem vendedor, nem gestor, nem admin. Correção de erro = novo evento. Sem TTL.
+    // Leitura: role gestor (proprietário) vê tudo; gestão por módulo (Camila) só category=='COMMERCIAL' (a consulta precisa filtrar);
+    // vendedor/anônimo: nada.
+    match /audit_log/{eventoId} {
+      allow read:  if isGestor() || (temAcessoModulo('fila-comercial-gestao') && resource.data.category == 'COMMERCIAL');
+      allow write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

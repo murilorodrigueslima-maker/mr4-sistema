@@ -391,6 +391,7 @@ if (_isLocal) {
 const _claimOpportunity   = httpsCallable(funcs, 'claimOpportunity');
 const _registerOutcome    = httpsCallable(funcs, 'registerOutcome');
 const _releaseOpportunity = httpsCallable(funcs, 'releaseOpportunity');
+const _crmConsulta        = httpsCallable(funcs, 'crmConsulta');
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
 
@@ -495,45 +496,26 @@ async function carregarSnapshot() {
 
 // ── Listener da Worklist V2 (N35.15) — único ──────────────────────────────────
 
+// S1 — a worklist e os atendimentos chegam por crmConsulta { acao:'fila' } (escopo aplicado no servidor); as Rules não permitem
+// mais ao vendedor ler fila_comercial/worklist nem interacoes_fila direto. Polling de 20 s + recarga após cada ação.
+let _carregandoFila = false, _refazerFila = false;
+async function carregarFilaEscopo() {
+  if (_carregandoFila) { _refazerFila = true; return; } _carregandoFila = true;
+  try {
+    const r = await _crmConsulta({ acao: 'fila' });
+    worklistDoc = (r.data && r.data.worklist) || null;
+    operationalMap = new Map(((r.data && r.data.interacoes) || []).map(e => [e.opportunityInstanceId, e]));
+    renderizarFila();
+    if (clienteSelecionado && clienteSelecionado.opportunityInstanceId) atualizarDetalheOperacional(clienteSelecionado.opportunityInstanceId);
+  } catch (e) { console.warn('[fila-comercial] fila:', e.code, e.message); }
+  finally { _carregandoFila = false; if (_refazerFila) { _refazerFila = false; carregarFilaEscopo(); } }
+}
 function iniciarListenerWorklist() {
-  if (_unsubWl) { _unsubWl(); _unsubWl = null; window.__filaListeners.worklist--; }
-  _unsubWl = onSnapshot(
-    doc(db, 'fila_comercial', 'worklist'),
-    snap => { worklistDoc = snap.exists() ? snap.data() : null; renderizarFila(); },
-    err => { console.warn('[fila-comercial] Listener worklist:', err.code, err.message); worklistDoc = null; renderizarFila(); }
-  );
-  window.__filaListeners.worklist++;
-  // Re-render periódico: expiração de claim (4h) e virada do dia comercial sem reload
-  if (!_tickWl) _tickWl = setInterval(renderizarFila, 60000);
+  carregarFilaEscopo();
+  if (!_tickWl) _tickWl = setInterval(() => { renderizarFila(); if (!document.hidden) carregarFilaEscopo(); }, 20000);
+  if (!window.__filaVis) { window.__filaVis = true; document.addEventListener('visibilitychange', () => { if (!document.hidden) carregarFilaEscopo(); }); }
 }
-
-function iniciarListenerOperacional() {
-  if (_unsubOp) { _unsubOp(); _unsubOp = null; window.__filaListeners.interacoes--; }
-  window.__filaListeners.interacoes++;
-
-  _unsubOp = onSnapshot(
-    collection(db, 'interacoes_fila'),
-    snap => {
-      snap.forEach(d => {
-        operationalMap.set(d.id, d.data());
-      });
-      // Remove entradas deletadas
-      snap.docChanges().forEach(change => {
-        if (change.type === 'removed') operationalMap.delete(change.doc.id);
-      });
-      renderizarFila();
-      // Re-renderizar detalhe se painel aberto
-      if (clienteSelecionado) {
-        const oppId = clienteSelecionado.opportunityInstanceId;
-        if (oppId) atualizarDetalheOperacional(oppId);
-      }
-    },
-    err => {
-      console.warn('[fila-comercial] Listener interacoes_fila:', err.code, err.message);
-      // Não é crítico — fila de snapshot continua funcionando
-    }
-  );
-}
+function iniciarListenerOperacional() { /* S1: unificado em iniciarListenerWorklist (uma chamada traz worklist + atendimentos) */ }
 
 // ── Auth ───────────────────────────────────────────────────────────────────────
 
@@ -1135,7 +1117,7 @@ async function handleClaim(oppId, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Aguarde…'; }
   try {
     await _claimOpportunity({ opportunityInstanceId: oppId });
-    toast('Atendimento iniciado!', 'ok');
+    toast('Atendimento iniciado!', 'ok'); carregarFilaEscopo();
   } catch (e) {
     const msg = e?.message || 'Erro ao iniciar atendimento.';
     if (msg.includes('já está em atendimento') || msg.includes('already-exists')) {
@@ -1158,7 +1140,7 @@ async function handleRelease(oppId, btn) {
   if (btn) { btn.disabled = true; btn.textContent = 'Aguarde…'; }
   try {
     await _releaseOpportunity({ opportunityInstanceId: oppId });
-    toast('Atendimento cancelado.', 'info');
+    toast('Atendimento cancelado.', 'info'); carregarFilaEscopo();
   } catch (e) {
     toast(e?.message || 'Erro ao cancelar atendimento.', 'err');
     console.error('[release]', e);
@@ -1227,7 +1209,7 @@ async function confirmarOutcome() {
     if (scheduledFor) payload.scheduledFor = scheduledFor;
     await _registerOutcome(payload);
     fecharModal();
-    toast('Resultado registrado!', 'ok');
+    toast('Resultado registrado!', 'ok'); carregarFilaEscopo();
   } catch (e) {
     const msg = e?.message || 'Erro ao registrar resultado.';
     errEl.textContent = msg;

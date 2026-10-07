@@ -16,8 +16,8 @@ const { calcularTendencia } = require('./tendenciaComercial');
 const { REF_FATURAMENTO_ALTO } = require('./priorizadorOportunidades');
 const T = require('./crmTimeline');
 
-const ACOES = ['cliente', 'cartoes', 'indicadores'];
-const PERMITIDOS = { cliente: ['acao', 'entidade'], cartoes: ['acao', 'entidades'], indicadores: ['acao', 'vendedorUid'] };
+const ACOES = ['cliente', 'cartoes', 'indicadores', 'fila'];
+const PERMITIDOS = { cliente: ['acao', 'entidade'], cartoes: ['acao', 'entidades'], indicadores: ['acao', 'vendedorUid'], fila: ['acao'] };
 const ENTITY_RE = /^(MR4_LINKED:[A-Za-z0-9]{6,40}|GC_NATIVE:\d{3,12})$/;
 const MAX_CARTOES = 80;
 const MAX_COMPRAS = 60;
@@ -321,11 +321,46 @@ async function consultarIndicadores(store, acesso, vendedorUid, agoraIso) {
     podeVerValores: acesso.gestao || alvo === acesso.uid };
 }
 
+
+/**
+ * S1 — leitura da Fila/CRM com ESCOPO NO SERVIDOR (substitui os listeners diretos de fila_comercial/worklist e interacoes_fila,
+ * que expunham ao vendedor a worklist e os atendimentos do outro). Gestão recebe o documento completo; vendedor recebe SOMENTE
+ * a própria worklist e as oportunidades dele (na própria worklist, claim próprio ou retorno dele). Eventos de outros operadores
+ * em oportunidades compartilhadas são reduzidos ao mínimo (sem operador real, sem meta/nota).
+ */
+async function consultarFila(store, acesso) {
+  const [wlSnap, intSnap] = await Promise.all([store.collection('fila_comercial').doc('worklist').get(), store.collection('interacoes_fila').get()]);
+  const wl = wlSnap.exists ? wlSnap.data() : null;
+  const estados = intSnap.docs.map(d => d.data());
+  if (acesso.gestao) return { escopo: 'GESTAO', worklist: wl, interacoes: estados };
+  const uid = acesso.uid;
+  let worklist = null;
+  const minhasOpps = new Set();
+  if (wl) {
+    const minha = (wl.vendedores || {})[uid] || null;
+    worklist = { schemaVersion: wl.schemaVersion, dataReferencia: wl.dataReferencia, versao: wl.versao, geradoEm: wl.geradoEm, cap: wl.cap,
+      vendedores: minha ? { [uid]: minha } : {}, vendedoresAtivos: minha ? [uid] : [],
+      vendedoresRotulos: { [uid]: (wl.vendedoresRotulos || {})[uid] || 'Vendedor' } };
+    if (minha) for (const k of Object.keys(minha)) if (Array.isArray(minha[k])) for (const it of minha[k]) if (it && it.opportunityInstanceId) minhasOpps.add(it.opportunityInstanceId);
+  }
+  const outcomes = e => (e.eventos || []).filter(x => x && x.tipo === 'OUTCOME_REGISTERED');
+  const interacoes = [];
+  for (const e of estados) {
+    const ult = outcomes(e).slice(-1)[0];
+    const meu = (e.claimAtual && e.claimAtual.operadorId === uid) || (ult && ult.operadorId === uid && e.estado !== 'CONCLUIDA' && e.nextFollowUpAt);
+    if (!meu && !minhasOpps.has(e.opportunityInstanceId)) continue;
+    const claim = e.claimAtual && e.claimAtual.operadorId !== uid ? { ...e.claimAtual, operadorId: 'OUTRO' } : e.claimAtual;
+    interacoes.push({ ...e, claimAtual: claim, eventos: (e.eventos || []).map(x => (x && x.operadorId && x.operadorId !== uid ? { tipo: x.tipo, outcome: x.outcome, timestamp: x.timestamp, operadorId: 'OUTRO' } : x)) });
+  }
+  return { escopo: 'VENDEDOR', worklist, interacoes };
+}
+
 async function crmConsulta(store, { operadorUid, data, agoraIso }) {
   validarPedido(data);
   const acesso = await perfilDeAcesso(store, operadorUid);
   if (data.acao === 'cliente') return consultarCliente(store, acesso, data.entidade, agoraIso);
   if (data.acao === 'cartoes') return consultarCartoes(store, acesso, data.entidades);
+  if (data.acao === 'fila') return consultarFila(store, acesso);
   return consultarIndicadores(store, acesso, data.vendedorUid, agoraIso);
 }
 

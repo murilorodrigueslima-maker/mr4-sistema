@@ -73,9 +73,10 @@ test('DR-05 DRY_RUN nunca escreve interacoes_fila, perfis_360, clientes, vendas_
   expect(db.writes.filter(w => !PERMITIDOS.includes(w))).toEqual([]);
 });
 
-test('DR-06 a tela assina SOMENTE fila_comercial/worklist (nunca a prévia)', () => {
+test('DR-06 a tela lê a worklist SOMENTE via crmConsulta fila (S1; nunca a prévia nem leitura direta)', () => {
   const html = fs.readFileSync(path.join(ROOT, 'modulos', 'fila-comercial.html'), 'utf8');
-  expect(html).toContain("doc(db, 'fila_comercial', 'worklist')");
+  expect(html).toContain("acao: 'fila'");
+  expect(html).not.toContain("doc(db, 'fila_comercial', 'worklist')");
   expect(html).not.toContain('worklist_preview');
 });
 

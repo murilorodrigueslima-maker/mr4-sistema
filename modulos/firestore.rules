@@ -677,8 +677,12 @@ service cloud.firestore {
     // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
 
     // N35.12S: operar = vendedores (funcionario+operar); gestao = Camila (funcionario+gestao); gestores = isGestor().
+    // S1 (07/10/2026): worklist/worklist_preview contêm TODOS os vendedores → leitura só da gestão. O vendedor recebe a
+    // própria worklist por crmConsulta { acao:'fila' } (escopo no servidor). `snapshot` (lista legada, sem dono por vendedor)
+    // segue legível pelo vendedor — limitação documentada (DEFERRED_TO_PHASE_B/S4).
     match /fila_comercial/{docId} {
-      allow read:  if isGestor() || temAcessoModulo('fila-comercial-operar') || temAcessoModulo('fila-comercial-gestao');
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao') ||
+                   (docId == 'snapshot' && (temAcessoModulo('fila-comercial-operar') || temAcessoModulo('fila-comercial-gestao')));
       allow write: if false;
     }
 
@@ -719,8 +723,9 @@ service cloud.firestore {
     // Estado operacional canário da Fila Comercial.
     // Escrita APENAS via Admin SDK (Cloud Function). Frontend: somente leitura.
     // N35.12S: gestores leem via isGestor(); vendedores via operar; supervisão via gestao.
+    // S1: atendimentos/eventos de TODOS os vendedores → leitura só da gestão; vendedor via crmConsulta { acao:'fila' }.
     match /interacoes_fila/{oppId} {
-      allow read:  if isGestor() || temAcessoModulo('fila-comercial-operar') || temAcessoModulo('fila-comercial-gestao');
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
       allow write: if false;
     }
 

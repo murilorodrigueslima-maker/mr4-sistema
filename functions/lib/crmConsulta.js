@@ -16,8 +16,8 @@ const { calcularTendencia } = require('./tendenciaComercial');
 const { REF_FATURAMENTO_ALTO } = require('./priorizadorOportunidades');
 const T = require('./crmTimeline');
 
-const ACOES = ['cliente', 'cartoes', 'indicadores', 'fila'];
-const PERMITIDOS = { cliente: ['acao', 'entidade'], cartoes: ['acao', 'entidades'], indicadores: ['acao', 'vendedorUid'], fila: ['acao'] };
+const ACOES = ['cliente', 'cartoes', 'indicadores', 'fila', 'clientesMeus', 'clienteBusca'];
+const PERMITIDOS = { cliente: ['acao', 'entidade'], cartoes: ['acao', 'entidades'], indicadores: ['acao', 'vendedorUid'], fila: ['acao'], clientesMeus: ['acao'], clienteBusca: ['acao', 'campo', 'valor'] };
 const ENTITY_RE = /^(MR4_LINKED:[A-Za-z0-9]{6,40}|GC_NATIVE:\d{3,12})$/;
 const MAX_CARTOES = 80;
 const MAX_COMPRAS = 60;
@@ -357,6 +357,12 @@ async function consultarFila(store, acesso) {
 
 async function crmConsulta(store, { operadorUid, data, agoraIso }) {
   validarPedido(data);
+  if (data.acao === 'clientesMeus' || data.acao === 'clienteBusca') {            // S4: CRM legado sem leitura direta ampla (módulo próprio)
+    const CC = require('./crmClientes'); CC.validarPedido(data);
+    const ac = await CC.acessoClientes(store, operadorUid);
+    if (data.acao === 'clientesMeus') return CC.clientesMeus(store, ac);
+    return CC.clienteBusca(store, require('firebase-admin').firestore.FieldValue, ac, data, Date.parse(agoraIso));
+  }
   const acesso = await perfilDeAcesso(store, operadorUid);
   if (data.acao === 'cliente') return consultarCliente(store, acesso, data.entidade, agoraIso);
   if (data.acao === 'cartoes') return consultarCartoes(store, acesso, data.entidades);

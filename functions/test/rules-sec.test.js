@@ -132,9 +132,9 @@ describe('users — ESCALADA DE PRIVILÉGIO (write bloqueado para não-gestores)
     await assertFails(db.collection('users').doc(UID_FUNC).update({ role: 'gestor' }));
   });
 
-  test('U14 — gestor PODE escrever em users/{uid}', async () => {
+  test('U14 — gestor SEM admin NÃO escreve em users/{uid} (S5; só ADMIN REAL)', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await assertSucceeds(db.collection('users').doc(UID_FUNC).update({ ativo: true }));
+    await assertFails(db.collection('users').doc(UID_FUNC).update({ ativo: true }));
   });
 });
 
@@ -193,9 +193,9 @@ describe('sistema_usuarios — ESCALADA (write bloqueado para não-gestores)', (
     await assertFails(db.collection('sistema_usuarios').doc(UID_GESTOR).update({ admin: true }));
   });
 
-  test('S10 — gestor PODE escrever em sistema_usuarios', async () => {
+  test('S10 — gestor SEM admin NÃO escreve em sistema_usuarios (S5; só ADMIN REAL)', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await assertSucceeds(db.collection('sistema_usuarios').doc(UID_FUNC).set({
+    await assertFails(db.collection('sistema_usuarios').doc(UID_FUNC).set({
       nome: 'Func Sec', cargo: 'Vendedor', modulos: [],
     }));
   });

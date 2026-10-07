@@ -25,10 +25,11 @@ beforeAll(async () => {
 });
 afterAll(async () => { await limpar(COLS); });
 const ctx = () => carregarContexto(db, { hoje: HOJE });
+beforeAll(async () => { await db.doc('carteira_comercial_config/motor').set({ motorAtivo: 'B3' }); });       // B3.1: exclusão mútua R2×B3 — escrita de ownership só com o motor B3 autorizado
 
 describe('B3 ops — INATIVAS por construção', () => {
   test('index.js não referencia o motor/ops/job; job tem trava FORCAR_DRY; nenhum agendador B3', () => {
-    const idx = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8'); expect(idx).not.toMatch(/reativacao|carteiraOwnership|carteiraV2/i); expect(JOB.FORCAR_DRY).toBe(true);
+    const idx = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8'); expect(idx.replace(/reativacaoGestaoCallable|crmReativacaoGestao|reativacaoGestaoHandler/g, '')).not.toMatch(/reativacao|carteiraOwnership|carteiraV2/i); expect(JOB.FORCAR_DRY).toBe(true);   // B3.1: único acréscimo permitido = callable de gestão (sem job/agendador)
     expect(require('../lib/carteiraRegraJob').FORCAR_SOMBRA).toBe(true);
   });
   test('Rules: reservas, restrições e devoluções sem escrita do cliente; leitura só da gestão', () => {
@@ -86,7 +87,7 @@ describe('B3 ops — venda converte a reserva e transfere (transação única)',
     const ev = (await db.collection('carteira_comercial_historico').doc(r.res.eventoId).get()).data();
     expect(ev).toMatchObject({ schemaVersion: 'historico-v2', tipoEvento: 'REATIVACAO_120D_PRIMEIRA_VENDA', ownerAnteriorUid: ADE, ownerNovoUid: FAB, motivoCodigo: 'REATIVACAO_120D', versaoCarteiraAntes: 2, versaoCarteiraDepois: 3, atorTipo: 'SYSTEM', chaveIdempotencia: 'B3:TRANSFERIR_REATIVACAO:2', referencias: { vendaGcId: '2', ciclo: dia(150), reservaChave: chaveX } });
     expect((await db.collection('carteira_reativacoes').get()).docs[0].data()).toMatchObject({ estado: 'CONVERTIDA', vendaId: '2' });
-    expect((await db.collection('audit_log').where('entityId', '==', 'GC:20').get()).size).toBe(1);
+    expect((await db.collection('audit_log').where('entityId', '==', 'GC:20').where('action', '==', 'PORTFOLIO_REATIVACAO_120D_PRIMEIRA_VENDA').get()).size).toBe(1);   // + 1 evento REACTIVATION_RESERVED (B3.1)
     const again = await OPS.aplicarDecisaoVenda(db, FieldValue, { decisao: r.decisao, venda: v1, carteira: (await db.doc('carteira_comercial/GC:20').get()).data().versao === 3 ? { ...c, versao: 2 } : c, agoraIso: HOJE + 'T10:00:00.000Z' });
     expect(again.repetido).toBe(true); expect((await db.collection('carteira_comercial_historico').get()).size).toBe(1);
   });
@@ -119,7 +120,7 @@ describe('B3 ops — venda converte a reserva e transfere (transação única)',
 });
 
 describe('B3 job — preparado e inativo', () => {
-  beforeAll(async () => { await limpar(['carteira_reativacoes', 'carteira_comercial_historico', 'vendas_gc', 'carteira_comercial', 'carteira_comercial_config']); await db.doc('carteira_comercial/GC:60').set(v2('60', ADE)); await seedVendas([venda(1, 60, dia(150), '111')]); });
+  beforeAll(async () => { await limpar(['carteira_reativacoes', 'carteira_comercial_historico', 'vendas_gc', 'carteira_comercial']); await db.doc('carteira_comercial_config/reativacao').delete(); await db.doc('carteira_comercial/GC:60').set(v2('60', ADE)); await seedVendas([venda(1, 60, dia(150), '111')]); });
   test('DESLIGADO por padrão (sem config) → nada acontece', async () => { expect((await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE })).status).toBe('DESLIGADO'); });
   test('modo DRY ou ATIVO com a trava FORCAR_DRY: calcula o plano e NÃO escreve', async () => {
     for (const modo of ['DRY', 'ATIVO']) { await db.doc('carteira_comercial_config/reativacao').set({ modo }); const r = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE }); expect(r.status).toBe('DRY'); expect(r.plano.liberar).toHaveLength(1); expect((await db.collection('carteira_reativacoes').get()).size).toBe(0); }

@@ -142,6 +142,7 @@ function montarTimeline({ estados = [], vendas = [], atribuicoes = [], carteiraH
       : t === 'CONFLITO_RESOLVIDO' ? 'Revisão de identidade concluída (dono mantido)'
       : t === 'MIGRATED_BASELINE' ? 'Estado inicial da carteira migrado'
       : t === 'LIBERACAO' ? 'Carteira liberada'
+      : t === 'REVERSAO_TRANSFERENCIA' ? 'Transferência revertida (venda deixou de ser válida)'
       : 'Carteira passou para ' + (nome(h.ownerNovoUid) || 'vendedor');
     ev.push({ quando: typeof h.criadoEm === 'string' ? h.criadoEm : String(h.criadoEm), precisao: 'HORA', ator: 'SISTEMA', tipo: 'CARTEIRA', titulo });
   }

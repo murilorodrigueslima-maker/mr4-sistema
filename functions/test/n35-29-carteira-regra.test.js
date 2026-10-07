@@ -13,6 +13,7 @@ const V1 = require('../lib/carteiraV1');
 
 const AGORA = '2026-09-27T10:00:00.000Z';
 const REGRA = { modo: 'ATIVO', ativoDesde: '2026-01-01' };
+beforeEach(async () => { await db.doc('carteira_comercial_config/motor').set({ motorAtivo: 'R2' }); });     // B3.1: R2 só escreve ownership com o motor R2 autorizado (exclusão mútua R2×B3)
 const FAB = 't29-fab', ADE = 't29-ade', MUR = 't29-mur', C = 'uid-vendedor-c', OFF = 't29-off', GES = 't29-gestor';
 const GC = { [FAB]: '9100001', [ADE]: '9100002', [MUR]: '9100003', [C]: '9100007', [OFF]: '9100009' };
 const criados = { vendas: new Set(), users: new Set(), clientes: new Set() };
@@ -96,7 +97,7 @@ describe('Venda válida e vendedor elegível (puro)', () => {
     expect(src).not.toMatch(/\b(?=[A-Za-z0-9]*\d)(?=[A-Za-z0-9]*[A-Z])[A-Za-z0-9]{28}\b/);   // UID Firebase (28 chars, com dígito)
     expect(src).not.toMatch(/1080453|948278|559684|791775|1392140|1249840/);  // vendedores GC reais
     const reqs = [...src.matchAll(/require\('([^']+)'\)/g)].map(m => m[1]).sort();
-    expect(reqs).toEqual(['./carteiraMigracao', './carteiraV1', './commercialIdentity', 'crypto']);
+    expect(reqs).toEqual(['./carteiraMigracao', './carteiraV1', './commercialIdentity', './motorCarteira', './motorCarteira', 'crypto']);   // B3.1: trava de exclusão mútua R2×B3
     expect(src).not.toMatch(/fila_comercial|interacoes_fila|perfis_360/);
   });
 });
@@ -369,7 +370,7 @@ describe('Worklist independente (WL)', () => {
     expect((await cart('8800501')).ownerUid).toBe(FAB);
     const v2 = await venda('8800501', '2026-09-21', ADE);
     await R.processarVendaCarteira(wrap, { vendaId: v2, agoraIso: AGORA, regraDoc: REGRA });
-    for (const c of colecoes) expect(['vendas_gc', 'carteira_comercial', 'carteira_comercial_historico', 'carteira_comercial_decisoes', 'clientes', 'sistema_usuarios', 'users']).toContain(c);
+    for (const c of colecoes) expect(['vendas_gc', 'carteira_comercial', 'carteira_comercial_historico', 'carteira_comercial_decisoes', 'clientes', 'sistema_usuarios', 'users', 'carteira_comercial_config']).toContain(c);   // config = leitura do motor (B3.1); coleções da FILA seguem intocadas
   });
   test('WL-02 dono Fabiana, 150 dias, Worklist/claim Ademir, sem venda → dono Fabiana', async () => {
     await carteira('8800502', FAB); await venda('8800502', dMenos('2026-09-27', 150), FAB);

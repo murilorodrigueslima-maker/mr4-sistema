@@ -151,9 +151,21 @@ async function claimOpportunityHandler(request, opts = {}) {
     // N35.14: worklist do dia define atribuição. Lida na MESMA transação (antes de qualquer write).
     const wlSnap = await tx.get(store.collection(WORKLIST_COLL).doc(WORKLIST_DOC));
     const wl = wlSnap.exists ? wlSnap.data() : null;
-    const atrib = (wl && wl.dataReferencia === dataComercial(isoNow))
+    let atrib = (wl && wl.dataReferencia === dataComercial(isoNow))
       ? ((wl.atribuicoes || {})[opportunityInstanceId] || null)
       : null;
+    // B3.1 — oportunidade de REATIVAÇÃO (reserva de 7 dias): autoriza o claim do vendedor RESERVADO, sem depender da worklist do dia.
+    // Reserva não cria ownership; recusa se o cliente virou NÃO CONTATAR ou se a reserva não está ativa/é de outro vendedor.
+    const resQ = await tx.get(store.collection('carteira_reativacoes').where('opportunityInstanceId', '==', opportunityInstanceId).limit(1));
+    if (!resQ.empty) {
+      const rv = resQ.docs[0].data(); const hojeC = dataComercial(isoNow);
+      const rst = await tx.get(store.collection('carteira_comercial_restricoes').doc(rv.portfolioId));
+      if (rv.destinoUid !== uid) throw new HttpsError('permission-denied', 'Oportunidade de reativação reservada para outro vendedor.');
+      const fim = rv.followUpAte && rv.followUpAte > rv.reservaAte ? rv.followUpAte : rv.reservaAte;
+      if (rv.estado !== 'RESERVADA' || hojeC < rv.liberadoEm || hojeC > fim) throw new HttpsError('failed-precondition', 'A reserva desta reativação não está ativa.');
+      if (rst.exists && rst.data().naoContatar === true) throw new HttpsError('failed-precondition', 'Cliente marcado como NÃO CONTATAR.');
+      atrib = { uid, commercialEntityId: 'GC_NATIVE:' + rv.portfolioId.slice(3), tipoOportunidade: 'REATIVACAO_120D', nomeCliente: rv.nomeCliente || 'Cliente' };
+    }
 
     if (atrib && atrib.uid !== uid) {
       throw new HttpsError('permission-denied', 'Oportunidade atribuída a outro vendedor hoje.');
@@ -275,6 +287,7 @@ async function registerOutcomeHandler(request, opts = {}) {
   const ref    = store.collection(COLL).doc(opportunityInstanceId);
   let novoEstado;
   let repetido = false;
+  let reativacaoAud = null, reativacaoPortfolio = null;
 
   await store.runTransaction(async tx => {
     repetido = false;
@@ -282,6 +295,9 @@ async function registerOutcomeHandler(request, opts = {}) {
     if (!snap.exists) throw new HttpsError('not-found', 'Oportunidade não encontrada.');
 
     const estado = snap.data();
+    // B3.1 — reserva de reativação ligada a esta oportunidade (leitura ANTES de qualquer escrita)
+    const resQ = await tx.get(store.collection('carteira_reativacoes').where('opportunityInstanceId', '==', opportunityInstanceId).limit(1));
+    const reserva = resQ.empty ? null : resQ.docs[0];
 
     // S6 idempotência: o mesmo requestId do mesmo operador já aplicado → devolve o resultado original, sem novo evento nem nova nota
     if (requestId && (estado.eventos || []).some(e => e && e.tipo === EVENT_TYPES.OUTCOME_REGISTERED && e.operadorId === uid && e.meta && e.meta.requestId === requestId)) {
@@ -306,6 +322,18 @@ async function registerOutcomeHandler(request, opts = {}) {
 
     novoEstado = registrarOutcome(estado, uid, outcome, isoNow, meta);
     tx.set(ref, novoEstado);
+    if (reserva && reserva.data().estado === 'RESERVADA' && reserva.data().destinoUid === uid) {
+      if (outcome === OUTCOMES.PEDIU_RETORNO) {                                    // follow-up real: data futura (já validada) + MOTIVO obrigatório; estende a janela
+        if (!notaLimpa || notaLimpa.length < 5) throw new HttpsError('invalid-argument', 'FOLLOWUP_DE_REATIVACAO_EXIGE_MOTIVO (observação com pelo menos 5 caracteres).');
+        const fimAtual = reserva.data().followUpAte && reserva.data().followUpAte > reserva.data().reservaAte ? reserva.data().followUpAte : reserva.data().reservaAte;
+        if (scheduledFor > fimAtual) tx.update(reserva.ref, { followUpAte: scheduledFor, followUpMotivo: notaLimpa.slice(0, 200) });
+        reativacaoAud = { action: 'REACTIVATION_FOLLOWUP_EXTENDED', after: { followUpAte: scheduledFor } };
+      } else if (outcome === OUTCOMES.SEM_INTERESSE_AGORA) {                       // sem interesse: encerra a reserva (cooldown de 30 dias vem do estado da oportunidade)
+        tx.update(reserva.ref, { estado: 'ENCERRADA', encerradaEm: dataComercial(isoNow), motivoEncerramento: 'SEM_INTERESSE' });
+        reativacaoAud = { action: 'REACTIVATION_CLOSED_NO_INTEREST', after: { estado: 'ENCERRADA' } };
+      }
+      reativacaoPortfolio = reserva.data().portfolioId;
+    }
     if (notaLimpa) {
       // id determinístico = oportunidade + índice do evento (append-only) → 1 nota por resultado; create() recusa duplicata
       const idx = novoEstado.eventos.length - 1;
@@ -316,6 +344,11 @@ async function registerOutcomeHandler(request, opts = {}) {
     }
   });
 
+  if (reativacaoAud) {
+    try { const A = require('./auditoria'); await A.gravar(store, require('firebase-admin').firestore.FieldValue, `reativ_${opportunityInstanceId}_${novoEstado.eventos.length}`, A.evento({ ator: await A.enriquecerAtor(store, { uid, type: 'USER', origin: 'CALLABLE_AUTH' }),
+      action: reativacaoAud.action, category: A.CATEGORIAS.COMMERCIAL, entityType: 'carteira_reativacoes', entityId: reativacaoPortfolio, source: 'CALLABLE:registerOutcome', before: null, after: reativacaoAud.after, metadata: { opportunityInstanceId } })); }
+    catch (e) { console.error('[registerOutcome] auditoria de reativação falhou', e && e.message); }
+  }
   if (repetido) {
     const orig = (novoEstado.eventos || []).filter(e => e && e.tipo === EVENT_TYPES.OUTCOME_REGISTERED && e.operadorId === uid && e.meta && e.meta.requestId === requestId).pop();
     return { estado: orig.estadoDepois, outcome: orig.outcome, nextFollowUpAt: (orig.meta && orig.meta.scheduledFor) || null,

@@ -139,6 +139,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 .toast.err{background:var(--red)}
 /* Agente Comercial (IA) */
 .tab[hidden]{display:none}
+#linkGestao[hidden]{display:none}
 .ag-box{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:1rem}
 .ag-h{display:flex;align-items:center;gap:.5rem;font-weight:700;font-size:1.02rem}.ag-h .ms{color:var(--blue)}
 .ag-beta{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--blue-dk);background:var(--blue-lt);border-radius:999px;padding:.1rem .5rem}
@@ -165,6 +166,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 <header class="topbar">
   <a class="back" href="../index.html"><span class="ms">arrow_back</span> Sistema</a>
   <div class="brand"><span class="ms">support_agent</span> CRM</div>
+  <a id="linkGestao" class="back" href="crm-gestao.html" hidden>Gestão da reativação</a>
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tabHoje" aria-selected="true">Hoje</button>
     <button class="tab" role="tab" id="tabAgenda" aria-selected="false">Agenda</button>
@@ -576,6 +578,7 @@ onAuthStateChanged(auth, async u => {
     const mods = Array.isArray(ss.data().modulos) ? ss.data().modulos : [];
     S.podeOperar = mods.includes('fila-comercial-operar');
     S.gestao = ud.role === 'gestor' || mods.includes('fila-comercial-gestao');
+    if (S.gestao) { const l = document.getElementById('linkGestao'); if (l) l.hidden = false; }          // B3.2: atalho para a gestão da reativação (só proprietário/gestão)
     if (!S.podeOperar && !S.gestao) { semAcesso('Você não tem acesso ao CRM.'); return; }
     // Gate do piloto (frontend): a aba só aparece se o BACKEND confirmar o acesso (gate real fica em aiAgente; esconder a aba nunca é a proteção).
     if (S.gestao) fnAgente({ agentType: 'commercial', modo: 'acesso' }).then(r => { if (r && r.data && r.data.acesso === true) document.getElementById('tabAgente').hidden = false; }).catch(() => {});

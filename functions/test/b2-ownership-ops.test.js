@@ -30,7 +30,7 @@ describe('B2 ops — INATIVAS por construção', () => {
     const idx = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8');
     expect(idx).not.toMatch(/carteiraOwnership|carteiraV2|b2_carteira/);
     expect(require('../lib/carteiraRegraJob').FORCAR_SOMBRA).toBe(true);
-    for (const f of fs.readdirSync(path.join(__dirname, '../lib')).filter(x => x.endsWith('.js'))) if (!['carteiraOwnership.js', 'reativacaoOps.js', 'restricoes.js', 'devolucoes.js', 'reativacaoReversao.js'].includes(f)) expect(fs.readFileSync(path.join(__dirname, '../lib', f), 'utf8')).not.toMatch(/require\(['"]\.\/carteiraOwnership['"]\)/);
+    for (const f of fs.readdirSync(path.join(__dirname, '../lib')).filter(x => x.endsWith('.js'))) if (!['carteiraOwnership.js', 'reativacaoOps.js', 'restricoes.js', 'devolucoes.js', 'reativacaoReversao.js', 'reativacaoGestaoCallable.js'].includes(f)) expect(fs.readFileSync(path.join(__dirname, '../lib', f), 'utf8')).not.toMatch(/require\(['"]\.\/carteiraOwnership['"]\)/);
   });
   test('Rules: carteira e histórico seguem sem escrita do cliente (nenhum perfil)', () => {
     const r = fs.readFileSync(path.join(__dirname, '../../modulos/firestore.rules'), 'utf8');

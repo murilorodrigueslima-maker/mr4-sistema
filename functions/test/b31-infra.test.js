@@ -255,7 +255,7 @@ describe('B3.1 — segurança: vendedor não controla owner/reserva/data [3]', (
   test('gestão callable: payload estrito, ação inválida e identidade; nenhuma ação cria oportunidade ou muda owner por si só', async () => {
     expect(await erro(G.reativacaoGestaoHandler(req(GES, { acao: 'transferir', portfolioId: 'GC:1' }), { db }))).toBe('invalid-argument');
     expect(await erro(G.reativacaoGestaoHandler(req(GES, { acao: 'reversao', portfolioId: 'GC:1', vendaId: '1', requestId: rid('x'), ownerUid: ADE }), { db }))).toBe('invalid-argument');
-    expect(Object.keys(G.PERMITIDOS).sort()).toEqual(['devolucao', 'naoContatar', 'reversao']);
+    expect(Object.keys(G.PERMITIDOS).sort()).toEqual(['devolucao', 'naoContatar', 'pendencias', 'reversao', 'venda']);   // B3.2: + consulta de venda e pendências (somente leitura)
   });
   test('claim/outcome recusam campos de identidade e de reserva no payload (vendedor não escolhe owner/vendedor/data)', async () => {
     for (const campo of ['ownerUid', 'novoOwnerUid', 'destinoUid', 'reservaAte', 'cicloAncoraEm', 'liberadoEm'])

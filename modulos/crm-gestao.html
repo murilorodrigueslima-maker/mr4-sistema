@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM · Gestão da reativação — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1a73e8;--blue-lt:#e8f0fe;--bg:#f5f6f8;--white:#fff;--text:#202124;--muted:#5f6368;--border:#dadce0;--green:#0d904f;--green-lt:#e6f4ea;--amber:#b06000;--amber-lt:#fef3e2;--red:#c5221f;--red-lt:#fce8e6;--radius:10px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+.topbar{position:sticky;top:0;z-index:20;height:56px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.75rem;padding:0 1.25rem}
+.back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;padding:.35rem .65rem;border:1px solid var(--border);border-radius:8px}
+.brand{font-weight:700}
+.tabs{display:flex;gap:.25rem;margin-left:.75rem;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:.45rem .8rem;border-radius:8px;font-weight:600;color:var(--muted)}
+.tab[aria-selected=true]{background:var(--blue-lt);color:var(--blue)}
+main{max-width:980px;margin:0 auto;padding:1rem 1.25rem 3rem}
+section.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1rem}
+h2{font-size:1rem;margin-bottom:.35rem}
+p.ajuda{color:var(--muted);font-size:.85rem;margin-bottom:.7rem}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--muted);margin:.5rem 0 .2rem}
+input,select,textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--border);border-radius:8px;font:inherit;background:#fff}
+.linha{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.7rem}
+button.btn{margin-top:.7rem;padding:.5rem .9rem;border-radius:8px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-weight:600}
+button.btn.sec{background:#fff;color:var(--blue)} button.btn.perigo{background:var(--red);border-color:var(--red)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.msg{margin-top:.6rem;padding:.5rem .7rem;border-radius:8px;font-size:.85rem}.msg.ok{background:var(--green-lt);color:var(--green)}.msg.err{background:var(--red-lt);color:var(--red)}.msg.info{background:var(--amber-lt);color:var(--amber)}
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:.5rem}th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--border);vertical-align:top}th{color:var(--muted);font-weight:600}
+.wrap{overflow-x:auto}.pill{display:inline-block;padding:.05rem .5rem;border-radius:99px;background:var(--blue-lt);color:var(--blue);font-size:.75rem;font-weight:600}
+.pill.r{background:var(--red-lt);color:var(--red)}.pill.a{background:var(--amber-lt);color:var(--amber)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="crm.html">← CRM</a><span class="brand">Gestão da reativação</span>
+  <nav class="tabs" role="tablist">
+    <button class="tab" data-aba="nc" aria-selected="true">Não contatar</button>
+    <button class="tab" data-aba="dev" aria-selected="false">Devoluções</button>
+    <button class="tab" data-aba="rev" aria-selected="false">Pendências de reversão</button>
+    <button class="tab" data-aba="hist" aria-selected="false">Histórico e auditoria</button>
+  </nav>
+</header>
+<main>
+  <div id="carregando" class="msg info">Verificando acesso…</div>
+
+  <div id="aba-nc" hidden>
+    <section class="card">
+      <h2>Marcar / desmarcar "Não contatar"</h2>
+      <p class="ajuda">Impede a oportunidade automática de reativação. O cliente que voltar espontaneamente continua podendo ser atendido. Vendedores veem o bloqueio, mas não alteram.</p>
+      <div class="linha">
+        <div><label for="ncId">ID do cliente no GestãoClick</label><input id="ncId" inputmode="numeric" placeholder="ex.: 36720558"></div>
+        <div><label for="ncMotivoCod">Motivo</label><select id="ncMotivoCod">
+          <option value="PEDIDO_DO_CLIENTE">Pedido do cliente</option><option value="CLIENTE_NAO_QUER_CONTATO">Cliente não quer contato</option><option value="DECISAO_COMERCIAL">Decisão comercial</option><option value="JURIDICO_FINANCEIRO">Jurídico / financeiro</option><option value="OUTRO">Outro</option></select></div>
+      </div>
+      <label for="ncMotivo">Detalhe do motivo (3–200 caracteres; sem dados pessoais)</label><input id="ncMotivo" maxlength="200">
+      <div id="ncEstado" class="msg info" hidden></div>
+      <button class="btn" id="ncConsultar">Consultar situação</button>
+      <button class="btn" id="ncMarcar">Marcar NÃO CONTATAR</button>
+      <button class="btn sec" id="ncDesmarcar">Desmarcar</button>
+      <div id="ncMsg"></div>
+    </section>
+    <section class="card"><h2>Clientes hoje marcados</h2><div class="wrap"><table><thead><tr><th>Cliente (GC)</th><th>Motivo</th><th>Desde</th><th>Por</th></tr></thead><tbody id="ncLista"></tbody></table></div></section>
+  </div>
+
+  <div id="aba-dev" hidden>
+    <section class="card">
+      <h2>Registrar devolução vinculada a uma venda</h2>
+      <p class="ajuda">Não há captura automática de devolução. Informe o número da venda, confira os dados e registre. <b>Total</b> invalida a renovação desta venda; <b>parcial</b> mantém.</p>
+      <div class="linha"><div><label for="dvVenda">Nº da venda no GestãoClick</label><input id="dvVenda" inputmode="numeric"></div></div>
+      <button class="btn sec" id="dvConferir">Conferir venda</button>
+      <div id="dvInfo" hidden></div>
+      <div id="dvForm" hidden>
+        <div class="linha">
+          <div><label for="dvTipo">Tipo</label><select id="dvTipo"><option value="PARCIAL">Parcial (mantém a renovação)</option><option value="TOTAL">Total (invalida a renovação)</option></select></div>
+          <div><label for="dvData">Data da devolução</label><input id="dvData" type="date"></div>
+        </div>
+        <label for="dvMotivo">Motivo (3–200 caracteres)</label><input id="dvMotivo" maxlength="200">
+        <label><input type="checkbox" id="dvOk" style="width:auto"> Conferi que esta é a venda correta</label>
+        <button class="btn perigo" id="dvRegistrar" disabled>Registrar devolução</button>
+      </div>
+      <div id="dvMsg"></div>
+    </section>
+  </div>
+
+  <div id="aba-rev" hidden>
+    <section class="card">
+      <h2>Pendências de reversão</h2>
+      <p class="ajuda">Transferências/criações por reativação cuja venda deixou de valer (cancelada ou devolvida integralmente). "Reverter" restaura o dono anterior e preserva todo o histórico. Casos ambíguos ficam para decisão da gestão.</p>
+      <button class="btn sec" id="revAtualizar">Atualizar</button><div id="revMsg"></div>
+      <div class="wrap"><table><thead><tr><th>Carteira</th><th>Venda</th><th>Situação</th><th>Motivos</th><th></th></tr></thead><tbody id="revLista"></tbody></table></div>
+    </section>
+  </div>
+
+  <div id="aba-hist" hidden>
+    <section class="card"><h2>Histórico</h2>
+      <label for="histTipo">Fonte</label><select id="histTipo"><option value="restricoes">Não contatar (trilha)</option><option value="devolucoes">Devoluções</option><option value="revisoes">Revisões da gestão</option><option value="reservas">Reservas de reativação</option><option value="audit">Auditoria comercial</option></select>
+      <button class="btn sec" id="histCarregar">Carregar</button><div id="histMsg"></div>
+      <div class="wrap"><table><thead id="histHead"></thead><tbody id="histBody"></tbody></table></div>
+    </section>
+  </div>
+</main>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, getDocs, collection, query, where, limit } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+const app = initializeApp({ apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto", storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5" });
+const auth = getAuth(app), db = getFirestore(app), fn = httpsCallable(getFunctions(app, 'southamerica-east1'), 'crmReativacaoGestao');
+const $ = id => document.getElementById(id); const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const msg = (id, t, k) => { $(id).innerHTML = t ? `<div class="msg ${k || 'info'}">${esc(t)}</div>` : ''; };
+const rid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+const erroTxt = e => ({ 'functions/permission-denied': 'Sem permissão (somente proprietário ou gestão).', 'functions/failed-precondition': 'Operação não permitida no estado atual: ' + (e.message || ''), 'functions/already-exists': 'Já registrado: ' + (e.message || ''), 'functions/not-found': 'Não encontrado: ' + (e.message || ''), 'functions/invalid-argument': 'Dados inválidos: ' + (e.message || '') }[e.code] || ('Falha: ' + (e.message || e.code)));
+const dt = s => s ? String(s).slice(0, 10).split('-').reverse().join('/') : '';
+const gcId = v => String(v || '').replace(/\D/g, '');
+onAuthStateChanged(auth, async u => {
+  if (!u) { location.href = '../login.html'; return; }
+  try {
+    const us = await getDoc(doc(db, 'users', u.uid)), ss = await getDoc(doc(db, 'sistema_usuarios', u.uid));
+    const gestao = us.exists() && us.data().ativo && ss.exists() && ss.data().bloqueado !== true && (us.data().role === 'gestor' || (ss.data().modulos || []).includes('fila-comercial-gestao'));
+    if (!gestao) { $('carregando').className = 'msg err'; $('carregando').textContent = 'Acesso restrito ao proprietário e à gestão.'; return; }
+  } catch (e) { $('carregando').className = 'msg err'; $('carregando').textContent = 'Não foi possível verificar o acesso.'; return; }
+  $('carregando').hidden = true; trocar('nc'); listarNC();
+});
+function trocar(aba) { document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.aba === aba)); ['nc', 'dev', 'rev', 'hist'].forEach(a => { $('aba-' + a).hidden = a !== aba; }); if (aba === 'rev') pendencias(); }
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => trocar(t.dataset.aba)));
+// ── Não contatar ──
+async function listarNC() {
+  const s = await getDocs(query(collection(db, 'carteira_comercial_restricoes'), where('naoContatar', '==', true), limit(300)));
+  $('ncLista').innerHTML = s.docs.map(d => { const x = d.data(); return `<tr><td>${esc(d.id.replace('GC:', ''))}</td><td>${esc(x.motivoCodigo)} — ${esc(x.motivo)}</td><td>${esc(dt(x.desde))}</td><td>${esc(x.atualizadoPorPapel)}</td></tr>`; }).join('') || '<tr><td colspan="4">Nenhum cliente marcado.</td></tr>';
+}
+$('ncConsultar').addEventListener('click', async () => {
+  const id = gcId($('ncId').value); if (!id) return msg('ncMsg', 'Informe o ID do cliente.', 'err');
+  const s = await getDoc(doc(db, 'carteira_comercial_restricoes', 'GC:' + id)); const e = $('ncEstado'); e.hidden = false;
+  e.textContent = s.exists() && s.data().naoContatar ? `Marcado NÃO CONTATAR desde ${dt(s.data().desde)} (${s.data().motivoCodigo}).` : 'Sem restrição de contato.';
+});
+async function nc(marcar) {
+  const id = gcId($('ncId').value); if (!id) return msg('ncMsg', 'Informe o ID do cliente.', 'err');
+  try { const r = await fn({ acao: 'naoContatar', portfolioId: 'GC:' + id, naoContatar: marcar, motivoCodigo: $('ncMotivoCod').value, motivo: $('ncMotivo').value.trim(), requestId: rid() });
+    msg('ncMsg', marcar ? 'Cliente marcado como NÃO CONTATAR.' : 'Restrição removida.', 'ok'); listarNC(); }
+  catch (e) { msg('ncMsg', erroTxt(e), 'err'); }
+}
+$('ncMarcar').addEventListener('click', () => nc(true)); $('ncDesmarcar').addEventListener('click', () => nc(false));
+// ── Devolução ──
+let vendaConferida = null;
+$('dvConferir').addEventListener('click', async () => {
+  const v = gcId($('dvVenda').value); vendaConferida = null; $('dvForm').hidden = true; $('dvInfo').hidden = true; if (!v) return msg('dvMsg', 'Informe o número da venda.', 'err');
+  try { const r = (await fn({ acao: 'venda', vendaId: v })).data; vendaConferida = r.venda;
+    $('dvInfo').hidden = false; $('dvInfo').innerHTML = `<div class="msg ${r.venda.valida ? 'ok' : 'err'}"><b>Venda ${esc(r.venda.vendaId)}</b> · data ${esc(dt(r.venda.data))} · situação ${esc(r.venda.situacao)} · cliente GC ${esc(r.venda.clienteGc)} · vendedor GC ${esc(r.venda.vendedorGc)} · ${r.venda.valida ? 'válida' : 'NÃO válida (' + esc(r.venda.motivoInvalida) + ')'}</div>
+      ${r.devolucoes.length ? '<div class="msg info">Devoluções já registradas: ' + r.devolucoes.map(d => esc(d.tipo) + ' em ' + esc(dt(d.dataDevolucao))).join('; ') + '</div>' : ''}
+      ${r.eventosDeCarteira.length ? '<div class="msg info">Esta venda aparece no histórico da carteira: ' + r.eventosDeCarteira.map(e => esc(e.tipoEvento)).join(', ') + ' — uma devolução TOTAL pode exigir reversão.</div>' : ''}`;
+    $('dvForm').hidden = !r.venda.valida; $('dvData').max = new Date().toISOString().slice(0, 10); msg('dvMsg', ''); }
+  catch (e) { msg('dvMsg', erroTxt(e), 'err'); }
+});
+$('dvOk').addEventListener('change', () => { $('dvRegistrar').disabled = !$('dvOk').checked; });
+$('dvRegistrar').addEventListener('click', async () => {
+  if (!vendaConferida) return;
+  try { const r = (await fn({ acao: 'devolucao', vendaId: vendaConferida.vendaId, tipo: $('dvTipo').value, dataDevolucao: $('dvData').value, motivo: $('dvMotivo').value.trim(), requestId: rid() })).data;
+    msg('dvMsg', 'Devolução registrada.' + (r.reversaoPodeSerNecessaria ? ' Verifique a aba "Pendências de reversão".' : ''), 'ok'); $('dvForm').hidden = true; $('dvOk').checked = false; $('dvRegistrar').disabled = true; }
+  catch (e) { msg('dvMsg', erroTxt(e), 'err'); }
+});
+// ── Pendências de reversão ──
+async function pendencias() {
+  msg('revMsg', 'Carregando…');
+  try { const r = (await fn({ acao: 'pendencias' })).data; const linhas = [];
+    r.invalidacoes.detalhes.forEach(d => linhas.push(`<tr><td>${esc(d.portfolioId)}</td><td>${esc(d.vendaId)}</td><td><span class="pill ${d.acao === 'REVERTER' ? 'r' : 'a'}">${esc(d.acao)}</span></td><td>${esc((d.motivos || []).join(', '))}</td><td>${d.acao === 'REVERTER' ? `<button class="btn perigo" data-rev="${esc(d.portfolioId)}|${esc(d.vendaId)}">Reverter</button>` : ''}</td></tr>`));
+    r.revisoesAbertas.forEach(x => linhas.push(`<tr><td>${esc(x.portfolioId)}</td><td>${esc(x.vendaId)}</td><td><span class="pill a">REVISÃO ABERTA</span></td><td>${esc((x.motivos || []).join(', '))}</td><td></td></tr>`));
+    $('revLista').innerHTML = linhas.join('') || '<tr><td colspan="5">Nenhuma pendência.</td></tr>'; msg('revMsg', ''); }
+  catch (e) { msg('revMsg', erroTxt(e), 'err'); }
+}
+$('revAtualizar').addEventListener('click', pendencias);
+$('revLista').addEventListener('click', async ev => { const b = ev.target.closest('[data-rev]'); if (!b) return; const [p, v] = b.dataset.rev.split('|'); b.disabled = true;
+  try { const r = (await fn({ acao: 'reversao', portfolioId: p, vendaId: v, requestId: rid() })).data; msg('revMsg', 'Resultado: ' + r.status + (r.motivos ? ' (' + r.motivos.join(', ') + ')' : ''), r.status === 'REVERTIDA' ? 'ok' : 'info'); pendencias(); }
+  catch (e) { msg('revMsg', erroTxt(e), 'err'); b.disabled = false; } });
+// ── Histórico e auditoria (leitura direta; Rules limitam à gestão) ──
+const FONTES = {
+  restricoes: { c: 'carteira_comercial_restricoes_hist', cols: ['Quando', 'Cliente (GC)', 'Ação', 'Motivo', 'Por'], linha: x => [dt(x.criadoEm), x.portfolioId, x.acao, x.motivoCodigo + ' — ' + x.motivo, x.atorPapel], ord: x => x.criadoEm },
+  devolucoes: { c: 'carteira_comercial_devolucoes', cols: ['Registrada', 'Venda', 'Cliente (GC)', 'Tipo', 'Data devolução', 'Motivo', 'Por'], linha: x => [dt(x.registradoEm), x.vendaId, x.portfolioId, x.tipo, dt(x.dataDevolucao), x.motivo, x.registradoPorPapel], ord: x => x.registradoEm },
+  revisoes: { c: 'carteira_comercial_revisoes', cols: ['Criada', 'Carteira', 'Venda', 'Tipo', 'Estado', 'Motivos'], linha: x => [dt(x.criadoEm), x.portfolioId, x.vendaId, x.tipo, x.estado, (x.motivos || []).join(', ')], ord: x => x.criadoEm },
+  reservas: { c: 'carteira_reativacoes', cols: ['Liberada', 'Cliente (GC)', 'Tipo', 'Estado', 'Reserva até', 'Follow-up até'], linha: x => [dt(x.liberadoEm), x.portfolioId, x.tipo, x.estado, dt(x.reservaAte), dt(x.followUpAte)], ord: x => x.criadoEm },
+  audit: { c: 'audit_log', q: [where('category', '==', 'COMMERCIAL')], cols: ['Quando', 'Ação', 'Entidade', 'Ator', 'Papel'], linha: x => [x.at && x.at.toDate ? x.at.toDate().toLocaleString('pt-BR') : '', x.action, x.entityId, x.actorType === 'SYSTEM' ? 'sistema' : (x.actorUid || '').slice(0, 6) + '…', x.actorRole || ''], ord: x => (x.at && x.at.toMillis ? x.at.toMillis() : 0) },
+};
+$('histCarregar').addEventListener('click', async () => {
+  const f = FONTES[$('histTipo').value]; msg('histMsg', 'Carregando…');
+  try { const s = await getDocs(query(collection(db, f.c), ...(f.q || []), limit(300))); const itens = s.docs.map(d => d.data()).sort((a, b) => (f.ord(b) > f.ord(a) ? 1 : -1));
+    $('histHead').innerHTML = '<tr>' + f.cols.map(c => `<th>${esc(c)}</th>`).join('') + '</tr>'; $('histBody').innerHTML = itens.map(x => '<tr>' + f.linha(x).map(c => `<td>${esc(c)}</td>`).join('') + '</tr>').join('') || `<tr><td colspan="${f.cols.length}">Sem registros.</td></tr>`; msg('histMsg', ''); }
+  catch (e) { msg('histMsg', 'Não foi possível carregar (' + (e.code || e.message) + ').', 'err'); }
+});
+</script>
+</body>
+</html>

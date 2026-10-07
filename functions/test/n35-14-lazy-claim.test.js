@@ -83,7 +83,9 @@ test('LZ-05 gestão (sem operar) não cria nem opera', async () => {
 
 test('LZ-06 duplo clique simultâneo do mesmo vendedor → 1 estado, 1 evento CLAIMED', async () => {
   const rs = await Promise.allSettled([claimOpportunityHandler(req(U.A, OPP)), claimOpportunityHandler(req(U.A, OPP))]);
-  expect(rs.filter(r => r.status === 'fulfilled')).toHaveLength(1);
+  // S6: retry/duplo clique do MESMO operador é idempotente (sucesso sem novo evento); o que importa: 1 estado, 1 CLAIMED, 1 dono
+  expect(rs.filter(r => r.status === 'fulfilled').length).toBeGreaterThanOrEqual(1);
+  rs.filter(r => r.status === 'rejected').forEach(r => expect(r.reason.code).toBe('already-exists'));
   const d = (await db.collection(COLL).doc(OPP).get()).data();
   expect(d.eventos.filter(e => e.tipo === 'CLAIMED')).toHaveLength(1);
 }, 20000);

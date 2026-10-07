@@ -95,7 +95,9 @@ test('IT-04 Ademir (não ativo) não consegue criar/operar item da Fabiana', asy
 test('IT-05 duplo clique simultâneo → 1 estado, 1 CLAIMED, 1 dono', async () => {
   const it = hojeDoc.vendedores[FAB].novas[2];
   const rs = await Promise.allSettled([1, 2, 3].map(() => claimOpportunityHandler(req(FAB, { opportunityInstanceId: it.opportunityInstanceId }))));
-  expect(rs.filter(r => r.status === 'fulfilled')).toHaveLength(1);
+  // S6: retry/duplo clique do MESMO operador é idempotente (sucesso sem novo evento); o que importa: 1 estado, 1 CLAIMED, 1 dono
+  expect(rs.filter(r => r.status === 'fulfilled').length).toBeGreaterThanOrEqual(1);
+  rs.filter(r => r.status === 'rejected').forEach(r => expect(r.reason.code).toBe('already-exists'));
   const d = (await db.doc(`interacoes_fila/${it.opportunityInstanceId}`).get()).data();
   expect(d.eventos.filter(e => e.tipo === 'CLAIMED')).toHaveLength(1);
   expect(d.claimAtual.operadorId).toBe(FAB);

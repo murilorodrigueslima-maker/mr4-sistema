@@ -4,7 +4,7 @@
 //   node functions/scripts/b3_dryrun.js [--hoje=YYYY-MM-DD] [--sem-gc]
 const admin = require('firebase-admin');
 const R = require('../lib/reativacao120'); const { carregarContexto } = require('../lib/reativacaoContexto');
-const ID = require('../lib/identidadeConflitos'); const { gcClientesDerivados } = require('../lib/gcFetchDerivado');
+const PV = require('../lib/reativacaoVendas'); const ID = require('../lib/identidadeConflitos'); const { gcClientesDerivados } = require('../lib/gcFetchDerivado');
 const args = Object.fromEntries(process.argv.slice(2).map(a => { const m = a.match(/^--([^=]+)(?:=(.*))?$/); return m ? [m[1], m[2] === undefined ? true : m[2]] : [a, true]; }));
 admin.initializeApp({ projectId: 'mr4-ponto', credential: admin.credential.applicationDefault() }); const db = admin.firestore();
 const HOJE = args.hoje || new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Fortaleza' }).format(new Date());
@@ -56,6 +56,9 @@ const cnt = a => a.length; const val = (v, n) => Object.fromEntries(Object.entri
   const situ = {}; let totalVendas = 0, zerado = 0; for (const vs of vendasPorCliente.values()) for (const v of vs) { totalVendas++; situ[v.nome_situacao] = (situ[v.nome_situacao] || 0) + 1; if (!(parseFloat(v.valor_total) > 0)) zerado++; }
   let titDev = 0, titTotal = 0; try { const t = await db.collection('fin_n1_titulos').get(); titTotal = t.size; t.docs.forEach(d => { if (/devolu/i.test(JSON.stringify(d.data()))) titDev++; }); } catch (_) { /* coleção ausente */ }
   const cfgReat = await db.doc('carteira_comercial_config/reativacao').get();
+  // impacto de vendas novas / cancelamentos / devoluções desde o corte (SIMULAÇÃO: modo DRY forçado, ZERO escritas)
+  const imp = CORTE ? await PV.processarVendas(db, admin.firestore.FieldValue, { agoraIso: new Date().toISOString(), forcarDry: true, cfgOverride: { modo: 'DRY', corte: CORTE } }) : null;
+  let canceladasDesdeCorte = 0, vendasDesdeCorte = 0; for (const vs of vendasPorCliente.values()) for (const v of vs) if (String(v.data).slice(0, 10) >= (CORTE || '9999')) { vendasDesdeCorte++; if (v.nome_situacao !== 'Concretizada') canceladasDesdeCorte++; }
   const relat = {
     ok: true, hoje: HOJE, escritasEmProducao: 0,
     carteiras: carteiras.size, owners: val(Object.fromEntries(Object.entries(require('../lib/carteiraV2').contagemPorOwner(Object.fromEntries([...carteiras].map(([k, v]) => [k, v])), nome)).map(([k, v]) => [k, v])), {}),
@@ -69,6 +72,7 @@ const cnt = a => a.length; const val = (v, n) => Object.fromEntries(Object.entri
     primeiro_dia_liberacao: { carteiras: por(pCart), com_sem_carteira: por(pSem), so_sem_carteira: por(pSem, 'SEM_CARTEIRA') },
     destino_total_com_sem_carteira: Object.fromEntries(Object.entries(pSem.porDestino).map(([u, n]) => [nome[u] || u, n])),
     conflitos_gc: gruposConf, fontes: ctx.fontes, shadow: { decisoesBrutas: todasDec.length, porDecisaoTodasRevisoes: todasDec.reduce((o, d) => (o[d.decisao] = (o[d.decisao] || 0) + 1, o), {}), porDecisaoUltimaRevisao: [...ultimaRev.values()].reduce((o, d) => (o[d.decisao] = (o[d.decisao] || 0) + 1, o), {}), criacoesTeoricasUltimaRevisao: [...ultimaRev.values()].filter(d => d.decisao === 'CRIAR_PRIMEIRA_VENDA' || d.decisao === 'CRIAR_REATIVACAO').length, executadas_oficialmente: 0, ultimasRevisoesPorVenda: ultimaRev.size, modoRegra: cfgRegra.exists ? cfgRegra.data().modo : null, modoReativacao: cfgReat.exists ? cfgReat.data().modo : 'AUSENTE (DESLIGADO)', comparacao: cmp },
+    impacto_vendas_desde_o_corte: imp ? { corte: CORTE, vendasAvaliadas: imp.vendasAvaliadas, ignoradasAntesDoCorte: imp.ignoradasAntesDoCorte, decisoes: imp.decisoes, foraDeOrdem: imp.foraDeOrdem.length, reversoes: imp.reversoes ? { candidatas: imp.reversoes.candidatas, reverter: imp.reversoes.reverter, ambiguas: imp.reversoes.ambiguas, renovacoesInvalidadas: imp.reversoes.renovacoesInvalidadas } : null, vendasNaoConcretizadasDesdeCorte: canceladasDesdeCorte, vendasDesdeCorteComStatusDiferenteOuTotal: vendasDesdeCorte, devolucoesRegistradas: ctx.devolucoes.size } : null,
     evidencias: { vendas_por_situacao: situ, vendas_total_com_cliente: totalVendas, vendas_valor_zerado: zerado, titulos_financeiros_total: titTotal, titulos_com_texto_devolucao: titDev, devolucoes_registradas_fonte: ctx.devolucoes.size },
   };
   console.log(JSON.stringify(relat, null, 1)); process.exit(0);

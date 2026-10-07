@@ -127,8 +127,8 @@ describe('B3 job — preparado e inativo', () => {
   });
   test('só com a trava removida (forcarDry=false) e modo ATIVO grava — idempotente no retry (ensaio em emulador)', async () => {
     await db.doc('carteira_comercial_config/reativacao').set({ modo: 'ATIVO' });
-    const a = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, forcarDry: false, agoraIso: HOJE + 'T06:00:00.000Z' }); expect(a).toMatchObject({ status: 'ATIVO', criadas: 1 });
-    const b = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, forcarDry: false, agoraIso: HOJE + 'T06:00:01.000Z' }); expect(b).toMatchObject({ criadas: 0 });
+    const a = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, forcarDry: false, lookupNome: async gc => 'Cliente ' + gc, agoraIso: HOJE + 'T06:00:00.000Z' }); expect(a).toMatchObject({ status: 'ATIVO', criadas: 1 });
+    const b = await JOB.executarReativacaoDiaria(db, FieldValue, { hoje: HOJE, forcarDry: false, lookupNome: async gc => 'Cliente ' + gc, agoraIso: HOJE + 'T06:00:01.000Z' }); expect(b).toMatchObject({ criadas: 0 });
     expect((await db.collection('carteira_reativacoes').get()).size).toBe(1); expect((await db.doc('carteira_comercial/GC:60').get()).data().ownerUid).toBe(ADE);
   });
 });

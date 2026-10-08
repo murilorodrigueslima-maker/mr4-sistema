@@ -733,3 +733,94 @@ function calcConcluirRevisao(v1Id, v2Id, assinadoPor, assinaturaImg, agora) {
 
   return { v2Update: v2Update, v1Update: v1Update, v1Id: v1Id, v2Id: v2Id };
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BANCO DE HORAS ACUMULATIVO + COMPENSAÇÃO DE FALTAS (funções PURAS, em minutos inteiros)
+// NÃO altera o motor do dia nem o espelho: só ENCADEIA os saldos mensais já calculados e aplica
+// lançamentos do razão `banco_horas_lancamentos`. Tudo desligado por padrão (banco_horas_config/politica).
+// Regras trabalhistas (prazo, limite negativo, quitação) NÃO são definidas aqui: vêm da política cadastrada.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Id determinístico do lançamento de compensação (idempotência: 1 por funcionário × data de ausência). */
+function idCompensacao(funcId, dataAusencia) { return funcId + '_' + dataAusencia; }
+
+/** Lançamentos de compensação VIGENTES = COMPENSACAO_AUSENCIA que não possuem ESTORNO. */
+function compensacoesVigentes(lancamentos) {
+  const est = new Set((lancamentos || []).filter(l => l.tipo === 'ESTORNO').map(l => l.estornaId));
+  return (lancamentos || []).filter(l => l.tipo === 'COMPENSACAO_AUSENCIA' && !est.has(l.id));
+}
+
+/**
+ * Encadeia os meses. `meses` = [{ mes:'YYYY-MM', dias:[{data, saldoMin, contaNoSaldo}], congelado?:bool, origem?:string }]
+ * em ordem crescente, começando no 1º mês do banco do funcionário.
+ * Compensação: o motor já debita uma falta (−jornada). O ajuste do lançamento é só o que o motor NÃO debitou naquele dia
+ * (evita débito duplo): extra = −(H − min(H, debitoMotorDoDia)). Se o motor já debitou tudo, é só reclassificação.
+ * Ajustes (tipo AJUSTE, minutos com sinal) entram na competência.
+ * @returns {Array<{mes, saldoAnterior, creditos, debitos, compensacoes, ajustes, saldoFinal, congelado, origem}>}
+ */
+function calcBancoAcumulado(meses, lancamentos) {
+  const vig = compensacoesVigentes(lancamentos), ajustes = (lancamentos || []).filter(l => l.tipo === 'AJUSTE');
+  let ant = 0; const out = [];
+  (meses || []).forEach(m => {
+    let cred = 0, deb = 0; const porData = {};
+    (m.dias || []).forEach(d => {
+      if (!d.contaNoSaldo || d.saldoMin === null || d.saldoMin === undefined) return;
+      porData[d.data] = d.saldoMin;
+      if (d.saldoMin > 0) cred += d.saldoMin; else deb += d.saldoMin;
+    });
+    let comp = 0;
+    vig.filter(l => String(l.dataAusencia || '').startsWith(m.mes)).forEach(l => {
+      const motorDebita = Math.max(0, -(porData[l.dataAusencia] || 0));
+      comp -= (l.minutos - Math.min(l.minutos, motorDebita));
+    });
+    const aj = ajustes.filter(l => l.competencia === m.mes).reduce((a, l) => a + l.minutos, 0);
+    const fim = ant + cred + deb + comp + aj;
+    out.push({ mes: m.mes, saldoAnterior: ant, creditos: cred, debitos: deb, compensacoes: comp, ajustes: aj, saldoFinal: fim, congelado: !!m.congelado, origem: m.origem || 'MOTOR' });
+    ant = fim;
+  });
+  return out;
+}
+
+/**
+ * Avalia uma compensação ANTES de gravar. `saldoAtualMin` = saldo acumulado final atual (já inclui o débito do motor naquele dia);
+ * `debitoMotorDiaMin` = quanto o motor já debitou na data da ausência (≥0). Política desconhecida = NÃO permite saldo negativo.
+ */
+function avaliarCompensacao(saldoAtualMin, debitoMotorDiaMin, horasMin, politica) {
+  const pol = politica || {};
+  if (!Number.isInteger(horasMin) || horasMin <= 0 || horasMin > 1440) return { ok: false, motivo: 'HORAS_INVALIDAS' };
+  const antes = saldoAtualMin + Math.max(0, debitoMotorDiaMin || 0);      // saldo sem o débito automático daquela ausência
+  const depois = antes - horasMin;
+  if (depois >= 0) return { ok: true, saldoAntesMin: antes, saldoDepoisMin: depois, negativo: false };
+  if (pol.permiteSaldoNegativo !== true) return { ok: false, motivo: 'SALDO_INSUFICIENTE_NEGATIVO_NAO_PERMITIDO', saldoAntesMin: antes, saldoDepoisMin: depois };
+  const lim = Number.isInteger(pol.limiteNegativoMin) ? pol.limiteNegativoMin : 100000;
+  if (depois < -lim) return { ok: false, motivo: 'EXCEDE_LIMITE_NEGATIVO', saldoAntesMin: antes, saldoDepoisMin: depois };
+  return { ok: true, saldoAntesMin: antes, saldoDepoisMin: depois, negativo: true };
+}
+
+/** Lista 'YYYY-MM' de `inicio` (YYYY-MM-DD) até `fimMes` inclusive. Sem início → [] (não se acumula sem data de início do banco). */
+function mesesDoBanco(inicio, fimMes) {
+  if (!inicio || !/^\d{4}-\d{2}/.test(inicio)) return [];
+  let [y, m] = inicio.slice(0, 7).split('-').map(Number); const out = [];
+  while (`${y}-${String(m).padStart(2, '0')}` <= fimMes) { out.push(`${y}-${String(m).padStart(2, '0')}`); if (++m > 12) { m = 1; y++; } }
+  return out;
+}
+
+/**
+ * Monta a entrada de calcBancoAcumulado. Mês com espelho ASSINADO que tem snapshot usa os dias CONGELADOS do snapshot
+ * (nunca recalcula). Assinado sem snapshot (legado) usa o motor atual, marcado origem='ASSINADO_SEM_SNAPSHOT'.
+ * `mesesDados` = [{ mes, regs, cred, just }]; mês corrente é calculado só até `ontemStr` (dia em andamento fica de fora).
+ */
+function montarMesesBanco(func, mesesDados, espelhos, hojeStr, ontemStr, mesAtualStr) {
+  return (mesesDados || []).map(md => {
+    const ass = (espelhos || []).filter(e => e.funcId === func.id && e.mes === md.mes && e.assinado && !e.substituido)
+      .sort((a, b) => (b.versao || 0) - (a.versao || 0))[0];
+    if (ass && ass.snapshot && Array.isArray(ass.snapshot.dias)) {
+      return { mes: md.mes, congelado: true, origem: 'SNAPSHOT_ASSINADO', pendencias: 0,
+        dias: ass.snapshot.dias.map(x => ({ data: x.data, saldoMin: x.saldoDia, contaNoSaldo: !!x.contaNoSaldo, status: x.status })) };
+    }
+    const r = calcBancoMes(func, md.regs || [], md.cred || [], md.mes, md.mes === mesAtualStr ? ontemStr : hojeStr, md.just || []);
+    return { mes: md.mes, congelado: false, origem: ass ? 'ASSINADO_SEM_SNAPSHOT' : 'MOTOR', pendencias: r.pendencias.length,
+      dias: r.dias.map(x => ({ data: x.data, saldoMin: x.saldoMin, contaNoSaldo: x.contaNoSaldo, status: x.status })) };
+  });
+}

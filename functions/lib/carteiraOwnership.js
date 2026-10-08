@@ -38,6 +38,8 @@ async function aplicar(store, FieldValue, p, regras) {
   const refC = store.collection(COLL).doc(p.portfolioId), refE = store.collection(COLL_HIST).doc(eventoId);
   const agoraIso = p.agoraIso || new Date().toISOString();
   let res;
+  for (let tent = 1; ; tent++) {
+  try {
   await store.runTransaction(async tx => {
     const [sc, se] = await Promise.all([tx.get(refC), tx.get(refE)]);
     const lido = p.lerTx ? await p.lerTx(tx) : null;                                    // B3: leituras extras ANTES de qualquer escrita (ex.: reserva de reativação)
@@ -61,6 +63,17 @@ async function aplicar(store, FieldValue, p, regras) {
     if (p.escreverTx) p.escreverTx(tx, lido, { antes, doc, evento, eventoId });         // escritas complementares na MESMA transação
     res = { repetido: false, antes, depois: doc, evento, eventoId };
   });
+  } catch (e) {                                                                          // contenção: o perdedor recebe erro de negócio estável (nunca um código cru do Firestore)
+    if (e instanceof HttpsError) throw e;
+    if (e && (e.code === 6 || /already exists|ALREADY_EXISTS/i.test(String(e.message)))) throw err('already-exists', 'JA_EXISTE_CARTEIRA_PARA_O_CLIENTE');
+    if (e && (e.code === 10 || e.code === 3 || /aborted|contention|too much/i.test(String(e.message)))) {
+      if (tent < 3) continue;                                                             // reexecuta: o perdedor então enxerga a carteira do vencedor e recebe already-exists
+      throw err('aborted', 'CONFLITO_DE_CONCORRENCIA_TENTE_NOVAMENTE');
+    }
+    throw e;
+  }
+  break;
+  }
   if (!res.repetido && p.auditar !== false) {                                           // auditoria S7 SÓ depois do commit
     await A.gravar(store, FieldValue, 'carteira_' + res.eventoId, A.evento({ ator: { uid: p.operadorUid || null, type: p.atorTipo || 'USER', origin: 'CALLABLE_AUTH' }, action: 'PORTFOLIO_' + regras.tipoEvento,
       category: A.CATEGORIAS.COMMERCIAL, entityType: 'carteira_comercial', entityId: p.portfolioId, source: 'LIB:carteiraOwnership',

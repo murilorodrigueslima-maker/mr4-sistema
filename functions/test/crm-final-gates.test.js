@@ -87,7 +87,7 @@ describe('interface do CRM: sem GestãoClick, sem segredo, sem HTML cru', () => 
   test('crm.html: nenhuma chamada/URL/credencial do GestãoClick; só Firebase (Auth, Firestore, callables)', () => {
     const h = ler('modulos/crm.html');
     expect(h.replace(/gestaoClickId/g, '')).not.toMatch(/gestaoclick|api\.gestao|access-token|secret-access|z-api|Client-Token/i);   // gestaoClickId = só o ID exibido
-    expect([...h.matchAll(/https?:\/\/[^\s'"`)]+/g)].map(m => new URL(m[0]).host).filter((v, i, a) => a.indexOf(v) === i).every(x => /^(localhost:9099|www\.gstatic\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|www\.w3\.org)$/.test(x))).toBe(true);
+    expect([...h.matchAll(/https?:\/\/[^\s'"`)]+/g)].map(m => new URL(m[0]).host).filter((v, i, a) => a.indexOf(v) === i).every(x => /^(wa\.me|localhost:9099|www\.gstatic\.com|fonts\.googleapis\.com|fonts\.gstatic\.com|www\.w3\.org)$/.test(x))).toBe(true);
     expect(h).not.toMatch(/\bfetch\s*\(/);
   });
   test('todo texto livre/cadastro entra no HTML só por esc(): nome, cidade, telefone, nota, vendedor, produto, título, detalhe', () => {

@@ -1418,8 +1418,33 @@ async function renderBancoFunc(){
       <div class="banco-item"><div class="banco-label">Saldo banco</div><div class="banco-valor ${saldoCls}">${saldoStr}</div></div>
       <div class="banco-item"><div class="banco-label">Dias trabalhados</div><div class="banco-valor">${diasTrab}</div></div>
       <div class="banco-item"><div class="banco-label">Horas esperadas</div><div class="banco-valor">${fmtMin(esperMin)}</div></div>
-    </div>${pendHtml}`;
+    </div>${pendHtml}<div id="banco-acum-func"></div>`;
+  renderBancoAcumFunc(mes).catch(e=>console.warn('[banco acumulado]',e&&e.message));
 }
+
+// Banco acumulativo (SOMENTE LEITURA): desligado por padrão; só aparece com banco_horas_config/politica.acumulativoAtivo=true.
+async function renderBancoAcumFunc(mesSel){
+  const box=document.getElementById('banco-acum-func');if(!box||!funcAtivo)return;
+  let cfg={};try{cfg=(await window._fbGetOne('banco_horas_config','politica'))||{};}catch(e){cfg={};}
+  if(!cfg.acumulativoAtivo)return;
+  const ms=mesesDoBanco(funcAtivo.inicioBancoHoras,mesSel);
+  if(!ms.length){box.innerHTML='<div class="banco-aviso">Sem data de início do banco cadastrada: o saldo acumulado não é calculado.</div>';return;}
+  const [cred,just,esp,lanc]=await Promise.all([fbGet('creditos_jornada'),fbGet('justificativas'),fbGet('espelhos'),fbGet('banco_horas_lancamentos')]);
+  const dadosMes=[];for(const m of ms){dadosMes.push({mes:m,regs:await fbRegistrosMes(m),cred:cred.filter(c=>c.data&&c.data.startsWith(m)),just:just.filter(j=>j.data&&j.data.startsWith(m))});}
+  const meses=montarMesesBanco(funcAtivo,dadosMes,esp,hoje(),ontemStr(),mesAtual());
+  const rows=calcBancoAcumulado(meses,lanc);const r=rows[rows.length-1];
+  const sg=v=>(v>0?'+':'')+fmtMin(v);
+  const est=new Set(lanc.filter(l=>l.tipo==='ESTORNO').map(l=>l.estornaId));
+  const hist=lanc.filter(l=>l.tipo==='COMPENSACAO_AUSENCIA').sort((a,b)=>String(b.dataAusencia).localeCompare(String(a.dataAusencia))).map(l=>`<div style="font-size:12px;padding:4px 0;border-bottom:1px solid var(--cinza-borda,#e5e7eb);">${fmtData(l.dataAusencia)} · −${fmtMin(l.minutos)} · ${esc(l.motivo)} · aprovado por ${esc(l.aprovadoPorEmail||'gestão')}${est.has(l.id)?' · <strong>ESTORNADA</strong>':''}</div>`).join('')||'<div style="font-size:12px;">Nenhuma compensação registrada.</div>';
+  box.innerHTML=`<div style="margin-top:12px;font-weight:700;">Banco acumulado até ${esc(r.mes)}</div>
+    <div class="banco-grid"><div class="banco-item"><div class="banco-label">Saldo anterior</div><div class="banco-valor">${sg(r.saldoAnterior)}</div></div>
+    <div class="banco-item"><div class="banco-label">Créditos</div><div class="banco-valor positivo">+${fmtMin(r.creditos)}</div></div>
+    <div class="banco-item"><div class="banco-label">Débitos</div><div class="banco-valor negativo">${fmtMin(r.debitos)}</div></div>
+    <div class="banco-item"><div class="banco-label">Compensações/ajustes</div><div class="banco-valor">${sg(r.compensacoes+r.ajustes)}</div></div>
+    <div class="banco-item"><div class="banco-label">Saldo acumulado</div><div class="banco-valor ${r.saldoFinal>=0?'positivo':'negativo'}">${sg(r.saldoFinal)}</div></div></div>
+    <div style="margin-top:8px;font-weight:600;font-size:13px;">Histórico de compensações</div>${hist}`;
+}
+function ontemStr(){const h=hoje();const[y,m,d]=h.split('-').map(Number);const t=new Date(Date.UTC(y,m-1,d-1,12));return `${t.getUTCFullYear()}-${String(t.getUTCMonth()+1).padStart(2,'0')}-${String(t.getUTCDate()).padStart(2,'0')}`;}
 
 // ── Justificativas ────────────────────────────────────────────────────────────
 function toggleCamposPonto(){

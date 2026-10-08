@@ -499,6 +499,7 @@ window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
 window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
+window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar');
 
 window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
@@ -811,6 +812,8 @@ function bancoAcumuladoHtml(f,meses,lf,rows,cfg){
 }
 function abrirCompensacao(fid,data){const d=document.getElementById('bh-d-'+fid);if(d){d.value=data;d.scrollIntoView({block:'center'});}}
 window.abrirCompensacao=abrirCompensacao;
+const _ERROS_BANCO={BANCO_DESLIGADO:'banco acumulativo/compensação desativados.',POLITICA_INCOMPLETA_SEM_LIMITE_NEGATIVO:'política de saldo negativo sem limite cadastrado.',SALDO_INSUFICIENTE_NEGATIVO_NAO_PERMITIDO:'saldo insuficiente e a política não permite saldo negativo.',EXCEDE_LIMITE_NEGATIVO:'excede o limite de saldo negativo da política.',JA_EXISTE_COMPENSACAO_PARA_ESTA_AUSENCIA:'já existe compensação para esta ausência.',SEM_DATA_DE_INICIO_DO_BANCO:'funcionário sem data de início do banco.',DATA_FORA_DO_PERIODO_DO_BANCO:'data fora do período do banco.'};
+function erroBanco(e){const m=String((e&&e.message)||'');return _ERROS_BANCO[m]||(e&&e.code==='functions/permission-denied'?'sem permissão.':m||'erro');}
 async function registrarCompensacao(fid){
   const msg=t=>{const e=document.getElementById('bh-msg-'+fid);if(e){e.textContent=t;e.style.color='#c0392b';}};
   const est=_bhEstado.dados[fid];if(!est){msg('Dados do banco não carregados.');return;}
@@ -833,9 +836,9 @@ async function registrarCompensacao(fid){
   if(!av.ok){msg(av.motivo==='SALDO_INSUFICIENTE_NEGATIVO_NAO_PERMITIDO'?`Bloqueado: o saldo ficaria em ${fmtMin(av.saldoDepoisMin)} e o acordo cadastrado não permite saldo negativo.`:av.motivo==='EXCEDE_LIMITE_NEGATIVO'?`Bloqueado: o saldo ficaria em ${fmtMin(av.saldoDepoisMin)}, acima do limite negativo cadastrado.`:'Horas inválidas.');return;}
   if(av.negativo&&!window.confirm(`Esta compensação deixa o saldo NEGATIVO em ${fmtMin(av.saldoDepoisMin)} (permitido pela política cadastrada). Confirmar?`))return;
   try{
-    await window._setDoc(docRef('banco_horas_lancamentos',id),{funcId:fid,tipo:'COMPENSACAO_AUSENCIA',dataAusencia:data,competencia:data.slice(0,7),minutos,motivo,aprovadoPorUid:window._userUid,aprovadoPorEmail:window._userEmail||'',saldoAntesMin:av.saldoAntesMin,saldoDepoisMin:av.saldoDepoisMin,criadoEm:window._serverTimestamp()});
-    invalidarCache('banco_horas_lancamentos');notif('Compensação registrada.','verde');renderBanco();
-  }catch(e){msg('Não foi possível registrar: '+(e&&e.code==='permission-denied'?'sem permissão ou lançamento duplicado.':(e&&e.message)||'erro'));}
+    const r=await window._bhCompensar({funcId:fid,dataAusencia:data,minutos,motivo});   // o servidor recalcula saldo/limites; a conferência acima é só prévia
+    invalidarCache('banco_horas_lancamentos');notif(r.data&&r.data.repetido?'Compensação já registrada.':'Compensação registrada.','verde');renderBanco();
+  }catch(e){msg('Não foi possível registrar: '+erroBanco(e));}
 }
 window.registrarCompensacao=registrarCompensacao;
 async function estornarCompensacao(fid,lid){
@@ -844,9 +847,9 @@ async function estornarCompensacao(fid,lid){
   if(m.length<5){notif('Preencha o campo Motivo (mín. 5 caracteres) para justificar o estorno.','vermelho');return;}
   const est=_bhEstado.dados[fid];const l=est&&est.lf.find(x=>x.id===lid);if(!l)return;
   try{
-    await window._setDoc(docRef('banco_horas_lancamentos','est_'+lid),{funcId:fid,tipo:'ESTORNO',estornaId:lid,competencia:l.competencia,minutos:l.minutos,motivo:m,aprovadoPorUid:window._userUid,aprovadoPorEmail:window._userEmail||'',criadoEm:window._serverTimestamp()});
+    await window._bhEstornar({lancamentoId:lid,motivo:m});
     invalidarCache('banco_horas_lancamentos');notif('Compensação estornada (registro mantido).','laranja');renderBanco();
-  }catch(e){notif('Não foi possível estornar: '+((e&&e.message)||'erro'),'vermelho');}
+  }catch(e){notif('Não foi possível estornar: '+erroBanco(e),'vermelho');}
 }
 window.estornarCompensacao=estornarCompensacao;
 

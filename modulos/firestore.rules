@@ -259,41 +259,15 @@ service cloud.firestore {
       allow write: if isAdminReal();
     }
 
-    // banco_horas_lancamentos: razão APPEND-ONLY (sem update, sem delete). Estorno = novo lançamento.
-    //   id determinístico → impede lançamento duplicado da mesma ausência (create falha se o id já existe).
-    //   Não altera marcações, justificativas, espelhos assinados nem o cálculo do motor.
+    // banco_horas_lancamentos: razão APPEND-ONLY escrito SOMENTE pelo backend (pontoBancoCompensar / pontoBancoEstornar, Admin SDK, transação atômica
+    // que recalcula o saldo e valida política/limites). Cliente: apenas LEITURA (gestão do ponto ou o próprio funcionário). Sem update/delete.
     match /banco_horas_lancamentos/{lancId} {
       allow read: if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow update, delete: if false;
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
-        naoEhProprioPonto(request.resource.data.funcId) &&
-        exists(/databases/$(database)/documents/banco_horas_config/politica) &&
-        get(/databases/$(database)/documents/banco_horas_config/politica).data.get('compensacaoAtiva', false) == true &&
-        request.resource.data.aprovadoPorUid == request.auth.uid &&
-        request.resource.data.criadoEm == request.time &&
-        request.resource.data.motivo is string && request.resource.data.motivo.size() >= 5 && request.resource.data.motivo.size() <= 300 &&
-        (
-          ( request.resource.data.keys().hasOnly(['funcId','tipo','dataAusencia','competencia','minutos','motivo','aprovadoPorUid','aprovadoPorEmail','saldoAntesMin','saldoDepoisMin','criadoEm']) &&
-            request.resource.data.tipo == 'COMPENSACAO_AUSENCIA' &&
-            lancId == request.resource.data.funcId + '_' + request.resource.data.dataAusencia &&
-            request.resource.data.dataAusencia is string && request.resource.data.dataAusencia.matches('^20[0-9]{2}-[01][0-9]-[0-3][0-9]$') &&
-            request.resource.data.competencia == request.resource.data.dataAusencia[0:7] &&
-            request.resource.data.minutos is int && request.resource.data.minutos > 0 && request.resource.data.minutos <= 1440 &&
-            request.resource.data.saldoAntesMin is int && request.resource.data.saldoDepoisMin is int &&
-            request.resource.data.saldoDepoisMin == request.resource.data.saldoAntesMin - request.resource.data.minutos &&
-            ( request.resource.data.saldoDepoisMin >= 0 ||
-              ( get(/databases/$(database)/documents/banco_horas_config/politica).data.get('permiteSaldoNegativo', false) == true &&
-                request.resource.data.saldoDepoisMin >= -get(/databases/$(database)/documents/banco_horas_config/politica).data.get('limiteNegativoMin', 100000) ) )
-          ) ||
-          ( request.resource.data.keys().hasOnly(['funcId','tipo','estornaId','competencia','minutos','motivo','aprovadoPorUid','aprovadoPorEmail','criadoEm']) &&
-            request.resource.data.tipo == 'ESTORNO' &&
-            lancId == 'est_' + request.resource.data.estornaId &&
-            exists(/databases/$(database)/documents/banco_horas_lancamentos/$(request.resource.data.estornaId)) &&
-            get(/databases/$(database)/documents/banco_horas_lancamentos/$(request.resource.data.estornaId)).data.funcId == request.resource.data.funcId &&
-            get(/databases/$(database)/documents/banco_horas_lancamentos/$(request.resource.data.estornaId)).data.tipo == 'COMPENSACAO_AUSENCIA' &&
-            request.resource.data.minutos == get(/databases/$(database)/documents/banco_horas_lancamentos/$(request.resource.data.estornaId)).data.minutos
-          )
-        );
+      allow create, update, delete: if false;
+    }
+    // banco_horas_saldo: documento-trava de concorrência do backend. Nenhum acesso de cliente.
+    match /banco_horas_saldo/{funcId} {
+      allow read, write: if false;
     }
 
     // ── Coleção: espelhos ──────────────────────────────────────────────────────

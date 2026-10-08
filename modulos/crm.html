@@ -238,11 +238,12 @@ const fnClaim = httpsCallable(funcs, 'claimOpportunity');
 const fnOutcome = httpsCallable(funcs, 'registerOutcome');
 const fnRelease = httpsCallable(funcs, 'releaseOpportunity');
 const fnConsulta = httpsCallable(funcs, 'crmConsulta');
+const fnContato = httpsCallable(funcs, 'crmContatoReativacao');       // telefone sob demanda: o backend autoriza ANTES de consultar o GestãoClick
 const fnAgente = httpsCallable(funcs, 'aiAgente');          // IA SOMENTE no backend (chave no Secret Manager); o navegador nunca vê chave nem dados fora do escopo
 const AV = window.AgenteComercialView;
 const V = window.CrmView;
 
-const S = { uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
+const S = { contatos: {}, uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
   indicadores: null, aba: 'hoje', aberto: null, sel: {}, enviando: new Set(), erros: {} };
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
@@ -297,6 +298,26 @@ function renderHoje() {
   pedirExtras([].concat(v.atrasados, v.retornosHoje, v.emAtendimento, v.pendentes, v.novas).map(x => x.item.commercialEntityId));
 }
 
+
+// ── Contato (telefone) da reativação — só em memória da página; nunca em armazenamento do navegador, URL ou log ──────────────────────────────────────────
+function contatoHtml(oppId) {
+  const c = S.contatos[oppId];
+  if (!c) return `<button class="btn" data-a="contato" data-id="${esc(oppId)}">Ver telefone</button>`;
+  if (c === 'carregando') return '<span class="muted">Consultando telefone…</span>';
+  if (c.erro) return `<span class="pill valor">${esc(c.erro)}</span> <button class="btn link" data-a="contato" data-id="${esc(oppId)}">Tentar de novo</button>`;
+  if (c.bloqueado) return '<span class="pill valor">NÃO CONTATAR — sem telefone liberado</span>';
+  if (!c.exibicao) return '<span class="pill">Sem telefone cadastrado no GestãoClick</span>';
+  return `<span>${c.tipo === 'CELULAR' ? 'Celular' : 'Telefone comercial'}: <b>${esc(c.exibicao)}</b></span> `
+    + (c.whatsapp ? `<a class="btn pri" href="https://wa.me/${esc(c.whatsapp)}" target="_blank" rel="noopener noreferrer"><span class="ms">chat</span> Abrir WhatsApp</a>` : '<span class="pill">sem WhatsApp (telefone comercial)</span>')
+    + ` <button class="btn link" data-a="copiar" data-v="${esc(c.exibicao)}">copiar</button>`;
+}
+async function carregarContato(oppId) {
+  S.contatos[oppId] = 'carregando'; render(); if (S.clienteAberto) renderCliente(S.clienteAberto);
+  try { const r = await fnContato({ opportunityInstanceId: oppId }); S.contatos[oppId] = r.data; }
+  catch (e) { S.contatos[oppId] = { erro: e.code === 'functions/permission-denied' ? 'Sem acesso a este contato.' : 'Não foi possível consultar agora.' }; }
+  render(); if (S.clienteAberto) renderCliente(S.clienteAberto);
+}
+
 function cartao(v, cls) {
   const op = S.opMap.get(v.item.opportunityInstanceId) || null;
   const m = V.modeloCartao(v, op, S.extras[v.item.commercialEntityId]);
@@ -321,6 +342,7 @@ function cartao(v, cls) {
   return `<article class="card ${cls}" data-id="${esc(id)}">
     <div class="card-top"><div class="card-nome">${esc(m.nome)}</div>${m.altoValor ? '<span class="pill valor">alto valor</span>' : ''}${m.tipo ? `<span class="pill">${esc(m.tipo)}</span>` : ''}</div>
     ${rt ? `<div class="hist">${rt.semCarteira ? '<span class="pill">Sem carteira — a reserva não cria carteira</span>' : '<span class="pill">Carteira de outro vendedor — só muda com venda válida na reserva</span>'}<span>Reserva até <b>${esc(V.dataBR(rt.reservaAte))}</b></span>${rt.followUpAte ? `<span>Follow-up até <b>${esc(V.dataBR(rt.followUpAte))}</b></span>` : ''}${rt.bloqueadoContato ? '<span class="pill valor">NÃO CONTATAR — bloqueado pela gestão</span>' : ''}</div>` : ''}
+    ${rt ? `<div class="hist contato">${contatoHtml(id)}</div>` : ''}
     ${m.motivo ? `<div class="motivo">${esc(m.motivo)}</div>` : ''}
     ${dados ? `<div class="dados">${dados}</div>` : ''}
     ${hist ? `<div class="hist">${hist}</div>` : ''}
@@ -446,10 +468,10 @@ async function abrirCliente(ent) {
   try {
     const r = await fnConsulta({ acao: 'cliente', entidade: ent });
     if (S.aberto !== ent) return;
-    renderCliente(r.data);
+    S.clienteAberto = r.data; renderCliente(r.data);
   } catch (e) { document.getElementById('drBody').innerHTML = `<div class="blk">${esc(e.code === 'functions/permission-denied' ? 'Este cliente não está na sua carteira ou lista.' : msgErro(e))}</div>`; document.getElementById('drNome').textContent = 'Cliente'; }
 }
-function fecharCliente() { S.aberto = null; document.getElementById('drawer').classList.remove('aberto'); document.getElementById('drawerBg').classList.remove('aberto'); }
+function fecharCliente() { S.aberto = null; S.clienteAberto = null; document.getElementById('drawer').classList.remove('aberto'); document.getElementById('drawerBg').classList.remove('aberto'); }
 
 const ROT_TIPO = { REATIVACAO_120D: 'Retomar contato', JANELA_DE_RECOMPRA: 'Janela de recompra', QUEDA_DE_COMPRAS: 'Queda no ritmo' };
 const ROT_ESTADO = { DISPONIVEL: 'disponível', EM_ATENDIMENTO: 'em atendimento', AGUARDANDO_RETORNO: 'aguardando retorno', CONCLUIDA: 'concluída' };
@@ -461,7 +483,8 @@ function renderCliente(c) {
   document.getElementById('drSub').innerHTML = [cl.cidade ? esc(cl.cidade) : '', cl.gestaoClickId ? 'GC ' + esc(cl.gestaoClickId) : '',
     cl.responsavelCarteira ? 'Carteira: ' + esc(cl.responsavelCarteira) : '',
     cl.telefone ? `<span>${esc(cl.telefone)} <button class="btn link" data-a="copiar" data-v="${esc(cl.telefone)}">copiar</button></span>` : '',
-    r.faixaValor === 'ALTO_VALOR' ? '<span class="pill valor">alto valor</span>' : ''].filter(Boolean).join(' · ');
+    r.faixaValor === 'ALTO_VALOR' ? '<span class="pill valor">alto valor</span>' : '',
+    (() => { const rv = (S.reativacoes || []).find(x => x.commercialEntityId === cl.entidade); return rv ? `<span class="contato">${contatoHtml(rv.opportunityInstanceId)}</span>` : ''; })()].filter(Boolean).join(' · ');
   const kv = (l, v) => v == null || v === '' ? '' : `<div>${esc(l)}<b>${esc(v)}</b></div>`;
   const val = r.valores || null;
   const resumo = `<div class="blk" id="c-resumo"><h3>Resumo</h3><div class="kv">
@@ -504,6 +527,7 @@ document.addEventListener('click', e => {
   else if (a === 'fecharReg') { delete S.sel[id]; delete S.erros[id]; render(); }
   else if (a === 'iniciar') iniciar(id);
   else if (a === 'cancelar') cancelar(id);
+  else if (a === 'contato') carregarContato(id);
   else if (a === 'cliente') abrirCliente(b.dataset.ent);
   else if (a === 'copiar') { navigator.clipboard && navigator.clipboard.writeText(b.dataset.v).then(() => toast('Telefone copiado.'), () => {}); }
 });

@@ -932,6 +932,12 @@ exports.crmConsulta        = onCall({ region: REGION }, req => crmConsultaHandle
 const { reativacaoGestaoHandler } = require('./lib/reativacaoGestaoCallable');
 exports.crmReativacaoGestao = onCall({ region: REGION }, req => reativacaoGestaoHandler(req));
 
+// Telefone do cliente nos cartões de reativação: consulta o GestãoClick sob demanda, autoriza ANTES no backend; número nunca é gravado/logado.
+exports.crmContatoReativacao = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, req => {
+  const { contatoReativacaoHandler } = require('./lib/contatoReativacao'); const { criarLookupContatoGC } = require('./lib/contatoGc');
+  return contatoReativacaoHandler(req, { lookup: criarLookupContatoGC({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN }) });
+});
+
 
 // AI Gateway interno — Agente Comercial (Fase 1). Chamada ao provedor SOMENTE aqui (chave no Secret Manager). Sem ferramentas de escrita.
 const { aiAgenteHandler } = require('./lib/ai/gateway/gateway');

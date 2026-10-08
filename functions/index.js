@@ -933,6 +933,10 @@ const { reativacaoGestaoHandler } = require('./lib/reativacaoGestaoCallable');
 exports.crmReativacaoGestao = onCall({ region: REGION }, req => reativacaoGestaoHandler(req));
 
 // Telefone do cliente nos cartões de reativação: consulta o GestãoClick sob demanda, autoriza ANTES no backend; número nunca é gravado/logado.
+// Banco de horas: compensação de faltas / estorno (validação e saldo NO BACKEND, transação atômica). Desligado até banco_horas_config/politica ativar.
+exports.pontoBancoCompensar = onCall({ region: REGION }, req => require('./lib/pontoBanco').compensarHandler(req));
+exports.pontoBancoEstornar  = onCall({ region: REGION }, req => require('./lib/pontoBanco').estornarHandler(req));
+
 exports.crmContatoReativacao = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, req => {
   const { contatoReativacaoHandler } = require('./lib/contatoReativacao'); const { criarLookupContatoGC } = require('./lib/contatoGc');
   return contatoReativacaoHandler(req, { lookup: criarLookupContatoGC({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN }) });

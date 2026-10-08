@@ -2,7 +2,6 @@
 // Banco de horas acumulativo + compensação de faltas: lógica pura + Firestore Rules (emulador). Dados 100% sintéticos.
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
-const { serverTimestamp } = require('firebase/firestore');
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../modulos/ponto-regras.js'), 'utf8') +
   ';this.A=calcBancoAcumulado;this.V=avaliarCompensacao;this.ID=idCompensacao;this.MM=montarMesesBanco;this.MD=mesesDoBanco;this.CM=calcBancoMes;this.VIG=compensacoesVigentes;', ctx);
@@ -98,8 +97,8 @@ describe('estáticos — desligado por padrão, sem escrita destrutiva', () => {
   });
 });
 
-describe('Rules — razão banco_horas_lancamentos', () => {
-  let env; const GES = 'g1', FUN = 'u-f1', OUT = 'u-f2', ADM = 'adm', FID1 = 'F1', FID2 = 'F2';
+describe('Rules — razão banco_horas_lancamentos (escrita SÓ no backend)', () => {
+  let env; const GES = 'g1', FUN = 'u-f1', ADM = 'adm', FID1 = 'F1', FID2 = 'F2';
   beforeAll(async () => {
     env = await initializeTestEnvironment({ projectId: 'mr4-ponto-banco-test', firestore: { rules: fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8') } });
   });
@@ -113,56 +112,27 @@ describe('Rules — razão banco_horas_lancamentos', () => {
       await db.doc('users/' + ADM).set({ role: 'gestor', ativo: true });
       await db.doc('sistema_usuarios/' + ADM).set({ modulos: [], admin: true, bloqueado: false });
       await db.doc('users/' + FUN).set({ role: 'funcionario', ativo: true, funcionarioId: FID1 });
-      await db.doc('users/' + OUT).set({ role: 'funcionario', ativo: true, funcionarioId: FID2 });
       if (cfg) await db.doc('banco_horas_config/politica').set(cfg);
-      await db.doc('banco_horas_lancamentos/' + FID1 + '_2026-09-01').set({ funcId: FID1, tipo: 'COMPENSACAO_AUSENCIA', dataAusencia: '2026-09-01', competencia: '2026-09', minutos: 480 });
+      await db.doc('banco_horas_lancamentos/' + FID1 + '_2026-09-01').set({ funcId: FID1, tipo: 'COMPENSACAO_AUSENCIA', minutos: 480 });
+      await db.doc('banco_horas_lancamentos/' + FID2 + '_2026-09-01').set({ funcId: FID2, tipo: 'COMPENSACAO_AUSENCIA', minutos: 60 });
+      await db.doc('banco_horas_saldo/' + FID1).set({ funcId: FID1, versao: 1 });
     });
   };
-  const comp = (extra = {}) => ({ funcId: FID1, tipo: 'COMPENSACAO_AUSENCIA', dataAusencia: '2026-09-02', competencia: '2026-09', minutos: 480, motivo: 'Compensação aprovada pela gestão',
-    aprovadoPorUid: GES, aprovadoPorEmail: 'g@x', saldoAntesMin: 600, saldoDepoisMin: 120, criadoEm: serverTimestamp(), ...extra });
   const dbDe = uid => env.authenticatedContext(uid, { email: 'g@x' }).firestore();
-
-  test('DESLIGADO por padrão: sem política ou com compensacaoAtiva=false, ninguém grava', async () => {
-    await seed(null); await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').set(comp()));
-    await seed({ compensacaoAtiva: false }); await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').set(comp()));
+  test('NINGUÉM no cliente cria/altera/apaga lançamentos (nem gestão, nem admin real), mesmo com a política ativa', async () => {
+    await seed({ compensacaoAtiva: true, acumulativoAtivo: true });
+    for (const uid of [GES, ADM, FUN]) {
+      await assertFails(dbDe(uid).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').set({ funcId: FID1, tipo: 'COMPENSACAO_AUSENCIA', minutos: 480 }));
+      await assertFails(dbDe(uid).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-01').update({ minutos: 1 }));
+      await assertFails(dbDe(uid).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-01').delete());
+    }
   });
-  test('ativo: gestão grava; duplicado (mesmo id) falha; update/delete sempre negados', async () => {
+  test('trava de concorrência banco_horas_saldo: sem acesso de cliente', async () => {
+    await seed(null);
+    for (const uid of [GES, ADM, FUN]) { await assertFails(dbDe(uid).doc('banco_horas_saldo/' + FID1).get()); await assertFails(dbDe(uid).doc('banco_horas_saldo/' + FID1).set({ versao: 9 })); }
+  });
+  test('isolamento: funcionário lê só o próprio razão; gestão lê todos; anônimo nada', async () => {
     await seed({ compensacaoAtiva: true });
-    await assertSucceeds(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').set(comp()));
-    await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').set(comp()));
-    await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').update({ minutos: 1 }));
-    await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').delete());
-    await assertFails(dbDe(ADM).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-01').delete());
-  });
-  test('saldo negativo só com política; sem permissão bloqueia; respeita limite', async () => {
-    const neg = comp({ dataAusencia: '2026-09-03', saldoAntesMin: 300, saldoDepoisMin: -180 });
-    await seed({ compensacaoAtiva: true }); await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-03').set(neg));
-    await seed({ compensacaoAtiva: true, permiteSaldoNegativo: true, limiteNegativoMin: 120 }); await assertFails(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-03').set(neg));
-    await seed({ compensacaoAtiva: true, permiteSaldoNegativo: true, limiteNegativoMin: 240 }); await assertSucceeds(dbDe(GES).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-03').set(neg));
-  });
-  test('validações: aprovador = quem chama; funcionário não grava; ninguém grava o próprio; campos extras/ aritmética inválida negados', async () => {
-    await seed({ compensacaoAtiva: true });
-    const ref = id => dbDe(GES).doc('banco_horas_lancamentos/' + id);
-    await assertFails(ref(FID1 + '_2026-09-02').set(comp({ aprovadoPorUid: 'outro' })));
-    await assertFails(ref(FID1 + '_2026-09-02').set(comp({ saldoDepoisMin: 999 })));
-    await assertFails(ref(FID1 + '_2026-09-02').set(comp({ motivo: 'x' })));
-    await assertFails(ref(FID1 + '_2026-09-02').set(comp({ extra: 1 })));
-    await assertFails(ref(FID1 + '_2026-09-05').set(comp()));                       // id ≠ funcId_data
-    await assertFails(dbDe(FUN).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-02').set(comp({ aprovadoPorUid: FUN })));
-    await env.withSecurityRulesDisabled(async c => { await c.firestore().doc('users/' + GES).update({ funcionarioId: FID1 }); });
-    await assertFails(ref(FID1 + '_2026-09-02').set(comp()));                       // gestão não mexe no PRÓPRIO banco
-  });
-  test('estorno: referencia compensação do mesmo funcionário; id determinístico; sem apagar', async () => {
-    await seed({ compensacaoAtiva: true });
-    const est = { funcId: FID1, tipo: 'ESTORNO', estornaId: FID1 + '_2026-09-01', competencia: '2026-09', minutos: 480, motivo: 'Lançada por engano', aprovadoPorUid: GES, aprovadoPorEmail: 'g@x', criadoEm: serverTimestamp() };
-    await assertSucceeds(dbDe(GES).doc('banco_horas_lancamentos/est_' + FID1 + '_2026-09-01').set(est));
-    await assertFails(dbDe(GES).doc('banco_horas_lancamentos/est_' + FID1 + '_2026-09-01').set(est));
-    await assertFails(dbDe(GES).doc('banco_horas_lancamentos/est_x').set({ ...est, estornaId: 'inexistente' }));
-    await assertFails(dbDe(GES).doc('banco_horas_lancamentos/est_' + FID1 + '_2026-09-01').delete());
-  });
-  test('isolamento: funcionário lê só o próprio razão; gestão lê todos; não autenticado nada', async () => {
-    await seed({ compensacaoAtiva: true });
-    await env.withSecurityRulesDisabled(async c => { await c.firestore().doc('banco_horas_lancamentos/' + FID2 + '_2026-09-01').set({ funcId: FID2, tipo: 'COMPENSACAO_AUSENCIA', minutos: 60 }); });
     await assertSucceeds(dbDe(FUN).doc('banco_horas_lancamentos/' + FID1 + '_2026-09-01').get());
     await assertFails(dbDe(FUN).doc('banco_horas_lancamentos/' + FID2 + '_2026-09-01').get());
     await assertFails(dbDe(FUN).collection('banco_horas_lancamentos').get());

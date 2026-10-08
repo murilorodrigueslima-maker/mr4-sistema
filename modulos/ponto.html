@@ -6,6 +6,9 @@
 <title>Ponto — MR4</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<!-- jsPDF.html() exige html2canvas (+DOMPurify) como globais; sem eles o callback nunca dispara e o PDF não baixa -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@2.5.8/dist/purify.min.js"></script>
 <style>
 /* ── Tokens ── */
 :root{
@@ -1100,9 +1103,14 @@ window.iniciarRevisaoPeriodo=iniciarRevisaoPeriodo;
 
 function exportarEspelhoPDF(){
   const el=document.getElementById('espelho-html');if(!el){notif('Gere o espelho primeiro','vermelho');return;}
-  if(!window.jspdf){notif('Aguarde o carregamento do PDF...','vermelho');return;}
+  if(!window.jspdf||typeof window.html2canvas!=='function'||!window.DOMPurify){notif('Biblioteca de PDF não carregou. Verifique a conexão e recarregue a página.','vermelho');return;}
   const{jsPDF}=window.jspdf;const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-  doc.html(el,{callback:function(doc){doc.save('espelho-ponto.pdf');},x:10,y:10,width:190,windowWidth:800});
+  let fim=false;
+  const aviso=setTimeout(()=>{if(!fim)notif('A geração do PDF está demorando. Se não baixar, recarregue e tente novamente.','laranja');},15000);
+  try{
+    doc.html(el,{x:10,y:10,width:190,windowWidth:800,
+      callback:function(d){fim=true;clearTimeout(aviso);try{d.save('espelho-ponto.pdf');notif('PDF gerado.','verde');}catch(e){notif('Não foi possível salvar o PDF: '+e.message,'vermelho');}}});
+  }catch(e){fim=true;clearTimeout(aviso);notif('Erro ao gerar o PDF: '+e.message,'vermelho');}
 }
 window.exportarEspelhoPDF=exportarEspelhoPDF;
 

@@ -1491,6 +1491,7 @@ async function renderJustifFunc(){
       </div>
       ${j.descricao?`<div class="justif-desc">${esc(j.descricao)}</div>`:''}
       ${j.obsGestor?`<div class="justif-gestor">Gestor: ${esc(j.obsGestor)}</div>`:''}
+      ${(j.infoSolicitada&&j.status==='pendente')?`<div class="justif-gestor" style="color:#b36b00;">A gestão pediu informações: ${esc(j.infoSolicitada)}</div>`:''}
     </div>`).join('');
 }
 

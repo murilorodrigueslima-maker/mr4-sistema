@@ -73,6 +73,13 @@ service cloud.firestore {
       return fid != meuPerfil().get('funcionarioId', '__sem_vinculo__');
     }
 
+    // FASE 4.4: mês com espelho ASSINADO (marcador ponto_meses_protegidos/{funcId}_{YYYY-MM}, mantido por gatilho e nunca apagado):
+    // registros, justificativas e créditos dessa competência ficam imutáveis para qualquer escritor de cliente.
+    function mesProtegido(fid, d) {
+      return fid is string && d is string && d.size() >= 7 &&
+        exists(/databases/$(database)/documents/ponto_meses_protegidos/$(fid + '_' + d[0:7]));
+    }
+
     // ── Funções auxiliares — segurança comercial ───────────────────────────────
     //
     // BILLING IMPORTANTE:
@@ -195,9 +202,11 @@ service cloud.firestore {
       //   create: lançamento administrativo (ex.: correção aprovada) — nunca do próprio ponto;
       //   update: só marcar a substituição por uma correção, uma única vez, sem tocar hora/tipo/data;
       //   delete: proibido (a trilha fica completa).
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId);
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId) &&
+        !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', ''));
       allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
         naoEhProprioPonto(resource.data.funcId) &&
+        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) &&
         !('substituidoPor' in resource.data) &&
         request.resource.data.diff(resource.data).affectedKeys()
           .hasOnly(['substituidoPor', 'substituidoEm', 'substituidoPorJustificativa']);
@@ -208,18 +217,22 @@ service cloud.firestore {
 
     match /justificativas/{justifId} {
       allow read:   if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create: if ((temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId)) || (
+      allow create: if !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', '')) && (((temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId)) || (
         isFuncionario() &&
         request.resource.data.funcId == meuFuncId() &&
         request.resource.data.status == 'pendente' &&
         request.resource.data.lancadoPorGestor == false
-      );
+      ));
       // Identidade: quando gravados, respondidoPorUid/Email devem corresponder ao caller.
       // Server timestamp: respondidoEm deve ser avaliado no momento do servidor (request.time).
       // Imutabilidade: após a resposta, esses três campos não podem ser alterados nem removidos.
       allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
         naoEhProprioPonto(resource.data.funcId) &&                                    // PONTO 2.0 F0 (P1-05)
         naoEhProprioPonto(request.resource.data.funcId) &&
+        // FASE 4.4: período protegido é imutável; APROVAR correção de batida (tipoPonto) só pelo servidor (pontoJustificativaDecidir:
+        // transação, conflitos, par de almoço, auditoria). Rejeição/observação e demais ocorrências seguem como antes.
+        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) &&
+        !(request.resource.data.get('status', '') == 'aprovado' && resource.data.get('tipoPonto', null) != null && resource.data.get('status', '') != 'aprovado') &&
         // PONTO 2.0 F0: decisão só a partir de 'pendente' (impede 2ª aprovação/reversão silenciosa)
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) || resource.data.status == 'pendente') &&
         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorUid']) ||
@@ -245,9 +258,12 @@ service cloud.firestore {
     match /creditos_jornada/{creditoId} {
       allow read:  if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
       // PONTO 2.0 F0 (P1-05): crédito de jornada nunca no próprio ponto
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId);
-      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId) && naoEhProprioPonto(request.resource.data.funcId);
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId);
+      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId) &&
+        !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', ''));
+      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId) && naoEhProprioPonto(request.resource.data.funcId) &&
+        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) && !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', ''));
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId) &&
+        !mesProtegido(resource.data.funcId, resource.data.get('data', ''));
     }
 
     // ── Banco de horas acumulativo e compensação de faltas ─────────────────────
@@ -299,6 +315,19 @@ service cloud.firestore {
       allow write: if false;
     }
     match /ponto_escalas_lock/{x} {
+      allow read, write: if false;
+    }
+
+    // Marcador de competência protegida (gatilho do servidor) e trilha de decisões sobre justificativas: sem escrita de cliente.
+    match /ponto_meses_protegidos/{x} {
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto');
+      allow write: if false;
+    }
+    match /ponto_justificativas_decisoes/{x} {
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto');
+      allow write: if false;
+    }
+    match /ponto_justificativas_lock/{x} {
       allow read, write: if false;
     }
 

@@ -136,4 +136,4 @@ async function escalaHandler(request, opts = {}) {
   });
 }
 
-module.exports = { decidirHandler, escalaHandler, normalizarDias, DECISOES };
+module.exports = { decidirHandler, escalaHandler, normalizarDias, DECISOES, lerFuncionario };

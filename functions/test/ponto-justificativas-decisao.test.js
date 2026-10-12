@@ -83,14 +83,14 @@ describe('regras: aprovar, rejeitar, solicitar informação (fluxo existente)', 
     await assertSucceeds(ctx(FUN).doc('justificativas/j1').get());
     await assertFails(ctx(FUN2).doc('justificativas/j1').get());
   });
-  test('aprovar: autor/data gravados com identidade real; replay e personificação negados; original preservado', async () => {
+  test('aprovar correção de batida pelo CLIENTE é negado (só o servidor decide); original preservado; ocorrências comuns seguem', async () => {
     const g = ctx(GES);
     const b = g.batch();
     b.update(g.doc('justificativas/j1'), { status: 'aprovado', obsGestor: 'Conferido', respondidoPorUid: GES, respondidoPorEmail: GES + '@x', respondidoEm: serverTimestamp() });
     b.update(g.doc('registros/rS'), { substituidoPor: 'corr_j1', substituidoEm: serverTimestamp(), substituidoPorJustificativa: 'j1' });
-    b.set(g.doc('registros/corr_j1'), { id: 'corr_j1', funcId: 'F1', data: '2026-10-06', tipo: 'saida', hora: '17:02:00', lancadoPorJustificativa: true, justificativaId: 'j1', valorOriginal: [{ id: 'rS', hora: '17:30:00', tipo: 'saida' }] });
-    await assertSucceeds(b.commit());
-    await env.withSecurityRulesDisabled(async c => { expect((await c.firestore().doc('registros/rS').get()).data().hora).toBe('17:30:00'); });        // horário original intacto
+    await assertFails(b.commit());
+    await env.withSecurityRulesDisabled(async c => { const d = (await c.firestore().doc('registros/rS').get()).data(); expect(d.hora).toBe('17:30:00'); expect(d.substituidoPor).toBeUndefined(); });
+    await env.withSecurityRulesDisabled(async c => { await c.firestore().doc('justificativas/j1').update({ status: 'aprovado', respondidoPorUid: 'servidor' }); });
     await assertFails(ctx(GES2).doc('justificativas/j1').update({ status: 'rejeitado', respondidoPorUid: GES2, respondidoPorEmail: GES2 + '@x', respondidoEm: serverTimestamp() }));   // já decidida
   });
   test('rejeitar: registra autor e motivo; personificar aprovador é negado', async () => {

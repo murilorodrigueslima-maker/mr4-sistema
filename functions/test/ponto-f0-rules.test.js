@@ -38,7 +38,7 @@ beforeEach(async () => { await testEnv.clearFirestore(); await testEnv.withSecur
 afterAll(async () => { await testEnv.clearFirestore(); await testEnv.cleanup(); });
 
 /** Mesmas escritas do ponto.html → responderJustificativa('aprovado') para correção de batida. */
-function aprovarCorrecao(db, uid, justifId, j, vigentes) {
+function aprovarCorrecao(db, uid, justifId, j, vigentes, completa = false) {
   const b = db.batch();
   const regId = 'corr_' + justifId;
   for (const r of vigentes) b.update(db.collection('registros').doc(r.id), { substituidoPor: regId, substituidoEm: serverTimestamp(), substituidoPorJustificativa: justifId });
@@ -47,11 +47,21 @@ function aprovarCorrecao(db, uid, justifId, j, vigentes) {
     justificativaId: justifId, correcaoDe: originais.map(o => o.id), valorOriginal: originais, valorProposto: j.horarioPonto + ':00', motivoCorrecao: 'Ponto não batido',
     descricaoCorrecao: 'Esqueci de bater no horário certo', solicitadoPorFuncId: j.funcId, solicitadoEm: DIA + 'T12:00:00Z', aprovadoPorUid: uid, aprovadoPorEmail: uid + '@mr4.test',
     aprovadoEm: serverTimestamp(), criadoEm: '2026-09-28T13:00:00Z' });
-  b.update(db.collection('justificativas').doc(justifId), { status: 'aprovado', obsGestor: 'ok', respondidoPorUid: uid, respondidoPorEmail: uid + '@mr4.test', respondidoEm: serverTimestamp(),
+  // FASE 4.4: a decisão da justificativa (status 'aprovado' de correção de batida) agora é SÓ do servidor (pontoJustificativaDecidir).
+  // Aqui o teste continua cobrindo as regras de `registros` (original preservado, correção aditiva); a parte da justificativa só entra com completa=true.
+  if (completa) b.update(db.collection('justificativas').doc(justifId), { status: 'aprovado', obsGestor: 'ok', respondidoPorUid: uid, respondidoPorEmail: uid + '@mr4.test', respondidoEm: serverTimestamp(),
     registroEfetivoId: regId, registrosOriginais: originais });
   return b.commit();
 }
 const ler = async path => { let d; await testEnv.withSecurityRulesDisabled(async c => { const s = await c.firestore().doc(path).get(); d = s.exists ? s.data() : null; }); return d; };
+
+describe('FASE 4.4 — aprovação de correção de batida só pelo servidor', () => {
+  test('o lote COMPLETO do cliente (incluindo status aprovado da justificativa de batida) é negado; nada é gravado', async () => {
+    await assertFails(aprovarCorrecao(ctx(UID_G), UID_G, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }], true));
+    expect((await ler('registros/corr_j-e-1'))).toBeNull();
+    expect((await ler('registros/r-e-ent')).substituidoPor).toBeUndefined();
+  });
+});
 
 describe('P0-02 — correção aditiva: original preservado + trilha', () => {
   test('CORR-01 aprovação: original continua existindo (hora intacta) e marcado; correção guarda ORIGINAL/PEDIDO/SOLICITANTE/APROVADOR/QUANDO', async () => {
@@ -62,7 +72,7 @@ describe('P0-02 — correção aditiva: original preservado + trilha', () => {
     expect(corr).toMatchObject({ hora: '08:00:00', valorOriginal: [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }], valorProposto: '08:00:00', motivoCorrecao: 'Ponto não batido',
       solicitadoPorFuncId: F_E, aprovadoPorUid: UID_G, justificativaId: 'j-e-1' });
     expect(corr.aprovadoEm).toBeTruthy();
-    expect(j).toMatchObject({ status: 'aprovado', respondidoPorUid: UID_G, registroEfetivoId: 'corr_j-e-1' });
+    expect(j).toMatchObject({ status: 'pendente' });   // a decisão da justificativa é do servidor (fase 4.4); aqui só a trilha em registros
   });
   test('CORR-02 original NUNCA pode ser apagado pelo cliente (gestor, dual-role, funcionário)', async () => {
     for (const uid of [UID_G, UID_D, UID_E]) await assertFails(ctx(uid).collection('registros').doc('r-e-ent').delete());
@@ -86,7 +96,7 @@ describe('P0-02 — correção aditiva: original preservado + trilha', () => {
     const j = await ler('justificativas/j-e-1');
     expect(j).toMatchObject({ status: 'rejeitado', respondidoPorUid: UID_G });
     await assertFails(ctx(UID_G).collection('justificativas').doc('j-e-1').update({ status: 'aprovado' }));
-    await assertFails(aprovarCorrecao(ctx(UID_D), UID_D, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }]));
+    await assertFails(aprovarCorrecao(ctx(UID_D), UID_D, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }], true));
     expect((await ler('registros/r-e-ent')).substituidoPor).toBeUndefined();   // batch atômico: nada aplicado
   });
 });

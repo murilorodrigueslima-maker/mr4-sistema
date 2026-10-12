@@ -13,7 +13,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const { HttpsError } = require('firebase-functions/v2/https');
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'ponto-regras.copy.js'), 'utf8') +
-  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista,calcDia,classificarPendenciaDia,toMin,SABADO_V2_DESDE,JORNADA_SABADO_MIN};', ctx);
+  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista,calcDia,classificarPendenciaDia,toMin,SABADO_V2_DESDE,JORNADA_SABADO_MIN,escalaDoDia,ehCorrecaoDeBatida};', ctx);
 const M = ctx.X;
 const DATA = /^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const negar = () => new HttpsError('permission-denied', 'Sem permissão para o banco de horas.');

@@ -528,7 +528,7 @@ window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
 window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
-window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar'); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga'); window._pendDecidir = httpsCallable(functions, 'pontoPendenciaDecidir'); window._escalaDefinir = httpsCallable(functions, 'pontoEscalaDefinir');
+window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar'); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga'); window._pendDecidir = httpsCallable(functions, 'pontoPendenciaDecidir'); window._justDecidir = httpsCallable(functions, 'pontoJustificativaDecidir'); window._escalaDefinir = httpsCallable(functions, 'pontoEscalaDefinir');
 
 window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
@@ -1188,19 +1188,27 @@ async function anexarContextoJustificativa(j,det,proprio,decidida){
   det.appendChild(cx);
   if(assinado){window._ctxJustif={bloquearAprovar:true,motivo:'mês com espelho assinado'};}
   else if(futura){window._ctxJustif={bloquearAprovar:true,motivo:'data posterior a hoje'};}
+  const ponto=pend.filter(x=>x.tipoPonto);
+  if(ponto.length>1&&!assinado&&!futura&&!proprio&&!decidida&&ponto.length<=4&&new Set(ponto.map(x=>x.tipoPonto)).size===ponto.length&&ponto.some(x=>x.id===j.id)){
+    window._ctxJustif.parIds=ponto.map(x=>x.id);
+    cx.insertAdjacentHTML('beforeend','<div style="margin-top:8px;"><button class="btn-aprovar" onclick="aprovarParJustificativas()">Aprovar o par juntas ('+ponto.map(x=>esc(x.horarioPonto)).join(' + ')+')</button><div style="font-size:11px;color:var(--cinza-texto);">Atômico: as duas batidas são corrigidas na mesma operação ou nenhuma é.</div></div>');
+  }
 }
 async function solicitarInfoJustificativa(){
   const obs=(document.getElementById('justif-obs-gestor').value||'').trim();
   if(obs.length<5){notif('Descreva a informação solicitada (mín. 5 caracteres).','vermelho');return;}
   if(!justifAtualId)return;
   try{
-    const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
-    if(j.status!=='pendente'){notif('Justificativa já decidida.','vermelho');return;}
-    if(window._meuFuncId&&j.funcId===window._meuFuncId){notif('Você não pode atuar sobre o próprio ponto.','vermelho');return;}
-    await fbSet('justificativas',justifAtualId,{infoSolicitada:obs,infoSolicitadaPorUid:window._userUid||'',infoSolicitadaPorEmail:window._userEmail||'',infoSolicitadaEm:window._serverTimestamp()});
-    invalidarCache('justificativas');fecharModal('modal-justif-gestor');notif('Solicitação registrada; a justificativa segue pendente.','laranja');renderJustificativas();
-  }catch(e){notif('Não foi possível registrar: '+((e&&e.code==='permission-denied')?'sem permissão.':(e&&e.message)||'erro'),'vermelho');}
+    await _decidirJustif([justifAtualId],'SOLICITAR_INFO',obs);
+    fecharModal('modal-justif-gestor');notif('Solicitação registrada; a justificativa segue pendente.','laranja');renderJustificativas();
+  }catch(e){notif('Não foi possível registrar: '+_erroJustif(e),'vermelho');}
 }
+function aprovarParJustificativas(){
+  const ids=(window._ctxJustif&&window._ctxJustif.parIds)||[];
+  if(ids.length<2){notif('Não há par pendente neste dia.','vermelho');return;}
+  responderJustificativa('aprovado',ids);
+}
+window.aprovarParJustificativas=aprovarParJustificativas;
 window.solicitarInfoJustificativa=solicitarInfoJustificativa;
 // ── Feriados 2026 ─────────────────────────────────────────────────────────────
 const FERIADOS_2026=[{data:'2026-01-01',nome:'Ano Novo',tipo:'Feriado nacional'},{data:'2026-02-16',nome:'Carnaval (segunda)',tipo:'Feriado nacional'},{data:'2026-02-17',nome:'Carnaval (terça)',tipo:'Feriado nacional'},{data:'2026-02-18',nome:'Quarta-feira de Cinzas',tipo:'Feriado nacional'},{data:'2026-03-19',nome:'São José (Ceará)',tipo:'Feriado estadual'},{data:'2026-04-03',nome:'Sexta-feira Santa',tipo:'Feriado nacional'},{data:'2026-04-05',nome:'Páscoa',tipo:'Feriado nacional'},{data:'2026-04-21',nome:'Tiradentes',tipo:'Feriado nacional'},{data:'2026-05-01',nome:'Dia do Trabalho',tipo:'Feriado nacional'},{data:'2026-06-04',nome:'Corpus Christi',tipo:'Feriado nacional'},{data:'2026-07-25',nome:'Abolição Escravatura CE',tipo:'Feriado estadual'},{data:'2026-08-15',nome:'N.Sra. da Assunção',tipo:'Feriado municipal'},{data:'2026-09-07',nome:'Independência do Brasil',tipo:'Feriado nacional'},{data:'2026-10-12',nome:'N.Sra. Aparecida',tipo:'Feriado nacional'},{data:'2026-11-02',nome:'Finados',tipo:'Feriado nacional'},{data:'2026-11-15',nome:'Proclamação da República',tipo:'Feriado nacional'},{data:'2026-11-20',nome:'Consciência Negra',tipo:'Feriado nacional'},{data:'2026-12-08',nome:'N.Sra. da Conceição',tipo:'Feriado municipal'},{data:'2026-12-25',nome:'Natal',tipo:'Feriado nacional'}];
@@ -1334,70 +1342,43 @@ async function abrirJustifGestor(id){
 window.abrirJustifGestor=abrirJustifGestor;
 
 let _respondendoJustif=false;
-async function responderJustificativa(status){
+const _ERROS_JUSTIF={MES_COM_ESPELHO_ASSINADO:'o mês tem espelho assinado.',DATA_FUTURA:'a data é posterior a hoje.',JUSTIFICATIVA_JA_DECIDIDA:'a justificativa já foi decidida.',
+  CONFLITO_COM_CORRECAO_APROVADA:'já existe correção APROVADA, com outro horário, para esta mesma batida. Revise antes.',
+  CONFLITO_ENTRE_PENDENTES_REVISE_E_REJEITE_UMA:'há outra justificativa pendente, com horário diferente, para a mesma batida. Rejeite uma delas primeiro.',
+  BATIDA_JA_CORRIGIDA_COM_O_MESMO_HORARIO:'a batida já foi corrigida com o mesmo horário.',
+  APROVACAO_ISOLADA_INCOERENTE_APROVE_O_PAR:'aprovada sozinha, esta justificativa deixa o almoço incoerente. Use "Aprovar o par juntas".',
+  RESULTADO_INCOERENTE_REVISE_AS_MARCACOES:'o resultado seria um dia incoerente (ordem ou almoço > 3h). Revise as marcações.',
+  JUSTIFICATIVA_SEM_HORARIO_VALIDO:'justificativa sem horário válido.',IDS_COM_MESMA_BATIDA:'o conjunto tem duas justificativas para a mesma batida.',
+  MISTURA_DE_CORRECAO_E_OCORRENCIA:'não misture correção de batida com outra ocorrência.',IDS_DE_FUNCIONARIOS_OU_DIAS_DIFERENTES:'as justificativas são de funcionários/dias diferentes.'};
+function _erroJustif(e){const m=String((e&&e.message)||'');return _ERROS_JUSTIF[m]||(e&&e.code==='functions/permission-denied'?'sem permissão (ou ponto próprio).':m||'erro');}
+// Decisão SEMPRE no servidor (transação, conflitos, par de almoço, mês protegido, auditoria). ids: 1 justificativa, ou o par do mesmo dia.
+async function _decidirJustif(ids,decisao,obs){
+  const r=await window._justDecidir({ids,decisao,obs});
+  invalidarCache('registros','justificativas','creditos_jornada');
+  return r.data;
+}
+async function responderJustificativa(status,idsExtra){
   if(_respondendoJustif)return;
-  {  // FASE 4.3: decisão exige conferência (aprovar) ou motivo (rejeitar); nada é automático
-    const obs0=(document.getElementById('justif-obs-gestor').value||'').trim();
-    const ctxJ=window._ctxJustif||{};
-    if(status==='aprovado'){
-      if(ctxJ.bloquearAprovar){notif('Aprovação bloqueada: '+(ctxJ.motivo||'verifique o contexto da justificativa.'),'vermelho');return;}
-      const ck=document.getElementById('justif-conferi');
-      if(ck&&!ck.checked){notif('Confirme que conferiu a evidência e as marcações do dia.','vermelho');return;}
-    }
-    if(status==='rejeitado'&&obs0.length<5){notif('Informe o motivo da rejeição (mín. 5 caracteres).','vermelho');return;}
+  const obs0=(document.getElementById('justif-obs-gestor').value||'').trim();
+  const ctxJ=window._ctxJustif||{};
+  if(status==='aprovado'){
+    if(ctxJ.bloquearAprovar){notif('Aprovação bloqueada: '+(ctxJ.motivo||'verifique o contexto da justificativa.'),'vermelho');return;}
+    const ck=document.getElementById('justif-conferi');
+    if(ck&&!ck.checked){notif('Confirme que conferiu a evidência e as marcações do dia.','vermelho');return;}
   }
+  if(status==='rejeitado'&&obs0.length<5){notif('Informe o motivo da rejeição (mín. 5 caracteres).','vermelho');return;}
   _respondendoJustif=true;
   const btns=document.querySelectorAll('#modal-justif-gestor .btn-aprovar,#modal-justif-gestor .btn-rejeitar');
   btns.forEach(b=>b.disabled=true);
   try{
-    const obs=document.getElementById('justif-obs-gestor').value.trim();
-    const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
-    const funcs=await fbGet('funcionarios');const func=funcs.find(f=>f.id===j.funcId);
-    const auditFields={
-      status,obsGestor:obs,
-      respondidoPorUid:window._userUid||'',
-      respondidoPorEmail:window._userEmail||'',
-      respondidoEm:window._serverTimestamp()
-    };
-    const batch=window._writeBatch();
-    // Update justificativa atomically with all downstream writes
-    batch.update(docRef('justificativas',justifAtualId),auditFields);
-    if(status==='aprovado'){
-      if(j.tipoPonto&&j.horarioPonto){
-        // PONTO 2.0 F0 (P0-02): correção ADITIVA — a batida original NUNCA é apagada.
-        // O original (e uma correção anterior) recebe substituidoPor; a nova correção guarda a trilha completa.
-        const regsDia=await window._getRegistrosDia(j.funcId,j.data);          // leitura fresca do dia (sem cache)
-        const vigentes=regsDia.filter(r=>r.tipo===j.tipoPonto&&!r.substituidoPor);
-        const tipoLabels={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
-        const regId='corr_'+justifAtualId;                                       // determinístico: 1 correção por justificativa
-        for(const reg of vigentes)batch.update(docRef('registros',reg.id),{substituidoPor:regId,substituidoEm:window._serverTimestamp(),substituidoPorJustificativa:justifAtualId});
-        const originais=vigentes.map(r=>({id:r.id,hora:r.hora||null,tipo:r.tipo}));
-        batch.set(docRef('registros',regId),{id:regId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,hora:j.horarioPonto+':00',tipo:j.tipoPonto,tipoLabel:tipoLabels[j.tipoPonto]||j.tipoPonto,lat:null,lng:null,dentroRaio:null,foto:null,facialScore:null,lancadoPorJustificativa:true,justificativaId:justifAtualId,
-          correcaoDe:originais.map(o=>o.id), valorOriginal:originais,                                  // ORIGINAL
-          valorProposto:j.horarioPonto+':00', motivoCorrecao:j.motivo||null, descricaoCorrecao:j.descricao||null,   // PEDIDO / WHY
-          solicitadoPorFuncId:j.funcId, solicitadoEm:j.criadoEm||null,                                 // SOLICITANTE
-          aprovadoPorUid:window._userUid||'', aprovadoPorEmail:window._userEmail||'', aprovadoEm:window._serverTimestamp(),   // APROVADOR / WHEN
-          criadoEm:new Date().toISOString()});
-        auditFields.registroEfetivoId=regId; auditFields.registrosOriginais=originais;
-      }else{
-        const jornMin=(parseFloat(func?.jornada)||8)*60;
-        const minutos=j.motivo==='Folga compensatória'?0:jornadaParaData(j.data,jornMin);
-        const tiposSemCredito=['Falta injustificada','Folga não remunerada','Suspensão disciplinar','Home Office'];
-        if(!tiposSemCredito.includes(j.motivo)){
-          const credId='cred_'+j.funcId+'_'+j.data;
-          batch.set(docRef('creditos_jornada',credId),{id:credId,funcId:j.funcId,funcNome:j.funcNome,data:j.data,minutos,motivo:j.motivo,criadoEm:new Date().toISOString()},{merge:true});
-        }
-      }
-    }
-    await batch.commit();
-    invalidarCache('registros','justificativas','creditos_jornada');   // o lote grava nas três
+    const ids=idsExtra&&idsExtra.length?idsExtra:[justifAtualId];
+    const r=await _decidirJustif(ids,status==='aprovado'?'APROVAR':'REJEITAR',obs0);
     fecharModal('modal-justif-gestor');
-    if(status==='aprovado')notif(j.tipoPonto?'Batida corrigida e lançada automaticamente!':'Justificativa aprovada — jornada creditada!','verde');
-    else notif('Justificativa rejeitada.','vermelho');
-    renderJustificativas();
+    if(status==='aprovado')notif(r.repetido?'Já estava aprovada.':(ids.length>1?'Par aprovado em conjunto — batidas corrigidas.':'Justificativa aprovada.'),'verde');
+    else notif(r.repetido?'Já estava rejeitada.':'Justificativa rejeitada.','vermelho');
+    renderJustificativas();_reg.carregado=false;
   }catch(e){
-    const negado=String(e&&(e.code||e.message)||'').includes('permission');
-    notif(negado?'Ação não permitida: não é possível decidir sobre o próprio ponto nem sobre uma justificativa já decidida.':'Erro ao responder justificativa. Tente novamente.','vermelho');
+    notif('Não foi possível decidir: '+_erroJustif(e),'vermelho');
     btns.forEach(b=>b.disabled=false);
   }finally{
     _respondendoJustif=false;

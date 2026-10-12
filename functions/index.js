@@ -962,3 +962,13 @@ exports._claimOpportunityHandler           = claimOpportunityHandler;
 exports._registerOutcomeHandler            = registerOutcomeHandler;
 exports._releaseOpportunityHandler         = releaseOpportunityHandler;
 exports._validateConcluirRevisao           = validateConcluirRevisao;
+
+// Ponto: decisão sobre justificativas NO SERVIDOR (transação, conflitos, par de almoço, mês protegido, trilha) e gatilho que marca competência assinada.
+exports.pontoJustificativaDecidir = onCall({ region: REGION }, req => require('./lib/pontoJustificativa').decidirJustificativaHandler(req));
+exports.pontoProtegerMesAssinado = onDocumentWritten({ document: 'espelhos/{espelhoId}', region: REGION, retry: true }, async ev => {
+  const dep = ev.data && ev.data.after && ev.data.after.exists ? ev.data.after.data() : null;
+  if (!dep || dep.assinado !== true || !dep.funcId || !/^\d{4}-\d{2}$/.test(dep.mes || '')) return;
+  const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp();
+  await admin.firestore().collection('ponto_meses_protegidos').doc(dep.funcId + '_' + dep.mes).set(
+    { funcId: dep.funcId, mes: dep.mes, espelhoId: ev.params.espelhoId, versao: dep.versao || null, origem: 'trigger', protegidoEm: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+});

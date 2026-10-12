@@ -32,7 +32,7 @@ body{display:flex;align-items:center;justify-content:center}
 .ttl{font-size:calc(var(--u)*3);font-weight:700;letter-spacing:-.005em}
 .ttl small{display:block;font-size:calc(var(--u)*1.6);font-weight:500;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-top:calc(var(--u)*.3)}
 .sp{flex:1}
-.mes{font-size:calc(var(--u)*2.6);font-weight:700;color:var(--text);text-transform:capitalize;letter-spacing:.01em}
+.mes{font-size:calc(var(--u)*2.6);font-weight:700;color:var(--text);letter-spacing:.01em}
 .rel{text-align:right}.rel .h{font-family:var(--num);font-size:calc(var(--u)*3.8);font-weight:700;line-height:1}.rel .d{font-size:calc(var(--u)*1.7);color:var(--sub);text-transform:capitalize;margin-top:calc(var(--u)*.4)}
 .chip{display:flex;align-items:center;gap:calc(var(--u)*.8);padding:calc(var(--u)*.7) calc(var(--u)*1.5);border-radius:99px;font-weight:600;font-size:calc(var(--u)*1.7);border:1px solid;white-space:nowrap}
 .chip .dot{width:calc(var(--u)*1.1);height:calc(var(--u)*1.1);border-radius:50%;background:currentColor}
@@ -50,7 +50,7 @@ body{display:flex;align-items:center;justify-content:center}
 .bar.off{opacity:.35}
 .pos{color:var(--green)}.neg{color:var(--red)}
 /* resultado geral */
-#hero{flex:1.5;justify-content:space-between}
+#hero{flex:1.15;justify-content:space-between}
 #hero .val{font-size:calc(var(--u)*9.2);margin-top:calc(var(--u)*1.2)}
 .hero-meta{display:flex;align-items:baseline;gap:calc(var(--u)*3)}
 .hero-meta .pct{font-size:calc(var(--u)*5);color:var(--brand2)}
@@ -61,7 +61,7 @@ body{display:flex;align-items:center;justify-content:center}
 .delta.on{opacity:1}
 #side{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:calc(var(--u)*1.6)}
 .tile{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--u)*1);padding:calc(var(--u)*1.5) calc(var(--u)*2);display:flex;flex-direction:column;justify-content:center;min-width:0;gap:calc(var(--u)*.8)}
-.tile .num{font-size:calc(var(--u)*3.6)}
+.tile .num{font-size:calc(var(--u)*3.1);white-space:nowrap}
 .tile.w2{grid-column:span 1}
 .tile .sub{font-size:calc(var(--u)*1.45);color:var(--dim)}
 .tile .est{font-size:calc(var(--u)*1.3);font-weight:700;letter-spacing:.08em;color:var(--brand2);text-transform:uppercase;margin-left:calc(var(--u)*.6)}
@@ -181,7 +181,7 @@ function render(d){
   const total = g.totalMes || 0, pct = meta ? (total / meta) * 100 : 0;
   const r = d.ritmo || {}, p = d.projecao || {}, dias = r.diasEquivalentesRestantes;
   const mesRef = (d.periodo && d.periodo.inicioMes || '').slice(0,7);
-  if (mesRef) { const [y,m] = mesRef.split('-'); $('mesRef').textContent = new Date(Date.UTC(+y,+m-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}); }
+  if (mesRef) { const [y,m] = mesRef.split('-'); { const t = new Date(Date.UTC(+y,+m-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}); $('mesRef').textContent = t.charAt(0).toUpperCase() + t.slice(1); } }
   // resultado geral
   animar($('hVal'), total, T.brl); animar($('hPct'), pct, T.pct);
   $('hMeta').textContent = T.brl(meta);

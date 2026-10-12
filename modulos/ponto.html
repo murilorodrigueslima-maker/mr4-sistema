@@ -774,7 +774,10 @@ const _bhEstado={dados:{}};
 async function renderBancoAcumulado(funcsAtivas){
   const box=document.getElementById('banco-acumulado');if(!box)return;
   const cfg=(await fbGet('banco_horas_config')).find(c=>c.id==='politica')||{};
-  if(!cfg.acumulativoAtivo){box.innerHTML='<div style="font-size:12px;color:var(--cinza-texto);">Banco acumulativo e compensação de faltas: <strong>desativados</strong> (aguardando validação do acordo aplicável). O saldo acima é o do mês.</div>';return;}
+  if(!cfg.acumulativoAtivo&&!cfg.cctPreview){box.innerHTML='<div style="font-size:12px;color:var(--cinza-texto);">Banco acumulativo e compensação de faltas: <strong>desativados</strong> (aguardando validação do acordo aplicável). O saldo acima é o do mês.</div>';return;}
+  const norma=cfg.normaId?((await fbGet('banco_horas_normas')).find(n=>n.id===cfg.normaId)||null):null;
+  const acordo=(await fbGet('banco_horas_config')).find(c=>c.id==='acordo')||null;
+  _bhEstado.norma=norma;_bhEstado.acordo=acordo;_bhEstado.preview=!cfg.acumulativoAtivo;
   box.innerHTML='<div style="font-size:13px;color:var(--cinza-texto);">Calculando saldo acumulado…</div>';
   const [creditos,espelhos,lanc]=await Promise.all([fbGet('creditos_jornada'),fbGet('espelhos'),fbGet('banco_horas_lancamentos')]);
   const mAtual=mesAtual(),h=hoje(),o=ontem();
@@ -788,11 +791,11 @@ async function renderBancoAcumulado(funcsAtivas){
     const lf=lanc.filter(l=>l.funcId===f.id);
     const rows=calcBancoAcumulado(meses,lf);
     _bhEstado.dados[f.id]={f,meses,lf,rows};
-    blocos.push(bancoAcumuladoHtml(f,meses,lf,rows,cfg));
+    blocos.push(bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo));
   }
   box.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:.6rem;">Saldo acumulado <span style="font-size:12px;font-weight:400;color:var(--cinza-texto);">(fechado até ontem · saldo anterior + créditos − débitos ± compensações/ajustes)</span></div>${blocos.join('')}`;
 }
-function bancoAcumuladoHtml(f,meses,lf,rows,cfg){
+function bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo){
   const ult=rows[rows.length-1]||{saldoFinal:0};
   const cor=v=>v>0?'color:#1a7a3a;':v<0?'color:#c0392b;':'';
   const sg=v=>(v>0?'+':'')+fmtMin(v);
@@ -805,9 +808,32 @@ function bancoAcumuladoHtml(f,meses,lf,rows,cfg){
   const faltas=[];meses.forEach(m=>m.dias.forEach(d=>{if(d.status==='falta'&&!comp_ativos.includes(d.data))faltas.push(d);}));
   const faltasHtml=faltas.length?faltas.slice(-15).map(d=>`<div style="font-size:12px;padding:4px 0;display:flex;gap:8px;justify-content:space-between;"><span>${fmtData(d.data)} · falta registrada (${fmtMin(d.saldoMin)} no banco)</span>${cfg.compensacaoAtiva?`<button class="btn-ghost" onclick="abrirCompensacao('${esc(f.id)}','${esc(d.data)}')">Compensar</button>`:''}</div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Nenhuma falta aguardando compensação.</div>';
   const form=cfg.compensacaoAtiva?`<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;"><label style="font-size:11px;">Data da ausência<br><input type="date" id="bh-d-${esc(f.id)}"></label><label style="font-size:11px;">Horas<br><input type="number" step="0.25" min="0.25" max="24" id="bh-h-${esc(f.id)}" value="8" style="width:70px;"></label><label style="font-size:11px;flex:1;min-width:160px;">Motivo<br><input type="text" id="bh-m-${esc(f.id)}" maxlength="300" style="width:100%;"></label><button class="btn-novo" onclick="registrarCompensacao('${esc(f.id)}')">Registrar compensação</button></div><div id="bh-msg-${esc(f.id)}" style="font-size:12px;margin-top:4px;"></div>`:'<div style="font-size:12px;color:var(--cinza-texto);margin-top:6px;">Compensação de faltas: desativada.</div>';
+
+  let cctHtml='';
+  if(cfg.normaId){
+    if(!norma){cctHtml='<div class="banco-aviso" style="margin-top:10px;"><strong>Norma coletiva não cadastrada</strong> (banco_horas_normas/'+esc(cfg.normaId)+'). Nenhuma regra da convenção é aplicada.</div>';}
+    else{
+      const dias=meses.flatMap(m=>m.dias);
+      const exc=lf.filter(l=>l.tipo==='EXCECAO_DIRETORIA');
+      const an=analisarBancoCct(norma,{hoje:hoje(),acordo,dias,compensacoes:compensacoesVigentes(lf),excecoes:exc});
+      const ROT={OPERACIONAL:'Operacional',SEM_ACORDO_COLETIVO:'Sem acordo coletivo da empresa (banco sem validade)',ACORDO_SEM_ANUENCIA_PATRONAL:'Acordo sem anuência do sindicato patronal',ACORDO_FORA_DA_VIGENCIA:'Acordo fora da vigência',NORMA_FORA_DA_VIGENCIA:'Norma fora da vigência',NORMA_INVALIDA:'Norma incompleta',BANCO_FORA_DA_VALIDADE:'Banco fora da validade da cláusula',SEM_CICLO:'Sem ciclo de apuração'};
+      const ok=an.status==='OPERACIONAL';
+      const r=an.resumo,ci=an.ciclo;
+      const lin2=[];
+      if(ci)lin2.push(`Ciclo ${ci.n}: ${fmtData(ci.inicio)} a ${fmtData(ci.fim)} · compensar folgas até ${fmtData(ci.compensarAte)}`);
+      if(r)lin2.push(`Horas positivas: +${fmtMin(r.positivasMin)} · folga devida (×${norma.fatorFolgaPorHoraExtra}): ${fmtMin(r.folgaDevidaMin)} · horas negativas: ${fmtMin(r.negativasMin)} · compensadas: ${fmtMin(r.compensacoesMin)} · <strong>folga pendente: ${fmtMin(r.folgaPendenteMin)}</strong>`);
+      lin2.push(`Limite de horas negativas: ${fmtMin(norma.limiteNegativoMesMin)}/mês (exceções da diretoria: ${exc.length?exc.map(e=>fmtData(e.data)+' +'+fmtMin(e.minutos)).map(esc).join('; '):'nenhuma'}) · limite diário de extras: ${fmtMin(norma.limiteExtraDiarioMin)}`);
+      const al=an.alertas.map(a=>`<div style="color:#c0392b;">⚠ ${esc(a.msg)}</div>`).join('');
+      const an2=an.exigeAnalise.map(a=>`<div style="color:#b36b00;">❓ Exige análise: ${esc(a)}</div>`).join('');
+      const pg=an.exigePagamento.map(p=>`<div style="color:#b36b00;">💲 Exige pagamento (apuração manual): ${fmtMin(p.horasExtrasMin)} de horas extras com adicional de ${Math.round(p.adicional*100)}% — <em>nenhum pagamento é gerado automaticamente</em></div>`).join('');
+      cctHtml=`<div style="margin-top:10px;padding:8px 10px;border:1px solid ${ok?'#1a7a3a':'#b36b00'};border-radius:6px;font-size:12px;">
+        <div style="font-weight:700;">Convenção coletiva ${esc(norma.origem.registro)} · cláusula ${esc(norma.origem.clausula)}${_bhEstado.preview?' · <span style="color:#b36b00;">PRÉVIA — sem efeito</span>':''}</div>
+        <div>Situação: <strong>${esc(ROT[an.status]||an.status)}</strong></div>${lin2.map(x=>`<div>${x}</div>`).join('')}${al}${an2}${pg}</div>`;
+    }
+  }
   return `<details class="ficha" style="padding:10px 14px;margin-bottom:8px;"><summary style="cursor:pointer;font-weight:600;display:flex;gap:10px;justify-content:space-between;">${esc(f.nome)}<span style="${cor(ult.saldoFinal)}">Saldo acumulado ${sg(ult.saldoFinal)}</span></summary>
     <div class="tabela-wrap" style="margin-top:8px;"><table><thead><tr><th>Mês</th><th>Anterior</th><th>Créditos</th><th>Débitos</th><th>Compens.</th><th>Ajustes</th><th>Final</th></tr></thead><tbody>${lin}</tbody></table></div>
-    <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Faltas aguardando compensação</div>${faltasHtml}
+    ${cctHtml}<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Faltas aguardando compensação</div>${faltasHtml}
     <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Histórico de compensações</div>${hist}${form}</details>`;
 }
 function abrirCompensacao(fid,data){const d=document.getElementById('bh-d-'+fid);if(d){d.value=data;d.scrollIntoView({block:'center'});}}

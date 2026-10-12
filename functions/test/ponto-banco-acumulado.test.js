@@ -82,7 +82,7 @@ describe('estáticos — desligado por padrão, sem escrita destrutiva', () => {
   const gest = fs.readFileSync(path.resolve(__dirname, '../../modulos/ponto.html'), 'utf8');
   const func = fs.readFileSync(path.resolve(__dirname, '../../modulos/ponto-func.html'), 'utf8');
   test('ambas as telas só exibem com acumulativoAtivo; gestão só compensa com compensacaoAtiva', () => {
-    expect(gest).toMatch(/if\(!cfg\.acumulativoAtivo\)/); expect(func).toMatch(/if\(!cfg\.acumulativoAtivo\)return/);
+    expect(gest).toMatch(/if\(!cfg\.acumulativoAtivo&&!cfg\.cctPreview\)/); expect(func).toMatch(/if\(!cfg\.acumulativoAtivo\)return/);
     expect(gest).toMatch(/if\(!cfg\.compensacaoAtiva\)\{msg\('Compensação desativada/);
   });
   test('funcionário não tem nenhuma escrita no banco; gestão não apaga lançamentos', () => {

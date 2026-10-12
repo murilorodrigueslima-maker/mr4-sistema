@@ -259,6 +259,15 @@ service cloud.firestore {
       allow write: if isAdminReal();
     }
 
+    // banco_horas_normas: parâmetros VERSIONADOS da norma coletiva (cláusula, vigência). Só o backend/admin SDK grava; cliente apenas lê.
+    match /banco_horas_normas/{normaId} {
+      allow read: if isAuthed();
+      allow write: if false;
+    }
+    match /banco_horas_config_historico/{h} {
+      allow read, write: if false;
+    }
+
     // banco_horas_lancamentos: razão APPEND-ONLY escrito SOMENTE pelo backend (pontoBancoCompensar / pontoBancoEstornar, Admin SDK, transação atômica
     // que recalcula o saldo e valida política/limites). Cliente: apenas LEITURA (gestão do ponto ou o próprio funcionário). Sem update/delete.
     match /banco_horas_lancamentos/{lancId} {

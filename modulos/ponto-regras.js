@@ -824,3 +824,96 @@ function montarMesesBanco(func, mesesDados, espelhos, hojeStr, ontemStr, mesAtua
       dias: r.dias.map(x => ({ data: x.data, saldoMin: x.saldoMin, contaNoSaldo: x.contaNoSaldo, status: x.status })) };
   });
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CCT — BANCO DE HORAS CONFORME NORMA COLETIVA VERSIONADA (funções PURAS; nada tem valor padrão)
+// Os parâmetros vêm de banco_horas_normas/{id} (cada campo referencia cláusula e vigência). Sem norma válida + acordo coletivo
+// da empresa vigente, o resultado é um STATUS de bloqueio — nunca uma regra presumida. Nenhuma função aqui grava ou paga nada.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Campos obrigatórios da norma. Retorna { ok, faltando[] }. */
+function normaCctValida(n) {
+  const falt = [];
+  const need = (c, cond) => { if (!cond) falt.push(c); };
+  n = n || {};
+  need('id', typeof n.id === 'string' && n.id);
+  need('origem.registro', n.origem && typeof n.origem.registro === 'string' && n.origem.registro);
+  need('origem.clausula', n.origem && typeof n.origem.clausula === 'string' && n.origem.clausula);
+  need('vigencia.inicio', n.vigencia && /^\d{4}-\d{2}-\d{2}$/.test(n.vigencia.inicio || ''));
+  need('vigencia.fim', n.vigencia && /^\d{4}-\d{2}-\d{2}$/.test(n.vigencia.fim || ''));
+  ['apuracaoDias', 'compensacaoDias', 'limiteNegativoMesMin', 'limiteExtraDiarioMin'].forEach(k => need(k, Number.isInteger(n[k]) && n[k] > 0));
+  need('fatorFolgaPorHoraExtra', typeof n.fatorFolgaPorHoraExtra === 'number' && n.fatorFolgaPorHoraExtra >= 1);
+  need('adicionalHoraExtra', typeof n.adicionalHoraExtra === 'number' && n.adicionalHoraExtra >= 0);
+  need('exigeAcordoColetivo', typeof n.exigeAcordoColetivo === 'boolean');
+  need('saldoNegativoFimCiclo', n.saldoNegativoFimCiclo === 'ZERAR');
+  need('rescisaoSaldoNegativo', n.rescisaoSaldoNegativo === 'ZERAR_SEM_COBRANCA');
+  need('rescisaoSaldoPositivo', n.rescisaoSaldoPositivo === 'PAGAR_HORA_EXTRA');
+  return { ok: falt.length === 0, faltando: falt };
+}
+
+/** Ciclos de apuração encadeados a partir do INÍCIO DO ACORDO (nunca inventado). Cada ciclo: apuração + janela de compensação. */
+function ciclosCct(acordoInicio, apuracaoDias, compensacaoDias, ateData) {
+  const add = (s, n) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n, 12)).toISOString().slice(0, 10); };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(acordoInicio || '') || !(apuracaoDias > 0)) return [];
+  const out = []; let ini = acordoInicio;
+  for (let i = 0; i < 60 && ini <= ateData; i++) {
+    const fim = add(ini, apuracaoDias - 1);
+    out.push({ n: i + 1, inicio: ini, fim, compensarAte: add(fim, compensacaoDias) });
+    ini = add(fim, 1);
+  }
+  return out;
+}
+
+/**
+ * Análise da gestão (somente leitura). ctx = { hoje, acordo:{registro,inicio,fim,anuenciaPatronal}|null, dias:[{data,saldoMin,contaNoSaldo,status}],
+ *   compensacoes:[{dataAusencia,minutos}] vigentes, excecoes:[{competencia|data, minutos}] }.
+ */
+function analisarBancoCct(norma, ctx) {
+  const v = normaCctValida(norma);
+  const r = { status: 'OPERACIONAL', alertas: [], exigeAnalise: [], exigePagamento: [], ciclo: null, ciclos: [], resumo: null };
+  if (!v.ok) { r.status = 'NORMA_INVALIDA'; r.exigeAnalise.push('Norma incompleta: ' + v.faltando.join(', ')); return r; }
+  const hoje = ctx.hoje, ac = ctx.acordo;
+  if (hoje < norma.vigencia.inicio || hoje > norma.vigencia.fim) { r.status = 'NORMA_FORA_DA_VIGENCIA'; r.exigeAnalise.push('Norma fora da vigência (' + norma.vigencia.inicio + ' a ' + norma.vigencia.fim + ').'); return r; }
+  if (norma.exigeAcordoColetivo) {
+    if (!ac || !ac.registro || !/^\d{4}-\d{2}-\d{2}$/.test(ac.inicio || '')) { r.status = 'SEM_ACORDO_COLETIVO'; r.exigeAnalise.push('A cláusula ' + norma.origem.clausula + ' exige acordo coletivo da empresa registrado: não cadastrado.'); return r; }
+    if (ac.anuenciaPatronal !== true) { r.status = 'ACORDO_SEM_ANUENCIA_PATRONAL'; r.exigeAnalise.push('Acordo sem anuência do sindicato patronal registrada (cl. 52ª, parágrafo único).'); return r; }
+    if (hoje < ac.inicio || (ac.fim && hoje > ac.fim)) { r.status = 'ACORDO_FORA_DA_VIGENCIA'; r.exigeAnalise.push('Acordo coletivo fora da vigência.'); return r; }
+  }
+  const inicioCiclos = ac && ac.inicio;
+  if (norma.bancoValidoAte && hoje > norma.bancoValidoAte) { r.alertas.push({ tipo: 'BANCO_FORA_DA_VALIDADE', msg: 'Validade do banco encerrou em ' + norma.bancoValidoAte + ' (cl. ' + norma.origem.clausula + ').' }); r.status = 'BANCO_FORA_DA_VALIDADE'; }
+  r.ciclos = ciclosCct(inicioCiclos, norma.apuracaoDias, norma.compensacaoDias, hoje);
+  const cic = r.ciclos.find(c => hoje >= c.inicio && hoje <= c.compensarAte) || r.ciclos[r.ciclos.length - 1] || null;
+  if (!cic) { r.status = r.status === 'OPERACIONAL' ? 'SEM_CICLO' : r.status; r.exigeAnalise.push('Sem ciclo de apuração (início do acordo ausente).'); return r; }
+  r.ciclo = cic;
+  const emCiclo = (ctx.dias || []).filter(d => d.contaNoSaldo && typeof d.saldoMin === 'number' && d.data >= cic.inicio && d.data <= cic.fim);
+  const pos = emCiclo.filter(d => d.saldoMin > 0).reduce((a, d) => a + d.saldoMin, 0);
+  const neg = -emCiclo.filter(d => d.saldoMin < 0).reduce((a, d) => a + d.saldoMin, 0);
+  const comp = (ctx.compensacoes || []).filter(c => c.dataAusencia >= cic.inicio && c.dataAusencia <= cic.fim).reduce((a, c) => a + c.minutos, 0);
+  const folgaDevida = Math.round(pos * norma.fatorFolgaPorHoraExtra);
+  const folgaPendente = Math.max(0, folgaDevida - neg - comp);
+  r.resumo = { positivasMin: pos, negativasMin: neg, compensacoesMin: comp, folgaDevidaMin: folgaDevida, folgaPendenteMin: folgaPendente,
+    saldoCicloMin: pos - neg - comp, faltasNoCiclo: emCiclo.filter(d => d.status === 'falta').length };
+  if (r.resumo.faltasNoCiclo) r.exigeAnalise.push(r.resumo.faltasNoCiclo + ' falta(s) no ciclo: a norma não define se entram como horas negativas do banco (decisão jurídica).');
+  // prazos
+  const dias = (a, b) => Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000);
+  if (hoje <= cic.fim) { const f = dias(hoje, cic.fim); if (f <= 15) r.alertas.push({ tipo: 'FIM_DO_CICLO_PROXIMO', msg: 'Ciclo ' + cic.n + ' encerra em ' + f + ' dia(s).' }); }
+  else if (hoje <= cic.compensarAte) { r.alertas.push({ tipo: 'JANELA_DE_COMPENSACAO', msg: 'Ciclo encerrado; folgas devem ser concedidas até ' + cic.compensarAte + ' (' + dias(hoje, cic.compensarAte) + ' dia(s)).' }); }
+  else if (folgaPendente > 0) {
+    const horasExtras = Math.round(folgaPendente / norma.fatorFolgaPorHoraExtra);
+    r.alertas.push({ tipo: 'POSITIVAS_VENCIDAS', msg: 'Prazo de compensação vencido com horas positivas não compensadas.' });
+    r.exigePagamento.push({ ciclo: cic.n, horasExtrasMin: horasExtras, adicional: norma.adicionalHoraExtra, geraPagamentoAutomatico: false });
+  }
+  // limites
+  if (neg > 0) {
+    const porMes = {}; emCiclo.filter(d => d.saldoMin < 0).forEach(d => { const m = d.data.slice(0, 7); porMes[m] = (porMes[m] || 0) - d.saldoMin; });
+    Object.entries(porMes).forEach(([m, min]) => {
+      const exc = (ctx.excecoes || []).filter(e => String(e.data || e.competencia || '').startsWith(m)).reduce((a, e) => a + e.minutos, 0);
+      const lim = norma.limiteNegativoMesMin + exc;
+      if (min > lim) r.alertas.push({ tipo: 'LIMITE_NEGATIVO_EXCEDIDO', msg: 'Horas negativas de ' + m + ' acima do limite (' + min + ' > ' + lim + ' min).', mes: m });
+    });
+  }
+  const acima = emCiclo.filter(d => d.saldoMin > norma.limiteExtraDiarioMin).map(d => d.data);
+  if (acima.length) r.alertas.push({ tipo: 'EXTRA_DIARIA_ACIMA_DO_LIMITE', msg: acima.length + ' dia(s) com mais de ' + norma.limiteExtraDiarioMin + ' min extras.', datas: acima });
+  return r;
+}

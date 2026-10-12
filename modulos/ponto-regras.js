@@ -4,6 +4,10 @@
 // Todas as funções trabalham em MINUTOS INTEIROS — sem floats intermediários.
 
 const JORNADA_SABADO_MIN = 210; // sábado 08:30–12:00 = 3h30
+// FASE 4 — SÁBADO TURNO CONTÍNUO. Antes desta data nada muda (histórico/espelhos assinados NÃO são recalculados em silêncio).
+// A partir dela, no sábado, as 4 marcações com intervalo NULO (saída p/ almoço = retorno, ou todas no fim do turno) deixam de ser
+// "ponto incompleto": o total é saída − entrada (o intervalo nulo desconta 0). Data = 1º sábado após a publicação.
+const SABADO_V2_DESDE = '2026-10-17';
 
 // Motivos que identificam crédito de feriado (usado por getTipoCredito).
 const TIPOS_FERIADO = ['Feriado nacional', 'Feriado estadual', 'Feriado municipal'];
@@ -31,8 +35,19 @@ function getJornadaPrevista(funcionario, data) {
   const d = new Date(data + 'T12:00:00');
   const diaSemana = d.getDay();
   if (diaSemana === 0) return 0;
+  const esc = escalaDoDia(funcionario, data, diaSemana);
+  if (esc !== null) return esc;
   if (diaSemana === 6) return JORNADA_SABADO_MIN;
   return (parseFloat(funcionario.jornada) || 8) * 60;
+}
+
+// ESCALA INDIVIDUAL (opcional): funcionario.escala = { vigenteDesde:'YYYY-MM-DD', dias:{ '1':480, ..., '6':210 } } (minutos; 0 = não trabalha).
+// Só vale a partir de vigenteDesde (nunca retroage) e nunca para domingo. Sem escala ⇒ comportamento legado (jornada × 60; sábado 210).
+function escalaDoDia(funcionario, dataStr, diaSemana) {
+  const e = funcionario && funcionario.escala;
+  if (!e || !/^\d{4}-\d{2}-\d{2}$/.test(e.vigenteDesde || '') || dataStr < e.vigenteDesde || !e.dias || diaSemana === 0) return null;
+  const v = e.dias[String(diaSemana)];
+  return Number.isInteger(v) && v >= 0 && v <= 720 ? v : null;
 }
 
 // Alias: recebe jornMin (número) em vez do objeto funcionario.
@@ -63,7 +78,7 @@ function getTipoCredito(motivo) {
 //           sa == ra (almoço 0 min) → null.
 //   DEC-1:  se (saída − entrada) > 360 e almoço incompleto (só sa, só ra, ou nenhum) → null.
 //           Sábado (≤210 min) e jornadas 6h (≤360 min) raramente excedem 360 → isentos naturalmente.
-function calcTotal(e, sa, ra, s) {
+function calcTotal(e, sa, ra, s, opts) {
   if (!e || !s) return null;
   const tE = toMin(e);
   const tS = toMin(s);
@@ -78,7 +93,10 @@ function calcTotal(e, sa, ra, s) {
   if (hasSa && hasRa) {
     const tSa = toMin(sa);
     const tRa = toMin(ra);
-    if (tSa <= tE || tSa >= tRa || tRa >= tS) return null;
+    if (opts && opts.intervaloNuloOk) {
+      // Sábado (turno contínuo): sa == ra e/ou ra == saída são aceitos como intervalo NULO; ordem invertida continua inválida
+      if (tSa < tE || tSa > tRa || tRa > tS) return null;
+    } else if (tSa <= tE || tSa >= tRa || tRa >= tS) return null;
   }
 
   // DEC-1: almoço obrigatório quando intervalo > 6h
@@ -248,7 +266,9 @@ function minutosDoCredito(c) {
 function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
   const diaSemana = new Date(dataStr + 'T12:00:00').getDay();
   const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
-  const jornadaDia = diaSemana === 0 ? 0 : diaSemana === 6 ? JORNADA_SABADO_MIN : jornMin;
+  const escalaMin = escalaDoDia(funcionario, dataStr, diaSemana);
+  const jornadaDia = diaSemana === 0 ? 0 : escalaMin !== null ? escalaMin : diaSemana === 6 ? JORNADA_SABADO_MIN : jornMin;
+  const sabadoV2 = diaSemana === 6 && dataStr >= SABADO_V2_DESDE;
 
   const efetivos = registrosEfetivos(regsDia);
   const batidas = {};
@@ -280,7 +300,7 @@ function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
     r.pendencias.push(motivo ? { tipo, motivo } : { tipo });
     r.pendente = true; r.status = status;
   };
-  const t = inconsBatida ? null : calcTotal(batidas.entrada, batidas.saida_almoco, batidas.retorno_almoco, batidas.saida);
+  const t = inconsBatida ? null : calcTotal(batidas.entrada, batidas.saida_almoco, batidas.retorno_almoco, batidas.saida, sabadoV2 ? { intervaloNuloOk: true } : undefined);
 
   // R7 — fora do período aplicável: batidas visíveis, sem falta, sem débito, sem pendência.
   if (!periodo.noPeriodo) {
@@ -352,6 +372,9 @@ function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
     r.status = r.abonadoMin > 0 ? 'credito' : 'ok';
     return r;
   }
+
+  // dia sem jornada na escala individual (ex.: sábado de folga) e sem batida: nada a contar
+  if (jornadaDia === 0 && diaSemana !== 0) { r.status = 'sem_jornada'; return r; }
 
   // falta: sem batida e sem crédito
   r.contaNoSaldo = true;
@@ -748,7 +771,8 @@ function idCompensacao(funcId, dataAusencia) { return funcId + '_' + dataAusenci
 /** Lançamentos de compensação VIGENTES = COMPENSACAO_AUSENCIA que não possuem ESTORNO. */
 function compensacoesVigentes(lancamentos) {
   const est = new Set((lancamentos || []).filter(l => l.tipo === 'ESTORNO').map(l => l.estornaId));
-  return (lancamentos || []).filter(l => l.tipo === 'COMPENSACAO_AUSENCIA' && !est.has(l.id));
+  return (lancamentos || []).filter(l => (l.tipo === 'COMPENSACAO_AUSENCIA' || l.tipo === 'FOLGA_COMPENSATORIA') && !est.has(l.id))
+    .map(l => (l.dataAusencia ? l : { ...l, dataAusencia: l.data }));
 }
 
 /**
@@ -760,7 +784,11 @@ function compensacoesVigentes(lancamentos) {
  * @returns {Array<{mes, saldoAnterior, creditos, debitos, compensacoes, ajustes, saldoFinal, congelado, origem}>}
  */
 function calcBancoAcumulado(meses, lancamentos) {
-  const vig = compensacoesVigentes(lancamentos), ajustes = (lancamentos || []).filter(l => l.tipo === 'AJUSTE');
+  // Compensação/folga com data POSTERIOR ao último dia já calculado ainda não ocorreu: fica como RESERVA (não entra no acumulado).
+  let maxData = '';
+  (meses || []).forEach(m => (m.dias || []).forEach(d => { if (d.data > maxData) maxData = d.data; }));
+  const vig = compensacoesVigentes(lancamentos).filter(l => !maxData || l.dataAusencia <= maxData);
+  const ajustes = (lancamentos || []).filter(l => l.tipo === 'AJUSTE');
   let ant = 0; const out = [];
   (meses || []).forEach(m => {
     let cred = 0, deb = 0; const porData = {};
@@ -916,4 +944,32 @@ function analisarBancoCct(norma, ctx) {
   const acima = emCiclo.filter(d => d.saldoMin > norma.limiteExtraDiarioMin).map(d => d.data);
   if (acima.length) r.alertas.push({ tipo: 'EXTRA_DIARIA_ACIMA_DO_LIMITE', msg: acima.length + ' dia(s) com mais de ' + norma.limiteExtraDiarioMin + ' min extras.', datas: acima });
   return r;
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FOLGA COMPENSATÓRIA (fase 4) — funções PURAS usadas pela tela e pelo backend
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Horas da folga. periodo 'DIA_INTEIRO' = jornada prevista do dia (escala individual); 'HORAS' = minutos informados (≤ jornada). */
+function minutosDaFolga(funcionario, dataStr, periodo, minutos) {
+  const jornada = getJornadaPrevista(funcionario, dataStr);
+  if (!(jornada > 0)) return { ok: false, motivo: 'DIA_SEM_JORNADA', jornada };
+  if (periodo === 'DIA_INTEIRO') return { ok: true, minutos: jornada, jornada };
+  if (periodo === 'HORAS') {
+    if (!Number.isInteger(minutos) || minutos <= 0 || minutos > jornada) return { ok: false, motivo: 'MINUTOS_INVALIDOS', jornada };
+    return { ok: true, minutos, jornada };
+  }
+  return { ok: false, motivo: 'PERIODO_INVALIDO', jornada };
+}
+
+/**
+ * Projeção de saldo ao aprovar uma folga. `saldoAtualMin` = saldo acumulado (inclui o débito do motor nos dias já ocorridos);
+ * `debitoMotorDiaMin` = o que o motor já debitou NAQUELE dia (0 em data futura); `reservadoMin` = folgas aprovadas ainda não realizadas.
+ * O débito efetivo é só o que o motor NÃO debita (sem desconto em dobro).
+ */
+function projetarFolga(saldoAtualMin, debitoMotorDiaMin, reservadoMin, minutos) {
+  const novo = Math.max(0, minutos - Math.max(0, debitoMotorDiaMin || 0));
+  const antes = saldoAtualMin - Math.max(0, reservadoMin || 0);
+  return { saldoAntesMin: antes, debitoNovoMin: novo, saldoDepoisMin: antes - novo };
 }

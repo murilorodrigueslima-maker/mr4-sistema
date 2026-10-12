@@ -13,7 +13,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const { HttpsError } = require('firebase-functions/v2/https');
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'ponto-regras.copy.js'), 'utf8') +
-  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct};', ctx);
+  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista};', ctx);
 const M = ctx.X;
 const DATA = /^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const negar = () => new HttpsError('permission-denied', 'Sem permissão para o banco de horas.');
@@ -55,7 +55,7 @@ async function carregarBanco(tx, store, funcId, hoje) {
   const esp = es.docs.map(d => ({ id: d.id, ...d.data() })), lf = lc.docs.map(d => ({ id: d.id, ...d.data() }));
   const dados = ms.map(m => ({ mes: m, regs: regs.filter(r => r.data && r.data.startsWith(m)), cred: cred.filter(c => c.data && c.data.startsWith(m)), just: just.filter(j => j.data && j.data.startsWith(m)) }));
   const meses = M.montarMesesBanco(func, dados, esp, hoje, diaAnterior(hoje), mAtual);
-  return { func, meses, lf, rows: M.calcBancoAcumulado(meses, lf), espelhos: esp };
+  return { func, meses, lf, rows: M.calcBancoAcumulado(meses, lf), espelhos: esp, cred, just, regs };
 }
 
 
@@ -95,6 +95,74 @@ async function excecaoHandler(request, opts = {}) {
   });
 }
 
+/** Política efetiva de uma operação que cria horas negativas: com normaId aplica norma+acordo+validade+limite (+exceções); sem, Fase 2. */
+async function politicaEfetiva(tx, store, P, B, hoje, dataRef) {
+  let polEf = P.pol, norma = null;
+  if (P.pol.normaId) {
+    norma = await carregarNorma(tx, store, P.pol.normaId);
+    const ac = await tx.get(store.collection('banco_horas_config').doc('acordo'));
+    const acordo = ac.exists ? ac.data() : null;
+    const dias = B.meses.flatMap(m => m.dias);
+    const exc = B.lf.filter(l => l.tipo === 'EXCECAO_DIRETORIA' && String(l.data || '').startsWith(dataRef.slice(0, 7)));
+    const an = M.analisarBancoCct(norma, { hoje, acordo, dias, compensacoes: M.compensacoesVigentes(B.lf), excecoes: exc });
+    if (BLOQUEIOS_CCT.includes(an.status)) throw new HttpsError('failed-precondition', an.status);
+    if (acordo && dataRef < acordo.inicio) throw new HttpsError('failed-precondition', 'DATA_ANTERIOR_AO_ACORDO');
+    if (norma.bancoValidoAte && dataRef > norma.bancoValidoAte) throw new HttpsError('failed-precondition', 'DATA_APOS_VALIDADE_DO_BANCO');
+    if (!P.pol.permiteSaldoNegativo) polEf = { ...P.pol, limiteNegativoMin: null };
+    else polEf = { ...P.pol, permiteSaldoNegativo: true, limiteNegativoMin: norma.limiteNegativoMesMin + exc.reduce((a, e) => a + e.minutos, 0) };
+  }
+  return { polEf, norma };
+}
+
+const diaSeguinte = (s, n) => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d + n, 12)).toISOString().slice(0, 10); };
+
+/** Folga compensatória (dia inteiro ou horas). Débito exatamente uma vez: só o que o motor não debita no dia; validação no servidor. */
+async function folgaHandler(request, opts = {}) {
+  if (!request || !request.auth || !request.auth.uid) throw new HttpsError('unauthenticated', 'Login necessário.');
+  const d = request.data; validarPayload(d, ['funcId', 'data', 'periodo', 'minutos', 'motivo']);
+  if (typeof d.funcId !== 'string' || !/^[A-Za-z0-9_-]{1,64}$/.test(d.funcId)) throw new HttpsError('invalid-argument', 'funcId inválido.');
+  if (typeof d.data !== 'string' || !DATA.test(d.data)) throw new HttpsError('invalid-argument', 'Data inválida.');
+  if (d.periodo !== 'DIA_INTEIRO' && d.periodo !== 'HORAS') throw new HttpsError('invalid-argument', 'Período inválido.');
+  if (d.periodo === 'HORAS' && !(Number.isInteger(d.minutos) && d.minutos > 0 && d.minutos <= 1440)) throw new HttpsError('invalid-argument', 'Minutos inválidos.');
+  if (!motivoOk(d.motivo)) throw new HttpsError('invalid-argument', 'Motivo obrigatório (5 a 300 caracteres).');
+  const admin = require('firebase-admin'); const store = opts.db || admin.firestore(); const FV = admin.firestore.FieldValue; const agora = opts.now ? opts.now() : new Date();
+  const uid = request.auth.uid, hoje = fortaleza(agora), ontem = diaSeguinte(hoje, -1);
+  const ator = await autorizar(store, uid, d.funcId);
+  const id = d.funcId + '_' + d.data, lRef = store.collection('banco_horas_lancamentos').doc(id), lockRef = store.collection('banco_horas_saldo').doc(d.funcId);
+  return store.runTransaction(async tx => {
+    const cfg = await tx.get(store.collection('banco_horas_config').doc('politica')); const P = lerPolitica(cfg.exists ? cfg.data() : null);
+    if (!P.ok) throw new HttpsError('failed-precondition', P.motivo);
+    const [lock, ja] = await Promise.all([tx.get(lockRef), tx.get(lRef)]);
+    const B = await carregarBanco(tx, store, d.funcId, hoje);
+    const mi = M.minutosDaFolga(B.func, d.data, d.periodo, d.minutos);
+    if (!mi.ok) throw new HttpsError('failed-precondition', mi.motivo);
+    if (ja.exists) {
+      const x = ja.data();
+      if (x.tipo === 'FOLGA_COMPENSATORIA' && x.minutos === mi.minutos && x.aprovadoPorUid === uid) return { ok: true, repetido: true, id };
+      throw new HttpsError('already-exists', 'JA_EXISTE_LANCAMENTO_PARA_ESTA_DATA');
+    }
+    if (d.data < B.func.inicioBancoHoras) throw new HttpsError('failed-precondition', 'DATA_ANTERIOR_AO_INICIO_DO_BANCO');
+    // não confundir folga com feriado, férias, ausência justificada ou dia trabalhado
+    const cred = B.cred.find(c => c.data === d.data);
+    if (cred && (cred.motivo === 'Férias' || /^Feriado/.test(cred.motivo || ''))) throw new HttpsError('failed-precondition', 'DIA_COBERTO_POR_FERIADO_OU_FERIAS');
+    if (B.just.some(j => j.data === d.data && j.status === 'aprovado')) throw new HttpsError('failed-precondition', 'JA_EXISTE_AUSENCIA_JUSTIFICADA');
+    if (B.regs.some(r => r.data === d.data) && d.periodo === 'DIA_INTEIRO') throw new HttpsError('failed-precondition', 'DIA_COM_MARCACOES');
+    if (B.espelhos.some(e => e.mes === d.data.slice(0, 7) && e.assinado && !e.substituido)) throw new HttpsError('failed-precondition', 'MES_COM_ESPELHO_ASSINADO');
+    const { polEf, norma } = await politicaEfetiva(tx, store, P, B, hoje, d.data);
+    const mes = B.meses.find(m => m.mes === d.data.slice(0, 7));
+    const dia = mes && mes.dias.find(x => x.data === d.data), deb = d.data <= ontem && dia && dia.contaNoSaldo && dia.saldoMin < 0 ? -dia.saldoMin : 0;
+    const reservado = M.compensacoesVigentes(B.lf).filter(l => l.dataAusencia > ontem).reduce((a, l) => a + l.minutos, 0);
+    const ult = B.rows[B.rows.length - 1];
+    const av = M.avaliarCompensacao(ult.saldoFinal - reservado, deb, mi.minutos, polEf);
+    if (!av.ok) throw new HttpsError('failed-precondition', norma && av.motivo === 'EXCEDE_LIMITE_NEGATIVO' ? 'LIMITE_NEGATIVO_MENSAL_EXCEDIDO' : av.motivo);
+    tx.create(lRef, { funcId: d.funcId, tipo: 'FOLGA_COMPENSATORIA', data: d.data, dataAusencia: d.data, competencia: d.data.slice(0, 7), periodo: d.periodo, minutos: mi.minutos,
+      jornadaPrevistaMin: mi.jornada, motivo: d.motivo.trim(), aprovadoPorUid: uid, aprovadoPorEmail: ator.email, saldoAntesMin: av.saldoAntesMin, saldoDepoisMin: av.saldoDepoisMin,
+      debitoMotorDiaMin: deb, saldoNegativo: av.negativo, descontoFolha: false, normaId: norma ? norma.id : null, normaClausula: norma ? norma.origem.clausula : null, criadoEm: FV.serverTimestamp() });
+    tx.set(lockRef, { funcId: d.funcId, versao: (lock.exists ? (lock.data().versao || 0) : 0) + 1, atualizadoEm: FV.serverTimestamp() });
+    return { ok: true, repetido: false, id, minutos: mi.minutos, saldoAntesMin: av.saldoAntesMin, saldoDepoisMin: av.saldoDepoisMin, negativo: av.negativo };
+  });
+}
+
 function validarPayload(d, chaves) {
   if (!d || typeof d !== 'object' || Array.isArray(d) || Object.keys(d).some(k => !chaves.includes(k))) throw new HttpsError('invalid-argument', 'Payload inválido.');
 }
@@ -126,20 +194,7 @@ async function compensarHandler(request, opts = {}) {
     if (!mes) throw new HttpsError('failed-precondition', 'DATA_FORA_DO_PERIODO_DO_BANCO');
     const dia = mes.dias.find(x => x.data === d.dataAusencia), deb = dia && dia.contaNoSaldo && dia.saldoMin < 0 ? -dia.saldoMin : 0;
     const ult = B.rows[B.rows.length - 1];
-    let polEf = P.pol, norma = null;
-    if (P.pol.normaId) {                                  // MODO CCT: norma versionada + acordo coletivo vigente; qualquer falha bloqueia
-      norma = await carregarNorma(tx, store, P.pol.normaId);
-      const ac = await tx.get(store.collection('banco_horas_config').doc('acordo'));
-      const acordo = ac.exists ? ac.data() : null;
-      const dias = B.meses.flatMap(m => m.dias);
-      const exc = B.lf.filter(l => l.tipo === 'EXCECAO_DIRETORIA' && String(l.data || '').startsWith(d.dataAusencia.slice(0, 7)));
-      const an = M.analisarBancoCct(norma, { hoje, acordo, dias, compensacoes: M.compensacoesVigentes(B.lf), excecoes: exc });
-      if (BLOQUEIOS_CCT.includes(an.status)) throw new HttpsError('failed-precondition', an.status);
-      if (acordo && d.dataAusencia < acordo.inicio) throw new HttpsError('failed-precondition', 'DATA_ANTERIOR_AO_ACORDO');
-      if (norma.bancoValidoAte && d.dataAusencia > norma.bancoValidoAte) throw new HttpsError('failed-precondition', 'DATA_APOS_VALIDADE_DO_BANCO');
-      if (!P.pol.permiteSaldoNegativo) polEf = { ...P.pol, limiteNegativoMin: null };
-      else polEf = { ...P.pol, permiteSaldoNegativo: true, limiteNegativoMin: norma.limiteNegativoMesMin + exc.reduce((a, e) => a + e.minutos, 0) };
-    }
+    const { polEf, norma } = await politicaEfetiva(tx, store, P, B, hoje, d.dataAusencia);
     const av = M.avaliarCompensacao(ult.saldoFinal, deb, d.minutos, polEf);
     if (!av.ok) throw new HttpsError('failed-precondition', norma && av.motivo === 'EXCEDE_LIMITE_NEGATIVO' ? 'LIMITE_NEGATIVO_MENSAL_EXCEDIDO' : av.motivo);
     tx.create(lRef, { funcId: d.funcId, tipo: 'COMPENSACAO_AUSENCIA', dataAusencia: d.dataAusencia, competencia: d.dataAusencia.slice(0, 7), minutos: d.minutos, motivo: d.motivo.trim(),
@@ -157,7 +212,7 @@ async function estornarHandler(request, opts = {}) {
   if (!motivoOk(d.motivo)) throw new HttpsError('invalid-argument', 'Motivo obrigatório (5 a 300 caracteres).');
   const admin = require('firebase-admin'); const store = opts.db || admin.firestore(); const FV = admin.firestore.FieldValue; const uid = request.auth.uid;
   const col = store.collection('banco_horas_lancamentos'), lRef = col.doc(d.lancamentoId), eRef = col.doc('est_' + d.lancamentoId);
-  const pre = await lRef.get(); if (!pre.exists || pre.data().tipo !== 'COMPENSACAO_AUSENCIA') throw new HttpsError('not-found', 'Compensação inexistente.');
+  const pre = await lRef.get(); if (!pre.exists || !['COMPENSACAO_AUSENCIA', 'FOLGA_COMPENSATORIA'].includes(pre.data().tipo)) throw new HttpsError('not-found', 'Compensação inexistente.');
   const ator = await autorizar(store, uid, pre.data().funcId);
   const lockRef = store.collection('banco_horas_saldo').doc(pre.data().funcId);
   return store.runTransaction(async tx => {
@@ -173,4 +228,4 @@ async function estornarHandler(request, opts = {}) {
   });
 }
 
-module.exports = { compensarHandler, estornarHandler, excecaoHandler, lerPolitica, carregarBanco, M };
+module.exports = { compensarHandler, estornarHandler, excecaoHandler, folgaHandler, lerPolitica, carregarBanco, M };

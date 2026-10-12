@@ -499,7 +499,7 @@ window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
 window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
-window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar');
+window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar'); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga');
 
 window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
@@ -801,9 +801,9 @@ function bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo){
   const sg=v=>(v>0?'+':'')+fmtMin(v);
   const lin=rows.map((r,i)=>{const m=meses[i];const sel=m.congelado?' · espelho assinado (congelado)':m.origem==='ASSINADO_SEM_SNAPSHOT'?' · assinado sem snapshot (calculado pelo motor atual)':'';
     return `<tr><td>${esc(r.mes)}${sel?`<div style="font-size:10px;color:var(--cinza-texto);">${esc(sel.slice(3))}</div>`:''}${m.pendencias?`<div style="font-size:10px;color:#c0392b;">${m.pendencias} dia(s) pendente(s)</div>`:''}</td><td>${sg(r.saldoAnterior)}</td><td style="color:#1a7a3a;">+${fmtMin(r.creditos)}</td><td style="color:#c0392b;">${fmtMin(r.debitos)}</td><td>${sg(r.compensacoes)}</td><td>${sg(r.ajustes)}</td><td style="font-weight:700;${cor(r.saldoFinal)}">${sg(r.saldoFinal)}</td></tr>`;}).join('');
-  const comp=lf.filter(l=>l.tipo==='COMPENSACAO_AUSENCIA').sort((a,b)=>String(b.dataAusencia).localeCompare(String(a.dataAusencia)));
+  const comp=lf.filter(l=>l.tipo==='COMPENSACAO_AUSENCIA'||l.tipo==='FOLGA_COMPENSATORIA').sort((a,b)=>String(b.dataAusencia||b.data).localeCompare(String(a.dataAusencia||a.data)));
   const estornados=new Set(lf.filter(l=>l.tipo==='ESTORNO').map(l=>l.estornaId));
-  const hist=comp.length?comp.map(l=>`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--cinza-borda);display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;"><span>${fmtData(l.dataAusencia)} · −${fmtMin(l.minutos)} · ${esc(l.motivo)} <span style="color:var(--cinza-texto);">(aprovado por ${esc(l.aprovadoPorEmail||l.aprovadoPorUid||'—')})</span>${estornados.has(l.id)?' <strong style="color:#c0392b;">ESTORNADA</strong>':''}</span>${!estornados.has(l.id)&&cfg.compensacaoAtiva?`<button class="btn-ghost" onclick="estornarCompensacao('${esc(f.id)}','${esc(l.id)}')">Estornar</button>`:''}</div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Nenhuma compensação registrada.</div>';
+  const hist=comp.length?comp.map(l=>`<div style="font-size:12px;padding:5px 0;border-bottom:1px solid var(--cinza-borda);display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;"><span>${l.tipo==='FOLGA_COMPENSATORIA'?'<strong>Folga compensatória</strong> ('+(l.periodo==='HORAS'?'horas':'dia inteiro')+') · ':''}${fmtData(l.dataAusencia||l.data)} · −${fmtMin(l.minutos)} · ${esc(l.motivo)} <span style="color:var(--cinza-texto);">(aprovado por ${esc(l.aprovadoPorEmail||l.aprovadoPorUid||'—')})</span>${estornados.has(l.id)?' <strong style="color:#c0392b;">ESTORNADA</strong>':''}</span>${!estornados.has(l.id)&&cfg.compensacaoAtiva?`<button class="btn-ghost" onclick="estornarCompensacao('${esc(f.id)}','${esc(l.id)}')">Estornar</button>`:''}</div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Nenhuma compensação registrada.</div>';
   const comp_ativos=compensacoesVigentes(lf).map(l=>l.dataAusencia);
   const faltas=[];meses.forEach(m=>m.dias.forEach(d=>{if(d.status==='falta'&&!comp_ativos.includes(d.data))faltas.push(d);}));
   const faltasHtml=faltas.length?faltas.slice(-15).map(d=>`<div style="font-size:12px;padding:4px 0;display:flex;gap:8px;justify-content:space-between;"><span>${fmtData(d.data)} · falta registrada (${fmtMin(d.saldoMin)} no banco)</span>${cfg.compensacaoAtiva?`<button class="btn-ghost" onclick="abrirCompensacao('${esc(f.id)}','${esc(d.data)}')">Compensar</button>`:''}</div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Nenhuma falta aguardando compensação.</div>';
@@ -831,14 +831,21 @@ function bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo){
         <div>Situação: <strong>${esc(ROT[an.status]||an.status)}</strong></div>${lin2.map(x=>`<div>${x}</div>`).join('')}${al}${an2}${pg}</div>`;
     }
   }
+  const folgaForm=cfg.compensacaoAtiva?`<div style="margin-top:12px;padding:8px 10px;border:1px solid var(--cinza-borda,#ccc);border-radius:6px;"><div style="font-weight:600;font-size:13px;margin-bottom:6px;">Folga compensatória (debita o banco uma única vez)</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;"><label style="font-size:11px;">Data da folga<br><input type="date" id="fg-d-${esc(f.id)}" onchange="previaFolga('${esc(f.id)}')"></label>
+    <label style="font-size:11px;">Período<br><select id="fg-p-${esc(f.id)}" onchange="previaFolga('${esc(f.id)}')"><option value="DIA_INTEIRO">Dia inteiro</option><option value="HORAS">Horas específicas</option></select></label>
+    <label style="font-size:11px;">Horas<br><input type="number" step="0.25" min="0.25" max="24" id="fg-h-${esc(f.id)}" value="2" style="width:70px;" onchange="previaFolga('${esc(f.id)}')"></label>
+    <label style="font-size:11px;flex:1;min-width:160px;">Motivo<br><input type="text" id="fg-m-${esc(f.id)}" maxlength="300" style="width:100%;"></label>
+    <button class="btn-novo" onclick="aprovarFolga('${esc(f.id)}')">Aprovar folga</button></div>
+    <div id="fg-prev-${esc(f.id)}" style="font-size:12px;margin-top:6px;"></div><div id="fg-msg-${esc(f.id)}" style="font-size:12px;margin-top:4px;color:#c0392b;"></div></div>`:'';
   return `<details class="ficha" style="padding:10px 14px;margin-bottom:8px;"><summary style="cursor:pointer;font-weight:600;display:flex;gap:10px;justify-content:space-between;">${esc(f.nome)}<span style="${cor(ult.saldoFinal)}">Saldo acumulado ${sg(ult.saldoFinal)}</span></summary>
     <div class="tabela-wrap" style="margin-top:8px;"><table><thead><tr><th>Mês</th><th>Anterior</th><th>Créditos</th><th>Débitos</th><th>Compens.</th><th>Ajustes</th><th>Final</th></tr></thead><tbody>${lin}</tbody></table></div>
     ${cctHtml}<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Faltas aguardando compensação</div>${faltasHtml}
-    <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Histórico de compensações</div>${hist}${form}</details>`;
+    <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Histórico de compensações e folgas</div>${hist}${form}${folgaForm}</details>`;
 }
 function abrirCompensacao(fid,data){const d=document.getElementById('bh-d-'+fid);if(d){d.value=data;d.scrollIntoView({block:'center'});}}
 window.abrirCompensacao=abrirCompensacao;
-const _ERROS_BANCO={BANCO_DESLIGADO:'banco acumulativo/compensação desativados.',POLITICA_INCOMPLETA_SEM_LIMITE_NEGATIVO:'política de saldo negativo sem limite cadastrado.',SALDO_INSUFICIENTE_NEGATIVO_NAO_PERMITIDO:'saldo insuficiente e a política não permite saldo negativo.',EXCEDE_LIMITE_NEGATIVO:'excede o limite de saldo negativo da política.',JA_EXISTE_COMPENSACAO_PARA_ESTA_AUSENCIA:'já existe compensação para esta ausência.',SEM_DATA_DE_INICIO_DO_BANCO:'funcionário sem data de início do banco.',DATA_FORA_DO_PERIODO_DO_BANCO:'data fora do período do banco.'};
+const _ERROS_BANCO={BANCO_DESLIGADO:'banco acumulativo/compensação desativados.',POLITICA_INCOMPLETA_SEM_LIMITE_NEGATIVO:'política de saldo negativo sem limite cadastrado.',SALDO_INSUFICIENTE_NEGATIVO_NAO_PERMITIDO:'saldo insuficiente e a política não permite saldo negativo.',EXCEDE_LIMITE_NEGATIVO:'excede o limite de saldo negativo da política.',JA_EXISTE_COMPENSACAO_PARA_ESTA_AUSENCIA:'já existe compensação para esta ausência.',SEM_DATA_DE_INICIO_DO_BANCO:'funcionário sem data de início do banco.',DATA_FORA_DO_PERIODO_DO_BANCO:'data fora do período do banco.',DIA_SEM_JORNADA:'dia sem jornada prevista.',MINUTOS_INVALIDOS:'horas inválidas.',DIA_COBERTO_POR_FERIADO_OU_FERIAS:'o dia já é feriado/férias (não é folga compensatória).',JA_EXISTE_AUSENCIA_JUSTIFICADA:'já existe ausência justificada aprovada nesse dia.',DIA_COM_MARCACOES:'o dia tem marcações de ponto.',MES_COM_ESPELHO_ASSINADO:'o mês tem espelho assinado (correção retroativa exige procedimento explícito).',JA_EXISTE_LANCAMENTO_PARA_ESTA_DATA:'já existe lançamento para esta data.',DATA_ANTERIOR_AO_INICIO_DO_BANCO:'data anterior ao início do banco.',LIMITE_NEGATIVO_MENSAL_EXCEDIDO:'excede o limite de horas negativas do mês (convenção).'};
 function erroBanco(e){const m=String((e&&e.message)||'');return _ERROS_BANCO[m]||(e&&e.code==='functions/permission-denied'?'sem permissão.':m||'erro');}
 async function registrarCompensacao(fid){
   const msg=t=>{const e=document.getElementById('bh-msg-'+fid);if(e){e.textContent=t;e.style.color='#c0392b';}};
@@ -879,6 +886,42 @@ async function estornarCompensacao(fid,lid){
 }
 window.estornarCompensacao=estornarCompensacao;
 
+
+// ── Folga compensatória: prévia (jornada, saldo disponível, projeção) e aprovação — a validação definitiva é do servidor ─────────────────
+function _folgaCalc(fid){
+  const est=_bhEstado.dados[fid];if(!est)return null;
+  const data=(document.getElementById('fg-d-'+fid)||{}).value,periodo=(document.getElementById('fg-p-'+fid)||{}).value||'DIA_INTEIRO';
+  const horas=parseFloat((document.getElementById('fg-h-'+fid)||{}).value);
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(data||''))return {erro:'Escolha a data da folga.'};
+  const mi=minutosDaFolga(est.f,data,periodo,periodo==='HORAS'?Math.round(horas*60):undefined);
+  if(!mi.ok)return {erro:mi.motivo==='DIA_SEM_JORNADA'?'Este dia não tem jornada prevista (domingo/folga na escala).':mi.motivo==='MINUTOS_INVALIDOS'?'Horas inválidas (máximo: a jornada do dia).':'Período inválido.',jornada:mi.jornada};
+  const ontemS=ontem();const mes=est.meses.find(m=>m.mes===data.slice(0,7));const dia=mes&&mes.dias.find(x=>x.data===data);
+  const deb=data<=ontemS&&dia&&dia.contaNoSaldo&&dia.saldoMin<0?-dia.saldoMin:0;
+  const reservado=compensacoesVigentes(est.lf).filter(l=>l.dataAusencia>ontemS).reduce((a,l)=>a+l.minutos,0);
+  const ult=est.rows[est.rows.length-1];
+  const pj=projetarFolga(ult.saldoFinal,deb,reservado,mi.minutos);
+  return {data,periodo,minutos:mi.minutos,jornada:mi.jornada,deb,reservado,saldo:ult.saldoFinal,...pj,data_:data};
+}
+function previaFolga(fid){
+  const el=document.getElementById('fg-prev-'+fid);if(!el)return;
+  const c=_folgaCalc(fid);if(!c){el.textContent='';return;}
+  if(c.erro){el.textContent=c.erro;el.style.color='#c0392b';return;}
+  el.style.color='';
+  el.innerHTML=`Jornada prevista: <strong>${fmtMin(c.jornada)}</strong> · folga: <strong>${fmtMin(c.minutos)}</strong> · saldo disponível: ${fmtMin(c.saldo-c.reservado)}${c.reservado?` (já reservado em folgas futuras: ${fmtMin(c.reservado)})`:''} · já debitado pelo motor nesse dia: ${fmtMin(c.deb)} · débito novo: ${fmtMin(c.debitoNovoMin)} · <strong>saldo após a folga: ${fmtMin(c.saldoDepoisMin)}</strong>${c.saldoDepoisMin<0?' <span style="color:#c0392b;">(negativo — o servidor valida limites e autorizações)</span>':''}`;
+}
+window.previaFolga=previaFolga;
+async function aprovarFolga(fid){
+  const msg=t=>{const e=document.getElementById('fg-msg-'+fid);if(e)e.textContent=t;};msg('');
+  const c=_folgaCalc(fid);if(!c||c.erro){msg((c&&c.erro)||'Dados não carregados.');return;}
+  const motivo=((document.getElementById('fg-m-'+fid)||{}).value||'').trim();
+  if(motivo.length<5){msg('Informe o motivo (mínimo 5 caracteres).');return;}
+  if(c.saldoDepoisMin<0&&!window.confirm(`Esta folga deixa o saldo NEGATIVO em ${fmtMin(c.saldoDepoisMin)}. O servidor só aceita dentro dos limites da política/convenção. Confirmar?`))return;
+  try{
+    const r=await window._bhFolga({funcId:fid,data:c.data,periodo:c.periodo,...(c.periodo==='HORAS'?{minutos:c.minutos}:{}),motivo});
+    invalidarCache('banco_horas_lancamentos');notif(r.data&&r.data.repetido?'Folga já registrada.':'Folga aprovada e registrada.','verde');renderBanco();
+  }catch(e){msg('Não foi possível aprovar: '+erroBanco(e));}
+}
+window.aprovarFolga=aprovarFolga;
 // ── Feriados 2026 ─────────────────────────────────────────────────────────────
 const FERIADOS_2026=[{data:'2026-01-01',nome:'Ano Novo',tipo:'Feriado nacional'},{data:'2026-02-16',nome:'Carnaval (segunda)',tipo:'Feriado nacional'},{data:'2026-02-17',nome:'Carnaval (terça)',tipo:'Feriado nacional'},{data:'2026-02-18',nome:'Quarta-feira de Cinzas',tipo:'Feriado nacional'},{data:'2026-03-19',nome:'São José (Ceará)',tipo:'Feriado estadual'},{data:'2026-04-03',nome:'Sexta-feira Santa',tipo:'Feriado nacional'},{data:'2026-04-05',nome:'Páscoa',tipo:'Feriado nacional'},{data:'2026-04-21',nome:'Tiradentes',tipo:'Feriado nacional'},{data:'2026-05-01',nome:'Dia do Trabalho',tipo:'Feriado nacional'},{data:'2026-06-04',nome:'Corpus Christi',tipo:'Feriado nacional'},{data:'2026-07-25',nome:'Abolição Escravatura CE',tipo:'Feriado estadual'},{data:'2026-08-15',nome:'N.Sra. da Assunção',tipo:'Feriado municipal'},{data:'2026-09-07',nome:'Independência do Brasil',tipo:'Feriado nacional'},{data:'2026-10-12',nome:'N.Sra. Aparecida',tipo:'Feriado nacional'},{data:'2026-11-02',nome:'Finados',tipo:'Feriado nacional'},{data:'2026-11-15',nome:'Proclamação da República',tipo:'Feriado nacional'},{data:'2026-11-20',nome:'Consciência Negra',tipo:'Feriado nacional'},{data:'2026-12-08',nome:'N.Sra. da Conceição',tipo:'Feriado municipal'},{data:'2026-12-25',nome:'Natal',tipo:'Feriado nacional'}];
 
@@ -1103,6 +1146,14 @@ async function gerarEspelho(){
 
   // buildEspelhoSnapshot usa os mesmos primitivos do motor de cálculo.
   const snap=buildEspelhoSnapshot(func,regsDoMes,creditosFuncMes,justifDoMes,mes,hojeStr);
+  // Folga compensatória aprovada aparece no espelho (informativo; o débito do banco é do razão, nunca duplicado aqui).
+  try{
+    const lancF=(await fbGet('banco_horas_lancamentos')).filter(l=>l.funcId===funcId);
+    compensacoesVigentes(lancF).filter(l=>l.tipo==='FOLGA_COMPENSATORIA'&&String(l.data).startsWith(mes)).forEach(l=>{
+      const dd=snap.dias.find(x=>x.data===l.data);
+      if(dd&&!dd.ocorrencia)dd.ocorrencia='Folga compensatória (banco de horas) '+(l.periodo==='HORAS'?fmtMin(l.minutos):'dia inteiro');
+    });
+  }catch(e){/* sem permissão/coleção: espelho segue sem a anotação */}
   snap.geradoEm=new Date().toISOString();
   snap.funcId=funcId;
   window._espelhoSnapshot=snap;

@@ -11,83 +11,79 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --u:min(calc(100vw / 192), calc(100vh / 108));          /* 1u = 10px em 1920×1080; tudo escala com a janela, sem rolagem */
-  --bg:#060B1A; --panel:#0E1730; --panel2:#132042; --line:#1F2F57;
-  --brand:#F28C28;  --brand2:#FFB066;  --blue:#4C8DF6; --green:#22C55E; --red:#EF4444; --yellow:#F5B301;
-  --text:#FFFFFF; --sub:#B6C2DA; --dim:#7E8CAB;
+  --bg:#071022; --panel:#0E1A33; --panel2:#142445; --line:#1F2F52;
+  --brand:#F28C28; --brand2:#F7A85A; --green:#2FB26A; --red:#E5484D;
+  --text:#FFFFFF; --sub:#A9B6CE; --dim:#7886A3;
   --num:'JetBrains Mono','SF Mono',Consolas,monospace; --ui:'Inter','Segoe UI',Roboto,Arial,sans-serif;
 }
 html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--ui);-webkit-font-smoothing:antialiased;user-select:none}
 body{display:flex;align-items:center;justify-content:center}
 .hidden{display:none!important}
-/* ── login / splash ── */
 .center{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6rem;background:var(--bg);z-index:5}
 .center img{height:80px;background:#EEF2FA;border-radius:14px;padding:10px 16px}
 .center input{width:320px;padding:.8rem 1rem;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:#fff;font-size:1rem}
 .center button{width:320px;padding:.8rem;border-radius:10px;border:0;background:var(--brand);color:#111;font-weight:800;font-size:1rem;cursor:pointer}
 .center .err{color:var(--red);min-height:1.2rem;font-size:.9rem}
 .spin{width:36px;height:36px;border:4px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:g 1s linear infinite}@keyframes g{to{transform:rotate(360deg)}}
-/* ── palco 16:9 ── */
-#stage{width:calc(var(--u)*192);height:calc(var(--u)*108);padding:calc(var(--u)*1.8) calc(var(--u)*2.4);display:flex;flex-direction:column;gap:calc(var(--u)*1.5);background:
-  radial-gradient(calc(var(--u)*60) calc(var(--u)*40) at 90% -10%,rgba(242,140,40,.10),transparent 60%),var(--bg)}
-.hd{height:calc(var(--u)*8);display:flex;align-items:center;gap:calc(var(--u)*2);flex:none}
-.logo{height:calc(var(--u)*5.6);background:#EEF2FA;border-radius:calc(var(--u)*1.1);padding:calc(var(--u)*.6) calc(var(--u)*1.4);display:flex;align-items:center}
+#stage{width:calc(var(--u)*192);height:calc(var(--u)*108);padding:calc(var(--u)*2) calc(var(--u)*2.6);display:flex;flex-direction:column;gap:calc(var(--u)*1.8);background:var(--bg)}
+.hd{height:calc(var(--u)*8);display:flex;align-items:center;gap:calc(var(--u)*2.2);flex:none}
+.logo{height:calc(var(--u)*6);background:#EEF2FA;border-radius:calc(var(--u)*.9);padding:calc(var(--u)*.6) calc(var(--u)*1.4);display:flex;align-items:center}
 .logo img{height:100%;object-fit:contain}
-.ttl{font-size:calc(var(--u)*2.7);font-weight:800;letter-spacing:-.01em}
-.ttl small{display:block;font-size:calc(var(--u)*1.7);font-weight:600;color:var(--sub);letter-spacing:.08em;text-transform:uppercase;margin-top:calc(var(--u)*.2)}
+.ttl{font-size:calc(var(--u)*3);font-weight:700;letter-spacing:-.005em}
+.ttl small{display:block;font-size:calc(var(--u)*1.6);font-weight:500;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-top:calc(var(--u)*.3)}
 .sp{flex:1}
-.mes{font-size:calc(var(--u)*2.4);font-weight:800;color:var(--brand2);text-transform:uppercase;letter-spacing:.06em;padding:calc(var(--u)*.7) calc(var(--u)*1.6);border:calc(var(--u)*.2) solid rgba(242,140,40,.45);border-radius:calc(var(--u)*1.2)}
-.rel{text-align:right}.rel .h{font-family:var(--num);font-size:calc(var(--u)*3.8);font-weight:700;line-height:1}.rel .d{font-size:calc(var(--u)*1.7);color:var(--sub);text-transform:capitalize;margin-top:calc(var(--u)*.3)}
-.chip{display:flex;align-items:center;gap:calc(var(--u)*.8);padding:calc(var(--u)*.8) calc(var(--u)*1.5);border-radius:99px;font-weight:700;font-size:calc(var(--u)*1.8);border:calc(var(--u)*.2) solid;white-space:nowrap}
-.chip .dot{width:calc(var(--u)*1.2);height:calc(var(--u)*1.2);border-radius:50%;background:currentColor}
-.chip.green{color:var(--green);border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.10)}.chip.green .dot{animation:pulso 2.4s ease-in-out infinite}
-.chip.yellow{color:var(--yellow);border-color:rgba(245,179,1,.5);background:rgba(245,179,1,.10)}
-.chip.red{color:var(--red);border-color:rgba(239,68,68,.55);background:rgba(239,68,68,.12)}
-@keyframes pulso{0%,100%{opacity:1}50%{opacity:.35}}
+.mes{font-size:calc(var(--u)*2.6);font-weight:700;color:var(--text);text-transform:capitalize;letter-spacing:.01em}
+.rel{text-align:right}.rel .h{font-family:var(--num);font-size:calc(var(--u)*3.8);font-weight:700;line-height:1}.rel .d{font-size:calc(var(--u)*1.7);color:var(--sub);text-transform:capitalize;margin-top:calc(var(--u)*.4)}
+.chip{display:flex;align-items:center;gap:calc(var(--u)*.8);padding:calc(var(--u)*.7) calc(var(--u)*1.5);border-radius:99px;font-weight:600;font-size:calc(var(--u)*1.7);border:1px solid;white-space:nowrap}
+.chip .dot{width:calc(var(--u)*1.1);height:calc(var(--u)*1.1);border-radius:50%;background:currentColor}
+.chip.green{color:var(--green);border-color:rgba(47,178,106,.45)}
+.chip.yellow{color:#E7B53A;border-color:rgba(231,181,58,.5)}
+.chip.red{color:var(--red);border-color:rgba(229,72,77,.6);background:rgba(229,72,77,.1)}
 .row{display:flex;gap:calc(var(--u)*2);min-height:0}
-.card{background:var(--panel);border-radius:calc(var(--u)*1.6);padding:calc(var(--u)*1.8) calc(var(--u)*2.2);display:flex;flex-direction:column;min-width:0;min-height:0;position:relative;transition:box-shadow .6s}
-.card.flash{box-shadow:0 0 0 calc(var(--u)*.35) var(--green),0 0 calc(var(--u)*4) rgba(34,197,94,.35)}
-.lbl{font-size:calc(var(--u)*1.7);font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.08em}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--u)*1);padding:calc(var(--u)*2) calc(var(--u)*2.6);display:flex;flex-direction:column;min-width:0;min-height:0;position:relative;box-shadow:0 calc(var(--u)*.4) calc(var(--u)*1.6) rgba(0,0,0,.28)}
+.lbl{font-size:calc(var(--u)*1.55);font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.09em}
 .num{font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.sub{font-size:calc(var(--u)*1.8);color:var(--sub)}
-.bar{height:calc(var(--u)*1.7);background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;position:relative}
+.sub{font-size:calc(var(--u)*1.6);color:var(--sub)}
+.bar{height:calc(var(--u)*1.4);background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:99px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1);background:var(--brand)}
-.bar i.green{background:var(--green)}.bar i.yellow{background:var(--yellow)}.bar i.red{background:var(--red)}
-.tag{display:inline-block;padding:calc(var(--u)*.3) calc(var(--u)*.9);border-radius:calc(var(--u)*.7);font-size:calc(var(--u)*1.5);font-weight:800;letter-spacing:.05em;vertical-align:middle}
-.tag.est{background:rgba(76,141,246,.18);color:#9DC0FF}.tag.low{background:rgba(245,179,1,.18);color:var(--yellow)}.tag.ok{background:rgba(34,197,94,.16);color:var(--green)}.tag.bad{background:rgba(239,68,68,.16);color:#FF8A8A}
-.pos{color:var(--green)}.neg{color:var(--red)}.warn{color:var(--yellow)}
-/* hero */
-#hero{flex:0 0 calc(var(--u)*118)}
-#hero .val{font-size:calc(var(--u)*8);color:var(--text);margin:calc(var(--u)*.5) 0 calc(var(--u)*.3)}
-.hero-meta{display:flex;align-items:baseline;gap:calc(var(--u)*3);margin:calc(var(--u)*.3) 0 calc(var(--u)*.8)}
-.hero-meta .pct{font-size:calc(var(--u)*4)}
-.chips{display:flex;gap:calc(var(--u)*3);margin-top:calc(var(--u)*.8)}
-.chips div{font-size:calc(var(--u)*1.7);color:var(--sub);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
-.chips b{display:block;font-family:var(--num);font-size:calc(var(--u)*2.8);color:var(--text);letter-spacing:0;margin-top:calc(var(--u)*.3)}
-.delta{position:absolute;right:calc(var(--u)*2.2);top:calc(var(--u)*1.8);padding:calc(var(--u)*.5) calc(var(--u)*1.2);border-radius:99px;background:rgba(34,197,94,.16);color:var(--green);font-weight:800;font-size:calc(var(--u)*1.8);opacity:0;transition:opacity .5s}
+.bar i.ok{background:var(--green)}
+.bar.off{opacity:.35}
+.pos{color:var(--green)}.neg{color:var(--red)}
+/* resultado geral */
+#hero{flex:1.5;justify-content:space-between}
+#hero .val{font-size:calc(var(--u)*9.2);margin-top:calc(var(--u)*1.2)}
+.hero-meta{display:flex;align-items:baseline;gap:calc(var(--u)*3)}
+.hero-meta .pct{font-size:calc(var(--u)*5);color:var(--brand2)}
+.hero-meta .sub b{color:var(--text)}
+.falta-g{display:flex;align-items:baseline;gap:calc(var(--u)*1.6);font-size:calc(var(--u)*2.2);color:var(--sub)}
+.falta-g b{font-family:var(--num);font-size:calc(var(--u)*4);color:var(--text)}
+.delta{position:absolute;right:calc(var(--u)*2.6);top:calc(var(--u)*2);font-size:calc(var(--u)*1.6);font-weight:600;color:var(--green);opacity:0;transition:opacity .6s}
 .delta.on{opacity:1}
-/* ritmo */
-#ritmo{flex:1}
-.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*1.6) calc(var(--u)*2);margin-top:calc(var(--u)*1)}
-.k .lbl{font-size:calc(var(--u)*1.55)}.k .num{font-size:calc(var(--u)*3.3);margin-top:calc(var(--u)*.5)}.k .sub{font-size:calc(var(--u)*1.55);margin-top:calc(var(--u)*.3)}
-/* gráfico */
-#graf{flex:0 0 calc(var(--u)*118)}
-#graf svg{width:100%;flex:1;min-height:0;margin-top:calc(var(--u)*.6)}
-.leg{display:flex;gap:calc(var(--u)*2.2);font-size:calc(var(--u)*1.6);color:var(--sub);align-items:center;flex-wrap:wrap}
-.leg i{display:inline-block;width:calc(var(--u)*2.4);height:calc(var(--u)*.45);margin-right:calc(var(--u)*.6);vertical-align:middle;border-radius:3px}
-#dia{flex:1}
-.big{font-size:calc(var(--u)*3.6)}
+#side{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:calc(var(--u)*1.6)}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--u)*1);padding:calc(var(--u)*1.5) calc(var(--u)*2);display:flex;flex-direction:column;justify-content:center;min-width:0;gap:calc(var(--u)*.8)}
+.tile .num{font-size:calc(var(--u)*3.6)}
+.tile.w2{grid-column:span 1}
+.tile .sub{font-size:calc(var(--u)*1.45);color:var(--dim)}
+.tile .est{font-size:calc(var(--u)*1.3);font-weight:700;letter-spacing:.08em;color:var(--brand2);text-transform:uppercase;margin-left:calc(var(--u)*.6)}
+.tile.hl{border-color:rgba(242,140,40,.45)}
 /* vendedores */
 .sellers{flex:1;min-height:0}
-.seller{flex:1;padding:calc(var(--u)*1.5) calc(var(--u)*2)}
-.seller .nm{font-size:calc(var(--u)*2.8);font-weight:800;display:flex;align-items:center;gap:calc(var(--u)*1)}
-.seller .pos-b{width:calc(var(--u)*3.6);height:calc(var(--u)*3.6);border-radius:50%;background:var(--brand);color:#111;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:calc(var(--u)*2)}
-.seller .pos-b.p2{background:#8FA3C8}.seller .pos-b.o{background:var(--panel2);color:var(--sub);font-size:calc(var(--u)*1.5)}
-.seller .tot{font-size:calc(var(--u)*4.6);margin:calc(var(--u)*.9) 0 calc(var(--u)*.7)}
-.seller .st{display:flex;gap:calc(var(--u)*2.4);font-size:calc(var(--u)*1.6);color:var(--sub);margin-top:calc(var(--u)*.9)}
-.seller .st b{color:var(--text);font-family:var(--num);font-size:calc(var(--u)*2.1);display:block}
-.seller .pr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:calc(var(--u)*.6);font-size:calc(var(--u)*1.7);color:var(--sub)}
-.ft{height:calc(var(--u)*4);display:flex;align-items:center;gap:calc(var(--u)*3);font-size:calc(var(--u)*1.65);color:var(--sub);flex:none}
-.ft b{color:var(--text)}
+.seller{flex:1}
+.seller .nm{font-size:calc(var(--u)*3);font-weight:700;display:flex;align-items:baseline;justify-content:space-between;gap:calc(var(--u)*1)}
+.seller .lead{font-size:calc(var(--u)*1.4);font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.08em}
+.seller .tot{font-size:calc(var(--u)*5.4);margin:calc(var(--u)*1.2) 0 calc(var(--u)*1)}
+.seller .pr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:calc(var(--u)*.7);font-size:calc(var(--u)*1.8);color:var(--sub)}
+.seller .pr b{color:var(--text);font-family:var(--num);font-size:calc(var(--u)*2.6)}
+.falta{margin-top:calc(var(--u)*1.4);padding:calc(var(--u)*1.1) calc(var(--u)*1.4);border-radius:calc(var(--u)*.7);background:var(--panel2);border-left:calc(var(--u)*.35) solid var(--brand)}
+.falta.off{border-left-color:var(--line)}
+.falta .num{font-size:calc(var(--u)*3.8);margin-top:calc(var(--u)*.5)}
+.nec{display:flex;justify-content:space-between;align-items:baseline;margin-top:calc(var(--u)*1.1);font-size:calc(var(--u)*1.6);color:var(--sub)}
+.nec b{font-family:var(--num);font-size:calc(var(--u)*2.4);color:var(--text)}
+.nec em{font-style:normal;font-size:calc(var(--u)*1.2);font-weight:700;color:var(--brand2);letter-spacing:.08em;text-transform:uppercase;margin-left:calc(var(--u)*.4)}
+.seller .st{display:flex;gap:calc(var(--u)*4);font-size:calc(var(--u)*1.5);color:var(--sub);margin-top:auto;padding-top:calc(var(--u)*1.2);border-top:1px solid var(--line)}
+.seller .st b{color:var(--text);font-family:var(--num);font-size:calc(var(--u)*2.2);display:block;margin-top:calc(var(--u)*.3)}
+.ft{height:calc(var(--u)*4.4);display:flex;align-items:center;gap:calc(var(--u)*3);font-size:calc(var(--u)*1.6);color:var(--sub);flex:none;border-top:1px solid var(--line);padding-top:calc(var(--u)*.4)}
+.ft b{color:var(--text)}.ft .dim{color:var(--dim)}
 </style>
 </head>
 <body>
@@ -105,7 +101,7 @@ body{display:flex;align-items:center;justify-content:center}
 <main id="stage" class="hidden">
   <header class="hd">
     <div class="logo"><img src="./assets/logo.png" alt="MR4 Distribuidora"></div>
-    <div class="ttl">Painel Comercial<small>MR4 Distribuidora · prévia do novo layout</small></div>
+    <div class="ttl">Painel Comercial<small>MR4 Distribuidora · prévia</small></div>
     <div class="sp"></div>
     <div class="mes" id="mesRef">—</div>
     <div class="sp"></div>
@@ -113,50 +109,36 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="rel"><div class="h" id="clock">--:--:--</div><div class="d" id="dateStr">—</div></div>
   </header>
 
-  <section class="row" style="flex:none;height:calc(var(--u)*29)">
+  <section class="row" style="flex:none;height:calc(var(--u)*34)">
     <div class="card" id="hero">
-      <div class="lbl">Faturamento do mês · MR4 (todos os vendedores)</div>
-      <div class="num val" id="hVal">R$ —</div>
+      <div>
+        <div class="lbl">Faturamento do mês · todos os vendedores</div>
+        <div class="num val" id="hVal">R$ —</div>
+      </div>
       <div class="hero-meta">
         <div class="num pct" id="hPct">— %</div>
-        <div class="sub">da meta de <b id="hMeta" style="color:var(--text)">R$ —</b> · faltam <b id="hRest" style="color:var(--text)">R$ —</b></div>
+        <div class="sub">da meta de <b id="hMeta">R$ —</b></div>
+        <div class="falta-g">faltam <b id="hRest">R$ —</b></div>
       </div>
-      <div class="bar"><i id="hBar"></i></div>
-      <div class="chips"><div>Pedidos no mês<b id="hPed">—</b></div><div>Ticket médio<b id="hTic">—</b></div><div>Vendido hoje<b id="hHoje">—</b></div></div>
+      <div class="bar" style="height:calc(var(--u)*1.8)"><i id="hBar"></i></div>
       <div class="delta" id="delta">+R$ 0,00</div>
     </div>
-    <div class="card" id="ritmo">
-      <div class="lbl">Ritmo e projeção <span class="tag est" id="tagEst">ESTIMATIVA</span> <span class="tag low hidden" id="tagConf"></span></div>
-      <div class="kgrid">
-        <div class="k"><div class="lbl">Meta por dia útil restante</div><div class="num" id="kNec">—</div><div class="sub" id="kNecS"></div></div>
-        <div class="k"><div class="lbl">Média por dia útil equiv.</div><div class="num" id="kMed">—</div><div class="sub" id="kMedS"></div></div>
-        <div class="k"><div class="lbl">Projeção de fechamento</div><div class="num" id="kProj">—</div><div class="sub" id="kProjS"></div></div>
-        <div class="k"><div class="lbl">Diferença para a meta</div><div class="num" id="kDif">—</div><div class="sub" id="kDifS"></div></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="row" style="flex:none;height:calc(var(--u)*27)">
-    <div class="card" id="graf">
-      <div class="leg"><span class="lbl">Evolução diária acumulada</span><span><i style="background:var(--brand)"></i>Realizado</span><span><i style="background:var(--blue)"></i>Meta esperada</span><span><i style="background:repeating-linear-gradient(90deg,#fff 0 6px,transparent 6px 10px)"></i>Projeção (estimativa)</span></div>
-      <svg id="svg" viewBox="0 0 1000 250" preserveAspectRatio="none"></svg>
-    </div>
-    <div class="card" id="dia">
-      <div class="lbl">Mês anterior · mesmo período</div>
-      <div class="num big" id="cVal" style="margin-top:calc(var(--u)*.9)">—</div>
-      <div class="sub" id="cDet" style="margin-top:calc(var(--u)*.6)"></div>
-      <div class="sub" id="cNota" style="margin-top:calc(var(--u)*.4);font-size:calc(var(--u)*1.4);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
-      <div class="lbl" style="margin-top:calc(var(--u)*1.1)">Vendas do dia</div>
-      <div class="num big" id="dVal" style="margin-top:calc(var(--u)*.6)">—</div>
-      <div class="sub" id="dDet"></div>
+    <div id="side">
+      <div class="tile"><div class="lbl">Pedidos no mês</div><div class="num" id="hPed">—</div></div>
+      <div class="tile"><div class="lbl">Ticket médio</div><div class="num" id="hTic">—</div></div>
+      <div class="tile"><div class="lbl">Vendas do dia</div><div class="num" id="hHoje">—</div><div class="sub" id="hHojeS"></div></div>
+      <div class="tile hl" style="grid-column:span 1"><div class="lbl">Meta por dia útil<span class="est">estimativa</span></div><div class="num" id="kNec">—</div><div class="sub" id="kNecS"></div></div>
+      <div class="tile" style="grid-column:span 2"><div class="lbl">Projeção de fechamento<span class="est">estimativa</span></div><div class="num" id="kProj">—</div><div class="sub" id="kProjS"></div></div>
     </div>
   </section>
 
   <section class="row sellers" id="sellers"></section>
 
   <footer class="ft">
-    <span id="ftAtual">—</span><span class="sp"></span>
-    <span>Projeções são <b>estimativas</b> sobre vendas concretizadas do GestãoClick (conciliadas). Domingos e feriados sem expediente não entram no cálculo.</span>
+    <span><span class="dim">Mês anterior, mesmo período:</span> <b id="cVal">—</b> <span id="cDet"></span> <span class="dim" id="cNota"></span></span>
+    <span class="sp"></span>
+    <span class="dim" id="ftCal"></span>
+    <span id="ftAtual">—</span>
   </footer>
 </main>
 
@@ -196,65 +178,51 @@ setInterval(selo, 15000);
 
 function render(d){
   const g = d.geral || d.equipe || {}, meta = (d.geral && d.geral.meta) || (d.configuracao && d.configuracao.metaEquipe) || 0;
-  const pct = meta ? (g.totalMes / meta) * 100 : 0;
+  const total = g.totalMes || 0, pct = meta ? (total / meta) * 100 : 0;
+  const r = d.ritmo || {}, p = d.projecao || {}, dias = r.diasEquivalentesRestantes;
   const mesRef = (d.periodo && d.periodo.inicioMes || '').slice(0,7);
   if (mesRef) { const [y,m] = mesRef.split('-'); $('mesRef').textContent = new Date(Date.UTC(+y,+m-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}); }
-  animar($('hVal'), g.totalMes||0, T.brl); animar($('hPct'), pct, T.pct);
-  $('hMeta').textContent = T.brl(meta); $('hRest').textContent = pct >= 100 ? 'meta batida' : T.brl(Math.max(0, meta - (g.totalMes||0)));
-  const b = $('hBar'); b.style.width = Math.min(100,pct) + '%'; b.className = cor(pct);
+  // resultado geral
+  animar($('hVal'), total, T.brl); animar($('hPct'), pct, T.pct);
+  $('hMeta').textContent = T.brl(meta);
+  const gf = T.faltaEPorDia(total, meta, dias);
+  $('hRest').textContent = gf.batida ? 'Meta batida' : T.brl(gf.falta);
+  const b = $('hBar'); b.style.width = Math.min(100,pct) + '%'; b.className = pct >= 100 ? 'ok' : '';
+  // destaque discreto de aumento (somente totais agregados)
+  if (anterior !== null) { const dl = T.delta(anterior, total); if (dl > 0) { const el = $('delta'); el.textContent = '+' + T.brl(dl) + ' desde a última atualização'; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'), 20000); } }
+  anterior = total;
+  // indicadores ao lado
   animar($('hPed'), g.pedidosMes||0, v => String(Math.round(v))); animar($('hTic'), g.ticketMes||0, T.brl); animar($('hHoje'), g.totalHoje||0, T.brl);
-  // destaque de aumento (somente totais agregados)
-  if (anterior !== null) { const dl = T.delta(anterior, g.totalMes||0); if (dl > 0) { const el = $('delta'); el.textContent = '+' + T.brl(dl) + ' desde a última atualização'; el.classList.add('on'); $('hero').classList.add('flash'); setTimeout(()=>{ el.classList.remove('on'); $('hero').classList.remove('flash'); }, 20000); } }
-  anterior = g.totalMes || 0;
-  // ritmo e projeção
-  const r = d.ritmo || {}, p = d.projecao || {};
-  $('kNec').textContent = r.metaNecessariaPorDiaUtil == null ? (pct >= 100 ? '—' : '—') : T.brl(r.metaNecessariaPorDiaUtil);
-  $('kNecS').textContent = r.diasEquivalentesRestantes != null ? `${String(r.diasEquivalentesRestantes).replace('.',',')} dias úteis equivalentes restantes` : '';
-  $('kMed').textContent = r.mediaPorDiaUtil == null ? '—' : T.brl(r.mediaPorDiaUtil);
-  $('kMedS').textContent = r.diasEquivalentesDecorridos != null ? `em ${String(r.diasEquivalentesDecorridos).replace('.',',')} dias equivalentes decorridos` : '';
-  $('kProj').textContent = p.fechamento == null ? '—' : T.brl(p.fechamento);
-  $('kProjS').innerHTML = p.fechamento == null ? 'sem base suficiente' : (p.pctMeta != null ? T.pct(p.pctMeta) + ' da meta' : '');
-  const dif = p.diferencaMeta;
-  $('kDif').textContent = dif == null ? '—' : (dif >= 0 ? '+' : '−') + T.brl(Math.abs(dif)); $('kDif').className = 'num ' + (dif == null ? '' : dif >= 0 ? 'pos' : 'neg');
-  $('kDifS').innerHTML = dif == null ? '' : (p.situacao === 'NO_RITMO' ? '<span class="tag ok">NO RITMO</span>' : p.situacao === 'ATENCAO' ? '<span class="tag low">ATENÇÃO</span>' : '<span class="tag bad">ABAIXO DA META</span>');
-  const tc = $('tagConf'); const c = r.confiabilidade;
-  if (c === 'BAIXA' || c === 'INSUFICIENTE') { tc.classList.remove('hidden'); tc.textContent = c === 'BAIXA' ? 'BAIXA CONFIABILIDADE' : 'DADOS INSUFICIENTES'; } else tc.classList.add('hidden');
-  // gráfico
-  desenhar(T.grafico({ serieDiaria: d.serieDiaria, calendario: d.calendario, meta, ritmo: r, hojeStr: d.periodo && d.periodo.fim }));
-  // comparativo e dia
-  const cp = T.textoComparativo(d.comparativoMesAnterior);
-  $('cVal').textContent = cp.valor; $('cDet').textContent = cp.detalhe || ''; $('cDet').className = 'sub ' + (cp.positivo === undefined ? '' : cp.positivo ? 'pos' : 'neg');
-  $('cNota').textContent = d.comparativoMesAnterior ? `Estimativa proporcional · ${String(d.comparativoMesAnterior.diasEquivalentes).replace('.',',')} dias úteis equivalentes` : '';
-  animar($('dVal'), g.totalHoje||0, T.brl);
   const hojeDia = (d.calendario && d.calendario.dias || []).find(x => x.d === (d.periodo && d.periodo.fim));
-  $('dDet').textContent = `${g.pedidosHoje||0} pedido${(g.pedidosHoje||0)===1?'':'s'}` + (g.pedidosHoje ? ` · ticket ${T.brl(g.ticketHoje)}` : '') + (hojeDia && hojeDia.peso === 0 ? ' · hoje sem expediente' : '');
-  // vendedores
+  $('hHojeS').textContent = `${g.pedidosHoje||0} pedido${(g.pedidosHoje||0)===1?'':'s'}` + (hojeDia && hojeDia.peso === 0 ? ' · hoje sem expediente' : '');
+  $('kNec').textContent = gf.batida ? '—' : (gf.porDia == null ? '—' : T.brl(gf.porDia));
+  $('kNecS').textContent = dias != null ? `${String(dias).replace('.',',')} dias úteis equivalentes restantes` : '';
+  $('kProj').textContent = p.fechamento == null ? '—' : T.brl(p.fechamento);
+  const dif = p.diferencaMeta, conf = r.confiabilidade;
+  $('kProjS').textContent = p.fechamento == null ? 'sem base suficiente' : [(p.pctMeta != null ? T.pct(p.pctMeta) + ' da meta' : ''), dif == null ? '' : (dif >= 0 ? 'acima ' : 'abaixo ') + T.brl(Math.abs(dif)), conf === 'BAIXA' ? 'baixa confiabilidade' : conf === 'INSUFICIENTE' ? 'dados insuficientes' : ''].filter(Boolean).join(' · ');
+  // vendedores (mesma identidade para todos)
   const rk = T.ranking(d.vendedores || []);
-  const caixa = (nome, o, rank, p2) => {
-    const hasMeta = !!o.meta, pc = hasMeta ? (o.totalMes / o.meta) * 100 : null;
-    const posB = rank ? `<span class="pos-b ${rank===2?'p2':''}">${rank}º</span>` : `<span class="pos-b o">+</span>`;
-    return `<div class="card seller"><div class="nm">${posB}${nome}${p2 && p2.melhorPctMeta ? ' <span class="tag ok">MAIOR % DA META</span>' : ''}</div>
+  const caixa = (nome, o, lider) => {
+    const hasMeta = !!o.meta, pc = hasMeta ? (o.totalMes / o.meta) * 100 : 0, f = hasMeta ? T.faltaEPorDia(o.totalMes, o.meta, dias) : null;
+    return `<div class="card seller"><div class="nm"><span>${nome}</span>${lider ? `<span class="lead">${lider}</span>` : ''}</div>
       <div class="num tot">${T.brl(o.totalMes)}</div>
-      ${hasMeta ? `<div class="pr"><span>Meta ${T.brl(o.meta)}</span><span><b style="color:var(--text);font-family:var(--num)">${T.pct(pc)}</b></span></div><div class="bar"><i class="${cor(pc)}" style="width:${Math.min(100,pc)}%"></i></div>`
-                : `<div class="pr"><span>Sem meta individual</span><span></span></div><div class="bar"><i style="width:0"></i></div>`}
-      <div class="st"><span>Pedidos<b>${o.pedidosMes}</b></span><span>Ticket médio<b>${T.brl(o.ticketMes)}</b></span><span>Hoje<b>${T.brl(o.totalHoje||0)}</b></span></div></div>`;
+      ${hasMeta ? `<div class="pr"><span>Meta ${T.brl(o.meta)}</span><b>${T.pct(pc)}</b></div><div class="bar"><i class="${pc >= 100 ? 'ok' : ''}" style="width:${Math.min(100,pc)}%"></i></div>
+        <div class="falta"><div class="lbl">${f.batida ? 'Meta individual' : 'Falta para a meta'}</div><div class="num">${f.batida ? 'Batida' : T.brl(f.falta)}</div></div>
+        <div class="nec"><span>Necessário por dia útil <em>estimativa</em></span><b>${f.batida ? '—' : f.porDia == null ? '—' : T.brl(f.porDia)}</b></div>`
+      : `<div class="pr"><span>Sem meta individual</span><b></b></div><div class="bar off"><i style="width:0"></i></div>
+        <div class="falta off"><div class="lbl">Participação no faturamento</div><div class="num">${total ? T.pct((o.totalMes / total) * 100) : '—'}</div></div>
+        <div class="nec"><span>Meta por vendedor</span><b>não se aplica</b></div>`}
+      <div class="st"><span>Pedidos<b>${o.pedidosMes||0}</b></span><span>Ticket médio<b>${T.brl(o.ticketMes||0)}</b></span></div></div>`;
   };
-  const lista = rk.map(x => { const v = (d.vendedores||[]).find(y => y.nome === x.nome) || {}; return caixa(x.nome, v, x.posicao, x); });
-  if (d.outros) lista.push(caixa('Outros vendedores', { ...d.outros, meta: 0 }, null, null));
+  const lista = rk.map((x,i) => { const v = (d.vendedores||[]).find(y => y.nome === x.nome) || {}; const lider = i === 0 && rk.length > 1 && x.totalMes > rk[1].totalMes ? 'Líder em faturamento' : (x.melhorPctMeta ? 'Maior % da meta' : ''); return caixa(x.nome, v, lider); });
+  if (d.outros) lista.push(caixa('Outros', { ...d.outros, meta: 0 }, ''));
   $('sellers').innerHTML = lista.join('');
-}
-
-function desenhar(gr){
-  const W = 1000, H = 250, L = 70, R = 16, Tp = 14, B = 30, pw = W - L - R, ph = H - Tp - B;
-  const x = i => L + (gr.n > 1 ? (i - 1) / (gr.n - 1) : 0) * pw, y = v => Tp + ph - (v / gr.maxY) * ph;
-  const path = a => a.map((p,k) => (k ? 'L' : 'M') + x(p.i).toFixed(1) + ' ' + y(p.v).toFixed(1)).join(' ');
-  let s = '';
-  for (let k = 0; k <= 4; k++) { const v = gr.maxY * k / 4, yy = y(v); s += `<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="#1F2F57" stroke-width="1"/><text x="${L-8}" y="${yy+5}" fill="#9AA8C4" font-size="15" text-anchor="end" font-family="JetBrains Mono,monospace">${v>=1000?Math.round(v/1000)+'k':Math.round(v)}</text>`; }
-  for (let i = 1; i <= gr.n; i++) if (i === 1 || i % 5 === 0 || i === gr.n) s += `<text x="${x(i)}" y="${H-8}" fill="#9AA8C4" font-size="15" text-anchor="middle" font-family="JetBrains Mono,monospace">${i}</text>`;
-  if (gr.esperado.length) s += `<path d="${path(gr.esperado)}" fill="none" stroke="#4C8DF6" stroke-width="3" stroke-dasharray="9 7"/>`;
-  if (gr.real.length) { const a = gr.real; s += `<path d="${path(a)} L${x(a[a.length-1].i)} ${y(0)} L${x(a[0].i)} ${y(0)} Z" fill="rgba(242,140,40,.16)"/><path d="${path(a)}" fill="none" stroke="#F28C28" stroke-width="4.5" stroke-linejoin="round"/><circle cx="${x(a[a.length-1].i)}" cy="${y(a[a.length-1].v)}" r="7" fill="#F28C28"/>`; }
-  if (gr.projecao.length > 1) s += `<path d="${path(gr.projecao)}" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-dasharray="3 8" stroke-linecap="round" opacity=".85"/>`;
-  $('svg').innerHTML = s;
+  // rodapé: comparativo e calendário
+  const cp = T.textoComparativo(d.comparativoMesAnterior);
+  $('cVal').textContent = cp.valor; $('cDet').textContent = cp.detalhe || ''; $('cDet').className = cp.positivo === undefined ? '' : cp.positivo ? 'pos' : 'neg';
+  $('cNota').textContent = d.comparativoMesAnterior ? `(estimativa proporcional · ${String(d.comparativoMesAnterior.diasEquivalentes).replace('.',',')} dias equiv.)` : '';
+  const av = T.avisoCalendario(d.calendario, d.periodo && d.periodo.fim);
+  $('ftCal').textContent = av.length ? 'Calendário não confirmado: ' + av.map(x => x.dia + ' (' + (x.expediente === 'FECHADO' ? 'sem expediente' : 'com expediente') + ' presumido)').join(', ') + ' — valores por dia útil são estimativas' : 'Valores por dia útil são estimativas sobre o calendário comercial';
 }
 
 /* ── autenticação e dados (mesmas permissões do painel atual) ── */

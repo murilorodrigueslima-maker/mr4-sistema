@@ -50,12 +50,30 @@
     return { n: n, real: real, esperado: esperado, projecao: projecao, maxY: maxY, idxHoje: idxHoje };
   }
 
+
+  /** Quanto falta para a meta e quanto é preciso por dia útil equivalente restante (apresentação; usa os dias do ritmo validado). */
+  function faltaEPorDia(total, meta, diasRestantes) {
+    var m = Number(meta) || 0, t = Number(total) || 0;
+    if (!m) return { falta: null, porDia: null, batida: false };
+    var falta = Math.max(0, Math.round((m - t) * 100) / 100);
+    if (falta === 0) return { falta: 0, porDia: 0, batida: true };
+    var d = Number(diasRestantes);
+    return { falta: falta, porDia: d > 0 ? Math.round((falta / d) * 100) / 100 : null, batida: false };
+  }
+
+  /** Datas ainda não confirmadas (verificado:false) de hoje em diante no mês — o painel avisa que o ritmo depende delas. */
+  function avisoCalendario(calendario, hojeStr) {
+    var f = (calendario && calendario.feriados) || [];
+    return f.filter(function (x) { return x.verificado === false && x.d >= (hojeStr || ''); })
+      .map(function (x) { return { d: x.d, nome: x.nome, expediente: x.expediente, dia: x.d.slice(8, 10) + '/' + x.d.slice(5, 7) }; });
+  }
+
   function textoComparativo(c) {
     if (!c) return { titulo: 'Mês anterior (mesmo período)', valor: '—', detalhe: 'Sem base comparável ainda' };
     var sinal = c.diferenca >= 0 ? '+' : '−';
     return { titulo: 'Mês anterior (mesmo período)', valor: brl(c.valor), detalhe: sinal + brl(Math.abs(c.diferenca)) + (c.variacaoPct === null ? '' : ' (' + (c.variacaoPct >= 0 ? '+' : '−') + String(Math.abs(c.variacaoPct)).replace('.', ',') + ' %)'), positivo: c.diferenca >= 0 };
   }
 
-  var API = { brl: brl, brlCurto: brlCurto, pct: pct, estadoDados: estadoDados, ranking: ranking, delta: delta, grafico: grafico, textoComparativo: textoComparativo };
+  var API = { brl: brl, brlCurto: brlCurto, pct: pct, estadoDados: estadoDados, ranking: ranking, delta: delta, grafico: grafico, textoComparativo: textoComparativo, faltaEPorDia: faltaEPorDia, avisoCalendario: avisoCalendario };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PainelTV = API;
 })(typeof window !== 'undefined' ? window : this);

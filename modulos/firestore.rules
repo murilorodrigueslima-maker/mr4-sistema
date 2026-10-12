@@ -665,6 +665,11 @@ service cloud.firestore {
 
     // P0 Painel: documento do GESTOR (custo, margem, cancelamentos, histórico, reconciliação). A conta `display` (TV) NÃO lê.
     // Escrita só pelo servidor (syncPainelDisplay). display_metrics_ctl e painel_mapeamento: sem regra ⇒ negado ao cliente.
+    // Calendário comercial do painel (feriados/exceções): leitura/escrita só gestão; o servidor embute o necessário no documento da TV.
+    match /painel_calendario/{docId} {
+      allow read, write: if isGestor();
+    }
+
     match /display_metrics_gestor/{docId} {
       allow read:  if isGestor();
       allow write: if false;

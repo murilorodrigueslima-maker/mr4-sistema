@@ -163,4 +163,25 @@ describe('segurança e estático', () => {
     const prod = fs.readFileSync(path.join(root, 'painel-comercial.html'), 'utf8');
     expect(prod).toMatch(/Painel Comercial — MR4 Distribuidora/); expect(prod).not.toMatch(/painel-tv-logic/);
   });
+  test('P1.2: faltaEPorDia — falta, valor por dia útil, meta batida, sem meta e sem dias (sem divisão por zero)', () => {
+    expect(T.faltaEPorDia(36234.28, 165000, 15.17)).toEqual({ falta: 128765.72, porDia: 8488.18, batida: false });
+    expect(T.faltaEPorDia(21779.77, 75000, 15.17).falta).toBe(53220.23);
+    expect(T.faltaEPorDia(80000, 75000, 10)).toEqual({ falta: 0, porDia: 0, batida: true });
+    expect(T.faltaEPorDia(100, 0, 10)).toEqual({ falta: null, porDia: null, batida: false });
+    expect(T.faltaEPorDia(100, 1000, 0).porDia).toBeNull();
+    expect(T.faltaEPorDia(100, 1000, -1).porDia).toBeNull();
+  });
+  test('P1.2: avisoCalendario lista só datas não verificadas de hoje em diante', () => {
+    const cal = { feriados: [{ d: '2026-10-12', nome: 'A', verificado: false, expediente: 'FECHADO' }, { d: '2026-10-30', nome: 'B', verificado: false, expediente: 'NORMAL' }, { d: '2026-10-05', nome: 'C', verificado: false, expediente: 'NORMAL' }, { d: '2026-10-20', nome: 'D', verificado: true, expediente: 'NORMAL' }] };
+    expect(T.avisoCalendario(cal, '2026-10-12').map(x => x.dia)).toEqual(['12/10', '30/10']);
+    expect(T.avisoCalendario(null, '2026-10-12')).toEqual([]);
+  });
+  test('P1.2: layout corporativo — sem gráfico, sem roxo/neon, sem animação contínua, metas individuais e falta/valor por dia', () => {
+    const h = fs.readFileSync(path.join(root, 'painel-comercial-preview.html'), 'utf8');
+    expect(h).not.toMatch(/<svg|desenhar|T\.grafico|Evolução diária/);
+    expect(h).not.toMatch(/#(7C3AED|8B5CF6|A855F7|9333EA|6D28D9)|neon|flash|pulso/i);
+    expect((h.match(/animation:/g) || []).length).toBe(1);   // apenas o spinner de carregamento
+    expect(h).toMatch(/Falta para a meta/); expect(h).toMatch(/Necessário por dia útil/); expect(h).toMatch(/faltaEPorDia/);
+    expect(h).toMatch(/Outros/); expect(h).toMatch(/Sem meta individual/);
+  });
 });

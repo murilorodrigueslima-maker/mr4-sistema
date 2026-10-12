@@ -13,7 +13,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const { HttpsError } = require('firebase-functions/v2/https');
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'ponto-regras.copy.js'), 'utf8') +
-  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista,calcDia,classificarPendenciaDia,toMin,SABADO_V2_DESDE,JORNADA_SABADO_MIN,escalaDoDia,ehCorrecaoDeBatida};', ctx);
+  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista,calcDia,classificarPendenciaDia,toMin,SABADO_V2_DESDE,JORNADA_SABADO_MIN,escalaDoDia,ehCorrecaoDeBatida,extratoBanco};', ctx);
 const M = ctx.X;
 const DATA = /^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const negar = () => new HttpsError('permission-denied', 'Sem permissão para o banco de horas.');
@@ -230,4 +230,17 @@ async function estornarHandler(request, opts = {}) {
   });
 }
 
-module.exports = { autorizar, compensarHandler, estornarHandler, excecaoHandler, folgaHandler, lerPolitica, carregarBanco, M };
+/**
+ * Ponto único para compensar/estornar: { acao:'COMPENSAR'|'ESTORNAR', dados:{...} }. Delega aos handlers (autenticação, autorização, política
+ * e transação são os MESMOS). Existe porque as funções pontoBancoCompensar/pontoBancoEstornar foram criadas sem invocador público (HTTP 403).
+ */
+async function lancamentoHandler(request, opts = {}) {
+  if (!request || !request.auth || !request.auth.uid) throw new HttpsError('unauthenticated', 'Login necessário.');
+  const d = request.data; validarPayload(d, ['acao', 'dados']);
+  if (!d.dados || typeof d.dados !== 'object' || Array.isArray(d.dados)) throw new HttpsError('invalid-argument', 'Dados inválidos.');
+  if (d.acao === 'COMPENSAR') return compensarHandler({ auth: request.auth, data: d.dados }, opts);
+  if (d.acao === 'ESTORNAR') return estornarHandler({ auth: request.auth, data: d.dados }, opts);
+  throw new HttpsError('invalid-argument', 'Ação inválida.');
+}
+
+module.exports = { lancamentoHandler, autorizar, compensarHandler, estornarHandler, excecaoHandler, folgaHandler, lerPolitica, carregarBanco, M };

@@ -1029,3 +1029,45 @@ function classificarPendenciaDia(func, r, ctx) {
   }
   return out('DECISAO_GESTAO', 'SEQUENCIA_DE_MARCACOES_INVALIDA', [], 'As marcações existem, mas a ordem/os horários não formam um dia válido.');
 }
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXTRATO DO BANCO (fase 5.1) — movimentações cronológicas com saldo corrente. PURO; reproduz o mesmo resultado de calcBancoAcumulado.
+// Faltas e atrasos são marcados como PROVISÓRIOS (a regra que os transforma em débito definitivo ainda não foi validada).
+// ═══════════════════════════════════════════════════════════════════════════════
+function extratoBanco(meses, lancamentos) {
+  let maxData = '';
+  (meses || []).forEach(m => (m.dias || []).forEach(d => { if (d.data > maxData) maxData = d.data; }));
+  const todas = compensacoesVigentes(lancamentos);
+  const estornos = (lancamentos || []).filter(l => l.tipo === 'ESTORNO');
+  const mov = [];
+  const porData = {};
+  (meses || []).forEach(m => (m.dias || []).forEach(d => {
+    porData[d.data] = d;
+    if (d.status === 'incompleto' || d.status === 'inconsistente') { mov.push({ data: d.data, tipo: 'PENDENCIA', minutos: 0, provisorio: true, descricao: 'Dia pendente: não entra no saldo até ser regularizado' }); return; }
+    if (!d.contaNoSaldo || d.saldoMin === null || d.saldoMin === undefined || d.saldoMin === 0) return;
+    if (d.saldoMin > 0) mov.push({ data: d.data, tipo: 'CREDITO_EXTRA', minutos: d.saldoMin, provisorio: false, descricao: 'Horas além da jornada prevista' });
+    else if (d.status === 'falta') mov.push({ data: d.data, tipo: 'FALTA', minutos: d.saldoMin, provisorio: true, descricao: 'Falta (débito provisório: regra de faltas ainda não validada)' });
+    else mov.push({ data: d.data, tipo: 'ATRASO_OU_SAIDA_ANTECIPADA', minutos: d.saldoMin, provisorio: true, descricao: 'Horas a menos que a jornada (débito provisório)' });
+  }));
+  todas.forEach(l => {
+    const data = l.dataAusencia, rot = l.tipo === 'FOLGA_COMPENSATORIA' ? 'Folga compensatória' + (l.periodo === 'HORAS' ? ' (horas)' : ' (dia inteiro)') : 'Compensação de ausência';
+    if (maxData && data > maxData) { mov.push({ data, tipo: 'FOLGA_FUTURA', minutos: 0, provisorio: false, referencia: l.minutos, descricao: rot + ' aprovada para data futura: reservada, ainda não realizada' }); return; }
+    const motorDebita = Math.max(0, -((porData[data] && porData[data].contaNoSaldo && porData[data].saldoMin) || 0));
+    const extra = -(l.minutos - Math.min(l.minutos, motorDebita));
+    mov.push({ data, tipo: l.tipo === 'FOLGA_COMPENSATORIA' ? 'FOLGA' : 'COMPENSACAO', minutos: extra, provisorio: false, referencia: l.minutos,
+      descricao: rot + ': ' + (extra === 0 ? 'ausência já debitada pelo motor (apenas reclassificada)' : 'débito de ' + Math.abs(extra) + ' min não debitado pelo motor') });
+  });
+  estornos.forEach(e => mov.push({ data: e.competencia ? e.competencia + '-01' : (e.data || ''), tipo: 'ESTORNO', minutos: 0, provisorio: false, referencia: e.minutos, descricao: 'Estorno registrado (a movimentação estornada deixa de valer; histórico mantido)' }));
+  (lancamentos || []).filter(l => l.tipo === 'AJUSTE').forEach(a => mov.push({ data: (a.competencia || '') + '-01', tipo: 'AJUSTE', minutos: a.minutos, provisorio: false, descricao: 'Ajuste auditado' }));
+  const ordem = { PENDENCIA: 0, CREDITO_EXTRA: 1, FALTA: 2, ATRASO_OU_SAIDA_ANTECIPADA: 3, FOLGA: 4, COMPENSACAO: 4, FOLGA_FUTURA: 5, ESTORNO: 6, AJUSTE: 7 };
+  mov.sort((a, b) => (a.data < b.data ? -1 : a.data > b.data ? 1 : (ordem[a.tipo] - ordem[b.tipo])));
+  let saldo = 0; const tot = { creditosExtra: 0, faltas: 0, atrasos: 0, compensacoesEFolgas: 0, ajustes: 0 };
+  mov.forEach(x => {
+    saldo += x.minutos; x.saldoApos = saldo;
+    if (x.tipo === 'CREDITO_EXTRA') tot.creditosExtra += x.minutos; else if (x.tipo === 'FALTA') tot.faltas += x.minutos;
+    else if (x.tipo === 'ATRASO_OU_SAIDA_ANTECIPADA') tot.atrasos += x.minutos; else if (x.tipo === 'FOLGA' || x.tipo === 'COMPENSACAO') tot.compensacoesEFolgas += x.minutos; else if (x.tipo === 'AJUSTE') tot.ajustes += x.minutos;
+  });
+  return { linhas: mov, totais: tot, saldoFinal: saldo, saldoSemFaltasEAtrasos: saldo - tot.faltas - tot.atrasos,
+    pendencias: mov.filter(x => x.tipo === 'PENDENCIA').length, foliasFuturas: mov.filter(x => x.tipo === 'FOLGA_FUTURA').reduce((a, x) => a + x.referencia, 0) };
+}

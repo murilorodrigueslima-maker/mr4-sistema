@@ -528,7 +528,8 @@ window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
 window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
-window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar'); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga'); window._pendDecidir = httpsCallable(functions, 'pontoPendenciaDecidir'); window._justDecidir = httpsCallable(functions, 'pontoJustificativaDecidir'); window._escalaDefinir = httpsCallable(functions, 'pontoEscalaDefinir');
+window._bhLancar = httpsCallable(functions, 'pontoBancoLancamento');   // compensar/estornar (as funções antigas pontoBancoCompensar/Estornar ficaram sem invocador público)
+window._bhCompensar = d => window._bhLancar({ acao: 'COMPENSAR', dados: d }); window._bhEstornar = d => window._bhLancar({ acao: 'ESTORNAR', dados: d }); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga'); window._pendDecidir = httpsCallable(functions, 'pontoPendenciaDecidir'); window._justDecidir = httpsCallable(functions, 'pontoJustificativaDecidir'); window._escalaDefinir = httpsCallable(functions, 'pontoEscalaDefinir');
 
 window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
@@ -865,6 +866,13 @@ function bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo){
   const faltasHtml=faltas.length?faltas.slice(-15).map(d=>`<div style="font-size:12px;padding:4px 0;display:flex;gap:8px;justify-content:space-between;"><span>${fmtData(d.data)} · falta registrada (${fmtMin(d.saldoMin)} no banco)</span>${cfg.compensacaoAtiva?`<button class="btn-ghost" onclick="abrirCompensacao('${esc(f.id)}','${esc(d.data)}')">Compensar</button>`:''}</div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Nenhuma falta aguardando compensação.</div>';
   const form=cfg.compensacaoAtiva?`<div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;"><label style="font-size:11px;">Data da ausência<br><input type="date" id="bh-d-${esc(f.id)}"></label><label style="font-size:11px;">Horas<br><input type="number" step="0.25" min="0.25" max="24" id="bh-h-${esc(f.id)}" value="8" style="width:70px;"></label><label style="font-size:11px;flex:1;min-width:160px;">Motivo<br><input type="text" id="bh-m-${esc(f.id)}" maxlength="300" style="width:100%;"></label><button class="btn-novo" onclick="registrarCompensacao('${esc(f.id)}')">Registrar compensação</button></div><div id="bh-msg-${esc(f.id)}" style="font-size:12px;margin-top:4px;"></div>`:'<div style="font-size:12px;color:var(--cinza-texto);margin-top:6px;">Compensação de faltas: desativada.</div>';
 
+  const ex=extratoBanco(meses,lf);
+  const tl={CREDITO_EXTRA:'Crédito (horas extras)',FALTA:'Falta (provisório)',ATRASO_OU_SAIDA_ANTECIPADA:'Atraso/saída antecipada (provisório)',FOLGA:'Folga compensatória',COMPENSACAO:'Compensação de ausência',FOLGA_FUTURA:'Folga futura (reservada)',ESTORNO:'Estorno',AJUSTE:'Ajuste',PENDENCIA:'Pendência'};
+  const exLinhas=ex.linhas.map(x=>`<tr><td>${fmtData(x.data)}</td><td>${esc(tl[x.tipo]||x.tipo)}${x.provisorio?' <span style="color:#b36b00;">●</span>':''}</td><td style="font-size:11px;">${esc(x.descricao)}</td><td style="${x.minutos>0?'color:#1a7a3a;':x.minutos<0?'color:#c0392b;':''}">${x.minutos?sg(x.minutos):'—'}</td><td>${sg(x.saldoApos)}</td></tr>`).join('');
+  const extratoHtml=`<details style="margin-top:10px;"><summary style="cursor:pointer;font-weight:600;font-size:13px;">Extrato de movimentações (${ex.linhas.length}) · saldo atual ${sg(ex.saldoFinal)}</summary>
+    <div style="font-size:12px;margin:6px 0;">Créditos (extras): <strong style="color:#1a7a3a;">${sg(ex.totais.creditosExtra)}</strong> · Faltas (provisório): <strong style="color:#c0392b;">${sg(ex.totais.faltas)}</strong> · Atrasos/saídas (provisório): <strong style="color:#c0392b;">${sg(ex.totais.atrasos)}</strong> · Folgas/compensações: <strong>${sg(ex.totais.compensacoesEFolgas)}</strong> · Ajustes: <strong>${sg(ex.totais.ajustes)}</strong>
+      <br>Saldo <em>sem</em> faltas e atrasos (só extras, folgas e ajustes): <strong>${sg(ex.saldoSemFaltasEAtrasos)}</strong> — faltas/atrasos só viram débito definitivo após regra validada. ${ex.pendencias?`<span style="color:#c0392b;">${ex.pendencias} dia(s) pendente(s) ainda NÃO contam.</span>`:''}${ex.foliasFuturas?` Folgas futuras reservadas: ${fmtMin(ex.foliasFuturas)}.`:''}</div>
+    <div class="tabela-wrap" style="max-height:340px;overflow:auto;"><table><thead><tr><th>Data</th><th>Movimento</th><th>Descrição</th><th>Efeito</th><th>Saldo após</th></tr></thead><tbody>${exLinhas||'<tr><td colspan="5">Sem movimentações.</td></tr>'}</tbody></table></div></details>`;
   let cctHtml='';
   if(cfg.normaId){
     if(!norma){cctHtml='<div class="banco-aviso" style="margin-top:10px;"><strong>Norma coletiva não cadastrada</strong> (banco_horas_normas/'+esc(cfg.normaId)+'). Nenhuma regra da convenção é aplicada.</div>';}
@@ -896,7 +904,7 @@ function bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo){
     <div id="fg-prev-${esc(f.id)}" style="font-size:12px;margin-top:6px;"></div><div id="fg-msg-${esc(f.id)}" style="font-size:12px;margin-top:4px;color:#c0392b;"></div></div>`:'';
   return `<details class="ficha" style="padding:10px 14px;margin-bottom:8px;"><summary style="cursor:pointer;font-weight:600;display:flex;gap:10px;justify-content:space-between;">${esc(f.nome)}<span style="${cor(ult.saldoFinal)}">Saldo acumulado ${sg(ult.saldoFinal)}</span></summary>
     <div class="tabela-wrap" style="margin-top:8px;"><table><thead><tr><th>Mês</th><th>Anterior</th><th>Créditos</th><th>Débitos</th><th>Compens.</th><th>Ajustes</th><th>Final</th></tr></thead><tbody>${lin}</tbody></table></div>
-    ${cctHtml}<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Faltas aguardando compensação</div>${faltasHtml}
+    ${extratoHtml}${cctHtml}<div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Faltas aguardando compensação</div>${faltasHtml}
     <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Histórico de compensações e folgas</div>${hist}${form}${folgaForm}</details>`;
 }
 function abrirCompensacao(fid,data){const d=document.getElementById('bh-d-'+fid);if(d){d.value=data;d.scrollIntoView({block:'center'});}}

@@ -71,7 +71,7 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
     let alvo = 'outros';
     if (vid === null) q.vendasSemVendedor++;
     else if (mapa[vid]) alvo = mapa[vid].chave === 'ademir' ? 'ademir' : mapa[vid].chave === 'fabiana' ? 'fabiana' : 'outros';
-    else q.vendedoresNaoMapeados++;
+    else if (!(cfg && cfg.outrosConhecidos && cfg.outrosConhecidos[vid])) q.vendedoresNaoMapeados++;   // id conhecido de outro responsável (Murilo, Swyanne, Camila…) não é "não mapeado"
     const custo = centavos(v.valor_custo);
     if (custo === null || custo === 0) q.semCusto++;
     const hoje = data === hojeStr;

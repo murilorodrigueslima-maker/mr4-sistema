@@ -70,7 +70,8 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
     const mapaDoc = mapSnap.exists && mapSnap.data().vendedores ? mapSnap.data().vendedores : null;
     const mapa = mapaDoc || M.MAPA_PADRAO;
     const nomeDe = k => Object.values(mapa).find(m => m.chave === k)?.nomeConfig || (k === 'ademir' ? 'Ademir' : 'Fabiana');
-    const cfg = { mapa, metas: { ademir: metaPorNome[nomeDe('ademir')] || 0, fabiana: metaPorNome[nomeDe('fabiana')] || 0 }, metaGeral: Number(cfgDoc.meta_equipe) || 0 };
+    const outrosConhecidos = mapSnap.exists && mapSnap.data().outrosConhecidos ? mapSnap.data().outrosConhecidos : {};
+    const cfg = { mapa, outrosConhecidos, metas: { ademir: metaPorNome[nomeDe('ademir')] || 0, fabiana: metaPorNome[nomeDe('fabiana')] || 0 }, metaGeral: Number(cfgDoc.meta_equipe) || 0 };
     // 3) vendas do mês corrente (concretizadas) + canceladas do mês
     const conc = await buscarVendas({ fetchImpl, tokens, situacaoId: M.STATUS_CONCRETIZADOS[0], inicio: inicioMes, fim: hojeStr });
     const canc = await buscarVendas({ fetchImpl, tokens, situacaoId: M.STATUS_CANCELADA, inicio: inicioMes, fim: hojeStr });

@@ -839,7 +839,17 @@ async function renderBancoAcumulado(funcsAtivas){
     _bhEstado.dados[f.id]={f,meses,lf,rows};
     blocos.push(bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo));
   }
-  box.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:.6rem;">Saldo acumulado <span style="font-size:12px;font-weight:400;color:var(--cinza-texto);">(fechado até ontem · saldo anterior + créditos − débitos ± compensações/ajustes)</span></div>${blocos.join('')}`;
+  // Banner: saldos PROVISÓRIOS — períodos incompletos/pendências e situação jurídica (sem desconto em folha)
+  let totPend=0,mesesInc=0,semAcordoBloq='';
+  Object.values(_bhEstado.dados).forEach(x=>x.meses.forEach(m=>{if(m.pendencias){totPend+=m.pendencias;mesesInc++;}}));
+  if(norma){const an0=analisarBancoCct(norma,{hoje:hoje(),acordo,dias:[],compensacoes:[],excecoes:[]});if(an0.status!=='OPERACIONAL')semAcordoBloq=an0.exigeAnalise.join(' ')||('Situação da norma: '+an0.status);}
+  const banner=`<div style="border:1px solid #b36b00;background:#fff8ec;color:#5b3a00;border-radius:8px;padding:10px 12px;margin-bottom:.8rem;font-size:12px;line-height:1.5;">
+    <div style="font-weight:700;">SALDOS PROVISÓRIOS — visualização gerencial${_bhEstado.preview?' (prévia sem efeito)':''}</div>
+    <div><strong>${totPend}</strong> dia(s) com ponto incompleto/pendente em <strong>${mesesInc}</strong> competência(s): o saldo muda quando forem regularizados. Meses assinados sem cópia congelada aparecem marcados e são calculados pelo motor atual.</div>
+    <div>Saldos negativos são apenas exibidos: <strong>nenhum desconto em folha ou rescisão</strong> é gerado por este módulo.</div>
+    ${semAcordoBloq?`<div style="color:#8a1c1c;font-weight:600;">Compensação e folgas reais permanecem desativadas: ${esc(semAcordoBloq)}</div>`:''}
+  </div>`;
+  box.innerHTML=`<div style="font-size:16px;font-weight:700;margin-bottom:.6rem;">Saldo acumulado <span style="font-size:12px;font-weight:400;color:var(--cinza-texto);">(fechado até ontem · saldo anterior + créditos − débitos ± compensações/ajustes · atravessa os meses)</span></div>${banner}${blocos.join('')}`;
 }
 function bancoAcumuladoHtml(f,meses,lf,rows,cfg,norma,acordo){
   const ult=rows[rows.length-1]||{saldoFinal:0};

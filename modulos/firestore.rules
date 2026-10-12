@@ -285,6 +285,23 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Regularização de pendências e escalas (fase 4.2): escrita SÓ pelo backend (Admin SDK, transação); cliente apenas lê.
+    match /ponto_pendencias_decisoes/{x} {
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto');
+      allow write: if false;
+    }
+    match /ponto_pendencias_estado/{x} {
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto');
+      allow write: if false;
+    }
+    match /ponto_escalas/{x} {
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow write: if false;
+    }
+    match /ponto_escalas_lock/{x} {
+      allow read, write: if false;
+    }
+
     // ── Coleção: espelhos ──────────────────────────────────────────────────────
 
     match /espelhos/{espelhoId} {

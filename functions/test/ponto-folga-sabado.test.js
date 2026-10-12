@@ -202,7 +202,7 @@ describe('estáticos', () => {
     expect(fs.readFileSync(path.join(root, 'functions/index.js'), 'utf8')).toMatch(/exports\.pontoBancoFolga\s*=\s*onCall\(\{ region: REGION \}/);
     expect(fs.readFileSync(path.join(root, 'functions/lib/ponto-regras.copy.js'), 'utf8')).toBe(fs.readFileSync(path.join(root, 'modulos/ponto-regras.js'), 'utf8'));
     const g = fs.readFileSync(path.join(root, 'modulos/ponto.html'), 'utf8');
-    const bloco = g.slice(g.indexOf('function _folgaCalc'), g.indexOf('// ── Feriados 2026'));
+    const bloco = g.slice(g.indexOf('function _folgaCalc'), g.indexOf('window.aprovarFolga=aprovarFolga;'));
     expect(bloco).not.toMatch(/_setDoc|_deleteDoc|fbSet\(|fbDel\(/);
     expect(bloco).toMatch(/window\._bhFolga/);
   });

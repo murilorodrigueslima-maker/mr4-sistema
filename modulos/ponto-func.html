@@ -1024,6 +1024,10 @@ onAuthStateChanged(auth, async user => {
       const m = {}; cs.docs.forEach(d => { const x = d.data(); if (x.ativa !== false && x.data) m[x.data] = true; });
       Object.defineProperty(window._funcAtivo, 'sabadosCorrigidos', {value: m, enumerable: false, configurable: true});
     } catch (e) { /* motor segue com a regra padrão */ }
+    try {   // escalas individuais versionadas do PRÓPRIO funcionário (propriedade não enumerável)
+      const ec = await getDocs(query(collection(db, 'ponto_escalas'), where('funcId', '==', funcSnap.id)));
+      Object.defineProperty(window._funcAtivo, 'escalas', {value: ec.docs.map(d => d.data()), enumerable: false, configurable: true});
+    } catch (e) { /* sem escala: padrão do sistema */ }
     window.dispatchEvent(new Event('authReady'));
 
   } catch(e) {

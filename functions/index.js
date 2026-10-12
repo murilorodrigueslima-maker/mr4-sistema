@@ -936,6 +936,8 @@ exports.crmReativacaoGestao = onCall({ region: REGION }, req => reativacaoGestao
 // Banco de horas: compensação de faltas / estorno (validação e saldo NO BACKEND, transação atômica). Desligado até banco_horas_config/politica ativar.
 exports.pontoBancoCompensar = onCall({ region: REGION }, req => require('./lib/pontoBanco').compensarHandler(req));
 exports.pontoBancoEstornar  = onCall({ region: REGION }, req => require('./lib/pontoBanco').estornarHandler(req));
+exports.pontoPendenciaDecidir = onCall({ region: REGION }, req => require('./lib/pontoRegularizacao').decidirHandler(req));
+exports.pontoEscalaDefinir  = onCall({ region: REGION }, req => require('./lib/pontoRegularizacao').escalaHandler(req));
 exports.pontoBancoFolga     = onCall({ region: REGION }, req => require('./lib/pontoBanco').folgaHandler(req));
 exports.pontoBancoExcecao   = onCall({ region: REGION }, req => require('./lib/pontoBanco').excecaoHandler(req));
 

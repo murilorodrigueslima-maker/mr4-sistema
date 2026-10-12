@@ -44,9 +44,17 @@ function getJornadaPrevista(funcionario, data) {
 // ESCALA INDIVIDUAL (opcional): funcionario.escala = { vigenteDesde:'YYYY-MM-DD', dias:{ '1':480, ..., '6':210 } } (minutos; 0 = não trabalha).
 // Só vale a partir de vigenteDesde (nunca retroage) e nunca para domingo. Sem escala ⇒ comportamento legado (jornada × 60; sábado 210).
 function escalaDoDia(funcionario, dataStr, diaSemana) {
-  const e = funcionario && funcionario.escala;
-  if (!e || !/^\d{4}-\d{2}-\d{2}$/.test(e.vigenteDesde || '') || dataStr < e.vigenteDesde || !e.dias || diaSemana === 0) return null;
-  const v = e.dias[String(diaSemana)];
+  if (!funcionario || diaSemana === 0) return null;
+  // `escalas` = histórico versionado (ponto_escalas); `escala` = formato simples legado. Vale a de maior vigenteDesde ≤ data (empate: maior rev).
+  const lista = Array.isArray(funcionario.escalas) ? funcionario.escalas : (funcionario.escala ? [funcionario.escala] : []);
+  let melhor = null;
+  lista.forEach(e => {
+    if (!e || !/^\d{4}-\d{2}-\d{2}$/.test(e.vigenteDesde || '') || dataStr < e.vigenteDesde || !e.dias) return;
+    if (!melhor || e.vigenteDesde > melhor.vigenteDesde || (e.vigenteDesde === melhor.vigenteDesde && (e.rev || 0) > (melhor.rev || 0))) melhor = e;
+  });
+  if (!melhor) return null;
+  let v = melhor.dias[String(diaSemana)];
+  if (v && typeof v === 'object') v = v.minutos;
   return Number.isInteger(v) && v >= 0 && v <= 720 ? v : null;
 }
 
@@ -973,4 +981,51 @@ function projetarFolga(saldoAtualMin, debitoMotorDiaMin, reservadoMin, minutos) 
   const novo = Math.max(0, minutos - Math.max(0, debitoMotorDiaMin || 0));
   const antes = saldoAtualMin - Math.max(0, reservadoMin || 0);
   return { saldoAntesMin: antes, debitoNovoMin: novo, saldoDepoisMin: antes - novo };
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REGULARIZAÇÃO DE PENDÊNCIAS (fase 4.2) — classificação PURA, compartilhada por tela, backend e auditoria
+// ═══════════════════════════════════════════════════════════════════════════════
+const CLASSE_PENDENCIA = {
+  ERRO_TECNICO: 'Erro técnico comprovado',
+  MARCACAO_FALTANTE: 'Marcação faltante',
+  JUSTIFICATIVA_AGUARDANDO: 'Justificativa aguardando análise',
+  ESCALA_DESCONHECIDA: 'Escala incorreta ou desconhecida',
+  PROTEGIDO_ASSINADO: 'Registro protegido por espelho assinado',
+  DECISAO_GESTAO: 'Exige decisão da gestão',
+};
+
+/**
+ * r = resultado de calcDia (pendente=true). ctx = { espelhos[], justificativas[], medianaEntradaSabado? (min) }.
+ * Retorna { classe, motivo, ausentes[], detalhe }. Nunca propõe horário: só aponta o que falta/por quê.
+ */
+function classificarPendenciaDia(func, r, ctx) {
+  ctx = ctx || {};
+  const TIPOS = { entrada: 'Entrada', saida_almoco: 'Saída almoço', retorno_almoco: 'Retorno almoço', saida: 'Saída' };
+  const marcas = { entrada: r.entrada, saida_almoco: r.saidaAlmoco, retorno_almoco: r.retornoAlmoco, saida: r.saida };
+  const mes = r.data.slice(0, 7);
+  const jd = (ctx.justificativas || []).filter(j => j.funcId === func.id && j.data === r.data);
+  const out = (classe, motivo, ausentes, detalhe) => ({ classe, motivo, ausentes: ausentes || [], detalhe: detalhe || '' });
+  if ((ctx.espelhos || []).some(e => e.funcId === func.id && e.mes === mes && e.assinado && !e.substituido)) return out('PROTEGIDO_ASSINADO', 'MES_COM_ESPELHO_ASSINADO');
+  if (jd.some(j => j.status === 'pendente')) return out('JUSTIFICATIVA_AGUARDANDO', 'JUSTIFICATIVA_PENDENTE', [], jd.filter(j => j.status === 'pendente').map(j => j.motivo).join('; '));
+  if (!func.inicioBancoHoras || func.controleBancoHoras === false) return out('ESCALA_DESCONHECIDA', !func.inicioBancoHoras ? 'SEM_DATA_DE_INICIO_DO_BANCO' : 'FORA_DO_BANCO');
+  const p = r.pendencias && r.pendencias[0];
+  if (r.status === 'inconsistente' || (p && p.tipo === 'DATA_INCONSISTENCY')) return out('DECISAO_GESTAO', (p && p.motivo) || 'INCONSISTENCIA_ADMINISTRATIVA');
+  const faltam = [];
+  if (!marcas.entrada) faltam.push('entrada');
+  if (!marcas.saida) faltam.push('saida');
+  const tE = marcas.entrada ? toMin(marcas.entrada) : null, tS = marcas.saida ? toMin(marcas.saida) : null;
+  if (tE !== null && tS !== null && (tS - tE) > 360) { if (!marcas.saida_almoco) faltam.push('saida_almoco'); if (!marcas.retorno_almoco) faltam.push('retorno_almoco'); }
+  if (faltam.length) {
+    // escala fora do padrão do próprio funcionário (ex.: entrada do sábado muito diferente da mediana) ⇒ escala desconhecida, não "esquecimento"
+    if (r.diaSemana === 6 && tE !== null && ctx.medianaEntradaSabado != null && Math.abs(tE - ctx.medianaEntradaSabado) > 90) return out('ESCALA_DESCONHECIDA', 'SABADO_FORA_DO_PADRAO_DO_FUNCIONARIO', faltam.map(k => TIPOS[k] || k));
+    return out('MARCACAO_FALTANTE', 'MARCACAO_AUSENTE', faltam.map(k => TIPOS[k] || k));
+  }
+  // marcações completas, mas o motor não fecha o dia
+  if (r.diaSemana === 6 && marcas.saida_almoco && marcas.retorno_almoco && tE !== null && tS !== null) {
+    const a = toMin(marcas.saida_almoco), b = toMin(marcas.retorno_almoco);
+    if (tE <= a && a <= b && b <= tS && (a === b || b === tS)) return out('ERRO_TECNICO', 'SABADO_INTERVALO_NULO_NAO_CORRIGIDO', [], 'Marcações completas; o intervalo nulo foi tratado como incompleto pela regra antiga.');
+  }
+  return out('DECISAO_GESTAO', 'SEQUENCIA_DE_MARCACOES_INVALIDA', [], 'As marcações existem, mas a ordem/os horários não formam um dia válido.');
 }

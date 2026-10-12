@@ -13,7 +13,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm');
 const { HttpsError } = require('firebase-functions/v2/https');
 const ctx = {}; vm.createContext(ctx);
 vm.runInContext(fs.readFileSync(path.join(__dirname, 'ponto-regras.copy.js'), 'utf8') +
-  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista};', ctx);
+  ';this.X={calcBancoAcumulado,avaliarCompensacao,montarMesesBanco,mesesDoBanco,registrosEfetivos,compensacoesVigentes,idCompensacao,fmtMin,normaCctValida,analisarBancoCct,ciclosCct,minutosDaFolga,projetarFolga,getJornadaPrevista,calcDia,classificarPendenciaDia,toMin,SABADO_V2_DESDE,JORNADA_SABADO_MIN};', ctx);
 const M = ctx.X;
 const DATA = /^20\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const negar = () => new HttpsError('permission-denied', 'Sem permissão para o banco de horas.');
@@ -50,7 +50,8 @@ async function carregarBanco(tx, store, funcId, hoje) {
   const mAtual = hoje.slice(0, 7), ms = M.mesesDoBanco(func.inicioBancoHoras, mAtual);
   if (!ms.length) throw new HttpsError('failed-precondition', 'SEM_DATA_DE_INICIO_DO_BANCO');       // nunca presume data
   const q = c => tx.get(store.collection(c).where('funcId', '==', funcId));
-  const [rg, jt, cr, es, lc, sc] = await Promise.all([q('registros'), q('justificativas'), q('creditos_jornada'), q('espelhos'), q('banco_horas_lancamentos'), q('ponto_sabado_correcoes')]);
+  const [rg, jt, cr, es, lc, sc, ec] = await Promise.all([q('registros'), q('justificativas'), q('creditos_jornada'), q('espelhos'), q('banco_horas_lancamentos'), q('ponto_sabado_correcoes'), q('ponto_escalas')]);
+  func.escalas = ec.docs.map(d => d.data());
   func.sabadosCorrigidos = {}; sc.docs.forEach(d => { const x = d.data(); if (x.ativa !== false && x.data) func.sabadosCorrigidos[x.data] = true; });
   const regs = M.registrosEfetivos(rg.docs.map(d => ({ id: d.id, ...d.data() }))), just = jt.docs.map(d => ({ id: d.id, ...d.data() })), cred = cr.docs.map(d => ({ id: d.id, ...d.data() }));
   const esp = es.docs.map(d => ({ id: d.id, ...d.data() })), lf = lc.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -229,4 +230,4 @@ async function estornarHandler(request, opts = {}) {
   });
 }
 
-module.exports = { compensarHandler, estornarHandler, excecaoHandler, folgaHandler, lerPolitica, carregarBanco, M };
+module.exports = { autorizar, compensarHandler, estornarHandler, excecaoHandler, folgaHandler, lerPolitica, carregarBanco, M };

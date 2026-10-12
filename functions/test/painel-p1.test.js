@@ -160,8 +160,10 @@ describe('segurança e estático', () => {
     expect(h).toMatch(/overflow:hidden/); expect(h).not.toMatch(/overflow(-y)?:\s*(auto|scroll)/);
     expect(h).toMatch(/display_metrics','painel_comercial'/); expect(h).toMatch(/painel_status/);
     expect(h).toMatch(/noindex/);
-    const prod = fs.readFileSync(path.join(root, 'painel-comercial.html'), 'utf8');
-    expect(prod).toMatch(/Painel Comercial — MR4 Distribuidora/); expect(prod).not.toMatch(/painel-tv-logic/);
+    const prod = fs.readFileSync(path.join(root, 'painel-comercial.html'), 'utf8');   // P1.4: a TV de produção recebeu o layout aprovado
+    expect(prod).toMatch(/<title>Painel Comercial — MR4 Distribuidora<\/title>/); expect(prod).toMatch(/painel-tv-logic/);
+    expect(prod.replace('<title>Painel Comercial — MR4 Distribuidora</title>', '')).toBe(h.replace('<title>Painel Comercial (PREVIEW) — MR4 Distribuidora</title>', ''));
+    expect(prod).not.toMatch(/display_metrics_gestor|valor_custo|margem|comiss|access-token|gestaoclick/i);
   });
   test('P1.2: faltaEPorDia — falta, valor por dia útil, meta batida, sem meta e sem dias (sem divisão por zero)', () => {
     expect(T.faltaEPorDia(36234.28, 165000, 15.17)).toEqual({ falta: 128765.72, porDia: 8488.18, batida: false });

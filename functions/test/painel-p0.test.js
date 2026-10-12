@@ -202,7 +202,7 @@ describe('estático', () => {
     const idx = fs.readFileSync(path.join(root, 'functions/index.js'), 'utf8');
     expect(idx).toMatch(/exports\.syncPainelDisplay = onSchedule\(\{\s*schedule:\s*'every 5 minutes'/); expect(idx).toMatch(/maxInstances:\s*1/);
     const h = fs.readFileSync(path.join(root, 'painel-comercial.html'), 'utf8');
-    expect(h).toMatch(/DADOS DESATUALIZADOS/); expect(h).toMatch(/painel_status/);
+    expect(h).toMatch(/Dados desatualizados/); expect(h).toMatch(/Atualização atrasada/); expect(h).toMatch(/painel_status/); expect(h).toMatch(/estadoDados/);   // selo calculado, não fixo (exibido em caixa alta via CSS)
     expect(h).not.toMatch(/gestaoclick|access-token|secret-access/i);
     expect(h).not.toMatch(/valor_custo|margem|custo/i);
   });

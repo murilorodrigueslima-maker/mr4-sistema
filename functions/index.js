@@ -559,96 +559,19 @@ async function fetchTodasVendasGC(accessToken, secretToken, dataInicio, dataFim)
   return todos;
 }
 
+// P0 (12/10/2026): apuração oficial reescrita em lib/painelSync.js + lib/painelMetricas.js.
+//   - TODAS as vendas concretizadas (GestãoClick, situacao_id explícita), vendedor por vendedor_id (mapa auditado), "Outros" agrupado,
+//     deduplicação por id, dinheiro em centavos, reconciliação interna; falha preserva o último conjunto válido;
+//   - documentos: display_metrics/painel_comercial (TV, formato antigo + campos novos), display_metrics_gestor/painel (restrito),
+//     display_metrics/painel_status (tentativa/sucesso/erro). Lease transacional contra execuções concorrentes.
 async function syncPainelDisplayHandler() {
-  const docRef = db.collection('display_metrics').doc('painel_comercial');
-
-  // Prevenção de execuções sobrepostas: pula se já foi atualizado há menos de 25 min.
-  // O onSchedule garante não sobreposição em condições normais; esta guarda cobre
-  // execuções manuais acidentais ou re-tentativas automáticas do Cloud Scheduler.
-  const existing = await docRef.get();
-  if (existing.exists) {
-    const ts = existing.data().atualizadoEm;
-    if (ts && typeof ts.toDate === 'function') {
-      if (Date.now() - ts.toDate().getTime() < 25 * 60 * 1000) return;
-    }
-  }
-
-  // Nomes dos vendedores: lidos de painel_config/default (somente leitura).
-  // Fallback para os nomes padrão caso o documento não exista.
-  const DEFAULT_VENDEDORES = ['Ademir', 'Fabiana'];
-  let vendedores  = DEFAULT_VENDEDORES;
-  let metaPorNome = {};  // nome → meta mensal (R$) — copiada de painel_config, atualiza a cada 30 min
-  let metaEquipe  = 0;
-  try {
-    const cfgSnap = await db.collection('painel_config').doc('default').get();
-    if (cfgSnap.exists) {
-      const cfg = cfgSnap.data();
-      if (Array.isArray(cfg.vendedores)) {
-        const validos = cfg.vendedores.filter(v => v.nome);
-        const nomes   = validos.map(v => v.nome);
-        if (nomes.length > 0) vendedores = nomes;
-        validos.forEach(v => { metaPorNome[v.nome] = Number(v.meta) || 0; });
-      }
-      metaEquipe = Number(cfg.meta_equipe) || 0;
-    }
-  } catch (_) { /* usa defaults */ }
-
-  // Período em America/Fortaleza (UTC-3 fixo) — mesma referência usada em todo o sistema.
-  const { data: hojeStr } = fortalezaAgora();
-  const [ano, mes]        = hojeStr.split('-');
-  const inicioMes         = `${ano}-${mes}-01`;
-
-  // Credenciais do Secret Manager (nunca expostas ao cliente)
-  const accessToken = process.env.GC_ACCESS_TOKEN;
-  const secretToken = process.env.GC_SECRET_ACCESS_TOKEN;
+  const accessToken = process.env.GC_ACCESS_TOKEN, secretToken = process.env.GC_SECRET_ACCESS_TOKEN;
   if (!accessToken || !secretToken) throw new Error('Credenciais GC não configuradas.');
-
-  // Busca e filtro
-  const todasVendas    = await fetchTodasVendasGC(accessToken, secretToken, inicioMes, hojeStr);
-  const concretizadas  = todasVendas.filter(v => String(v.situacao_id) === SITUACAO_CONCRETIZADO);
-
-  // Métricas por vendedor (lógica idêntica ao painel-comercial.html)
-  const metricsVendedores = vendedores.map(nome => {
-    const vendasV    = concretizadas.filter(v =>
-      nomeMatchPainel(v.nome_vendedor || v.vendedor || v.nome_usuario || '', nome)
-    );
-    const vendasHoje = vendasV.filter(v =>
-      (v.data || v.data_venda || v.data_pedido || '').slice(0, 10) === hojeStr
-    );
-    const totalMes    = vendasV.reduce(   (s, v) => s + Number(v.valor_total || v.total || v.valor || 0), 0);
-    const totalHoje   = vendasHoje.reduce((s, v) => s + Number(v.valor_total || v.total || v.valor || 0), 0);
-    const pedidosMes  = vendasV.length;
-    const pedidosHoje = vendasHoje.length;
-    return {
-      nome,
-      meta:       metaPorNome[nome] || 0,
-      totalMes,   totalHoje,
-      pedidosMes, pedidosHoje,
-      ticketMes:  pedidosMes  ? totalMes  / pedidosMes  : 0,
-      ticketHoje: pedidosHoje ? totalHoje / pedidosHoje : 0,
-    };
+  const r = await require('./lib/painelSync').sincronizar({
+    db, FieldValue: admin.firestore.FieldValue, fetchImpl: (u, o) => fetch(u, o), tokens: { access: accessToken, secret: secretToken }, intervaloMin: 5,
   });
-
-  // Totais da equipe (somatório dos vendedores)
-  const equipe = {
-    totalHoje:   metricsVendedores.reduce((s, v) => s + v.totalHoje,   0),
-    totalMes:    metricsVendedores.reduce((s, v) => s + v.totalMes,    0),
-    pedidosHoje: metricsVendedores.reduce((s, v) => s + v.pedidosHoje, 0),
-    pedidosMes:  metricsVendedores.reduce((s, v) => s + v.pedidosMes,  0),
-  };
-  equipe.ticketHoje = equipe.pedidosHoje ? equipe.totalHoje / equipe.pedidosHoje : 0;
-  equipe.ticketMes  = equipe.pedidosMes  ? equipe.totalMes  / equipe.pedidosMes  : 0;
-
-  // Grava via Admin SDK — o navegador não pode escrever (allow write: if false nas Rules)
-  await docRef.set({
-    atualizadoEm: admin.firestore.FieldValue.serverTimestamp(),
-    periodo:      { inicioMes, fim: hojeStr },
-    equipe,
-    vendedores:   metricsVendedores,
-    // Somente os campos de config estritamente necessários para o painel display.
-    // Alterações em painel_config levam até 30 min para refletir na TV.
-    configuracao: { metaEquipe },
-  });
+  console.log(JSON.stringify({ evento: 'painel_sync', ...r }));
+  return r;
 }
 
 // ── Handler: concluirRevisaoEspelho ───────────────────────────────────────────
@@ -766,13 +689,16 @@ exports.expedicaoSyncPedidos = onSchedule({
   }
 });
 
-// S3 — Etapa 2: sincronização agendada do Painel Comercial.
-// Executa a cada 30 minutos; usa os mesmos secrets GC já configurados no Secret Manager.
+// Painel Comercial: sincronização agendada a cada 5 minutos (GestãoClick só GET: ~6 requisições/execução; histórico a cada 6 h).
 exports.syncPainelDisplay = onSchedule({
-  schedule:        'every 30 minutes',
+  schedule:        'every 5 minutes',
+  timeZone:        'America/Fortaleza',
   region:          REGION,
   secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
-  timeoutSeconds:  120,
+  timeoutSeconds:  240,
+  memory:          '256MiB',
+  retryCount:      0,
+  maxInstances:    1,
 }, syncPainelDisplayHandler);
 
 // S7 — trilha de auditoria append-only (audit_log). Autor derivado do contexto de autenticação do evento / operador gravado no servidor.

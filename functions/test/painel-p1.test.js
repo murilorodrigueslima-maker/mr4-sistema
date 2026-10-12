@@ -178,10 +178,21 @@ describe('segurança e estático', () => {
   });
   test('P1.2: layout corporativo — sem gráfico, sem roxo/neon, sem animação contínua, metas individuais e falta/valor por dia', () => {
     const h = fs.readFileSync(path.join(root, 'painel-comercial-preview.html'), 'utf8');
-    expect(h).not.toMatch(/<svg|desenhar|T\.grafico|Evolução diária/);
+    expect(h).not.toMatch(/<svg id="svg"|desenhar|T\.grafico|Evolução diária|viewBox="0 0 1000 250"/);
     expect(h).not.toMatch(/#(7C3AED|8B5CF6|A855F7|9333EA|6D28D9)|neon|flash|pulso/i);
     expect((h.match(/animation:/g) || []).length).toBe(1);   // apenas o spinner de carregamento
     expect(h).toMatch(/Falta para a meta/); expect(h).toMatch(/Necessário por dia útil/); expect(h).toMatch(/faltaEPorDia/);
     expect(h).toMatch(/Outros/); expect(h).toMatch(/Sem meta individual/);
+  });
+  test('P1.3: layout aprovado — estrutura, cores semânticas e dados vindos do documento da TV', () => {
+    const h = fs.readFileSync(path.join(root, 'painel-comercial-preview.html'), 'utf8');
+    ['PAINEL COMERCIAL', 'FATURAMENTO GERAL', 'Pedidos no mês', 'Ticket médio', 'Vendas do dia', 'Meta por dia útil equivalente', 'Projeção de fechamento',
+      'Outros vendedores', 'Participação no faturamento', 'Comparativo com o mês anterior', 'Dias úteis equivalentes', 'Última atualização', 'Líder em faturamento', 'Maior % da meta']
+      .forEach(t => expect(h).toContain(t));
+    expect(h).not.toMatch(/<svg id="svg"|T\.grafico/);
+    // vendedor abaixo de 100% não é marcado como negativo: percentual em laranja, nunca vermelho
+    expect(h).toMatch(/\.seller \.pc \.n\{[^}]*color:var\(--brand\)/);
+    expect(h).not.toMatch(/display_metrics_gestor|valor_custo|margem|comiss|gestaoclick/i);
+    expect(h).toMatch(/display_metrics','painel_comercial'/); expect(h).toMatch(/painel_status/);
   });
 });

@@ -11,10 +11,10 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --u:min(calc(100vw / 192), calc(100vh / 108));          /* 1u = 10px em 1920×1080; tudo escala com a janela, sem rolagem */
-  --bg:#071022; --panel:#0E1A33; --panel2:#142445; --line:#1F2F52;
-  --brand:#F28C28; --brand2:#F7A85A; --green:#2FB26A; --red:#E5484D;
-  --text:#FFFFFF; --sub:#A9B6CE; --dim:#7886A3;
-  --num:'JetBrains Mono','SF Mono',Consolas,monospace; --ui:'Inter','Segoe UI',Roboto,Arial,sans-serif;
+  --bg:#050C1C; --panel:#0A1530; --panel2:#0F1D3F; --line:#1B2B52;
+  --brand:#FF8A1F; --brand-d:rgba(255,138,31,.14); --blue:#4C9BFF; --blue-d:rgba(76,155,255,.13); --green:#22C55E; --red:#FF4D4F;
+  --text:#FFFFFF; --sub:#AEBBD3; --dim:#7F8EAE;
+  --ui:'Inter','Segoe UI',Roboto,Arial,sans-serif;
 }
 html,body{height:100%;width:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--ui);-webkit-font-smoothing:antialiased;user-select:none}
 body{display:flex;align-items:center;justify-content:center}
@@ -25,65 +25,105 @@ body{display:flex;align-items:center;justify-content:center}
 .center button{width:320px;padding:.8rem;border-radius:10px;border:0;background:var(--brand);color:#111;font-weight:800;font-size:1rem;cursor:pointer}
 .center .err{color:var(--red);min-height:1.2rem;font-size:.9rem}
 .spin{width:36px;height:36px;border:4px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:g 1s linear infinite}@keyframes g{to{transform:rotate(360deg)}}
-#stage{width:calc(var(--u)*192);height:calc(var(--u)*108);padding:calc(var(--u)*2) calc(var(--u)*2.6);display:flex;flex-direction:column;gap:calc(var(--u)*1.8);background:var(--bg)}
-.hd{height:calc(var(--u)*8);display:flex;align-items:center;gap:calc(var(--u)*2.2);flex:none}
-.logo{height:calc(var(--u)*6);background:#EEF2FA;border-radius:calc(var(--u)*.9);padding:calc(var(--u)*.6) calc(var(--u)*1.4);display:flex;align-items:center}
+#stage{width:calc(var(--u)*192);height:calc(var(--u)*108);padding:calc(var(--u)*1.8) calc(var(--u)*2.2);display:flex;flex-direction:column;gap:calc(var(--u)*1.6);background:radial-gradient(calc(var(--u)*90) calc(var(--u)*60) at 20% 0%,#0A1738 0%,var(--bg) 70%)}
+svg.i{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ico{flex:none;width:calc(var(--u)*5.6);height:calc(var(--u)*5.6);border-radius:calc(var(--u)*1.1);display:flex;align-items:center;justify-content:center;padding:calc(var(--u)*1.2);background:rgba(255,255,255,.05);border:1px solid var(--line)}
+.ico.o{color:var(--brand);background:var(--brand-d);border-color:rgba(255,138,31,.25)}
+.ico.b{color:var(--blue);background:var(--blue-d);border-color:rgba(76,155,255,.25)}
+.ico.s{width:calc(var(--u)*4.4);height:calc(var(--u)*4.4);padding:calc(var(--u)*1);color:var(--sub)}
+/* cabeçalho */
+.hd{height:calc(var(--u)*8.6);display:flex;align-items:center;gap:calc(var(--u)*2.4);flex:none}
+.logo{height:calc(var(--u)*6.6);background:#EEF2FA;border-radius:calc(var(--u)*1);padding:calc(var(--u)*.7) calc(var(--u)*1.5);display:flex;align-items:center}
 .logo img{height:100%;object-fit:contain}
-.ttl{font-size:calc(var(--u)*3);font-weight:700;letter-spacing:-.005em}
-.ttl small{display:block;font-size:calc(var(--u)*1.6);font-weight:500;color:var(--sub);letter-spacing:.1em;text-transform:uppercase;margin-top:calc(var(--u)*.3)}
+.hd .vr{width:1px;align-self:stretch;margin:calc(var(--u)*.8) 0;background:var(--line)}
+.ttl{font-size:calc(var(--u)*4);font-weight:800;letter-spacing:.01em;line-height:1}
+.ttl small{display:block;font-size:calc(var(--u)*1.7);font-weight:500;color:var(--blue);letter-spacing:.14em;margin-top:calc(var(--u)*.7)}
 .sp{flex:1}
-.mes{font-size:calc(var(--u)*2.6);font-weight:700;color:var(--text);letter-spacing:.01em}
-.rel{text-align:right}.rel .h{font-family:var(--num);font-size:calc(var(--u)*3.8);font-weight:700;line-height:1}.rel .d{font-size:calc(var(--u)*1.7);color:var(--sub);text-transform:capitalize;margin-top:calc(var(--u)*.4)}
-.chip{display:flex;align-items:center;gap:calc(var(--u)*.8);padding:calc(var(--u)*.7) calc(var(--u)*1.5);border-radius:99px;font-weight:600;font-size:calc(var(--u)*1.7);border:1px solid;white-space:nowrap}
-.chip .dot{width:calc(var(--u)*1.1);height:calc(var(--u)*1.1);border-radius:50%;background:currentColor}
-.chip.green{color:var(--green);border-color:rgba(47,178,106,.45)}
-.chip.yellow{color:#E7B53A;border-color:rgba(231,181,58,.5)}
-.chip.red{color:var(--red);border-color:rgba(229,72,77,.6);background:rgba(229,72,77,.1)}
-.row{display:flex;gap:calc(var(--u)*2);min-height:0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--u)*1);padding:calc(var(--u)*2) calc(var(--u)*2.6);display:flex;flex-direction:column;min-width:0;min-height:0;position:relative;box-shadow:0 calc(var(--u)*.4) calc(var(--u)*1.6) rgba(0,0,0,.28)}
-.lbl{font-size:calc(var(--u)*1.7);font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.09em}
-.num{font-family:var(--num);font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.sub{font-size:calc(var(--u)*1.6);color:var(--sub)}
-.bar{height:calc(var(--u)*1.4);background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
-.bar i{display:block;height:100%;border-radius:99px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1);background:var(--brand)}
+.mes{display:flex;align-items:center;gap:calc(var(--u)*1.5)}
+.mes .t{font-size:calc(var(--u)*3);font-weight:800;text-transform:uppercase;line-height:1}
+.mes .p{font-size:calc(var(--u)*1.8);color:var(--sub);margin-top:calc(var(--u)*.6)}
+.selo{display:flex;align-items:center;gap:calc(var(--u)*1.6);padding:calc(var(--u)*1) calc(var(--u)*2.6) calc(var(--u)*1) calc(var(--u)*1.6);border-radius:calc(var(--u)*1);border:1px solid;min-width:calc(var(--u)*27)}
+.selo .dot{width:calc(var(--u)*3.8);height:calc(var(--u)*3.8);border-radius:50%;background:currentColor;flex:none}
+.selo .a{font-size:calc(var(--u)*2.4);font-weight:800;letter-spacing:.04em;line-height:1;text-transform:uppercase}
+.selo .b{font-size:calc(var(--u)*1.7);margin-top:calc(var(--u)*.5);color:var(--text)}
+.selo.green{color:var(--green);border-color:rgba(34,197,94,.45);background:rgba(34,197,94,.1)}
+.selo.yellow{color:#F5B301;border-color:rgba(245,179,1,.5);background:rgba(245,179,1,.1)}
+.selo.red{color:var(--red);border-color:rgba(255,77,79,.6);background:rgba(255,77,79,.12)}
+.rel{text-align:right}.rel .h{font-size:calc(var(--u)*4.4);font-weight:700;line-height:1;letter-spacing:.06em;font-variant-numeric:tabular-nums}.rel .d{font-size:calc(var(--u)*1.7);color:var(--sub);margin-top:calc(var(--u)*.6)}
+/* cartões */
+.row{display:flex;gap:calc(var(--u)*1.8);min-height:0}
+.card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:calc(var(--u)*1.4);padding:calc(var(--u)*1.8) calc(var(--u)*2.4);display:flex;flex-direction:column;min-width:0;min-height:0;position:relative}
+.n{font-weight:800;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.01em}
+.lbl{font-size:calc(var(--u)*1.7);font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.05em}
+.sub{font-size:calc(var(--u)*1.8);color:var(--sub)}
+.tag{display:inline-block;padding:calc(var(--u)*.4) calc(var(--u)*1.1);border-radius:calc(var(--u)*.7);font-size:calc(var(--u)*1.5);font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;border:1px solid}
+.tag.o{color:var(--brand);background:var(--brand-d);border-color:rgba(255,138,31,.45)}
+.tag.g{color:var(--green);background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.5)}
+.bar{height:calc(var(--u)*1.7);background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:99px;width:0;transition:width 1.4s cubic-bezier(.2,.8,.2,1);background:linear-gradient(90deg,#FF7A00,#FFA24D)}
 .bar i.ok{background:var(--green)}
-.bar.off{opacity:.35}
-.pos{color:var(--green)}.neg{color:var(--red)}
+.or{color:var(--brand)}.gr{color:var(--green)}.rd{color:var(--red)}.bl{color:var(--blue)}.yl{color:#F5B301}
 /* resultado geral */
-#hero{flex:1.15;justify-content:space-between}
-#hero .val{font-size:calc(var(--u)*9.2);margin-top:calc(var(--u)*1.2)}
-.hero-meta{display:flex;align-items:baseline;gap:calc(var(--u)*3)}
-.hero-meta .pct{font-size:calc(var(--u)*5);color:var(--brand2)}
-.hero-meta .sub b{color:var(--text)}
-.falta-g{display:flex;align-items:baseline;gap:calc(var(--u)*1.6);font-size:calc(var(--u)*2.2);color:var(--sub)}
-.falta-g b{font-family:var(--num);font-size:calc(var(--u)*4);color:var(--text)}
-.delta{position:absolute;right:calc(var(--u)*2.6);top:calc(var(--u)*2);font-size:calc(var(--u)*1.6);font-weight:600;color:var(--green);opacity:0;transition:opacity .6s}
+#hero{flex:0 0 calc(var(--u)*70.5);justify-content:space-between;padding-top:calc(var(--u)*1.6);padding-bottom:calc(var(--u)*1.6)}
+#hero h2{font-size:calc(var(--u)*2.8);font-weight:800;color:var(--brand);letter-spacing:.01em}
+#hero h2 span{color:var(--text)}
+#hero .cap{font-size:calc(var(--u)*1.7);color:var(--sub);text-transform:uppercase;margin-top:calc(var(--u)*.4)}
+#hero .val{font-size:calc(var(--u)*9.4);margin-top:calc(var(--u)*.4)}
+.hm{display:flex;align-items:baseline;gap:calc(var(--u)*1.6)}
+.hm .pct{font-size:calc(var(--u)*5.2);color:var(--brand)}
+.hm .sub{font-size:calc(var(--u)*2.4)}.hm .sub b{color:var(--text);font-weight:700}
+.falta-g{font-size:calc(var(--u)*2.5);color:var(--sub)}.falta-g b{color:var(--text);font-weight:800}
+.delta{position:absolute;right:calc(var(--u)*2.4);top:calc(var(--u)*1.8);font-size:calc(var(--u)*1.6);font-weight:700;color:var(--green);opacity:0;transition:opacity .6s}
 .delta.on{opacity:1}
-#side{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:calc(var(--u)*1.6)}
-.tile{background:var(--panel);border:1px solid var(--line);border-radius:calc(var(--u)*1);padding:calc(var(--u)*1.5) calc(var(--u)*2);display:flex;flex-direction:column;justify-content:center;min-width:0;gap:calc(var(--u)*.8)}
-.tile .num{font-size:calc(var(--u)*3.1);white-space:nowrap}
-.tile.w2{grid-column:span 1}
-.tile .sub{font-size:calc(var(--u)*1.7);color:var(--dim)}
-.tile .est{font-size:calc(var(--u)*1.4);font-weight:700;letter-spacing:.08em;color:var(--brand2);text-transform:uppercase;margin-left:calc(var(--u)*.6)}
-.tile.hl{border-color:rgba(242,140,40,.45)}
+#side{flex:1;display:flex;flex-direction:column;gap:calc(var(--u)*1.8);min-width:0}
+#side .r{display:flex;gap:calc(var(--u)*1.8);flex:1;min-height:0}
+.kp{flex:1;flex-direction:row;align-items:center;gap:calc(var(--u)*1.8);padding:calc(var(--u)*1.2) calc(var(--u)*2)}
+.kp .tx{min-width:0}
+.kp .lbl{font-size:calc(var(--u)*1.6)}
+.kp .n{font-size:calc(var(--u)*4.4);margin-top:calc(var(--u)*.7);white-space:nowrap}
+.kp .sub{font-size:calc(var(--u)*1.5);margin-top:calc(var(--u)*.5);white-space:nowrap}
+.kw{flex:1;justify-content:center;gap:calc(var(--u)*.9)}
+.kw .tp{display:flex;align-items:center;gap:calc(var(--u)*1.2)}
+.kw .tp svg{width:calc(var(--u)*3.2);height:calc(var(--u)*3.2)}
+.kw .lbl{font-size:calc(var(--u)*1.6)}
+.kw .n{font-size:calc(var(--u)*5)}
+.kw .ln{display:flex;align-items:baseline;gap:calc(var(--u)*2.2);white-space:nowrap}
+.kw .ps{display:flex;flex-direction:column;align-items:flex-end;font-size:calc(var(--u)*1.6);gap:calc(var(--u)*.4);margin-left:auto}
+.kw .ps b{font-size:calc(var(--u)*2.6)}
+.kw .sub{font-size:calc(var(--u)*1.8)}
 /* vendedores */
 .sellers{flex:1;min-height:0}
-.seller{flex:1}
-.seller .nm{font-size:calc(var(--u)*3);font-weight:700;display:flex;align-items:baseline;justify-content:space-between;gap:calc(var(--u)*1)}
-.seller .lead{font-size:calc(var(--u)*1.6);font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.08em}
-.seller .tot{font-size:calc(var(--u)*5.4);margin:calc(var(--u)*1.2) 0 calc(var(--u)*1)}
-.seller .pr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:calc(var(--u)*.7);font-size:calc(var(--u)*1.8);color:var(--sub)}
-.seller .pr b{color:var(--text);font-family:var(--num);font-size:calc(var(--u)*2.6)}
-.falta{margin-top:calc(var(--u)*1.4);padding:calc(var(--u)*1.1) calc(var(--u)*1.4);border-radius:calc(var(--u)*.7);background:var(--panel2);border-left:calc(var(--u)*.35) solid var(--brand)}
-.falta.off{border-left-color:var(--line)}
-.falta .num{font-size:calc(var(--u)*3.8);margin-top:calc(var(--u)*.5)}
-.nec{display:flex;justify-content:space-between;align-items:baseline;margin-top:calc(var(--u)*1.1);font-size:calc(var(--u)*1.7);color:var(--sub)}
-.nec b{font-family:var(--num);font-size:calc(var(--u)*2.4);color:var(--text)}
-.nec em{font-style:normal;font-size:calc(var(--u)*1.4);font-weight:700;color:var(--brand2);letter-spacing:.08em;text-transform:uppercase;margin-left:calc(var(--u)*.4)}
-.seller .st{display:flex;gap:calc(var(--u)*4);font-size:calc(var(--u)*1.7);color:var(--sub);margin-top:auto;padding-top:calc(var(--u)*1.2);border-top:1px solid var(--line)}
-.seller .st b{color:var(--text);font-family:var(--num);font-size:calc(var(--u)*2.2);display:block;margin-top:calc(var(--u)*.3)}
-.ft{height:calc(var(--u)*4.4);display:flex;align-items:center;gap:calc(var(--u)*3);font-size:calc(var(--u)*1.7);color:var(--sub);flex:none;border-top:1px solid var(--line);padding-top:calc(var(--u)*.4)}
-.ft b{color:var(--text)}.ft .dim{color:var(--dim)}
+.seller{flex:1.15}.seller.ot{flex:1}
+.seller .top{display:flex;align-items:center;justify-content:space-between;gap:calc(var(--u)*1)}
+.seller .nm{font-size:calc(var(--u)*3.6);font-weight:800}
+.seller .vl{display:flex;align-items:flex-start;justify-content:space-between;margin-top:calc(var(--u)*1.4)}
+.seller .tot{font-size:calc(var(--u)*6.2)}
+.seller .pc{text-align:right}.seller .pc .n{font-size:calc(var(--u)*4.2);color:var(--brand)}.seller .pc div+div{font-size:calc(var(--u)*1.7);color:var(--sub);margin-top:calc(var(--u)*.5)}
+.seller .mt{font-size:calc(var(--u)*1.9);color:var(--sub);margin:calc(var(--u)*.7) 0 calc(var(--u)*1.1)}.seller .mt b{color:var(--text);font-weight:700}
+.boxes{display:flex;gap:calc(var(--u)*1.4);margin-top:calc(var(--u)*1.8)}
+.bx{flex:1;border-radius:calc(var(--u)*1);padding:calc(var(--u)*1.2) calc(var(--u)*1.6);border:1px solid;min-width:0}
+.bx .lbl{font-size:calc(var(--u)*1.5)}
+.bx .n{font-size:calc(var(--u)*3.6);margin-top:calc(var(--u)*.8);white-space:nowrap}
+.bx .sub{font-size:calc(var(--u)*1.5);margin-top:calc(var(--u)*.5)}
+.bx.o{background:var(--brand-d);border-color:rgba(255,138,31,.4)}.bx.o .lbl,.bx.o .n{color:var(--brand)}
+.bx.b{background:var(--blue-d);border-color:rgba(76,155,255,.4)}.bx.b .lbl{color:var(--blue)}
+.bx.n0{background:rgba(255,255,255,.04);border-color:var(--line)}
+.st{display:flex;margin-top:auto;padding-top:calc(var(--u)*1.2);gap:calc(var(--u)*1.4)}
+.st>div{flex:1;display:flex;align-items:center;gap:calc(var(--u)*1.4);min-width:0}
+.st .l{font-size:calc(var(--u)*1.7);color:var(--sub)}.st .v{font-size:calc(var(--u)*2.8);font-weight:700;margin-top:calc(var(--u)*.3);white-space:nowrap;font-variant-numeric:tabular-nums}
+.ring{width:calc(var(--u)*6.4);height:calc(var(--u)*6.4);border-radius:50%;flex:none}
+.pt{display:flex;align-items:center;gap:calc(var(--u)*2)}
+.pt .n{font-size:calc(var(--u)*4.4);margin-top:calc(var(--u)*.8)}
+/* rodapé */
+.ft{height:calc(var(--u)*10.4);flex:none;display:flex;align-items:center;gap:calc(var(--u)*2.4);padding:0 calc(var(--u)*2.4);background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:calc(var(--u)*1.4)}
+.ft .sec{display:flex;align-items:center;gap:calc(var(--u)*1.6);min-width:0}
+.ft .sec+.sec{border-left:1px solid var(--line);padding-left:calc(var(--u)*2.4)}
+.ft .lbl{font-size:calc(var(--u)*1.5)}
+.ft .n{font-size:calc(var(--u)*3.6);margin-top:calc(var(--u)*.6)}
+.ft .tx{font-size:calc(var(--u)*1.6);color:var(--sub);line-height:1.35}
+.ft .tx b{color:var(--text);font-size:calc(var(--u)*2.4);font-weight:700;font-variant-numeric:tabular-nums}
+.cmp{display:flex;flex-direction:column;align-items:flex-start}
+.cmp .pc{font-size:calc(var(--u)*2.8);font-weight:800;line-height:1}.cmp .df{font-size:calc(var(--u)*1.7);font-weight:700;margin-top:calc(var(--u)*.4)}.cmp .es{font-size:calc(var(--u)*1.4);color:var(--dim);margin-top:calc(var(--u)*.3)}
 </style>
 </head>
 <body>
@@ -101,44 +141,46 @@ body{display:flex;align-items:center;justify-content:center}
 <main id="stage" class="hidden">
   <header class="hd">
     <div class="logo"><img src="./assets/logo.png" alt="MR4 Distribuidora"></div>
-    <div class="ttl">Painel Comercial<small>MR4 Distribuidora · prévia</small></div>
+    <div class="vr"></div>
+    <div class="ttl">PAINEL COMERCIAL<small>VENDAS • METAS • RESULTADOS</small></div>
+    <div class="sp"></div><div class="vr"></div>
+    <div class="mes"><div class="ico b"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></svg></div><div><div class="t" id="mesRef">—</div><div class="p" id="mesPer">—</div></div></div>
     <div class="sp"></div>
-    <div class="mes" id="mesRef">—</div>
-    <div class="sp"></div>
-    <div class="chip green" id="selo"><span class="dot"></span><span id="seloTxt">Ao vivo</span></div>
+    <div class="selo green" id="selo"><span class="dot"></span><div><div class="a" id="seloTxt">Ao vivo</div><div class="b" id="seloSub">Dados atualizados</div></div></div>
     <div class="rel"><div class="h" id="clock">--:--:--</div><div class="d" id="dateStr">—</div></div>
   </header>
 
-  <section class="row" style="flex:none;height:calc(var(--u)*34)">
+  <section class="row" style="flex:none;height:calc(var(--u)*31)">
     <div class="card" id="hero">
-      <div>
-        <div class="lbl">Faturamento do mês · todos os vendedores</div>
-        <div class="num val" id="hVal">R$ —</div>
-      </div>
-      <div class="hero-meta">
-        <div class="num pct" id="hPct">— %</div>
-        <div class="sub">da meta de <b id="hMeta">R$ —</b></div>
-        <div class="falta-g">faltam <b id="hRest">R$ —</b></div>
-      </div>
-      <div class="bar" style="height:calc(var(--u)*1.8)"><i id="hBar"></i></div>
+      <div><h2>FATURAMENTO GERAL <span>– MR4</span></h2><div class="cap">Todos os vendedores (vendas concretizadas)</div></div>
+      <div class="n val" id="hVal">R$ —</div>
+      <div class="hm"><div class="n pct" id="hPct">— %</div><div class="sub">da meta de <b id="hMeta">R$ —</b></div></div>
+      <div class="bar"><i id="hBar"></i></div>
+      <div class="falta-g" id="hFalta">—</div>
       <div class="delta" id="delta">+R$ 0,00</div>
     </div>
     <div id="side">
-      <div class="tile"><div class="lbl">Pedidos no mês</div><div class="num" id="hPed">—</div></div>
-      <div class="tile"><div class="lbl">Ticket médio</div><div class="num" id="hTic">—</div></div>
-      <div class="tile"><div class="lbl">Vendas do dia</div><div class="num" id="hHoje">—</div><div class="sub" id="hHojeS"></div></div>
-      <div class="tile hl" style="grid-column:span 1"><div class="lbl">Meta por dia útil<span class="est">estimativa</span></div><div class="num" id="kNec">—</div><div class="sub" id="kNecS"></div></div>
-      <div class="tile" style="grid-column:span 2"><div class="lbl">Projeção de fechamento<span class="est">estimativa</span></div><div class="num" id="kProj">—</div><div class="sub" id="kProjS"></div></div>
+      <div class="r">
+        <div class="card kp"><div class="ico o"><svg class="i" viewBox="0 0 24 24"><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/><path d="M2 3h3l2.6 12.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 7H6"/></svg></div><div class="tx"><div class="lbl">Pedidos no mês</div><div class="n" id="hPed">—</div></div></div>
+        <div class="card kp"><div class="ico o"><svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg></div><div class="tx"><div class="lbl">Ticket médio</div><div class="n" id="hTic">—</div></div></div>
+        <div class="card kp"><div class="ico o"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></svg></div><div class="tx"><div class="lbl">Vendas do dia</div><div class="n" id="hHoje">—</div><div class="sub" id="hHojeS"></div></div></div>
+      </div>
+      <div class="r">
+        <div class="card kw"><div class="tp"><span class="or"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/><path d="M12 12l8-8"/></svg></span><span class="lbl">Meta por dia útil equivalente</span><span class="tag o" id="tagNec">Estimativa</span></div>
+          <div class="n bl" id="kNec">—</div><div class="sub" id="kNecS"></div></div>
+        <div class="card kw"><div class="tp"><span class="or"><svg class="i" viewBox="0 0 24 24"><path d="M5 20V13M12 20V6M19 20V10"/></svg></span><span class="lbl">Projeção de fechamento</span><span class="tag o" id="tagProj">Estimativa</span></div>
+          <div class="ln"><div class="n" id="kProj">—</div><div class="ps" id="kProjP"></div></div></div>
+      </div>
     </div>
   </section>
 
   <section class="row sellers" id="sellers"></section>
 
   <footer class="ft">
-    <span><span class="dim">Mês anterior, mesmo período:</span> <b id="cVal">—</b> <span id="cDet"></span> <span class="dim" id="cNota"></span></span>
-    <span class="sp"></span>
-    <span class="dim" id="ftCal"></span>
-    <span id="ftAtual">—</span>
+    <div class="sec" style="flex:1.15"><div class="ico o"><svg class="i" viewBox="0 0 24 24"><path d="M5 20V13M12 20V6M19 20V10"/></svg></div><div class="cmp"><div class="lbl">Comparativo com o mês anterior</div><div style="display:flex;align-items:center;gap:calc(var(--u)*2.2)"><div class="n" id="cVal">—</div><div id="cPct"></div></div></div></div>
+    <div class="sec" style="flex:.9"><div class="ico b"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/><path d="M8 13.5h.01M12 13.5h.01M16 13.5h.01M8 17h.01M12 17h.01"/></svg></div><div><div class="lbl">Dias úteis equivalentes</div><div class="tx" id="ftDias">—</div></div></div>
+    <div class="sec" style="flex:1.5"><div class="ico o"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.6h.01"/></svg></div><div><div class="lbl">Calendário</div><div class="tx" id="ftCal">—</div></div></div>
+    <div class="sec" style="flex:.9"><div class="ico s"><svg class="i" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4M4 4v4h4M4 13a8 8 0 0 0 14.5 4M20 20v-4h-4"/></svg></div><div><div class="lbl" style="text-transform:none;letter-spacing:0">Última atualização</div><div class="tx"><b id="ftHora">—</b> <span id="ftIdade"></span></div><div class="tx" style="font-size:calc(var(--u)*1.4);color:var(--dim)">atualização a cada 5 min</div></div></div>
   </footer>
 </main>
 
@@ -150,10 +192,11 @@ import { getFirestore, doc, getDoc, onSnapshot } from 'https://www.gstatic.com/f
 const app = initializeApp({ apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto", storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5" });
 const auth = getAuth(app), db = getFirestore(app);
 const T = window.PainelTV, $ = id => document.getElementById(id);
+const IC = { down: `<svg class="i" viewBox="0 0 24 24"><path d="M12 4v15M6 13l6 6 6-6"/></svg>`, up: `<svg class="i" viewBox="0 0 24 24"><path d="M12 20V5M6 11l6-6 6 6"/></svg>`, bag: `<svg class="i" viewBox="0 0 24 24"><path d="M6 8h12l1 12H5z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>`, coins: `<svg class="i" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v5c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 11v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></svg>`, bars: `<svg class="i" viewBox="0 0 24 24"><path d="M5 20V13M12 20V6M19 20V10"/></svg>` };
 
 /* ── relógio: independente da sincronização ── */
 function tick(){ const n = new Date(); $('clock').textContent = n.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:'America/Fortaleza'});
-  $('dateStr').textContent = n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',timeZone:'America/Fortaleza'}); }
+  const t = n.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',timeZone:'America/Fortaleza'}); $('dateStr').textContent = t.charAt(0).toUpperCase() + t.slice(1); }
 setInterval(tick, 1000); tick();
 
 /* ── estado ── */
@@ -166,63 +209,89 @@ function animar(el, para, fmt){
   const passo = t => { const k = Math.min(1,(t-t0)/ms), e = 1-Math.pow(1-k,3); el.textContent = fmt(de + (para-de)*e); if (k<1) requestAnimationFrame(passo); else el.textContent = fmt(para); };
   requestAnimationFrame(passo);
 }
-const cor = p => p >= 100 ? 'green' : p >= 70 ? 'yellow' : p >= 40 ? '' : 'red';
-
+const hm = ms => new Date(ms).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Fortaleza'});
 function selo(){
   const idade = ultimoMs === null ? null : (Date.now() - ultimoMs)/60000;
   const e = T.estadoDados({ idadeMin: idade, status: ST && ST.status, erro: ERRO && ultimoMs === null });
-  const s = $('selo'); s.className = 'chip ' + e.cor; $('seloTxt').textContent = e.rotulo;
-  $('ftAtual').innerHTML = ultimoMs === null ? 'Aguardando dados…' : `Dados de <b>${new Date(ultimoMs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Fortaleza'})}</b> · há ${Math.round(idade)} min · atualização a cada 5 min` + (ST && (ST.status==='FALHA'||ST.status==='DIVERGENCIA') ? ' · <span class="neg">última tentativa falhou (exibindo o último conjunto válido)</span>' : '');
+  $('selo').className = 'selo ' + e.cor;
+  const m = idade === null ? null : Math.max(0, Math.round(idade));
+  $('seloTxt').textContent = { ok: 'Ao vivo', atrasado: 'Atualização atrasada', desatualizado: 'Dados desatualizados', indisponivel: 'Dados indisponíveis', aguardando: 'Aguardando dados' }[e.nivel] || e.rotulo;
+  $('seloSub').textContent = e.nivel === 'ok' ? 'Dados atualizados' : (m === null ? '' : 'Última atualização há ' + m + ' min');
+  $('ftHora').textContent = ultimoMs === null ? '—' : hm(ultimoMs);
+  $('ftIdade').textContent = m === null ? '' : '(há ' + m + ' min)' + (ST && (ST.status==='FALHA'||ST.status==='DIVERGENCIA') ? ' · última tentativa falhou' : '');
 }
 setInterval(selo, 15000);
+const dm = s => s.slice(8,10) + '/' + s.slice(5,7);
+const num = (n, c) => String(n).replace('.', ',');
 
 function render(d){
   const g = d.geral || d.equipe || {}, meta = (d.geral && d.geral.meta) || (d.configuracao && d.configuracao.metaEquipe) || 0;
   const total = g.totalMes || 0, pct = meta ? (total / meta) * 100 : 0;
   const r = d.ritmo || {}, p = d.projecao || {}, dias = r.diasEquivalentesRestantes;
   const mesRef = (d.periodo && d.periodo.inicioMes || '').slice(0,7);
-  if (mesRef) { const [y,m] = mesRef.split('-'); { const t = new Date(Date.UTC(+y,+m-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'}); $('mesRef').textContent = t.charAt(0).toUpperCase() + t.slice(1); } }
+  if (mesRef) { const [y,m] = mesRef.split('-'); $('mesRef').textContent = new Date(Date.UTC(+y,+m-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
+    const ds = (d.calendario && d.calendario.dias) || []; if (ds.length) $('mesPer').textContent = 'Período: ' + dm(ds[0].d) + ' a ' + dm(ds[ds.length-1].d); }
   // resultado geral
   animar($('hVal'), total, T.brl); animar($('hPct'), pct, T.pct);
   $('hMeta').textContent = T.brl(meta);
   const gf = T.faltaEPorDia(total, meta, dias);
-  $('hRest').textContent = gf.batida ? 'Meta batida' : T.brl(gf.falta);
+  $('hFalta').innerHTML = gf.batida ? '<b class="gr">Meta batida</b>' : 'Faltam <b>' + T.brl(gf.falta) + '</b> para atingir a meta';
   const b = $('hBar'); b.style.width = Math.min(100,pct) + '%'; b.className = pct >= 100 ? 'ok' : '';
-  // destaque discreto de aumento (somente totais agregados)
   if (anterior !== null) { const dl = T.delta(anterior, total); if (dl > 0) { const el = $('delta'); el.textContent = '+' + T.brl(dl) + ' desde a última atualização'; el.classList.add('on'); setTimeout(()=>el.classList.remove('on'), 20000); } }
   anterior = total;
-  // indicadores ao lado
+  // indicadores
   animar($('hPed'), g.pedidosMes||0, v => String(Math.round(v))); animar($('hTic'), g.ticketMes||0, T.brl); animar($('hHoje'), g.totalHoje||0, T.brl);
   const hojeDia = (d.calendario && d.calendario.dias || []).find(x => x.d === (d.periodo && d.periodo.fim));
-  $('hHojeS').textContent = `${g.pedidosHoje||0} pedido${(g.pedidosHoje||0)===1?'':'s'}` + (hojeDia && hojeDia.peso === 0 ? ' · hoje sem expediente' : '');
+  $('hHojeS').textContent = `${g.pedidosHoje||0} pedido${(g.pedidosHoje||0)===1?'':'s'}` + (hojeDia && hojeDia.peso === 0 ? ' • hoje sem expediente' : '');
   $('kNec').textContent = gf.batida ? '—' : (gf.porDia == null ? '—' : T.brl(gf.porDia));
-  $('kNecS').textContent = dias != null ? `${String(dias).replace('.',',')} dias úteis equivalentes restantes` : '';
+  $('kNecS').textContent = dias != null ? `${num(dias)} dias úteis equivalentes restantes` : '';
   $('kProj').textContent = p.fechamento == null ? '—' : T.brl(p.fechamento);
-  const dif = p.diferencaMeta, conf = r.confiabilidade;
-  $('kProjS').textContent = p.fechamento == null ? 'sem base suficiente' : [(p.pctMeta != null ? T.pct(p.pctMeta) + ' da meta' : ''), dif == null ? '' : (dif >= 0 ? 'acima ' : 'abaixo ') + T.brl(Math.abs(dif)), conf === 'BAIXA' ? 'baixa confiabilidade' : conf === 'INSUFICIENTE' ? 'dados insuficientes' : ''].filter(Boolean).join(' · ');
-  // vendedores (mesma identidade para todos)
+  const dif = p.diferencaMeta, conf = r.confiabilidade, sit = p.situacao;
+  const corP = sit === 'NO_RITMO' ? 'gr' : sit === 'ATENCAO' ? 'yl' : sit === 'ABAIXO' ? 'rd' : '';
+  $('kProj').className = 'n ' + corP;
+  $('kProjP').innerHTML = p.fechamento == null ? '<span class="sub">sem base suficiente</span>' :
+    `<span class="${corP}"><b>${T.pct(p.pctMeta||0)}</b> da meta</span>` + (dif == null ? '' : dif >= 0 ? `<span class="gr">+${T.brl(dif)} acima da meta</span>` : `<span class="${corP}">Faltam <b style="font-size:inherit">${T.brl(Math.abs(dif))}</b></span>`);
+  $('tagProj').textContent = 'Estimativa' + (conf === 'BAIXA' ? ' · baixa confiabilidade' : conf === 'INSUFICIENTE' ? ' · dados insuficientes' : '');
+  // vendedores
   const rk = T.ranking(d.vendedores || []);
-  const caixa = (nome, o, lider) => {
-    const hasMeta = !!o.meta, pc = hasMeta ? (o.totalMes / o.meta) * 100 : 0, f = hasMeta ? T.faltaEPorDia(o.totalMes, o.meta, dias) : null;
-    return `<div class="card seller"><div class="nm"><span>${nome}</span>${lider ? `<span class="lead">${lider}</span>` : ''}</div>
-      <div class="num tot">${T.brl(o.totalMes)}</div>
-      ${hasMeta ? `<div class="pr"><span>Meta ${T.brl(o.meta)}</span><b>${T.pct(pc)}</b></div><div class="bar"><i class="${pc >= 100 ? 'ok' : ''}" style="width:${Math.min(100,pc)}%"></i></div>
-        <div class="falta"><div class="lbl">${f.batida ? 'Meta individual' : 'Falta para a meta'}</div><div class="num">${f.batida ? 'Batida' : T.brl(f.falta)}</div></div>
-        <div class="nec"><span>Necessário por dia útil <em>estimativa</em></span><b>${f.batida ? '—' : f.porDia == null ? '—' : T.brl(f.porDia)}</b></div>`
-      : `<div class="pr"><span>Sem meta individual</span><b></b></div><div class="bar off"><i style="width:0"></i></div>
-        <div class="falta off"><div class="lbl">Participação no faturamento</div><div class="num">${total ? T.pct((o.totalMes / total) * 100) : '—'}</div></div>
-        <div class="nec"><span>Meta por vendedor</span><b>não se aplica</b></div>`}
-      <div class="st"><span>Pedidos<b>${o.pedidosMes||0}</b></span><span>Ticket médio<b>${T.brl(o.ticketMes||0)}</b></span></div></div>`;
+  const caixa = (nome, o, badge, outros) => {
+    if (outros) {
+      const part = total ? (o.totalMes / total) * 100 : 0;
+      return `<div class="card seller ot"><div class="top"><div class="nm">Outros vendedores</div></div>
+        <div class="vl"><div class="n tot">${T.brl(o.totalMes)}</div></div>
+        <div class="mt">Sem meta individual</div>
+        <div class="bx n0" style="margin-top:calc(var(--u)*.6)"><div class="pt"><div class="ring" style="background:radial-gradient(closest-side,#0C1836 70%,transparent 72% 100%),conic-gradient(var(--brand) ${Math.min(100,part)}%,rgba(255,255,255,.12) 0)"></div>
+          <div><div class="lbl">Participação no faturamento</div><div class="n">${T.pct(part)}</div></div></div></div>
+        <div class="st"><div><span class="ico s">${IC.bag}</span><div><div class="l">Pedidos</div><div class="v">${o.pedidosMes||0}</div></div></div>
+          <div><span class="ico s">${IC.coins}</span><div><div class="l">Ticket médio</div><div class="v">${T.brl(o.ticketMes||0)}</div></div></div></div></div>`;
+    }
+    const pc = o.meta ? (o.totalMes / o.meta) * 100 : 0, f = T.faltaEPorDia(o.totalMes, o.meta, dias);
+    return `<div class="card seller"><div class="top"><div class="nm">${nome}</div>${badge ? `<span class="tag ${badge.c}">${badge.t}</span>` : ''}</div>
+      <div class="vl"><div class="n tot">${T.brl(o.totalMes)}</div><div class="pc"><div class="n ${pc >= 100 ? 'gr' : ''}">${T.pct(pc)}</div><div>da meta</div></div></div>
+      <div class="mt">Meta: <b>${T.brl(o.meta)}</b></div>
+      <div class="bar"><i class="${pc >= 100 ? 'ok' : ''}" style="width:${Math.min(100,pc)}%"></i></div>
+      <div class="boxes">
+        <div class="bx ${f.batida ? 'n0' : 'o'}"><div class="lbl">${f.batida ? 'Meta individual' : 'Falta para a meta'}</div><div class="n ${f.batida ? 'gr' : ''}">${f.batida ? 'Batida' : T.brl(f.falta)}</div></div>
+        <div class="bx b"><div class="lbl">Necessário por dia útil</div><div class="n">${f.batida || f.porDia == null ? '—' : T.brl(f.porDia)}</div><div class="sub">estimativa</div></div>
+      </div>
+      <div class="st"><div><span class="ico s">${IC.bag}</span><div><div class="l">Pedidos</div><div class="v">${o.pedidosMes||0}</div></div></div>
+        <div><span class="ico s">${IC.coins}</span><div><div class="l">Ticket médio</div><div class="v">${T.brl(o.ticketMes||0)}</div></div></div></div></div>`;
   };
-  const lista = rk.map((x,i) => { const v = (d.vendedores||[]).find(y => y.nome === x.nome) || {}; const lider = i === 0 && rk.length > 1 && x.totalMes > rk[1].totalMes ? 'Líder em faturamento' : (x.melhorPctMeta ? 'Maior % da meta' : ''); return caixa(x.nome, v, lider); });
-  if (d.outros) lista.push(caixa('Outros', { ...d.outros, meta: 0 }, ''));
+  const lista = rk.map((x,i) => { const v = (d.vendedores||[]).find(y => y.nome === x.nome) || {};
+    const badge = i === 0 && rk.length > 1 && x.totalMes > rk[1].totalMes ? { t: 'Líder em faturamento', c: 'o' } : (x.melhorPctMeta ? { t: 'Maior % da meta', c: 'g' } : null);
+    return caixa(x.nome, v, badge, false); });
+  if (d.outros) lista.push(caixa('Outros vendedores', d.outros, null, true));
   $('sellers').innerHTML = lista.join('');
-  // rodapé: comparativo e calendário
-  const cp = T.textoComparativo(d.comparativoMesAnterior);
-  $('cVal').textContent = cp.valor; $('cDet').textContent = cp.detalhe || ''; $('cDet').className = cp.positivo === undefined ? '' : cp.positivo ? 'pos' : 'neg';
-  $('cNota').textContent = d.comparativoMesAnterior ? `(estimativa proporcional · ${String(d.comparativoMesAnterior.diasEquivalentes).replace('.',',')} dias equiv.)` : '';
+  // rodapé
+  const c = d.comparativoMesAnterior;
+  if (c) {
+    $('cVal').textContent = T.brl(c.valor);
+    const pos = c.diferenca >= 0, cc = pos ? 'gr' : 'rd', sg = pos ? '+' : '−';
+    $('cPct').innerHTML = `<div class="cmp ${cc}"><div class="pc">${c.variacaoPct == null ? '' : sg + String(Math.abs(c.variacaoPct)).replace('.', ',') + '%'}</div><div class="df">${sg}${T.brl(Math.abs(c.diferenca))}</div><div class="es">(estimativa proporcional)</div></div>`;
+  } else { $('cVal').textContent = '—'; $('cPct').innerHTML = '<div class="cmp"><div class="es">Sem base comparável ainda</div></div>'; }
+  $('ftDias').innerHTML = r.diasEquivalentesDecorridos != null ? `<b>${num(r.diasEquivalentesDecorridos)}</b> decorridos<br><b>${num(r.diasEquivalentesRestantes)}</b> restantes` : '—';
   const av = T.avisoCalendario(d.calendario, d.periodo && d.periodo.fim);
-  $('ftCal').textContent = av.length ? 'Calendário não confirmado: ' + av.map(x => x.dia + ' (' + (x.expediente === 'FECHADO' ? 'sem expediente' : 'com expediente') + ' presumido)').join(', ') + ' — valores por dia útil são estimativas' : 'Valores por dia útil são estimativas sobre o calendário comercial';
+  $('ftCal').innerHTML = av.length ? av.map(x => `${x.dia} <span style="color:var(--dim)">(${x.expediente === 'FECHADO' ? 'sem' : 'com'} expediente presumido)</span>`).join('<br>') + '<br><span style="color:var(--dim)">— valores por dia útil são estimativas</span>' : 'Sem pendências no calendário<br><span style="color:var(--dim)">valores por dia útil são estimativas</span>';
 }
 
 /* ── autenticação e dados (mesmas permissões do painel atual) ── */

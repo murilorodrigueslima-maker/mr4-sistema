@@ -6,10 +6,11 @@
  *  • Documentos: TV (display_metrics/painel_comercial, sem custo/margem) e Gestor (display_metrics_gestor/painel).
  *  • Histórico (6 meses fechados) refrescado a cada 6 h, para não multiplicar chamadas à API.
  */
-const M = require('./painelMetricas');
+const M = require('./painelMetricas'); const CAL = require('./painelCalendario');
 const BASE = 'https://api.gestaoclick.com';
 const LEASE_MIN = 4, HIST_HORAS = 6, MAX_PAGINAS = 120, HIST_MESES = 6;
 const fortaleza = d => { const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Fortaleza', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d).map(x => [x.type, x.value])); return `${p.year}-${p.month}-${p.day}`; };
+const horaFortaleza = d => new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Fortaleza', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
 const somarMes = (mes, n) => { let [y, m] = mes.split('-').map(Number); m += n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } return `${y}-${String(m).padStart(2, '0')}`; };
 const ultimoDia = mes => { const [y, m] = mes.split('-').map(Number); return `${mes}-${String(new Date(Date.UTC(y, m, 0)).getUTCDate()).padStart(2, '0')}`; };
 const espera = ms => new Promise(r => setTimeout(r, ms));
@@ -64,7 +65,8 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
   try {
     const hojeStr = fortaleza(agora), mes = hojeStr.slice(0, 7), inicioMes = mes + '-01';
     // 2) configuração (somente leitura): metas e mapeamento auditado
-    const [cfgSnap, mapSnap, antGest] = await Promise.all([db.collection('painel_config').doc('default').get(), db.collection('painel_mapeamento').doc('vendedores').get(), gestRef.get()]);
+    const [cfgSnap, mapSnap, antGest, calSnap] = await Promise.all([db.collection('painel_config').doc('default').get(), db.collection('painel_mapeamento').doc('vendedores').get(), gestRef.get(), db.collection('painel_calendario').doc('default').get()]);
+    const calCfg = calSnap.exists ? calSnap.data() : null;
     const cfgDoc = cfgSnap.exists ? cfgSnap.data() : {};
     const metaPorNome = {}; (Array.isArray(cfgDoc.vendedores) ? cfgDoc.vendedores : []).forEach(v => { if (v && v.nome) metaPorNome[v.nome] = Number(v.meta) || 0; });
     const mapaDoc = mapSnap.exists && mapSnap.data().vendedores ? mapSnap.data().vendedores : null;
@@ -86,7 +88,8 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
     const ant = antGest.exists ? antGest.data() : {};
     let historico = ant.historico || [], histEm = ant.historicoAtualizadoEm || null, histErro = null;
     const idadeH = histEm && histEm.toMillis ? (agora.getTime() - histEm.toMillis()) / 3600000 : Infinity;
-    if (idadeH >= HIST_HORAS) {
+    const faltaDiario = !historico.length || historico.some(h => !h.diario);
+    if (idadeH >= HIST_HORAS || faltaDiario) {
       try {
         const novo = [];
         for (let i = HIST_MESES; i >= 1; i--) {
@@ -97,7 +100,7 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
           if (!x.ok || !c.integra) throw Object.assign(new Error('HIST_DIVERGENCIA:' + m), { codigo: 'HIST_DIVERGENCIA' });
           novo.push({ mes: m, geral: x.geral.totalMes, pedidos: x.geral.pedidosMes, ticket: x.geral.ticketMes, ademir: x.ademir.totalMes, fabiana: x.fabiana.totalMes, outros: x.outros.totalMes,
             pedidosAdemir: x.ademir.pedidosMes, pedidosFabiana: x.fabiana.pedidosMes, pedidosOutros: x.outros.pedidosMes, cancelamentosQtd: x.cancelamentos.qtd, cancelamentosValor: x.cancelamentos.valor,
-            custo: M.reais(x.custo.mesCentavos), coberturaCusto: x.custo.cobertura });
+            custo: M.reais(x.custo.mesCentavos), coberturaCusto: x.custo.cobertura, diario: x.diario });
         }
         historico = novo; histEm = FieldValue.serverTimestamp();
       } catch (e) { histErro = e.codigo || 'HIST_FALHA'; }
@@ -109,9 +112,25 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
     const equipeLegado = { totalHoje: g.totalHoje, totalMes: g.totalMes, pedidosHoje: g.pedidosHoje, pedidosMes: g.pedidosMes, ticketHoje: g.ticketHoje, ticketMes: g.ticketMes };
     const sinc = { status: 'OK', intervaloMinutos: intervaloMin };
     const qualBasica = { vendasConsideradas: r.qualidade.vendasConsideradas, vendasSemVendedor: r.qualidade.vendasSemVendedor, duplicidadesDetectadas: r.qualidade.duplicidadesDetectadas, reconciliado: true, fonte: 'GestaoClick' };
+    // Ritmo, projeção, série diária e comparativo (derivados dos totais conciliados + calendário comercial; informativos)
+    const hora = horaFortaleza(agora);
+    const ritmo = CAL.ritmoEProjecao({ cfg: calCfg, mes, hojeStr, hora, acumulado: g.totalMes, meta: cfg.metaGeral });
+    const diasMes = CAL.diasDoMes(calCfg, mes);
+    let acum = 0;
+    const serieDiaria = diasMes.filter(x => x.d <= hojeStr).map(x => { const d = r.diario[x.d] || { v: 0, p: 0 }; acum += d.v; return { d: x.d, v: M.reais(d.v), p: d.p, a: M.reais(acum) }; });
+    const mesAnt = somarMes(mes, -1);
+    const antEntrada = (historico || []).find(h => h.mes === mesAnt);
+    const comparativo = antEntrada && antEntrada.diario
+      ? CAL.comparativoMesAnterior({ cfg: calCfg, mesAnterior: mesAnt, diasEquivalentesDecorridos: ritmo.diasEquivalentesDecorridos, diarioAnterior: antEntrada.diario, acumuladoAtual: g.totalMes, pedidosAtual: g.pedidosMes })
+      : null;
+    const calendario = { mes, fonte: calSnap.exists ? 'painel_calendario/default' : 'padrao', horasDiaCompleto: CAL.normalizar(calCfg).horasDiaCompleto,
+      dias: diasMes.map(x => ({ d: x.d, peso: Math.round(x.peso * 1000) / 1000 })),
+      feriados: (calCfg && Array.isArray(calCfg.feriados) ? calCfg.feriados : []).filter(f => String(f.data).startsWith(mes)).map(f => ({ d: f.data, nome: f.nome, expediente: f.expediente, verificado: !!f.verificado })) };
     const tv = { atualizadoEm: FieldValue.serverTimestamp(), periodo: { inicioMes, fim: hojeStr }, equipe: equipeLegado, vendedores: vendedoresLegado, configuracao: { metaEquipe: cfg.metaGeral },
-      schemaVersao: 2, geral: { ...g }, outros: { ...r.outros }, qualidade: qualBasica, sincronizacao: sinc };
-    const gest = { atualizadoEm: FieldValue.serverTimestamp(), periodo: { inicioMes, fim: hojeStr }, geral: { ...g }, ademir: { ...r.ademir }, fabiana: { ...r.fabiana }, outros: { ...r.outros },
+      schemaVersao: 3, geral: { ...g }, outros: { ...r.outros }, qualidade: qualBasica, sincronizacao: sinc,
+      ritmo, projecao: { fechamento: ritmo.projecaoFechamento, diferencaMeta: ritmo.diferencaProjetadaMeta, pctMeta: ritmo.pctProjetadoMeta, confiabilidade: ritmo.confiabilidade, situacao: ritmo.situacao, estimativa: true },
+      serieDiaria, calendario, comparativoMesAnterior: comparativo };
+    const gest = { atualizadoEm: FieldValue.serverTimestamp(), periodo: { inicioMes, fim: hojeStr }, ritmo, comparativoMesAnterior: comparativo, geral: { ...g }, ademir: { ...r.ademir }, fabiana: { ...r.fabiana }, outros: { ...r.outros },
       custo: { mes: M.reais(r.custo.mesCentavos), margemBruta: M.reais(g.totalMes * 100 - r.custo.mesCentavos), margemPct: g.totalMes ? Math.round(1000 * (g.totalMes * 100 - r.custo.mesCentavos) / (g.totalMes * 100)) / 10 : 0,
         cobertura: r.custo.cobertura, porChave: Object.fromEntries(Object.entries(r.custo.porChave).map(([k, v]) => [k, M.reais(v)])) },
       cancelamentos: r.cancelamentos, historico, historicoAtualizadoEm: histEm, historicoErro: histErro,

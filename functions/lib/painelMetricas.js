@@ -44,6 +44,7 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
   const vistos = new Map();
   const b = { geral: vazio(), ademir: vazio(), fabiana: vazio(), outros: vazio() };
   const canc = new Map();
+  const diario = {};
   (vendas || []).forEach(v => {
     q.vendasLidas++;
     const id = v && v.id !== undefined && v.id !== null ? String(v.id) : null;
@@ -74,6 +75,7 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
     else if (!(cfg && cfg.outrosConhecidos && cfg.outrosConhecidos[vid])) q.vendedoresNaoMapeados++;   // id conhecido de outro responsável (Murilo, Swyanne, Camila…) não é "não mapeado"
     const custo = centavos(v.valor_custo);
     if (custo === null || custo === 0) q.semCusto++;
+    diario[data] = diario[data] || { v: 0, p: 0 }; diario[data].v += c; diario[data].p += 1;
     const hoje = data === hojeStr;
     for (const k of [alvo, 'geral']) {
       b[k].totalMes += c; b[k].pedidosMes += 1; b[k].custoMes += (custo || 0);
@@ -99,6 +101,7 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
       duplicidadesDetectadas: q.duplicidadesDetectadas, conflitosDeDuplicidade: q.conflitosDeDuplicidade, valoresInvalidos: q.valoresInvalidos,
       foraDoPeriodo: q.foraDoPeriodo, naoConcretizadas: q.naoConcretizadas, divergencias: erros.length, reconciliado: erros.length === 0 },
     centavos: { geral: b.geral.totalMes, ademir: b.ademir.totalMes, fabiana: b.fabiana.totalMes, outros: b.outros.totalMes },
+    diario,
   };
   return out;
 }

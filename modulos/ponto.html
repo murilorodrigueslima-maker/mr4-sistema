@@ -475,9 +475,10 @@ tr:hover td{background:rgba(26,115,232,.04);}
   <div class="modal">
     <div class="modal-titulo"><span>Analisar justificativa</span><button class="modal-fechar" onclick="fecharModal('modal-justif-gestor')">×</button></div>
     <div id="justif-detalhe"></div>
-    <div class="form-campo" style="margin-bottom:1rem;"><label>Observação do gestor (opcional)</label><textarea id="justif-obs-gestor" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;min-height:80px;resize:vertical;"></textarea></div>
+    <div class="form-campo" style="margin-bottom:1rem;"><label>Observação do gestor (obrigatória para rejeitar e para solicitar informações)</label><textarea id="justif-obs-gestor" style="background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;width:100%;min-height:80px;resize:vertical;"></textarea></div>
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="fecharModal('modal-justif-gestor')">Cancelar</button>
+      <button class="btn-ghost" onclick="solicitarInfoJustificativa()">Solicitar informações</button>
       <button class="btn-rejeitar" onclick="responderJustificativa('rejeitado')">Rejeitar</button>
       <button class="btn-aprovar" onclick="responderJustificativa('aprovado')">Aprovar</button>
     </div>
@@ -1140,6 +1141,67 @@ async function salvarEscala(fid){
   }catch(e){msg('Não foi possível salvar: '+(({MES_ASSINADO_NA_VIGENCIA:'há espelho assinado a partir desse mês.'})[String(e&&e.message)]||(e&&e.message)||'erro'));}
 }
 window.salvarEscala=salvarEscala;
+
+// ── Contexto da decisão sobre justificativa (fase 4.3): marcações, evidências, consequências; reutiliza o fluxo existente ──────────────
+async function anexarContextoJustificativa(j,det,proprio,decidida){
+  window._ctxJustif={bloquearAprovar:false,motivo:''};
+  const [funcs,esp,todas,credTodos,regs]=await Promise.all([fbGet('funcionarios'),fbGet('espelhos'),fbGet('justificativas'),fbGet('creditos_jornada'),window._getRegistrosDia(j.funcId,j.data)]);
+  const f=funcs.find(x=>x.id===j.funcId)||{id:j.funcId,jornada:8};
+  const efet=registrosEfetivos(regs);
+  const cred=credTodos.find(c=>c.funcId===j.funcId&&c.data===j.data)||null;
+  const doDia=todas.filter(x=>x.funcId===j.funcId&&x.data===j.data);
+  const aprov=doDia.filter(x=>x.status==='aprovado');
+  const outras=doDia.filter(x=>x.id!==j.id);
+  const assinado=esp.some(e=>e.funcId===j.funcId&&e.mes===j.data.slice(0,7)&&e.assinado&&!e.substituido);
+  const futura=j.data>hoje();
+  const calc=lista=>calcDia(f,j.data,lista,cred,aprov);
+  const atual=calc(efet);
+  const aplica=(base,lista)=>{let alt=base.slice();lista.forEach(x=>{alt=alt.filter(r=>r.tipo!==x.tipoPonto).concat([{funcId:j.funcId,data:j.data,tipo:x.tipoPonto,hora:x.horarioPonto+':00'}]);});return calc(alt);};
+  const isol=(j.tipoPonto&&j.horarioPonto)?aplica(efet,[j]):null;
+  const pend=doDia.filter(x=>x.status==='pendente'&&x.tipoPonto&&x.horarioPonto);
+  const junt=pend.length>1?aplica(efet,pend):null;
+  const txt=r=>r.status==='ok'?`o dia fecha com <strong>${fmtMin(r.trabalhadoMin)}</strong> trabalhadas (saldo do dia <strong>${r.saldoMin>=0?'+':''}${fmtMin(r.saldoMin)}</strong> sobre ${fmtMin(r.jornadaPrevistaMin)} previstas)`:`o dia <strong>continua pendente</strong> (${esc(r.status)})`;
+  const marc=[['Entrada',atual.entrada],['Saída almoço',atual.saidaAlmoco],['Retorno almoço',atual.retornoAlmoco],['Saída',atual.saida]].map(([k,v])=>`${k}: <strong>${v?esc(v):'—'}</strong>`).join(' · ');
+  const avisos=[];
+  if(futura)avisos.push('A data é POSTERIOR a hoje: não há como justificar um dia que ainda não ocorreu (provável erro de data).');
+  if(assinado)avisos.push('Mês com ESPELHO ASSINADO: não pode ser decidido aqui.');
+  if(aprov.some(x=>x.id!==j.id&&x.tipoPonto&&x.tipoPonto===j.tipoPonto))avisos.push('Já existe correção APROVADA para esta mesma batida neste dia ('+aprov.filter(x=>x.tipoPonto===j.tipoPonto).map(x=>esc(x.horarioPonto)).join(', ')+').');
+  if(j.tipoPonto&&j.horarioPonto&&atual[{entrada:'entrada',saida_almoco:'saidaAlmoco',retorno_almoco:'retornoAlmoco',saida:'saida'}[j.tipoPonto]]===j.horarioPonto)avisos.push('A batida já consta com este mesmo horário (justificativa redundante).');
+  if(!j.anexo&&!j.evidenciaGestao&&!(j.descricao&&j.descricao.trim()))avisos.push('Sem descrição, anexo ou evidência registrada.');
+  if(pend.length>1)avisos.push('Há '+pend.length+' justificativas pendentes de batida neste dia ('+pend.map(x=>esc(x.motivo)).join(' + ')+'): decidir uma isoladamente pode gerar resultado incoerente.');
+  const hist=[];
+  if(j.infoSolicitada)hist.push(`Informação solicitada por ${esc(j.infoSolicitadaPorEmail||'gestão')}: “${esc(j.infoSolicitada)}”`);
+  if(j.respondidoPorEmail)hist.push(`Decidida por ${esc(j.respondidoPorEmail)}${j.obsGestor?': “'+esc(j.obsGestor)+'”':''}`);
+  const cx=document.createElement('div');
+  cx.style.cssText='font-size:12px;background:#f8f9fa;border:1px solid var(--cinza-borda);border-radius:8px;padding:10px 12px;margin-top:10px;line-height:1.5;';
+  cx.innerHTML=`<div style="font-weight:700;margin-bottom:4px;">Contexto para decisão</div>
+    <div>Jornada prevista: <strong>${fmtMin(atual.jornadaPrevistaMin)}</strong> · status do dia: ${esc(atual.status)}</div>
+    <div>Marcações atuais: ${marc}</div>
+    <div>Evidências: ${j.anexo?'anexo <strong>'+esc(j.anexoNome||'arquivo')+'</strong>':'sem anexo'}${j.evidenciaGestao?' · evidência da gestão: '+esc(j.evidenciaGestao):''}${j.descricao?' · descrição: “'+esc(j.descricao)+'”':''}</div>
+    <div>Outras justificativas do dia: ${outras.length?outras.map(x=>esc(x.status)+' — '+esc(x.motivo)).join('; '):'nenhuma'}</div>
+    ${hist.length?'<div>'+hist.join('<br>')+'</div>':''}
+    ${avisos.length?'<div style="color:#c0392b;margin-top:4px;">'+avisos.map(a=>'⚠ '+a).join('<br>')+'</div>':''}
+    <div style="margin-top:6px;"><strong>Se APROVAR:</strong> ${isol?txt(isol):'o dia recebe o crédito/abono da ocorrência (sem alteração de horários)'}${junt?`<br><strong>Se aprovadas JUNTAS:</strong> ${txt(junt)}`:''}</div>
+    <div><strong>Se REJEITAR:</strong> nada muda no ponto; o dia continua ${esc(atual.status)}. O funcionário vê o motivo.</div>
+    <div style="margin-top:4px;color:var(--cinza-texto);">Nenhuma decisão afeta o banco de horas enquanto ele estiver desligado; espelhos assinados nunca são alterados.</div>
+    ${(proprio||decidida||assinado||futura)?'':'<label style="display:block;margin-top:8px;font-weight:600;"><input type="checkbox" id="justif-conferi"> Conferi a evidência e as marcações do dia</label>'}`;
+  det.appendChild(cx);
+  if(assinado){window._ctxJustif={bloquearAprovar:true,motivo:'mês com espelho assinado'};}
+  else if(futura){window._ctxJustif={bloquearAprovar:true,motivo:'data posterior a hoje'};}
+}
+async function solicitarInfoJustificativa(){
+  const obs=(document.getElementById('justif-obs-gestor').value||'').trim();
+  if(obs.length<5){notif('Descreva a informação solicitada (mín. 5 caracteres).','vermelho');return;}
+  if(!justifAtualId)return;
+  try{
+    const snap=await window._getDoc(docRef('justificativas',justifAtualId));const j=snap.data();
+    if(j.status!=='pendente'){notif('Justificativa já decidida.','vermelho');return;}
+    if(window._meuFuncId&&j.funcId===window._meuFuncId){notif('Você não pode atuar sobre o próprio ponto.','vermelho');return;}
+    await fbSet('justificativas',justifAtualId,{infoSolicitada:obs,infoSolicitadaPorUid:window._userUid||'',infoSolicitadaPorEmail:window._userEmail||'',infoSolicitadaEm:window._serverTimestamp()});
+    invalidarCache('justificativas');fecharModal('modal-justif-gestor');notif('Solicitação registrada; a justificativa segue pendente.','laranja');renderJustificativas();
+  }catch(e){notif('Não foi possível registrar: '+((e&&e.code==='permission-denied')?'sem permissão.':(e&&e.message)||'erro'),'vermelho');}
+}
+window.solicitarInfoJustificativa=solicitarInfoJustificativa;
 // ── Feriados 2026 ─────────────────────────────────────────────────────────────
 const FERIADOS_2026=[{data:'2026-01-01',nome:'Ano Novo',tipo:'Feriado nacional'},{data:'2026-02-16',nome:'Carnaval (segunda)',tipo:'Feriado nacional'},{data:'2026-02-17',nome:'Carnaval (terça)',tipo:'Feriado nacional'},{data:'2026-02-18',nome:'Quarta-feira de Cinzas',tipo:'Feriado nacional'},{data:'2026-03-19',nome:'São José (Ceará)',tipo:'Feriado estadual'},{data:'2026-04-03',nome:'Sexta-feira Santa',tipo:'Feriado nacional'},{data:'2026-04-05',nome:'Páscoa',tipo:'Feriado nacional'},{data:'2026-04-21',nome:'Tiradentes',tipo:'Feriado nacional'},{data:'2026-05-01',nome:'Dia do Trabalho',tipo:'Feriado nacional'},{data:'2026-06-04',nome:'Corpus Christi',tipo:'Feriado nacional'},{data:'2026-07-25',nome:'Abolição Escravatura CE',tipo:'Feriado estadual'},{data:'2026-08-15',nome:'N.Sra. da Assunção',tipo:'Feriado municipal'},{data:'2026-09-07',nome:'Independência do Brasil',tipo:'Feriado nacional'},{data:'2026-10-12',nome:'N.Sra. Aparecida',tipo:'Feriado nacional'},{data:'2026-11-02',nome:'Finados',tipo:'Feriado nacional'},{data:'2026-11-15',nome:'Proclamação da República',tipo:'Feriado nacional'},{data:'2026-11-20',nome:'Consciência Negra',tipo:'Feriado nacional'},{data:'2026-12-08',nome:'N.Sra. da Conceição',tipo:'Feriado municipal'},{data:'2026-12-25',nome:'Natal',tipo:'Feriado nacional'}];
 
@@ -1266,6 +1328,7 @@ async function abrirJustifGestor(id){
   document.querySelectorAll('#modal-justif-gestor .btn-aprovar,#modal-justif-gestor .btn-rejeitar').forEach(b=>{b.style.display=(proprio||decidida)?'none':'';b.disabled=false;});
   if(proprio){const av=document.createElement('div');av.style.cssText='font-size:13px;color:var(--vermelho);margin-top:8px;font-weight:600;';av.textContent='Você não pode aprovar, rejeitar ou corrigir o próprio ponto. Peça a outro gestor.';det.appendChild(av);}
   document.getElementById('justif-obs-gestor').value='';
+  try{await anexarContextoJustificativa(j,det,proprio,decidida);}catch(e){window._ctxJustif={bloquearAprovar:false,motivo:''};}
   document.getElementById('modal-justif-gestor').classList.add('aberto');
 }
 window.abrirJustifGestor=abrirJustifGestor;
@@ -1273,6 +1336,16 @@ window.abrirJustifGestor=abrirJustifGestor;
 let _respondendoJustif=false;
 async function responderJustificativa(status){
   if(_respondendoJustif)return;
+  {  // FASE 4.3: decisão exige conferência (aprovar) ou motivo (rejeitar); nada é automático
+    const obs0=(document.getElementById('justif-obs-gestor').value||'').trim();
+    const ctxJ=window._ctxJustif||{};
+    if(status==='aprovado'){
+      if(ctxJ.bloquearAprovar){notif('Aprovação bloqueada: '+(ctxJ.motivo||'verifique o contexto da justificativa.'),'vermelho');return;}
+      const ck=document.getElementById('justif-conferi');
+      if(ck&&!ck.checked){notif('Confirme que conferiu a evidência e as marcações do dia.','vermelho');return;}
+    }
+    if(status==='rejeitado'&&obs0.length<5){notif('Informe o motivo da rejeição (mín. 5 caracteres).','vermelho');return;}
+  }
   _respondendoJustif=true;
   const btns=document.querySelectorAll('#modal-justif-gestor .btn-aprovar,#modal-justif-gestor .btn-rejeitar');
   btns.forEach(b=>b.disabled=true);

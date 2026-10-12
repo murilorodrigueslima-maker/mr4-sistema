@@ -967,8 +967,6 @@ exports._validateConcluirRevisao           = validateConcluirRevisao;
 exports.pontoJustificativaDecidir = onCall({ region: REGION }, req => require('./lib/pontoJustificativa').decidirJustificativaHandler(req));
 exports.pontoProtegerMesAssinado = onDocumentWritten({ document: 'espelhos/{espelhoId}', region: REGION, retry: true }, async ev => {
   const dep = ev.data && ev.data.after && ev.data.after.exists ? ev.data.after.data() : null;
-  if (!dep || dep.assinado !== true || !dep.funcId || !/^\d{4}-\d{2}$/.test(dep.mes || '')) return;
-  const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp();
-  await admin.firestore().collection('ponto_meses_protegidos').doc(dep.funcId + '_' + dep.mes).set(
-    { funcId: dep.funcId, mes: dep.mes, espelhoId: ev.params.espelhoId, versao: dep.versao || null, origem: 'trigger', protegidoEm: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+  const { getFirestore, FieldValue } = require('firebase-admin/firestore');   // API modular: independe do namespace legado
+  return require('./lib/pontoProtecao').protegerMesAssinado(getFirestore(), FieldValue, dep, ev.params.espelhoId);
 });

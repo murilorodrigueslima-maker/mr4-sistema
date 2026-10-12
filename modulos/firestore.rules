@@ -663,6 +663,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // P0 Painel: documento do GESTOR (custo, margem, cancelamentos, histórico, reconciliação). A conta `display` (TV) NÃO lê.
+    // Escrita só pelo servidor (syncPainelDisplay). display_metrics_ctl e painel_mapeamento: sem regra ⇒ negado ao cliente.
+    match /display_metrics_gestor/{docId} {
+      allow read:  if isGestor();
+      allow write: if false;
+    }
+
     // ── Coleção: gc_audit ─────────────────────────────────────────────────────
     // Log de auditoria de operações de escrita no GestãoClick.
     // ATUALIZAR_PRECO removida (Calculadora de Custo eliminada). Coleção mantida para histórico.

@@ -333,7 +333,7 @@ body{
   <div class="hd-div"></div>
   <span class="hd-title">📊 Painel Comercial</span>
   <div class="hd-sep"></div>
-  <div class="live-dot"><span class="dot"></span>Ao vivo</div>
+  <div class="live-dot" id="liveBadge"><span class="dot" id="liveDot"></span><span id="liveTxt">Ao vivo</span></div>
   <div>
     <div class="hd-clock" id="clock">--:--:--</div>
     <div class="hd-date" id="dateStr">—</div>
@@ -356,6 +356,11 @@ body{
   <div>
     <div class="tb-label">Pedidos hoje</div>
     <div class="tb-val" id="tbPedidos">—</div>
+  </div>
+  <div class="tb-div"></div>
+  <div>
+    <div class="tb-label">Outros vendedores (mês)</div>
+    <div class="tb-val" id="tbOutros" style="font-size:1rem">—</div>
   </div>
   <div class="tb-div"></div>
   <div class="tb-sep"></div>
@@ -451,6 +456,26 @@ window.toggleFS = function() {
 };
 document.addEventListener('keydown',e=>{ if(e.key==='F11'){e.preventDefault();toggleFS();} });
 
+/* ── FRESCOR DOS DADOS (P0): "Ao vivo" só quando os dados são recentes ── */
+let _ultimoSucessoMs = null, _statusDoc = null;
+function atualizarSelo() {
+  const badge = document.getElementById('liveBadge'), txt = document.getElementById('liveTxt'), dot = document.getElementById('liveDot');
+  const lu = document.getElementById('lastUpdate');
+  if(!badge) return;
+  if(_ultimoSucessoMs === null){ txt.textContent = 'Aguardando dados'; return; }
+  const min = Math.max(0, Math.round((Date.now() - _ultimoSucessoMs) / 60000));
+  const falha = _statusDoc && (_statusDoc.status === 'FALHA' || _statusDoc.status === 'DIVERGENCIA');
+  let nivel = 'ok', rotulo = 'Ao vivo';
+  if(min > 45 || (falha && min > 15)){ nivel = 'red'; rotulo = `DADOS DESATUALIZADOS · há ${min} min`; }
+  else if(min > 15 || falha){ nivel = 'yellow'; rotulo = `Atualização atrasada · há ${min} min`; }
+  const cor = nivel==='ok' ? '16,185,129' : nivel==='yellow' ? '245,158,11' : '239,68,68';
+  badge.style.background = `rgba(${cor},.12)`; badge.style.borderColor = `rgba(${cor},.35)`; badge.style.color = `rgb(${cor})`;
+  dot.style.background = `rgb(${cor})`; dot.style.animation = nivel==='ok' ? '' : 'none';
+  txt.textContent = rotulo;
+  if(lu) lu.textContent = `Dados de ${new Date(_ultimoSucessoMs).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})} · há ${min} min` + (falha ? ' · última tentativa falhou' : '');
+}
+setInterval(atualizarSelo, 20000);
+
 /* ── RENDER ── */
 function renderPainel(data) {
   const vendedores = data.vendedores || [];
@@ -480,9 +505,12 @@ function renderPainel(data) {
 
   if(data.atualizadoEm) {
     const ts = data.atualizadoEm.toDate ? data.atualizadoEm.toDate() : new Date(data.atualizadoEm);
-    const el = document.getElementById('lastUpdate');
-    if(el) el.textContent = `Atualizado às ${ts.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`;
+    _ultimoSucessoMs = ts.getTime();
+    atualizarSelo();
   }
+  const outros = data.outros;
+  const elOutros = document.getElementById('tbOutros');
+  if(elOutros) elOutros.textContent = outros ? `${brl(outros.totalMes)} · ${outros.pedidosMes} ped.` : '—';
 
   ranked.forEach((d, rankIdx) => {
     const rank  = rankIdx+1;
@@ -578,6 +606,12 @@ function mostrarPainel() {
 
   if(_unsubSnapshot) { _unsubSnapshot(); _unsubSnapshot = null; }
 
+  if(window._unsubStatus) { window._unsubStatus(); window._unsubStatus = null; }
+  window._unsubStatus = onSnapshot(doc(_db,'display_metrics','painel_status'),
+    sn => { _statusDoc = sn.exists() ? sn.data() : null;
+      if(_statusDoc && _statusDoc.ultimoSucessoEm && _statusDoc.ultimoSucessoEm.toMillis){ _ultimoSucessoMs = Math.max(_ultimoSucessoMs||0, _statusDoc.ultimoSucessoEm.toMillis()); }
+      atualizarSelo(); },
+    () => {});
   _unsubSnapshot = onSnapshot(
     doc(_db,'display_metrics','painel_comercial'),
     snap => {

@@ -252,6 +252,8 @@ tr:hover td{background:rgba(26,115,232,.04);}
     <div class="nav-sep"></div>
     <span class="nav-group-label">Gestão</span>
     <div class="nav-item" onclick="mudarSecao('banco',this)">Banco de Horas</div>
+    <div class="nav-item" onclick="mudarSecao('regularizacao',this)">Regularização <span class="notif-badge" id="badge-regul" style="display:none">0</span></div>
+    <div class="nav-item" onclick="mudarSecao('escalas',this)">Escalas</div>
     <div class="nav-item" onclick="mudarSecao('espelho',this)">Espelhos</div>
     <div class="nav-sep"></div>
     <span class="nav-group-label">Administração</span>
@@ -296,6 +298,25 @@ tr:hover td{background:rgba(26,115,232,.04);}
       <div class="metrics-grid" id="metrics-banco"></div>
       <div id="banco-cards"></div>
       <div id="banco-acumulado" style="margin-top:1.2rem;"></div>
+    </div>
+
+    <div class="dash-secao" id="sec-regularizacao">
+      <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;margin-bottom:.4rem;">Regularização de pendências</div>
+      <div style="font-size:12px;color:var(--cinza-texto);margin-bottom:.8rem;">Dias com ponto incompleto ou inconsistente. Nada é corrigido automaticamente: horários só entram pelo fluxo de justificativa com aprovação; aqui a gestão registra a decisão, com autor e motivo.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:.8rem;">
+        <select id="reg-fil-func" onchange="renderRegularizacao(false)" class="sel-mes"><option value="">Todos os funcionários</option></select>
+        <select id="reg-fil-classe" onchange="renderRegularizacao(false)" class="sel-mes"><option value="">Todas as causas</option></select>
+        <select id="reg-fil-status" onchange="renderRegularizacao(false)" class="sel-mes"><option value="">Todos os status</option><option value="pendente">Pendente</option><option value="em_analise">Em análise</option><option value="encaminhado">Encaminhado p/ revisão</option><option value="justificado">Justificado (sem horário)</option><option value="corrigido">Corrigido (regra do sábado)</option><option value="bloqueado">Bloqueado por espelho assinado</option></select>
+        <button class="btn-novo" onclick="renderRegularizacao(true)">Atualizar</button>
+      </div>
+      <div id="reg-resumo" style="font-size:13px;margin-bottom:.6rem;"></div>
+      <div class="tabela-wrap"><table><thead><tr><th>Funcionário</th><th>Data</th><th>Marcações</th><th>Causa</th><th>Status</th><th></th></tr></thead><tbody id="reg-lista"><tr><td colspan="6">Carregando…</td></tr></tbody></table></div>
+    </div>
+
+    <div class="dash-secao" id="sec-escalas">
+      <div style="font-size:20px;font-weight:700;color:var(--branco);letter-spacing:-.3px;margin-bottom:.4rem;">Escalas individuais</div>
+      <div style="font-size:12px;color:var(--cinza-texto);margin-bottom:.8rem;">Cada alteração cria uma nova versão com vigência e motivo; versões antigas nunca são sobrescritas. Sem escala cadastrada vale o padrão do sistema (jornada do cadastro; sábado 3h30). Nenhuma escala é presumida.</div>
+      <div id="escalas-lista">Carregando…</div>
     </div>
 
     <div class="dash-secao" id="sec-justificativas">
@@ -443,6 +464,13 @@ tr:hover td{background:rgba(26,115,232,.04);}
 </div>
 
 <!-- MODAL JUSTIFICATIVA GESTOR -->
+<div class="modal-overlay" id="modal-pend">
+  <div class="modal">
+    <div class="modal-titulo"><span>Pendência de ponto</span><button class="modal-fechar" onclick="fecharModal('modal-pend')">×</button></div>
+    <div id="pend-detalhe"></div>
+    <div id="pend-acoes"></div>
+  </div>
+</div>
 <div class="modal-overlay" id="modal-justif-gestor">
   <div class="modal">
     <div class="modal-titulo"><span>Analisar justificativa</span><button class="modal-fechar" onclick="fecharModal('modal-justif-gestor')">×</button></div>
@@ -499,7 +527,7 @@ window._signOut = () => signOut(auth);
 
 // Criação de conta via Cloud Function — Admin SDK server-side, gestor não é deslogado
 window._criarContaFuncionario = httpsCallable(functions, 'criarContaFuncionario');
-window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar'); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga');
+window._bhCompensar = httpsCallable(functions, 'pontoBancoCompensar'); window._bhEstornar = httpsCallable(functions, 'pontoBancoEstornar'); window._bhFolga = httpsCallable(functions, 'pontoBancoFolga'); window._pendDecidir = httpsCallable(functions, 'pontoPendenciaDecidir'); window._escalaDefinir = httpsCallable(functions, 'pontoEscalaDefinir');
 
 window._userEmail=''; window._monitorFuncId=null; window._isDualRole=false;
 onAuthStateChanged(auth, async user => {
@@ -551,6 +579,10 @@ onAuthStateChanged(auth, async user => {
   }
   window._userEmail = user.email || '';
   window._userUid   = user.uid   || '';
+  // Escalas individuais versionadas (Fase 4.2): 1 leitura no login; erro/ausência ⇒ sem escala (motor padrão)
+  window._escalas = getDocs(collection(db, 'ponto_escalas')).then(es => {
+    const m = {}; es.docs.forEach(d => { const x = d.data(); if (x.funcId) (m[x.funcId] = m[x.funcId] || []).push({ id: d.id, ...x }); }); return m;
+  }).catch(() => ({}));
   // Sábados corrigidos (Fase 4.1): 1 leitura no login; erro/ausência ⇒ conjunto vazio (motor padrão)
   window._sabCorr = getDocs(collection(db, 'ponto_sabado_correcoes')).then(cs => {
     const m = {}; cs.docs.forEach(d => { const x = d.data(); if (x.ativa !== false && x.funcId && x.data) (m[x.funcId] = m[x.funcId] || {})[x.data] = true; }); return m;
@@ -599,6 +631,9 @@ async function fbGet(c){
     const s=await window._getDocs(col(c));const data=_efetivosSe(c,s.docs.map(d=>({id:d.id,...d.data()})));
     if(c==='funcionarios'&&window._sabCorr){   // sábados corrigidos (auditados), carregados UMA vez no login; propriedade NÃO enumerável (nunca vaza ao salvar)
       try{const m=await window._sabCorr;data.forEach(f=>Object.defineProperty(f,'sabadosCorrigidos',{value:m[f.id]||{},enumerable:false,configurable:true}));}catch(e){/* motor segue com a regra padrão */}
+    }
+    if(c==='funcionarios'&&window._escalas){
+      try{const m=await window._escalas;data.forEach(f=>Object.defineProperty(f,'escalas',{value:m[f.id]||[],enumerable:false,configurable:true}));}catch(e){/* sem escala */}
     }
     return data;
   });
@@ -932,6 +967,179 @@ async function aprovarFolga(fid){
   }catch(e){msg('Não foi possível aprovar: '+erroBanco(e));}
 }
 window.aprovarFolga=aprovarFolga;
+
+// ── Regularização de pendências (fase 4.2) ──────────────────────────────────────────────────────────
+// Reaproveita o motor (calcDia) e a MESMA classificação do backend. Decisões ficam no servidor (callable, transação, auditoria);
+// horários só entram pelo fluxo existente de justificativa + aprovação.
+const _STATUS_ROT={pendente:'Pendente',em_analise:'Em análise',encaminhado:'Encaminhado p/ revisão',justificado:'Justificado (sem horário)',corrigido:'Corrigido (regra do sábado)',bloqueado:'Bloqueado — espelho assinado'};
+const _MOTIVO_ROT={MES_COM_ESPELHO_ASSINADO:'Mês com espelho assinado',JUSTIFICATIVA_PENDENTE:'Justificativa aguardando análise',SEM_DATA_DE_INICIO_DO_BANCO:'Funcionário sem data de início do banco',FORA_DO_BANCO:'Fora do banco de horas',MARCACAO_AUSENTE:'Marcação ausente',SABADO_FORA_DO_PADRAO_DO_FUNCIONARIO:'Sábado fora do padrão do funcionário (escala?)',SABADO_INTERVALO_NULO_NAO_CORRIGIDO:'Sábado com intervalo nulo (marcações completas)',SEQUENCIA_DE_MARCACOES_INVALIDA:'Sequência de marcações inválida',INCONSISTENCIA_ADMINISTRATIVA:'Inconsistência administrativa',CREDITO_SEM_MINUTOS:'Crédito sem minutos',JUSTIFICATIVA_SEM_CREDITO:'Justificativa aprovada sem crédito',CORRECAO_DUPLA_SEM_CRITERIO:'Correção dupla sem critério'};
+const _reg={itens:[],carregado:false};
+function _mesesEntre(inicio,fim){const out=[];let[y,m]=inicio.slice(0,7).split('-').map(Number);while(`${y}-${String(m).padStart(2,'0')}`<=fim){out.push(`${y}-${String(m).padStart(2,'0')}`);if(++m>12){m=1;y++;}}return out;}
+async function renderRegularizacao(forcar){
+  const corpo=document.getElementById('reg-lista');if(!corpo)return;
+  if(forcar||!_reg.carregado){
+    corpo.innerHTML='<tr><td colspan="6">Calculando pendências…</td></tr>';
+    if(forcar){invalidarCache('registros','justificativas','creditos_jornada','espelhos','funcionarios','ponto_pendencias_estado','ponto_pendencias_decisoes');}
+    const [funcs,cred,esp,estados,decis]=await Promise.all([fbGet('funcionarios'),fbGet('creditos_jornada'),fbGet('espelhos'),fbGet('ponto_pendencias_estado'),fbGet('ponto_pendencias_decisoes')]);
+    const h=hoje();const mAtual=mesAtual();
+    const todos=[];
+    const funcsOk=funcs.filter(f=>f.controleBancoHoras!==false);
+    const inicioGlobal=funcsOk.map(f=>f.inicioBancoHoras).filter(Boolean).sort()[0]||mAtual+'-01';
+    const meses=_mesesEntre(inicioGlobal,mAtual);
+    const regsPorMes={},justPorMes={};
+    for(const m of meses){regsPorMes[m]=await fbRegistrosMes(m);justPorMes[m]=await fbJustifMes(m);}
+    const justTodas=await fbGet('justificativas');
+    for(const f of funcsOk){
+      const R=meses.flatMap(m=>regsPorMes[m].filter(r=>r.funcId===f.id));
+      const ini=f.inicioBancoHoras||(R.map(r=>r.data).sort()[0]||h);
+      const datas=[...new Set(R.map(r=>r.data))].filter(d=>d>=ini&&d<h).sort();
+      const limpos=datas.filter(d=>new Date(d+'T12:00:00').getDay()===6).map(d=>calcDia(f,d,R.filter(r=>r.data===d),null,[])).filter(r=>r.status==='ok'&&r.entrada).map(r=>toMin(r.entrada)).sort((a,b)=>a-b);
+      const med=limpos.length?(limpos.length%2?limpos[(limpos.length-1)/2]:(limpos[limpos.length/2-1]+limpos[limpos.length/2])/2):null;
+      const J=justTodas.filter(j=>j.funcId===f.id);
+      datas.forEach(d=>{
+        const jd=J.filter(j=>j.data===d);
+        const r=calcDia(f,d,R.filter(x=>x.data===d),cred.find(c=>c.funcId===f.id&&c.data===d)||null,jd);
+        if(!r.pendente)return;
+        const c=classificarPendenciaDia(f,r,{espelhos:esp,justificativas:J,medianaEntradaSabado:med});
+        const est=estados.find(e=>e.id===f.id+'_'+d);
+        const status=c.classe==='PROTEGIDO_ASSINADO'?'bloqueado':(est?est.status:'pendente');
+        todos.push({f,data:d,r,c,status,jornada:r.jornadaPrevistaMin,justs:jd,est,decis:decis.filter(x=>x.funcId===f.id&&x.data===d).sort((a,b)=>(a.versao||0)-(b.versao||0)),noBanco:!!f.inicioBancoHoras});
+      });
+    }
+    _reg.itens=todos;_reg.carregado=true;
+    const selF=document.getElementById('reg-fil-func');if(selF&&selF.options.length<=1)funcsOk.forEach(f=>selF.insertAdjacentHTML('beforeend',`<option value="${esc(f.id)}">${esc(f.nome)}</option>`));
+    const selC=document.getElementById('reg-fil-classe');if(selC&&selC.options.length<=1)Object.entries(CLASSE_PENDENCIA).forEach(([k,v])=>selC.insertAdjacentHTML('beforeend',`<option value="${k}">${esc(v)}</option>`));
+  }
+  const ff=document.getElementById('reg-fil-func').value,fc=document.getElementById('reg-fil-classe').value,fs=document.getElementById('reg-fil-status').value;
+  const lista=_reg.itens.filter(x=>(!ff||x.f.id===ff)&&(!fc||x.c.classe===fc)&&(!fs||x.status===fs));
+  const abertas=_reg.itens.filter(x=>x.status!=='bloqueado'&&x.status!=='corrigido'&&x.status!=='justificado').length;
+  const cnt={};_reg.itens.forEach(x=>cnt[x.c.classe]=(cnt[x.c.classe]||0)+1);
+  document.getElementById('reg-resumo').innerHTML=`<strong>${_reg.itens.length}</strong> pendência(s) no total · <strong>${abertas}</strong> aberta(s) · ${Object.entries(cnt).map(([k,v])=>`${esc(CLASSE_PENDENCIA[k]||k)}: ${v}`).join(' · ')}`;
+  const bd=document.getElementById('badge-regul');if(bd){bd.textContent=abertas;bd.style.display=abertas?'':'none';}
+  corpo.innerHTML=lista.length?lista.map(x=>{
+    const m=x.r;const marc=[['E',m.entrada],['SA',m.saidaAlmoco],['RA',m.retornoAlmoco],['S',m.saida]].map(([k,v])=>`${k} ${v||'—'}`).join(' · ');
+    const idx=_reg.itens.indexOf(x);
+    return `<tr><td>${esc(x.f.nome)}${x.noBanco?'':' <span style="font-size:10px;color:var(--cinza-texto);">(fora do banco)</span>'}</td><td>${fmtData(x.data)}</td><td style="font-size:12px;">${esc(marc)}</td><td>${esc(CLASSE_PENDENCIA[x.c.classe]||x.c.classe)}<div style="font-size:11px;color:var(--cinza-texto);">${esc(_MOTIVO_ROT[x.c.motivo]||x.c.motivo)}</div></td><td>${esc(_STATUS_ROT[x.status]||x.status)}</td><td><button class="btn-ghost" onclick="abrirPendencia(${idx})">Abrir</button></td></tr>`;
+  }).join(''):'<tr><td colspan="6">Nenhuma pendência com estes filtros.</td></tr>';
+}
+window.renderRegularizacao=renderRegularizacao;
+
+function abrirPendencia(idx){
+  const x=_reg.itens[idx];if(!x)return;
+  const r=x.r,f=x.f;
+  const marc=[['Entrada',r.entrada],['Saída almoço',r.saidaAlmoco],['Retorno almoço',r.retornoAlmoco],['Saída',r.saida]].map(([k,v])=>`<div>${k}: <strong>${v?esc(v):'— (não registrada)'}</strong></div>`).join('');
+  const js=x.justs.length?x.justs.map(j=>`<div style="font-size:12px;">• ${esc(j.status)} — ${esc(j.motivo||'')}${j.descricao?' ('+esc(j.descricao)+')':''}</div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Nenhuma justificativa/correção neste dia.</div>';
+  const hist=x.decis.length?x.decis.map(d=>`<div style="font-size:12px;">• v${d.versao} ${esc(d.decisao)} — ${esc(d.motivo)} <span style="color:var(--cinza-texto);">(${esc(d.autorEmail||'')})</span></div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Sem decisões registradas.</div>';
+  const proprio=!!(window._meuFuncId&&f.id===window._meuFuncId);
+  document.getElementById('pend-detalhe').innerHTML=`<div style="background:var(--cinza-medio);border-radius:8px;padding:12px;margin-bottom:.8rem;"><div style="font-size:15px;font-weight:600;">${esc(f.nome)} · ${fmtData(x.data)}</div>
+    <div style="font-size:12px;color:var(--cinza-texto);margin:4px 0 8px;">Jornada prevista: <strong>${fmtMin(x.jornada)}</strong> · status do motor: ${esc(r.status)} · <strong>${esc(CLASSE_PENDENCIA[x.c.classe]||x.c.classe)}</strong> — ${esc(_MOTIVO_ROT[x.c.motivo]||x.c.motivo)}${x.c.ausentes&&x.c.ausentes.length?' · faltando: '+x.c.ausentes.map(esc).join(', '):''}</div>
+    ${marc}<div style="margin-top:8px;font-weight:600;font-size:13px;">Justificativas e correções</div>${js}<div style="margin-top:8px;font-weight:600;font-size:13px;">Decisões da gestão</div>${hist}</div>
+    <div style="font-size:12px;">Status atual: <strong>${esc(_STATUS_ROT[x.status]||x.status)}</strong></div>`;
+  const bloqueado=x.status==='bloqueado'||proprio;
+  let acoes='';
+  if(x.status==='bloqueado')acoes='<div style="color:#c0392b;font-size:13px;font-weight:600;">Mês com espelho assinado: nada pode ser alterado aqui (correção retroativa exige procedimento explícito).</div>';
+  else if(proprio)acoes='<div style="color:#c0392b;font-size:13px;font-weight:600;">Você não pode decidir sobre o próprio ponto. Peça a outro gestor.</div>';
+  else{
+    const regraSab=x.c.motivo==='SABADO_INTERVALO_NULO_NAO_CORRIGIDO'&&x.status!=='corrigido';
+    acoes=`<div class="form-campo"><label>Motivo / evidência da decisão (obrigatório)</label><textarea id="pend-motivo" rows="2" style="width:100%;"></textarea></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:.6rem;">
+        <button class="btn-ghost" onclick="decidirPendencia(${idx},'EM_ANALISE')">Em análise</button>
+        <button class="btn-ghost" onclick="decidirPendencia(${idx},'ENCAMINHAR_REVISAO')">Encaminhar para revisão</button>
+        <button class="btn-ghost" onclick="decidirPendencia(${idx},'JUSTIFICADO_SEM_HORARIO')">Justificar sem horário</button>
+        ${x.status!=='pendente'&&x.status!=='corrigido'?`<button class="btn-ghost" onclick="decidirPendencia(${idx},'REABRIR')">Reabrir</button>`:''}
+        ${regraSab?`<button class="btn-novo" onclick="decidirPendencia(${idx},'APLICAR_REGRA_SABADO')">Aplicar regra do sábado (intervalo nulo)</button>`:''}
+      </div>
+      <div style="border-top:1px solid var(--cinza-borda);padding-top:.6rem;"><div style="font-weight:600;font-size:13px;margin-bottom:4px;">Registrar marcação comprovada (vai para aprovação em Justificativas)</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;"><label style="font-size:11px;">Batida<br><select id="pend-tipo"><option value="entrada">Entrada</option><option value="saida_almoco">Saída almoço</option><option value="retorno_almoco">Retorno almoço</option><option value="saida">Saída</option></select></label>
+        <label style="font-size:11px;">Horário<br><input type="time" id="pend-hora"></label>
+        <label style="font-size:11px;flex:1;min-width:180px;">Evidência (como foi comprovado)<br><input type="text" id="pend-evid" maxlength="300" style="width:100%;"></label>
+        <button class="btn-novo" onclick="proporMarcacao(${idx})">Enviar para aprovação</button></div></div>
+      <div id="pend-msg" style="font-size:12px;margin-top:6px;color:#c0392b;"></div>`;
+  }
+  document.getElementById('pend-acoes').innerHTML=acoes;
+  document.getElementById('modal-pend').classList.add('aberto');
+}
+window.abrirPendencia=abrirPendencia;
+
+const _ERROS_REG={MES_COM_ESPELHO_ASSINADO:'o mês tem espelho assinado.',SEM_PENDENCIA_NESTA_DATA:'o dia não está mais pendente.',CORRECAO_APLICADA_USE_REVERSAO_AUDITADA:'correção já aplicada (reversão exige procedimento auditado).',REGRA_NAO_SE_APLICA_A_ESTA_DATA:'a regra não se aplica a esta data.',DATA_JA_USA_A_REGRA_NOVA:'a data já usa a regra nova.',REGRA_NAO_FECHA_O_DIA:'a regra não fecha o dia.'};
+async function decidirPendencia(idx,decisao){
+  const x=_reg.itens[idx];if(!x)return;const msg=t=>{const e=document.getElementById('pend-msg');if(e)e.textContent=t;};
+  const motivo=((document.getElementById('pend-motivo')||{}).value||'').trim();
+  if(motivo.length<5){msg('Informe o motivo (mínimo 5 caracteres).');return;}
+  if(decisao==='APLICAR_REGRA_SABADO'&&!window.confirm('Aplicar a regra do sábado (intervalo nulo) a este dia? Os horários registrados não mudam; o dia passa a ser calculado como turno contínuo.'))return;
+  try{
+    const r=await window._pendDecidir({funcId:x.f.id,data:x.data,decisao,motivo});
+    invalidarCache('ponto_pendencias_estado','ponto_pendencias_decisoes');
+    notif(r.data&&r.data.repetido?'Decisão já registrada.':'Decisão registrada.','verde');
+    fecharModal('modal-pend');_reg.carregado=false;renderRegularizacao(false);
+  }catch(e){msg('Não foi possível registrar: '+(_ERROS_REG[String(e&&e.message)]||(e&&e.message)||'erro'));}
+}
+window.decidirPendencia=decidirPendencia;
+
+// Marcação comprovada: NÃO grava registro; cria uma justificativa "ponto não batido" PENDENTE (mesmo fluxo do funcionário) para aprovação.
+async function proporMarcacao(idx){
+  const x=_reg.itens[idx];if(!x)return;const msg=t=>{const e=document.getElementById('pend-msg');if(e)e.textContent=t;};
+  const tipo=document.getElementById('pend-tipo').value,hora=document.getElementById('pend-hora').value,evid=((document.getElementById('pend-evid')||{}).value||'').trim();
+  if(!/^\d{2}:\d{2}$/.test(hora||'')){msg('Informe o horário comprovado.');return;}
+  if(evid.length<5){msg('Descreva a evidência que comprova o horário.');return;}
+  if(window._meuFuncId&&x.f.id===window._meuFuncId){msg('Não é permitido propor correção do próprio ponto.');return;}
+  const rot={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[tipo];
+  const id=uid();
+  try{
+    await fbSet('justificativas',id,{id,funcId:x.f.id,funcNome:x.f.nome,data:x.data,motivo:`Ponto não batido — ${rot} às ${hora}`,descricao:'Proposta pela gestão (fila de regularização). Evidência: '+evid,tipoPonto:tipo,horarioPonto:hora,evidenciaGestao:evid,status:'pendente',lancadoPorGestor:true,origemFila:true,propostoPorUid:window._userUid||'',propostoPorEmail:window._userEmail||'',criadoEm:new Date().toISOString()});
+    invalidarCache('justificativas');notif('Proposta enviada para aprovação em Justificativas.','verde');fecharModal('modal-pend');_reg.carregado=false;atualizarBadgeJustif();renderRegularizacao(false);
+  }catch(e){msg('Não foi possível enviar: '+((e&&e.code==='permission-denied')?'sem permissão.':(e&&e.message)||'erro'));}
+}
+window.proporMarcacao=proporMarcacao;
+
+// ── Escalas individuais (fase 4.2) ──────────────────────────────────────────────────────────────────
+const _DIAS_SEM=[['1','Segunda'],['2','Terça'],['3','Quarta'],['4','Quinta'],['5','Sexta'],['6','Sábado']];
+async function renderEscalas(){
+  const box=document.getElementById('escalas-lista');if(!box)return;
+  invalidarCache('ponto_escalas');
+  const [funcs,escs]=await Promise.all([fbGet('funcionarios'),fbGet('ponto_escalas')]);
+  const h=hoje();
+  const blocos=[];
+  for(const f of funcs.filter(x=>x.controleBancoHoras!==false)){
+    const vers=escs.filter(e=>e.funcId===f.id).sort((a,b)=>a.vigenteDesde<b.vigenteDesde?1:a.vigenteDesde>b.vigenteDesde?-1:(b.rev||0)-(a.rev||0));
+    const ef={...f,escalas:vers};
+    const linhas=_DIAS_SEM.map(([k,n])=>{const dt=new Date(h+'T12:00:00');const w=dt.getDay();const delta=(parseInt(k,10)-w+7)%7;const d2=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()+delta,12)).toISOString().slice(0,10);
+      return `<td>${n}</td><td>${fmtMin(getJornadaPrevista(ef,d2))}</td>`;}).map(c=>`<tr>${c}</tr>`).join('');
+    const origem=vers.length?`Escala cadastrada (vigente desde ${fmtData((vers.find(v=>v.vigenteDesde<=h)||vers[vers.length-1]).vigenteDesde)})`:`Padrão do sistema: jornada ${esc(String(f.jornada||8))} h/dia; sábado ${fmtMin(JORNADA_SABADO_MIN)}`;
+    const hist=vers.length?vers.map(v=>`<div style="font-size:12px;">• vigente desde <strong>${fmtData(v.vigenteDesde)}</strong> (rev. ${v.rev||1}${v.retroativa?', retroativa':''}) — ${esc(v.motivo||'')} <span style="color:var(--cinza-texto);">(${esc(v.criadoPorEmail||'')})</span></div>`).join(''):'<div style="font-size:12px;color:var(--cinza-texto);">Sem versões cadastradas.</div>';
+    const inputs=_DIAS_SEM.map(([k,n])=>`<tr><td>${n}</td><td><input type="checkbox" id="es-t-${esc(f.id)}-${k}"></td><td><input type="time" id="es-e-${esc(f.id)}-${k}"></td><td><input type="time" id="es-s-${esc(f.id)}-${k}"></td><td><input type="number" min="0" max="240" id="es-i-${esc(f.id)}-${k}" value="0" style="width:60px;"></td></tr>`).join('');
+    blocos.push(`<details class="ficha" style="padding:10px 14px;margin-bottom:8px;"><summary style="cursor:pointer;font-weight:600;">${esc(f.nome)} <span style="font-weight:400;color:var(--cinza-texto);font-size:12px;">— ${origem}</span></summary>
+      <div class="tabela-wrap" style="margin-top:8px;"><table><thead><tr><th>Dia</th><th>Jornada prevista</th></tr></thead><tbody>${linhas}</tbody></table></div>
+      <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Histórico de versões</div>${hist}
+      <div style="font-weight:600;font-size:13px;margin:10px 0 4px;">Nova versão da escala</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;"><label style="font-size:11px;">Vigente a partir de<br><input type="date" id="es-v-${esc(f.id)}"></label><label style="font-size:11px;flex:1;min-width:180px;">Motivo<br><input type="text" id="es-m-${esc(f.id)}" maxlength="300" style="width:100%;"></label></div>
+      <div class="tabela-wrap"><table><thead><tr><th>Dia</th><th>Trabalha</th><th>Entrada</th><th>Saída</th><th>Intervalo (min)</th></tr></thead><tbody>${inputs}</tbody></table></div>
+      <div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">Domingo não faz parte da escala. Vigência retroativa recalcula meses ainda não assinados; meses com espelho assinado bloqueiam a alteração.</div>
+      <button class="btn-novo" style="margin-top:6px;" onclick="salvarEscala('${esc(f.id)}')">Salvar nova versão</button><div id="es-msg-${esc(f.id)}" style="font-size:12px;margin-top:4px;color:#c0392b;"></div></details>`);
+  }
+  box.innerHTML=blocos.join('')||'Nenhum funcionário no banco de horas.';
+}
+window.renderEscalas=renderEscalas;
+async function salvarEscala(fid){
+  const msg=t=>{const e=document.getElementById('es-msg-'+fid);if(e)e.textContent=t;};msg('');
+  const vig=(document.getElementById('es-v-'+fid)||{}).value,motivo=((document.getElementById('es-m-'+fid)||{}).value||'').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(vig||'')){msg('Informe a data de início da vigência.');return;}
+  if(motivo.length<5){msg('Informe o motivo da alteração.');return;}
+  const dias={};
+  for(const [k] of _DIAS_SEM){
+    const t=document.getElementById(`es-t-${fid}-${k}`).checked;
+    if(!t){dias[k]={trabalha:false};continue;}
+    const e=document.getElementById(`es-e-${fid}-${k}`).value,s2=document.getElementById(`es-s-${fid}-${k}`).value,iv=parseInt(document.getElementById(`es-i-${fid}-${k}`).value||'0',10);
+    if(!e||!s2){msg('Informe entrada e saída de todos os dias marcados.');return;}
+    dias[k]={trabalha:true,entrada:e,saida:s2,intervaloMin:iv};
+  }
+  if(vig<=hoje()&&!window.confirm('Vigência RETROATIVA: os meses ainda não assinados serão calculados com esta escala. Meses assinados bloqueiam a operação. Confirmar?'))return;
+  try{
+    const r=await window._escalaDefinir({funcId:fid,vigenteDesde:vig,dias,motivo});
+    invalidarCache('ponto_escalas','funcionarios');window._escalas=null;notif(r.data&&r.data.repetido?'Escala já cadastrada.':'Nova versão da escala registrada. Recarregue a página para aplicar nos cálculos.','verde');renderEscalas();
+  }catch(e){msg('Não foi possível salvar: '+(({MES_ASSINADO_NA_VIGENCIA:'há espelho assinado a partir desse mês.'})[String(e&&e.message)]||(e&&e.message)||'erro'));}
+}
+window.salvarEscala=salvarEscala;
 // ── Feriados 2026 ─────────────────────────────────────────────────────────────
 const FERIADOS_2026=[{data:'2026-01-01',nome:'Ano Novo',tipo:'Feriado nacional'},{data:'2026-02-16',nome:'Carnaval (segunda)',tipo:'Feriado nacional'},{data:'2026-02-17',nome:'Carnaval (terça)',tipo:'Feriado nacional'},{data:'2026-02-18',nome:'Quarta-feira de Cinzas',tipo:'Feriado nacional'},{data:'2026-03-19',nome:'São José (Ceará)',tipo:'Feriado estadual'},{data:'2026-04-03',nome:'Sexta-feira Santa',tipo:'Feriado nacional'},{data:'2026-04-05',nome:'Páscoa',tipo:'Feriado nacional'},{data:'2026-04-21',nome:'Tiradentes',tipo:'Feriado nacional'},{data:'2026-05-01',nome:'Dia do Trabalho',tipo:'Feriado nacional'},{data:'2026-06-04',nome:'Corpus Christi',tipo:'Feriado nacional'},{data:'2026-07-25',nome:'Abolição Escravatura CE',tipo:'Feriado estadual'},{data:'2026-08-15',nome:'N.Sra. da Assunção',tipo:'Feriado municipal'},{data:'2026-09-07',nome:'Independência do Brasil',tipo:'Feriado nacional'},{data:'2026-10-12',nome:'N.Sra. Aparecida',tipo:'Feriado nacional'},{data:'2026-11-02',nome:'Finados',tipo:'Feriado nacional'},{data:'2026-11-15',nome:'Proclamação da República',tipo:'Feriado nacional'},{data:'2026-11-20',nome:'Consciência Negra',tipo:'Feriado nacional'},{data:'2026-12-08',nome:'N.Sra. da Conceição',tipo:'Feriado municipal'},{data:'2026-12-25',nome:'Natal',tipo:'Feriado nacional'}];
 
@@ -1455,6 +1663,8 @@ function mudarSecao(id,el){
   if(id==='hoje')renderHoje();
   if(id==='registros'){document.getElementById('fil-mes').value=mesAtual();renderRegistros();}
   if(id==='banco')renderBanco();
+  if(id==='regularizacao')renderRegularizacao(false);
+  if(id==='escalas')renderEscalas();
   if(id==='justificativas')renderJustificativas();
   if(id==='espelho'){document.getElementById('esp-mes').value=mesAtual();renderFuncionarios();}
   if(id==='funcionarios')renderFuncionarios();

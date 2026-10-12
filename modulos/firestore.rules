@@ -279,6 +279,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ponto_sabado_correcoes: sábados corrigidos retroativamente (auditoria 1 doc por dia: antes/depois, critérios, autor). Só Admin SDK grava.
+    match /ponto_sabado_correcoes/{cid} {
+      allow read: if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow write: if false;
+    }
+
     // ── Coleção: espelhos ──────────────────────────────────────────────────────
 
     match /espelhos/{espelhoId} {

@@ -551,6 +551,10 @@ onAuthStateChanged(auth, async user => {
   }
   window._userEmail = user.email || '';
   window._userUid   = user.uid   || '';
+  // Sábados corrigidos (Fase 4.1): 1 leitura no login; erro/ausência ⇒ conjunto vazio (motor padrão)
+  window._sabCorr = getDocs(collection(db, 'ponto_sabado_correcoes')).then(cs => {
+    const m = {}; cs.docs.forEach(d => { const x = d.data(); if (x.ativa !== false && x.funcId && x.data) (m[x.funcId] = m[x.funcId] || {})[x.data] = true; }); return m;
+  }).catch(() => ({}));
   window._meuFuncId = (perfil && perfil.funcionarioId) || null;   // PONTO 2.0 F0 (P1-05): esconder ações sobre o próprio ponto (Rules são a autoridade)
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dashboard').style.display='flex';
@@ -591,7 +595,13 @@ function invalidarCache(...cols){for(const k of Object.keys(_fbCache))if(cols.so
 // PONTO 2.0 F0 (P0-02): telas e cálculos usam só registros efetivos; o substituído fica no Firestore (auditoria)
 const _efetivosSe=(c,data)=>c==='registros'?registrosEfetivos(data):data;
 async function fbGet(c){
-  return _cacheGet(c,async()=>{const s=await window._getDocs(col(c));return _efetivosSe(c,s.docs.map(d=>({id:d.id,...d.data()})));});
+  return _cacheGet(c,async()=>{
+    const s=await window._getDocs(col(c));const data=_efetivosSe(c,s.docs.map(d=>({id:d.id,...d.data()})));
+    if(c==='funcionarios'&&window._sabCorr){   // sábados corrigidos (auditados), carregados UMA vez no login; propriedade NÃO enumerável (nunca vaza ao salvar)
+      try{const m=await window._sabCorr;data.forEach(f=>Object.defineProperty(f,'sabadosCorrigidos',{value:m[f.id]||{},enumerable:false,configurable:true}));}catch(e){/* motor segue com a regra padrão */}
+    }
+    return data;
+  });
 }
 // consultas filtradas no servidor (mesma semântica dos filtros que as telas faziam em memória)
 function fbQuery(c,chave,filtros,ordem,lim){return _cacheGet(c+':'+chave,async()=>_efetivosSe(c,await window._qDocs(c,filtros,ordem,lim)));}

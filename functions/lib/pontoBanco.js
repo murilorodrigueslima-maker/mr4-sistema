@@ -50,7 +50,8 @@ async function carregarBanco(tx, store, funcId, hoje) {
   const mAtual = hoje.slice(0, 7), ms = M.mesesDoBanco(func.inicioBancoHoras, mAtual);
   if (!ms.length) throw new HttpsError('failed-precondition', 'SEM_DATA_DE_INICIO_DO_BANCO');       // nunca presume data
   const q = c => tx.get(store.collection(c).where('funcId', '==', funcId));
-  const [rg, jt, cr, es, lc] = await Promise.all([q('registros'), q('justificativas'), q('creditos_jornada'), q('espelhos'), q('banco_horas_lancamentos')]);
+  const [rg, jt, cr, es, lc, sc] = await Promise.all([q('registros'), q('justificativas'), q('creditos_jornada'), q('espelhos'), q('banco_horas_lancamentos'), q('ponto_sabado_correcoes')]);
+  func.sabadosCorrigidos = {}; sc.docs.forEach(d => { const x = d.data(); if (x.ativa !== false && x.data) func.sabadosCorrigidos[x.data] = true; });
   const regs = M.registrosEfetivos(rg.docs.map(d => ({ id: d.id, ...d.data() }))), just = jt.docs.map(d => ({ id: d.id, ...d.data() })), cred = cr.docs.map(d => ({ id: d.id, ...d.data() }));
   const esp = es.docs.map(d => ({ id: d.id, ...d.data() })), lf = lc.docs.map(d => ({ id: d.id, ...d.data() }));
   const dados = ms.map(m => ({ mes: m, regs: regs.filter(r => r.data && r.data.startsWith(m)), cred: cred.filter(c => c.data && c.data.startsWith(m)), just: just.filter(j => j.data && j.data.startsWith(m)) }));

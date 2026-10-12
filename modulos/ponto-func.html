@@ -1019,6 +1019,11 @@ onAuthStateChanged(auth, async user => {
     }
 
     window._funcAtivo = {id: funcSnap.id, ...funcSnap.data()};
+    try {   // sábados corrigidos (auditados) do PRÓPRIO funcionário; propriedade não enumerável
+      const cs = await getDocs(query(collection(db, 'ponto_sabado_correcoes'), where('funcId', '==', funcSnap.id)));
+      const m = {}; cs.docs.forEach(d => { const x = d.data(); if (x.ativa !== false && x.data) m[x.data] = true; });
+      Object.defineProperty(window._funcAtivo, 'sabadosCorrigidos', {value: m, enumerable: false, configurable: true});
+    } catch (e) { /* motor segue com a regra padrão */ }
     window.dispatchEvent(new Event('authReady'));
 
   } catch(e) {

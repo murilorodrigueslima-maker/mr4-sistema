@@ -268,7 +268,8 @@ function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
   const jornMin = (parseFloat(funcionario.jornada) || 8) * 60;
   const escalaMin = escalaDoDia(funcionario, dataStr, diaSemana);
   const jornadaDia = diaSemana === 0 ? 0 : escalaMin !== null ? escalaMin : diaSemana === 6 ? JORNADA_SABADO_MIN : jornMin;
-  const sabadoV2 = diaSemana === 6 && dataStr >= SABADO_V2_DESDE;
+  // Sábado corrigido: a partir do corte OU em dias explicitamente corrigidos e auditados (ponto_sabado_correcoes → funcionario.sabadosCorrigidos).
+  const sabadoV2 = diaSemana === 6 && (dataStr >= SABADO_V2_DESDE || !!(funcionario.sabadosCorrigidos && funcionario.sabadosCorrigidos[dataStr] === true));
 
   const efetivos = registrosEfetivos(regsDia);
   const batidas = {};

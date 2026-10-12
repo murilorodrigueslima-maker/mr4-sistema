@@ -26,6 +26,11 @@ describe('apuração (pura)', () => {
     const r = calc([venda({ nome_vendedor: 'Ademir Santos', vendedor_id: '555' }), venda({ nome_vendedor: 'qualquer coisa', vendedor_id: '948278' })]);
     expect(r.ademir.pedidosMes).toBe(1); expect(r.outros.pedidosMes).toBe(1); expect(r.qualidade.vendedoresNaoMapeados).toBe(1);
   });
+  test('responsável conhecido de "Outros" não conta como vendedor NÃO mapeado; id realmente desconhecido conta', () => {
+    const cfg = { ...CFG, outrosConhecidos: { '559684': 'Murilo' } };
+    const r = M.calcular({ vendas: [venda({ vendedor_id: '559684' }), venda({ vendedor_id: '999999' })], hojeStr: '2026-10-10', mes: '2026-10', cfg });
+    expect(r.outros.pedidosMes).toBe(2); expect(r.qualidade.vendedoresNaoMapeados).toBe(1);
+  });
   test('deduplicação por id (mesmo pedido em páginas diferentes) e conflito de valor vira divergência', () => {
     const a = venda({ id: '777', valor_total: '50.00' });
     const r = calc([a, { ...a }, venda()]);

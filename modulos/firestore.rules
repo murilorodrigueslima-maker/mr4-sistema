@@ -250,7 +250,8 @@ service cloud.firestore {
         (!('respondidoEm'       in resource.data) ||
          ('respondidoEm'       in request.resource.data &&
           resource.data.respondidoEm       == request.resource.data.respondidoEm));
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && resource.data.status == 'pendente' && naoEhProprioPonto(resource.data.funcId);
+      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && resource.data.status == 'pendente' && naoEhProprioPonto(resource.data.funcId) &&
+        !mesProtegido(resource.data.funcId, resource.data.get('data', ''));
     }
 
     // ── Coleção: creditos_jornada ──────────────────────────────────────────────

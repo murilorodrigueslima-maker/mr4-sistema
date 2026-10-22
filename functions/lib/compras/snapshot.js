@@ -13,6 +13,7 @@ const { calcularTudo, RULES_VERSION } = require('./motor');
 const { resumoCalibracao, resumoPolitica } = require('./calibracao');
 const { POLITICA_VIGENTE } = require('./politica');
 const Rent = require('./rentabilidade');
+const Forn = require('./fornecedores');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -201,7 +202,7 @@ function montarView(r, porId, custos, agora, hoje, financeiro = null, softLimitB
 /** O resumo é lido por quem tem o módulo estoque: a política publicada ali NÃO leva o bloco de rentabilidade (limiares de margem, fornecedores importados). */
 function semRentabilidade(politica) { if (!politica.profitability) return politica; const { profitability, ...resto } = politica; return resto; }   // 1.0/1.1: o próprio objeto (identidade preservada)
 
-function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = new Date(), estatisticas = {}, politica = POLITICA_VIGENTE, modo = 'FULL' }) {
+function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = new Date(), estatisticas = {}, politica = POLITICA_VIGENTE, modo = 'FULL', ultimoCompleto = null, nomesFornecedores = {} }) {
   const hoje = dataComercial(agora);
   const produtos = brutosProdutos.map(mapearProduto);
   const fatosVenda = brutosVendas.flatMap(fatosDeVenda);
@@ -236,6 +237,8 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
     operacional, custos,
     meta: { versao: RULES_VERSION, policy_version: r.policy_version, modo_sync: modo, ultima_sincronizacao_ok: agora.toISOString(), data_comercial: hoje, estatisticas: { ...estatisticas, duplicatas_de_linha: r.duplicatas } },
     snapshotEstoque: montarSnapshotEstoque(produtos, agora, politica),
+    // Fase B (vendas por fornecedor): agregados puros dos MESMOS fatos canônicos; ainda NÃO são gravados (persistência e Rules = Fase C)
+    fornecedores: Forn.montarFornecedores({ produtos, fatosVenda, fatosCompra, hoje, agora, modo, ultimoCompleto, nomes: nomesFornecedores, sync: politica.sync, config: politica.supplier_sales || Forn.DEFAULTS }),
     view: montarView(r, porId, custos, agora, hoje, financeiro, financeiro ? politica.profitability.view.soft_limit_bytes : null),
     base: { layout: layoutDaPolitica(politica), vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
   };

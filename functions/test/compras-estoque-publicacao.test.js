@@ -190,7 +190,8 @@ describe('TELA — verificações estáticas (compras.html)', () => {
   const js = html.slice(html.indexOf('<script type="module">'));
   test('lê SÓ a visão já processada + meta; nada de GestãoClick, base, blocos ou coleções inteiras no navegador', () => {
     const docs = [...js.matchAll(/doc\(db,\s*'([a-z0-9_]+)',\s*'([a-z0-9_]+)'\)/g)].map(m => m[1] + '/' + m[2]).sort();
-    expect(docs).toEqual(['compras_n0/meta', 'compras_n0_view/custos', 'compras_n0_view/sugestoes']);
+    // Fase C: a aba Fornecedores lê, sob demanda, os 2 documentos agregados da coleção PRÓPRIA compras_n0_fornecedores (unidades e valores; Rules distintas)
+    expect(docs).toEqual(['compras_n0/meta', 'compras_n0_fornecedores/unidades', 'compras_n0_fornecedores/valores', 'compras_n0_view/custos', 'compras_n0_view/sugestoes']);
     expect(js).not.toMatch(/gcQuery|collection\(|getDocs|compras_n0_base|compras_n0_produtos|compras_n0_custos|api\.gestaoclick/);
     // Agente de Compras (IA): ÚNICO callable permitido no navegador é o aiAgente (somente leitura; permissão e escopo no backend). Qualquer outro continua proibido.
     const chamadas = js.split('\n').filter(l => /httpsCallable\(/.test(l)); expect(chamadas.length).toBeGreaterThan(0); for (const l of chamadas) expect(l).toMatch(/'aiAgente'/);

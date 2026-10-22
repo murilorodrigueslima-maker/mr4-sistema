@@ -339,6 +339,37 @@ async function persistirSnapshot(db, snap, { runId, loteBytesMax = LOTE_BYTES_MA
     for (const d of (await db.collection(col).get()).docs) if (d.id.startsWith(pref) && Number(d.id.slice(pref.length)) >= n) await d.ref.delete();
   }
   snap.persistencia.limpeza_base = refNova ? await limparGeracoesSubstituidas(db, { substituidas, idsNovos, refNova, runId, quando }) : { removidos: 0, pendentes: 0 };
+  snap.persistencia.fornecedores = await persistirFornecedores(db, snap);   // por último e isolado: não altera nada do que foi gravado acima
+}
+
+// ── Vendas por fornecedor (Fase C): nomes e gravação ISOLADA ───────────────────────────────────────────────────────
+/** Nomes dos fornecedores. Só roda com supplier_sales.fetch_names=true (padrão FALSE). Qualquer falha ⇒ sem nomes (fallback "Fornecedor #id"), nunca derruba o sync. */
+async function lerNomesFornecedores({ cli, fetchMod, politica }) {
+  const cfg = politica.supplier_sales || Forn.DEFAULTS;
+  if (!cfg.fetch_names) return { nomes: {}, estatisticas: { ativo: false } };
+  try { const r = await fetchMod.buscarFornecedores(cli); return { nomes: r.nomes, estatisticas: { ativo: true, ok: true, ...r.estatisticas } }; }
+  catch (e) { return { nomes: {}, estatisticas: { ativo: true, ok: false, erro: String((e && (e.codigo || e.message)) || e).replace(/[A-Za-z0-9_\-]{24,}/g, '[REDACTED]').slice(0, 120) } }; }
+}
+/**
+ * Grava os dois documentos de vendas por fornecedor DEPOIS do snapshot principal e FORA da sua transação/lote: uma falha aqui
+ * (documento grande demais, rede, permissão) NUNCA desfaz nem atrasa o snapshot de Compras — só fica registrada em snap.persistencia.fornecedores.
+ * Unidades e valores vão em documentos distintos (Rules diferentes). Acima do limite, o detalhe por produto é retirado (resumo por fornecedor).
+ */
+async function persistirFornecedores(db, snap) {
+  const f = snap.fornecedores;
+  if (!f) return { gravado: false, motivo: 'SEM_AGREGADO' };
+  try {
+    const tam = d => Buffer.byteLength(JSON.stringify(d));
+    let docs = f.docs.map(([c, id, v]) => [c, id, v]), detalhe = true;
+    if (docs.some(d => tam(d[2]) > DOC_BYTES_MAX)) {
+      const semDetalhe = v => ({ ...v, detalhe_produtos: false, externos: v.externos.map(g => ({ ...g, produtos: [] })), internos: v.internos.map(g => ({ ...g, produtos: [] })), sem_fornecedor: { ...v.sem_fornecedor, produtos: [] }, itens_sem_produto: { ...v.itens_sem_produto, produtos: [] } });
+      docs = docs.map(([c, id, v]) => [c, id, semDetalhe(v)]); detalhe = false;
+      if (docs.some(d => tam(d[2]) > DOC_BYTES_MAX)) { const e = new Error('DOC_GRANDE_DEMAIS compras_n0_view/fornecedores'); e.codigo = 'DOC_GRANDE_DEMAIS'; throw e; }
+    }
+    for (const d of docs) if (temArrayAninhado(d[2])) { const e = new Error('DOC_INCOMPATIVEL_FIRESTORE ' + d[1]); e.codigo = 'DOC_INCOMPATIVEL_FIRESTORE'; throw e; }
+    const l = db.batch(); for (const [c, id, v] of docs) l.set(db.collection(c).doc(id), v); await l.commit();
+    return { gravado: true, detalhe_produtos: detalhe, bytes: docs.map(d => tam(d[2])) };
+  } catch (e) { return { gravado: false, erro: String(e.codigo || e.message).slice(0, 120) }; }
 }
 
 /**
@@ -402,7 +433,9 @@ async function executarSync({ cli, db, agora = new Date(), inicio = '2022-01-01'
     const pr = await fetchMod.buscarProdutos(cli);
     const ve = await fetchMod.buscarPorJanelas(cli, 'vendas', { inicio, fim: hoje });
     const co = await fetchMod.buscarPorJanelas(cli, 'compras', { inicio, fim: hoje });
-    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: ve.registros, brutosCompras: co.registros, agora, politica, modo: 'FULL', estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas } });
+    const nm = await lerNomesFornecedores({ cli, fetchMod, politica });
+    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: ve.registros, brutosCompras: co.registros, agora, politica, modo: 'FULL', nomesFornecedores: nm.nomes, estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas } });
+    snap.fornecedores.unidades.meta.nomes_fornecedores = nm.estatisticas;   // (mesmo objeto `meta` dos dois documentos)
     snap.meta.ultima_reconciliacao_completa = agora.toISOString();
     await persistirSnapshot(db, snap, { runId });
     return { ok: true, modo: 'FULL', snapshot: snap };
@@ -431,9 +464,11 @@ async function executarSyncIncremental({ cli, db, agora = new Date(), fetchMod =
     const co = await fetchMod.buscarPorJanelas(cli, 'compras', { inicio: plano.compras.inicio, fim: hoje, janelaAnterior: false, conferenciaGlobal: false });
     const mv = fetchMod.mesclarRegistros(base.vendas, ve.registros.map(compactarVenda));
     const mc = fetchMod.mesclarRegistros(base.compras, co.registros.map(compactarCompra));
-    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: mv.registros, brutosCompras: mc.registros, agora, politica, modo: 'INCREMENTAL',
+    const nm = await lerNomesFornecedores({ cli, fetchMod, politica });
+    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: mv.registros, brutosCompras: mc.registros, agora, politica, modo: 'INCREMENTAL', nomesFornecedores: nm.nomes, ultimoCompleto: metaAnterior.ultima_reconciliacao_completa || null,
       estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas, lookback_dias: plano.lookback_dias,
         mescla: { vendas: { inseridos: mv.inseridos, substituidos: mv.substituidos, ignorados: mv.ignorados }, compras: { inseridos: mc.inseridos, substituidos: mc.substituidos, ignorados: mc.ignorados } } } });
+    snap.fornecedores.unidades.meta.nomes_fornecedores = nm.estatisticas;
     const ultFull = metaAnterior.ultima_reconciliacao_completa || null;
     snap.meta.ultima_reconciliacao_completa = ultFull;
     snap.meta.reconciliacao_atrasada = !ultFull || (agora.getTime() - Date.parse(ultFull)) / 3600000 > politica.sync.full_overdue_after_hours;
@@ -485,4 +520,4 @@ function estimarArmazenamento({ produtos, bytesPorProduto, mudancasPorDia, anos,
   return { opcao_A_bytes: Math.round(a), opcao_B_bytes: Math.round(b), produtos_no_fim: n };
 }
 
-module.exports = { FORMATO_BASE, LAYOUT_BASE_V2, layoutDaPolitica, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };
+module.exports = { lerNomesFornecedores, persistirFornecedores, FORMATO_BASE, LAYOUT_BASE_V2, layoutDaPolitica, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };

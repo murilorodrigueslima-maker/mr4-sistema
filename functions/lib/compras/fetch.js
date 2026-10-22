@@ -99,6 +99,18 @@ async function buscarPorJanelas(cli, recurso, { inicio, fim, janelaAnterior = tr
   return { registros: [...porId.values()], estatisticas: { recurso, janelas: janelas.length, paginas, fetched, unique: porId.size, duplicates: fetched - porId.size, total_consulta_ampla: totalAmplo } };
 }
 
+/**
+ * Nomes dos fornecedores (id → nome). PREPARADO, NÃO ATIVO: '/fornecedores' NÃO está em RECURSOS_PERMITIDOS, então com o cliente de
+ * produção esta função falha com GET_ONLY_GUARD até que o gestor autorize (1) incluir o recurso na allowlist e (2) ligar
+ * supplier_sales.fetch_names. Devolve só id e nome — nunca CNPJ/CPF, contatos ou endereço.
+ */
+async function buscarFornecedores(cli) {
+  const r = await paginar(cli, '/fornecedores', 'fornecedores');
+  const nomes = {};
+  for (const f of r.itens) { const nome = String(f.nome || '').trim(); if (f.id != null && nome) nomes[String(f.id)] = nome; }
+  return { nomes, estatisticas: { recurso: 'fornecedores', paginas: r.paginas, fetched: r.itens.length, nomeados: Object.keys(nomes).length } };
+}
+
 async function buscarProdutos(cli) {
   const r = await paginar(cli, '/produtos', 'produtos');
   const porId = new Map(r.itens.map(p => [String(p.id), p]));
@@ -156,4 +168,4 @@ function estimarChamadas(registros, campoData, { inicio, fim }) {
   return { janelas: janelas.length, chamadas: chamadas + 1 };   // + consulta ampla de conferência
 }
 
-module.exports = { criarClienteGC, janelasMensais, paginar, buscarPorJanelas, buscarProdutos, planoIncremental, mesclarRegistros, analisarDefasagem, estimarChamadas, RECURSOS_PERMITIDOS, LIMITE };
+module.exports = { criarClienteGC, janelasMensais, paginar, buscarPorJanelas, buscarProdutos, buscarFornecedores, planoIncremental, mesclarRegistros, analisarDefasagem, estimarChamadas, RECURSOS_PERMITIDOS, LIMITE };

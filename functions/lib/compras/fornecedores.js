@@ -17,18 +17,20 @@
 //    centavos): a soma das parcelas é EXATAMENTE o desconto — sem sobra nem falta de centavo.
 //  • Fornecedor = ATRIBUIÇÃO GERENCIAL: o da última compra CONFIRMADA do produto (emissão, depois id da compra — mesmo desempate do
 //    motor). NÃO afirma a origem histórica do estoque vendido. Cada linha de venda pertence a UM só grupo (sem dupla contagem).
-//  • Grupos: externos · internos (ids configurados, ex.: compra própria/transferência) · "Sem fornecedor identificado".
+//  • Grupos (quatro, mutuamente exclusivos): externos · internos (ids configurados, ex.: compra própria/transferência) ·
+//    produtos sem fornecedor identificado · itens de venda sem produto cadastrado. Os dois últimos não geram sugestão de reposição.
 //    Os três fecham com o total elegível, calculado por um caminho independente (conciliação).
 
 const RULES_VERSION = 'FORN_V1';
 const SCHEMA_VERSION = 1;
-const DOC_UNIDADES = 'fornecedores', DOC_VALORES = 'fornecedores_valores';   // ids previstos em compras_n0_view (Fase C)
+const COLECAO = 'compras_n0_fornecedores', DOC_UNIDADES = 'unidades', DOC_VALORES = 'valores';   // coleção PRÓPRIA: nenhum documento nem regra existente de Compras é tocado
 
 // Parâmetros (futuramente administrados em Configurações, com permissão e auditoria — Fase D). Sobrescrevíveis por `config`.
 const DEFAULTS = Object.freeze({
   months: 3,
   internal_supplier_ids: Object.freeze(['2026204']),      // "MR4 DISTRIBUIDORA": compra própria / transferência interna (confirmado pelo gestor em 22/10/2026)
   attribution: 'LAST_CONFIRMED_PURCHASE',
+  fetch_names: false,                                      // true ⇒ o sync lê /fornecedores para trazer os nomes. DESLIGADO: /fornecedores não está na allowlist de produção (ativar exige autorização própria)
 });
 
 function validarConfig(c) {
@@ -37,6 +39,7 @@ function validarConfig(c) {
   if (!(Number.isInteger(c.months) && c.months >= 1 && c.months <= 12)) e.push('months deve ser inteiro entre 1 e 12');
   if (!Array.isArray(c.internal_supplier_ids) || c.internal_supplier_ids.some(x => typeof x !== 'string' || !x)) e.push('internal_supplier_ids deve ser lista de ids (texto)');
   if (c.attribution !== 'LAST_CONFIRMED_PURCHASE') e.push('attribution desconhecida');
+  if (typeof c.fetch_names !== 'boolean') e.push('fetch_names deve ser booleano');
   return e;
 }
 
@@ -148,7 +151,8 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   // ── agregação por grupo × produto ──────────────────────────────────────────────────────────────────────────
   const grupos = new Map();
   const grupoDe = pid => {
-    const sid = pid === SEM_PRODUTO ? null : (ultimo[pid] || null);
+    if (pid === SEM_PRODUTO) return { chave: 'ITENS_SEM_PRODUTO', tipo: 'ITENS_SEM_PRODUTO', supplier_id: null };
+    const sid = ultimo[pid] || null;
     if (!sid) return { chave: 'SEM_FORNECEDOR', tipo: 'SEM_FORNECEDOR', supplier_id: null };
     return internos.has(sid) ? { chave: 'INTERNO:' + sid, tipo: 'INTERNO', supplier_id: sid } : { chave: 'EXTERNO:' + sid, tipo: 'EXTERNO', supplier_id: sid };
   };
@@ -163,7 +167,7 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
     else if (e.balde === 'corrente') { pr.un_corrente += q; pr.liq_corrente += v; }
     else if (e.balde !== 'futuro') { pr.un[e.balde] += q; pr.liq[e.balde] += v; }
   }
-  if (!grupos.has('SEM_FORNECEDOR')) grupos.set('SEM_FORNECEDOR', { chave: 'SEM_FORNECEDOR', tipo: 'SEM_FORNECEDOR', supplier_id: null, produtos: new Map() });
+  for (const t of ['SEM_FORNECEDOR', 'ITENS_SEM_PRODUTO']) if (!grupos.has(t)) grupos.set(t, { chave: t, tipo: t, supplier_id: null, produtos: new Map() });
 
   // ── totais pelo caminho INDEPENDENTE (direto das linhas elegíveis, sem passar pelos grupos) ───────────────────
   const tot = { un: arr(N), liq: arr(N), un_corrente: 0, liq_corrente: 0, res_un: 0, res_liq: 0, produtos: new Set() };
@@ -182,7 +186,8 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   }
 
   // ── montagem dos documentos ────────────────────────────────────────────────────────────────────────────────
-  const nomeDe = g => g.tipo === 'SEM_FORNECEDOR' ? { nome: 'Sem fornecedor identificado', nome_origem: 'ROTULO_FIXO' }
+  const nomeDe = g => g.tipo === 'SEM_FORNECEDOR' ? { nome: 'Produtos sem fornecedor identificado', nome_origem: 'ROTULO_FIXO' }
+    : g.tipo === 'ITENS_SEM_PRODUTO' ? { nome: 'Itens de venda sem produto cadastrado', nome_origem: 'ROTULO_FIXO' }
     : (nomes[g.supplier_id] ? { nome: nomes[g.supplier_id], nome_origem: 'GESTAOCLICK' } : { nome: 'Fornecedor #' + g.supplier_id, nome_origem: 'FALLBACK_ID' });
   const lista = [...grupos.values()].map(g => {
     const prods = [...g.produtos.entries()].map(([pid, v]) => ({ pid, v, info: porProduto[pid] || null }));
@@ -195,8 +200,10 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   const ordenar = (a, b) => (somar(b.un) - somar(a.un)) || String(a.g.chave).localeCompare(String(b.g.chave));
   const ordProd = (a, b) => (somar(b.v.un) - somar(a.v.un)) || String(a.pid).localeCompare(String(b.pid));
 
+  // Itens sem identificação confiável NUNCA geram sugestão automática de reposição (decisão do gestor, 22/10/2026). Nesta fase não há sugestão nenhuma.
+  const reposicao = t => t === 'EXTERNO' ? { elegivel: true, motivo: null } : t === 'INTERNO' ? { elegivel: false, motivo: 'ORIGEM_INTERNA_NAO_AVALIADA' } : { elegivel: false, motivo: t === 'ITENS_SEM_PRODUTO' ? 'ITEM_SEM_PRODUTO_CADASTRADO' : 'SEM_FORNECEDOR_IDENTIFICADO' };
   const gUn = L => ({
-    chave: L.g.chave, tipo: L.g.tipo, fornecedor_id: L.g.supplier_id, nome: L.nome, nome_origem: L.nome_origem,
+    chave: L.g.chave, tipo: L.g.tipo, fornecedor_id: L.g.supplier_id, nome: L.nome, nome_origem: L.nome_origem, reposicao: reposicao(L.g.tipo),
     un: L.un, soma: somar(L.un), media: r2(somar(L.un) / N), mes_corrente: L.unC,
     reservado: { un: L.resUn, mes_corrente: L.resUnC, futuro: L.resUnF, total: somar(L.resUn) + L.resUnC + L.resUnF },
     produtos_vendidos: L.vendidos,
@@ -213,7 +220,7 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
     reservado_liq_cents: { por_mes: L.resLiq, mes_corrente: L.resLiqC, futuro: L.resLiqF, total: somar(L.resLiq) + L.resLiqC + L.resLiqF },
     produtos: Object.fromEntries(L.prods.map(({ pid, v }) => [pid, { liq_cents: v.liq, soma_cents: somar(v.liq), media_cents: Math.round(somar(v.liq) / N), mes_corrente_cents: v.liq_corrente, reservado_liq_cents: somar(v.res_liq) + v.res_liq_corrente + v.res_liq_futuro }])),
   });
-  const externos = lista.filter(L => L.g.tipo === 'EXTERNO').sort(ordenar), internosL = lista.filter(L => L.g.tipo === 'INTERNO').sort(ordenar), sem = lista.find(L => L.g.tipo === 'SEM_FORNECEDOR');
+  const externos = lista.filter(L => L.g.tipo === 'EXTERNO').sort(ordenar), internosL = lista.filter(L => L.g.tipo === 'INTERNO').sort(ordenar), sem = lista.find(L => L.g.tipo === 'SEM_FORNECEDOR'), semProduto = lista.find(L => L.g.tipo === 'ITENS_SEM_PRODUTO');
 
   // ── conciliação: Σ grupos × total elegível independente ─────────────────────────────────────────────────────
   const somaGrupos = { un: arr(N), liq: arr(N), un_corrente: 0, liq_corrente: 0 };
@@ -252,7 +259,7 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   const unidades = {
     ...{ schema_version: SCHEMA_VERSION, rules_version: RULES_VERSION, tipo: 'UNIDADES' }, periodo, meta, aviso: avisoSugestao,
     totais: { un: tot.un, soma: somar(tot.un), media: r2(somar(tot.un) / N), mes_corrente: tot.un_corrente, reservado: tot.res_un, produtos_vendidos: tot.produtos.size },
-    externos: externos.map(gUn), internos: internosL.map(gUn), sem_fornecedor: gUn(sem),
+    externos: externos.map(gUn), internos: internosL.map(gUn), sem_fornecedor: gUn(sem), itens_sem_produto: gUn(semProduto),
     excluidas: excl, qualidade, rateio_aplicado: { pedidos: rateio.pedidos, pedidos_com_desconto: rateio.pedidos_com_desconto },
     conciliacao: { fecha, unidades: concUn },
   };
@@ -260,11 +267,11 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
     ...{ schema_version: SCHEMA_VERSION, rules_version: RULES_VERSION, tipo: 'VALORES' }, periodo, meta, moeda: 'BRL', unidade_monetaria: 'centavos',
     base: 'faturamento líquido de PRODUTOS (valor da linha − rateio do desconto do pedido); sem frete e sem serviços',
     totais: { liq_cents: tot.liq, soma_cents: somar(tot.liq), media_cents: Math.round(somar(tot.liq) / N), mes_corrente_cents: tot.liq_corrente, reservado_liq_cents: tot.res_liq },
-    externos: externos.map(gVal), internos: internosL.map(gVal), sem_fornecedor: gVal(sem),
+    externos: externos.map(gVal), internos: internosL.map(gVal), sem_fornecedor: gVal(sem), itens_sem_produto: gVal(semProduto),
     rateio,
     conciliacao: { fecha, valores: concVal },
   };
-  return { unidades, valores, docs: [['compras_n0_view', DOC_UNIDADES, unidades], ['compras_n0_view', DOC_VALORES, valores]] };
+  return { unidades, valores, docs: [[COLECAO, DOC_UNIDADES, unidades], [COLECAO, DOC_VALORES, valores]] };
 }
 
-module.exports = { SEM_PRODUTO, RULES_VERSION, SCHEMA_VERSION, DOC_UNIDADES, DOC_VALORES, DEFAULTS, validarConfig, periodoDe, somarMeses, ratearDesconto, mapaFornecedores, montarFornecedores };
+module.exports = { COLECAO, SEM_PRODUTO, RULES_VERSION, SCHEMA_VERSION, DOC_UNIDADES, DOC_VALORES, DEFAULTS, validarConfig, periodoDe, somarMeses, ratearDesconto, mapaFornecedores, montarFornecedores };

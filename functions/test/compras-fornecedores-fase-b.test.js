@@ -26,9 +26,9 @@ function compra(data, itens, o = {}) {
 }
 const fatosV = vs => vs.flatMap(K.fatosDeVenda), fatosC = cs => cs.flatMap(K.fatosDeCompra);
 const rodar = (vs, cs, o = {}) => F.montarFornecedores({ produtos: [], fatosVenda: fatosV(vs), fatosCompra: fatosC(cs), hoje: HOJE, agora: AGORA, modo: 'FULL', sync: POLITICA_VIGENTE.sync, ...o });
-const todos = r => [...r.unidades.externos, ...r.unidades.internos, r.unidades.sem_fornecedor];
+const todos = r => [...r.unidades.externos, ...r.unidades.internos, r.unidades.sem_fornecedor, r.unidades.itens_sem_produto];
 const grupo = (r, chave) => todos(r).find(g => g.chave === chave);
-const valGrupo = (r, chave) => [...r.valores.externos, ...r.valores.internos, r.valores.sem_fornecedor].find(g => g.chave === chave);
+const valGrupo = (r, chave) => [...r.valores.externos, ...r.valores.internos, r.valores.sem_fornecedor, r.valores.itens_sem_produto].find(g => g.chave === chave);
 const compras0 = [compra('2026-01-10', ['P1', 'P2']), compra('2026-01-11', ['P3'], { f: 'F2' })];
 
 describe('Período: três meses civis completos + mês corrente separado (America/Fortaleza)', () => {
@@ -57,6 +57,7 @@ describe('Período: três meses civis completos + mês corrente separado (Americ
     expect(() => rodar([], [], { config: { ...F.DEFAULTS, months: 0 } })).toThrow(/FORNECEDORES_CONFIG_INVALIDA/);
     expect(() => rodar([], [], { config: { ...F.DEFAULTS, internal_supplier_ids: [1] } })).toThrow(/FORNECEDORES_CONFIG_INVALIDA/);
     expect(F.validarConfig(F.DEFAULTS)).toEqual([]);
+    expect(F.validarConfig({ ...F.DEFAULTS, fetch_names: 'sim' })).toEqual(['fetch_names deve ser booleano']); expect(F.DEFAULTS.fetch_names).toBe(false);
   });
 });
 
@@ -80,7 +81,8 @@ describe('Médias, meses zerados e mês corrente', () => {
   });
   test('fornecedor sem nenhuma venda no período não aparece; grupo "Sem fornecedor" sempre existe (zerado)', () => {
     const r3 = rodar([], compras0);
-    expect(r3.unidades.externos).toEqual([]); expect(r3.unidades.sem_fornecedor).toMatchObject({ chave: 'SEM_FORNECEDOR', un: [0, 0, 0], soma: 0, nome: 'Sem fornecedor identificado' });
+    expect(r3.unidades.externos).toEqual([]); expect(r3.unidades.sem_fornecedor).toMatchObject({ chave: 'SEM_FORNECEDOR', un: [0, 0, 0], soma: 0, nome: 'Produtos sem fornecedor identificado' });
+    expect(r3.unidades.itens_sem_produto).toMatchObject({ chave: 'ITENS_SEM_PRODUTO', un: [0, 0, 0], soma: 0 });
     expect(r3.unidades.conciliacao.fecha).toBe(true);
   });
 });
@@ -204,22 +206,27 @@ describe('Origem interna e "Sem fornecedor identificado"', () => {
     expect(r.unidades.externos.map(g => g.chave)).toEqual(['EXTERNO:F1']);
     expect(r.unidades.totais.soma).toBe(14);
   });
-  test('produto sem compra confirmada e item de venda sem produto cadastrado → "Sem fornecedor identificado"', () => {
-    expect(r.unidades.sem_fornecedor.soma).toBe(5);
-    expect(r.unidades.sem_fornecedor.produtos.map(p => [p.id, p.soma])).toEqual([['__SEM_PRODUTO__', 3], ['PZ', 2]]);
-    expect(r.unidades.sem_fornecedor.produtos[0].nome).toBe('Item sem produto cadastrado');
-    expect(r.unidades.sem_fornecedor.produtos_vendidos).toBe(1);                     // o item sem produto não conta como "produto"
+  test('produto sem compra confirmada e item de venda sem produto cadastrado são grupos SEPARADOS e sem reposição automática', () => {
+    expect(r.unidades.sem_fornecedor.soma).toBe(2);
+    expect(r.unidades.sem_fornecedor.produtos.map(p => [p.id, p.soma])).toEqual([['PZ', 2]]);
+    expect(r.unidades.itens_sem_produto.soma).toBe(3);
+    expect(r.unidades.itens_sem_produto.produtos.map(p => [p.id, p.soma])).toEqual([['__SEM_PRODUTO__', 3]]);
+    expect(r.unidades.itens_sem_produto.produtos[0].nome).toBe('Item sem produto cadastrado');
+    expect(r.unidades.itens_sem_produto.produtos_vendidos).toBe(0);                  // o item sem produto não conta como "produto"
+    expect(r.unidades.sem_fornecedor.reposicao).toEqual({ elegivel: false, motivo: 'SEM_FORNECEDOR_IDENTIFICADO' });
+    expect(r.unidades.itens_sem_produto.reposicao).toEqual({ elegivel: false, motivo: 'ITEM_SEM_PRODUTO_CADASTRADO' });
+    expect(r.unidades.internos[0].reposicao.elegivel).toBe(false); expect(r.unidades.externos[0].reposicao).toEqual({ elegivel: true, motivo: null });
     expect(r.unidades.qualidade).toEqual({ linhas_sem_produto: 1, unidades_sem_produto_concluidas: 3 });
     expect(r.unidades.meta.limitacoes).toContain('ITENS_DE_VENDA_SEM_PRODUTO_CADASTRADO');
   });
   test('uma compra com produto_id vazio nunca atribui fornecedor a itens de venda sem produto (regressão Fase A)', () => {
     const r2 = rodar([venda('2026-08-10', [['', 7, 70]])], [compra('2026-05-01', [''], { f: 'F1' })]);
-    expect(r2.unidades.externos).toEqual([]); expect(r2.unidades.sem_fornecedor.soma).toBe(7);
+    expect(r2.unidades.externos).toEqual([]); expect(r2.unidades.itens_sem_produto.soma).toBe(7); expect(r2.unidades.sem_fornecedor.soma).toBe(0);
   });
   test('Σ externos + internos + sem fornecedor = total elegível (unidades e R$)', () => {
     const soma = k => todos(r).reduce((s, g) => s + g[k], 0);
     expect(soma('soma')).toBe(r.unidades.totais.soma);
-    expect([...r.valores.externos, ...r.valores.internos, r.valores.sem_fornecedor].reduce((s, g) => s + g.soma_cents, 0)).toBe(r.valores.totais.soma_cents);
+    expect([...r.valores.externos, ...r.valores.internos, r.valores.sem_fornecedor, r.valores.itens_sem_produto].reduce((s, g) => s + g.soma_cents, 0)).toBe(r.valores.totais.soma_cents);
   });
   test('ids internos vêm da configuração, não do código', () => {
     const r3 = rodar(vs, cs, { config: { ...F.DEFAULTS, internal_supplier_ids: ['F1'] } });
@@ -283,7 +290,7 @@ describe('Valores em R$ ficam só no documento do gestor (separação no backend
     expect(Number.isInteger(r.valores.totais.soma_cents)).toBe(true);
   });
   test('docs prontos para gravar (ainda NÃO gravados) com ids distintos para permissões distintas', () => {
-    expect(r.docs.map(d => d.slice(0, 2).join('/'))).toEqual(['compras_n0_view/fornecedores', 'compras_n0_view/fornecedores_valores']);
+    expect(r.docs.map(d => d.slice(0, 2).join('/'))).toEqual(['compras_n0_fornecedores/unidades', 'compras_n0_fornecedores/valores']);
   });
 });
 
@@ -324,7 +331,7 @@ describe('Determinismo, pureza e integração com o snapshot', () => {
   test('o módulo é puro: não toca rede, Firestore, relógio nem variáveis de ambiente', () => {
     const src = fs.readFileSync(path.join(__dirname, '../lib/compras/fornecedores.js'), 'utf8').replace(/\/\/.*$/gm, '');
     expect(src).not.toMatch(/require\((['"])(?!\.\/canonico)/);
-    expect(src).not.toMatch(/fetch|firestore|firebase|process\.env|Date\.now|new Date\(\)|console\.|gestaoclick\.com/i);
+    expect(src).not.toMatch(/\bfetch\s*\(|firestore|firebase|process\.env|Date\.now|new Date\(\)|console\.|gestaoclick\.com/i);
   });
   test('montarSnapshot produz `fornecedores` dos mesmos fatos e NÃO muda o resto do snapshot (view, resumo, operacional, custos, meta idênticos)', () => {
     const c = X.cenario();
@@ -333,10 +340,6 @@ describe('Determinismo, pureza e integração com o snapshot', () => {
     expect(fornecedores.unidades.tipo).toBe('UNIDADES'); expect(fornecedores.unidades.conciliacao.fecha).toBe(true); expect(fornecedores.valores.conciliacao.fecha).toBe(true);
     expect(Object.keys(resto).sort()).toEqual(['base', 'custos', 'meta', 'operacional', 'resumo', 'snapshotEstoque', 'view']);
     expect(fornecedores.unidades.periodo.mes_corrente).toBe(X.HOJE.slice(0, 7));
-  });
-  test('a gravação do sync NÃO inclui os documentos de fornecedores nesta fase (persistência e Rules ficam para a Fase C)', () => {
-    const src = fs.readFileSync(path.join(__dirname, '../lib/compras/snapshot.js'), 'utf8');
-    expect(src).not.toMatch(/compras_n0_view', 'fornecedores|DOC_UNIDADES|DOC_VALORES|snap\.fornecedores/);
   });
 });
 

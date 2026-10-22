@@ -36,6 +36,7 @@ beforeAll(async () => {
     await db.doc('compras_n0_fornecedores/unidades').set(JSON.parse(JSON.stringify(DOCS.unidades)));
     await db.doc('compras_n0_fornecedores/valores').set(JSON.parse(JSON.stringify(DOCS.valores)));
     await db.doc('compras_n0_fornecedores/outro').set({ fixture: true });
+    await db.doc('compras_n0_fornecedores/nomes').set({ versao: 1, fornecedores: { F1: { nome: 'CACHE DE NOMES (só Admin SDK)', ativo: true } } });
   });
 });
 afterAll(async () => { await env.clearFirestore(); await env.cleanup(); });
@@ -68,6 +69,11 @@ describe('Vendas por fornecedor — matriz de permissões (backend)', () => {
     for (const uid of ['admin', 'gestorComEstoque', 'funcComEstoque']) {
       await assertFails(ref(uid, 'unidades').set({ x: 1 })); await assertFails(ref(uid, 'valores').update({ 'totais.soma_cents': 1 })); await assertFails(ref(uid, 'valores').delete()); await assertFails(ref(uid, 'novo').set({ x: 1 }));
     }
+  });
+  test('Fase C.2: o CACHE DE NOMES (compras_n0_fornecedores/nomes) não é legível nem gravável por NENHUM perfil — só o backend (Admin SDK)', async () => {
+    for (const uid of Object.keys(PERFIS)) await assertFails(ref(uid, 'nomes').get());
+    await assertFails(env.unauthenticatedContext().firestore().doc('compras_n0_fornecedores/nomes').get());
+    for (const uid of ['admin', 'gestorComEstoque']) { await assertFails(ref(uid, 'nomes').set({ x: 1 })); await assertFails(ref(uid, 'nomes').delete()); }
   });
   test('as regras existentes de Compras continuam como estavam (custos/tela/execuções)', async () => {
     await env.withSecurityRulesDisabled(async c => { const db = c.firestore(); for (const d of ['compras_n0_view/sugestoes', 'compras_n0_view/custos', 'compras_n0_runs/r1']) await db.doc(d).set({ fixture: true }); await db.doc('compras_n0_custos/bloco_000').set({ fixture: true }); });

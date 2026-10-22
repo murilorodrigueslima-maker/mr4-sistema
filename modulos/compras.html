@@ -650,7 +650,8 @@ const LIMITACAO_TXT = {
   DEVOLUCAO_REGISTRADA_COMO_CANCELAMENTO_DA_VENDA_ORIGINAL: 'Devoluções são lançadas cancelando a venda original; vendas canceladas ficam fora dos números.',
   CANCELAMENTO_POSTERIOR_SO_REFLETE_NO_SYNC_COMPLETO: 'Um cancelamento feito depois da venda só aparece após o próximo sincronismo completo.',
   FRETE_E_SERVICOS_FORA_DO_FATURAMENTO: 'O faturamento considera só produtos, líquido do desconto do pedido (sem frete e sem serviços).',
-  NOMES_DE_FORNECEDOR_AUSENTES: 'Nomes de fornecedor ainda não sincronizados: exibindo o código do fornecedor.',
+  NOMES_DE_FORNECEDOR_AUSENTES: 'Alguns fornecedores ainda não têm nome sincronizado: exibindo o código do fornecedor.',
+  NOMES_DE_FORNECEDOR_DESATUALIZADOS: 'Os nomes dos fornecedores estão desatualizados: a última leitura do cadastro falhou ou é antiga. Os nomes exibidos são os últimos conhecidos; os números de vendas não são afetados.',
   ITENS_DE_VENDA_SEM_PRODUTO_CADASTRADO: 'Há itens de venda sem produto cadastrado; ficam num grupo próprio.',
   PEDIDOS_COM_BASE_DE_RATEIO_DIVERGENTE: 'Alguns pedidos têm total de produtos diferente da soma dos itens; o rateio usou a soma dos itens.',
   CONCILIACAO_NAO_FECHA: 'ATENÇÃO: a soma dos grupos não fecha com o total de vendas — não use estes números.' };
@@ -675,7 +676,7 @@ const fRot = { todos: 'Todos', ext: 'Externos', int: 'Origem interna', sem: 'Sem
 
 function fornFiltrado() {
   const q = FORN.busca.trim().toLowerCase();
-  let lista = fGrupos().filter(([g, k]) => (FORN.grupo === 'todos' || FORN.grupo === k) && (!q || String(g.nome || '').toLowerCase().includes(q) || String(g.fornecedor_id || '').toLowerCase().includes(q)));
+  let lista = fGrupos().filter(([g, k]) => (FORN.grupo === 'todos' || FORN.grupo === k) && (!q || String(g.nome || '').toLowerCase().includes(q) || String(g.nome_anterior || '').toLowerCase().includes(q) || String(g.fornecedor_id || '').toLowerCase().includes(q)));
   const chave = { media: g => g.media, mes: g => g.mes_corrente, nome: null, rs: g => ((fVal(g.chave) || {}).media_cents ?? -1) }[FORN.ordem];
   const ordem = { ext: 0, int: 1, sem: 2, isp: 3 };
   return lista.sort(([a, ka], [b, kb]) => (ordem[ka] - ordem[kb]) || (chave ? (chave(b) - chave(a)) : String(a.nome).localeCompare(String(b.nome), 'pt-BR')) || String(a.chave).localeCompare(String(b.chave)));
@@ -692,6 +693,9 @@ function renderFornecedores() {
   const alertas = [];
   if (st !== 'OK') alertas.push(['fail', `<b>Dados ${st === 'DESATUALIZADA' ? 'desatualizados' : st === 'PARCIAL' ? 'parciais' : 'sem confirmação de atualização'}.</b> ${esc(STATUS_TXT[st] || '')} Não tome decisão de compra com base nestes números sem conferir.`]);
   if (atraso) alertas.push(['warn', `<b>Visão desatualizada${idadeH !== null ? ` há ${Math.floor(idadeH)} h` : ''}.</b> O limite é ${fmt(limite)} h desde a última geração.`]);
+  const nm = m.nomes_fornecedores || null, nmIdade = nm && nm.atualizado_em ? (Date.now() - Date.parse(nm.atualizado_em)) / 3600000 : null;
+  const nomesVelhos = !!nm && nm.ativo !== false && ((m.limitacoes || []).includes('NOMES_DE_FORNECEDOR_DESATUALIZADOS') || (nmIdade !== null && nm.stale_after_hours != null && nmIdade > nm.stale_after_hours));
+  if (nomesVelhos) alertas.push(['warn', `<b>Nomes de fornecedores desatualizados${nm.atualizado_em ? ` desde ${esc(dataHora(nm.atualizado_em))}` : ''}.</b> Exibindo os últimos nomes conhecidos; os números de vendas não são afetados.`]);
   const lim = (m.limitacoes || []).filter(k => k === 'CONCILIACAO_NAO_FECHA');
   lim.forEach(k => alertas.push(['fail', esc(LIMITACAO_TXT[k])]));
   const nomesFalta = (m.limitacoes || []).includes('NOMES_DE_FORNECEDOR_AUSENTES');
@@ -701,7 +705,7 @@ function renderFornecedores() {
     <div class="forn-nota"><b>Atribuição gerencial.</b> ${esc((m.atribuicao || {}).aviso || 'Cada produto é associado ao fornecedor da última compra confirmada; isso não representa a origem histórica exata do estoque vendido.')}
       Vendas canceladas (inclui devoluções) estão fora. Vendas reservadas aparecem à parte e não entram na média.</div>
     <div class="forn-sync"><span class="fresh ${st === 'OK' && !atraso ? 'ok' : st === 'DESATUALIZADA' ? 'fail' : 'stale'}">${st === 'OK' && !atraso ? 'Atualizado' : 'Atenção aos dados'}</span>
-      <span>Último sincronismo completo: <b>${esc(dataHora(m.ultimo_sync_completo))}</b></span><span>· gerado em ${esc(dataHora(m.gerado_em))}</span><span>· ${m.modo_sync === 'FULL' ? 'sincronismo completo' : 'atualização parcial sobre o completo'}</span></div>
+      <span>Último sincronismo completo: <b>${esc(dataHora(m.ultimo_sync_completo))}</b></span><span>· gerado em ${esc(dataHora(m.gerado_em))}</span><span>· ${m.modo_sync === 'FULL' ? 'sincronismo completo' : 'atualização parcial sobre o completo'}</span>${nm && nm.atualizado_em ? `<span>· nomes de fornecedores atualizados em ${esc(dataHora(nm.atualizado_em))}</span>` : ''}</div>
     <div class="forn-chips">
       ${chip('Unidades vendidas', fmt(t.soma), `${mesRot(meses[0])} a ${mesRot(meses[meses.length - 1])}`)}
       ${chip('Média mensal', fmt(t.media), 'unidades por mês')}
@@ -720,7 +724,7 @@ function renderFornecedores() {
   for (const [g, k] of lista) {
     if (k !== ultimaSecao) { corpo += `<div class="fsec">${esc(fSecao[k])}</div>`; ultimaSecao = k; }
     const v = fVal(g.chave), aberto = FORN.sel === g.chave;
-    const sub = [g.nome_origem === 'FALLBACK_ID' ? '<span class="bd at">NOME INDISPONÍVEL</span>' : '', k === 'int' ? '<span class="bd int">ORIGEM INTERNA</span>' : '', (k === 'sem' || k === 'isp') ? '<span class="bd sem">SEM SUGESTÃO AUTOMÁTICA</span>' : '',
+    const sub = [g.nome_origem === 'FALLBACK_ID' ? '<span class="bd at">NOME INDISPONÍVEL</span>' : '', g.inativo ? '<span class="bd sem">FORNECEDOR INATIVO</span>' : '', g.nome_ausente_na_api ? '<span class="bd at">AUSENTE NO CADASTRO ATUAL · ÚLTIMO NOME CONHECIDO</span>' : '', g.nome_anterior ? `<span class="bd at">RENOMEADO · ANTES: ${esc(g.nome_anterior)}</span>` : '', k === 'int' ? '<span class="bd int">ORIGEM INTERNA</span>' : '', (k === 'sem' || k === 'isp') ? '<span class="bd sem">SEM SUGESTÃO AUTOMÁTICA</span>' : '',
       g.reservado.total > 0 ? `<span class="bd at">RESERVADO: ${fmt(g.reservado.total)} un (fora da média)</span>` : ''].join('');
     corpo += `<div class="${cls} item${aberto ? ' sel' : ''}" data-forn="${esc(g.chave)}" role="button" tabindex="0" aria-expanded="${aberto}"><div class="fn"><div class="nome">${esc(g.nome)}</div>${sub ? `<div class="badges">${sub}</div>` : ''}</div>${celulas(g, v)}</div>`;
     if (aberto) corpo += detalheForn(g, v, val);
@@ -731,7 +735,7 @@ function renderFornecedores() {
   const ex = u.excluidas || {};
   const rodape = `<div class="forn-rodape"><b>Conferência:</b> ${fecha ? '✓ a soma de externos + origem interna + sem fornecedor + itens sem produto fecha com o total de vendas elegíveis (unidades' + (val ? ' e R$' : '') + ').' : '✗ a soma dos grupos NÃO fecha com o total — não use estes números.'}
     <br><b>Fora dos números:</b> canceladas/devoluções ${fmt((ex.cancelada || {}).unidades || 0)} un · sem baixa de estoque ${fmt((ex.sem_baixa_de_estoque || {}).unidades || 0)} un · concluídas com data futura ${fmt((ex.concluida_data_futura || {}).unidades || 0)} un · reservadas ${fmt(t.reservado)} un (identificadas à parte).
-    <ul>${(m.limitacoes || []).filter(k => LIMITACAO_TXT[k] && k !== 'CONCILIACAO_NAO_FECHA' && !(k === 'NOMES_DE_FORNECEDOR_AUSENTES' && !nomesFalta)).map(k => `<li>${esc(LIMITACAO_TXT[k])}</li>`).join('')}</ul>
+    <ul>${(m.limitacoes || []).filter(k => LIMITACAO_TXT[k] && k !== 'CONCILIACAO_NAO_FECHA' && !(k === 'NOMES_DE_FORNECEDOR_AUSENTES' && !nomesFalta) && k !== 'NOMES_DE_FORNECEDOR_DESATUALIZADOS').map(k => `<li>${esc(LIMITACAO_TXT[k])}</li>`).join('')}</ul>
     ${val ? '' : '<br>Os valores financeiros ficam disponíveis apenas ao perfil gestor autorizado.'}</div>`;
   box.innerHTML = cabecalho + filtros + `<div class="lista">${cab}${corpo}${total}</div>` + rodape;
   ligarForn(box);

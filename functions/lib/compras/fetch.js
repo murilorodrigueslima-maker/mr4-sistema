@@ -4,7 +4,7 @@
 // por data (venda / emissão) com data_inicio/data_fim; /compras vem embrulhado em {Compra:{...}}.
 // Estratégia: janelas mensais + paginação até o fim + conferência (únicos == total_registros) + deduplicação por ID.
 const BASE = 'https://api.gestaoclick.com';
-const RECURSOS_PERMITIDOS = ['/produtos', '/vendas', '/compras', '/situacoes_vendas', '/situacoes_compras'];
+const RECURSOS_PERMITIDOS = ['/produtos', '/vendas', '/compras', '/situacoes_vendas', '/situacoes_compras', '/fornecedores'];   // '/fornecedores' (Fase C.2): só nomes, 1 leitura por sync COMPLETO; o restante do sync não depende dele
 const LIMITE = 100;
 
 function criarClienteGC({ fetchImpl, accessToken, secretToken, pausaMs = 300, timeoutMs = 60000, tentativas = 3, dormir }) {
@@ -100,15 +100,13 @@ async function buscarPorJanelas(cli, recurso, { inicio, fim, janelaAnterior = tr
 }
 
 /**
- * Nomes dos fornecedores (id → nome). PREPARADO, NÃO ATIVO: '/fornecedores' NÃO está em RECURSOS_PERMITIDOS, então com o cliente de
- * produção esta função falha com GET_ONLY_GUARD até que o gestor autorize (1) incluir o recurso na allowlist e (2) ligar
- * supplier_sales.fetch_names. Devolve só id e nome — nunca CNPJ/CPF, contatos ou endereço.
+ * Fornecedores (Fase C.2) — SOMENTE id, nome e situação (ativo); nunca CNPJ/CPF, contatos ou endereço. Paginação conferida
+ * (únicos == total_registros); a normalização, o cache e a tolerância a falhas ficam em nomesFornecedores.js e snapshot.js.
  */
 async function buscarFornecedores(cli) {
   const r = await paginar(cli, '/fornecedores', 'fornecedores');
-  const nomes = {};
-  for (const f of r.itens) { const nome = String(f.nome || '').trim(); if (f.id != null && nome) nomes[String(f.id)] = nome; }
-  return { nomes, estatisticas: { recurso: 'fornecedores', paginas: r.paginas, fetched: r.itens.length, nomeados: Object.keys(nomes).length } };
+  const registros = r.itens.map(f => ({ id: f.id, nome: f.nome, ativo: f.ativo }));
+  return { registros, estatisticas: { recurso: 'fornecedores', paginas: r.paginas, fetched: r.itens.length } };
 }
 
 async function buscarProdutos(cli) {

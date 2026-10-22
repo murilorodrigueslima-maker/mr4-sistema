@@ -30,7 +30,9 @@ const DEFAULTS = Object.freeze({
   months: 3,
   internal_supplier_ids: Object.freeze(['2026204']),      // "MR4 DISTRIBUIDORA": compra própria / transferência interna (confirmado pelo gestor em 22/10/2026)
   attribution: 'LAST_CONFIRMED_PURCHASE',
-  fetch_names: false,                                      // true ⇒ o sync lê /fornecedores para trazer os nomes. DESLIGADO: /fornecedores não está na allowlist de produção (ativar exige autorização própria)
+  fetch_names: true,                                       // o sync COMPLETO lê /fornecedores (1 GET) e atualiza o cache de nomes; false = só usa o cache (chave de desligamento)
+  names_stale_after_hours: 48,                             // cache de nomes mais velho que isso (ou última leitura falha) ⇒ aviso de nomes desatualizados
+  names_suspect_ratio: 0.5,                                // resposta com menos que 50% dos fornecedores já conhecidos é tratada como suspeita (falha), nunca mesclada
 });
 
 function validarConfig(c) {
@@ -40,6 +42,8 @@ function validarConfig(c) {
   if (!Array.isArray(c.internal_supplier_ids) || c.internal_supplier_ids.some(x => typeof x !== 'string' || !x)) e.push('internal_supplier_ids deve ser lista de ids (texto)');
   if (c.attribution !== 'LAST_CONFIRMED_PURCHASE') e.push('attribution desconhecida');
   if (typeof c.fetch_names !== 'boolean') e.push('fetch_names deve ser booleano');
+  if (!(typeof c.names_stale_after_hours === 'number' && c.names_stale_after_hours > 0)) e.push('names_stale_after_hours deve ser número > 0');
+  if (!(typeof c.names_suspect_ratio === 'number' && c.names_suspect_ratio > 0 && c.names_suspect_ratio <= 1)) e.push('names_suspect_ratio deve estar entre 0 (exclusivo) e 1');
   return e;
 }
 
@@ -93,11 +97,12 @@ const r2 = x => Math.round(x * 100) / 100;
  * @param {Date}     p.agora          instante da geração
  * @param {string}   p.modo           'FULL' | 'INCREMENTAL'
  * @param {string}   [p.ultimoCompleto]  ISO do último sync completo (incremental)
- * @param {object}   [p.nomes]        { supplier_id: nome } — ausente ⇒ "Fornecedor #id"
+ * @param {object}   [p.nomes]        { supplier_id: nome | { nome, ativo, nome_anterior, ausente } } — ausente ⇒ "Fornecedor #id". Só APRESENTAÇÃO: não entra em nenhum cálculo.
+ * @param {object}   [p.nomesMeta]    situação do cache de nomes (nomesFornecedores.situacao + relatório da última leitura)
  * @param {object}   [p.sync]         { stale_after_hours, full_overdue_after_hours } (da política)
  * @param {object}   [p.config]       parâmetros (DEFAULTS)
  */
-function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], hoje, agora, modo = 'FULL', ultimoCompleto = null, nomes = {}, sync = {}, config = DEFAULTS }) {
+function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], hoje, agora, modo = 'FULL', ultimoCompleto = null, nomes = {}, nomesMeta = null, sync = {}, config = DEFAULTS }) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(hoje)) || !(agora instanceof Date) || Number.isNaN(agora.getTime())) throw new Error('FORNECEDORES_ENTRADA_INVALIDA: hoje (YYYY-MM-DD) e agora (Date) são obrigatórios — o módulo não lê o relógio');
   const erros = validarConfig(config);
   if (erros.length) throw new Error('FORNECEDORES_CONFIG_INVALIDA: ' + erros.join('; '));
@@ -186,9 +191,14 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   }
 
   // ── montagem dos documentos ────────────────────────────────────────────────────────────────────────────────
-  const nomeDe = g => g.tipo === 'SEM_FORNECEDOR' ? { nome: 'Produtos sem fornecedor identificado', nome_origem: 'ROTULO_FIXO' }
-    : g.tipo === 'ITENS_SEM_PRODUTO' ? { nome: 'Itens de venda sem produto cadastrado', nome_origem: 'ROTULO_FIXO' }
-    : (nomes[g.supplier_id] ? { nome: nomes[g.supplier_id], nome_origem: 'GESTAOCLICK' } : { nome: 'Fornecedor #' + g.supplier_id, nome_origem: 'FALLBACK_ID' });
+  const nomeDe = g => {
+    if (g.tipo === 'SEM_FORNECEDOR') return { nome: 'Produtos sem fornecedor identificado', nome_origem: 'ROTULO_FIXO' };
+    if (g.tipo === 'ITENS_SEM_PRODUTO') return { nome: 'Itens de venda sem produto cadastrado', nome_origem: 'ROTULO_FIXO' };
+    const x = nomes[g.supplier_id], info = typeof x === 'string' ? { nome: x } : x;
+    if (!info || !info.nome) return { nome: 'Fornecedor #' + g.supplier_id, nome_origem: 'FALLBACK_ID' };
+    // atributos de APRESENTAÇÃO (só aparecem quando verdadeiros); o id continua sendo a chave estável do grupo
+    return { nome: info.nome, nome_origem: 'GESTAOCLICK', ...(info.ativo === false ? { inativo: true } : {}), ...(info.ausente ? { nome_ausente_na_api: true } : {}), ...(info.nome_anterior ? { nome_anterior: info.nome_anterior } : {}) };
+  };
   const lista = [...grupos.values()].map(g => {
     const prods = [...g.produtos.entries()].map(([pid, v]) => ({ pid, v, info: porProduto[pid] || null }));
     const un = arr(N), liq = arr(N), resUn = arr(N), resLiq = arr(N);
@@ -203,7 +213,9 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   // Itens sem identificação confiável NUNCA geram sugestão automática de reposição (decisão do gestor, 22/10/2026). Nesta fase não há sugestão nenhuma.
   const reposicao = t => t === 'EXTERNO' ? { elegivel: true, motivo: null } : t === 'INTERNO' ? { elegivel: false, motivo: 'ORIGEM_INTERNA_NAO_AVALIADA' } : { elegivel: false, motivo: t === 'ITENS_SEM_PRODUTO' ? 'ITEM_SEM_PRODUTO_CADASTRADO' : 'SEM_FORNECEDOR_IDENTIFICADO' };
   const gUn = L => ({
-    chave: L.g.chave, tipo: L.g.tipo, fornecedor_id: L.g.supplier_id, nome: L.nome, nome_origem: L.nome_origem, reposicao: reposicao(L.g.tipo),
+    chave: L.g.chave, tipo: L.g.tipo, fornecedor_id: L.g.supplier_id, nome: L.nome, nome_origem: L.nome_origem,
+    ...(L.inativo ? { inativo: true } : {}), ...(L.nome_ausente_na_api ? { nome_ausente_na_api: true } : {}), ...(L.nome_anterior ? { nome_anterior: L.nome_anterior } : {}),
+    reposicao: reposicao(L.g.tipo),
     un: L.un, soma: somar(L.un), media: r2(somar(L.un) / N), mes_corrente: L.unC,
     reservado: { un: L.resUn, mes_corrente: L.resUnC, futuro: L.resUnF, total: somar(L.resUn) + L.resUnC + L.resUnF },
     produtos_vendidos: L.vendidos,
@@ -243,6 +255,7 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   if (!historicoCobre) atualizacao = { status: atualizacao.status === 'OK' ? 'PARCIAL' : atualizacao.status, motivo: atualizacao.motivo + '|HISTORICO_NAO_COBRE_O_PERIODO' };
   const limitacoes = ['ATRIBUICAO_GERENCIAL_ULTIMA_COMPRA_CONFIRMADA', 'DEVOLUCAO_REGISTRADA_COMO_CANCELAMENTO_DA_VENDA_ORIGINAL', 'CANCELAMENTO_POSTERIOR_SO_REFLETE_NO_SYNC_COMPLETO', 'FRETE_E_SERVICOS_FORA_DO_FATURAMENTO'];
   if ([...lista].some(L => L.g.tipo === 'EXTERNO' && L.nome_origem === 'FALLBACK_ID')) limitacoes.push('NOMES_DE_FORNECEDOR_AUSENTES');
+  if (nomesMeta && nomesMeta.status === 'DESATUALIZADO') limitacoes.push('NOMES_DE_FORNECEDOR_DESATUALIZADOS');
   if (rateio.base_divergente) limitacoes.push('PEDIDOS_COM_BASE_DE_RATEIO_DIVERGENTE');
   if (qualidade.linhas_sem_produto) limitacoes.push('ITENS_DE_VENDA_SEM_PRODUTO_CADASTRADO');
   if (!fecha) limitacoes.push('CONCILIACAO_NAO_FECHA');
@@ -253,6 +266,7 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
     stale_after_hours: staleH, atualizacao, historico: { venda_mais_antiga: vendaMaisAntiga, cobre_periodo: historicoCobre },
     atribuicao: { regra: config.attribution, natureza: 'GERENCIAL', aviso: 'Fornecedor da última compra confirmada do produto; não representa a origem histórica exata do estoque vendido.' },
     internos: config.internal_supplier_ids, limitacoes,
+    nomes_fornecedores: nomesMeta,
   };
   const periodo = { ...per, meses_analisados: N };
   const avisoSugestao = 'Esta visão NÃO gera sugestão de compra.';

@@ -119,7 +119,7 @@ describe('Aba Fornecedores — conteúdo e permissões', () => {
     const t = await (await tela({ unidades: DOCS.unidades, valores: DOCS.valores })).abrir(); const h = t.painel();
     expect(h).not.toContain('<b>COMERCIAL</b>'); expect(h).toContain('ALFA &lt;b&gt;COMERCIAL&lt;/b&gt;');
     const sem = gerar({ nomes: {} }); const t2 = await (await tela({ unidades: sem.unidades, valores: sem.valores })).abrir();
-    expect(t2.painel()).toContain('Fornecedor #F1'); expect(t2.painel()).toContain('NOME INDISPONÍVEL'); expect(t2.painel()).toContain('Nomes de fornecedor ainda não sincronizados');
+    expect(t2.painel()).toContain('Fornecedor #F1'); expect(t2.painel()).toContain('NOME INDISPONÍVEL'); expect(t2.painel()).toContain('Alguns fornecedores ainda não têm nome sincronizado');
   });
 });
 
@@ -189,6 +189,36 @@ describe('Aba Fornecedores — busca, ordenação, filtro e detalhe', () => {
   test('documento resumido (sem detalhe por produto) é explicado', async () => {
     const r = JSON.parse(JSON.stringify(DOCS.unidades)); r.detalhe_produtos = false; r.externos.forEach(g => { g.produtos = []; });
     const s = await (await tela({ unidades: r, valores: DOCS.valores })).abrir(); s.clicar(r.externos[0].chave); expect(s.painel()).toContain('Detalhe por produto indisponível nesta geração');
+  });
+});
+
+describe('Aba Fornecedores — nomes reais (Fase C.2)', () => {
+  const nm = { ativo: true, atualizacao: 'LEITURA_NO_SYNC_COMPLETO', status: 'OK', motivo: null, atualizado_em: '2026-10-22T19:00:00.000Z', ultima_tentativa_ok: true, stale_after_hours: 48, conhecidos: 5 };
+  const rico = (extra = {}) => gerar({ nomes: { F1: { nome: 'ALFA <b>COMERCIAL</b>', ativo: false, nome_anterior: 'ANTIGA <i>RAZAO</i>', ausente: false }, F2: { nome: 'BETA IMPORTADORA', ativo: true, ausente: true }, F3: 'GAMA', F9: { nome: 'ZETA', ativo: true } }, nomesMeta: { ...nm, ...extra } });
+  test('selos de inativo, renomeado (com o nome anterior escapado) e ausente no cadastro; o nome real aparece no lugar do código', async () => {
+    const d = rico(); const h = (await (await tela({ unidades: d.unidades, valores: d.valores })).abrir()).painel();
+    expect(h).toContain('FORNECEDOR INATIVO'); expect(h).toContain('AUSENTE NO CADASTRO ATUAL · ÚLTIMO NOME CONHECIDO'); expect(h).toContain('RENOMEADO · ANTES: ANTIGA &lt;i&gt;RAZAO&lt;/i&gt;');
+    expect(h).not.toContain('<i>RAZAO</i>'); expect(h).not.toContain('<b>COMERCIAL</b>'); expect(h).toContain('ALFA &lt;b&gt;COMERCIAL&lt;/b&gt;'); expect(h).not.toContain('Fornecedor #F1');
+    expect(h).toContain('nomes de fornecedores atualizados em');
+  });
+  test('a busca encontra o fornecedor também pelo NOME ANTERIOR e pelo código (id estável)', async () => {
+    const d = rico(); const t = await (await tela({ unidades: d.unidades, valores: d.valores })).abrir();
+    t.digitar('fornBusca', 'antiga'); expect(t.painel()).toContain('ALFA'); expect(t.painel()).not.toContain('BETA IMPORTADORA');
+    t.digitar('fornBusca', 'f1'); expect(t.painel()).toContain('ALFA');
+  });
+  test('nomes desatualizados: alerta amarelo (limitação do servidor OU cache mais velho que o limite) sem tocar nos números', async () => {
+    const velho = rico({ status: 'DESATUALIZADO', motivo: 'ULTIMA_LEITURA_FALHOU', ultima_tentativa_ok: false });
+    const h = (await (await tela({ unidades: velho.unidades, valores: velho.valores })).abrir()).painel();
+    expect(velho.unidades.meta.limitacoes).toContain('NOMES_DE_FORNECEDOR_DESATUALIZADOS'); expect(h).toContain('Nomes de fornecedores desatualizados desde'); expect(h).toContain('forn-nota warn'); expect(h).toContain('os números de vendas não são afetados');
+    const ok = rico(); const h2 = (await (await tela({ unidades: ok.unidades, valores: ok.valores, agora: new Date(AGORA.getTime() + 60 * 3600e3) })).abrir()).painel();   // 60 h depois: passou do limite de 48 h
+    expect(h2).toContain('Nomes de fornecedores desatualizados desde');
+    const h3 = (await (await tela({ unidades: ok.unidades, valores: ok.valores })).abrir()).painel(); expect(h3).not.toContain('Nomes de fornecedores desatualizados');
+  });
+  test('leitura de nomes desligada (chave) não gera alerta de nomes; os números são os mesmos com qualquer nome', async () => {
+    const off = rico({ ativo: false, atualizado_em: null, status: 'AUSENTE' }); const h = (await (await tela({ unidades: off.unidades, valores: off.valores })).abrir()).painel();
+    expect(h).not.toContain('Nomes de fornecedores desatualizados');
+    const semNomes = gerar({ nomes: {} }), comNomes = rico(); const strip = d => JSON.stringify(d.unidades.externos.map(g => [g.chave, g.un, g.soma, g.media, g.mes_corrente, g.produtos.map(p => [p.id, p.un])]));
+    expect(strip(comNomes)).toBe(strip(semNomes));
   });
 });
 

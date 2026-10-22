@@ -57,7 +57,7 @@ describe('Período: três meses civis completos + mês corrente separado (Americ
     expect(() => rodar([], [], { config: { ...F.DEFAULTS, months: 0 } })).toThrow(/FORNECEDORES_CONFIG_INVALIDA/);
     expect(() => rodar([], [], { config: { ...F.DEFAULTS, internal_supplier_ids: [1] } })).toThrow(/FORNECEDORES_CONFIG_INVALIDA/);
     expect(F.validarConfig(F.DEFAULTS)).toEqual([]);
-    expect(F.validarConfig({ ...F.DEFAULTS, fetch_names: 'sim' })).toEqual(['fetch_names deve ser booleano']); expect(F.DEFAULTS.fetch_names).toBe(false);
+    expect(F.validarConfig({ ...F.DEFAULTS, fetch_names: 'sim' })).toEqual(['fetch_names deve ser booleano']); expect(F.DEFAULTS.fetch_names).toBe(true);
   });
 });
 

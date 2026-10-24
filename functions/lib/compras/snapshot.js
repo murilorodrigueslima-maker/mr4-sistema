@@ -15,6 +15,7 @@ const { POLITICA_VIGENTE } = require('./politica');
 const Rent = require('./rentabilidade');
 const Forn = require('./fornecedores');
 const Nomes = require('./nomesFornecedores');
+const Compat = require('./docCompat');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -393,8 +394,8 @@ async function persistirFornecedores(db, snap) {
       docs = docs.map(([c, id, v]) => [c, id, semDetalhe(v)]); detalhe = false;
       if (docs.some(d => tam(d[2]) > DOC_BYTES_MAX)) { const e = new Error('DOC_GRANDE_DEMAIS compras_n0_view/fornecedores'); e.codigo = 'DOC_GRANDE_DEMAIS'; throw e; }
     }
-    for (const d of docs) if (temArrayAninhado(d[2])) { const e = new Error('DOC_INCOMPATIVEL_FIRESTORE ' + d[1]); e.codigo = 'DOC_INCOMPATIVEL_FIRESTORE'; throw e; }
     if (snap.nomesCache) docs.push([Forn.COLECAO, 'nomes', snap.nomesCache]);
+    for (const d of docs) { const pb = Compat.problemasFirestore(d[2]); if (pb.length) { const e = new Error('FIRESTORE_INCOMPATIVEL ' + d[1] + ': ' + pb.slice(0, 3).join('; ')); e.codigo = e.message.slice(0, 160); throw e; } }   // o emulador aceita o que o Firestore real recusa (ex.: campo __x__): validar ANTES de gravar
     const l = db.batch(); for (const [c, id, v] of docs) l.set(db.collection(c).doc(id), v); await l.commit();
     return { gravado: true, detalhe_produtos: detalhe, bytes: docs.map(d => tam(d[2])), nomes_cache: !!snap.nomesCache };
   } catch (e) { return { gravado: false, erro: String(e.codigo || e.message).slice(0, 120) }; }

@@ -50,7 +50,7 @@ describe('Gravação isolada dos agregados', () => {
     const db = G.criarDbFalso();
     expect(await S.persistirFornecedores(db, {})).toEqual({ gravado: false, motivo: 'SEM_AGREGADO' });
     const r = await S.persistirFornecedores(db, { fornecedores: { docs: [[COL, 'unidades', { a: [[1]] }]] } });
-    expect(r.gravado).toBe(false); expect(r.erro).toMatch(/DOC_INCOMPATIVEL_FIRESTORE/); expect(db.st[COL]).toBeUndefined();
+    expect(r.gravado).toBe(false); expect(r.erro).toMatch(/FIRESTORE_INCOMPATIVEL.*ARRAY_ANINHADO/); expect(db.st[COL]).toBeUndefined();
   });
   test('incremental repassa o último sync completo e marca DESATUALIZADA quando o completo está atrasado', async () => {
     const db = G.criarDbFalso();

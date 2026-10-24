@@ -210,7 +210,7 @@ describe('Origem interna e "Sem fornecedor identificado"', () => {
     expect(r.unidades.sem_fornecedor.soma).toBe(2);
     expect(r.unidades.sem_fornecedor.produtos.map(p => [p.id, p.soma])).toEqual([['PZ', 2]]);
     expect(r.unidades.itens_sem_produto.soma).toBe(3);
-    expect(r.unidades.itens_sem_produto.produtos.map(p => [p.id, p.soma])).toEqual([['__SEM_PRODUTO__', 3]]);
+    expect(r.unidades.itens_sem_produto.produtos.map(p => [p.id, p.soma])).toEqual([['SEM_PRODUTO', 3]]);
     expect(r.unidades.itens_sem_produto.produtos[0].nome).toBe('Item sem produto cadastrado');
     expect(r.unidades.itens_sem_produto.produtos_vendidos).toBe(0);                  // o item sem produto não conta como "produto"
     expect(r.unidades.sem_fornecedor.reposicao).toEqual({ elegivel: false, motivo: 'SEM_FORNECEDOR_IDENTIFICADO' });

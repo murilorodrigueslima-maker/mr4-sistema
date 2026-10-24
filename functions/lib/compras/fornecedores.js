@@ -82,7 +82,7 @@ function mapaFornecedores(fatosCompra) {
   return { ultimo: Object.fromEntries(Object.entries(ultima).map(([p, f]) => [p, f.supplier_id])), todos };
 }
 
-const SEM_PRODUTO = '__SEM_PRODUTO__';   // item de venda sem produto cadastrado (produto_id vazio no ERP): nunca recebe fornecedor por acaso
+const SEM_PRODUTO = 'SEM_PRODUTO';   // item de venda sem produto cadastrado (produto_id vazio no ERP): nunca recebe fornecedor por acaso. NÃO usar __x__: o Firestore reserva esses nomes de campo (e esta chave vira nome de campo em `valores`)
 const RE_CANCELADA = /cancel|n[aã]o fechou/i;
 const arr = (n, v = 0) => Array.from({ length: n }, () => v);
 const somar = a => a.reduce((s, x) => s + x, 0);

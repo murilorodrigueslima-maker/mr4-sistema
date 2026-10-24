@@ -748,8 +748,8 @@ function detalheForn(g, v, val) {
   const linhas = prods.map(p => {
     const pv = v && v.produtos ? v.produtos[p.id] : null, resTot = p.reservado.un.reduce((a, b) => a + b, 0) + p.reservado.mes_corrente + p.reservado.futuro;
     const bd = [p.outros_fornecedores > 0 ? `<span class="bd at">TAMBÉM COMPRADO DE ${p.outros_fornecedores} OUTRO(S) FORNECEDOR(ES)</span>` : '', resTot > 0 ? `<span class="bd at">RESERVADO ${fmt(resTot)} un</span>` : ''].join('');
-    const nome = p.id === '__SEM_PRODUTO__' ? 'Item sem produto cadastrado' : (p.nome || 'Produto ' + p.id);
-    return `<div class="${cls}"><div class="pn"><div class="nome">${esc(nome)}</div><div class="meta">${esc(p.codigo || (p.id === '__SEM_PRODUTO__' ? '' : p.id))}</div>${bd ? `<div class="badges">${bd}</div>` : ''}</div>
+    const nome = p.id === 'SEM_PRODUTO' ? 'Item sem produto cadastrado' : (p.nome || 'Produto ' + p.id);
+    return `<div class="${cls}"><div class="pn"><div class="nome">${esc(nome)}</div><div class="meta">${esc(p.codigo || (p.id === 'SEM_PRODUTO' ? '' : p.id))}</div>${bd ? `<div class="badges">${bd}</div>` : ''}</div>
       <div class="num"><span class="lbl">Estoque </span>${p.estoque === null || p.estoque === undefined ? '—' : `<span class="${p.estoque < 0 ? 'neg-num' : ''}">${fmt(p.estoque)}</span>`}</div>
       ${p.un.map((x, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} </span>${fmt(x)}</div>`).join('')}<div class="num"><span class="lbl">Média </span><b>${fmt(p.media)}</b></div><div class="num"><span class="lbl">Corrente </span>${fmt(p.mes_corrente)}</div><div class="num"><span class="lbl">Total </span>${fmt(p.soma)}</div>
       ${val ? `<div class="num"><span class="lbl">R$/mês </span>${pv ? brl(pv.media_cents) : '—'}</div>` : ''}</div>`;

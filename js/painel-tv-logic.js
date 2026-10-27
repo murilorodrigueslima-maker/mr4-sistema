@@ -74,6 +74,49 @@
     return { titulo: 'Mês anterior (mesmo período)', valor: brl(c.valor), detalhe: sinal + brl(Math.abs(c.diferenca)) + (c.variacaoPct === null ? '' : ' (' + (c.variacaoPct >= 0 ? '+' : '−') + String(Math.abs(c.variacaoPct)).replace('.', ',') + ' %)'), positivo: c.diferenca >= 0 };
   }
 
-  var API = { brl: brl, brlCurto: brlCurto, pct: pct, estadoDados: estadoDados, ranking: ranking, delta: delta, grafico: grafico, textoComparativo: textoComparativo, faltaEPorDia: faltaEPorDia, avisoCalendario: avisoCalendario };
+
+  /** Data (YYYY-MM-DD) em America/Fortaleza de um instante (ms). */
+  function dataFortaleza(ms) {
+    var p = {}; new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Fortaleza', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(ms)).forEach(function (x) { p[x.type] = x.value; });
+    return p.year + '-' + p.month + '-' + p.day;
+  }
+
+  /** O documento da TV é do dia/mês em que foi gerado (periodo.fim). Na virada do dia (ou do mês) em Fortaleza, até a próxima sincronização os números "do dia"
+   *  NÃO são de hoje: a tela deve mostrar "aguardando atualização" em vez de repetir o dia anterior como se fosse hoje. */
+  function diaDoPainel(doc, agoraMs) {
+    var fim = (doc && doc.periodo && doc.periodo.fim) || null, ini = (doc && doc.periodo && doc.periodo.inicioMes) || null, hoje = dataFortaleza(agoraMs);
+    return { hoje: hoje, docDia: fim, atual: !!fim && fim === hoje, mesDoc: ini ? ini.slice(0, 7) : null, virouMes: !!ini && hoje.slice(0, 7) !== ini.slice(0, 7) };
+  }
+
+  /** Média diária do mês = a média por dia útil equivalente já calculada e validada no servidor (faturamento do mês ÷ dias úteis equivalentes decorridos).
+   *  Não é a meta necessária por dia (essa não é exibida). Sem base suficiente (<1 dia equivalente) ⇒ valor nulo. */
+  function mediaDiaria(doc) {
+    var r = (doc && doc.ritmo) || {}, g = (doc && (doc.geral || doc.equipe)) || {};
+    var dias = r.diasEquivalentesDecorridos;
+    return { valor: r.mediaPorDiaUtil == null ? null : Number(r.mediaPorDiaUtil), dias: dias == null ? null : Number(dias), totalMes: Number(g.totalMes || 0), fracaoHoje: r.fracaoHoje == null ? null : Number(r.fracaoHoje) };
+  }
+
+  var cent = function (v) { return Math.round(Number(v || 0) * 100); };
+  /** Cartões dos vendedores a partir do documento da TV (nenhum valor é calculado de fonte externa; só reorganiza e confere).
+   *  Ordem: faturamento do mês (maior primeiro); "Outros vendedores" sempre por último. Vendedor sem meta ⇒ semMeta (sem % nem falta).
+   *  reconc: confere, em centavos, vendedores + outros × geral (mês, dia e pedidos do dia). */
+  function cartoesVendedores(doc) {
+    var g = (doc && (doc.geral || doc.equipe)) || {};
+    var vs = ((doc && doc.vendedores) || []).map(function (v) {
+      var meta = Number(v.meta) || 0, tot = Number(v.totalMes || 0), falta = meta ? Math.max(0, Math.round((meta - tot) * 100) / 100) : null;
+      return { chave: 'v:' + v.nome, nome: v.nome, outros: false, totalMes: tot, meta: meta, semMeta: !meta, pct: meta ? (tot / meta) * 100 : null, falta: falta, batida: !!meta && tot >= meta,
+        totalHoje: Number(v.totalHoje || 0), pedidosHoje: Number(v.pedidosHoje || 0), pedidosMes: Number(v.pedidosMes || 0) };
+    }).sort(function (a, b) { return b.totalMes - a.totalMes; });
+    var o = doc && doc.outros;
+    var outros = o ? { chave: 'outros', nome: 'Outros vendedores', outros: true, totalMes: Number(o.totalMes || 0), meta: 0, semMeta: true, pct: null, falta: null, batida: false,
+      totalHoje: Number(o.totalHoje || 0), pedidosHoje: Number(o.pedidosHoje || 0), pedidosMes: Number(o.pedidosMes || 0) } : null;
+    var todos = outros ? vs.concat([outros]) : vs;
+    var soma = function (k) { return todos.reduce(function (a, x) { return a + cent(x[k]); }, 0); };
+    var conf = function (k, gk) { var s = soma(k), t = cent(g[gk]); return { soma: s / 100, geral: t / 100, ok: s === t }; };
+    return { cartoes: todos, participacao: function (x) { return g.totalMes ? (x.totalMes / g.totalMes) * 100 : 0; },
+      reconc: { mes: conf('totalMes', 'totalMes'), dia: conf('totalHoje', 'totalHoje'), pedidosDia: { soma: todos.reduce(function (a, x) { return a + x.pedidosHoje; }, 0), geral: Number(g.pedidosHoje || 0), ok: todos.reduce(function (a, x) { return a + x.pedidosHoje; }, 0) === Number(g.pedidosHoje || 0) } } };
+  }
+
+  var API = { brl: brl, brlCurto: brlCurto, pct: pct, estadoDados: estadoDados, ranking: ranking, delta: delta, grafico: grafico, textoComparativo: textoComparativo, faltaEPorDia: faltaEPorDia, avisoCalendario: avisoCalendario, dataFortaleza: dataFortaleza, diaDoPainel: diaDoPainel, mediaDiaria: mediaDiaria, cartoesVendedores: cartoesVendedores };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.PainelTV = API;
 })(typeof window !== 'undefined' ? window : this);

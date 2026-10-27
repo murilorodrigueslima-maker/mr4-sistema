@@ -149,41 +149,78 @@
     .row.fin-on { grid-template-columns: 44px minmax(0, 1.5fr) 62px 80px 70px 80px 58px 74px; gap: .5rem; padding: .65rem .6rem; min-width: 0; }
     .row.fin-on .qtd { font-size: .95rem; }
   }
-  /* ── Aba Fornecedores (vendas por fornecedor) — mesmos tokens, componentes e espaçamentos da tela de Compras ── */
-  .forn-chips { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin-bottom: 1rem; }
+  /* ── Aba Fornecedores — painel gerencial de vendas por fornecedor (mesmos tokens e componentes da tela de Compras) ── */
+  .fp-head h2 { font-size: 1.15rem; font-weight: 700; margin: 0; }
+  .fp-head .fp-sub { font-size: .8rem; color: var(--muted); margin: .2rem 0 .8rem; line-height: 1.5; }
+  .forn-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .6rem; margin-bottom: 1rem; }
   .forn-chips .chip { cursor: default; }
+  .forn-chips .chip.dest { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue-bg); }
+  .forn-chips .chip.dest .v { color: var(--blue-dk); }
   .forn-nota { background: var(--white); border: 1px solid var(--border); border-left: 4px solid var(--blue); border-radius: 8px; padding: .6rem .9rem; font-size: .78rem; color: var(--muted); line-height: 1.5; margin-bottom: .6rem; }
   .forn-nota.warn { border-left-color: var(--yellow); background: var(--yellow-bg); color: var(--yellow); }
   .forn-nota.fail { border-left-color: var(--red); background: var(--red-bg); color: var(--red); }
   .forn-sync { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: .6rem; font-size: .78rem; color: var(--muted); }
-  .frow { display: grid; grid-template-columns: minmax(0, 2.4fr) repeat(3, 72px) 92px 84px 70px; gap: .75rem; align-items: center; padding: .65rem .9rem; border-top: 1px solid var(--border); font-size: .85rem; }
-  .frow.val { grid-template-columns: minmax(0, 2.2fr) repeat(3, 72px) 92px 84px 70px 112px; }
-  .frow.head { border-top: 0; background: #fafafa; font-size: .7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-  .frow.item { cursor: pointer; }
-  .frow.item:hover { background: var(--bg); }
-  .frow.sel { background: var(--blue-bg); }
+  .fp-bar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .7rem; }
+  .fp-bar input[type=search] { flex: 1 1 240px; padding: .55rem .75rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .85rem; background: var(--white); }
+  .fp-bar select { padding: .5rem .6rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .8rem; background: var(--white); }
+  .fp-bar .seg { max-width: 100%; overflow-x: auto; }
+  .fp-lista { overflow-x: auto; }   /* em telas estreitas a tabela rola na horizontal em vez de espremer o nome do fornecedor */
+  .frow { display: grid; grid-template-columns: minmax(190px, 2.4fr) repeat(3, 70px) 92px 88px 58px 80px 18px; gap: .5rem; align-items: center; padding: .65rem .9rem; border-top: 1px solid var(--border); font-size: .85rem; min-width: 880px; }
+  .frow.fin { grid-template-columns: minmax(190px, 2.2fr) repeat(3, 92px) 100px 62px 56px 92px 94px 16px; gap: .6rem; font-size: .82rem; min-width: 1060px; }
+  .frow .num { padding-right: .1rem; }
+  .frow.head { border-top: 0; background: #fafafa; font-size: .68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .frow.item { cursor: pointer; transition: background .12s; }
+  .frow.item:hover, .frow.item:focus-visible { background: var(--blue-bg); outline: none; }
+  .frow.item:hover .nome, .frow.item:focus-visible .nome { color: var(--blue-dk); text-decoration: underline; }
+  .frow.item .go { color: var(--blue); font-weight: 700; font-size: 1.1rem; text-align: right; }
   .frow.tot { background: #fafafa; font-weight: 700; }
   .frow .nome { font-weight: 600; overflow-wrap: anywhere; }
-  .frow .sub2 { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+  .frow .tot3 { font-weight: 700; color: var(--text); }
+  .frow .z, .fp-prow .z { color: #9aa0a6; font-weight: 400; }
   .fsec { padding: .45rem .9rem; font-size: .68rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); background: var(--bg); border-top: 1px solid var(--border); }
-  .fdet { padding: .6rem .9rem .9rem; background: #fcfcfc; border-top: 1px solid var(--border); }
-  .fdet .fdet-top { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-bottom: .5rem; }
-  .fdet input[type=search] { flex: 1 1 200px; padding: .45rem .65rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .8rem; background: var(--white); }
-  .prow { display: grid; grid-template-columns: minmax(0, 2.4fr) 70px repeat(3, 56px) 70px 72px 66px; gap: .6rem; align-items: center; padding: .45rem 0; border-top: 1px solid var(--border); font-size: .8rem; }
-  .prow.val { grid-template-columns: minmax(0, 2.2fr) 70px repeat(3, 56px) 70px 72px 66px 96px; }
-  .prow.head { border-top: 0; font-size: .66rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-  .prow .meta { font-size: .7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
   .bd.int { background: var(--blue-bg); color: var(--blue); } .bd.sem { background: var(--yellow-bg); color: var(--yellow); }
-  #fornSeg { max-width: 100%; overflow-x: auto; }
   .forn-rodape { font-size: .74rem; color: var(--muted); line-height: 1.6; margin-top: .8rem; }
   .forn-rodape ul { margin: .25rem 0 0 1.1rem; padding: 0; }
+  /* painel lateral de produtos */
+  body.fp-lock { overflow: hidden; }
+  .fp-ov { position: fixed; inset: 0; background: rgba(32, 33, 36, .45); z-index: 900; }
+  .fp-drawer.sv .fp-tools, .fp-drawer.sv .fp-db .contagem { display: none; }
+  .fp-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(1180px, 96vw); background: var(--white); z-index: 901; box-shadow: -8px 0 30px rgba(0, 0, 0, .18); display: flex; flex-direction: column; animation: fp-in .18s ease-out; }
+  @keyframes fp-in { from { transform: translateX(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+  .fp-dh { display: flex; align-items: flex-start; gap: .8rem; padding: 1rem 1.2rem .8rem; border-bottom: 1px solid var(--border); }
+  .fp-dh .tit { flex: 1; min-width: 0; }
+  .fp-dh h3 { font-size: 1.1rem; margin: 0 0 .2rem; overflow-wrap: anywhere; }
+  .fp-x { flex: none; width: 36px; height: 36px; border: 1px solid var(--border); background: var(--white); border-radius: 8px; font-size: 1rem; cursor: pointer; color: var(--muted); }
+  .fp-x:hover { background: var(--bg); color: var(--text); }
+  .fp-db { flex: 1; overflow-y: auto; padding: .9rem 1.2rem 1.5rem; }
+  .fp-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem; margin-bottom: .9rem; }
+  .fp-kpis .chip { cursor: default; }
+  .fp-tools { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-bottom: .6rem; }
+  .fp-tools input[type=search] { flex: 1 1 220px; padding: .5rem .7rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .85rem; }
+  .fp-tools select { padding: .45rem .6rem; border: 1px solid var(--border); border-radius: 8px; font: inherit; font-size: .8rem; background: var(--white); }
+  .fp-tab { border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; }
+  .fp-prow { display: grid; grid-template-columns: minmax(200px, 2.4fr) repeat(3, 54px) 66px; gap: .5rem; align-items: center; padding: .5rem .8rem; border-top: 1px solid var(--border); font-size: .8rem; min-width: 640px; }
+  .fp-prow.fin { grid-template-columns: minmax(200px, 2.2fr) repeat(3, 52px) 62px repeat(3, 86px) 98px 92px 58px; min-width: 1000px; }
+  .fp-prow.head { border-top: 0; background: #fafafa; font-size: .64rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; position: sticky; top: 0; }
+  .fp-prow .pn .nome { font-weight: 600; overflow-wrap: anywhere; }
+  .fp-prow .pn .meta { font-size: .7rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .fp-prow .pct { color: var(--blue-dk); font-weight: 600; }
+  .fp-pct-bar { height: 3px; background: var(--blue-bg); border-radius: 2px; margin-top: 3px; } .fp-pct-bar i { display: block; height: 100%; background: var(--blue); border-radius: 2px; }
   @media (max-width: 900px) {
     .forn-chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .frow, .frow.val { grid-template-columns: 1fr 1fr; gap: .35rem .75rem; }
-    .frow.head, .prow.head { display: none; }
-    .frow > .fn, .prow > .pn { grid-column: 1 / -1; }
-    .prow, .prow.val { grid-template-columns: 1fr 1fr; gap: .3rem .6rem; }
-    .frow .lbl, .prow .lbl { display: inline; }
+    .fp-lista { overflow-x: visible; }
+    .frow, .frow.fin { grid-template-columns: 1fr 1fr; gap: .35rem .75rem; min-width: 0; }
+    .frow.head { display: none; }
+    .frow > .fn { grid-column: 1 / -1; }
+    .frow.item .go { display: none; }
+    .frow.item::after { content: 'Ver produtos ›'; grid-column: 1 / -1; color: var(--blue); font-size: .75rem; font-weight: 700; }
+    .frow .lbl, .fp-prow .lbl { display: inline; }
+    .fp-drawer { width: 100vw; }
+    .fp-dh { padding: .8rem .9rem; } .fp-db { padding: .7rem .8rem 1.5rem; }
+    .fp-tab { overflow-x: visible; border: 0; }
+    .fp-prow, .fp-prow.fin { grid-template-columns: 1fr 1fr; min-width: 0; gap: .3rem .6rem; border: 1px solid var(--border); border-radius: 10px; margin-bottom: .5rem; padding: .6rem .7rem; }
+    .fp-prow.head { display: none; }
+    .fp-prow > .pn { grid-column: 1 / -1; }
   }
   @media (max-width: 900px) {
     .sidebar { display: none !important; }
@@ -513,6 +550,7 @@ function render() {
   document.getElementById('painelOrc').hidden = !orc;
   document.getElementById('painelAgente').hidden = !agt;
   document.getElementById('painelForn').hidden = !forn;
+  if (!forn && FORN.sel) { FORN.sel = null; document.body.classList.remove('fp-lock'); }   // sair da aba fecha o painel de produtos
   if (forn) {   // aba Fornecedores: tela própria; as demais abas não são tocadas
     for (const id of ['lista', 'contagem', 'barraFiltros', 'chips']) document.getElementById(id).style.display = 'none';
     document.getElementById('revChips').hidden = true;
@@ -637,14 +675,16 @@ function atualizarOrcamento() {
     <div class="aviso-fin" style="margin-top:.6rem;font-size:.72rem;color:var(--muted)">Simulação com os valores estimados desta tela. A quantidade nunca passa da sugerida pela política de compras e o gasto nunca passa do orçamento.</div>`;
 }
 
-// ── Aba Fornecedores (vendas por fornecedor) ───────────────────────────────────────────────────────────────────────
-// A tela só LÊ os documentos prontos do servidor (compras_n0_fornecedores/unidades e /valores). Não calcula média, rateio, atribuição nem
-// conciliação, não consulta o ERP e não decide permissão: o documento de valores em R$ só chega a quem as Firestore Rules autorizam (gestor);
-// se a leitura for negada, as colunas em R$ simplesmente não existem. Sem sugestão de compra nesta aba.
-const FORN = { carregado: false, carregando: false, erro: null, un: null, val: null, grupo: 'todos', busca: '', ordem: 'media', sel: null, buscaProd: '' };
+// ── Aba Fornecedores — painel gerencial de vendas por fornecedor ─────────────────────────────────────────────────────
+// A tela só LÊ os documentos prontos do servidor (compras_n0_fornecedores/unidades e /valores) e só combina (junta por fornecedor/produto) e
+// ordena o que já veio calculado: não recalcula média, rateio, atribuição nem conciliação, não consulta o ERP e não decide permissão.
+// O documento de valores em R$ só chega a quem as Firestore Rules autorizam (gestor); se a leitura for negada, FORN.val fica nulo e NENHUMA
+// coluna, cartão ou texto em R$ é montado (o código de valores só roda quando FORN.val existe). Sem sugestão de compra nesta aba.
+const FORN = { carregado: false, carregando: false, erro: null, un: null, val: null, tipo: 'todos', situacao: 'todos', busca: '', ordem: null, sel: null, buscaProd: '', ordemProd: null, soMesCorrente: false };
 const MES_ABREV = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const mesRot = ym => (MES_ABREV[Number(String(ym).slice(5, 7)) - 1] || '?') + '/' + String(ym).slice(2, 4);
 const dataHora = iso => { const d = iso ? new Date(iso) : null; return d && !Number.isNaN(d.getTime()) ? d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—'; };
+const pctTxt = v => (v === null || v === undefined || !Number.isFinite(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
 const LIMITACAO_TXT = {
   ATRIBUICAO_GERENCIAL_ULTIMA_COMPRA_CONFIRMADA: 'Atribuição gerencial: cada produto é associado ao fornecedor da última compra confirmada.',
   DEVOLUCAO_REGISTRADA_COMO_CANCELAMENTO_DA_VENDA_ORIGINAL: 'Devoluções são lançadas cancelando a venda original; vendas canceladas ficam fora dos números.',
@@ -656,6 +696,7 @@ const LIMITACAO_TXT = {
   PEDIDOS_COM_BASE_DE_RATEIO_DIVERGENTE: 'Alguns pedidos têm total de produtos diferente da soma dos itens; o rateio usou a soma dos itens.',
   CONCILIACAO_NAO_FECHA: 'ATENÇÃO: a soma dos grupos não fecha com o total de vendas — não use estes números.' };
 const STATUS_TXT = { DESATUALIZADA: 'O sincronismo completo está atrasado.', PARCIAL: 'O histórico disponível não cobre todo o período analisado.', DESCONHECIDA: 'Não foi possível confirmar o último sincronismo completo.' };
+const TIPO_TXT = { EXTERNO: 'Fornecedor externo', INTERNO: 'Origem interna MR4', SEM_FORNECEDOR: 'Sem fornecedor identificado', ITENS_SEM_PRODUTO: 'Itens de venda sem produto cadastrado' };
 
 async function carregarFornecedores() {
   if (FORN.carregando) return;
@@ -669,25 +710,45 @@ async function carregarFornecedores() {
   catch (_) { FORN.val = null; }   // perfil sem permissão de valores: as Rules negam e nada em R$ é baixado
   FORN.carregado = true; FORN.carregando = false;
 }
-const fGrupos = () => { const u = FORN.un; return u ? [...u.externos.map(g => [g, 'ext']), ...u.internos.map(g => [g, 'int']), [u.sem_fornecedor, 'sem'], [u.itens_sem_produto, 'isp']] : []; };
-const fVal = chave => { const v = FORN.val; if (!v) return null; return [...v.externos, ...v.internos, v.sem_fornecedor, v.itens_sem_produto].find(g => g.chave === chave) || null; };
+const finOn = () => !!FORN.val;
+// Fornecedores cadastrados SEM venda nos meses completos (lista `sem_vendas` do documento de unidades; documento antigo sem a lista ⇒ vazio).
+// A lista só traz identificação (nome, tipo, selo, produtos atribuídos); aqui ela vira um grupo "zerado" para entrar na mesma tabela e nos mesmos filtros.
+// Nenhum valor é buscado nem calculado: zero é a definição de "sem vendas", não um dado financeiro.
+const fSemVendas = () => { const u = FORN.un, n = u ? u.periodo.meses.length : 0; return u && Array.isArray(u.sem_vendas) ? u.sem_vendas.map(x => ({ ...x, sem_vendas: true, un: Array(n).fill(0), soma: 0, media: 0, mes_corrente: 0, produtos_vendidos: 0, produtos: [],
+  reservado: { un: Array(n).fill(0), mes_corrente: 0, futuro: 0, total: 0 }, reposicao: x.tipo === 'INTERNO' ? { elegivel: false, motivo: 'ORIGEM_INTERNA_NAO_AVALIADA' } : { elegivel: true, motivo: null } })) : []; };
+const fGrupos = () => { const u = FORN.un; if (!u) return []; const sv = fSemVendas();
+  return [...u.externos.map(g => [g, 'ext']), ...sv.filter(g => g.tipo === 'EXTERNO').map(g => [g, 'ext']), ...u.internos.map(g => [g, 'int']), ...sv.filter(g => g.tipo === 'INTERNO').map(g => [g, 'int']), [u.sem_fornecedor, 'sem'], [u.itens_sem_produto, 'isp']]; };
+const fValG = chave => { const v = FORN.val; if (!v) return null; const g = [...v.externos, ...v.internos, v.sem_fornecedor, v.itens_sem_produto].find(x => x.chave === chave);
+  if (g) return g; const n = FORN.un.periodo.meses.length;
+  return (FORN.un.sem_vendas || []).some(x => x.chave === chave) ? { chave, liq_cents: Array(n).fill(0), soma_cents: 0, media_cents: 0, mes_corrente_cents: 0, produtos: {} } : null; };
 const fSecao = { ext: 'Fornecedores externos', int: 'Origem interna', sem: 'Produtos sem fornecedor identificado', isp: 'Itens de venda sem produto cadastrado' };
 const fRot = { todos: 'Todos', ext: 'Externos', int: 'Origem interna', sem: 'Sem fornecedor', isp: 'Itens sem produto' };
+const ORDEM_FORN = () => (finOn()
+  ? [['fat', 'Faturamento total (maior)'], ['media', 'Média mensal R$ (maior)'], ['un', 'Unidades (maior)'], ['mes', 'Mês corrente R$ (maior)'], ['nome', 'Nome (A–Z)']]
+  : [['un', 'Unidades (maior)'], ['media', 'Média mensal un (maior)'], ['mes', 'Mês corrente un (maior)'], ['nome', 'Nome (A–Z)']]);
+const ORDEM_PROD = () => (finOn() ? [['fat', 'Faturamento (maior)'], ['un', 'Unidades (maior)'], ['nome', 'Nome (A–Z)']] : [['un', 'Unidades (maior)'], ['nome', 'Nome (A–Z)']]);
 
-function fornFiltrado() {
-  const q = FORN.busca.trim().toLowerCase();
-  let lista = fGrupos().filter(([g, k]) => (FORN.grupo === 'todos' || FORN.grupo === k) && (!q || String(g.nome || '').toLowerCase().includes(q) || String(g.nome_anterior || '').toLowerCase().includes(q) || String(g.fornecedor_id || '').toLowerCase().includes(q)));
-  const chave = { media: g => g.media, mes: g => g.mes_corrente, nome: null, rs: g => ((fVal(g.chave) || {}).media_cents ?? -1) }[FORN.ordem];
-  const ordem = { ext: 0, int: 1, sem: 2, isp: 3 };
-  return lista.sort(([a, ka], [b, kb]) => (ordem[ka] - ordem[kb]) || (chave ? (chave(b) - chave(a)) : String(a.nome).localeCompare(String(b.nome), 'pt-BR')) || String(a.chave).localeCompare(String(b.chave)));
+function fLinhas() {   // 1 linha por grupo, já com o valor financeiro (se autorizado) ao lado das quantidades
+  return fGrupos().map(([g, k]) => { const v = finOn() ? fValG(g.chave) : null; return { g, k, v, un: g.soma, fat: v ? v.soma_cents : null, media: v ? v.media_cents : g.media, mes: v ? v.mes_corrente_cents : g.mes_corrente }; });
 }
+function fFiltradas() {
+  const q = FORN.busca.trim().toLowerCase(), ord = FORN.ordem || ORDEM_FORN()[0][0];
+  const chave = { fat: r => r.fat ?? -1, media: r => r.media ?? -1, un: r => r.un, mes: r => r.mes ?? -1, nome: null }[ord] || (r => r.un);
+  const secao = { ext: 0, int: 1, sem: 2, isp: 3 };
+  return fLinhas().filter(r => (FORN.tipo === 'todos' || FORN.tipo === r.k) && (FORN.situacao === 'todos' || (FORN.situacao === 'com' ? r.g.soma > 0 : r.g.soma === 0))
+    && (!q || String(r.g.nome || '').toLowerCase().includes(q) || String(r.g.nome_anterior || '').toLowerCase().includes(q) || String(r.g.fornecedor_id || '').toLowerCase().includes(q)))
+    .sort((a, b) => (secao[a.k] - secao[b.k]) || (!!a.g.sem_vendas - !!b.g.sem_vendas) || (ord === 'nome' ? String(a.g.nome).localeCompare(String(b.g.nome), 'pt-BR') : (chave(b) - chave(a))) || String(a.g.chave).localeCompare(String(b.g.chave)));
+}
+const selosGrupo = (g, k) => [g.nome_origem === 'FALLBACK_ID' ? '<span class="bd at">NOME INDISPONÍVEL</span>' : '', g.inativo ? '<span class="bd sem">INATIVO</span>' : '', g.nome_ausente_na_api ? '<span class="bd at">AUSENTE NO CADASTRO ATUAL · ÚLTIMO NOME CONHECIDO</span>' : '',
+  g.nome_anterior ? `<span class="bd at">RENOMEADO · ANTES: ${esc(g.nome_anterior)}</span>` : '', k === 'int' ? '<span class="bd int">ORIGEM INTERNA</span>' : '', g.sem_vendas ? '<span class="bd sem">SEM VENDAS NO PERÍODO</span>' : '', (k === 'sem' || k === 'isp') ? '<span class="bd sem">SEM SUGESTÃO AUTOMÁTICA</span>' : '',
+  g.reservado.total > 0 ? `<span class="bd at">RESERVADO: ${fmt(g.reservado.total)} un (fora da apuração)</span>` : ''].join('');
 
 function renderFornecedores() {
   const box = document.getElementById('painelForn');
   if (!FORN.carregado) { box.innerHTML = '<div class="vazio">Carregando vendas por fornecedor…</div>'; if (!FORN.carregando) carregarFornecedores().then(() => { if (estado.aba === 'forn') render(); }); return; }
   const u = FORN.un;
   if (!u) { box.innerHTML = `<div class="vazio">${FORN.erro === 'NEGADO' ? 'Sem permissão para ver as vendas por fornecedor (o perfil precisa do módulo Estoque).' : 'As vendas por fornecedor ainda não foram geradas. Elas aparecem após o próximo sincronismo completo.'}</div>`; return; }
-  const meses = u.periodo.meses, m = u.meta, val = !!FORN.val, t = u.totais;
+  const meses = u.periodo.meses, m = u.meta, fin = finOn(), t = u.totais, V = fin ? FORN.val.totais : null;
   const idadeH = m.gerado_em ? (Date.now() - Date.parse(m.gerado_em)) / 3600000 : null, limite = m.stale_after_hours ?? FRESCO_HORAS;
   const atraso = idadeH === null || idadeH > limite, st = (m.atualizacao || {}).status || 'DESCONHECIDA';
   const alertas = [];
@@ -696,81 +757,130 @@ function renderFornecedores() {
   const nm = m.nomes_fornecedores || null, nmIdade = nm && nm.atualizado_em ? (Date.now() - Date.parse(nm.atualizado_em)) / 3600000 : null;
   const nomesVelhos = !!nm && nm.ativo !== false && ((m.limitacoes || []).includes('NOMES_DE_FORNECEDOR_DESATUALIZADOS') || (nmIdade !== null && nm.stale_after_hours != null && nmIdade > nm.stale_after_hours));
   if (nomesVelhos) alertas.push(['warn', `<b>Nomes de fornecedores desatualizados${nm.atualizado_em ? ` desde ${esc(dataHora(nm.atualizado_em))}` : ''}.</b> Exibindo os últimos nomes conhecidos; os números de vendas não são afetados.`]);
-  const lim = (m.limitacoes || []).filter(k => k === 'CONCILIACAO_NAO_FECHA');
-  lim.forEach(k => alertas.push(['fail', esc(LIMITACAO_TXT[k])]));
+  (m.limitacoes || []).filter(k => k === 'CONCILIACAO_NAO_FECHA').forEach(k => alertas.push(['fail', esc(LIMITACAO_TXT[k])]));
   const nomesFalta = (m.limitacoes || []).includes('NOMES_DE_FORNECEDOR_AUSENTES');
-  const fecha = u.conciliacao && u.conciliacao.fecha === true && (!val || (FORN.val.conciliacao || {}).fecha === true);
+  const fecha = u.conciliacao && u.conciliacao.fecha === true && (!fin || (FORN.val.conciliacao || {}).fecha === true);
+  const comVenda = [...u.externos, ...u.internos].filter(g => g.soma > 0).length, semVenda = fGrupos().filter(([g, k]) => (k === 'ext' || k === 'int') && g.soma === 0).length;
   const chip = (k, v, un, cls = '') => `<div class="chip ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="u">${un}</div></div>`;
-  const cabecalho = `${alertas.map(([c, h]) => `<div class="forn-nota ${c}">${h}</div>`).join('')}
+  const periodoTxt = `${mesRot(meses[0])} a ${mesRot(meses[meses.length - 1])}`;
+  const kpis = fin
+    ? chip('Faturamento líquido (3 meses)', brl(V.soma_cents), periodoTxt + ' · só gestor', 'dest') + chip('Média mensal', brl(V.media_cents), 'faturamento por mês · ÷ ' + meses.length) + chip('Unidades vendidas', fmt(t.soma), 'no período · ' + fmt(t.produtos_vendidos) + ' produtos') + chip('Fornecedores com vendas', fmt(comVenda), 'externos + origem interna · ' + fmt(semVenda) + ' sem vendas') + chip('Mês corrente (parcial)', brl(V.mes_corrente_cents), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`)
+    : chip('Unidades vendidas', fmt(t.soma), periodoTxt, 'dest') + chip('Média mensal', fmt(t.media), 'unidades por mês') + chip('Mês corrente (parcial)', fmt(t.mes_corrente), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`) + chip('Fornecedores com vendas', fmt(comVenda), fmt(t.produtos_vendidos) + ' produtos · ' + fmt(semVenda) + ' sem vendas');
+  const cabecalho = `<div class="fp-head"><h2>Análise de Vendas por Fornecedor</h2><p class="fp-sub">${fin ? 'Faturamento líquido de produtos' : 'Quantidades vendidas'} nos 3 meses civis completos (${periodoTxt}), com o mês corrente à parte. Clique em um fornecedor para ver os produtos vendidos.</p></div>
+    ${alertas.map(([c, h]) => `<div class="forn-nota ${c}">${h}</div>`).join('')}
     <div class="forn-nota"><b>Atribuição gerencial.</b> ${esc((m.atribuicao || {}).aviso || 'Cada produto é associado ao fornecedor da última compra confirmada; isso não representa a origem histórica exata do estoque vendido.')}
-      Vendas canceladas (inclui devoluções) estão fora. Vendas reservadas aparecem à parte e não entram na média.</div>
+      Vendas canceladas (inclui devoluções) estão fora. Vendas reservadas aparecem à parte e não entram na apuração principal.</div>
     <div class="forn-sync"><span class="fresh ${st === 'OK' && !atraso ? 'ok' : st === 'DESATUALIZADA' ? 'fail' : 'stale'}">${st === 'OK' && !atraso ? 'Atualizado' : 'Atenção aos dados'}</span>
       <span>Último sincronismo completo: <b>${esc(dataHora(m.ultimo_sync_completo))}</b></span><span>· gerado em ${esc(dataHora(m.gerado_em))}</span><span>· ${m.modo_sync === 'FULL' ? 'sincronismo completo' : 'atualização parcial sobre o completo'}</span>${nm && nm.atualizado_em ? `<span>· nomes de fornecedores atualizados em ${esc(dataHora(nm.atualizado_em))}</span>` : ''}</div>
-    <div class="forn-chips">
-      ${chip('Unidades vendidas', fmt(t.soma), `${mesRot(meses[0])} a ${mesRot(meses[meses.length - 1])}`)}
-      ${chip('Média mensal', fmt(t.media), 'unidades por mês')}
-      ${chip('Mês corrente (parcial)', fmt(t.mes_corrente), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`)}
-      ${val ? chip('Faturamento líquido', brl(FORN.val.totais.media_cents), 'média mensal · só gestor') : chip('Produtos vendidos', fmt(t.produtos_vendidos), 'no período')}
-    </div>`;
-  const lista = fornFiltrado();
-  const filtros = `<div class="filtros"><input type="search" id="fornBusca" placeholder="Buscar fornecedor…" autocomplete="off" value="${esc(FORN.busca)}">
-      <div class="seg" id="fornSeg">${Object.keys(fRot).map(k => `<button data-v="${k}" class="${FORN.grupo === k ? 'sel' : ''}">${fRot[k]}</button>`).join('')}</div>
-      <select id="fornOrdem" aria-label="Ordenar fornecedores"><option value="media"${FORN.ordem === 'media' ? ' selected' : ''}>Ordem: maior média de unidades</option><option value="mes"${FORN.ordem === 'mes' ? ' selected' : ''}>Ordem: maior mês corrente</option><option value="nome"${FORN.ordem === 'nome' ? ' selected' : ''}>Ordem: nome (A–Z)</option>${val ? `<option value="rs"${FORN.ordem === 'rs' ? ' selected' : ''}>Ordem: maior faturamento (R$)</option>` : ''}</select></div>
-    <div class="contagem">${fmt(lista.length)} grupo(s) · unidades concluídas (sem canceladas e sem reservas)${nomesFalta ? ' · nomes de fornecedor indisponíveis: exibindo o código' : ''}</div>`;
-  const cls = 'frow' + (val ? ' val' : '');
-  const cab = `<div class="${cls} head"><div>Fornecedor</div>${meses.map(x => `<div class="num">${mesRot(x)}</div>`).join('')}<div class="num">Média/mês</div><div class="num">${mesRot(u.periodo.mes_corrente)} (parcial)</div><div class="num">Produtos</div>${val ? '<div class="num">Média R$/mês</div>' : ''}</div>`;
-  const celulas = (g, v) => `${g.un.map((x, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} </span>${fmt(x)}</div>`).join('')}<div class="num"><span class="lbl">Média </span><b>${fmt(g.media)}</b></div><div class="num"><span class="lbl">Corrente </span>${fmt(g.mes_corrente)}</div><div class="num"><span class="lbl">Produtos </span>${fmt(g.produtos_vendidos)}</div>${val ? `<div class="num"><span class="lbl">R$/mês </span>${v ? brl(v.media_cents) : '—'}</div>` : ''}`;
-  let corpo = '', ultimaSecao = null;
-  for (const [g, k] of lista) {
-    if (k !== ultimaSecao) { corpo += `<div class="fsec">${esc(fSecao[k])}</div>`; ultimaSecao = k; }
-    const v = fVal(g.chave), aberto = FORN.sel === g.chave;
-    const sub = [g.nome_origem === 'FALLBACK_ID' ? '<span class="bd at">NOME INDISPONÍVEL</span>' : '', g.inativo ? '<span class="bd sem">FORNECEDOR INATIVO</span>' : '', g.nome_ausente_na_api ? '<span class="bd at">AUSENTE NO CADASTRO ATUAL · ÚLTIMO NOME CONHECIDO</span>' : '', g.nome_anterior ? `<span class="bd at">RENOMEADO · ANTES: ${esc(g.nome_anterior)}</span>` : '', k === 'int' ? '<span class="bd int">ORIGEM INTERNA</span>' : '', (k === 'sem' || k === 'isp') ? '<span class="bd sem">SEM SUGESTÃO AUTOMÁTICA</span>' : '',
-      g.reservado.total > 0 ? `<span class="bd at">RESERVADO: ${fmt(g.reservado.total)} un (fora da média)</span>` : ''].join('');
-    corpo += `<div class="${cls} item${aberto ? ' sel' : ''}" data-forn="${esc(g.chave)}" role="button" tabindex="0" aria-expanded="${aberto}"><div class="fn"><div class="nome">${esc(g.nome)}</div>${sub ? `<div class="badges">${sub}</div>` : ''}</div>${celulas(g, v)}</div>`;
-    if (aberto) corpo += detalheForn(g, v, val);
+    <div class="forn-chips">${kpis}</div>`;
+  const ordens = ORDEM_FORN(), ordAtual = FORN.ordem && ordens.some(o => o[0] === FORN.ordem) ? FORN.ordem : ordens[0][0];
+  const lista = fFiltradas();
+  const barra = `<div class="fp-bar"><input type="search" id="fornBusca" placeholder="Buscar fornecedor…" autocomplete="off" value="${esc(FORN.busca)}">
+      <select id="fornSituacao" aria-label="Situação do fornecedor"><option value="todos"${FORN.situacao === 'todos' ? ' selected' : ''}>Situação: todos</option><option value="com"${FORN.situacao === 'com' ? ' selected' : ''}>Com vendas no período</option><option value="sem"${FORN.situacao === 'sem' ? ' selected' : ''}>Sem vendas no período</option></select>
+      <div class="seg" id="fornSeg">${Object.keys(fRot).map(k => `<button data-v="${k}" class="${FORN.tipo === k ? 'sel' : ''}">${fRot[k]}</button>`).join('')}</div>
+      <select id="fornOrdem" aria-label="Ordenar fornecedores">${ordens.map(([k, r]) => `<option value="${k}"${ordAtual === k ? ' selected' : ''}>Ordem: ${r}</option>`).join('')}</select></div>
+    <div class="contagem">${fmt(lista.length)} grupo(s) · ${fin ? 'faturamento líquido' : 'unidades'} de vendas concluídas (sem canceladas e sem reservas)${nomesFalta ? ' · nomes de fornecedor indisponíveis: exibindo o código' : ''}</div>`;
+  const cls = 'frow' + (fin ? ' fin' : '');
+  const cab = fin
+    ? `<div class="${cls} head"><div>Fornecedor</div>${meses.map(x => `<div class="num">${mesRot(x)} (R$)</div>`).join('')}<div class="num">Total 3 meses</div><div class="num">Unidades</div><div class="num">Produtos</div><div class="num">Média R$/mês</div><div class="num">${mesRot(u.periodo.mes_corrente)} (parcial)</div><div></div></div>`
+    : `<div class="${cls} head"><div>Fornecedor</div>${meses.map(x => `<div class="num">${mesRot(x)} (un)</div>`).join('')}<div class="num">Média un/mês</div><div class="num">${mesRot(u.periodo.mes_corrente)} (parcial)</div><div class="num">Produtos</div><div class="num">Total 3 meses</div><div></div></div>`;
+  const n0 = (txt, zero) => zero ? `<span class="z">${txt}</span>` : txt;
+  const celulas = r => fin
+    ? `${r.v.liq_cents.map((c, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} </span>${n0(brl(c), c === 0)}</div>`).join('')}<div class="num tot3"><span class="lbl">Total 3 meses </span>${brl(r.v.soma_cents)}</div><div class="num"><span class="lbl">Unidades </span>${fmt(r.g.soma)}</div><div class="num"><span class="lbl">Produtos </span>${fmt(r.g.produtos_vendidos)}</div><div class="num"><span class="lbl">Média R$/mês </span><b>${brl(r.v.media_cents)}</b></div><div class="num"><span class="lbl">${mesRot(u.periodo.mes_corrente)} (parcial) </span>${n0(brl(r.v.mes_corrente_cents), r.v.mes_corrente_cents === 0)}</div><div class="go" aria-hidden="true">›</div>`
+    : `${r.g.un.map((x, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} </span>${n0(fmt(x), x === 0)}</div>`).join('')}<div class="num"><span class="lbl">Média un/mês </span><b>${fmt(r.g.media)}</b></div><div class="num"><span class="lbl">${mesRot(u.periodo.mes_corrente)} (parcial) </span>${n0(fmt(r.g.mes_corrente), r.g.mes_corrente === 0)}</div><div class="num"><span class="lbl">Produtos </span>${fmt(r.g.produtos_vendidos)}</div><div class="num tot3"><span class="lbl">Total 3 meses </span>${fmt(r.g.soma)}</div><div class="go" aria-hidden="true">›</div>`;
+  let corpo = '', ultima = null;
+  for (const r of lista) {
+    if (r.k !== ultima) { corpo += `<div class="fsec">${esc(fSecao[r.k])}</div>`; ultima = r.k; }
+    const sub = selosGrupo(r.g, r.k);
+    corpo += `<div class="${cls} item" data-forn="${esc(r.g.chave)}" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Ver produtos de ${esc(r.g.nome)}"><div class="fn"><div class="nome">${esc(r.g.nome)}</div>${sub ? `<div class="badges">${sub}</div>` : ''}</div>${celulas(r)}</div>`;
   }
-  if (!lista.length) corpo = '<div class="vazio">Nenhum fornecedor encontrado.</div>';
-  const vTot = FORN.val ? FORN.val.totais : null;
-  const total = `<div class="${cls} tot"><div class="fn">Total geral (todos os grupos)</div>${t.un.map(x => `<div class="num">${fmt(x)}</div>`).join('')}<div class="num">${fmt(t.media)}</div><div class="num">${fmt(t.mes_corrente)}</div><div class="num">${fmt(t.produtos_vendidos)}</div>${val ? `<div class="num">${brl(vTot.media_cents)}</div>` : ''}</div>`;
+  if (!lista.length) corpo = `<div class="vazio">${FORN.situacao === 'sem' ? (Array.isArray(u.sem_vendas) ? 'Nenhum fornecedor sem vendas no período com esses filtros.' : 'Esta geração ainda não lista os fornecedores sem vendas; ela aparece após o próximo sincronismo completo.') : 'Nenhum fornecedor encontrado.'}</div>`;
+  const tot = fin
+    ? `<div class="${cls} tot"><div class="fn">Total geral (todos os grupos)</div>${V.liq_cents.map(c => `<div class="num">${brl(c)}</div>`).join('')}<div class="num">${brl(V.soma_cents)}</div><div class="num">${fmt(t.soma)}</div><div class="num">${fmt(t.produtos_vendidos)}</div><div class="num">${brl(V.media_cents)}</div><div class="num">${brl(V.mes_corrente_cents)}</div><div></div></div>`
+    : `<div class="${cls} tot"><div class="fn">Total geral (todos os grupos)</div>${t.un.map(x => `<div class="num">${fmt(x)}</div>`).join('')}<div class="num">${fmt(t.media)}</div><div class="num">${fmt(t.mes_corrente)}</div><div class="num">${fmt(t.produtos_vendidos)}</div><div class="num">${fmt(t.soma)}</div><div></div></div>`;
   const ex = u.excluidas || {};
-  const rodape = `<div class="forn-rodape"><b>Conferência:</b> ${fecha ? '✓ a soma de externos + origem interna + sem fornecedor + itens sem produto fecha com o total de vendas elegíveis (unidades' + (val ? ' e R$' : '') + ').' : '✗ a soma dos grupos NÃO fecha com o total — não use estes números.'}
+  const rodape = `<div class="forn-rodape"><b>Conferência:</b> ${fecha ? '✓ a soma de externos + origem interna + sem fornecedor + itens sem produto fecha com o total de vendas elegíveis (unidades' + (fin ? ' e R$' : '') + ').' : '✗ a soma dos grupos NÃO fecha com o total — não use estes números.'}
     <br><b>Fora dos números:</b> canceladas/devoluções ${fmt((ex.cancelada || {}).unidades || 0)} un · sem baixa de estoque ${fmt((ex.sem_baixa_de_estoque || {}).unidades || 0)} un · concluídas com data futura ${fmt((ex.concluida_data_futura || {}).unidades || 0)} un · reservadas ${fmt(t.reservado)} un (identificadas à parte).
     <ul>${(m.limitacoes || []).filter(k => LIMITACAO_TXT[k] && k !== 'CONCILIACAO_NAO_FECHA' && !(k === 'NOMES_DE_FORNECEDOR_AUSENTES' && !nomesFalta) && k !== 'NOMES_DE_FORNECEDOR_DESATUALIZADOS').map(k => `<li>${esc(LIMITACAO_TXT[k])}</li>`).join('')}</ul>
-    ${val ? '' : '<br>Os valores financeiros ficam disponíveis apenas ao perfil gestor autorizado.'}</div>`;
-  box.innerHTML = cabecalho + filtros + `<div class="lista">${cab}${corpo}${total}</div>` + rodape;
+    ${fin ? '' : '<br>Os valores financeiros ficam disponíveis apenas ao perfil gestor autorizado.'}</div>`;
+  box.innerHTML = `<div id="fpMain">${cabecalho}${barra}<div class="lista fp-lista">${cab}${corpo}${tot}</div>${rodape}</div><div id="fpDrawerBox"></div>`;
   ligarForn(box);
+  renderDrawer();
 }
 
-function detalheForn(g, v, val) {
-  const u = FORN.un, meses = u.periodo.meses, q = FORN.buscaProd.trim().toLowerCase();
-  const prods = g.produtos.filter(p => !q || String(p.nome || '').toLowerCase().includes(q) || String(p.codigo || '').toLowerCase().includes(q) || String(p.id).toLowerCase().includes(q));
-  const cls = 'prow' + (val ? ' val' : '');
-  const linhas = prods.map(p => {
-    const pv = v && v.produtos ? v.produtos[p.id] : null, resTot = p.reservado.un.reduce((a, b) => a + b, 0) + p.reservado.mes_corrente + p.reservado.futuro;
-    const bd = [p.outros_fornecedores > 0 ? `<span class="bd at">TAMBÉM COMPRADO DE ${p.outros_fornecedores} OUTRO(S) FORNECEDOR(ES)</span>` : '', resTot > 0 ? `<span class="bd at">RESERVADO ${fmt(resTot)} un</span>` : ''].join('');
+function fProdutos(g, v) {   // produtos do grupo: nomes/unidades (documento de unidades) + R$ por mês (documento de valores, se autorizado) juntados por id
+  const tot = v ? v.soma_cents : null;
+  return g.produtos.map(p => { const pv = v && v.produtos ? v.produtos[p.id] || null : null;
+    return { p, pv, fat: pv ? pv.soma_cents : null, pct: pv && tot > 0 ? pv.soma_cents / tot * 100 : null }; });
+}
+function renderDrawer() {
+  const dbox = document.getElementById('fpDrawerBox'); if (!dbox) return;
+  document.body.classList.toggle('fp-lock', !!FORN.sel);
+  const alvo = FORN.sel ? fGrupos().find(([g]) => g.chave === FORN.sel) : null;
+  if (!alvo) { dbox.innerHTML = ''; if (FORN.sel) FORN.sel = null; return; }
+  const [g, k] = alvo, u = FORN.un, meses = u.periodo.meses, fin = finOn(), v = fin ? fValG(g.chave) : null;
+  const q = FORN.buscaProd.trim().toLowerCase(), ords = ORDEM_PROD(), ord = FORN.ordemProd && ords.some(o => o[0] === FORN.ordemProd) ? FORN.ordemProd : ords[0][0];
+  let itens = fProdutos(g, v);
+  const totalProdutos = itens.filter(x => x.p.soma > 0).length;
+  itens = itens.filter(x => (FORN.soMesCorrente || x.p.soma > 0) && (!q || String(x.p.nome || '').toLowerCase().includes(q) || String(x.p.codigo || '').toLowerCase().includes(q) || String(x.p.id).toLowerCase().includes(q)))
+    .sort((a, b) => (ord === 'nome' ? String(a.p.nome).localeCompare(String(b.p.nome), 'pt-BR') : ord === 'fat' ? ((b.fat ?? -1) - (a.fat ?? -1)) : (b.p.soma - a.p.soma)) || (b.p.soma - a.p.soma) || String(a.p.id).localeCompare(String(b.p.id)));
+  const chip = (kk, vv, un, cls = '') => `<div class="chip ${cls}"><div class="k">${kk}</div><div class="v">${vv}</div><div class="u">${un}</div></div>`;
+  const kpis = fin
+    ? chip('Faturamento (3 meses)', brl(v.soma_cents), 'líquido de produtos', 'dest') + chip('Unidades vendidas', fmt(g.soma), 'nos 3 meses') + chip('Produtos distintos', fmt(g.produtos_vendidos), 'vendidos no período') + chip('Média mensal', brl(v.media_cents), 'R$ por mês · ÷ ' + meses.length) + chip(mesRot(u.periodo.mes_corrente) + ' (parcial)', brl(v.mes_corrente_cents), fmt(g.mes_corrente) + ' un · fora da média')
+    : chip('Unidades vendidas', fmt(g.soma), 'nos 3 meses', 'dest') + chip('Produtos distintos', fmt(g.produtos_vendidos), 'vendidos no período') + chip('Média mensal', fmt(g.media), 'unidades por mês') + chip(mesRot(u.periodo.mes_corrente) + ' (parcial)', fmt(g.mes_corrente), 'unidades · fora da média');
+  const cls = 'fp-prow' + (fin ? ' fin' : '');
+  const n0 = (txt, zero) => zero ? `<span class="z">${txt}</span>` : txt;
+  const cab = fin
+    ? `<div class="${cls} head"><div>Produto</div>${meses.map(x => `<div class="num">${mesRot(x)} un</div>`).join('')}<div class="num">Total un</div>${meses.map(x => `<div class="num">${mesRot(x)} R$</div>`).join('')}<div class="num">Total R$</div><div class="num">Média R$/mês</div><div class="num">% do forn.</div></div>`
+    : `<div class="${cls} head"><div>Produto</div>${meses.map(x => `<div class="num">${mesRot(x)} un</div>`).join('')}<div class="num">Total un</div></div>`;
+  const linhas = itens.map(({ p, pv, pct }) => {
     const nome = p.id === 'SEM_PRODUTO' ? 'Item sem produto cadastrado' : (p.nome || 'Produto ' + p.id);
-    return `<div class="${cls}"><div class="pn"><div class="nome">${esc(nome)}</div><div class="meta">${esc(p.codigo || (p.id === 'SEM_PRODUTO' ? '' : p.id))}</div>${bd ? `<div class="badges">${bd}</div>` : ''}</div>
-      <div class="num"><span class="lbl">Estoque </span>${p.estoque === null || p.estoque === undefined ? '—' : `<span class="${p.estoque < 0 ? 'neg-num' : ''}">${fmt(p.estoque)}</span>`}</div>
-      ${p.un.map((x, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} </span>${fmt(x)}</div>`).join('')}<div class="num"><span class="lbl">Média </span><b>${fmt(p.media)}</b></div><div class="num"><span class="lbl">Corrente </span>${fmt(p.mes_corrente)}</div><div class="num"><span class="lbl">Total </span>${fmt(p.soma)}</div>
-      ${val ? `<div class="num"><span class="lbl">R$/mês </span>${pv ? brl(pv.media_cents) : '—'}</div>` : ''}</div>`;
+    const resTot = p.reservado.un.reduce((a, b) => a + b, 0) + p.reservado.mes_corrente + p.reservado.futuro;
+    const bd = [p.outros_fornecedores > 0 ? `<span class="bd at">TAMBÉM COMPRADO DE ${p.outros_fornecedores} OUTRO(S) FORNECEDOR(ES)</span>` : '', resTot > 0 ? `<span class="bd at">RESERVADO ${fmt(resTot)} un (fora)</span>` : '', p.soma === 0 ? '<span class="bd sem">SEM VENDA NOS 3 MESES · SÓ MÊS CORRENTE/RESERVA</span>' : ''].join('');
+    const meta = [p.id === 'SEM_PRODUTO' ? '' : (p.codigo || p.id), p.estoque === null || p.estoque === undefined ? '' : 'estoque ' + fmt(p.estoque)].filter(Boolean).map(esc).join(' · ');
+    const un = p.un.map((x, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} un </span>${n0(fmt(x), x === 0)}</div>`).join('') + `<div class="num"><span class="lbl">Total un </span><b>${fmt(p.soma)}</b></div>`;
+    const rs = fin ? pv.liq_cents.map((c, i) => `<div class="num"><span class="lbl">${mesRot(meses[i])} R$ </span>${n0(brl(c), c === 0)}</div>`).join('') + `<div class="num"><span class="lbl">Total R$ </span><b>${brl(pv.soma_cents)}</b></div><div class="num"><span class="lbl">Média R$/mês </span>${brl(pv.media_cents)}</div><div class="num pct"><span class="lbl">% do fornecedor </span>${pctTxt(pct)}${pct !== null ? `<div class="fp-pct-bar"><i style="width:${Math.min(100, Math.max(0, pct)).toFixed(1)}%"></i></div>` : ''}</div>` : '';
+    return `<div class="${cls}" data-pid="${esc(p.id)}"><div class="pn"><div class="nome">${esc(nome)}</div><div class="meta">${meta}</div>${bd ? `<div class="badges">${bd}</div>` : ''}</div>${un}${rs}</div>`;
   }).join('');
-  const cab = `<div class="${cls} head"><div>Produto</div><div class="num">Estoque atual</div>${meses.map(x => `<div class="num">${mesRot(x)}</div>`).join('')}<div class="num">Média/mês</div><div class="num">Corrente</div><div class="num">Total</div>${val ? '<div class="num">Média R$/mês</div>' : ''}</div>`;
   const aviso = g.reposicao && g.reposicao.elegivel === false ? `<div class="forn-nota warn">Este grupo <b>não gera sugestão automática de reposição</b> (${g.tipo === 'ITENS_SEM_PRODUTO' ? 'item de venda sem produto cadastrado' : g.tipo === 'INTERNO' ? 'origem interna, ainda não avaliada' : 'produto sem fornecedor identificado'}).</div>` : '';
-  const vazio = g.produtos.length === 0 ? `<div class="vazio">${u.detalhe_produtos === false ? 'Detalhe por produto indisponível nesta geração (documento resumido).' : 'Nenhum produto vendido neste grupo no período.'}</div>` : '';
-  return `<div class="fdet">${aviso}<div class="fdet-top"><b>${fmt(g.produtos_vendidos)} produto(s) vendido(s)</b><input type="search" id="fornBuscaProd" placeholder="Buscar produto ou código…" autocomplete="off" value="${esc(FORN.buscaProd)}"></div>${prods.length ? cab + linhas : vazio}</div>`;
+  const vazio = g.sem_vendas ? `<div class="vazio">Este fornecedor não teve vendas nos ${meses.length} meses completos (${esc(mesRot(meses[0]))} a ${esc(mesRot(meses[meses.length - 1]))}). ${g.produtos_atribuidos > 0 ? `Produtos hoje atribuídos a ele (última compra confirmada): ${fmt(g.produtos_atribuidos)}.` : 'Nenhum produto está atribuído a ele pela última compra confirmada.'}</div>` : g.produtos.length === 0 ? `<div class="vazio">${u.detalhe_produtos === false ? 'Detalhe por produto indisponível nesta geração (documento resumido).' : 'Nenhum produto vendido neste grupo no período.'}</div>` : (itens.length ? '' : '<div class="vazio">Nenhum produto encontrado.</div>');
+  dbox.innerHTML = `<div class="fp-ov" data-fp-fechar></div><aside class="fp-drawer${g.sem_vendas ? ' sv' : ''}" role="dialog" aria-modal="true" aria-labelledby="fpTitulo">
+    <div class="fp-dh"><div class="tit"><h3 id="fpTitulo">${esc(g.nome)}</h3><div class="badges"><span class="bd ${k === 'int' ? 'int' : k === 'ext' ? 'at' : 'sem'}">${esc((TIPO_TXT[g.tipo] || '').toUpperCase())}</span>${selosGrupo(g, k)}</div>${g.fornecedor_id ? `<div class="fp-sub" style="font-size:.72rem;color:var(--muted);margin-top:.25rem">Código do fornecedor no ERP: ${esc(g.fornecedor_id)}</div>` : ''}</div>
+      <button type="button" class="fp-x" data-fp-fechar aria-label="Fechar detalhes">✕</button></div>
+    <div class="fp-db">${aviso}<div class="fp-kpis">${kpis}</div>
+      <div class="fp-tools"><input type="search" id="fpBusca" placeholder="Buscar produto, código…" autocomplete="off" value="${esc(FORN.buscaProd)}">
+        <select id="fpOrdem" aria-label="Ordenar produtos">${ords.map(([kk, r]) => `<option value="${kk}"${ord === kk ? ' selected' : ''}>Ordem: ${r}</option>`).join('')}</select>
+        <label class="tog"><input type="checkbox" id="fpSoCorrente"${FORN.soMesCorrente ? ' checked' : ''}> Incluir produtos sem venda nos 3 meses</label></div>
+      <div class="contagem">${fmt(itens.length)} produto(s) exibido(s) de ${fmt(totalProdutos)} vendidos no período${fin ? ' · % = faturamento do produto ÷ faturamento do fornecedor' : ''}</div>
+      <div class="fp-tab">${itens.length ? cab + linhas : ''}</div>${vazio}</div></aside>`;
+  const x = dbox.querySelector('.fp-x'); if (x && !renderDrawer.focado) { x.focus(); }
+  ligarDrawer(dbox);
 }
 
-function ligarForn(box) {
-  const reabrir = id => { const el = document.getElementById(id); if (el) { el.focus(); const n = el.value.length; try { el.setSelectionRange(n, n); } catch (_) { /* tipo search */ } } };
-  box.querySelectorAll('[data-forn]').forEach(el => {
-    const alternar = () => { FORN.sel = FORN.sel === el.dataset.forn ? null : el.dataset.forn; FORN.buscaProd = ''; render(); };
-    el.addEventListener('click', alternar); el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); alternar(); } });
-  });
-  const b = document.getElementById('fornBusca'); if (b) b.addEventListener('input', e => { FORN.busca = e.target.value; render(); reabrir('fornBusca'); });
-  const bp = document.getElementById('fornBuscaProd'); if (bp) bp.addEventListener('input', e => { FORN.buscaProd = e.target.value; render(); reabrir('fornBuscaProd'); });
-  const o = document.getElementById('fornOrdem'); if (o) o.addEventListener('change', e => { FORN.ordem = e.target.value; render(); });
-  box.querySelectorAll('#fornSeg button').forEach(x => x.addEventListener('click', () => { FORN.grupo = x.dataset.v; FORN.sel = null; render(); }));
+function fFechar() {
+  const chave = FORN.sel; FORN.sel = null; FORN.buscaProd = ''; FORN.ordemProd = null; FORN.soMesCorrente = false;
+  renderDrawer();
+  const linha = chave ? [...document.querySelectorAll('#painelForn [data-forn]')].find(e => e.dataset.forn === chave) : null; if (linha) linha.focus();
 }
+function ligarForn(box) {
+  const reabrir = id => { const e = document.getElementById(id); if (e) { e.focus(); const n = e.value.length; try { e.setSelectionRange(n, n); } catch (_) { /* tipo search */ } } };
+  box.querySelectorAll('[data-forn]').forEach(el => {
+    const abrir = () => { FORN.sel = el.dataset.forn; FORN.buscaProd = ''; FORN.ordemProd = null; FORN.soMesCorrente = false; renderDrawer(); };
+    el.addEventListener('click', abrir); el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); } });
+  });
+  const b = document.getElementById('fornBusca'); if (b) b.addEventListener('input', e => { FORN.busca = e.target.value; renderFornecedores(); reabrir('fornBusca'); });
+  const s = document.getElementById('fornSituacao'); if (s) s.addEventListener('change', e => { FORN.situacao = e.target.value; renderFornecedores(); });
+  const o = document.getElementById('fornOrdem'); if (o) o.addEventListener('change', e => { FORN.ordem = e.target.value; renderFornecedores(); });
+  box.querySelectorAll('#fornSeg button').forEach(x => x.addEventListener('click', () => { FORN.tipo = x.dataset.v; renderFornecedores(); }));
+}
+function ligarDrawer(dbox) {
+  const reabrir = id => { const e = document.getElementById(id); if (e) { e.focus(); const n = e.value.length; try { e.setSelectionRange(n, n); } catch (_) { /* tipo search */ } } };
+  dbox.querySelectorAll('[data-fp-fechar]').forEach(x => x.addEventListener('click', fFechar));
+  const b = document.getElementById('fpBusca'); if (b) b.addEventListener('input', e => { FORN.buscaProd = e.target.value; renderDrawer.focado = true; renderDrawer(); renderDrawer.focado = false; reabrir('fpBusca'); });
+  const o = document.getElementById('fpOrdem'); if (o) o.addEventListener('change', e => { FORN.ordemProd = e.target.value; renderDrawer.focado = true; renderDrawer(); renderDrawer.focado = false; });
+  const c = document.getElementById('fpSoCorrente'); if (c) c.addEventListener('change', e => { FORN.soMesCorrente = e.target.checked; renderDrawer.focado = true; renderDrawer(); renderDrawer.focado = false; });
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && FORN.sel) fFechar(); });
 
 // ── Agente de Compras (IA): aba OCULTA por padrão; só aparece depois que o BACKEND confirma o acesso (modo 'acesso'). Esconder a aba nunca é a proteção. ──
 const AGENTE_FORMATOS = { capitalSugerido: 'brl', receitaPotencial: 'brl', lucroBrutoPotencial: 'brl', capitalNecessario: 'brl', custoUnitario: 'brl', precoUnitario: 'brl', impactoReceitaDia: 'brl', lucroPotencial: 'brl', cestaCapital: 'brl',

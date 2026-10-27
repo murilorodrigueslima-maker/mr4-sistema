@@ -184,6 +184,7 @@
   /* painel lateral de produtos */
   body.fp-lock { overflow: hidden; }
   .fp-ov { position: fixed; inset: 0; background: rgba(32, 33, 36, .45); z-index: 900; }
+  .fp-drawer.sv .fp-tools, .fp-drawer.sv .fp-db .contagem { display: none; }
   .fp-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(1180px, 96vw); background: var(--white); z-index: 901; box-shadow: -8px 0 30px rgba(0, 0, 0, .18); display: flex; flex-direction: column; animation: fp-in .18s ease-out; }
   @keyframes fp-in { from { transform: translateX(24px); opacity: .6; } to { transform: none; opacity: 1; } }
   .fp-dh { display: flex; align-items: flex-start; gap: .8rem; padding: 1rem 1.2rem .8rem; border-bottom: 1px solid var(--border); }
@@ -710,8 +711,16 @@ async function carregarFornecedores() {
   FORN.carregado = true; FORN.carregando = false;
 }
 const finOn = () => !!FORN.val;
-const fGrupos = () => { const u = FORN.un; return u ? [...u.externos.map(g => [g, 'ext']), ...u.internos.map(g => [g, 'int']), [u.sem_fornecedor, 'sem'], [u.itens_sem_produto, 'isp']] : []; };
-const fValG = chave => { const v = FORN.val; return v ? ([...v.externos, ...v.internos, v.sem_fornecedor, v.itens_sem_produto].find(g => g.chave === chave) || null) : null; };
+// Fornecedores cadastrados SEM venda nos meses completos (lista `sem_vendas` do documento de unidades; documento antigo sem a lista ⇒ vazio).
+// A lista só traz identificação (nome, tipo, selo, produtos atribuídos); aqui ela vira um grupo "zerado" para entrar na mesma tabela e nos mesmos filtros.
+// Nenhum valor é buscado nem calculado: zero é a definição de "sem vendas", não um dado financeiro.
+const fSemVendas = () => { const u = FORN.un, n = u ? u.periodo.meses.length : 0; return u && Array.isArray(u.sem_vendas) ? u.sem_vendas.map(x => ({ ...x, sem_vendas: true, un: Array(n).fill(0), soma: 0, media: 0, mes_corrente: 0, produtos_vendidos: 0, produtos: [],
+  reservado: { un: Array(n).fill(0), mes_corrente: 0, futuro: 0, total: 0 }, reposicao: x.tipo === 'INTERNO' ? { elegivel: false, motivo: 'ORIGEM_INTERNA_NAO_AVALIADA' } : { elegivel: true, motivo: null } })) : []; };
+const fGrupos = () => { const u = FORN.un; if (!u) return []; const sv = fSemVendas();
+  return [...u.externos.map(g => [g, 'ext']), ...sv.filter(g => g.tipo === 'EXTERNO').map(g => [g, 'ext']), ...u.internos.map(g => [g, 'int']), ...sv.filter(g => g.tipo === 'INTERNO').map(g => [g, 'int']), [u.sem_fornecedor, 'sem'], [u.itens_sem_produto, 'isp']]; };
+const fValG = chave => { const v = FORN.val; if (!v) return null; const g = [...v.externos, ...v.internos, v.sem_fornecedor, v.itens_sem_produto].find(x => x.chave === chave);
+  if (g) return g; const n = FORN.un.periodo.meses.length;
+  return (FORN.un.sem_vendas || []).some(x => x.chave === chave) ? { chave, liq_cents: Array(n).fill(0), soma_cents: 0, media_cents: 0, mes_corrente_cents: 0, produtos: {} } : null; };
 const fSecao = { ext: 'Fornecedores externos', int: 'Origem interna', sem: 'Produtos sem fornecedor identificado', isp: 'Itens de venda sem produto cadastrado' };
 const fRot = { todos: 'Todos', ext: 'Externos', int: 'Origem interna', sem: 'Sem fornecedor', isp: 'Itens sem produto' };
 const ORDEM_FORN = () => (finOn()
@@ -728,10 +737,10 @@ function fFiltradas() {
   const secao = { ext: 0, int: 1, sem: 2, isp: 3 };
   return fLinhas().filter(r => (FORN.tipo === 'todos' || FORN.tipo === r.k) && (FORN.situacao === 'todos' || (FORN.situacao === 'com' ? r.g.soma > 0 : r.g.soma === 0))
     && (!q || String(r.g.nome || '').toLowerCase().includes(q) || String(r.g.nome_anterior || '').toLowerCase().includes(q) || String(r.g.fornecedor_id || '').toLowerCase().includes(q)))
-    .sort((a, b) => (secao[a.k] - secao[b.k]) || (ord === 'nome' ? String(a.g.nome).localeCompare(String(b.g.nome), 'pt-BR') : (chave(b) - chave(a))) || String(a.g.chave).localeCompare(String(b.g.chave)));
+    .sort((a, b) => (secao[a.k] - secao[b.k]) || (!!a.g.sem_vendas - !!b.g.sem_vendas) || (ord === 'nome' ? String(a.g.nome).localeCompare(String(b.g.nome), 'pt-BR') : (chave(b) - chave(a))) || String(a.g.chave).localeCompare(String(b.g.chave)));
 }
-const selosGrupo = (g, k) => [g.nome_origem === 'FALLBACK_ID' ? '<span class="bd at">NOME INDISPONÍVEL</span>' : '', g.inativo ? '<span class="bd sem">FORNECEDOR INATIVO</span>' : '', g.nome_ausente_na_api ? '<span class="bd at">AUSENTE NO CADASTRO ATUAL · ÚLTIMO NOME CONHECIDO</span>' : '',
-  g.nome_anterior ? `<span class="bd at">RENOMEADO · ANTES: ${esc(g.nome_anterior)}</span>` : '', k === 'int' ? '<span class="bd int">ORIGEM INTERNA</span>' : '', (k === 'sem' || k === 'isp') ? '<span class="bd sem">SEM SUGESTÃO AUTOMÁTICA</span>' : '',
+const selosGrupo = (g, k) => [g.nome_origem === 'FALLBACK_ID' ? '<span class="bd at">NOME INDISPONÍVEL</span>' : '', g.inativo ? '<span class="bd sem">INATIVO</span>' : '', g.nome_ausente_na_api ? '<span class="bd at">AUSENTE NO CADASTRO ATUAL · ÚLTIMO NOME CONHECIDO</span>' : '',
+  g.nome_anterior ? `<span class="bd at">RENOMEADO · ANTES: ${esc(g.nome_anterior)}</span>` : '', k === 'int' ? '<span class="bd int">ORIGEM INTERNA</span>' : '', g.sem_vendas ? '<span class="bd sem">SEM VENDAS NO PERÍODO</span>' : '', (k === 'sem' || k === 'isp') ? '<span class="bd sem">SEM SUGESTÃO AUTOMÁTICA</span>' : '',
   g.reservado.total > 0 ? `<span class="bd at">RESERVADO: ${fmt(g.reservado.total)} un (fora da apuração)</span>` : ''].join('');
 
 function renderFornecedores() {
@@ -751,12 +760,12 @@ function renderFornecedores() {
   (m.limitacoes || []).filter(k => k === 'CONCILIACAO_NAO_FECHA').forEach(k => alertas.push(['fail', esc(LIMITACAO_TXT[k])]));
   const nomesFalta = (m.limitacoes || []).includes('NOMES_DE_FORNECEDOR_AUSENTES');
   const fecha = u.conciliacao && u.conciliacao.fecha === true && (!fin || (FORN.val.conciliacao || {}).fecha === true);
-  const comVenda = [...u.externos, ...u.internos].filter(g => g.soma > 0).length;
+  const comVenda = [...u.externos, ...u.internos].filter(g => g.soma > 0).length, semVenda = fGrupos().filter(([g, k]) => (k === 'ext' || k === 'int') && g.soma === 0).length;
   const chip = (k, v, un, cls = '') => `<div class="chip ${cls}"><div class="k">${k}</div><div class="v">${v}</div><div class="u">${un}</div></div>`;
   const periodoTxt = `${mesRot(meses[0])} a ${mesRot(meses[meses.length - 1])}`;
   const kpis = fin
-    ? chip('Faturamento líquido (3 meses)', brl(V.soma_cents), periodoTxt + ' · só gestor', 'dest') + chip('Média mensal', brl(V.media_cents), 'faturamento por mês · ÷ ' + meses.length) + chip('Unidades vendidas', fmt(t.soma), 'no período · ' + fmt(t.produtos_vendidos) + ' produtos') + chip('Fornecedores com vendas', fmt(comVenda), 'externos + origem interna') + chip('Mês corrente (parcial)', brl(V.mes_corrente_cents), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`)
-    : chip('Unidades vendidas', fmt(t.soma), periodoTxt, 'dest') + chip('Média mensal', fmt(t.media), 'unidades por mês') + chip('Mês corrente (parcial)', fmt(t.mes_corrente), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`) + chip('Fornecedores com vendas', fmt(comVenda), fmt(t.produtos_vendidos) + ' produtos vendidos');
+    ? chip('Faturamento líquido (3 meses)', brl(V.soma_cents), periodoTxt + ' · só gestor', 'dest') + chip('Média mensal', brl(V.media_cents), 'faturamento por mês · ÷ ' + meses.length) + chip('Unidades vendidas', fmt(t.soma), 'no período · ' + fmt(t.produtos_vendidos) + ' produtos') + chip('Fornecedores com vendas', fmt(comVenda), 'externos + origem interna · ' + fmt(semVenda) + ' sem vendas') + chip('Mês corrente (parcial)', brl(V.mes_corrente_cents), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`)
+    : chip('Unidades vendidas', fmt(t.soma), periodoTxt, 'dest') + chip('Média mensal', fmt(t.media), 'unidades por mês') + chip('Mês corrente (parcial)', fmt(t.mes_corrente), `${mesRot(u.periodo.mes_corrente)} até dia ${fmt(u.periodo.dia_do_mes_corrente)} · fora da média`) + chip('Fornecedores com vendas', fmt(comVenda), fmt(t.produtos_vendidos) + ' produtos · ' + fmt(semVenda) + ' sem vendas');
   const cabecalho = `<div class="fp-head"><h2>Análise de Vendas por Fornecedor</h2><p class="fp-sub">${fin ? 'Faturamento líquido de produtos' : 'Quantidades vendidas'} nos 3 meses civis completos (${periodoTxt}), com o mês corrente à parte. Clique em um fornecedor para ver os produtos vendidos.</p></div>
     ${alertas.map(([c, h]) => `<div class="forn-nota ${c}">${h}</div>`).join('')}
     <div class="forn-nota"><b>Atribuição gerencial.</b> ${esc((m.atribuicao || {}).aviso || 'Cada produto é associado ao fornecedor da última compra confirmada; isso não representa a origem histórica exata do estoque vendido.')}
@@ -785,7 +794,7 @@ function renderFornecedores() {
     const sub = selosGrupo(r.g, r.k);
     corpo += `<div class="${cls} item" data-forn="${esc(r.g.chave)}" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Ver produtos de ${esc(r.g.nome)}"><div class="fn"><div class="nome">${esc(r.g.nome)}</div>${sub ? `<div class="badges">${sub}</div>` : ''}</div>${celulas(r)}</div>`;
   }
-  if (!lista.length) corpo = `<div class="vazio">${FORN.situacao === 'sem' ? 'Nenhum fornecedor com venda zerada nos 3 meses neste documento. Fornecedores cadastrados que não aparecem aqui simplesmente não tiveram nenhuma venda e não são listados pelo servidor.' : 'Nenhum fornecedor encontrado.'}</div>`;
+  if (!lista.length) corpo = `<div class="vazio">${FORN.situacao === 'sem' ? (Array.isArray(u.sem_vendas) ? 'Nenhum fornecedor sem vendas no período com esses filtros.' : 'Esta geração ainda não lista os fornecedores sem vendas; ela aparece após o próximo sincronismo completo.') : 'Nenhum fornecedor encontrado.'}</div>`;
   const tot = fin
     ? `<div class="${cls} tot"><div class="fn">Total geral (todos os grupos)</div>${V.liq_cents.map(c => `<div class="num">${brl(c)}</div>`).join('')}<div class="num">${brl(V.soma_cents)}</div><div class="num">${fmt(t.soma)}</div><div class="num">${fmt(t.produtos_vendidos)}</div><div class="num">${brl(V.media_cents)}</div><div class="num">${brl(V.mes_corrente_cents)}</div><div></div></div>`
     : `<div class="${cls} tot"><div class="fn">Total geral (todos os grupos)</div>${t.un.map(x => `<div class="num">${fmt(x)}</div>`).join('')}<div class="num">${fmt(t.media)}</div><div class="num">${fmt(t.mes_corrente)}</div><div class="num">${fmt(t.produtos_vendidos)}</div><div class="num">${fmt(t.soma)}</div><div></div></div>`;
@@ -834,8 +843,8 @@ function renderDrawer() {
     return `<div class="${cls}" data-pid="${esc(p.id)}"><div class="pn"><div class="nome">${esc(nome)}</div><div class="meta">${meta}</div>${bd ? `<div class="badges">${bd}</div>` : ''}</div>${un}${rs}</div>`;
   }).join('');
   const aviso = g.reposicao && g.reposicao.elegivel === false ? `<div class="forn-nota warn">Este grupo <b>não gera sugestão automática de reposição</b> (${g.tipo === 'ITENS_SEM_PRODUTO' ? 'item de venda sem produto cadastrado' : g.tipo === 'INTERNO' ? 'origem interna, ainda não avaliada' : 'produto sem fornecedor identificado'}).</div>` : '';
-  const vazio = g.produtos.length === 0 ? `<div class="vazio">${u.detalhe_produtos === false ? 'Detalhe por produto indisponível nesta geração (documento resumido).' : 'Nenhum produto vendido neste grupo no período.'}</div>` : (itens.length ? '' : '<div class="vazio">Nenhum produto encontrado.</div>');
-  dbox.innerHTML = `<div class="fp-ov" data-fp-fechar></div><aside class="fp-drawer" role="dialog" aria-modal="true" aria-labelledby="fpTitulo">
+  const vazio = g.sem_vendas ? `<div class="vazio">Este fornecedor não teve vendas nos ${meses.length} meses completos (${esc(mesRot(meses[0]))} a ${esc(mesRot(meses[meses.length - 1]))}). ${g.produtos_atribuidos > 0 ? `Produtos hoje atribuídos a ele (última compra confirmada): ${fmt(g.produtos_atribuidos)}.` : 'Nenhum produto está atribuído a ele pela última compra confirmada.'}</div>` : g.produtos.length === 0 ? `<div class="vazio">${u.detalhe_produtos === false ? 'Detalhe por produto indisponível nesta geração (documento resumido).' : 'Nenhum produto vendido neste grupo no período.'}</div>` : (itens.length ? '' : '<div class="vazio">Nenhum produto encontrado.</div>');
+  dbox.innerHTML = `<div class="fp-ov" data-fp-fechar></div><aside class="fp-drawer${g.sem_vendas ? ' sv' : ''}" role="dialog" aria-modal="true" aria-labelledby="fpTitulo">
     <div class="fp-dh"><div class="tit"><h3 id="fpTitulo">${esc(g.nome)}</h3><div class="badges"><span class="bd ${k === 'int' ? 'int' : k === 'ext' ? 'at' : 'sem'}">${esc((TIPO_TXT[g.tipo] || '').toUpperCase())}</span>${selosGrupo(g, k)}</div>${g.fornecedor_id ? `<div class="fp-sub" style="font-size:.72rem;color:var(--muted);margin-top:.25rem">Código do fornecedor no ERP: ${esc(g.fornecedor_id)}</div>` : ''}</div>
       <button type="button" class="fp-x" data-fp-fechar aria-label="Fechar detalhes">✕</button></div>
     <div class="fp-db">${aviso}<div class="fp-kpis">${kpis}</div>

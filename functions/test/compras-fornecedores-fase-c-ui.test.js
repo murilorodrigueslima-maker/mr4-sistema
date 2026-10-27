@@ -169,14 +169,14 @@ describe('Painel gerencial — busca, filtros e ordenação dos fornecedores', (
     t.digitar('fornBusca', 'beta'); expect(nomes(t.painel())).toContain('BETA IMPORTADORA'); expect(t.painel()).not.toContain('ZETA'); t.digitar('fornBusca', '');
     t.seg('int'); expect(secoes(t.painel())).toEqual(['Origem interna']); t.seg('isp'); expect(secoes(t.painel())).toEqual(['Itens de venda sem produto cadastrado']); t.seg('todos');
     t.sit('com'); expect(secoes(t.painel()).length).toBe(4); t.sit('sem');
-    expect(t.painel()).toContain('Nenhum fornecedor com venda zerada nos 3 meses');          // hoje o documento só lista quem vendeu
+    expect(nomes(t.painel())).toEqual(['GAMA']);                                            // fornecedor conhecido (cadastro/compras) sem venda nos 3 meses
   });
   test('"Sem vendas": lista os grupos com os 3 meses zerados quando o documento os traz', async () => {
     const un = JSON.parse(JSON.stringify(DOCS.unidades)), va = JSON.parse(JSON.stringify(DOCS.valores));
     const vazio = JSON.parse(JSON.stringify(un.externos[0])); Object.assign(vazio, { chave: 'EXTERNO:F00', fornecedor_id: 'F00', nome: 'FORNECEDOR PARADO', un: [0, 0, 0], soma: 0, media: 0, mes_corrente: 0, produtos_vendidos: 0, produtos: [] });
     un.externos.push(vazio); va.externos.push({ chave: 'EXTERNO:F00', liq_cents: [0, 0, 0], soma_cents: 0, media_cents: 0, mes_corrente_cents: 0, reservado_liq_cents: { por_mes: [0, 0, 0], mes_corrente: 0, futuro: 0, total: 0 }, produtos: {} });
-    const s = await (await tela({ unidades: un, valores: va })).abrir(); s.sit('sem'); expect(nomes(s.painel())).toEqual(['FORNECEDOR PARADO']);
-    s.sit('com'); expect(nomes(s.painel())).not.toContain('FORNECEDOR PARADO');
+    const s = await (await tela({ unidades: un, valores: va })).abrir(); s.sit('sem'); expect(nomes(s.painel())).toEqual(['FORNECEDOR PARADO', 'GAMA']);   // grupo com venda zero no documento + fornecedor da lista sem_vendas
+    s.sit('com'); expect(nomes(s.painel())).not.toContain('FORNECEDOR PARADO'); expect(nomes(s.painel())).not.toContain('GAMA');
   });
 });
 
@@ -257,7 +257,7 @@ describe('Painel gerencial — alertas de atualização e nomes (preservados)', 
   const rico = (extra = {}) => gerar({ nomes: { F1: { nome: 'ALFA <b>COMERCIAL</b>', ativo: false, nome_anterior: 'ANTIGA <i>RAZAO</i>', ausente: false }, F2: { nome: 'BETA IMPORTADORA', ativo: true, ausente: true }, F3: 'GAMA', F9: 'ZETA' }, nomesMeta: { ...nm, ...extra } });
   test('selos de inativo, renomeado (nome anterior escapado) e ausente; busca pelo nome anterior', async () => {
     const d = rico(); const t = await (await tela({ unidades: d.unidades, valores: d.valores })).abrir(); const h = t.painel();
-    expect(h).toContain('FORNECEDOR INATIVO'); expect(h).toContain('AUSENTE NO CADASTRO ATUAL'); expect(h).toContain('RENOMEADO · ANTES: ANTIGA &lt;i&gt;RAZAO&lt;/i&gt;'); expect(h).not.toContain('<i>RAZAO</i>');
+    expect(h).toContain('>INATIVO<'); expect(h).toContain('AUSENTE NO CADASTRO ATUAL'); expect(h).toContain('RENOMEADO · ANTES: ANTIGA &lt;i&gt;RAZAO&lt;/i&gt;'); expect(h).not.toContain('<i>RAZAO</i>');
     t.digitar('fornBusca', 'antiga'); expect(nomes(t.painel())).toEqual(['ALFA <b>COMERCIAL</b>']);
   });
   test('visão antiga, sincronismo atrasado, nomes desatualizados e conciliação quebrada são sinalizados', async () => {
@@ -291,5 +291,78 @@ describe('Regressão: o resto da tela de Compras não mudou', () => {
     const src = script(HTML); const novos = src.split('\n').filter(l => /compras_n0_fornecedores/.test(l));
     expect(novos.length).toBeGreaterThan(0); expect(src).not.toMatch(/gestaoclick|api\.gestaoclick/i);
     expect(src.match(/getDoc\(doc\(db, 'compras_n0_fornecedores'/g).length).toBe(2);
+  });
+});
+
+
+// ── Fase C.4 · fornecedores conhecidos sem vendas (lista `sem_vendas` do documento de unidades) ──────────────────────────────────────────
+const NOMES4 = { ...NOMES, F8: 'DELTA PARADA', F7: 'EPSILON INATIVA', 2026205: 'MR4 TRANSFERENCIA' };
+const DOCS4 = gerar({ nomes: { ...NOMES4, F7: { nome: 'EPSILON INATIVA', ativo: false } }, config: { ...Forn.DEFAULTS, internal_supplier_ids: ['2026204', '2026205'] } });
+const SV = DOCS4.unidades.sem_vendas;
+const fatTotal = h => unesc((h.match(/Faturamento líquido \(3 meses\)<\/div><div class="v">([^<]*)</) || [])[1] || '');
+describe('Fornecedores sem vendas — tabela, filtros, selo Inativo e painel', () => {
+  test('o documento de teste traz sem vendas externos (ativo e inativo) e interno, sem duplicar quem vendeu', () => {
+    expect(SV.map(x => x.nome).sort()).toEqual(['DELTA PARADA', 'EPSILON INATIVA', 'GAMA', 'MR4 TRANSFERENCIA']);
+    const com = [...DOCS4.unidades.externos, ...DOCS4.unidades.internos].map(g => g.fornecedor_id);
+    expect(SV.filter(x => com.includes(x.fornecedor_id))).toEqual([]);
+  });
+  test('filtro "Sem vendas": lista todos, com R$ e unidades zerados; externos antes dos internos; selo Inativo; sem duplicar', async () => {
+    const t = await (await tela({ unidades: DOCS4.unidades, valores: DOCS4.valores })).abrir(); t.sit('sem'); const h = t.painel();
+    expect([...nomes(h)].sort()).toEqual(['DELTA PARADA', 'EPSILON INATIVA', 'GAMA', 'MR4 TRANSFERENCIA']);
+    expect(secoes(h)).toEqual(['Fornecedores externos', 'Origem interna']);
+    expect(new Set(nomes(h)).size).toBe(4);
+    for (const x of SV) expect(linhaDe(h, x.chave)).not.toBeNull();
+    const lin = x => linhaDe(h, x.chave).cel;
+    SV.forEach(x => { expect(lin(x).filter(c => /R\$/.test(c)).every(c => cents(c) === 0)).toBe(true); expect(lin(x)[4]).toBe('0'); expect(lin(x)[5]).toBe('0'); });
+    expect(h).toContain('SEM VENDAS NO PERÍODO'); expect((h.match(/>INATIVO</g) || []).length).toBe(1);
+    expect(h.slice(h.indexOf('EXTERNO:F7'), h.indexOf('EXTERNO:F7') + 900)).toContain('>INATIVO<');
+    expect(h.slice(h.indexOf('INTERNO:2026205'), h.indexOf('INTERNO:2026205') + 900)).toContain('ORIGEM INTERNA');
+  });
+  test('"Com vendas" não mostra ninguém da lista; "Todos" mostra com vendas primeiro e sem vendas no fim de cada seção; totais não mudam', async () => {
+    const t = await (await tela({ unidades: DOCS4.unidades, valores: DOCS4.valores })).abrir(); t.sit('com');
+    SV.forEach(x => expect(nomes(t.painel())).not.toContain(x.nome));
+    t.sit('todos'); const n = nomes(t.painel()), ext = DOCS4.unidades.externos.map(g => g.nome);
+    const ultimoCom = Math.max(...ext.map(x => n.indexOf(x))), primeiroSem = Math.min(...['DELTA PARADA', 'EPSILON INATIVA', 'GAMA'].map(x => n.indexOf(x)));
+    expect(ultimoCom).toBeLessThan(primeiroSem);
+    t.ordem('nome'); const n2 = nomes(t.painel()); expect(Math.max(...ext.map(x => n2.indexOf(x)))).toBeLessThan(Math.min(...['DELTA PARADA', 'EPSILON INATIVA', 'GAMA'].map(x => n2.indexOf(x))));
+    expect(fatTotal(t.painel())).toBe(fatTotal((await (await tela({ unidades: DOCS.unidades, valores: DOCS.valores })).abrir()).painel()));   // faturamento total igual ao sem a lista
+  });
+  test('filtros por agrupamento e busca alcançam os sem vendas (inclusive pelo código do fornecedor)', async () => {
+    const t = await (await tela({ unidades: DOCS4.unidades, valores: DOCS4.valores })).abrir();
+    t.seg('int'); expect(nomes(t.painel())).toEqual(expect.arrayContaining(['MR4 TRANSFERENCIA'])); t.seg('ext'); expect(nomes(t.painel())).not.toContain('MR4 TRANSFERENCIA'); expect(nomes(t.painel())).toContain('DELTA PARADA'); t.seg('todos');
+    t.digitar('fornBusca', 'delta'); expect(nomes(t.painel())).toEqual(['DELTA PARADA']); t.digitar('fornBusca', 'F7'); expect(nomes(t.painel())).toEqual(['EPSILON INATIVA']);
+  });
+  test('indicadores contam os sem vendas e continuam contando só quem vendeu em "Fornecedores com vendas"', async () => {
+    const t = await (await tela({ unidades: DOCS4.unidades, valores: DOCS4.valores })).abrir(); const h = t.painel();
+    const com = [...DOCS4.unidades.externos, ...DOCS4.unidades.internos].filter(g => g.soma > 0).length;
+    expect(h).toContain(`<div class="k">Fornecedores com vendas</div><div class="v">${com}</div>`); expect(h).toContain('· 4 sem vendas');
+  });
+  test('painel de produtos de um fornecedor sem vendas: nome, tipo, zeros, mensagem clara e produtos atribuídos; fecha normalmente', async () => {
+    const t = await (await tela({ unidades: DOCS4.unidades, valores: DOCS4.valores })).abrir(); t.clicar('EXTERNO:F8');
+    const d = t.drawer(); expect(d).toContain('DELTA PARADA'); expect(d).toContain('FORNECEDOR EXTERNO'); expect(d).toContain('Este fornecedor não teve vendas nos 3 meses completos');
+    expect(d).toContain('Nenhum produto está atribuído'); expect(d).toMatch(/R\$\s0,00/); expect(t.corpo.has('fp-lock')).toBe(true);
+    t.fechar(); expect(t.drawer()).toBe(''); t.clicar('INTERNO:2026205'); expect(t.drawer()).toContain('ORIGEM INTERNA'); expect(t.drawer()).toContain('MR4 TRANSFERENCIA');
+  });
+  test('sem produtos vendidos, mas com produtos atribuídos pela última compra: a mensagem informa a quantidade', async () => {
+    const un = JSON.parse(JSON.stringify(DOCS4.unidades)); un.sem_vendas.find(x => x.fornecedor_id === 'F3').produtos_atribuidos = 5;
+    const t = await (await tela({ unidades: un, valores: DOCS4.valores })).abrir(); t.clicar('EXTERNO:F3'); expect(t.drawer()).toContain('atribuídos a ele (última compra confirmada): 5');
+  });
+  test('PERFIL SEM VALORES: a lista aparece só em unidades — nenhum R$ na tabela nem no painel, e o documento de valores não é lido', async () => {
+    const t = await tela({ unidades: DOCS4.unidades, valores: null, valoresNegado: true }); await t.abrir(); t.sit('sem'); const h = t.painel();
+    expect(nomes(h).length).toBe(4); expect(h).not.toMatch(/R\$/); expect(h).toContain('Unidades (maior)');
+    t.clicar('EXTERNO:F8'); expect(t.drawer()).not.toMatch(/R\$/); expect(t.drawer()).toContain('Este fornecedor não teve vendas'); expect(t.F().val).toBeNull();
+    expect(t.redes).toEqual([]);
+  });
+  test('COMPATIBILIDADE: documento sem a lista (backend antigo) funciona como na V2; sem filtro vazio enganoso', async () => {
+    const un = JSON.parse(JSON.stringify(DOCS4.unidades)); delete un.sem_vendas; delete un.conciliacao.fornecedores;
+    const t = await (await tela({ unidades: un, valores: DOCS4.valores })).abrir(); t.sit('sem');
+    expect(nomes(t.painel())).toEqual([]); expect(t.painel()).toContain('Esta geração ainda não lista os fornecedores sem vendas'); t.sit('todos'); expect(nomes(t.painel())).not.toContain('DELTA PARADA');
+    expect(fatTotal(t.painel())).toBe(fatTotal((await (await tela({ unidades: DOCS.unidades, valores: DOCS.valores })).abrir()).painel()));
+  });
+  test('COMPATIBILIDADE: a página ANTERIOR (V2 commitada) ignora o campo novo e mostra o mesmo que antes', async () => {
+    const v2 = (() => { try { return execFileSync('git', ['show', '2fa91cc:modulos/compras.html'], { cwd: __dirname, maxBuffer: 1 << 24 }).toString(); } catch (e) { return null; } })();
+    if (!v2) return;
+    const t = await (await tela({ unidades: DOCS4.unidades, valores: DOCS4.valores, html: v2 })).abrir(); const h = t.painel();
+    expect(fatTotal(h)).toBe(fatTotal((await (await tela({ unidades: DOCS.unidades, valores: DOCS.valores })).abrir()).painel())); expect(nomes(h)).not.toContain('DELTA PARADA'); expect(h).not.toContain('undefined');
   });
 });

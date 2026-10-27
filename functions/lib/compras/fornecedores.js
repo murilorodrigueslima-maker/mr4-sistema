@@ -234,6 +234,22 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
   });
   const externos = lista.filter(L => L.g.tipo === 'EXTERNO').sort(ordenar), internosL = lista.filter(L => L.g.tipo === 'INTERNO').sort(ordenar), sem = lista.find(L => L.g.tipo === 'SEM_FORNECEDOR'), semProduto = lista.find(L => L.g.tipo === 'ITENS_SEM_PRODUTO');
 
+  // ── fornecedores conhecidos SEM venda nos meses completos (só apresentação; nenhum número de venda depende disto) ──
+  // Conhecidos = ids do cache de nomes ∪ ids que são "última compra" de algum produto. Quem já tem grupo (inclusive grupo só com mês corrente/reservado) NÃO entra aqui.
+  const comGrupo = new Set(lista.filter(L => L.g.supplier_id).map(L => String(L.g.supplier_id)));
+  const atribuidos = {};
+  for (const sid of Object.values(ultimo)) atribuidos[sid] = (atribuidos[sid] || 0) + 1;
+  const conhecidos = new Set([...Object.keys(nomes || {}), ...Object.keys(atribuidos)].map(String));
+  const semVendas = [...conhecidos].filter(id => !comGrupo.has(id)).map(id => {
+    const g = { tipo: internos.has(id) ? 'INTERNO' : 'EXTERNO', supplier_id: id };
+    const n = nomeDe(g);
+    return { chave: g.tipo + ':' + id, tipo: g.tipo, fornecedor_id: id, nome: n.nome, nome_origem: n.nome_origem,
+      ...(n.inativo ? { inativo: true } : {}), ...(n.nome_ausente_na_api ? { nome_ausente_na_api: true } : {}), ...(n.nome_anterior ? { nome_anterior: n.nome_anterior } : {}),
+      produtos_atribuidos: atribuidos[id] || 0 };
+  }).sort((x, y) => (x.tipo === y.tipo ? 0 : x.tipo === 'EXTERNO' ? -1 : 1) || String(x.nome).localeCompare(String(y.nome), 'pt-BR') || String(x.fornecedor_id).localeCompare(String(y.fornecedor_id)));
+  const concForn = { conhecidos: conhecidos.size, com_grupo: [...conhecidos].filter(id => comGrupo.has(id)).length, sem_vendas: semVendas.length };
+  concForn.fecha = concForn.com_grupo + concForn.sem_vendas === concForn.conhecidos && !semVendas.some(x => comGrupo.has(x.fornecedor_id));
+
   // ── conciliação: Σ grupos × total elegível independente ─────────────────────────────────────────────────────
   const somaGrupos = { un: arr(N), liq: arr(N), un_corrente: 0, liq_corrente: 0 };
   lista.forEach(L => { L.un.forEach((x, i) => { somaGrupos.un[i] += x; somaGrupos.liq[i] += L.liq[i]; }); somaGrupos.un_corrente += L.unC; somaGrupos.liq_corrente += L.liqC; });
@@ -274,8 +290,9 @@ function montarFornecedores({ produtos = [], fatosVenda = [], fatosCompra = [], 
     ...{ schema_version: SCHEMA_VERSION, rules_version: RULES_VERSION, tipo: 'UNIDADES' }, periodo, meta, aviso: avisoSugestao,
     totais: { un: tot.un, soma: somar(tot.un), media: r2(somar(tot.un) / N), mes_corrente: tot.un_corrente, reservado: tot.res_un, produtos_vendidos: tot.produtos.size },
     externos: externos.map(gUn), internos: internosL.map(gUn), sem_fornecedor: gUn(sem), itens_sem_produto: gUn(semProduto),
+    sem_vendas: semVendas,
     excluidas: excl, qualidade, rateio_aplicado: { pedidos: rateio.pedidos, pedidos_com_desconto: rateio.pedidos_com_desconto },
-    conciliacao: { fecha, unidades: concUn },
+    conciliacao: { fecha, unidades: concUn, fornecedores: concForn },
   };
   const valores = {
     ...{ schema_version: SCHEMA_VERSION, rules_version: RULES_VERSION, tipo: 'VALORES' }, periodo, meta, moeda: 'BRL', unidade_monetaria: 'centavos',

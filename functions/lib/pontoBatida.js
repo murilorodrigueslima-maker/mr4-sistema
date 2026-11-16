@@ -16,6 +16,13 @@ const REQUEST_ID_RE = /^[A-Za-z0-9_-]{8,64}$/;
 const COOLDOWN_COM_INTENCAO_MS = 10000;   // clientes novos: mantém o valor atual (intenção já barra repetição)
 const COOLDOWN_LEGADO_MS = 60000;         // clientes sem intenção (páginas antigas em cache durante a transição)
 
+// P1 (sábado sem almoço): encerramento direto (entrada → saída), SEM batidas fictícias de almoço. Decisão 100% do servidor:
+//   • só com intenção explícita (encerramentoDireto:true + tipoEsperado:'saida');
+//   • só aos sábados (data oficial do servidor), com a última batida efetiva = entrada;
+//   • só se a permanência até agora não exigir intervalo (DEC-1: > 6h exige almoço) — acima disso o almoço continua obrigatório.
+const MAX_MIN_SEM_ALMOCO = 360;           // DEC-1 (ponto-regras.js): permanência > 6h exige almoço
+const ENCERRAMENTO_MOTIVO_SABADO = 'SABADO_SEM_ALMOCO';
+
 function proximoTipo(ultimo) {
   if (!ultimo) return 'entrada';
   const i = TIPOS.indexOf(ultimo.tipo);
@@ -26,14 +33,32 @@ function efetivos(regs) { return (regs || []).filter(r => r && !r.substituidoPor
 
 /** Valida os campos de intenção do payload. Retorna {requestId, tipoEsperado} (null quando ausentes = cliente legado). */
 function lerIntencao(payload) {
-  const { requestId, tipoEsperado } = payload || {};
+  const { requestId, tipoEsperado, encerramentoDireto } = payload || {};
   if (requestId !== undefined && requestId !== null && !REQUEST_ID_RE.test(String(requestId))) {
     const e = new Error('REQUEST_ID_INVALIDO'); e.codigo = 'REQUEST_ID_INVALIDO'; throw e;
   }
   if (tipoEsperado !== undefined && tipoEsperado !== null && !TIPOS.includes(tipoEsperado)) {
     const e = new Error('TIPO_ESPERADO_INVALIDO'); e.codigo = 'TIPO_ESPERADO_INVALIDO'; throw e;
   }
-  return { requestId: requestId ? String(requestId) : null, tipoEsperado: tipoEsperado || null };
+  if (encerramentoDireto !== undefined && encerramentoDireto !== null && encerramentoDireto !== true && encerramentoDireto !== false) {
+    const e = new Error('ENCERRAMENTO_DIRETO_INVALIDO'); e.codigo = 'ENCERRAMENTO_DIRETO_INVALIDO'; throw e;
+  }
+  if (encerramentoDireto === true && tipoEsperado !== 'saida') {
+    const e = new Error('ENCERRAMENTO_DIRETO_EXIGE_TIPO_SAIDA'); e.codigo = 'ENCERRAMENTO_DIRETO_EXIGE_TIPO_SAIDA'; throw e;
+  }
+  return { requestId: requestId ? String(requestId) : null, tipoEsperado: tipoEsperado || null, encerramentoDireto: encerramentoDireto === true };
+}
+
+/** 'YYYY-MM-DD' (data local do servidor, Fortaleza) cai num sábado? (calendário puro; sem fuso) */
+function ehSabado(dataStr) {
+  if (typeof dataStr !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) return false;
+  const [a, m, d] = dataStr.split('-').map(Number);
+  return new Date(Date.UTC(a, m - 1, d)).getUTCDay() === 6;
+}
+function minutosDe(hhmmss) {
+  const p = String(hhmmss || '').split(':').map(Number);
+  if (p.length < 2 || p.some(x => !Number.isFinite(x))) return null;
+  return p[0] * 60 + p[1] + (p[2] || 0) / 60;
 }
 
 function millis(v) {
@@ -57,6 +82,7 @@ function ordenar(regs) {
  */
 async function registrarBatidaTx(db, ctx) {
   const { funcId, requestId, tipoEsperado, HttpsError } = ctx;
+  const encerramentoDireto = ctx.encerramentoDireto === true;
   const registrosRef = db.collection('registros');
   let resultado = null;
   await db.runTransaction(async (tx) => {
@@ -75,10 +101,21 @@ async function registrarBatidaTx(db, ctx) {
     const snap = await tx.get(registrosRef.where('funcId', '==', funcId).where('data', '==', ctx.data));
     const regsHoje = ordenar(efetivos(snap.docs.map(d => d.data())));
     const ultimo = regsHoje[regsHoje.length - 1] || null;
-    const tipo = proximoTipo(ultimo);
+    let tipo = proximoTipo(ultimo);
     if (!tipo) throw new HttpsError('failed-precondition', 'Ponto do dia já completo.', { codigo: 'DIA_COMPLETO', proximo: null, ultimo: ultimo ? ultimo.tipo : null });
+    // 2b) P1 — encerramento direto no sábado (entrada → saída). Todas as condições são verificadas AQUI, com a data/hora do servidor.
+    if (encerramentoDireto) {
+      const recusa = codigo => new HttpsError('failed-precondition', codigo, { codigo, proximo: tipo, ultimo: ultimo ? { tipo: ultimo.tipo, hora: ultimo.hora } : null });
+      if (tipoEsperado !== 'saida') throw recusa('ENCERRAMENTO_DIRETO_EXIGE_TIPO_SAIDA');
+      if (!ehSabado(ctx.data)) throw recusa('ENCERRAMENTO_DIRETO_SO_NO_SABADO');
+      if (!ultimo || ultimo.tipo !== 'entrada') throw recusa('ENCERRAMENTO_DIRETO_APENAS_APOS_ENTRADA');
+      const permanencia = minutosDe(ctx.hora) - minutosDe(ultimo.hora);
+      if (!(permanencia >= 0)) throw recusa('ENCERRAMENTO_DIRETO_HORARIO_INVALIDO');
+      if (permanencia > MAX_MIN_SEM_ALMOCO) throw recusa('ENCERRAMENTO_DIRETO_EXIGE_ALMOCO');
+      tipo = 'saida';
+    }
     // 3) Intenção explícita: nunca "avançar" para outra batida que o funcionário não pediu
-    if (tipoEsperado && tipoEsperado !== tipo) {
+    if (!encerramentoDireto && tipoEsperado && tipoEsperado !== tipo) {
       throw new HttpsError('failed-precondition', 'TIPO_ESPERADO_DIVERGENTE', {
         codigo: 'TIPO_ESPERADO_DIVERGENTE', esperado: tipoEsperado, proximo: tipo,
         ultimo: ultimo ? { tipo: ultimo.tipo, hora: ultimo.hora } : null,
@@ -102,6 +139,7 @@ async function registrarBatidaTx(db, ctx) {
       facialScore: ctx.facialScore, foto: ctx.foto,
       requestId: requestId || null,              // intenção (auditoria + idempotência)
       tipoEsperado: tipoEsperado || null,
+      ...(encerramentoDireto ? { encerramentoDireto: true, encerramentoMotivo: ENCERRAMENTO_MOTIVO_SABADO } : {}),   // P1: trilha da saída sem almoço
       criadoEm: ctx.serverTimestamp(),
     });
     resultado = { status: 'REGISTRADO', id, tipo, tipoLabel, data: ctx.data, hora: ctx.hora, dentroRaio: ctx.dentroRaio, modalidade: ctx.modalidade };
@@ -109,4 +147,4 @@ async function registrarBatidaTx(db, ctx) {
   return resultado;
 }
 
-module.exports = { registrarBatidaTx, lerIntencao, proximoTipo, efetivos, TIPOS, REQUEST_ID_RE, COOLDOWN_COM_INTENCAO_MS, COOLDOWN_LEGADO_MS };
+module.exports = { registrarBatidaTx, lerIntencao, proximoTipo, efetivos, ehSabado, MAX_MIN_SEM_ALMOCO, ENCERRAMENTO_MOTIVO_SABADO, TIPOS, REQUEST_ID_RE, COOLDOWN_COM_INTENCAO_MS, COOLDOWN_LEGADO_MS };

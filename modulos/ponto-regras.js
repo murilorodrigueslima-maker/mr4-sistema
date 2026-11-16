@@ -555,7 +555,156 @@ function snapshotsEquivalentes(a, b) {
 // Versionada: snapshot 3.x é desenhado exatamente como era (documento congelado não muda de aparência).
 // PONTO 2.0 F0 (P1-04): ocorrência vem de justificativa (texto do funcionário) — sempre escapada
 function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"'`]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' }[c])); }
-function renderEspelhoRowsHTML(snap) {
+// ── P6 — CONTROLE DE JUSTIFICATIVAS DE BATIDA (evidência + alertas) ─────────────────────────────────────────────────────────────
+// NÃO altera cálculo de jornada/saldo. Regras:
+//   • Justificativa de correção de batida ("ponto não batido") ANTIGA (> DIAS_SEM_EVIDENCIA dias depois do dia) exige evidência:
+//     descrição (≥ MIN_DESCRICAO_EVIDENCIA caracteres), anexo ou evidência registrada pela gestão. Correção legítima continua possível:
+//     o gestor registra, ao aprovar, a evidência que verificou (observação ≥ MIN_DESCRICAO_EVIDENCIA caracteres).
+//   • Alertas (não bloqueiam): horário repetido, excesso de batidas lançadas por justificativa no mês, criação em lote, almoço sempre idêntico.
+const DIAS_SEM_EVIDENCIA = 3;
+const MIN_DESCRICAO_EVIDENCIA = 15;
+const LIMITE_HORARIO_REPETIDO = 2;      // mesmo tipo+horário já usado em ≥ 2 OUTROS dias recentes
+const JANELA_REPETICAO_DIAS = 45;
+const LIMITE_LOTE_MESMO_DIA = 5;        // ≥ 5 justificativas de batida criadas no mesmo dia pelo mesmo funcionário
+const LIMITE_EXCESSO_PERCENTUAL = 25;   // % das batidas do mês lançadas por justificativa
+const LIMITE_EXCESSO_QTDE = 8;
+const LIMITE_ALMOCO_EXATO_DIAS = 4;     // dias com pausa de almoço lançada por justificativa com duração idêntica de 60 min
+function _diasEntreDatas(a, b) {        // b − a em dias (datas 'YYYY-MM-DD'); NaN se inválidas
+  const t = x => /^\d{4}-\d{2}-\d{2}$/.test(String(x || '')) ? Date.UTC(+x.slice(0, 4), +x.slice(5, 7) - 1, +x.slice(8, 10)) : NaN;
+  return Math.round((t(b) - t(a)) / 86400000);
+}
+function temEvidenciaJustificativa(j) {
+  if (!j) return false;
+  if (j.anexo || j.evidenciaGestao) return true;
+  return String(j.descricao || '').trim().length >= MIN_DESCRICAO_EVIDENCIA;
+}
+// A justificativa de correção de batida é "antiga" e portanto exige evidência?
+function exigeEvidenciaJustificativa(j, hojeStr) {
+  if (!j || !j.tipoPonto || !j.horarioPonto) return false;
+  const idade = _diasEntreDatas(j.data, hojeStr);
+  return Number.isFinite(idade) && idade > DIAS_SEM_EVIDENCIA;
+}
+// Evidência suficiente para decidir: da própria justificativa OU registrada pelo gestor na decisão (observação).
+function evidenciaSuficiente(j, obsGestor) {
+  return temEvidenciaJustificativa(j) || String(obsGestor || '').trim().length >= MIN_DESCRICAO_EVIDENCIA;
+}
+function _fmtDataBR(d) { return String(d || '').split('-').reverse().join('/'); }
+const _ROT_TIPO = { entrada: 'Entrada', saida_almoco: 'Saída almoço', retorno_almoco: 'Retorno almoço', saida: 'Saída' };
+// ctx: { justificativas: [todas do funcionário], registros: [do mês de j.data], hojeStr }
+function avaliarAlertasJustificativa(j, ctx) {
+  const alertas = [];
+  const hojeStr = ctx && ctx.hojeStr;
+  const todas = ((ctx && ctx.justificativas) || []).filter(x => x && x.funcId === j.funcId);
+  const corr = todas.filter(x => x.tipoPonto && x.horarioPonto && x.status !== 'rejeitado');
+  const idade = _diasEntreDatas(j.data, hojeStr);
+  const exige = exigeEvidenciaJustificativa(j, hojeStr);
+  if (j.tipoPonto && Number.isFinite(idade) && idade > DIAS_SEM_EVIDENCIA) {
+    alertas.push({ codigo: 'JUSTIFICATIVA_ANTIGA', nivel: exige && !temEvidenciaJustificativa(j) ? 'alto' : 'medio',
+      msg: 'Justificativa lançada ' + idade + ' dias depois do dia' + (temEvidenciaJustificativa(j) ? '.' : ' e SEM descrição suficiente, anexo ou evidência: para aprovar, registre na observação a evidência que você verificou (mín. ' + MIN_DESCRICAO_EVIDENCIA + ' caracteres).') });
+  }
+  if (j.tipoPonto && j.horarioPonto) {
+    const outras = corr.filter(x => x.id !== j.id && x.tipoPonto === j.tipoPonto && x.horarioPonto === j.horarioPonto && x.data !== j.data
+      && Math.abs(_diasEntreDatas(x.data, j.data)) <= JANELA_REPETICAO_DIAS);
+    const dias = [...new Set(outras.map(x => x.data))].sort();
+    if (dias.length >= LIMITE_HORARIO_REPETIDO) {
+      alertas.push({ codigo: 'HORARIO_REPETIDO', nivel: 'medio', msg: (_ROT_TIPO[j.tipoPonto] || j.tipoPonto) + ' às ' + j.horarioPonto + ' já foi justificado em ' + dias.length + ' outros dias (' + dias.slice(0, 5).map(_fmtDataBR).join(', ') + (dias.length > 5 ? '…' : '') + '). Horários repetidos pedem conferência.' });
+    }
+  }
+  const mes = String(j.data || '').slice(0, 7);
+  const doMes = corr.filter(x => String(x.data || '').startsWith(mes));
+  const regsMes = ((ctx && ctx.registros) || []).filter(r => r && r.data && String(r.data).startsWith(mes) && !r.substituidoPor);
+  const jaLancadas = regsMes.filter(r => r.lancadoPorJustificativa).length;
+  const pendentes = doMes.filter(x => x.status === 'pendente').length;
+  const totalBatidas = regsMes.length + pendentes;
+  const porJust = jaLancadas + pendentes;
+  const pct = totalBatidas ? Math.round((porJust * 1000) / totalBatidas) / 10 : 0;
+  if (porJust >= LIMITE_EXCESSO_QTDE || (porJust >= 3 && pct >= LIMITE_EXCESSO_PERCENTUAL)) {
+    alertas.push({ codigo: 'EXCESSO_JUSTIFICATIVAS', nivel: pct >= LIMITE_EXCESSO_PERCENTUAL ? 'alto' : 'medio', msg: 'Neste mês ' + porJust + ' de ' + totalBatidas + ' batidas (' + String(pct).replace('.', ',') + '%) foram lançadas por justificativa (já aprovadas + pendentes).' });
+  }
+  const criadasMesmoDia = corr.filter(x => x.criadoEm && j.criadoEm && String(x.criadoEm).slice(0, 10) === String(j.criadoEm).slice(0, 10));
+  if (criadasMesmoDia.length >= LIMITE_LOTE_MESMO_DIA) {
+    alertas.push({ codigo: 'CRIADAS_EM_LOTE', nivel: 'medio', msg: criadasMesmoDia.length + ' justificativas de batida foram criadas no mesmo dia (' + _fmtDataBR(String(j.criadoEm).slice(0, 10)) + ') pelo mesmo funcionário.' });
+  }
+  // almoço sempre idêntico (60 min) quando lançado por justificativa
+  const porDia = {};
+  corr.filter(x => x.tipoPonto === 'saida_almoco' || x.tipoPonto === 'retorno_almoco').forEach(x => { (porDia[x.data] = porDia[x.data] || {})[x.tipoPonto] = x.horarioPonto; });
+  const exatos = Object.keys(porDia).filter(d => porDia[d].saida_almoco && porDia[d].retorno_almoco && (toMin(porDia[d].retorno_almoco) - toMin(porDia[d].saida_almoco)) === 60 && Math.abs(_diasEntreDatas(d, j.data)) <= 60);
+  if ((j.tipoPonto === 'saida_almoco' || j.tipoPonto === 'retorno_almoco') && exatos.length >= LIMITE_ALMOCO_EXATO_DIAS) {
+    alertas.push({ codigo: 'ALMOCO_SEMPRE_60', nivel: 'medio', msg: 'O almoço lançado por justificativa tem exatamente 60 min em ' + exatos.length + ' dias recentes (batidas reais costumam variar).' });
+  }
+  if (j.tipoPonto && !temEvidenciaJustificativa(j) && !alertas.some(a => a.codigo === 'JUSTIFICATIVA_ANTIGA')) {
+    alertas.push({ codigo: 'SEM_DESCRICAO', nivel: 'baixo', msg: 'Sem descrição suficiente, anexo ou evidência registrada.' });
+  }
+  return { alertas, exigeEvidencia: exige, evidenciaPresente: temEvidenciaJustificativa(j), idadeDias: Number.isFinite(idade) ? idade : null,
+    resumoMes: { porJustificativa: porJust, totalBatidas, percentual: pct } };
+}
+
+// ── P5 — ORIGEM DAS BATIDAS (somente EXIBIÇÃO; não altera cálculo, snapshot, hash ou saldo) ─────────────────────────────────
+// Identifica batidas lançadas por justificativa aprovada e mostra o horário ORIGINAL ao lado do corrigido. O dado vem dos próprios
+// registros (correção aditiva: valorOriginal/justificativaId/aprovadoPor…); o registro original nunca é apagado.
+const CAMPO_SNAPSHOT_POR_TIPO = { entrada: 'entrada', saida_almoco: 'saidaAlmoco', retorno_almoco: 'retornoAlmoco', saida: 'saida' };
+function _hhmm(h) { return h ? String(h).slice(0, 5) : null; }
+function buildOrigemBatidas(registros, mes) {
+  const porData = {};
+  (registros || []).forEach(r => { if (r && r.data && String(r.data).startsWith(mes)) (porData[r.data] = porData[r.data] || []).push(r); });
+  const dias = {};
+  let total = 0, porJustificativa = 0, encerramentosDiretos = 0;
+  Object.keys(porData).sort().forEach(data => {
+    const todos = porData[data];
+    const efetivos = registrosEfetivos(todos);
+    TIPOS_PONTO.forEach(tipo => {
+      const reg = escolherBatida(efetivos.filter(r => r.tipo === tipo)).reg;
+      if (!reg || !reg.hora) return;
+      total++;
+      const info = { hora: _hhmm(reg.hora), horaCompleta: reg.hora, origem: 'batida' };
+      if (reg.lancadoPorJustificativa) {
+        porJustificativa++;
+        info.origem = 'justificativa';
+        let orig = (Array.isArray(reg.valorOriginal) ? reg.valorOriginal : []).map(o => o && o.hora).filter(Boolean);
+        if (!orig.length) orig = todos.filter(r => r.tipo === tipo && r.substituidoPor && r.substituidoPor === reg.id).map(r => r.hora).filter(Boolean);
+        info.horaOriginal = orig.length ? orig.map(_hhmm).join(', ') : null;
+        info.horaOriginalCompleta = orig.length ? orig.join(', ') : null;
+        info.justificativaId = reg.justificativaId || null;
+        info.aprovadoPor = reg.aprovadoPorEmail || null;
+        info.aprovadoEm = tsMillis(reg.aprovadoEm);
+        info.motivo = reg.motivoCorrecao || null;
+      } else if (reg.encerramentoDireto === true) {
+        encerramentosDiretos++;
+        info.encerramentoDireto = true;
+      }
+      (dias[data] = dias[data] || {})[CAMPO_SNAPSHOT_POR_TIPO[tipo]] = info;
+    });
+  });
+  return { dias, resumo: { totalBatidas: total, porJustificativa, encerramentosDiretos, percentualJustificativa: total ? Math.round((porJustificativa * 1000) / total) / 10 : 0 } };
+}
+const _ROTULO_J = 'font-size:9px;font-weight:700;color:#8a5a00;background:#fff1cf;border:1px solid #e0b24d;border-radius:3px;padding:0 3px;margin-left:2px;cursor:help;';
+function _celulaBatida(d, campo, origem) {
+  const v = d[campo];
+  if (!v) return '—';
+  const o = origem && origem.dias && origem.dias[d.data] && origem.dias[d.data][campo];
+  if (!o || o.hora !== v) return v;                                  // só marca quando o horário exibido é o da batida analisada
+  if (o.origem === 'justificativa') {
+    const tip = 'Lançada por justificativa aprovada' + (o.aprovadoPor ? ' por ' + o.aprovadoPor : '') + '. ' +
+      (o.horaOriginal ? 'Batida original: ' + o.horaOriginalCompleta + '.' : 'Não havia batida original.') + ' O registro original continua guardado.';
+    const sub = o.horaOriginal ? 'orig. ' + o.horaOriginal : 'sem batida original';
+    return v + ' <span title="' + escHtml(tip) + '" style="' + _ROTULO_J + '">J</span><div style="font-size:9px;color:#8a5a00;line-height:1.1;">' + escHtml(sub) + '</div>';
+  }
+  if (o.encerramentoDireto) return v + ' <span title="Encerramento direto (sábado, sem almoço): nenhuma batida de almoço foi criada." style="' + _ROTULO_J + '">direto</span>';
+  return v;
+}
+// Texto da ocorrência: "Ponto não batido — X às HH:MM" é o motivo da justificativa; a batida existe (foi lançada por justificativa).
+function _ocorrenciaExibicao(txt) { return String(txt || '').replace(/Ponto não batido — /g, 'Batida lançada por justificativa — '); }
+// Legenda + resumo do mês (transparência). Vazio quando não há nada a explicar.
+function renderLegendaOrigemHTML(origem) {
+  const r = origem && origem.resumo;
+  if (!r || (!r.porJustificativa && !r.encerramentosDiretos)) return '';
+  const partes = [];
+  if (r.porJustificativa) partes.push('<span style="' + _ROTULO_J + 'margin-left:0;">J</span> = horário lançado por justificativa aprovada (a batida original é preservada e aparece como "orig."). <strong>' + r.porJustificativa + ' de ' + r.totalBatidas + '</strong> batidas do mês (' + String(r.percentualJustificativa).replace('.', ',') + '%) foram lançadas assim.');
+  if (r.encerramentosDiretos) partes.push('<span style="' + _ROTULO_J + 'margin-left:0;">direto</span> = expediente encerrado sem almoço (sábado): ' + r.encerramentosDiretos + ' dia(s).');
+  return '<div style="font-size:10px;color:#555;margin-top:6px;line-height:1.5;">' + partes.join('<br>') + '</div>';
+}
+
+function renderEspelhoRowsHTML(snap, origem) {
   if (!ehSnapshotV4(snap)) return _renderEspelhoRowsHTMLV3(snap);
   const NOMES_DIA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   return snap.dias.map(d => {
@@ -592,13 +741,13 @@ function renderEspelhoRowsHTML(snap) {
                      : 'color:#c0392b;';
     return `<tr style="${bgColor}">` +
       `<td style="color:#111;font-weight:600;"><strong>${diaN}</strong> ${diaSem}</td>` +
-      `<td style="color:#111;">${d.entrada       || '—'}</td>` +
-      `<td style="color:#111;">${d.saidaAlmoco   || '—'}</td>` +
-      `<td style="color:#111;">${d.retornoAlmoco || '—'}</td>` +
-      `<td style="color:#111;">${d.saida         || '—'}</td>` +
+      `<td style="color:#111;">${origem ? _celulaBatida(d, 'entrada', origem) : (d.entrada || '—')}</td>` +
+      `<td style="color:#111;">${origem ? _celulaBatida(d, 'saidaAlmoco', origem) : (d.saidaAlmoco || '—')}</td>` +
+      `<td style="color:#111;">${origem ? _celulaBatida(d, 'retornoAlmoco', origem) : (d.retornoAlmoco || '—')}</td>` +
+      `<td style="color:#111;">${origem ? _celulaBatida(d, 'saida', origem) : (d.saida || '—')}</td>` +
       `<td style="${totalColor}">${totalLabel}</td>` +
       `<td style="${saldoColor}">${saldoStr}</td>` +
-      `<td style="${ocorrColor}font-size:10px;">${escHtml(d.ocorrencia || '')}</td>` +
+      `<td style="${ocorrColor}font-size:10px;">${escHtml(origem ? _ocorrenciaExibicao(d.ocorrencia) : (d.ocorrencia || ''))}</td>` +
       `</tr>`;
   }).join('');
 }

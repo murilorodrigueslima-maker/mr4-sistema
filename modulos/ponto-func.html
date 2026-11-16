@@ -224,6 +224,9 @@ body{
 }
 .aviso-erro strong{display:block;font-size:15px;font-weight:700;color:var(--danger);margin-bottom:4px;}
 .aviso-erro span{font-size:13px;color:#7f1d1d;}
+.btn-encerrar{display:block;margin:14px auto 0;padding:10px 18px;border-radius:10px;border:1.5px solid #5f6368;background:#fff;color:#202124;font-size:14px;font-weight:600;cursor:pointer;}
+.btn-encerrar .btn-encerrar-sub{display:block;font-size:11px;font-weight:400;color:#5f6368;}
+.btn-encerrar:disabled{opacity:.5;cursor:default;}
 .btn-retry{
   width:100%;min-height:48px;
   background:var(--surface);border:1.5px solid var(--border);
@@ -744,6 +747,8 @@ html,body{overflow-x:hidden;}
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
             <span class="btn-ponto-label" id="lbl-prox">Entrada</span>
           </button>
+          <!-- P1: sábado sem almoço — só aparece no sábado, depois da entrada (o servidor revalida tudo) -->
+          <button type="button" class="btn-encerrar" id="btn-encerrar" style="display:none;" onclick="encerrarExpediente()" aria-label="Encerrar expediente sem almoço (sábado)">Encerrar expediente <span class="btn-encerrar-sub">sábado, sem almoço</span></button>
         </div>
       </div>
 
@@ -819,7 +824,7 @@ html,body{overflow-x:hidden;}
         </div>
         <div id="campos-ponto-nao-batido" style="display:none;">
           <div class="campos-ponto-box">
-            <div class="info-box" style="margin-bottom:10px;">Informe qual batida não foi registrada e o horário correto.</div>
+            <div class="info-box" style="margin-bottom:10px;">Informe qual batida não foi registrada e o horário correto. Justificativas de mais de 3 dias atrás exigem descrição do que aconteceu (mín. 15 caracteres) ou anexo.</div>
             <div class="form-campo">
               <label for="justif-batida">Qual batida não foi registrada?</label>
               <select id="justif-batida">
@@ -1156,12 +1161,28 @@ function obterLoc(){
   });
 }
 
+// P1 — "Encerrar expediente": só no sábado, logo após a entrada e com permanência ≤ 6h (acima disso o almoço é obrigatório).
+// É só uma dica de tela: o SERVIDOR decide (data/hora oficiais) e recusa qualquer outro caso.
+const MAX_MIN_SEM_ALMOCO_UI=360;
+function podeEncerrarDireto(ult){
+  try{
+    if(!ult||ult.tipo!=='entrada')return false;
+    if(new Date(hoje()+'T12:00:00').getDay()!==6)return false;
+    const a=String(ult.hora||'').split(':').map(Number),b=String(hojeHora()||'').split(':').map(Number);
+    if(a.length<2||b.length<2||a.some(isNaN)||b.some(isNaN))return false;
+    return (b[0]*60+b[1])-(a[0]*60+a[1])<=MAX_MIN_SEM_ALMOCO_UI;
+  }catch(e){return false;}
+}
+function atualizarBotaoEncerrar(prox){
+  const b=document.getElementById('btn-encerrar');if(!b)return;
+  b.style.display=(prox&&prox.podeEncerrarDireto)?'block':'none';
+}
 async function proxPonto(regsAll){
   if(!regsAll)regsAll=await fbRegistrosMes(mesAtual());   // PERFORMANCE P0: hoje ⊂ mês corrente
   const regHoje=regsAll.filter(r=>r.funcId===funcAtivo.id&&r.data===hoje()).sort((a,b)=>a.hora>b.hora?1:-1);
   const ult=regHoje[regHoje.length-1];
   if(!ult)return{tipo:'entrada',label:'Registrar Entrada',classe:''};
-  if(ult.tipo==='entrada')return{tipo:'saida_almoco',label:'Registrar Saída Almoço',classe:'saida-almoco'};
+  if(ult.tipo==='entrada')return{tipo:'saida_almoco',label:'Registrar Saída Almoço',classe:'saida-almoco',podeEncerrarDireto:podeEncerrarDireto(ult)};
   if(ult.tipo==='saida_almoco')return{tipo:'retorno_almoco',label:'Registrar Retorno',classe:'retorno'};
   if(ult.tipo==='retorno_almoco')return{tipo:'saida',label:'Registrar Saída',classe:'saida'};
   return null;
@@ -1182,13 +1203,15 @@ function limparIntencao(){try{localStorage.removeItem(chaveIntencao());}catch(e)
 function mostrarEstado(id){['est-aguardando','est-proc','est-comp','est-gps-bloqueado','est-incerto'].forEach(x=>{const el=document.getElementById(x);if(el)el.style.display=(x===id?'block':'none');});}
 const ERROS_INCERTOS=['functions/unavailable','functions/deadline-exceeded','functions/internal','functions/unknown','functions/cancelled','functions/aborted'];
 
-async function iniciarBatida(){
+async function iniciarBatida(opts){
+  const direto=!!(opts&&opts.encerramentoDireto===true);   // P1: só o botão "Encerrar expediente" passa true
   if(batidaEmProgresso)return;
   batidaEmProgresso=true;
   if(lerIntencaoPendente()){batidaEmProgresso=false;reconciliarIntencao();return;}   // há uma batida não confirmada: verificar antes
   mostrarEstado('est-proc');                                                          // feedback imediato
   const prox=await proxPonto().catch(()=>null);
   if(!prox){mostrarEstado('est-aguardando');notif('Ponto do dia completo!');batidaEmProgresso=false;return;}
+  if(direto&&!prox.podeEncerrarDireto){mostrarEstado('est-aguardando');notif('Encerrar sem almoço só é possível no sábado, logo após a entrada.','vermelho');batidaEmProgresso=false;return;}
   // GPS bloqueante: PRESENCIAL exige localização dentro do raio
   if((funcAtivo.modalidade||'PRESENCIAL')==='PRESENCIAL'){
     if(locAtual===null){
@@ -1205,11 +1228,18 @@ async function iniciarBatida(){
       return;
     }
   }
-  const intencao={requestId:novoRequestId(),tipoEsperado:prox.tipo,criadoEm:Date.now(),data:hoje()};
+  const intencao={requestId:novoRequestId(),tipoEsperado:direto?'saida':prox.tipo,criadoEm:Date.now(),data:hoje(),...(direto?{encerramentoDireto:true}:{})};
   salvarIntencao(intencao);
   finalizarBatida(intencao);
 }
 window.iniciarBatida=iniciarBatida;
+// P1 — "Encerrar expediente": confirmação explícita; o mesmo fluxo de GPS/intenção/idempotência da batida normal.
+function encerrarExpediente(){
+  if(batidaEmProgresso)return;
+  if(!window.confirm('Encerrar o expediente agora, SEM intervalo de almoço?\n\nUse somente se você não saiu para almoçar hoje. Depois disso o ponto do dia ficará completo.'))return;
+  iniciarBatida({encerramentoDireto:true});
+}
+window.encerrarExpediente=encerrarExpediente;
 
 function tentarNovamenteLoc(){
   batidaEmProgresso=false;
@@ -1231,6 +1261,7 @@ async function finalizarBatida(intencao){
     foto:        null,
     requestId:   intencao.requestId,
     tipoEsperado:intencao.tipoEsperado,
+    ...(intencao.encerramentoDireto===true?{encerramentoDireto:true}:{}),   // P1: o servidor valida sábado/entrada/≤6h
   };
   try{
     const result=await window._registrarPonto(payload);
@@ -1253,6 +1284,8 @@ async function finalizarBatida(intencao){
     let msg=e?.message||'Erro ao salvar ponto.';
     if(codigo==='TIPO_ESPERADO_DIVERGENTE')msg='Seu ponto mudou desde que a tela abriu (talvez registrado em outro aparelho). Confira as batidas de hoje antes de continuar.';
     else if(codigo==='JA_REGISTRADO'||codigo==='DIA_COMPLETO')msg='Esta batida já estava registrada. Confira as batidas de hoje.';
+    else if(codigo==='ENCERRAMENTO_DIRETO_EXIGE_ALMOCO')msg='Passaram mais de 6 horas desde a entrada: o intervalo de almoço é obrigatório. Registre a saída para o almoço.';
+    else if(codigo&&codigo.indexOf('ENCERRAMENTO_DIRETO_')===0)msg='Não é possível encerrar sem almoço agora (só no sábado, logo após a entrada). Use o botão normal do ponto.';
     notif(msg,'vermelho');
     batidaEmProgresso=false;
     voltarPonto();renderHistDia();
@@ -1327,6 +1360,7 @@ async function voltarPonto(){
     lbl.textContent=prox.label;
     if(ct)ct.textContent=prox.label;
   }
+  atualizarBotaoEncerrar(prox);
 }
 window.voltarPonto=voltarPonto;
 
@@ -1380,12 +1414,14 @@ async function renderHistDia(){
     btn.disabled=true;btn.className='btn-ponto-grande';
     lbl.textContent='Concluído';
     if(ct)ct.textContent='Jornada finalizada ✓';
+    atualizarBotaoEncerrar(null);
     el.innerHTML=`<div class="hoje-card">${rows}</div>
       <div class="jornada-status finalizada"><div class="jornada-status-dot"></div>Jornada finalizada</div>`;
   }else{
     btn.disabled=false;btn.className='btn-ponto-grande '+(prox.classe||'');
     lbl.textContent=prox.label;
     if(ct)ct.textContent=prox.label;
+    atualizarBotaoEncerrar(prox);
     const temBatidas=Object.keys(mapa).length>0;
     el.innerHTML=`<div class="hoje-card">${rows}</div>`+
       (temBatidas?'<div class="jornada-status em-andamento"><div class="jornada-status-dot"></div>Jornada em andamento</div>':'');
@@ -1469,6 +1505,10 @@ async function enviarJustificativa(){
   if(tipoOcorr==='ponto_nao_batido'){batida=document.getElementById('justif-batida').value;horarioBatida=document.getElementById('justif-horario').value;if(!batida||!horarioBatida){notif('Informe qual batida e o horário','vermelho');return;}}
   let anexoBase64=null,anexoNome=null,anexoTipo=null;
   const anexoFile=document.getElementById('justif-anexo').files[0];
+  // P6 — justificativa de batida ANTIGA exige descrição ou evidência (o gestor também confere ao decidir; o servidor revalida)
+  if(tipoOcorr==='ponto_nao_batido'&&exigeEvidenciaJustificativa({tipoPonto:batida,horarioPonto:horarioBatida,data},hoje())&&!temEvidenciaJustificativa({descricao:desc,anexo:anexoFile?'x':null})){
+    notif('Esta justificativa é de mais de '+DIAS_SEM_EVIDENCIA+' dias atrás: descreva o que aconteceu (mín. '+MIN_DESCRICAO_EVIDENCIA+' caracteres) ou anexe uma evidência.','vermelho');return;
+  }
   if(anexoFile){if(anexoFile.size>5*1024*1024){notif('Arquivo muito grande (máx 5MB)','vermelho');return;}anexoBase64=await new Promise(res=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(anexoFile);});anexoNome=anexoFile.name;anexoTipo=anexoFile.type;}
   const motivo=tipoOcorr==='ponto_nao_batido'?`Ponto não batido — ${{entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[batida]} às ${horarioBatida}`:tipoOcorr;
   const id=uid();
@@ -1590,20 +1630,23 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
   const [ano,mesNum]=mes.split('-').map(Number);
   const nomeMes=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'][mesNum-1];
 
-  let snap;
+  let snap,regsOrigem=null;
   if(espDoc&&espDoc.snapshot){
     // Snapshot imutável: renderizar exatamente o que foi gerado/assinado.
     snap=espDoc.snapshot;
+    // P5: origem das batidas (só exibição). 1 consulta do mês do próprio funcionário; se falhar, o espelho segue sem as marcas.
+    try{regsOrigem=await window._fbRegistrosDias(funcId,diasDoMes(mes));}catch(e){regsOrigem=null;}
   }else{
     // Legado (espelhos sem snapshot) ou geração dinâmica para pré-visualização.
-    const regs=await fbGet('registros',funcId);
+    const regs=await fbGet('registros',funcId);regsOrigem=regs;
     const justifs=await fbGet('justificativas',funcId);
     const creditos=await fbGet('creditos_jornada',funcId);
     snap=buildEspelhoSnapshot(func,regs,creditos,justifs,mes,hoje());
     snap.geradoEm=null; // legado: não gravar geradoEm
   }
 
-  const rows=renderEspelhoRowsHTML(snap);
+  const origem=regsOrigem?buildOrigemBatidas(regsOrigem.filter(r=>r.funcId===funcId||!r.funcId),mes):null;   // P5
+  const rows=renderEspelhoRowsHTML(snap,origem);
   const saldoTotal=snap.totais.saldo;
   return `<div style="background:white;color:#111;padding:1rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;border:1px solid #ddd;overflow-x:auto;">
     <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">
@@ -1631,6 +1674,7 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
         <td></td>
       </tr></tfoot>
     </table>
+    ${renderLegendaOrigemHTML(origem)}
   </div>`;
 }
 

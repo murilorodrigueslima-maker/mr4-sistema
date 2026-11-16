@@ -131,7 +131,7 @@ async function registrarPontoHandler(request) {
     horaCliente: typeof horaCliente === 'string' ? horaCliente.slice(0, 8) : null,
     facialScore: typeof facialScore === 'number' ? Math.round(facialScore) : null,
     foto:        foto && typeof foto === 'string' ? foto : null,
-    requestId: intencao.requestId, tipoEsperado: intencao.tipoEsperado,
+    requestId: intencao.requestId, tipoEsperado: intencao.tipoEsperado, encerramentoDireto: intencao.encerramentoDireto === true,   // P1: sábado sem almoço (decisão do servidor em pontoBatida.js)
     agoraMs: Date.now(),
     cooldownOverrideMs: envCooldown !== undefined ? parseInt(envCooldown, 10) : undefined,   // testes (PONTO_COOLDOWN_MS)
     LABEL_PONTO, HttpsError, serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp(),

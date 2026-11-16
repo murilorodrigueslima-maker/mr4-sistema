@@ -94,3 +94,47 @@ describe('P6 · gestor vê originais e alertas; evidência obrigatória', () => 
     expect(fs.readFileSync(path.join(root, 'functions/lib/pontoJustificativa.js'), 'utf8')).toMatch(/EVIDENCIA_OBRIGATORIA_JUSTIFICATIVA_ANTIGA/);
   });
 });
+
+describe('P6 (correção) · aviso "Evidência obrigatória" só com ação de aprovação pendente', () => {
+  const R = {}; vm.createContext(R); vm.runInContext(REGRAS, R);
+  const H = vm.createContext({});
+  vm.runInContext(fn(ADM, 'acaoDeAprovacaoPendente') + fn(ADM, 'textoAlertaControle') + ';this.a=acaoDeAprovacaoPendente;this.t=textoAlertaControle;', H);
+  const base = { id: 'j', funcId: 'F1', data: '2026-10-21', motivo: 'Ponto não batido — Saída almoço', tipoPonto: 'saida_almoco', horarioPonto: '13:39', criadoEm: '2026-11-11T12:26:00Z' };
+  const precisa = (j, proprio = false, assinado = false, futura = false) => {
+    const decidida = !!(j.status && j.status !== 'pendente');
+    const acao = H.a(j, proprio, decidida, assinado, futura);
+    return acao && R.exigeEvidenciaJustificativa(j, '2026-11-16') && !R.temEvidenciaJustificativa(j);
+  };
+  test('PENDENTE antiga sem evidência ⇒ aviso/bloqueio presentes; com descrição ⇒ ausentes', () => {
+    expect(precisa({ ...base, status: 'pendente' })).toBe(true);
+    expect(precisa({ ...base, status: 'pendente', descricao: 'Saí para almoçar às 13:39 com o gerente' })).toBe(false);
+  });
+  test('APROVADA e REJEITADA (já decididas) ⇒ SEM aviso, mesmo antigas e sem evidência', () => {
+    expect(precisa({ ...base, status: 'aprovado' })).toBe(false);
+    expect(precisa({ ...base, status: 'rejeitado' })).toBe(false);
+  });
+  test('pendente porém sem ação possível (ponto próprio, mês assinado, data futura) ⇒ sem aviso de evidência', () => {
+    expect(precisa({ ...base, status: 'pendente' }, true)).toBe(false);
+    expect(precisa({ ...base, status: 'pendente' }, false, true)).toBe(false);
+    expect(precisa({ ...base, status: 'pendente' }, false, false, true)).toBe(false);
+  });
+  test('texto do alerta: com ação pendente mantém a instrução; decidida mostra só o fato (sem "para aprovar…")', () => {
+    const a = R.avaliarAlertasJustificativa({ ...base, status: 'aprovado' }, { justificativas: [], registros: [], hojeStr: '2026-11-16' }).alertas[0];
+    expect(a.msg).toMatch(/para aprovar, registre na observação/);
+    expect(H.t(a.msg, true)).toBe(a.msg);
+    expect(H.t(a.msg, false)).toBe('Justificativa lançada 26 dias depois do dia e SEM descrição suficiente, anexo ou evidência.');
+    expect(H.t('Horário repetido: sem instrução', false)).toBe('Horário repetido: sem instrução');
+  });
+  test('HTML: o aviso depende de acaoPend; histórico, observações, registros originais e alertas seguem SEMPRE renderizados', () => {
+    expect(ADM).toMatch(/const precisaObs=acaoPend&&\[j,\.\.\.parPend\]/);
+    expect(ADM).toMatch(/const acaoPend=acaoDeAprovacaoPendente\(j,proprio,decidida,assinado,futura\)/);
+    expect(ADM).toMatch(/esc\(textoAlertaControle\(a\.msg,acaoPend\)\)/);
+    expect(ADM).toMatch(/\$\{blocoOrig\}/); expect(ADM).toMatch(/\$\{hist\.length\?/); expect(ADM).toMatch(/\$\{alertas6\?/);
+    expect(ADM).toMatch(/\$\{precisaObs\?'<div[^']*Evidência obrigatória/);
+  });
+  test('regras de aprovação, motor e servidor INALTERADOS (esta correção é só de tela)', () => {
+    const rodado = fs.readFileSync(path.join(root, 'functions/lib/ponto-regras.copy.js'), 'utf8');
+    expect(rodado).toBe(REGRAS);
+    expect(ADM).toMatch(/ctxJ\.exigeObsEvidencia&&obs0\.length<MIN_DESCRICAO_EVIDENCIA/);        // bloqueio ao clicar continua dependendo do mesmo flag
+  });
+});

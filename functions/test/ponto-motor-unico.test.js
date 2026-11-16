@@ -263,7 +263,7 @@ describe('Telas consomem o motor único (inspeção estática)', () => {
   test('gestor: espelho assinado exibe o snapshot congelado; legado sem snapshot exibe aviso', () => {
     const g = G.slice(G.indexOf('async function gerarEspelho'), G.indexOf('window.gerarEspelho'));
     expect(g).toMatch(/const congelado=espExist\?\.assinado&&espExist\.snapshot/);
-    expect(g).toMatch(/renderEspelhoRowsHTML\(snapExib\)/);
+    expect(g).toMatch(/renderEspelhoRowsHTML\(snapExib(,origem)?\)/);   // P5: o 2º argumento (origem das batidas) é só exibição; continua renderizando o snapshot congelado
     expect(g).toMatch(/LEGACY_SIGNED_NO_SNAPSHOT/);
   });
   test('funcionário: assinatura bloqueia espelho desatualizado e envia hashAssinado', () => {

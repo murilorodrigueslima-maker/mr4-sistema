@@ -17,7 +17,7 @@ const erro = p => p.then(() => 'OK', e => (e.code || '') + ':' + (e.message || '
 const hash = async c => crypto.createHash('sha1').update(JSON.stringify((await db.collection(c).orderBy('__name__').get()).docs.map(d => [d.id, d.data()]))).digest('hex');
 const DIA = '2026-10-07';
 const reg = (id, tipo, hora, data = DIA) => db.collection('registros').doc(id).set({ id, funcId: 'FA', data, tipo, hora: hora + ':00' });
-const just = (id, tipo, hora, extra = {}) => db.collection('justificativas').doc(id).set({ id, funcId: 'FA', funcNome: 'FA', data: DIA, motivo: 'Ponto não batido — ' + tipo + ' às ' + hora, tipoPonto: tipo, horarioPonto: hora, status: 'pendente', lancadoPorGestor: false, ...extra });
+const just = (id, tipo, hora, extra = {}) => db.collection('justificativas').doc(id).set({ id, funcId: 'FA', funcNome: 'FA', data: DIA, motivo: 'Ponto não batido — ' + tipo + ' às ' + hora, tipoPonto: tipo, horarioPonto: hora, status: 'pendente', lancadoPorGestor: false, descricao: 'Esqueci de bater o ponto; horário conferido com o gerente', ...extra });   // P6: justificativa antiga precisa de evidência (descrição ≥ 15)
 async function cenarioPar() {      // marcações reais: almoço batido no fim do expediente; par pendente 12:01/13:01
   await reg('r1', 'entrada', '08:14'); await reg('r2', 'saida_almoco', '17:25'); await reg('r3', 'retorno_almoco', '17:26'); await reg('r4', 'saida', '17:31');
   await just('ja', 'saida_almoco', '12:01'); await just('jb', 'retorno_almoco', '13:01');

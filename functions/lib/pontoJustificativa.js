@@ -68,6 +68,8 @@ async function decidirJustificativaHandler(request, opts = {}) {
       if (data > hoje) throw falha('DATA_FUTURA');
       const doDia = D.just.filter(x => x.data === data);
       const ponto = atuais.filter(x => x.tipoPonto);
+      // P6: correção de batida ANTIGA exige evidência (da justificativa ou registrada pelo gestor na decisão). Correção legítima segue possível.
+      if (ponto.some(x => M.exigeEvidenciaJustificativa(x, hoje) && !M.evidenciaSuficiente(x, obs))) throw falha('EVIDENCIA_OBRIGATORIA_JUSTIFICATIVA_ANTIGA');
       if (ponto.some(x => !x.horarioPonto || !/^\d{2}:\d{2}$/.test(x.horarioPonto) || !TIPOS[x.tipoPonto])) throw falha('JUSTIFICATIVA_SEM_HORARIO_VALIDO');
       if (new Set(ponto.map(x => x.tipoPonto)).size !== ponto.length) throw falha('IDS_COM_MESMA_BATIDA');
       if (ponto.length && ponto.length !== atuais.length) throw falha('MISTURA_DE_CORRECAO_E_OCORRENCIA');

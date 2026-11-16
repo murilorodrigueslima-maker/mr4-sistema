@@ -1163,7 +1163,7 @@ window.salvarEscala=salvarEscala;
 // ── Contexto da decisão sobre justificativa (fase 4.3): marcações, evidências, consequências; reutiliza o fluxo existente ──────────────
 async function anexarContextoJustificativa(j,det,proprio,decidida){
   window._ctxJustif={bloquearAprovar:false,motivo:''};
-  const [funcs,esp,todas,credTodos,regs]=await Promise.all([fbGet('funcionarios'),fbGet('espelhos'),fbGet('justificativas'),fbGet('creditos_jornada'),window._getRegistrosDia(j.funcId,j.data)]);
+  const [funcs,esp,todas,credTodos,regs,regsMesTodos]=await Promise.all([fbGet('funcionarios'),fbGet('espelhos'),fbGet('justificativas'),fbGet('creditos_jornada'),window._getRegistrosDia(j.funcId,j.data),fbRegistrosMes(j.data.slice(0,7)).catch(()=>[])]);
   const f=funcs.find(x=>x.id===j.funcId)||{id:j.funcId,jornada:8};
   const efet=registrosEfetivos(regs);
   const cred=credTodos.find(c=>c.funcId===j.funcId&&c.data===j.data)||null;
@@ -1188,6 +1188,21 @@ async function anexarContextoJustificativa(j,det,proprio,decidida){
   if(!j.anexo&&!j.evidenciaGestao&&!(j.descricao&&j.descricao.trim()))avisos.push('Sem descrição, anexo ou evidência registrada.');
   if(isol&&pend.length>1&&(()=>{const m=[isol.entrada,isol.saidaAlmoco,isol.retornoAlmoco,isol.saida].map(h=>h?toMin(h):null).filter(v=>v!==null);for(let i=1;i<m.length;i++)if(m[i]<m[i-1])return true;return !!(isol.saidaAlmoco&&isol.retornoAlmoco&&(toMin(isol.retornoAlmoco)-toMin(isol.saidaAlmoco))>180);})())avisos.push('Aprovada SOZINHA, esta justificativa deixa o almoço incoerente e será RECUSADA pelo servidor. Use "Aprovar o par juntas".');
   if(pend.length>1)avisos.push('Há '+pend.length+' justificativas pendentes de batida neste dia ('+pend.map(x=>esc(x.motivo)).join(' + ')+'): decidir uma isoladamente pode gerar resultado incoerente.');
+  // P6 — alertas de controle (não bloqueiam) + exigência de evidência para justificativa de batida ANTIGA
+  const reg6=avaliarAlertasJustificativa(j,{justificativas:todas.filter(x=>x.funcId===j.funcId),registros:(regsMesTodos||[]).filter(r=>r.funcId===j.funcId),hojeStr:hoje()});
+  const alertas6=reg6.alertas.map(a=>`<div style="color:${a.nivel==='alto'?'#c0392b':a.nivel==='medio'?'#b36b00':'#555'};">${a.nivel==='alto'?'⛔':'⚠'} ${esc(a.msg)}</div>`).join('');
+  const parPend=pend.filter(x=>x.tipoPonto&&x.horarioPonto);
+  const precisaObs=[j,...parPend].some(x=>exigeEvidenciaJustificativa(x,hoje())&&!temEvidenciaJustificativa(x));
+  // Registros ORIGINAIS do dia (como batidos), antes de qualquer correção: horário do servidor, origem e situação
+  const fmtLocal=v=>{const t=tsMillis(v);return t==null?'—':new Date(t).toLocaleString('pt-BR',{timeZone:'America/Fortaleza',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});};
+  const NOME_T={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};
+  const ordTipo=['entrada','saida_almoco','retorno_almoco','saida'];
+  const linhasOrig=[...regs].sort((a,b)=>(ordTipo.indexOf(a.tipo)-ordTipo.indexOf(b.tipo))||String(a.hora).localeCompare(String(b.hora))).map(r=>{
+    const porJust=!!(r.lancadoPorJustificativa||r.origem==='pontoJustificativaDecidir');
+    const sit=r.substituidoPor?'<span style="color:#b36b00;">substituída</span>':'vigente';
+    return `<tr><td style="padding:2px 6px;">${esc(NOME_T[r.tipo]||r.tipo||'—')}</td><td style="padding:2px 6px;"><strong>${esc(String(r.hora||'—').slice(0,8))}</strong></td><td style="padding:2px 6px;">${porJust?'lançada por justificativa':(r.encerramentoDireto?'batida no ponto (encerramento direto)':'batida no ponto')}</td><td style="padding:2px 6px;">${esc(fmtLocal(r.criadoEm))}</td><td style="padding:2px 6px;">${sit}</td></tr>`;
+  }).join('');
+  const blocoOrig=`<div style="margin-top:6px;"><div style="font-weight:600;">Registros originais do dia (como batidos)</div>${linhasOrig?`<table style="font-size:11px;border-collapse:collapse;margin-top:2px;"><thead><tr style="color:#555;text-align:left;"><th style="padding:2px 6px;">Tipo</th><th style="padding:2px 6px;">Hora</th><th style="padding:2px 6px;">Origem</th><th style="padding:2px 6px;">Gravada em</th><th style="padding:2px 6px;">Situação</th></tr></thead><tbody>${linhasOrig}</tbody></table>`:'<div style="color:#555;">Nenhum registro de ponto neste dia (todas as marcações dependem de justificativa).</div>'}</div>`;
   const hist=[];
   if(j.infoSolicitada)hist.push(`Informação solicitada por ${esc(j.infoSolicitadaPorEmail||'gestão')}: “${esc(j.infoSolicitada)}”`);
   if(j.respondidoPorEmail)hist.push(`Decidida por ${esc(j.respondidoPorEmail)}${j.obsGestor?': “'+esc(j.obsGestor)+'”':''}`);
@@ -1196,15 +1211,19 @@ async function anexarContextoJustificativa(j,det,proprio,decidida){
   cx.innerHTML=`<div style="font-weight:700;margin-bottom:4px;">Contexto para decisão</div>
     <div>Jornada prevista: <strong>${fmtMin(atual.jornadaPrevistaMin)}</strong> · status do dia: ${esc(atual.status)}</div>
     <div>Marcações atuais: ${marc}</div>
+    ${blocoOrig}
     <div>Evidências: ${j.anexo?'anexo <strong>'+esc(j.anexoNome||'arquivo')+'</strong>':'sem anexo'}${j.evidenciaGestao?' · evidência da gestão: '+esc(j.evidenciaGestao):''}${j.descricao?' · descrição: “'+esc(j.descricao)+'”':''}</div>
     <div>Outras justificativas do dia: ${outras.length?outras.map(x=>esc(x.status)+' — '+esc(x.motivo)).join('; '):'nenhuma'}</div>
     ${hist.length?'<div>'+hist.join('<br>')+'</div>':''}
     ${avisos.length?'<div style="color:#c0392b;margin-top:4px;">'+avisos.map(a=>'⚠ '+a).join('<br>')+'</div>':''}
+    ${alertas6?`<div style="margin-top:4px;"><div style="font-weight:600;">Alertas de controle <span style="font-weight:400;color:#555;">(neste mês: ${reg6.resumoMes.porJustificativa} de ${reg6.resumoMes.totalBatidas} batidas por justificativa, ${String(reg6.resumoMes.percentual).replace('.',',')}%)</span></div>${alertas6}</div>`:''}
+    ${precisaObs?'<div style="margin-top:6px;padding:6px 8px;border:1px solid #c0392b;border-radius:6px;background:#fdecea;color:#611;"><strong>Evidência obrigatória.</strong> Para APROVAR, registre no campo Observação a evidência que você verificou (mín. '+MIN_DESCRICAO_EVIDENCIA+' caracteres).</div>':''}
     <div style="margin-top:6px;"><strong>Se APROVAR:</strong> ${isol?txt(isol):'o dia recebe o crédito/abono da ocorrência (sem alteração de horários)'}${junt?`<br><strong>Se aprovadas JUNTAS:</strong> ${txt(junt)}`:''}</div>
     <div><strong>Se REJEITAR:</strong> nada muda no ponto; o dia continua ${esc(atual.status)}. O funcionário vê o motivo.</div>
     <div style="margin-top:4px;color:var(--cinza-texto);">Nenhuma decisão afeta o banco de horas enquanto ele estiver desligado; espelhos assinados nunca são alterados.</div>
     ${(proprio||decidida||assinado||futura)?'':'<label style="display:block;margin-top:8px;font-weight:600;"><input type="checkbox" id="justif-conferi"> Conferi a evidência e as marcações do dia</label>'}`;
   det.appendChild(cx);
+  window._ctxJustif.exigeObsEvidencia=precisaObs;
   if(assinado){window._ctxJustif={bloquearAprovar:true,motivo:'mês com espelho assinado'};}
   else if(futura){window._ctxJustif={bloquearAprovar:true,motivo:'data posterior a hoje'};}
   const ponto=pend.filter(x=>x.tipoPonto);
@@ -1367,6 +1386,7 @@ const _ERROS_JUSTIF={MES_COM_ESPELHO_ASSINADO:'o mês tem espelho assinado.',DAT
   BATIDA_JA_CORRIGIDA_COM_O_MESMO_HORARIO:'a batida já foi corrigida com o mesmo horário.',
   APROVACAO_ISOLADA_INCOERENTE_APROVE_O_PAR:'aprovada sozinha, esta justificativa deixa o almoço incoerente. Use "Aprovar o par juntas".',
   RESULTADO_INCOERENTE_REVISE_AS_MARCACOES:'o resultado seria um dia incoerente (ordem ou almoço > 3h). Revise as marcações.',
+  EVIDENCIA_OBRIGATORIA_JUSTIFICATIVA_ANTIGA:'justificativa antiga sem evidência: registre na Observação a evidência verificada (mín. 15 caracteres).',
   JUSTIFICATIVA_SEM_HORARIO_VALIDO:'justificativa sem horário válido.',IDS_COM_MESMA_BATIDA:'o conjunto tem duas justificativas para a mesma batida.',
   MISTURA_DE_CORRECAO_E_OCORRENCIA:'não misture correção de batida com outra ocorrência.',IDS_DE_FUNCIONARIOS_OU_DIAS_DIFERENTES:'as justificativas são de funcionários/dias diferentes.'};
 function _erroJustif(e){const m=String((e&&e.message)||'');return _ERROS_JUSTIF[m]||(e&&e.code==='functions/permission-denied'?'sem permissão (ou ponto próprio).':m||'erro');}
@@ -1384,6 +1404,7 @@ async function responderJustificativa(status,idsExtra){
     if(ctxJ.bloquearAprovar){notif('Aprovação bloqueada: '+(ctxJ.motivo||'verifique o contexto da justificativa.'),'vermelho');return;}
     const ck=document.getElementById('justif-conferi');
     if(ck&&!ck.checked){notif('Confirme que conferiu a evidência e as marcações do dia.','vermelho');return;}
+    if(ctxJ.exigeObsEvidencia&&obs0.length<MIN_DESCRICAO_EVIDENCIA){notif('Justificativa antiga sem evidência: registre na Observação a evidência que você verificou (mín. '+MIN_DESCRICAO_EVIDENCIA+' caracteres).','vermelho');return;}
   }
   if(status==='rejeitado'&&obs0.length<5){notif('Informe o motivo da rejeição (mín. 5 caracteres).','vermelho');return;}
   _respondendoJustif=true;
@@ -1467,10 +1488,11 @@ async function gerarEspelho(){
     :snap.totais.pendencias>0
     ?`<div style="margin:8px 0;padding:8px 10px;border:1px solid #e67e22;border-radius:6px;background:#fff4e5;color:#633;font-size:11px;">${snap.totais.pendencias} pendência(s) no período (ponto incompleto ou inconsistência administrativa). O funcionário não conseguirá assinar enquanto houver pendência.</div>`
     :'';
-  const rows=renderEspelhoRowsHTML(snapExib);
+  const origem=buildOrigemBatidas(regsDoMes,mes);   // P5: só exibição (J = lançada por justificativa; horário original)
+  const rows=renderEspelhoRowsHTML(snapExib,origem);
   const saldoTotal=snapExib.totais.saldo;
   const saldoColor=saldoTotal>=0?'#4ade80':'#f87171';
-  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${esc(fExib.nome)} · ${esc(fExib.cargo||'')} · Jornada: ${esc(fExib.jornada||8)}h/dia</div></div>${avisoEspelho}<table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snapExib.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table><div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${esc(espExist.assinaturaImg)}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${esc(fExib.nome)}<br>${espExist?.assinado?'Assinado em '+fmtData(dataIsoDe(espExist.assinadoEm)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
+  const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${esc(fExib.nome)} · ${esc(fExib.cargo||'')} · Jornada: ${esc(fExib.jornada||8)}h/dia</div></div>${avisoEspelho}<table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snapExib.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table>${renderLegendaOrigemHTML(origem)}<div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${esc(espExist.assinaturaImg)}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${esc(fExib.nome)}<br>${espExist?.assinado?'Assinado em '+fmtData(dataIsoDe(espExist.assinadoEm)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
   const statusAssin=espExist?.assinado?`<span class="badge assinado">✓ Assinado por ${esc(espExist.assinadoPor)}</span>`:`<span class="badge aguardando">Aguardando assinatura</span>`;
   const btnAcao=espExist?.assinado
     ?`<button class="btn-ghost" style="border-color:#1a73e8;color:#1a73e8;" onclick="iniciarRevisaoPeriodo('${sid(funcId)}','${mes}')">Revisar Período (Gestor)</button>`

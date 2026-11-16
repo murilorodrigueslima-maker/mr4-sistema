@@ -1161,6 +1161,10 @@ async function salvarEscala(fid){
 window.salvarEscala=salvarEscala;
 
 // ── Contexto da decisão sobre justificativa (fase 4.3): marcações, evidências, consequências; reutiliza o fluxo existente ──────────────
+// P6 (correção): o aviso/bloqueio de EVIDÊNCIA só vale enquanto há AÇÃO DE APROVAÇÃO pendente (pendente, não é o próprio ponto, mês não assinado, data não futura).
+// Justificativa já decidida (aprovada/rejeitada) continua mostrando histórico, observações, registros originais e alertas informativos — sem a instrução de aprovar.
+function acaoDeAprovacaoPendente(j,proprio,decidida,assinado,futura){return !!(j&&j.status==='pendente'&&!proprio&&!decidida&&!assinado&&!futura);}
+function textoAlertaControle(msg,acaoPendente){return acaoPendente?String(msg||''):String(msg||'').replace(/: para aprovar,.*$/,'.');}
 async function anexarContextoJustificativa(j,det,proprio,decidida){
   window._ctxJustif={bloquearAprovar:false,motivo:''};
   const [funcs,esp,todas,credTodos,regs,regsMesTodos]=await Promise.all([fbGet('funcionarios'),fbGet('espelhos'),fbGet('justificativas'),fbGet('creditos_jornada'),window._getRegistrosDia(j.funcId,j.data),fbRegistrosMes(j.data.slice(0,7)).catch(()=>[])]);
@@ -1190,9 +1194,10 @@ async function anexarContextoJustificativa(j,det,proprio,decidida){
   if(pend.length>1)avisos.push('Há '+pend.length+' justificativas pendentes de batida neste dia ('+pend.map(x=>esc(x.motivo)).join(' + ')+'): decidir uma isoladamente pode gerar resultado incoerente.');
   // P6 — alertas de controle (não bloqueiam) + exigência de evidência para justificativa de batida ANTIGA
   const reg6=avaliarAlertasJustificativa(j,{justificativas:todas.filter(x=>x.funcId===j.funcId),registros:(regsMesTodos||[]).filter(r=>r.funcId===j.funcId),hojeStr:hoje()});
-  const alertas6=reg6.alertas.map(a=>`<div style="color:${a.nivel==='alto'?'#c0392b':a.nivel==='medio'?'#b36b00':'#555'};">${a.nivel==='alto'?'⛔':'⚠'} ${esc(a.msg)}</div>`).join('');
+  const acaoPend=acaoDeAprovacaoPendente(j,proprio,decidida,assinado,futura);
+  const alertas6=reg6.alertas.map(a=>`<div style="color:${a.nivel==='alto'?'#c0392b':a.nivel==='medio'?'#b36b00':'#555'};">${a.nivel==='alto'?'⛔':'⚠'} ${esc(textoAlertaControle(a.msg,acaoPend))}</div>`).join('');
   const parPend=pend.filter(x=>x.tipoPonto&&x.horarioPonto);
-  const precisaObs=[j,...parPend].some(x=>exigeEvidenciaJustificativa(x,hoje())&&!temEvidenciaJustificativa(x));
+  const precisaObs=acaoPend&&[j,...parPend].some(x=>exigeEvidenciaJustificativa(x,hoje())&&!temEvidenciaJustificativa(x));
   // Registros ORIGINAIS do dia (como batidos), antes de qualquer correção: horário do servidor, origem e situação
   const fmtLocal=v=>{const t=tsMillis(v);return t==null?'—':new Date(t).toLocaleString('pt-BR',{timeZone:'America/Fortaleza',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});};
   const NOME_T={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'};

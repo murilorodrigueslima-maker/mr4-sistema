@@ -94,6 +94,9 @@ function calcTotal(e, sa, ra, s, opts) {
   // DEC-12: meia-noite
   if (tS < tE) return null;
 
+  // DIA SEM INTERVALO (autorizado e auditado, por data): jornada contínua; sa/ra eventualmente batidos por engano NÃO entram no cálculo.
+  if (opts && opts.semIntervalo) return tS - tE;
+
   const hasSa = !!sa;
   const hasRa = !!ra;
 
@@ -277,6 +280,8 @@ function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
   const escalaMin = escalaDoDia(funcionario, dataStr, diaSemana);
   const jornadaDia = diaSemana === 0 ? 0 : escalaMin !== null ? escalaMin : diaSemana === 6 ? JORNADA_SABADO_MIN : jornMin;
   // Sábado corrigido: a partir do corte OU em dias explicitamente corrigidos e auditados (ponto_sabado_correcoes → funcionario.sabadosCorrigidos).
+  // Dia útil SEM INTERVALO: somente em data explicitamente autorizada (ponto_sabado_correcoes, tipo DIA_SEM_INTERVALO → funcionario.sabadosCorrigidos[data]). Não altera a regra geral.
+  const semIntervalo = diaSemana >= 1 && diaSemana <= 5 && !!(funcionario.sabadosCorrigidos && funcionario.sabadosCorrigidos[dataStr] === true);
   const sabadoV2 = diaSemana === 6 && (dataStr >= SABADO_V2_DESDE || !!(funcionario.sabadosCorrigidos && funcionario.sabadosCorrigidos[dataStr] === true));
 
   const efetivos = registrosEfetivos(regsDia);
@@ -305,11 +310,12 @@ function calcDia(funcionario, dataStr, regsDia, creditoD, justifsDia) {
       : correcoes[0] ? (correcoes[0].motivo || '')
       : (creditoD && !temBatida ? (creditoD.motivo || '') : ''),
   };
+  if (semIntervalo && !r.ocorrencia) r.ocorrencia = 'Jornada contínua — sem intervalo (autorizado)';
   const pendenciar = (tipo, motivo, status) => {
     r.pendencias.push(motivo ? { tipo, motivo } : { tipo });
     r.pendente = true; r.status = status;
   };
-  const t = inconsBatida ? null : calcTotal(batidas.entrada, batidas.saida_almoco, batidas.retorno_almoco, batidas.saida, sabadoV2 ? { intervaloNuloOk: true } : undefined);
+  const t = inconsBatida ? null : calcTotal(batidas.entrada, batidas.saida_almoco, batidas.retorno_almoco, batidas.saida, semIntervalo ? { semIntervalo: true } : sabadoV2 ? { intervaloNuloOk: true } : undefined);
 
   // R7 — fora do período aplicável: batidas visíveis, sem falta, sem débito, sem pendência.
   if (!periodo.noPeriodo) {

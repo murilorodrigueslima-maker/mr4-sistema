@@ -130,6 +130,34 @@ body {
 
 .msg-erro.show { display: block; }
 
+/* ── Esqueci a senha / aviso ───────────────────────────────────────────── */
+.msg-ok {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  color: #1b5e20;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: none;
+  line-height: 1.45;
+}
+.msg-ok.show { display: block; }
+.link-esqueci {
+  display: block;
+  margin: 14px auto 0;
+  background: none;
+  border: 0;
+  color: var(--blue);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.link-esqueci:disabled { opacity: .6; cursor: default; }
+
 /* ── Campos ────────────────────────────────────────────────────────────── */
 .field {
   margin-bottom: 14px;
@@ -284,6 +312,7 @@ input:focus {
   </div>
 
   <div class="msg-erro" id="msgErro"></div>
+  <div class="msg-ok" id="msgOk" role="status"></div>
 
   <div class="field">
     <label for="email">E-mail</label>
@@ -301,6 +330,7 @@ input:focus {
   </div>
 
   <button class="btn-entrar" id="btnEntrar" onclick="fazerLogin()">ENTRAR</button>
+  <button class="link-esqueci" id="btnEsqueci" type="button" onclick="esqueciSenha()">Esqueci a senha</button>
 
   <div class="rodape">MR4 Distribuidora &copy; 2026 &mdash; Acesso restrito</div>
 
@@ -309,7 +339,7 @@ input:focus {
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
   const firebaseConfig = {
     apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -338,6 +368,7 @@ input:focus {
     const erro   = document.getElementById('msgErro');
 
     erro.classList.remove('show');
+    document.getElementById('msgOk').classList.remove('show');
 
     if (!email || !senha) {
       mostrarErro('Preencha e-mail e senha.');
@@ -364,6 +395,28 @@ input:focus {
     }
   };
 
+  // Esqueci a senha: envia o link de redefinição do Firebase. A resposta é sempre a mesma
+  // (exista a conta ou não) para não revelar quais e-mails estão cadastrados.
+  window.esqueciSenha = async function() {
+    const email = document.getElementById('email').value.trim();
+    const ok    = document.getElementById('msgOk');
+    const btn   = document.getElementById('btnEsqueci');
+    document.getElementById('msgErro').classList.remove('show');
+    ok.classList.remove('show');
+    if (!email) { mostrarErro('Digite seu e-mail acima e clique em "Esqueci a senha".'); return; }
+    btn.disabled = true;
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (e) {
+      if (e.code === 'auth/invalid-email') { mostrarErro('E-mail inválido.'); btn.disabled = false; return; }
+      if (e.code === 'auth/too-many-requests') { mostrarErro('Muitas tentativas. Tente mais tarde.'); btn.disabled = false; return; }
+      // demais erros (inclui conta inexistente): mesma resposta neutra
+    }
+    ok.textContent = 'Se o e-mail estiver cadastrado, enviamos um link para definir uma nova senha. Verifique também o spam.';
+    ok.classList.add('show');
+    setTimeout(() => { btn.disabled = false; }, 30000);
+  };
+
   window.toggleSenha = function() {
     const inp  = document.getElementById('senha');
     const icon = document.getElementById('eyeIcon');
@@ -384,7 +437,7 @@ input:focus {
 
   // Enter para logar
   document.addEventListener('keydown', e => {
-    if (e.key === 'Enter') window.fazerLogin();
+    if (e.key === 'Enter' && document.activeElement?.id !== 'btnEsqueci') window.fazerLogin();
   });
 </script>
 

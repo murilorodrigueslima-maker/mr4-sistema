@@ -296,6 +296,11 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
         <input type="password" id="fSenha" placeholder="Mínimo 6 caracteres">
         <div class="uid-hint" id="senhaHint">🔑 Defina a senha inicial do colaborador.</div>
       </div>
+      <div class="form-group" id="resetGroup" style="display:none">
+        <label class="fl">Senha de acesso</label>
+        <button type="button" class="btn-sm btn-sm-secondary" id="btnResetUsuario" onclick="enviarResetUsuario()">↻ Enviar link de redefinição</button>
+        <div class="uid-hint">🔑 O colaborador recebe um e-mail e define a nova senha. Esta tela não altera senhas.</div>
+      </div>
     </div>
     <input type="hidden" id="fUid">
 
@@ -672,6 +677,7 @@ window.abrirModalNovo = function() {
   document.getElementById('fAdmin').checked     = false;
   document.getElementById('fBloqueado').checked = false;
   document.getElementById('senhaGroup').style.display = '';
+  document.getElementById('resetGroup').style.display = 'none';
   document.getElementById('senhaHint').textContent    = '🔑 Defina a senha inicial do colaborador.';
   document.getElementById('modalTitulo').textContent  = 'Novo Usuário';
   document.getElementById('modalSub').textContent     = 'Cadastre um novo colaborador e defina os módulos';
@@ -691,9 +697,9 @@ window.abrirModalEditar = function(uid) {
   document.getElementById('fCargo').value       = u.cargo || '';
   document.getElementById('fAdmin').checked     = !!u.admin;
   document.getElementById('fBloqueado').checked = !!u.bloqueado;
-  // Na edição, senha não é obrigatória
-  document.getElementById('senhaGroup').style.display = '';
-  document.getElementById('senhaHint').textContent    = '🔑 Deixe em branco para não alterar a senha.';
+  // Na edição a senha NÃO é alterada por esta tela: só o envio do link de redefinição.
+  document.getElementById('senhaGroup').style.display = 'none';
+  document.getElementById('resetGroup').style.display = '';
   document.getElementById('modalTitulo').textContent  = 'Editar Usuário';
   document.getElementById('modalSub').textContent     = `Editando: ${u.nome || u.email || uid}`;
   renderModulosForm(u.modulos||[], !!u.admin);
@@ -758,6 +764,22 @@ window.salvarUsuario = async function() {
       toast('Erro: ' + e.message, true);
     }
   }
+};
+
+// ── Enviar link de redefinição de senha (edição de usuário) ──────────────────
+window.enviarResetUsuario = async function() {
+  const email = document.getElementById('fEmail').value.trim();
+  const btn   = document.getElementById('btnResetUsuario');
+  if (!email) { toast('Informe o e-mail do colaborador.', true); return; }
+  btn.disabled = true;
+  try {
+    await window._sendPasswordReset(email);
+    toast(`✅ Link de redefinição enviado para ${email}. Peça para verificar também o spam.`);
+  } catch(e) {
+    const m = { 'auth/user-not-found': 'Não há conta de login com este e-mail.', 'auth/invalid-email': 'E-mail inválido.', 'auth/too-many-requests': 'Muitas tentativas. Tente mais tarde.' };
+    toast(m[e.code] || ('Erro ao enviar: ' + e.message), true);
+  }
+  setTimeout(() => { btn.disabled = false; }, 15000);
 };
 
 // ── Modal de exclusão ────────────────────────────────────────────────────────
@@ -900,6 +922,7 @@ window.abrirModalPerfil = function(funcId) {
   document.getElementById('fAdmin').checked     = false;
   document.getElementById('fBloqueado').checked = false;
   document.getElementById('senhaGroup').style.display = 'none';
+  document.getElementById('resetGroup').style.display = 'none';
   document.getElementById('modalTitulo').textContent  = 'Configurar perfil';
   document.getElementById('modalSub').textContent     = `Conta existente — defina os módulos e a Fila Comercial de ${(f && f.nome) || user.email || ''}`;
   renderModulosForm([], false);

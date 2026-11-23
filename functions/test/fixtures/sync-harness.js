@@ -8,7 +8,7 @@ const fs = require('fs');
 const https = require('https');
 const { EventEmitter } = require('events');
 
-const MODE = process.env.HARNESS_MODE;                       // 'ok' | 'falha'
+const MODE = process.env.HARNESS_MODE;                       // 'ok' | 'falha' | vendas_pag2_429 | vendas_pag2_500 | vendas_estrutura_invalida | vendas_pag_incompleta | vendas_vazio | vendas_queda | pagamentos_queda
 const state = JSON.parse(fs.readFileSync(process.env.HARNESS_STATE, 'utf8'));
 const writes = [], diskWrites = [], gcCalls = [];
 const escreverDisco = fs.writeFileSync.bind(fs);
@@ -71,16 +71,40 @@ const FIXTURE = {
     { id: '12', codigo_interno: 'C3', nome: 'Produto C', marca: 'Fab Z', estoque: '0', valor_custo: '1', valor_venda: '4', estoque_minimo: '0' },
   ],
 };
+// ── Respostas do GestãoClick falso por MODO (Etapa A · A1) ─────────────────────────────────────
+// 'ok' e 'falha' mantêm EXATAMENTE o comportamento anterior. Os demais modos reproduzem falhas reais da API
+// SOMENTE em /vendas (ou /pagamentos em 'pagamentos_queda'), com status HTTP e corpo realistas.
+const maisVendas = (n, ini) => Array.from({ length: n }, (_, i) => ({ id: String(ini + i), data: HOJE, valor_total: '100.00', nome_vendedor: 'Vendedor A', situacao_id: '3952593' }));
+const META_VAZIA = { total_registros: null, total_paginas: null, total_registros_pagina: null, pagina_atual: 1, limite_por_pagina: 100, pagina_anterior: null, url_anterior: null, proxima_pagina: null, proxima_url: null };
+function respostaGC(u) {
+  const path = u.pathname; const pagina = Number(u.searchParams.get('pagina') || 1);
+  const padrao = () => { const f = FIXTURE[path] || []; return { status: 200, body: { data: f, meta: { total_paginas: 1, total_registros: f.length } } }; };
+  const pag = (data, tp, tr) => ({ status: 200, body: { code: 200, status: 'success', meta: { total_registros: tr, total_paginas: tp, pagina_atual: pagina, limite_por_pagina: 100, proxima_pagina: pagina < tp ? pagina + 1 : null }, data } });
+  if (path === '/vendas') {
+    switch (MODE) {
+      case 'vendas_pag2_429': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8) : { status: 429, body: { code: 429, status: 'error', message: 'Too many requests' } };
+      case 'vendas_pag2_500': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8) : { status: 500, body: { code: 500, status: 'error', message: 'Internal error' } };
+      case 'vendas_estrutura_invalida': return { status: 200, body: { code: 200, status: 'success', dados: FIXTURE['/vendas'], meta: { total_registros: 4, total_paginas: 1 } } };   // chave errada: "dados"
+      case 'vendas_pag_incompleta': return pagina === 1 ? pag(FIXTURE['/vendas'], 3, 12) : pagina === 2 ? pag(maisVendas(4, 100), 3, 12) : pag([], 3, 12);   // total 12, entrega 8
+      case 'vendas_vazio': return { status: 200, body: { code: 200, status: 'success', meta: META_VAZIA, data: [], error: '', message: '' } };
+      case 'vendas_queda': return pag([FIXTURE['/vendas'][0]], 1, 1);
+      default: return padrao();
+    }
+  }
+  if (path === '/pagamentos' && MODE === 'pagamentos_queda') return pag([{ id: '900', data_vencimento: HOJE, valor: '10.00', liquidado: '0', entidade: 'O', nome_fornecedor: 'Fornecedor', descricao: 'x' }], 1, 1);
+  return padrao();
+}
 https.get = function (url, opts, cb) {
   const u = new URL(url);
   const h = (opts && opts.headers) || {};
-  gcCalls.push({ host: u.host, path: u.pathname, temCredencial: !!(h['access-token'] && h['secret-access-token']) });
+  gcCalls.push({ host: u.host, path: u.pathname, temCredencial: !!(h['access-token'] && h['secret-access-token']), pagina: Number(u.searchParams.get('pagina') || 1) });
   const req = new EventEmitter();
   process.nextTick(() => {
     if (MODE === 'falha') { req.emit('error', new Error('ECONNRESET (simulado)')); return; }
-    const res = new EventEmitter();
+    const r = respostaGC(u);
+    const res = new EventEmitter(); res.statusCode = r.status; res.headers = {};
     cb(res);
-    res.emit('data', JSON.stringify({ data: FIXTURE[u.pathname] || [], meta: { total_paginas: 1, total_registros: (FIXTURE[u.pathname] || []).length } }));
+    res.emit('data', JSON.stringify(r.body));
     res.emit('end');
   });
   return req;

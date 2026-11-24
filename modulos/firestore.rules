@@ -463,6 +463,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // VENDAS POR FORNECEDOR (Fase C) — coleção PRÓPRIA; nenhuma regra acima foi alterada. Escrita só pelo sync (Admin SDK).
+    //   unidades: quantidades (SEM valores em R$) — mesmo critério do operacional: gestor ou funcionário ativo com módulo 'estoque', não bloqueado
+    //   valores:  faturamento líquido em R$ — mesmo critério do custo: GESTOR + (admin | módulo 'estoque'), não bloqueado
+    match /compras_n0_fornecedores/{docId} {
+      allow read:  if (docId == 'unidades' && temAcessoModulo('estoque')) ||
+                      (docId == 'valores'  && temModulo('estoque') && naoBloqueado());
+      allow write: if false;
+    }
+
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
 

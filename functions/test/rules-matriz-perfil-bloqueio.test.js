@@ -5,6 +5,7 @@
  * (3) funcionário só por módulo explícito (dual-role); (4) `admin=true` é atalho de módulo só onde a regra usa temAcessoModulo;
  * (5) fila_comercial_gestao e clientes/conversas/painel_config NÃO têm atalho admin para dual-role.
  * Os valores esperados vêm da POLÍTICA (comentários das regras, commits 7f462a9/fa488bd/S4) — não foram ajustados para "fazer passar".
+ * R1: o bloqueio vale também para role=gestor.
  * Executa com o emulador do Firestore (porta 8080).
  */
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
@@ -21,6 +22,9 @@ const PERFIS = {
   'gestor ativo, admin=true':       { u: { role: 'gestor', ativo: true }, s: { modulos: [], admin: true } },
   'gestor ativo, SEM sistema_usuarios': { u: { role: 'gestor', ativo: true } },
   'gestor INATIVO (users.ativo=false)': { u: { role: 'gestor', ativo: false }, s: { modulos: ['ponto'], admin: true } },
+  'gestor BLOQUEADO (admin=true, módulos=[ponto])': { u: { role: 'gestor', ativo: true }, s: { modulos: ['ponto'], admin: true, bloqueado: true } },
+  'gestor BLOQUEADO (módulos=[])':  { u: { role: 'gestor', ativo: true }, s: { modulos: [], admin: false, bloqueado: true } },
+  'gestor ativo, bloqueado=false explícito': { u: { role: 'gestor', ativo: true }, s: { modulos: ['ponto'], admin: false, bloqueado: false } },
   'dual-role admin=true':           { u: { role: 'funcionario', ativo: true, funcionarioId: 'F-A' }, s: { modulos: [], admin: true } },
   'dual-role módulos=[ponto]':      { u: { role: 'funcionario', ativo: true, funcionarioId: 'F-B' }, s: { modulos: ['ponto'], admin: false } },
   'dual-role módulos=[demandas]':   { u: { role: 'funcionario', ativo: true, funcionarioId: 'F-C' }, s: { modulos: ['demandas'], admin: false } },
@@ -48,6 +52,9 @@ const ESPERADO = {
   'gestor ativo, admin=true':               [L, L, L, L, L, L, L, L, L, L],
   'gestor ativo, SEM sistema_usuarios':     [N, L, L, L, L, L, L, L, L, L],
   'gestor INATIVO (users.ativo=false)':     [N, N, N, N, N, N, N, N, N, N],
+  'gestor BLOQUEADO (admin=true, módulos=[ponto])': [N, N, N, N, N, N, N, N, N, N],   // R1: bloqueio vale para gestor
+  'gestor BLOQUEADO (módulos=[])':          [N, N, N, N, N, N, N, N, N, N],
+  'gestor ativo, bloqueado=false explícito': [L, L, L, L, L, L, L, L, L, L],
   'dual-role admin=true':                   [L, L, L, L, N, N, N, N, L, N],   // atalho admin só onde há temAcessoModulo; sem atalho em gestao/clientes/painel_config
   'dual-role módulos=[ponto]':              [L, N, N, N, N, N, N, N, N, N],
   'dual-role módulos=[demandas]':           [N, N, N, N, N, N, N, N, L, N],
@@ -88,7 +95,7 @@ describe('cobertura da matriz', () => {
   test('todas as linhas têm uma expectativa para cada coleção (sem buracos)', () => {
     for (const n of Object.keys(PERFIS)) expect({ n, cols: (ESPERADO[n] || []).length }).toEqual({ n, cols: Object.keys(ALVOS).length });
   });
-  test('qualquer perfil BLOQUEADO ou INATIVO (exceto gestor — ver R1) é negado em TODAS as coleções', () => {
+  test('qualquer perfil BLOQUEADO ou INATIVO (inclusive gestor) é negado em TODAS as coleções', () => {
     for (const n of Object.keys(PERFIS).filter(k => /BLOQUEADO|INATIVO/.test(k))) expect({ n, algumPermitido: ESPERADO[n].some(Boolean) }).toEqual({ n, algumPermitido: false });
   });
 });

@@ -35,11 +35,16 @@ service cloud.firestore {
     // FAIL CLOSED: exige doc users/{uid} com role='gestor' E ativo=true.
     // Qualquer usuário sem este doc é tratado como não-gestor.
     // (Anterior: !exists(...) = gestor — VULNERABILIDADE REMOVIDA)
+    // R1 (política): usuário BLOQUEADO não acessa nada, independentemente do cargo. Gestor com sistema_usuarios.bloqueado == true
+    // é negado. Gestor SEM doc em sistema_usuarios continua sendo gestor (fail-open só nesse ponto: não há registro de bloqueio a respeitar;
+    // o bloqueio é gravado em sistema_usuarios). BILLING: +1 leitura (sistema_usuarios/{uid}), em cache quando a regra já a consulta.
     function isGestor() {
       return isAuthed() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         meuPerfil().role == 'gestor' &&
-        meuPerfil().ativo == true;
+        meuPerfil().ativo == true &&
+        (!exists(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)) ||
+         get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('bloqueado', false) != true);
     }
 
     // S5 (07/10/2026) — ADMIN REAL: único perfil autorizado a conceder/remover privilégios.

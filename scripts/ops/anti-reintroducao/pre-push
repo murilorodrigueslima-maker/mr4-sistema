@@ -1,0 +1,16 @@
+#!/bin/sh
+# MR4 — impede (re)introduzir no GitHub o histórico antigo com dados sensíveis (incidente de privacidade de 24/11/2026).
+# Bloqueia o push se, no intervalo enviado, houver (1) algum commit da lista de hashes ANTIGOS (denylist) ou (2) algum objeto em caminhos proibidos.
+# Instalação: git config core.hooksPath <pasta com este arquivo>.   Lista: $MR4_DENYLIST ou <pasta do hook>/denylist-commits-antigos.txt
+AQUI="$(cd "$(dirname "$0")" && pwd)"; LISTA="${MR4_DENYLIST:-$AQUI/denylist-commits-antigos.txt}"; ZERO=0000000000000000000000000000000000000000
+PROIBIDOS=' (data/|docs/agente-comercial/(LABORATORIO_REGRAS_N22|CALIBRACAO_COMERCIAL|CALIBRACAO_COMERCIAL_VINCULADOS)\.md)'
+[ -r "$LISTA" ] || { echo "mr4 pre-push: lista de bloqueio ausente ($LISTA) — push RECUSADO por segurança" >&2; exit 1; }
+while read -r lref lsha rref rsha; do
+  [ "$lsha" = "$ZERO" ] && continue
+  # ref nova OU sha remoto desconhecido localmente (ex.: force-push sobre histórico que este clone não tem) => examina TODO o histórico enviado (nunca "passa" por erro de intervalo)
+  if [ "$rsha" = "$ZERO" ] || ! git cat-file -e "$rsha^{commit}" 2>/dev/null; then faixa="$lsha"; else faixa="$rsha..$lsha"; fi
+  git rev-list "$faixa" >/dev/null 2>&1 || { echo "mr4 pre-push: não foi possível examinar $lref ($faixa) — push RECUSADO por segurança" >&2; exit 1; }
+  if git rev-list "$faixa" 2>/dev/null | grep -q -F -f "$LISTA"; then echo "mr4 pre-push: RECUSADO — $lref contém commit(s) do histórico antigo contaminado (denylist)." >&2; exit 1; fi
+  if git rev-list --objects "$faixa" 2>/dev/null | grep -q -E "$PROIBIDOS"; then echo "mr4 pre-push: RECUSADO — $lref contém arquivos de dados proibidos (data/ ou relatórios reais)." >&2; exit 1; fi
+done
+exit 0

@@ -57,7 +57,8 @@ const GC_BASE    = 'https://api.gestaoclick.com';
 const HIST_INICIO = '2022-03-24';
 const DATA_REF    = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Fortaleza' }))
                     .toISOString().slice(0, 10);
-const OUT_DIR     = path.join(__dirname, '..', 'docs', 'agente-comercial');
+// Saída FORA do repositório (dados comerciais reais): MR4_RELATORIOS_DIR ou ~/mr4-relatorios-privados. Nunca gravar em docs/ (ver .gitignore e o teste relatorios-reais-nao-rastreados).
+const OUT_DIR     = process.env.MR4_RELATORIOS_DIR || path.join(require('os').homedir(), 'mr4-relatorios-privados');
 const OUT_FILE    = path.join(OUT_DIR, 'LABORATORIO_REGRAS_N22.md');
 const VINCULOS    = path.join(__dirname, '..', 'artifacts', 'vinculos-gc.json');
 

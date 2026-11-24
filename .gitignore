@@ -30,3 +30,11 @@ functions/.env.*.local
 # Editor / sistema
 .DS_Store
 .claude/
+
+# Relatórios analíticos com DADOS COMERCIAIS REAIS (gerados por scripts/laboratorio-regras-n22.js e scripts/calibrar-agente-comercial*.js).
+# NUNCA versionar: ficam em ~/mr4-relatorios-privados (ver os scripts). Proteção adicional: functions/test/relatorios-reais-nao-rastreados.test.js e o hook pre-push.
+docs/agente-comercial/LABORATORIO_REGRAS_N22.md
+docs/agente-comercial/CALIBRACAO_COMERCIAL.md
+docs/agente-comercial/CALIBRACAO_COMERCIAL_VINCULADOS.md
+relatorios-privados/
+mr4-relatorios-privados/

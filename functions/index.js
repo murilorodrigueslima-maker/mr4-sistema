@@ -57,6 +57,7 @@ const LABEL_PONTO = {
 // ── Handler: registrarPonto ───────────────────────────────────────────────────
 // PONTO 2.0 F0 (P0-01): batida idempotente por intenção (requestId + tipoEsperado) — ver lib/pontoBatida.js
 const pontoBatida = require('./lib/pontoBatida');
+const { exigirNaoBloqueado } = require('./lib/usuarioOperacional');   // F1: bloqueado não opera, independentemente do cargo
 
 async function registrarPontoHandler(request) {
   // 1. Autenticação obrigatória
@@ -77,6 +78,7 @@ async function registrarPontoHandler(request) {
   if (!userPerfil.ativo) {
     throw new HttpsError('permission-denied', 'Conta inativa. Contate o gestor.');
   }
+  await exigirNaoBloqueado(db, uid);   // F1
   const funcId = userPerfil.funcionarioId;
   if (!funcId) {
     throw new HttpsError('not-found', 'Funcionário não vinculado ao perfil. Contate o gestor.');
@@ -162,6 +164,7 @@ async function criarContaFuncionarioHandler(request) {
   if (!isGestor) {
     throw new HttpsError('permission-denied', 'Somente gestores podem criar contas de funcionários.');
   }
+  await exigirNaoBloqueado(db, uid);   // F1: gestor bloqueado não cria contas
 
   // 3. Payload
   const { email, senha, funcId, funcNome } = request.data || {};
@@ -391,6 +394,7 @@ async function gcQueryHandler(request) {
   if (!perfil || !perfil.ativo) {
     throw new HttpsError('permission-denied', 'Acesso negado.');
   }
+  await exigirNaoBloqueado(db, uid);   // F1: bloqueado não consulta o GestãoClick (gestor ou funcionário)
   // Gestor: acesso completo. Funcionário da expedição: somente LISTAR_VENDAS.
   if (perfil.role !== 'gestor') {
     const { operacao: opCheck } = request.data || {};

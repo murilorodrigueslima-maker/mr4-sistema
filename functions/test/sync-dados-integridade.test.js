@@ -214,7 +214,7 @@ describe('A2 — FALHA DE GRAVAÇÃO e ATOMICIDADE dos grupos', () => {
 describe('A2 — status do workflow e fluxo saudável', () => {
   test('fluxo saudável (modo ok, sem documentos anteriores): 8 documentos, `_meta` aditivo, RESUMO ok, exit 0', () => {
     const r = rodar('ok', {});
-    expect(r.exitCode).toBe(0); expect(resumo(r)).toEqual({ ok: true, falhas: [] });
+    expect(r.exitCode).toBe(0); expect(resumo(r)).toEqual({ ok: true, falhas: [], avisos: [] });
     expect([...r.writes].sort()).toEqual(['display_metrics/latest', 'financeiro_cache/latest', 'painel_cache/caixa', 'painel_cache/estoque', 'painel_cache/estoque_custos', 'painel_cache/produtos_catalogo', 'painel_cache/vendas', 'pedidos_cache/latest']);
     expect(r.state.painel_cache.vendas._meta).toMatchObject({ vendasTotal: 4, janelaDias: 30, escopo: 'padrao_sem_loja_id' });
     expect(r.diskWrites.filter(p => p !== process.env.HARNESS_OUT && !p.includes('a2-sync-'))).toEqual([]);
@@ -255,10 +255,15 @@ describe('ESTÁTICO — o script usa a camada segura e o workflow falha quando o
     const ocorrencias = src.split('\n').filter(l => /JSON\.parse\(body\)/.test(l)); expect(ocorrencias).toHaveLength(1);
     expect(src.indexOf('JSON.parse(body)')).toBeGreaterThan(src.indexOf('async function syncPerfil360'));
   });
-  test('falha ⇒ process.exitCode = 1 e RESUMO_SYNC; permitirVazio SÓ no bloco de pagamentos', () => {
+  test('falha ⇒ process.exitCode = 1 e RESUMO_SYNC; permitirVazio SÓ em pagamentos e em Pedidos (este só aceito com corroboração A2.1)', () => {
     expect(src).toMatch(/process\.exitCode = 1/); expect(src).toMatch(/RESUMO_SYNC/);
-    expect((src.match(/permitirVazio: true/g) || []).length).toBe(1); expect(src.indexOf('permitirVazio: true')).toBeGreaterThan(src.indexOf('async function syncFinanceiro'));
-    expect(src.indexOf('permitirVazio: true')).toBeLessThan(src.indexOf('async function syncPedidos'));
+    // A2.1 ampliou a exceção, de forma deliberada e autorizada: 2 ocorrências, uma em cada bloco; a de Pedidos exige avaliarVazioPedidos
+    expect((src.match(/permitirVazio: true/g) || []).length).toBe(2);
+    const iFin = src.indexOf('async function syncFinanceiro'), iPed = src.indexOf('async function syncPedidos'), iCat = src.indexOf('async function syncCatalogoProdutos');
+    const primeira = src.indexOf('permitirVazio: true'), segunda = src.indexOf('permitirVazio: true', primeira + 1);
+    expect(primeira).toBeGreaterThan(iFin); expect(primeira).toBeLessThan(iPed);
+    expect(segunda).toBeGreaterThan(iPed); expect(segunda).toBeLessThan(iCat);
+    expect(src.slice(iPed, iCat)).toMatch(/avaliarVazioPedidos/);
   });
   test('workflow: o passo executa o script SEM continue-on-error (exit ≠ 0 ⇒ job vermelho)', () => {
     expect(wf).toMatch(/run: node scripts\/sync-dados\.js/); expect(wf).not.toMatch(/continue-on-error/);

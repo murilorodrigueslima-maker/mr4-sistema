@@ -93,6 +93,24 @@ function respostaGC(u) {
     if (!f.length) return { status: 200, body: { code: 200, status: 'success', meta: META_VAZIA, data: [], error: '', message: '' } };
     return { status: 200, body: { code: 200, status: 'success', meta: { total_registros: f.length, total_paginas: 1, pagina_atual: 1, limite_por_pagina: 100, proxima_pagina: null }, data: f } }; };
   const pag = (data, tp, tr, lim = 100) => ({ status: 200, body: { code: 200, status: 'success', meta: { total_registros: tr, total_paginas: tp, pagina_atual: pagina, limite_por_pagina: lim, proxima_pagina: pagina < tp ? pagina + 1 : null }, data } });
+  const diaAtras = n => { const d = hojeComoOSync(); d.setDate(d.getDate() - n); return iso(d); };
+  const ini = u.searchParams.get('data_inicio') || '';
+  const ehJanelaPedidos = path === '/vendas' && ini >= diaAtras(2);        // janela de 3 dias (Pedidos) × 30 dias (vendas)
+  const vendasAntigas = () => pag(Array.from({ length: 4 }, (_, i) => ({ id: String(300 + i), data: diaAtras(6 + i), valor_total: '100.00', nome_vendedor: 'Vendedor A', situacao_id: '3952593' })), 1, 4);
+  const vazioValido = () => ({ status: 200, body: { code: 200, status: 'success', meta: META_VAZIA, data: [], error: '', message: '' } });
+  if (path === '/vendas' && MODE.startsWith('pedidos_')) {   // A2.1 — cenários de Pedidos vazio (Pedidos = janela curta; vendas = 30 dias)
+    switch (MODE) {
+      case 'pedidos_vazio_feriado': return ehJanelaPedidos ? vazioValido() : vendasAntigas();                          // sem vendas há 3+ dias; 30 dias íntegros
+      case 'pedidos_vazio_inconsistente': return ehJanelaPedidos ? vazioValido() : padrao();                           // 30 dias TEM venda de hoje, Pedidos vazio
+      case 'pedidos_vazio_vendas30_500': return ehJanelaPedidos ? vazioValido() : { status: 500, body: { code: 500, status: 'error', message: 'Internal error' } };
+      case 'pedidos_vazio_vendas30_incompleta': return ehJanelaPedidos ? vazioValido() : (pagina === 1 ? pag(FIXTURE['/vendas'], 3, 12, 4) : pagina === 2 ? pag(maisVendas(4, 100), 3, 12, 4) : pag([], 3, 12, 4));
+      case 'pedidos_vazio_vendas30_vazia': return vazioValido();                                                        // tudo vazio: nada corrobora
+      case 'pedidos_vazio_vendas30_queda': return ehJanelaPedidos ? vazioValido() : pag([{ id: '301', data: diaAtras(7), valor_total: '1.00', nome_vendedor: 'V', situacao_id: '3952593' }], 1, 1);   // queda > 70% ⇒ vendas bloqueada
+      case 'pedidos_estrutura_invalida': return ehJanelaPedidos ? { status: 200, body: { code: 200, status: 'success', dados: [], meta: { total_registros: null } } } : vendasAntigas();
+      case 'pedidos_pag2_500': return ehJanelaPedidos ? (pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8, 4) : { status: 500, body: { code: 500, status: 'error', message: 'Internal error' } }) : vendasAntigas();
+      default: return padrao();
+    }
+  }
   if (path === '/vendas') {
     switch (MODE) {
       case 'vendas_pag2_429': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8, 4) : { status: 429, body: { code: 429, status: 'error', message: 'Too many requests' } };

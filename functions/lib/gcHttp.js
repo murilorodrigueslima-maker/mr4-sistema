@@ -317,4 +317,28 @@ function decidirCursor({ cursorAtual = null, novoCursor = null, leituraCompleta 
   return { cursor: pode ? novoCursor : cursorAtual, avancou: pode && novoCursor !== cursorAtual };
 }
 
-module.exports = { BASE, CODIGOS, GcErro, criarCliente, criarTransporteHttps, paginarCompleto, validarEstrutura, verificarFiltroModificacao, avaliarPublicacao, decidirCursor };
+/**
+ * A2.1 — Decide se um resultado VAZIO de Pedidos (janela curta, ex.: 3 dias) é ausência LEGÍTIMA de vendas
+ * (feriado prolongado, loja sem movimento) e não falha da API. Só aceita com CORROBORAÇÃO INDEPENDENTE no mesmo ciclo:
+ * a leitura de vendas dos últimos 30 dias (mesmo endpoint, mesmo escopo, período que COBRE a janela de Pedidos) concluída
+ * com integridade e sem nenhuma venda dentro da janela de Pedidos. Qualquer dúvida ⇒ NÃO aceita (preserva o último válido).
+ * Pré-condições já garantidas por paginarCompleto: HTTP 200, estrutura válida, paginação consistente (vazio sem próxima página,
+ * sem total > 0). Função PURA.
+ * @param {{vendas30:{integra:boolean,escopo:string,inicio:string,fim:string,datas:string[],semData:number}|null,
+ *          janela:{escopo:string,inicio:string,fim:string}}} p
+ */
+function avaliarVazioPedidos({ vendas30, janela } = {}) {
+  const nao = motivo => ({ aceitar: false, motivo });
+  const dia = x => typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x);
+  if (!vendas30 || vendas30.integra !== true) return nao('VENDAS30_NAO_INTEGRA');
+  if (!janela || !dia(janela.inicio) || !dia(janela.fim) || !dia(vendas30.inicio) || !dia(vendas30.fim)) return nao('PERIODO_INVALIDO');
+  if (!vendas30.escopo || vendas30.escopo !== janela.escopo) return nao('ESCOPO_INCOMPATIVEL');
+  if (vendas30.inicio > janela.inicio || vendas30.fim < janela.fim) return nao('PERIODO_INCOMPATIVEL');
+  if (!Array.isArray(vendas30.datas) || vendas30.datas.length === 0) return nao('VENDAS30_VAZIA');
+  if (vendas30.semData > 0) return nao('VENDAS30_SEM_DATA');
+  if (vendas30.datas.some(d => !dia(d))) return nao('VENDAS30_DATA_INVALIDA');
+  if (vendas30.datas.some(d => d >= janela.inicio && d <= janela.fim)) return nao('INCONSISTENTE_VENDAS_NA_JANELA_DE_PEDIDOS');
+  return { aceitar: true, motivo: 'OK_CORROBORADO' };
+}
+
+module.exports = { BASE, CODIGOS, GcErro, criarCliente, criarTransporteHttps, paginarCompleto, validarEstrutura, verificarFiltroModificacao, avaliarPublicacao, avaliarVazioPedidos, decidirCursor };

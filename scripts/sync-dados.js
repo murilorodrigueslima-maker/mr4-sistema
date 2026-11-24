@@ -40,6 +40,10 @@ const LIMITE_QUEDA_PADRAO = 0.70;
 const MAX_PAGINAS         = 400;                    // trava de segurança: ABORTA (GC_LIMITE_PAGINAS), nunca trunca
 const gcCliente = gcHttp.criarCliente({ transporte: gcHttp.criarTransporteHttps(https), credenciais: { access: ACCESS_TOKEN, secret: SECRET_TOKEN } });
 const falhas = [];
+const avisos = [];      // eventos de auditoria que NÃO são falha (ex.: vazio de Pedidos corroborado) — só códigos
+// A2.1 — leitura de vendas (30 dias) compartilhada com Pedidos como CORROBORAÇÃO do vazio. syncVendas SEMPRE resolve (finally).
+let _resolverVendas30; const vendas30Pronta = new Promise(r => { _resolverVendas30 = r; });
+let _estadoVendas30 = null;
 function registrarFalha(bloco, codigo, detalhe) {
   falhas.push({ bloco, codigo, detalhe: detalhe || null });
   console.error(`🚨 FALHA bloco=${bloco} codigo=${codigo}${detalhe ? ' ' + detalhe : ''}`);   // só códigos e contagens — sem dados pessoais
@@ -196,6 +200,9 @@ function diasAtras(n) {
 
 // ── VENDAS ───────────────────────────────────────────────────────────────────
 async function syncVendas() {
+  try { await syncVendasCorpo(); } finally { _resolverVendas30(_estadoVendas30); }
+}
+async function syncVendasCorpo() {
   console.log('📊 Sincronizando vendas...');
   const META_MES    = 200000;
   const META_DIA    = 8000;
@@ -226,6 +233,9 @@ async function syncVendas() {
     console.log('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
     return;
   }
+  // A2.1: leitura íntegra e aprovada ⇒ serve de corroboração (só datas e contagem; nenhum dado pessoal)
+  const dataDe = v => String(v.data || v.data_venda || v.data_pedido || '').slice(0, 10);
+  _estadoVendas30 = { integra: true, escopo: ESCOPO_VENDAS, inicio: diasAtras(JANELA_VENDAS_DIAS), fim: hoje(), datas: vendas.map(dataDe).filter(Boolean), semData: vendas.filter(v => !dataDe(v)).length };
 
   const hojStr  = hoje();
   const semStr  = inicioSemana();
@@ -516,12 +526,27 @@ async function syncFinanceiro() {
 async function syncPedidos() {
   console.log('🚚 Sincronizando pedidos para expedição...');
   let vendas = [];
+  let vazioCorroborado = false;
 
   try {
     const inicio = diasAtras(2);
-    const r = await lerLista('/vendas', { data_inicio: inicio, data_fim: hoje() });
+    const fim = hoje();
+    // permitirVazio: SÓ para obter a resposta vazia válida; ela só é ACEITA com corroboração independente (A2.1, abaixo)
+    const r = await lerLista('/vendas', { data_inicio: inicio, data_fim: fim }, { permitirVazio: true });
     vendas = r.itens;
     console.log(`  → ${vendas.length} pedidos encontrados`);
+    if (r.vazio) {
+      const vendas30 = await vendas30Pronta;
+      const av = gcHttp.avaliarVazioPedidos({ vendas30, janela: { escopo: ESCOPO_VENDAS, inicio, fim } });
+      if (!av.aceitar) {
+        console.log(`  ⚠️ Pedidos vazio NÃO corroborado (${av.motivo}) — preservando pedidos_cache/latest`);
+        const err = new gcHttp.GcErro(gcHttp.CODIGOS.VAZIO_INESPERADO, `vazio de Pedidos não corroborado: ${av.motivo}`, { caminho: '/vendas' });
+        throw err;
+      }
+      vazioCorroborado = true;
+      avisos.push({ bloco: 'pedidos', codigo: 'PEDIDOS_VAZIO_CORROBORADO' });
+      console.log('  ℹ️ Pedidos vazio LEGÍTIMO: vendas de 30 dias íntegras e sem vendas na janela de Pedidos (corroborado)');
+    }
   } catch(e) {
     console.log('⚠️ Erro ao buscar pedidos:', e.codigo || e.message);
     registrarFalha('pedidos', e.codigo || 'ERRO_INESPERADO');
@@ -566,7 +591,8 @@ async function syncPedidos() {
     return;
   }
   const totalAnterior = refPed.dados ? (refPed.dados._meta?.pedidosTotal ?? null) : null;
-  const anomalia = detectarAnomalia('pedidos', pedidos.length, totalAnterior, 0.80);
+  // vazio corroborado (A2.1) é ausência legítima de vendas: a confirmação independente substitui a regra de queda; demais quedas seguem protegidas
+  const anomalia = vazioCorroborado ? false : detectarAnomalia('pedidos', pedidos.length, totalAnterior, 0.80);
 
   if (anomalia) {
     registrarFalha('pedidos', 'PUBLICACAO_BLOQUEADA', `novo=${pedidos.length} anterior=${totalAnterior}`);
@@ -774,7 +800,7 @@ async function syncPerfil360() {
   ]);
   resultados.forEach((r, i) => { if (r.status === 'rejected') registrarFalha(blocos[i], 'EXCECAO_NAO_TRATADA', String((r.reason && r.reason.message) || r.reason).slice(0, 120)); });
   // Resumo estruturado (só códigos e contagens — sem dados pessoais) e STATUS DO WORKFLOW: qualquer falha ⇒ erro
-  console.log('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })) }));
+  console.log('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })), avisos }));
   if (falhas.length) {
     process.exitCode = 1;
     console.error(`❌ Sync concluído COM ${falhas.length} falha(s): ${falhas.map(f => f.bloco + ':' + f.codigo).join(', ')}`);

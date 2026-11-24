@@ -212,10 +212,10 @@ describe('A2 — FALHA DE GRAVAÇÃO e ATOMICIDADE dos grupos', () => {
 });
 
 describe('A2 — status do workflow e fluxo saudável', () => {
-  test('fluxo saudável (modo ok, sem documentos anteriores): 8 documentos, `_meta` aditivo, RESUMO ok, exit 0', () => {
+  test('fluxo saudável (modo ok, sem documentos anteriores): 8 documentos + heartbeat (gc_sync_status/ultima), `_meta` aditivo, RESUMO ok, exit 0', () => {
     const r = rodar('ok', {});
     expect(r.exitCode).toBe(0); expect(resumo(r)).toMatchObject({ ok: true, falhas: [], avisos: [] }); expect(Object.keys(resumo(r)).sort()).toEqual(['avisos', 'duracaoMs', 'duracoesMs', 'falhas', 'ok']);
-    expect([...r.writes].sort()).toEqual(['display_metrics/latest', 'financeiro_cache/latest', 'painel_cache/caixa', 'painel_cache/estoque', 'painel_cache/estoque_custos', 'painel_cache/produtos_catalogo', 'painel_cache/vendas', 'pedidos_cache/latest']);
+    expect([...r.writes].sort()).toEqual(['display_metrics/latest', 'financeiro_cache/latest', 'gc_sync_status/ultima', 'painel_cache/caixa', 'painel_cache/estoque', 'painel_cache/estoque_custos', 'painel_cache/produtos_catalogo', 'painel_cache/vendas', 'pedidos_cache/latest']);
     expect(r.state.painel_cache.vendas._meta).toMatchObject({ vendasTotal: 4, janelaDias: 30, escopo: 'padrao_sem_loja_id' });
     expect(r.diskWrites.filter(p => p !== process.env.HARNESS_OUT && !p.includes('a2-sync-'))).toEqual([]);
   });

@@ -2,12 +2,18 @@ name: Sync Dados GestãoClick
 
 on:
   schedule:
-    - cron: '0 */2 * * *'    # a cada 2 horas
+    - cron: '17 */2 * * *'   # a cada 2 horas, no minuto 17 (fora do pico do minuto 0)
   workflow_dispatch:           # permite rodar manualmente
+
+# Uma execução por vez, SEM cancelar a que está em andamento (as gravações em lote assumem execução única); no máximo uma fica na fila.
+concurrency:
+  group: sync-dados
+  cancel-in-progress: false
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 30   # histórico (Sync Dados): mediana 4,8 min, p95 7,7, p99 11,5, máx 20,6 min — 20 min teria cancelado o máximo histórico
     permissions:
       contents: read    # SECURITY HOTFIX P0: o sync não grava mais nada no repositório público
       id-token: write   # obrigatório para GitHub Actions OIDC → WIF

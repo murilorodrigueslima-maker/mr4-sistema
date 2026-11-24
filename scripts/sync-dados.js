@@ -803,6 +803,28 @@ async function syncPerfil360() {
   }
 }
 
+// ── HEARTBEAT (gc_sync_status/ultima) ─────────────────────────────────────────
+// ultimoSucessoCompletoEm = último ciclo SEM nenhuma falha; ultimoSucessoPorBloco[b] = último ciclo em que o bloco b não falhou.
+// Lê o documento anterior para preservar os últimos sucessos; se a leitura falhar, NÃO grava (não perde histórico). Sem dados do negócio.
+async function registrarHeartbeat(blocos, inicioTotal, duracoes) {
+  try {
+    const ref = await firestoreLerReferencia('gc_sync_status', 'ultima');
+    if (!ref.ok) { log.aviso('⚠️  Heartbeat não gravado (leitura do anterior falhou)'); return; }
+    const ant = ref.dados || {}; const agoraIso = new Date().toISOString(); const falhou = new Set(falhas.map(f => f.bloco));
+    const porBloco = { ...(ant.ultimoSucessoPorBloco || {}) };
+    for (const b of blocos) if (!falhou.has(b)) porBloco[b] = agoraIso;
+    const runId = /^\d{1,20}$/.test(String(process.env.GITHUB_RUN_ID || '')) ? String(process.env.GITHUB_RUN_ID) : null;
+    const doc = {
+      schema: 1, ultimaTentativaEm: agoraIso,
+      ultimoSucessoCompletoEm: falhas.length === 0 ? agoraIso : (ant.ultimoSucessoCompletoEm || null),
+      ultimoSucessoPorBloco: porBloco,
+      ultimaExecucao: { runId, ok: falhas.length === 0, duracaoMs: Date.now() - inicioTotal, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })) },
+    };
+    const ok = await firestoreSet('gc_sync_status', 'ultima', doc);
+    if (!ok) log.aviso('⚠️  Heartbeat não gravado (escrita falhou)');
+  } catch (e) { log.aviso(`⚠️  Heartbeat não gravado (codigo=${codigoSeguro(e)})`); }
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 (async () => {
   log.info(`🔄 Iniciando sync — ${agora()}`);
@@ -818,6 +840,9 @@ async function syncPerfil360() {
     medir('perfil360', syncPerfil360),
   ]);
   resultados.forEach((r, i) => { if (r.status === 'rejected') registrarFalha(blocos[i], 'EXCECAO_NAO_TRATADA', codigoSeguro(r.reason)); });
+  // Heartbeat (monitor de dados desatualizados): só códigos e horários, nenhum dado do negócio. Falha ao gravar NÃO muda o resultado do sync
+  // (o monitor independente alertará por ausência de atualização).
+  await registrarHeartbeat(blocos, inicioTotal, duracoes);
   // Resumo estruturado (só códigos e contagens — sem dados pessoais) e STATUS DO WORKFLOW: qualquer falha ⇒ erro
   // RESUMO_SYNC: SÓ bloco/código/motivo(enum)/duração. Nenhuma contagem de negócio, valor ou dado pessoal.
   log.info('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo, motivo: f.detalhe && /^[A-Z0-9_]{3,60}$/.test(f.detalhe) ? f.detalhe : undefined })), avisos, duracaoMs: Date.now() - inicioTotal, duracoesMs: duracoes }));

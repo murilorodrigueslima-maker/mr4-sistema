@@ -694,6 +694,12 @@ exports.expedicaoSyncPedidos = onSchedule({
 });
 
 // Painel Comercial: sincronização agendada a cada 5 minutos (GestãoClick só GET: ~6 requisições/execução; histórico a cada 6 h).
+// Monitor independente de dados desatualizados do sync (heartbeat gc_sync_status/ultima): alerta > 4 h, crítico > 8 h. SÓ log estruturado
+// (Cloud Logging → política de alerta); sem segredos, sem API externa. NÃO ativado: depende de deploy de Functions autorizado.
+exports.monitorarSyncDesatualizado = onSchedule({
+  schedule: 'every 30 minutes', timeZone: 'America/Fortaleza', region: REGION, timeoutSeconds: 60, memory: '256MiB', retryCount: 0, maxInstances: 1,
+}, () => require('./lib/syncMonitor').monitorarHandler({ db, logger: require('firebase-functions/logger') }));
+
 exports.syncPainelDisplay = onSchedule({
   schedule:        'every 5 minutes',
   timeZone:        'America/Fortaleza',

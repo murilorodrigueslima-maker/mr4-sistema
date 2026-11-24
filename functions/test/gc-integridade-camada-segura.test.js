@@ -123,10 +123,12 @@ describe('LADO A LADO — mesma resposta com falha na página 2: código ATUAL �
   });
 });
 
-describe('A camada segura NÃO está conectada a nenhum fluxo de produção (A0/A1)', () => {
-  test('nenhum arquivo de produção referencia gcHttp', () => {
-    const fs = require('fs'), path = require('path'); const raiz = path.resolve(__dirname, '../..');
-    const alvos = ['functions/index.js', 'scripts/sync-dados.js', 'scripts/incremental360.js', 'scripts/bootstrap360.js', 'functions/lib/sync360.js', 'functions/lib/painelSync.js', 'functions/lib/expedicao/sync.js', 'functions/lib/financeiro/fetch.js', 'functions/lib/compras/fetch.js'];
-    for (const f of alvos) expect({ f, usa: /gcHttp/.test(fs.readFileSync(path.join(raiz, f), 'utf8')) }).toEqual({ f, usa: false });
+describe('Conexão da camada segura: SÓ o scripts/sync-dados.js (A2); os demais fluxos continuam fora (A3, A4, B, C)', () => {
+  const fs = require('fs'), path = require('path'); const raiz = path.resolve(__dirname, '../..');
+  const le = f => fs.readFileSync(path.join(raiz, f), 'utf8');
+  test('scripts/sync-dados.js usa gcHttp (A2)', () => { expect(/require\('\.\.\/functions\/lib\/gcHttp'\)/.test(le('scripts/sync-dados.js'))).toBe(true); });
+  test('nenhum OUTRO arquivo de produção referencia gcHttp', () => {
+    const alvos = ['functions/index.js', 'scripts/incremental360.js', 'scripts/bootstrap360.js', 'functions/lib/sync360.js', 'functions/lib/painelSync.js', 'functions/lib/expedicao/sync.js', 'functions/lib/financeiro/fetch.js', 'functions/lib/compras/fetch.js'];
+    for (const f of alvos) expect({ f, usa: /gcHttp/.test(le(f)) }).toEqual({ f, usa: false });
   });
 });

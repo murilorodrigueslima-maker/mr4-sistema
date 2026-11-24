@@ -1,6 +1,7 @@
 'use strict';
 // Etapa A · A0 — camada HTTP segura (gcHttp.criarCliente). Sem rede, sem credenciais reais.
-const { criarCliente, GcErro, CODIGOS, BASE } = require('../lib/gcHttp');
+const { criarCliente, criarTransporteHttps, GcErro, CODIGOS, BASE } = require('../lib/gcHttp');
+const { EventEmitter } = require('events');
 
 const SEG_A = 'SEGREDO-ACESSO-FAKE-123', SEG_S = 'SEGREDO-SECRETO-FAKE-456', CORPO_SECRETO = 'CORPO-BRUTO-SENSIVEL-XYZ';
 const OK = (data = [{ id: '1' }], meta = { total_registros: 1, total_paginas: 1, pagina_atual: 1, limite_por_pagina: 100, proxima_pagina: null }) => ({ code: 200, status: 'success', meta, data });
@@ -167,5 +168,50 @@ describe('gcHttp — erros sanitizados', () => {
       const txt = e.message + JSON.stringify(e) + (e.stack || '').split('\n')[0];
       for (const s of [SEG_A, SEG_S, CORPO_SECRETO, '123.456.789-00', 'loja_id=', '?']) expect(txt).not.toContain(s);
     }
+  });
+});
+
+describe('gcHttp.criarTransporteHttps — adaptador de https.get', () => {
+  /** https simulado: responde conforme `resposta`; registra as chamadas */
+  function httpsFalso(resposta) {
+    const chamadas = [];
+    return { chamadas, get(url, opts, cb) {
+      chamadas.push({ url, opts }); const req = new EventEmitter();
+      process.nextTick(() => {
+        if (resposta.erro) { req.emit('error', resposta.erro); return; }
+        const res = new EventEmitter(); res.statusCode = resposta.status; res.headers = resposta.headers || {};
+        cb(res); for (const c of resposta.pedacos) res.emit('data', c); res.emit('end');
+      });
+      return req;
+    } };
+  }
+  const via = (resposta, extra = {}) => { const h = httpsFalso(resposta); const c = criarCliente({ transporte: criarTransporteHttps(h), credenciais: { access: SEG_A, secret: SEG_S }, dormir: async () => {}, ...extra }); return { h, c }; };
+
+  test('200 em vários pedaços (string e Buffer) é reconstituído e validado; cabeçalhos e signal repassados', async () => {
+    const corpo = JSON.stringify(OK([{ id: '1' }, { id: '2' }], { total_registros: 2, total_paginas: 1, pagina_atual: 1, limite_por_pagina: 100, proxima_pagina: null }));
+    const { h, c } = via({ status: 200, pedacos: [corpo.slice(0, 20), Buffer.from(corpo.slice(20))] });
+    const j = await c.get('/vendas', { loja_id: '262759' });
+    expect(j.data).toHaveLength(2);
+    expect(h.chamadas[0].opts.headers['access-token']).toBe(SEG_A); expect(h.chamadas[0].opts.signal).toBeDefined();
+    expect(h.chamadas[0].url.startsWith(BASE)).toBe(true);
+  });
+  test('status e Retry-After (inclusive cabeçalho em lista) chegam ao cliente: 429 com Retry-After é respeitado', async () => {
+    const h = httpsFalso({ status: 429, headers: { 'retry-after': ['3'] }, pedacos: ['{}'] }); const esperas = [];
+    const c = criarCliente({ transporte: criarTransporteHttps(h), credenciais: { access: 'a', secret: 'b' }, tentativas: 2, dormir: async ms => { esperas.push(ms); } });
+    const e = await falha(c.get('/vendas'));
+    expect(e.codigo).toBe(CODIGOS.R429_ESGOTADO); expect(esperas).toEqual([3000]); expect(h.chamadas).toHaveLength(2);
+  });
+  test('3xx volta como status e é recusado (https.get não segue redirecionamento)', async () => {
+    const { c } = via({ status: 301, headers: { location: 'https://evil.example' }, pedacos: [''] });
+    expect((await falha(c.get('/vendas'))).codigo).toBe(CODIGOS.REDIRECIONAMENTO);
+  });
+  test('corpo que não é JSON ⇒ GC_JSON_INVALIDO; erro de socket ⇒ GC_REDE (retentado)', async () => {
+    expect((await falha(via({ status: 200, pedacos: ['<html>erro</html>'] }).c.get('/vendas'))).codigo).toBe(CODIGOS.JSON_INVALIDO);
+    const r = via({ erro: new Error('ECONNRESET') }); expect((await falha(r.c.get('/vendas'))).codigo).toBe(CODIGOS.REDE); expect(r.h.chamadas).toHaveLength(3);
+  });
+  test('protocolo não https e url inválida são recusados pelo transporte', async () => {
+    const t = criarTransporteHttps(httpsFalso({ status: 200, pedacos: ['{}'] }));
+    await expect(t('http://api.gestaoclick.com/vendas')).rejects.toMatchObject({ codigo: CODIGOS.HOST_FORA_DO_GC });
+    await expect(t('::não é url::')).rejects.toMatchObject({ codigo: CODIGOS.CAMINHO_INVALIDO });
   });
 });

@@ -8,7 +8,16 @@ const fs = require('fs');
 const https = require('https');
 const { EventEmitter } = require('events');
 
-const MODE = process.env.HARNESS_MODE;                       // 'ok' | 'falha' | vendas_pag2_429 | vendas_pag2_500 | vendas_estrutura_invalida | vendas_pag_incompleta | vendas_vazio | vendas_queda | pagamentos_queda
+const MODE = process.env.HARNESS_MODE;                       // 'ok' | 'falha' | vendas_pag2_429 | vendas_pag2_500 | vendas_estrutura_invalida | vendas_pag_incompleta | vendas_vazio | vendas_queda | vendas_total_muda | vendas_pag2_429_transitorio | pagamentos_erro500 | pagamentos_queda
+// Relógio simulado (ex.: HARNESS_NOW=2026-12-01T10:00:00-03:00 para testar a virada de mês). Instalado ANTES de qualquer cálculo de data.
+if (process.env.HARNESS_NOW) {
+  const fixo = new Date(process.env.HARNESS_NOW).getTime(); const RealDate = Date;
+  global.Date = class extends RealDate { constructor(...a) { if (a.length === 0) super(fixo); else super(...a); } static now() { return fixo; } };
+}
+// Falha de escrita simulada: HARNESS_FALHA_ESCRITA=painel_cache/caixa,pedidos_cache/latest (set e batch.commit lançam erro)
+const FALHA_ESCRITA = (process.env.HARNESS_FALHA_ESCRITA || '').split(',').filter(Boolean);
+// Falha de LEITURA simulada: HARNESS_FALHA_LEITURA=painel_cache/vendas (get lança erro)
+const FALHA_LEITURA = (process.env.HARNESS_FALHA_LEITURA || '').split(',').filter(Boolean);
 const state = JSON.parse(fs.readFileSync(process.env.HARNESS_STATE, 'utf8'));
 const writes = [], diskWrites = [], gcCalls = [];
 const escreverDisco = fs.writeFileSync.bind(fs);
@@ -33,14 +42,16 @@ class Query {
 }
 class DocRef {
   constructor(col, id) { this.col = col; this.id = id; }
-  async get() { return new Snap(this.id, (state[this.col] || {})[this.id]); }
-  async set(d, opt) { const cur = (state[this.col] || {})[this.id]; (state[this.col] = state[this.col] || {})[this.id] = opt && opt.merge ? { ...cur, ...clone(d) } : clone(d); writes.push(this.col + '/' + this.id); }
+  async get() { if (FALHA_LEITURA.includes(this.col + '/' + this.id)) throw new Error('UNAVAILABLE (leitura simulada)'); return new Snap(this.id, (state[this.col] || {})[this.id]); }
+  async set(d, opt) { if (FALHA_ESCRITA.includes(this.col + '/' + this.id)) throw new Error('UNAVAILABLE (escrita simulada)'); const cur = (state[this.col] || {})[this.id]; (state[this.col] = state[this.col] || {})[this.id] = opt && opt.merge ? { ...cur, ...clone(d) } : clone(d); writes.push(this.col + '/' + this.id); }
   async update(d) { return this.set(d, { merge: true }); }
 }
 class CollectionRef extends Query { doc(id) { return new DocRef(this.col, id); } }
 class Firestore {
   collection(n) { return new CollectionRef(n); }
-  batch() { const ops = []; return { set: (r, d, o) => ops.push(() => r.set(d, o)), update: (r, d) => ops.push(() => r.update(d)), commit: async () => { for (const op of ops) await op(); } }; }
+  // batch ATÔMICO como o Firestore real: se qualquer documento do lote falhar, NENHUM é gravado
+  batch() { const ops = []; return { set: (r, d, o) => ops.push({ r, fn: () => r.set(d, o) }), update: (r, d) => ops.push({ r, fn: () => r.update(d) }),
+    commit: async () => { for (const { r } of ops) if (FALHA_ESCRITA.includes(r.col + '/' + r.id)) throw new Error('UNAVAILABLE (lote simulado)'); for (const { fn } of ops) await fn(); } }; }
   async runTransaction(fn) { return fn({ get: r => r.get(), set: (r, d, o) => r.set(d, o), update: (r, d) => r.update(d) }); }
 }
 const FieldValue = { serverTimestamp: () => '__serverTimestamp__', increment: n => n, arrayUnion: (...a) => a, delete: () => undefined };
@@ -78,19 +89,28 @@ const maisVendas = (n, ini) => Array.from({ length: n }, (_, i) => ({ id: String
 const META_VAZIA = { total_registros: null, total_paginas: null, total_registros_pagina: null, pagina_atual: 1, limite_por_pagina: 100, pagina_anterior: null, url_anterior: null, proxima_pagina: null, proxima_url: null };
 function respostaGC(u) {
   const path = u.pathname; const pagina = Number(u.searchParams.get('pagina') || 1);
-  const padrao = () => { const f = FIXTURE[path] || []; return { status: 200, body: { data: f, meta: { total_paginas: 1, total_registros: f.length } } }; };
-  const pag = (data, tp, tr) => ({ status: 200, body: { code: 200, status: 'success', meta: { total_registros: tr, total_paginas: tp, pagina_atual: pagina, limite_por_pagina: 100, proxima_pagina: pagina < tp ? pagina + 1 : null }, data } });
+  const padrao = () => { const f = FIXTURE[path] || [];
+    if (!f.length) return { status: 200, body: { code: 200, status: 'success', meta: META_VAZIA, data: [], error: '', message: '' } };
+    return { status: 200, body: { code: 200, status: 'success', meta: { total_registros: f.length, total_paginas: 1, pagina_atual: 1, limite_por_pagina: 100, proxima_pagina: null }, data: f } }; };
+  const pag = (data, tp, tr, lim = 100) => ({ status: 200, body: { code: 200, status: 'success', meta: { total_registros: tr, total_paginas: tp, pagina_atual: pagina, limite_por_pagina: lim, proxima_pagina: pagina < tp ? pagina + 1 : null }, data } });
   if (path === '/vendas') {
     switch (MODE) {
-      case 'vendas_pag2_429': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8) : { status: 429, body: { code: 429, status: 'error', message: 'Too many requests' } };
-      case 'vendas_pag2_500': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8) : { status: 500, body: { code: 500, status: 'error', message: 'Internal error' } };
+      case 'vendas_pag2_429': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8, 4) : { status: 429, body: { code: 429, status: 'error', message: 'Too many requests' } };
+      case 'vendas_pag2_500': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8, 4) : { status: 500, body: { code: 500, status: 'error', message: 'Internal error' } };
       case 'vendas_estrutura_invalida': return { status: 200, body: { code: 200, status: 'success', dados: FIXTURE['/vendas'], meta: { total_registros: 4, total_paginas: 1 } } };   // chave errada: "dados"
-      case 'vendas_pag_incompleta': return pagina === 1 ? pag(FIXTURE['/vendas'], 3, 12) : pagina === 2 ? pag(maisVendas(4, 100), 3, 12) : pag([], 3, 12);   // total 12, entrega 8
+      case 'vendas_pag_incompleta': return pagina === 1 ? pag(FIXTURE['/vendas'], 3, 12, 4) : pagina === 2 ? pag(maisVendas(4, 100), 3, 12, 4) : pag([], 3, 12, 4);   // total 12, entrega 8
+      case 'vendas_total_muda': return pagina === 1 ? pag(FIXTURE['/vendas'], 2, 8, 4) : pag(maisVendas(4, 100), 2, 9, 4);   // total_registros 8 ⇒ 9 durante a paginação
+      case 'vendas_pag2_429_transitorio': {   // 429 UMA vez na página 2 (Retry-After 1 s) e depois dados completos: a retentativa limitada recupera
+        if (pagina === 1) return pag(FIXTURE['/vendas'], 2, 8, 4);
+        if (!global.__429feito) { global.__429feito = true; return { status: 429, body: { code: 429, status: 'error', message: 'Too many requests' }, headers: { 'retry-after': '1' } }; }
+        return pag(maisVendas(4, 100), 2, 8, 4);
+      }
       case 'vendas_vazio': return { status: 200, body: { code: 200, status: 'success', meta: META_VAZIA, data: [], error: '', message: '' } };
       case 'vendas_queda': return pag([FIXTURE['/vendas'][0]], 1, 1);
       default: return padrao();
     }
   }
+  if (path === '/pagamentos' && MODE === 'pagamentos_erro500') return { status: 500, body: { code: 500, status: 'error', message: 'Internal error' } };
   if (path === '/pagamentos' && MODE === 'pagamentos_queda') return pag([{ id: '900', data_vencimento: HOJE, valor: '10.00', liquidado: '0', entidade: 'O', nome_fornecedor: 'Fornecedor', descricao: 'x' }], 1, 1);
   return padrao();
 }
@@ -102,7 +122,7 @@ https.get = function (url, opts, cb) {
   process.nextTick(() => {
     if (MODE === 'falha') { req.emit('error', new Error('ECONNRESET (simulado)')); return; }
     const r = respostaGC(u);
-    const res = new EventEmitter(); res.statusCode = r.status; res.headers = {};
+    const res = new EventEmitter(); res.statusCode = r.status; res.headers = r.headers || {};
     cb(res);
     res.emit('data', JSON.stringify(r.body));
     res.emit('end');

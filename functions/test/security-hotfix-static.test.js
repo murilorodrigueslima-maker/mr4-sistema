@@ -65,8 +65,9 @@ describe('Gerador e workflow não publicam dados comerciais', () => {
   const sync = ler('scripts/sync-dados.js');
   test('sync-dados.js não grava arquivos e escreve os 5 documentos protegidos', () => {
     expect(sync).not.toMatch(/writeFileSync|require\('fs'\)/);
-    for (const d of ['vendas', 'caixa', 'estoque', 'estoque_custos', 'produtos_catalogo'])
-      expect(sync).toContain(`firestoreSet('painel_cache', '${d}'`);
+    // A2: vendas/caixa e estoque/estoque_custos são gravados em LOTE ATÔMICO (firestoreBatchSet); o catálogo segue em firestoreSet
+    const grava = d => sync.includes(`firestoreSet('painel_cache', '${d}'`) || new RegExp(`col: 'painel_cache',\\s+id: '${d}'`).test(sync);
+    for (const d of ['vendas', 'caixa', 'estoque', 'estoque_custos', 'produtos_catalogo']) expect({ d, grava: grava(d) }).toEqual({ d, grava: true });
   });
   test('documento operacional de estoque não contém custo, preço, margem nem valor do estoque', () => {
     const bloco = sync.slice(sync.indexOf('const estoqueOperacional'), sync.indexOf('const estoqueCustos'));
@@ -74,10 +75,11 @@ describe('Gerador e workflow não publicam dados comerciais', () => {
     expect(bloco).toMatch(/abaixo_minimo/);
   });
   test('documento do caixa contém só atualizado_em e hoje', () => {
-    expect(sync).toMatch(/firestoreSet\('painel_cache', 'caixa', \{ atualizado_em: dadosVendas\.atualizado_em, hoje: fatHoje \}\)/);
+    expect(sync).toMatch(/id: 'caixa',\s+dados: \{ atualizado_em: dadosVendas\.atualizado_em, hoje: fatHoje \}/);
   });
   test('falha do GestãoClick não sobrescreve os caches com zeros', () => {
-    expect((sync.match(/↩ Mantendo painel_cache/g) || []).length).toBe(3);
+    // A2: cada um dos 3 blocos (vendas, estoque, catálogo) preserva o cache em 2 caminhos: erro de leitura E publicação bloqueada
+    expect((sync.match(/↩ Mantendo painel_cache/g) || []).length).toBe(6);
   });
   test('workflow não commita data/ e tem só leitura no repositório', () => {
     const wf = ler('.github/workflows/sync-dados.yml');

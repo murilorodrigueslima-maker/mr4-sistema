@@ -93,6 +93,34 @@ function validarEstrutura(json, tipo, caminho) {
 }
 
 /**
+ * Transporte baseado em `https.get` (Node) com a interface mínima do fetch usada pelo cliente:
+ * { status, ok, headers.get(), json() }. Usado pelos scripts do GitHub Actions (que já dependem de https.get).
+ * `https.get` NUNCA segue redirecionamento: um 3xx volta como status e o cliente o recusa (GC_REDIRECIONAMENTO).
+ * O `signal` (timeout) é repassado ao Node. Só https; qualquer outro protocolo é recusado.
+ */
+function criarTransporteHttps(httpsMod = require('https')) {
+  return (url, opts = {}) => new Promise((resolve, reject) => {
+    let u;
+    try { u = new URL(url); } catch (_) { reject(new GcErro(CODIGOS.CAMINHO_INVALIDO, 'url inválida')); return; }
+    if (u.protocol !== 'https:') { reject(new GcErro(CODIGOS.HOST_FORA_DO_GC, 'protocolo não https')); return; }
+    const req = httpsMod.get(url, { headers: opts.headers, signal: opts.signal }, res => {
+      const partes = [];
+      res.on('data', c => partes.push(Buffer.isBuffer(c) ? c : Buffer.from(String(c))));
+      res.on('error', reject);
+      res.on('end', () => {
+        const texto = Buffer.concat(partes).toString('utf8'); const status = res.statusCode;
+        resolve({
+          status, ok: status >= 200 && status < 300,
+          headers: { get: k => { const v = res.headers && res.headers[String(k).toLowerCase()]; return Array.isArray(v) ? v[0] : (v === undefined ? null : v); } },
+          json: async () => JSON.parse(texto),
+        });
+      });
+    });
+    req.on('error', reject);
+  });
+}
+
+/**
  * Cliente GET seguro.
  * @param {object} o
  * @param {Function} o.transporte      (url, opts) → Promise<Response-like>   (padrão: fetch global)
@@ -289,4 +317,4 @@ function decidirCursor({ cursorAtual = null, novoCursor = null, leituraCompleta 
   return { cursor: pode ? novoCursor : cursorAtual, avancou: pode && novoCursor !== cursorAtual };
 }
 
-module.exports = { BASE, CODIGOS, GcErro, criarCliente, paginarCompleto, validarEstrutura, verificarFiltroModificacao, avaliarPublicacao, decidirCursor };
+module.exports = { BASE, CODIGOS, GcErro, criarCliente, criarTransporteHttps, paginarCompleto, validarEstrutura, verificarFiltroModificacao, avaliarPublicacao, decidirCursor };

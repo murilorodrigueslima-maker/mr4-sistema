@@ -4,7 +4,7 @@
 // meta.total_registros/total_paginas e a consulta ampla (limite=1) da conferência global. Dados sempre fornecidos pelo teste.
 const F = require('../../lib/compras/fetch');
 
-function criarGcFalso({ produtos = [], vendas = [], compras = [], falhas = [] } = {}) {
+function criarGcFalso({ produtos = [], vendas = [], compras = [], falhas = [], fornecedores = [] } = {}) {
   const chamadas = []; let i = 0;
   const fetchImpl = async (url, opts) => {
     chamadas.push({ url, method: opts.method });
@@ -15,6 +15,7 @@ function criarGcFalso({ produtos = [], vendas = [], compras = [], falhas = [] } 
     if (u.pathname === '/produtos') lista = produtos;
     else if (u.pathname === '/vendas') lista = vendas.filter(v => v.data >= ini && v.data <= fim);
     else if (u.pathname === '/compras') lista = compras.filter(c => (c.Compra || c).data_emissao >= ini && (c.Compra || c).data_emissao <= fim);
+    else if (u.pathname === '/fornecedores') lista = fornecedores;
     else return { ok: false, status: 404, json: async () => ({}) };
     return { ok: true, json: async () => ({ data: lista.slice((pagina - 1) * lim, pagina * lim), meta: { total_registros: lista.length, total_paginas: Math.max(1, Math.ceil(lista.length / lim)) } }) };
   };

@@ -13,6 +13,9 @@ const { calcularTudo, RULES_VERSION } = require('./motor');
 const { resumoCalibracao, resumoPolitica } = require('./calibracao');
 const { POLITICA_VIGENTE } = require('./politica');
 const Rent = require('./rentabilidade');
+const Forn = require('./fornecedores');
+const Nomes = require('./nomesFornecedores');
+const Compat = require('./docCompat');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -201,7 +204,7 @@ function montarView(r, porId, custos, agora, hoje, financeiro = null, softLimitB
 /** O resumo é lido por quem tem o módulo estoque: a política publicada ali NÃO leva o bloco de rentabilidade (limiares de margem, fornecedores importados). */
 function semRentabilidade(politica) { if (!politica.profitability) return politica; const { profitability, ...resto } = politica; return resto; }   // 1.0/1.1: o próprio objeto (identidade preservada)
 
-function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = new Date(), estatisticas = {}, politica = POLITICA_VIGENTE, modo = 'FULL' }) {
+function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = new Date(), estatisticas = {}, politica = POLITICA_VIGENTE, modo = 'FULL', ultimoCompleto = null, nomesFornecedores = {}, nomesMeta = null }) {
   const hoje = dataComercial(agora);
   const produtos = brutosProdutos.map(mapearProduto);
   const fatosVenda = brutosVendas.flatMap(fatosDeVenda);
@@ -236,6 +239,8 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
     operacional, custos,
     meta: { versao: RULES_VERSION, policy_version: r.policy_version, modo_sync: modo, ultima_sincronizacao_ok: agora.toISOString(), data_comercial: hoje, estatisticas: { ...estatisticas, duplicatas_de_linha: r.duplicatas } },
     snapshotEstoque: montarSnapshotEstoque(produtos, agora, politica),
+    // Fase B (vendas por fornecedor): agregados puros dos MESMOS fatos canônicos; ainda NÃO são gravados (persistência e Rules = Fase C)
+    fornecedores: Forn.montarFornecedores({ produtos, fatosVenda, fatosCompra, hoje, agora, modo, ultimoCompleto, nomes: nomesFornecedores, nomesMeta, sync: politica.sync, config: politica.supplier_sales || Forn.DEFAULTS }),
     view: montarView(r, porId, custos, agora, hoje, financeiro, financeiro ? politica.profitability.view.soft_limit_bytes : null),
     base: { layout: layoutDaPolitica(politica), vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
   };
@@ -336,6 +341,64 @@ async function persistirSnapshot(db, snap, { runId, loteBytesMax = LOTE_BYTES_MA
     for (const d of (await db.collection(col).get()).docs) if (d.id.startsWith(pref) && Number(d.id.slice(pref.length)) >= n) await d.ref.delete();
   }
   snap.persistencia.limpeza_base = refNova ? await limparGeracoesSubstituidas(db, { substituidas, idsNovos, refNova, runId, quando }) : { removidos: 0, pendentes: 0 };
+  snap.persistencia.fornecedores = await persistirFornecedores(db, snap);   // por último e isolado: não altera nada do que foi gravado acima
+}
+
+// ── Vendas por fornecedor (Fase C): nomes e gravação ISOLADA ───────────────────────────────────────────────────────
+/**
+ * Nomes dos fornecedores (Fase C.2) — CACHE em compras_n0_fornecedores/nomes (só Admin SDK; as Rules nunca liberam esse documento).
+ *   • Sync COMPLETO: 1 leitura de /fornecedores (se supplier_sales.fetch_names) e mesclagem no cache.
+ *   • Sync INCREMENTAL: nenhuma chamada à API; só usa o cache.
+ *   • Qualquer falha (API, resposta vazia/suspeita, leitura do cache): o cache anterior permanece, a falha é registrada e a tela avisa
+ *     "nomes desatualizados". NUNCA lança: o sync de vendas/estoque não depende deste endpoint.
+ */
+async function lerCacheNomes(db) {
+  try {
+    const d = (await db.collection(Forn.COLECAO).doc('nomes').get()).data();
+    return { cache: Nomes.valido(d) ? d : Nomes.cacheVazio(), leituraFalhou: false };
+  } catch (_) { return { cache: Nomes.cacheVazio(), leituraFalhou: true }; }
+}
+async function prepararNomes({ cli, db, fetchMod, politica, agora, modo }) {
+  const cfg = politica.supplier_sales || Forn.DEFAULTS;
+  const { cache: anterior, leituraFalhou } = await lerCacheNomes(db);
+  let cache = anterior, relatorio = null, tentou = false, ok = false;
+  if (cfg.fetch_names && modo === 'FULL') {
+    tentou = true;
+    try {
+      const r = await fetchMod.buscarFornecedores(cli);
+      const lista = Nomes.normalizarResposta(r.registros);
+      const v = Nomes.validarResposta(anterior, lista, cfg.names_suspect_ratio);
+      if (!v.ok) { const e = new Error(v.codigo); e.codigo = v.codigo; throw e; }
+      const m = Nomes.mesclarResposta(anterior, lista, agora); cache = m.cache; relatorio = m.relatorio; ok = true;
+    } catch (e) { cache = Nomes.registrarFalha(anterior, agora, e); }
+  }
+  const meta = { ativo: !!cfg.fetch_names, atualizacao: modo === 'FULL' ? (cfg.fetch_names ? 'LEITURA_NO_SYNC_COMPLETO' : 'DESLIGADA') : 'USA_CACHE', cache_ilegivel: leituraFalhou || undefined,
+    ...Nomes.situacao(cache, agora, cfg.names_stale_after_hours), relatorio };
+  if (meta.cache_ilegivel === undefined) delete meta.cache_ilegivel;
+  // cache só é regravado se houve tentativa E (a leitura anterior do cache funcionou OU a nova leitura da API deu certo): nunca sobrescreve um cache bom com um "vazio + falha"
+  return { nomes: Nomes.paraApresentacao(cache), meta, cacheParaGravar: tentou && (!leituraFalhou || ok) ? cache : null };
+}
+/**
+ * Grava os dois documentos de vendas por fornecedor DEPOIS do snapshot principal e FORA da sua transação/lote: uma falha aqui
+ * (documento grande demais, rede, permissão) NUNCA desfaz nem atrasa o snapshot de Compras — só fica registrada em snap.persistencia.fornecedores.
+ * Unidades e valores vão em documentos distintos (Rules diferentes). Acima do limite, o detalhe por produto é retirado (resumo por fornecedor).
+ */
+async function persistirFornecedores(db, snap) {
+  const f = snap.fornecedores;
+  if (!f) return { gravado: false, motivo: 'SEM_AGREGADO' };
+  try {
+    const tam = d => Buffer.byteLength(JSON.stringify(d));
+    let docs = f.docs.map(([c, id, v]) => [c, id, v]), detalhe = true;
+    if (docs.some(d => tam(d[2]) > DOC_BYTES_MAX)) {
+      const semDetalhe = v => ({ ...v, detalhe_produtos: false, externos: v.externos.map(g => ({ ...g, produtos: [] })), internos: v.internos.map(g => ({ ...g, produtos: [] })), sem_fornecedor: { ...v.sem_fornecedor, produtos: [] }, itens_sem_produto: { ...v.itens_sem_produto, produtos: [] } });
+      docs = docs.map(([c, id, v]) => [c, id, semDetalhe(v)]); detalhe = false;
+      if (docs.some(d => tam(d[2]) > DOC_BYTES_MAX)) { const e = new Error('DOC_GRANDE_DEMAIS compras_n0_view/fornecedores'); e.codigo = 'DOC_GRANDE_DEMAIS'; throw e; }
+    }
+    if (snap.nomesCache) docs.push([Forn.COLECAO, 'nomes', snap.nomesCache]);
+    for (const d of docs) { const pb = Compat.problemasFirestore(d[2]); if (pb.length) { const e = new Error('FIRESTORE_INCOMPATIVEL ' + d[1] + ': ' + pb.slice(0, 3).join('; ')); e.codigo = e.message.slice(0, 160); throw e; } }   // o emulador aceita o que o Firestore real recusa (ex.: campo __x__): validar ANTES de gravar
+    const l = db.batch(); for (const [c, id, v] of docs) l.set(db.collection(c).doc(id), v); await l.commit();
+    return { gravado: true, detalhe_produtos: detalhe, bytes: docs.map(d => tam(d[2])), nomes_cache: !!snap.nomesCache };
+  } catch (e) { return { gravado: false, erro: String(e.codigo || e.message).slice(0, 120) }; }
 }
 
 /**
@@ -399,7 +462,9 @@ async function executarSync({ cli, db, agora = new Date(), inicio = '2022-01-01'
     const pr = await fetchMod.buscarProdutos(cli);
     const ve = await fetchMod.buscarPorJanelas(cli, 'vendas', { inicio, fim: hoje });
     const co = await fetchMod.buscarPorJanelas(cli, 'compras', { inicio, fim: hoje });
-    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: ve.registros, brutosCompras: co.registros, agora, politica, modo: 'FULL', estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas } });
+    const nm = await prepararNomes({ cli, db, fetchMod, politica, agora, modo: 'FULL' });
+    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: ve.registros, brutosCompras: co.registros, agora, politica, modo: 'FULL', nomesFornecedores: nm.nomes, nomesMeta: nm.meta, estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas } });
+    snap.nomesCache = nm.cacheParaGravar;
     snap.meta.ultima_reconciliacao_completa = agora.toISOString();
     await persistirSnapshot(db, snap, { runId });
     return { ok: true, modo: 'FULL', snapshot: snap };
@@ -428,7 +493,8 @@ async function executarSyncIncremental({ cli, db, agora = new Date(), fetchMod =
     const co = await fetchMod.buscarPorJanelas(cli, 'compras', { inicio: plano.compras.inicio, fim: hoje, janelaAnterior: false, conferenciaGlobal: false });
     const mv = fetchMod.mesclarRegistros(base.vendas, ve.registros.map(compactarVenda));
     const mc = fetchMod.mesclarRegistros(base.compras, co.registros.map(compactarCompra));
-    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: mv.registros, brutosCompras: mc.registros, agora, politica, modo: 'INCREMENTAL',
+    const nm = await prepararNomes({ cli, db, fetchMod, politica, agora, modo: 'INCREMENTAL' });
+    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: mv.registros, brutosCompras: mc.registros, agora, politica, modo: 'INCREMENTAL', nomesFornecedores: nm.nomes, nomesMeta: nm.meta, ultimoCompleto: metaAnterior.ultima_reconciliacao_completa || null,
       estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas, lookback_dias: plano.lookback_dias,
         mescla: { vendas: { inseridos: mv.inseridos, substituidos: mv.substituidos, ignorados: mv.ignorados }, compras: { inseridos: mc.inseridos, substituidos: mc.substituidos, ignorados: mc.ignorados } } } });
     const ultFull = metaAnterior.ultima_reconciliacao_completa || null;
@@ -482,4 +548,4 @@ function estimarArmazenamento({ produtos, bytesPorProduto, mudancasPorDia, anos,
   return { opcao_A_bytes: Math.round(a), opcao_B_bytes: Math.round(b), produtos_no_fim: n };
 }
 
-module.exports = { FORMATO_BASE, LAYOUT_BASE_V2, layoutDaPolitica, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };
+module.exports = { prepararNomes, lerCacheNomes, persistirFornecedores, FORMATO_BASE, LAYOUT_BASE_V2, layoutDaPolitica, FORMATOS_BASE_ACEITOS, idGeracao, idFatia, idsDaBase, refBaseAtiva, limparGeracoesSubstituidas, LIMITACOES, montarView, motivosAtencao, ATENCAO_MOTIVOS, ATENCAO_ANOTACAO, FAIXAS_SEM_VENDA, temArrayAninhado, BLOCO, DOC_BYTES_MAX, LOTE_BYTES_MAX, LOTE_OPS_MAX, BASE_LIMITE_OPERACIONAL_BYTES, avisosBase, frescor, compactarVenda, compactarCompra, codificarVenda, decodificarVenda, codificarCompra, decodificarCompra, fatiarPorBytes, montarSnapshotEstoque, montarSnapshot, persistirSnapshot, carregarBase, executarSync, executarSyncIncremental, lerSaldoDoDia, diasParaExpurgo, snapshotDelta, reconstruirSaldos, estimarArmazenamento };

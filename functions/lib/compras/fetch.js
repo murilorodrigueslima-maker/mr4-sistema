@@ -4,7 +4,7 @@
 // por data (venda / emissão) com data_inicio/data_fim; /compras vem embrulhado em {Compra:{...}}.
 // Estratégia: janelas mensais + paginação até o fim + conferência (únicos == total_registros) + deduplicação por ID.
 const BASE = 'https://api.gestaoclick.com';
-const RECURSOS_PERMITIDOS = ['/produtos', '/vendas', '/compras', '/situacoes_vendas', '/situacoes_compras'];
+const RECURSOS_PERMITIDOS = ['/produtos', '/vendas', '/compras', '/situacoes_vendas', '/situacoes_compras', '/fornecedores'];   // '/fornecedores' (Fase C.2): só nomes, 1 leitura por sync COMPLETO; o restante do sync não depende dele
 const LIMITE = 100;
 
 function criarClienteGC({ fetchImpl, accessToken, secretToken, pausaMs = 300, timeoutMs = 60000, tentativas = 3, dormir }) {
@@ -99,6 +99,16 @@ async function buscarPorJanelas(cli, recurso, { inicio, fim, janelaAnterior = tr
   return { registros: [...porId.values()], estatisticas: { recurso, janelas: janelas.length, paginas, fetched, unique: porId.size, duplicates: fetched - porId.size, total_consulta_ampla: totalAmplo } };
 }
 
+/**
+ * Fornecedores (Fase C.2) — SOMENTE id, nome e situação (ativo); nunca CNPJ/CPF, contatos ou endereço. Paginação conferida
+ * (únicos == total_registros); a normalização, o cache e a tolerância a falhas ficam em nomesFornecedores.js e snapshot.js.
+ */
+async function buscarFornecedores(cli) {
+  const r = await paginar(cli, '/fornecedores', 'fornecedores');
+  const registros = r.itens.map(f => ({ id: f.id, nome: f.nome, ativo: f.ativo }));
+  return { registros, estatisticas: { recurso: 'fornecedores', paginas: r.paginas, fetched: r.itens.length } };
+}
+
 async function buscarProdutos(cli) {
   const r = await paginar(cli, '/produtos', 'produtos');
   const porId = new Map(r.itens.map(p => [String(p.id), p]));
@@ -156,4 +166,4 @@ function estimarChamadas(registros, campoData, { inicio, fim }) {
   return { janelas: janelas.length, chamadas: chamadas + 1 };   // + consulta ampla de conferência
 }
 
-module.exports = { criarClienteGC, janelasMensais, paginar, buscarPorJanelas, buscarProdutos, planoIncremental, mesclarRegistros, analisarDefasagem, estimarChamadas, RECURSOS_PERMITIDOS, LIMITE };
+module.exports = { criarClienteGC, janelasMensais, paginar, buscarPorJanelas, buscarProdutos, buscarFornecedores, planoIncremental, mesclarRegistros, analisarDefasagem, estimarChamadas, RECURSOS_PERMITIDOS, LIMITE };

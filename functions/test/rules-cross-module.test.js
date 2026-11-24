@@ -187,13 +187,21 @@ describe('CM-C — Camila (admin=true)', () => {
   test('CM-C6: Camila LÊ marketing_conteudos', async () => {
     await assertSucceeds(db(UID_CAMILA).collection('marketing_conteudos').doc('mk-c').get());
   });
-  test('CM-C7: Camila NÃO lê registros de outro func (ponto exige role=gestor) → ESCAPE=0', async () => {
+  // T1 (política validada): desde 24/09/2026 (7f462a9 "dual-role ponto" + comentário de temModulo/temAcessoModulo: "admin=true concede acesso a qualquer módulo")
+  // o dual-role com admin=true LÊ registros e fila_comercial. Os testes antigos (22/09) diziam "exige role=gestor". Os limites que continuam valendo
+  // estão abaixo (dual-role sem admin/módulo, bloqueado, funcionário comum, outros usuários) e na matriz permanente rules-matriz-perfil-bloqueio.test.js.
+  test('CM-C7: Camila (dual-role admin=true) LÊ registros de outro func (atalho admin=true, 7f462a9) — e um dual-role SEM admin/ponto continua negado', async () => {
     await seed('registros', 'reg-c', { funcId: 'FUNC-CM-99', data: '2026-09-22' });
-    await assertFails(db(UID_CAMILA).collection('registros').doc('reg-c').get());
+    await assertSucceeds(db(UID_CAMILA).collection('registros').doc('reg-c').get());
+    await assertFails(db(UID_FABIANA).collection('registros').doc('reg-c').get());      // modulos=['demandas'], sem ponto/admin
+    await assertFails(db(UID_PP).collection('registros').doc('reg-c').get());           // funcionário sem perfil administrativo
   });
-  test('CM-C8: Camila NÃO lê fila_comercial (exige temModulo=gestor) → ESCAPE=0', async () => {
+  test('CM-C8: Camila (dual-role admin=true) LÊ fila_comercial (atalho admin=true; fa488bd) — sem módulo de fila e sem admin continua negado', async () => {
     await seed('fila_comercial', 'fila-c', { status: 'aberta' });
-    await assertFails(db(UID_CAMILA).collection('fila_comercial').doc('fila-c').get());
+    await assertSucceeds(db(UID_CAMILA).collection('fila_comercial').doc('fila-c').get());
+    await assertFails(db(UID_FABIANA).collection('fila_comercial').doc('fila-c').get());
+    await assertFails(db(UID_SWYANNE).collection('fila_comercial').doc('fila-c').get());
+    await assertFails(db(UID_BLOQUEADO).collection('fila_comercial').doc('fila-c').get());
   });
 });
 

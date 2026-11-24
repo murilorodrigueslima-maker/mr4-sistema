@@ -117,16 +117,17 @@ test('FC-02: funcionario (role≠gestor) cannot read fila_comercial/snapshot', a
 
 // ─── FC-03: Gestor sem doc sistema_usuarios → read → FAILS ───────────────────
 
-test('FC-03: gestor without sistema_usuarios doc cannot read fila_comercial/snapshot', async () => {
+// T1: POLÍTICA VIGENTE (fa488bd/N35.12S, 24/09/2026; comentários das regras l.776/822): gestor (role=gestor ativo) lê a fila pela VISÃO DE GESTÃO (`isGestor()`), independente de módulo; funcionário só por módulo explícito. O teste anterior (N34/N35.10, 20/09) exigia módulo para o gestor.
+test('FC-03 (T1): gestor ativo SEM doc sistema_usuarios LÊ fila_comercial/snapshot (visão de gestão, isGestor)', async () => {
   const ref = db(UID_GESTOR_SEM_SYSDOC).collection('fila_comercial').doc('snapshot');
-  await assertFails(ref.get());
+  await assertSucceeds(ref.get());
 });
 
 // ─── FC-04: Gestor com modulos sem fila-comercial → read → FAILS ─────────────
 
-test('FC-04: gestor with modulos=[ponto] (no fila-comercial) cannot read', async () => {
-  const ref = db(UID_GESTOR_SEM).collection('fila_comercial').doc('snapshot');
-  await assertFails(ref.get());
+test('FC-04 (T1): gestor com modulos=[ponto] (sem fila-comercial) LÊ (visão de gestão); funcionário com o módulo LEGADO fila-comercial segue NEGADO', async () => {
+  await assertSucceeds(db(UID_GESTOR_SEM).collection('fila_comercial').doc('snapshot').get());
+  await assertFails(db(UID_FUNC).collection('fila_comercial').doc('snapshot').get());
 });
 
 // ─── FC-05: Gestor com modulos=['fila-comercial'] → read → SUCCEEDS ──────────

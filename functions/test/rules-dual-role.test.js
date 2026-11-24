@@ -168,9 +168,10 @@ describe('DR-11..DR-13 — ponto regressão (temModulo mantido)', () => {
     await assertFails(db(UID_DUAL_DEMANDAS).collection('registros').doc('reg-test').get());
   });
 
-  test('DR-12: dual-role admin=true NÃO lê registros de OUTRO func (ponto exige role=gestor)', async () => {
+  test('DR-12 (T1, política validada): dual-role admin=true LÊ registros de OUTRO func (atalho admin=true; 7f462a9) — bloqueado e sem módulo continuam negados', async () => {
     await seed('registros', 'reg-test', { funcId: 'FUNC-DR-99', data: '2026-09-22' });
-    await assertFails(db(UID_DUAL_ADMIN).collection('registros').doc('reg-test').get());
+    await assertSucceeds(db(UID_DUAL_ADMIN).collection('registros').doc('reg-test').get());
+    await assertFails(db(UID_DUAL_BLOQUEADO).collection('registros').doc('reg-test').get());
   });
 
   test('DR-13: gestor COM módulo ponto ACESSA registros (regressão gestor preservado)', async () => {

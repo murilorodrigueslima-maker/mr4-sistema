@@ -166,6 +166,9 @@ function buildProposedRules() {
   const current = fs.readFileSync(
     path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'
   );
+  // T1: o bloco interacoes_fila JÁ está nas regras vigentes (a substituição abaixo deixou de casar e era um no-op silencioso).
+  // Usa-se a regra REAL; este guard impede voltar a testar uma regra que não é a publicada.
+  if (/match \/interacoes_fila\/\{oppId\}/.test(current)) return current;
   const interacoesRule = `
     // ── interacoes_fila (N35.10) — read=fila-comercial, write=false ──
     match /interacoes_fila/{oppId} {
@@ -470,10 +473,10 @@ describe('C. Regras Firestore (proposed rules com interacoes_fila)', () => {
     await assertFails(ref.get());
   });
 
-  // IG-02: Gestor sem fila-comercial → DENY
-  test('IG-02: USER_WITHOUT_COMMERCIAL_PERMISSION=DENY — gestor sem fila-comercial', async () => {
+  // IG-02 (T1): POLÍTICA VIGENTE (fa488bd/N35.12S, 24/09/2026; comentários das regras l.776/822): gestor (role=gestor ativo) lê a fila pela VISÃO DE GESTÃO (`isGestor()`), independente de módulo; funcionário só por módulo explícito. O teste anterior (N34/N35.10, 20/09) exigia módulo para o gestor.
+  test('IG-02 (T1): gestor sem módulo fila-comercial LÊ interacoes_fila (visão de gestão); funcionário sem módulo de gestão segue NEGADO (IG-03)', async () => {
     const ref = clientDb(UID_SEM_FC).collection('interacoes_fila').doc(OPP_TEST);
-    await assertFails(ref.get());
+    await assertSucceeds(ref.get());
   });
 
   // IG-03: Funcionário com módulo fila-comercial mas role≠gestor → DENY (temModulo requer isGestor)

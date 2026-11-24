@@ -85,6 +85,15 @@ def conferir_functions(projeto, so_funcoes):
         if a is None or b is None: reg('functions', f'{fn}: handler', 'INFO', 'handler não localizado pelo nome padrão — comparar manualmente'); 
         else:
             igual, n = comparar_texto(a, b); reg('functions', f'{fn}: handler repositório × implantado', 'OK' if igual else 'DIVERGE', f'revisão {d.get("serviceConfig",{}).get("revision","?")} · implantada {upd[:19]}Z' + ('' if igual else f' · {n} linha(s) diferem'))
+        # comparação de ARQUIVOS: lib/ implantado × repositório (a fonte implantada é um instantâneo do código no momento do deploy)
+        dif, ausentes = [], []
+        for raiz, _, fs in os.walk(os.path.join(tmp, 'src', 'lib')):
+            for f in fs:
+                rel = os.path.relpath(os.path.join(raiz, f), os.path.join(tmp, 'src')); loc = os.path.join(RAIZ, 'functions', rel)
+                if not os.path.exists(loc): ausentes.append(rel)
+                elif sha(open(loc, 'rb').read()) != sha(open(os.path.join(tmp, 'src', rel), 'rb').read()): dif.append(rel)
+        reg('functions', f'{fn}: lib/ implantado × repositório', 'OK' if not dif and not ausentes else 'INFO',
+            'idêntico' if not dif and not ausentes else f'{len(dif)} arquivo(s) diferem, {len(ausentes)} só no implantado' + (': ' + ', '.join((dif + ausentes)[:6]) if dif or ausentes else '') + ' — explicar (código implantado a partir de outra linha? commits pendentes?)')
         reg('functions', f'{fn}: commits em functions/ após a implantação', 'INFO' if pend else 'OK', f'{len(pend)} pendente(s) de implantar' + (': ' + '; '.join(pend[:3]) if pend else ''))
 
 

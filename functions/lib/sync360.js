@@ -411,7 +411,7 @@ async function runIncremental({
     if (firestoreReleaseLock && lockId) {
       // Best-effort: não deixar o lock preso se o core lança exceção.
       await firestoreReleaseLock(lockId).catch(e =>
-        console.warn('[sync360] lock release falhou (best-effort):', e.message)
+        console.warn('[sync360] lock release falhou (best-effort) codigo=' + String((e && e.code) || 'ERRO').replace(/[^A-Za-z0-9_.-]/g, '').slice(0, 40))
       );
     }
   }

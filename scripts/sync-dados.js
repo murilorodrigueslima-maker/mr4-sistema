@@ -16,7 +16,7 @@ const API_BASE      = 'https://api.gestaoclick.com';
 const PROJECT_ID    = 'mr4-ponto';
 
 if (!ACCESS_TOKEN || !SECRET_TOKEN) {
-  console.error('❌ Tokens GestãoClick não configurados');
+  log.erro('❌ Tokens GestãoClick não configurados');
   process.exit(1);
 }
 
@@ -44,9 +44,26 @@ const avisos = [];      // eventos de auditoria que NÃO são falha (ex.: vazio 
 // A2.1 — leitura de vendas (30 dias) compartilhada com Pedidos como CORROBORAÇÃO do vazio. syncVendas SEMPRE resolve (finally).
 let _resolverVendas30; const vendas30Pronta = new Promise(r => { _resolverVendas30 = r; });
 let _estadoVendas30 = null;
+// A2.2 — LOGS PÚBLICOS (repositório público): SÓ informação operacional — bloco, status, códigos de erro, duração e resultado
+// das verificações de integridade. NUNCA valores em R$, contagens de negócio, nomes, identificadores, respostas da API,
+// mensagens de exceção (podem conter dados) nem stack traces. Toda saída passa por `log.*`; textos são FIXOS (sem interpolar dados).
+// Os testes (sync-dados-a22-logs.test.js) impedem a reintrodução.
+const log = {
+  info: m => console.log(m),
+  aviso: m => console.warn(m),
+  erro: m => console.error(m),
+};
+/** Classificação segura de uma exceção: só um código curto (nunca a mensagem). */
+function codigoSeguro(e) {
+  if (e && typeof e.codigo === 'string' && /^[A-Z0-9_]{3,60}$/.test(e.codigo)) return e.codigo;
+  if (e && (typeof e.code === 'string' || typeof e.code === 'number') && /^[A-Za-z0-9_.-]{1,40}$/.test(String(e.code))) return 'ERRO_' + String(e.code).toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+  return 'ERRO_INESPERADO';
+}
+process.on('unhandledRejection', e => { log.erro(`🚨 EXCECAO_NAO_TRATADA codigo=${codigoSeguro(e)}`); process.exitCode = 1; });
+process.on('uncaughtException', e => { log.erro(`🚨 EXCECAO_NAO_TRATADA codigo=${codigoSeguro(e)}`); process.exit(1); });
 function registrarFalha(bloco, codigo, detalhe) {
   falhas.push({ bloco, codigo, detalhe: detalhe || null });
-  console.error(`🚨 FALHA bloco=${bloco} codigo=${codigo}${detalhe ? ' ' + detalhe : ''}`);   // só códigos e contagens — sem dados pessoais
+  log.erro(`🚨 FALHA bloco=${bloco} codigo=${codigo}${detalhe ? ' motivo=' + detalhe : ''}`);   // detalhe = SÓ enum de motivo (nunca contagens/dados)
 }
 /** Lista COMPLETA (ou erro): nunca devolve resultado parcial. */
 function lerLista(caminho, params, opcoes = {}) {
@@ -80,7 +97,7 @@ function initFirestore() {
     _db = new Firestore(opts);
     return _db;
   } catch(e) {
-    console.warn('⚠️  Firestore falhou ao inicializar:', e.message);
+    log.aviso(`⚠️  Firestore falhou ao inicializar (codigo=${codigoSeguro(e)})`);
     return null;
   }
 }
@@ -94,7 +111,7 @@ async function firestoreLerReferencia(colecao, docId) {
     const snap = await db.collection(colecao).doc(docId).get();
     return { ok: true, dados: snap.exists ? snap.data() : null };
   } catch(e) {
-    console.warn(`⚠️  Firestore.get(${colecao}/${docId}):`, e.message);
+    log.aviso(`⚠️  Firestore.get(${colecao}/${docId}) falhou (codigo=${codigoSeguro(e)})`);
     return { ok: false, dados: null };
   }
 }
@@ -106,7 +123,7 @@ async function firestoreSet(colecao, docId, dados) {
     await db.collection(colecao).doc(docId).set(dados);
     return true;
   } catch(e) {
-    console.warn(`⚠️  Firestore.set(${colecao}/${docId}):`, e.message);
+    log.aviso(`⚠️  Firestore.set(${colecao}/${docId}) falhou (codigo=${codigoSeguro(e)})`);
     return false;
   }
 }
@@ -121,7 +138,7 @@ async function firestoreBatchSet(ops) {
     await lote.commit();
     return true;
   } catch(e) {
-    console.warn(`⚠️  Firestore.batch(${ops.map(o => o.col + '/' + o.id).join(', ')}):`, e.message);
+    log.aviso(`⚠️  Firestore.batch(${ops.map(o => o.col + '/' + o.id).join(', ')}) falhou (codigo=${codigoSeguro(e)})`);
     return false;
   }
 }
@@ -147,7 +164,7 @@ function sanitizarCliente(nome) {
 function detectarAnomalia(nome, totalNovo, totalAnterior, limiteQuedaPct = 0.70) {
   const av = gcHttp.avaliarPublicacao({ novo: totalNovo, anterior: totalAnterior, limiteQuedaPct });
   if (!av.publicar) {
-    console.warn(`🚨 ANOMALIA ${nome}: ${av.motivo} (anterior=${totalAnterior} novo=${totalNovo}) — preservando cache`);
+    log.aviso(`🚨 ANOMALIA ${nome}: ${av.motivo} — preservando cache`);
     return true;
   }
   return false;
@@ -203,7 +220,7 @@ async function syncVendas() {
   try { await syncVendasCorpo(); } finally { _resolverVendas30(_estadoVendas30); }
 }
 async function syncVendasCorpo() {
-  console.log('📊 Sincronizando vendas...');
+  log.info('📊 Sincronizando vendas...');
   const META_MES    = 200000;
   const META_DIA    = 8000;
   const META_SEMANA = 40000;
@@ -213,12 +230,12 @@ async function syncVendasCorpo() {
     const inicio = diasAtras(JANELA_VENDAS_DIAS);
     const r = await lerLista('/vendas', { data_inicio: inicio, data_fim: hoje() });
     vendas = r.itens;
-    console.log(`  → ${vendas.length} vendas encontradas`);
+    log.info('  → leitura de vendas completa e íntegra');
   } catch(e) {
-    console.log('⚠️ Erro ao buscar vendas:', e.codigo || e.message);
-    registrarFalha('vendas', e.codigo || 'ERRO_INESPERADO');
+    log.info('⚠️ Erro ao buscar vendas: '+codigoSeguro(e));
+    registrarFalha('vendas', codigoSeguro(e));
     // GC falhou ou devolveu resposta inválida/incompleta: não sobrescreve os caches protegidos (preserva o último válido)
-    console.log('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
+    log.info('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
     return;
   }
 
@@ -229,8 +246,8 @@ async function syncVendasCorpo() {
     ? gcHttp.avaliarPublicacao({ novo: vendas.length, anterior: anteriorVendas, limiteQuedaPct: LIMITE_QUEDA_PADRAO })
     : { publicar: false, motivo: 'REFERENCIA_ILEGIVEL' };
   if (!avVendas.publicar) {
-    registrarFalha('vendas', 'PUBLICACAO_BLOQUEADA', `${avVendas.motivo} novo=${vendas.length} anterior=${anteriorVendas}`);
-    console.log('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
+    registrarFalha('vendas', 'PUBLICACAO_BLOQUEADA', avVendas.motivo);
+    log.info('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
     return;
   }
   // A2.1: leitura íntegra e aprovada ⇒ serve de corroboração (só datas e contagem; nenhum dado pessoal)
@@ -331,26 +348,26 @@ async function syncVendasCorpo() {
     { col: 'display_metrics', id: 'latest', dados: dmDoc },
   ]);
   if (vOk) {
-    console.log(`✅ Vendas: hoje R$ ${fatHoje.toFixed(2)} | mês R$ ${fatMes.toFixed(2)}`);
-    console.log(`✅ display_metrics: ${dmVendedores.length} vendedores | mês R$ ${fatMes.toFixed(2)}`);
+    log.info('✅ Vendas publicadas');
+    log.info('✅ display_metrics publicado');
   } else {
     registrarFalha('vendas', 'GRAVACAO_FALHOU');
-    console.log(`❌ Vendas: hoje R$ ${fatHoje.toFixed(2)} | mês R$ ${fatMes.toFixed(2)} — FALHA ao gravar painel_cache/display_metrics (lote atômico: nenhum documento foi alterado)`);
+    log.info('❌ Vendas: FALHA ao gravar painel_cache/display_metrics (lote atômico: nenhum documento foi alterado)');
   }
 }
 
 // ── ESTOQUE ──────────────────────────────────────────────────────────────────
 async function syncEstoque() {
-  console.log('🗄️ Sincronizando estoque...');
+  log.info('🗄️ Sincronizando estoque...');
   let produtos = [];
 
   try {
     const r = await lerLista('/produtos', { ativo: 1 });
     produtos = r.itens;
   } catch(e) {
-    console.log('⚠️ Erro ao buscar produtos:', e.codigo || e.message);
-    registrarFalha('estoque', e.codigo || 'ERRO_INESPERADO');
-    console.log('  ↩ Mantendo painel_cache/estoque e painel_cache/estoque_custos inalterados');
+    log.info('⚠️ Erro ao buscar produtos: '+codigoSeguro(e));
+    registrarFalha('estoque', codigoSeguro(e));
+    log.info('  ↩ Mantendo painel_cache/estoque e painel_cache/estoque_custos inalterados');
     return;
   }
 
@@ -361,8 +378,8 @@ async function syncEstoque() {
     ? gcHttp.avaliarPublicacao({ novo: produtos.length, anterior: anteriorEstoque, limiteQuedaPct: LIMITE_QUEDA_PADRAO })
     : { publicar: false, motivo: 'REFERENCIA_ILEGIVEL' };
   if (!avEstoque.publicar) {
-    registrarFalha('estoque', 'PUBLICACAO_BLOQUEADA', `${avEstoque.motivo} novo=${produtos.length} anterior=${anteriorEstoque}`);
-    console.log('  ↩ Mantendo painel_cache/estoque e painel_cache/estoque_custos inalterados');
+    registrarFalha('estoque', 'PUBLICACAO_BLOQUEADA', avEstoque.motivo);
+    log.info('  ↩ Mantendo painel_cache/estoque e painel_cache/estoque_custos inalterados');
     return;
   }
 
@@ -420,12 +437,12 @@ async function syncEstoque() {
     { col: 'painel_cache', id: 'estoque_custos', dados: estoqueCustos },
   ]);
   if (!eOk) registrarFalha('estoque', 'GRAVACAO_FALHOU');
-  console.log(`${eOk ? '✅' : '❌'} Estoque: ${produtos.length} produtos | ${abaixoMinimo.length} abaixo do mínimo${eOk ? '' : ' — FALHA ao gravar painel_cache (lote atômico: nenhum documento foi alterado)'}`);
+  log.info(`${eOk ? '✅ Estoque publicado' : '❌ Estoque: FALHA ao gravar painel_cache (lote atômico: nenhum documento foi alterado)'}`);
 }
 
 // ── FINANCEIRO ───────────────────────────────────────────────────────────────
 async function syncFinanceiro() {
-  console.log('💰 Sincronizando financeiro...');
+  log.info('💰 Sincronizando financeiro...');
   let lancamentos = [];
 
   try {
@@ -435,12 +452,12 @@ async function syncFinanceiro() {
     // (ou queda > 70%) sobrescreva dados financeiros válidos já publicados.
     const r = await lerLista('/pagamentos', { data_inicio: inicio, data_fim: fim }, { permitirVazio: true });
     lancamentos = r.itens;
-    console.log(`  → ${lancamentos.length} lançamentos encontrados`);
+    log.info('  → leitura de pagamentos completa e íntegra');
   } catch(e) {
-    console.log('⚠️ Erro ao buscar pagamentos:', e.codigo || e.message);
-    registrarFalha('financeiro', e.codigo || 'ERRO_INESPERADO');
+    log.info('⚠️ Erro ao buscar pagamentos: '+codigoSeguro(e));
+    registrarFalha('financeiro', codigoSeguro(e));
     // GC falhou: não sobrescreve o cache Firestore (preservar último válido)
-    console.log('  ↩ Mantendo financeiro_cache/latest inalterado');
+    log.info('  ↩ Mantendo financeiro_cache/latest inalterado');
     return;
   }
 
@@ -491,7 +508,7 @@ async function syncFinanceiro() {
   const refFin = await firestoreLerReferencia('financeiro_cache', 'latest');
   if (!refFin.ok) {
     registrarFalha('financeiro', 'PUBLICACAO_BLOQUEADA', 'REFERENCIA_ILEGIVEL');
-    console.log('  ↩ financeiro_cache/latest preservado (referência ilegível)');
+    log.info('  ↩ financeiro_cache/latest preservado (referência ilegível)');
     return;
   }
   const totalAnterior = refFin.dados ? (refFin.dados._meta?.lancamentosTotal ?? null) : null;
@@ -499,8 +516,8 @@ async function syncFinanceiro() {
 
   if (anomalia) {
     // GC retornou quantidade drasticamente menor — NÃO sobrescrever Firestore (e gerar alerta)
-    registrarFalha('financeiro', 'PUBLICACAO_BLOQUEADA', `novo=${lancamentos.length} anterior=${totalAnterior}`);
-    console.log('  ↩ financeiro_cache/latest preservado (anomalia detectada)');
+    registrarFalha('financeiro', 'PUBLICACAO_BLOQUEADA', 'QUEDA_OU_VAZIO_ANOMALO');
+    log.info('  ↩ financeiro_cache/latest preservado (anomalia detectada)');
     return;
   }
 
@@ -515,16 +532,16 @@ async function syncFinanceiro() {
   const ok = await firestoreSet('financeiro_cache', 'latest', docFirestore);
 
   if (ok) {
-    console.log(`✅ Financeiro: Firestore | vencido ${brl(totalVencido)} | a receber ${brl(totalReceber)}`);
+    log.info('✅ Financeiro publicado');
   } else {
     registrarFalha('financeiro', 'GRAVACAO_FALHOU');
-    console.log(`⚠️  Financeiro: Firestore indisponível | vencido ${brl(totalVencido)}`);
+    log.info('⚠️  Financeiro: Firestore indisponível');
   }
 }
 
 // ── PEDIDOS (Expedição) ───────────────────────────────────────────────────────
 async function syncPedidos() {
-  console.log('🚚 Sincronizando pedidos para expedição...');
+  log.info('🚚 Sincronizando pedidos para expedição...');
   let vendas = [];
   let vazioCorroborado = false;
 
@@ -534,23 +551,23 @@ async function syncPedidos() {
     // permitirVazio: SÓ para obter a resposta vazia válida; ela só é ACEITA com corroboração independente (A2.1, abaixo)
     const r = await lerLista('/vendas', { data_inicio: inicio, data_fim: fim }, { permitirVazio: true });
     vendas = r.itens;
-    console.log(`  → ${vendas.length} pedidos encontrados`);
+    log.info('  → leitura de pedidos completa e íntegra');
     if (r.vazio) {
       const vendas30 = await vendas30Pronta;
       const av = gcHttp.avaliarVazioPedidos({ vendas30, janela: { escopo: ESCOPO_VENDAS, inicio, fim } });
       if (!av.aceitar) {
-        console.log(`  ⚠️ Pedidos vazio NÃO corroborado (${av.motivo}) — preservando pedidos_cache/latest`);
+        log.info(`  ⚠️ Pedidos vazio NÃO corroborado (${av.motivo}) — preservando pedidos_cache/latest`);
         const err = new gcHttp.GcErro(gcHttp.CODIGOS.VAZIO_INESPERADO, `vazio de Pedidos não corroborado: ${av.motivo}`, { caminho: '/vendas' });
         throw err;
       }
       vazioCorroborado = true;
       avisos.push({ bloco: 'pedidos', codigo: 'PEDIDOS_VAZIO_CORROBORADO' });
-      console.log('  ℹ️ Pedidos vazio LEGÍTIMO: vendas de 30 dias íntegras e sem vendas na janela de Pedidos (corroborado)');
+      log.info('  ℹ️ Pedidos vazio LEGÍTIMO: leitura longa de vendas íntegra e sem vendas na janela de Pedidos (corroborado)');
     }
   } catch(e) {
-    console.log('⚠️ Erro ao buscar pedidos:', e.codigo || e.message);
-    registrarFalha('pedidos', e.codigo || 'ERRO_INESPERADO');
-    console.log('  ↩ Mantendo pedidos_cache/latest inalterado');
+    log.info('⚠️ Erro ao buscar pedidos: '+codigoSeguro(e));
+    registrarFalha('pedidos', codigoSeguro(e));
+    log.info('  ↩ Mantendo pedidos_cache/latest inalterado');
     return;
   }
 
@@ -587,7 +604,7 @@ async function syncPedidos() {
   const refPed = await firestoreLerReferencia('pedidos_cache', 'latest');
   if (!refPed.ok) {
     registrarFalha('pedidos', 'PUBLICACAO_BLOQUEADA', 'REFERENCIA_ILEGIVEL');
-    console.log('  ↩ pedidos_cache/latest preservado (referência ilegível)');
+    log.info('  ↩ pedidos_cache/latest preservado (referência ilegível)');
     return;
   }
   const totalAnterior = refPed.dados ? (refPed.dados._meta?.pedidosTotal ?? null) : null;
@@ -595,8 +612,8 @@ async function syncPedidos() {
   const anomalia = vazioCorroborado ? false : detectarAnomalia('pedidos', pedidos.length, totalAnterior, 0.80);
 
   if (anomalia) {
-    registrarFalha('pedidos', 'PUBLICACAO_BLOQUEADA', `novo=${pedidos.length} anterior=${totalAnterior}`);
-    console.log('  ↩ pedidos_cache/latest preservado (anomalia detectada)');
+    registrarFalha('pedidos', 'PUBLICACAO_BLOQUEADA', 'QUEDA_OU_VAZIO_ANOMALO');
+    log.info('  ↩ pedidos_cache/latest preservado (anomalia detectada)');
     return;
   }
 
@@ -611,24 +628,24 @@ async function syncPedidos() {
   const ok = await firestoreSet('pedidos_cache', 'latest', docFirestore);
 
   if (ok) {
-    console.log(`✅ Pedidos: Firestore (sanitizado) | ${pedidos.length} registros`);
+    log.info('✅ Pedidos publicado');
   } else {
     registrarFalha('pedidos', 'GRAVACAO_FALHOU');
-    console.log(`⚠️  Pedidos: Firestore indisponível | ${pedidos.length} registros`);
+    log.info('⚠️  Pedidos: Firestore indisponível');
   }
 }
 
 // ── CATÁLOGO DE PRODUTOS (para busca local por nome e código) ─────────────────
 async function syncCatalogoProdutos() {
-  console.log('📦 Sincronizando catálogo de produtos...');
+  log.info('📦 Sincronizando catálogo de produtos...');
   let produtos = [];
   try {
     const r = await lerLista('/produtos', { ativo: 1 });
     produtos = r.itens;
   } catch(e) {
-    console.log('⚠️ Erro ao buscar catálogo:', e.codigo || e.message);
-    registrarFalha('catalogo', e.codigo || 'ERRO_INESPERADO');
-    console.log('  ↩ Mantendo painel_cache/produtos_catalogo inalterado');
+    log.info('⚠️ Erro ao buscar catálogo: ' + codigoSeguro(e));
+    registrarFalha('catalogo', codigoSeguro(e));
+    log.info('  ↩ Mantendo painel_cache/produtos_catalogo inalterado');
     return;
   }
 
@@ -646,8 +663,8 @@ async function syncCatalogoProdutos() {
     ? gcHttp.avaliarPublicacao({ novo: catalogo.length, anterior: anteriorCat, limiteQuedaPct: LIMITE_QUEDA_PADRAO })
     : { publicar: false, motivo: 'REFERENCIA_ILEGIVEL' };
   if (!avCat.publicar) {
-    registrarFalha('catalogo', 'PUBLICACAO_BLOQUEADA', `${avCat.motivo} novo=${catalogo.length} anterior=${anteriorCat}`);
-    console.log('  ↩ Mantendo painel_cache/produtos_catalogo inalterado');
+    registrarFalha('catalogo', 'PUBLICACAO_BLOQUEADA', avCat.motivo);
+    log.info('  ↩ Mantendo painel_cache/produtos_catalogo inalterado');
     return;
   }
 
@@ -656,14 +673,14 @@ async function syncCatalogoProdutos() {
   // documento comporta ~8.000 produtos; hoje ~900.
   const pOk = await firestoreSet('painel_cache', 'produtos_catalogo', { atualizado_em: dataISO(), total: catalogo.length, itens: catalogo });
   if (!pOk) registrarFalha('catalogo', 'GRAVACAO_FALHOU');
-  console.log(`${pOk ? '✅' : '❌'} Catálogo: ${catalogo.length} produtos${pOk ? '' : ' — FALHA ao gravar painel_cache'}`);
+  log.info(`${pOk ? '✅ Catálogo publicado' : '❌ Catálogo: FALHA ao gravar painel_cache'}`);
 }
 
 // ── PERFIL360 INCREMENTAL ────────────────────────────────────────────────────
 // Executa em isolamento via Promise.allSettled — falha não afeta outros syncs.
 // Requer GOOGLE_APPLICATION_CREDENTIALS (WIF/OIDC) para acesso ao Firestore.
 async function syncPerfil360() {
-  console.log('🔄 Perfil360: iniciando incremental...');
+  log.info('🔄 Perfil360: iniciando incremental...');
   try {
     const {
       runIncremental,
@@ -678,7 +695,7 @@ async function syncPerfil360() {
 
     const db = initFirestore();
     if (!db) {
-      console.log('⚠️  Perfil360: Firestore indisponível — pulando incremental');
+      log.info('⚠️  Perfil360: Firestore indisponível — pulando incremental');
       return;
     }
 
@@ -698,7 +715,7 @@ async function syncPerfil360() {
           res.on('data', c => { body += c; });
           res.on('end', () => {
             try { resolve(JSON.parse(body)); }
-            catch (e) { reject(new Error('GC JSON: ' + e.message)); }
+            catch (e) { reject(new Error('GC JSON inválido')); }
           });
         }).on('error', reject);
       });
@@ -751,7 +768,7 @@ async function syncPerfil360() {
       const { BulkWriter } = db.constructor;
       const writer = db.bulkWriter();
       writer.onWriteError(err => {
-        console.error('  [Perfil360 BulkWriter]', err.documentRef.path, err.code);
+        log.erro(`  [Perfil360 BulkWriter] falha de gravação codigo=${codigoSeguro(err)}`);
         return false;
       });
       for (const venda of vendas) {
@@ -762,7 +779,7 @@ async function syncPerfil360() {
 
     const syncState = await firestoreGetSyncState();
     if (!syncState || syncState.status !== 'READY') {
-      console.log(`⚠️  Perfil360: status=${syncState?.status || 'N/A'} — pulando (não READY)`);
+      log.info('⚠️  Perfil360: sincronização-base não está READY — pulando');
       return;
     }
 
@@ -780,31 +797,34 @@ async function syncPerfil360() {
       dataReferencia: calcularDataReferencia(),
     });
 
-    console.log(`✅ Perfil360: ${result.modifiedVendas} vendas delta | ${result.creates}C/${result.updates}U perfis | cursor avançou=${result.cursorAdvanced}`);
+    log.info(`✅ Perfil360: incremental concluído | cursor avançou=${result.cursorAdvanced === true}`);
   } catch(e) {
-    console.error('❌ Perfil360 incremental falhou (isolado):', e.message);
+    log.erro(`❌ Perfil360 incremental falhou (isolado) codigo=${codigoSeguro(e)}`);
   }
 }
 
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 (async () => {
-  console.log(`🔄 Iniciando sync — ${agora()}`);
+  log.info(`🔄 Iniciando sync — ${agora()}`);
   const blocos = ['vendas', 'estoque', 'financeiro', 'pedidos', 'catalogo', 'perfil360'];
+  const inicioTotal = Date.now(); const duracoes = {};
+  const medir = (nome, fn) => { const t0 = Date.now(); return Promise.resolve().then(fn).finally(() => { duracoes[nome] = Date.now() - t0; }); };
   const resultados = await Promise.allSettled([
-    syncVendas(),
-    syncEstoque(),
-    syncFinanceiro(),
-    syncPedidos(),
-    syncCatalogoProdutos(),
-    syncPerfil360(),
+    medir('vendas', syncVendas),
+    medir('estoque', syncEstoque),
+    medir('financeiro', syncFinanceiro),
+    medir('pedidos', syncPedidos),
+    medir('catalogo', syncCatalogoProdutos),
+    medir('perfil360', syncPerfil360),
   ]);
-  resultados.forEach((r, i) => { if (r.status === 'rejected') registrarFalha(blocos[i], 'EXCECAO_NAO_TRATADA', String((r.reason && r.reason.message) || r.reason).slice(0, 120)); });
+  resultados.forEach((r, i) => { if (r.status === 'rejected') registrarFalha(blocos[i], 'EXCECAO_NAO_TRATADA', codigoSeguro(r.reason)); });
   // Resumo estruturado (só códigos e contagens — sem dados pessoais) e STATUS DO WORKFLOW: qualquer falha ⇒ erro
-  console.log('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })), avisos }));
+  // RESUMO_SYNC: SÓ bloco/código/motivo(enum)/duração. Nenhuma contagem de negócio, valor ou dado pessoal.
+  log.info('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo, motivo: f.detalhe && /^[A-Z0-9_]{3,60}$/.test(f.detalhe) ? f.detalhe : undefined })), avisos, duracaoMs: Date.now() - inicioTotal, duracoesMs: duracoes }));
   if (falhas.length) {
     process.exitCode = 1;
-    console.error(`❌ Sync concluído COM ${falhas.length} falha(s): ${falhas.map(f => f.bloco + ':' + f.codigo).join(', ')}`);
+    log.erro(`❌ Sync concluído COM ${falhas.length} falha(s): ${falhas.map(f => f.bloco + ':' + f.codigo).join(', ')}`);
   } else {
-    console.log('🏁 Sync concluído!');
+    log.info('🏁 Sync concluído!');
   }
 })();

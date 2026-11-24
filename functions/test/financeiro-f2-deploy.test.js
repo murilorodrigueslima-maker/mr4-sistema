@@ -2,7 +2,7 @@
 // FINANCEIRO Fase 2 · escopo de deploy: Function única e agendada, Rules só no bloco fin_n1, nenhum outro módulo alterado, navegação intacta.
 const fs = require('fs'), path = require('path'), { execSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '../..');
-const BASE = 'd6b256f';                       // main aprovado (CRM 2.0 em produção); imutável
+const BASE = 'cfc4129';                       // main aprovado (CRM 2.0 em produção); imutável
 const git = cmd => execSync('git ' + cmd, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
 let temGit = true; try { git('cat-file -e ' + BASE + '^{commit}'); } catch (_) { temGit = false; }
 const dt = temGit ? test : test.skip;

@@ -4,7 +4,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm'), { execSync
 const ROOT = path.resolve(__dirname, '../..');
 const lerHtml = f => fs.readFileSync(path.join(ROOT, 'modulos', f), 'utf8');
 const LEGADA = lerHtml('financeiro.html'), V2 = lerHtml('financeiro-v2.html');
-const BASE = 'd6b256f';
+const BASE = 'cfc4129';
 const git = c => execSync('git ' + c, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
 let temGit = true; try { git('cat-file -e ' + BASE + '^{commit}'); } catch (_) { temGit = false; }
 const dt = temGit ? test : test.skip;

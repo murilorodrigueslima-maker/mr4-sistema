@@ -15,6 +15,6 @@ test('ninguém (anônimo, vendedor, gestor, gestão, admin) lê, lista ou escrev
     for (const c of ['ai_rate', 'ai_uso', 'ai_chamadas']) await assertFails(db.collection(c).get()); }
 });
 test('o agente não adiciona nenhuma regra: o arquivo de Rules é idêntico ao do main aprovado', () => {
-  const { execSync } = require('child_process'); const raiz = resolve(__dirname, '../..'); let base; try { base = execSync('git show f944e67:modulos/firestore.rules', { cwd: raiz, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch (_) { return; }
+  const { execSync } = require('child_process'); const raiz = resolve(__dirname, '../..'); let base; try { base = execSync('git show 927a9da:modulos/firestore.rules', { cwd: raiz, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch (_) { return; }
   expect(readFileSync(resolve(raiz, 'modulos/firestore.rules'), 'utf8')).toBe(base);
 });

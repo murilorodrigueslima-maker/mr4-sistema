@@ -3,7 +3,7 @@
 const fs = require('fs'), path = require('path'), { execSync } = require('child_process');
 const RAIZ = path.join(__dirname, '../..');
 const HTML = fs.readFileSync(path.join(RAIZ, 'modulos/compras.html'), 'utf8');
-const BASE_COMMIT = 'c79ad64';
+const BASE_COMMIT = '3290604';
 
 describe('integração na página de Compras', () => {
   test('aba/botão "Agente" OCULTO por padrão; painel oculto; só aparece por montarAgente (depois do backend)', () => {

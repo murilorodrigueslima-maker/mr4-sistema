@@ -1,5 +1,5 @@
 'use strict';
-// Política 1.2 — COMPATIBILIDADE DE DEPLOY E ROLLBACK, provada contra o CÓDIGO REAL DE PRODUÇÃO (4cc4f55, extraído do git):
+// Política 1.2 — COMPATIBILIDADE DE DEPLOY E ROLLBACK, provada contra o CÓDIGO REAL DE PRODUÇÃO (db408ef, extraído do git):
 // backend antigo × novo sobre o MESMO Firestore falso e a MESMA fonte falsa do GestãoClick (só GET).
 // Regra de ouro: enquanto a Política 1.2 não for ativada, o novo backend grava a base no formato v1 (idêntico ao de produção);
 // o rollback do backend nunca encontra base que não entenda. Ativar a 1.2 exige sync completo (incremental sobre base v1 falha FECHADO, sem tocar o ERP).
@@ -13,7 +13,7 @@ const X = require('./fixtures/compras-rentabilidade-fx').X;
 let OLD;
 beforeAll(() => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'compras-old-'));
-  const tar = execFileSync('git', ['archive', '4cc4f55', 'lib/compras'], { cwd: path.join(__dirname, '..'), maxBuffer: 1 << 26 });
+  const tar = execFileSync('git', ['archive', 'db408ef', 'lib/compras'], { cwd: path.join(__dirname, '..'), maxBuffer: 1 << 26 });
   fs.writeFileSync(path.join(tmp, 'old.tar'), tar); execFileSync('tar', ['-xf', 'old.tar'], { cwd: tmp });
   fs.symlinkSync(path.join(__dirname, '../node_modules'), path.join(tmp, 'node_modules'));
   OLD = require(path.join(tmp, 'lib/compras/snapshot.js'));

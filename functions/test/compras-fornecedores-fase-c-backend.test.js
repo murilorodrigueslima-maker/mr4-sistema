@@ -21,7 +21,7 @@ describe('Gravação isolada dos agregados', () => {
     expect(u.conciliacao.fecha).toBe(true); expect(v.conciliacao.fecha).toBe(true);
     expect(r.snapshot.persistencia.fornecedores).toMatchObject({ gravado: true, detalhe_produtos: true });
   });
-  test('NENHUM documento existente muda: as demais coleções são idênticas ao que o sync gravava antes (compat com produção 4cc4f55 já coberta nas suítes de deploy)', async () => {
+  test('NENHUM documento existente muda: as demais coleções são idênticas ao que o sync gravava antes (compat com produção db408ef já coberta nas suítes de deploy)', async () => {
     const a = G.criarDbFalso(), b = G.criarDbFalso();
     await S.executarSync({ cli: gc().cli, db: a, agora: T0, politica: P12 });
     // mesma execução, mas com a gravação de fornecedores impedida: o restante precisa ser byte a byte igual

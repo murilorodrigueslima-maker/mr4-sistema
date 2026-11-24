@@ -8,7 +8,7 @@ const Forn = require('../lib/compras/fornecedores');
 const Sim = require('../lib/compras/simulador');
 const DUI = require('./fixtures/compras-ui-dados');
 const HTML = fs.readFileSync(path.join(__dirname, '../../modulos/compras.html'), 'utf8');
-const HTML_PROD = (() => { try { return execFileSync('git', ['show', '4cc4f55:modulos/compras.html'], { cwd: __dirname, maxBuffer: 1 << 24 }).toString(); } catch (e) { return null; } })();
+const HTML_PROD = (() => { try { return execFileSync('git', ['show', 'db408ef:modulos/compras.html'], { cwd: __dirname, maxBuffer: 1 << 24 }).toString(); } catch (e) { return null; } })();
 const script = h => { const i = h.indexOf('<script type="module">') + '<script type="module">'.length; return h.slice(i, h.indexOf('</script>', i)).replace(/^import .*$/gm, ''); };
 
 // ── dados sintéticos pelo agregador real ───────────────────────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ describe('Painel gerencial — alertas de atualização e nomes (preservados)', 
 
 describe('Regressão: o resto da tela de Compras não mudou', () => {
   const W = DUI.dados(0);
-  test('abas Sugestões e Atenção produzem EXATAMENTE a mesma lista e contagem que a página em produção (4cc4f55) com os mesmos dados', async () => {
+  test('abas Sugestões e Atenção produzem EXATAMENTE a mesma lista e contagem que a página em produção (db408ef) com os mesmos dados', async () => {
     expect(HTML_PROD).not.toBeNull();
     const a = await tela({ unidades: null, valores: null, html: HTML_PROD }), b = await tela({ unidades: null, valores: null });
     expect(b.lista()).toBe(a.lista()); expect(b.els.contagem.textContent).toBe(a.els.contagem.textContent);

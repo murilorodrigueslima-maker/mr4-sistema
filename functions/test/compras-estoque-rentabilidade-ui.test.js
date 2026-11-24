@@ -6,7 +6,7 @@ const fs = require('fs'), path = require('path'), vm = require('vm'), { execFile
 const D = require('./fixtures/compras-ui-dados');
 const Sim = require('../lib/compras/simulador');
 const HTML = fs.readFileSync(path.join(__dirname, '../../modulos/compras.html'), 'utf8');
-const HTML_PROD = (() => { try { return execFileSync('git', ['show', '4cc4f55:modulos/compras.html'], { cwd: __dirname, maxBuffer: 1 << 24 }).toString(); } catch (e) { return null; } })();   // página em produção
+const HTML_PROD = (() => { try { return execFileSync('git', ['show', 'db408ef:modulos/compras.html'], { cwd: __dirname, maxBuffer: 1 << 24 }).toString(); } catch (e) { return null; } })();   // página em produção
 const script = h => { const i = h.indexOf('<script type="module">') + '<script type="module">'.length; return h.slice(i, h.indexOf('</script>', i)).replace(/^import .*$/gm, ''); };
 
 function el() {

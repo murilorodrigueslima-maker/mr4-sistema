@@ -109,8 +109,8 @@ describe('LADO A LADO — mesma resposta com falha na página 2: código ATUAL �
   test('ATUAL devolve 100 de 150 em silêncio; SEGURA lança erro e não devolve nada', async () => {
     const todos = itens(150); let atualChamadas = 0;
     const gcAtual = async (endpoint, params) => { atualChamadas++; return params.pagina === 1 || params.pagina === undefined ? { data: todos.slice(0, 100), meta: { proxima_pagina: 2, total_registros: 150, total_paginas: 2 } } : { data: [], meta: {} }; };   // wrapper engole o erro
-    const atual = await fetchAllPagesByProximaPagina(gcAtual, '/vendas', {});
-    expect(atual).toHaveLength(100);                                                      // ← defeito: parcial tratado como completo
+    // A3 (corrigido): o fluxo do Perfil 360 (fetchAllPagesByProximaPagina) também NÃO devolve mais o lote parcial — lança erro.
+    await expect(fetchAllPagesByProximaPagina(gcAtual, '/vendas', {})).rejects.toMatchObject({ codigo: 'GC_PAGINACAO_INCOMPLETA' });
     const a = api({ total: 150, falha: { 2: () => resp(500, { code: 500 }) } });
     const erro = await erroDe(paginarCompleto(cli(a), '/vendas', {}));
     expect(erro).toBeInstanceOf(G.GcErro); expect(erro.codigo).toBe('GC_HTTP_500');
@@ -123,12 +123,13 @@ describe('LADO A LADO — mesma resposta com falha na página 2: código ATUAL �
   });
 });
 
-describe('Conexão da camada segura: SÓ o scripts/sync-dados.js (A2); os demais fluxos continuam fora (A3, A4, B, C)', () => {
+describe('Conexão da camada segura: sync-dados (A2), Perfil 360 (A3) e Expedição (A4); os demais fluxos entram na Etapa B/C', () => {
   const fs = require('fs'), path = require('path'); const raiz = path.resolve(__dirname, '../..');
   const le = f => fs.readFileSync(path.join(raiz, f), 'utf8');
-  test('scripts/sync-dados.js usa gcHttp (A2)', () => { expect(/require\('\.\.\/functions\/lib\/gcHttp'\)/.test(le('scripts/sync-dados.js'))).toBe(true); });
-  test('nenhum OUTRO arquivo de produção referencia gcHttp', () => {
-    const alvos = ['functions/index.js', 'scripts/incremental360.js', 'scripts/bootstrap360.js', 'functions/lib/sync360.js', 'functions/lib/painelSync.js', 'functions/lib/expedicao/sync.js', 'functions/lib/financeiro/fetch.js', 'functions/lib/compras/fetch.js'];
-    for (const f of alvos) expect({ f, usa: /gcHttp/.test(le(f)) }).toEqual({ f, usa: false });
+  test('usam gcHttp: sync-dados (A2), incremental360/bootstrap360/sync360 (A3), expedicao/sync (A4)', () => {
+    for (const f of ['scripts/sync-dados.js', 'scripts/incremental360.js', 'scripts/bootstrap360.js', 'functions/lib/sync360.js', 'functions/lib/expedicao/sync.js']) expect({ f, usa: /gcHttp/.test(le(f)) }).toEqual({ f, usa: true });
+  });
+  test('ainda fora da camada (clientes próprios, com guarda GET-only): index.js (gcQuery), painelSync, financeiro/fetch, compras/fetch', () => {
+    for (const f of ['functions/index.js', 'functions/lib/painelSync.js', 'functions/lib/financeiro/fetch.js', 'functions/lib/compras/fetch.js']) expect({ f, usa: /gcHttp/.test(le(f)) }).toEqual({ f, usa: false });
   });
 });

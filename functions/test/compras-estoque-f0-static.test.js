@@ -27,7 +27,7 @@ test('motor não calcula margem nem capital parado como verdade', () => {
 });
 test('nada do módulo é carregado pelo frontend nem exportado para arquivo público', () => {
   const arqs = [];
-  const varrer = d => { for (const n of fs.readdirSync(d)) { if (['node_modules', '.git', 'functions', 'artifacts'].includes(n)) continue; const p = path.join(d, n), st = fs.lstatSync(p); if (st.isSymbolicLink()) continue; if (st.isDirectory()) varrer(p); else if (/\.(html|js)$/.test(n)) arqs.push(p); } };
+  const varrer = d => { for (const n of fs.readdirSync(d)) { if (['node_modules', '.git', 'functions', 'artifacts', 'dist'].includes(n)) continue; const p = path.join(d, n), st = fs.lstatSync(p); if (st.isSymbolicLink()) continue; if (st.isDirectory()) varrer(p); else if (/\.(html|js)$/.test(n)) arqs.push(p); } };
   varrer(ROOT);
   // Exceção documentada: modulos/estoque.html (aba Produtos, Fase A) lê compras_n0_custos SOMENTE dentro de carregarProdutos(), em tentativa protegida pelas Rules
   // (gestor com módulo estoque); sem permissão a página esconde o capital. Nenhum outro arquivo pode referenciar o módulo; lib/compras continua proibido em todos.

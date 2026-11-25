@@ -1,0 +1,17 @@
+.git
+node_modules
+**/node_modules
+docs
+artifacts
+tools
+worker
+dist
+functions/test
+functions/node_modules
+*.md
+firebase-debug.log
+firestore-debug.log
+modulos
+js
+assets
+*.html

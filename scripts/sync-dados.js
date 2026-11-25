@@ -843,7 +843,7 @@ async function syncPerfil360() {
 // ── HEARTBEAT (gc_sync_status/ultima) ─────────────────────────────────────────
 // ultimoSucessoCompletoEm = último ciclo SEM nenhuma falha; ultimoSucessoPorBloco[b] = último ciclo em que o bloco b não falhou.
 // Lê o documento anterior para preservar os últimos sucessos; se a leitura falhar, NÃO grava (não perde histórico). Sem dados do negócio.
-async function registrarHeartbeat(blocos, inicioTotal, duracoes) {
+async function registrarHeartbeat(blocos, inicioTotal, duracoes, parcial = false) {
   try {
     const ref = await firestoreLerReferencia('gc_sync_status', 'ultima');
     if (!ref.ok) { log.aviso('⚠️  Heartbeat não gravado (leitura do anterior falhou)'); return; }
@@ -853,33 +853,81 @@ async function registrarHeartbeat(blocos, inicioTotal, duracoes) {
     const runId = /^\d{1,20}$/.test(String(process.env.GITHUB_RUN_ID || '')) ? String(process.env.GITHUB_RUN_ID) : null;
     const doc = {
       schema: 1, ultimaTentativaEm: agoraIso,
-      ultimoSucessoCompletoEm: falhas.length === 0 ? agoraIso : (ant.ultimoSucessoCompletoEm || null),
+      ultimoSucessoCompletoEm: falhas.length === 0 && !parcial ? agoraIso : (ant.ultimoSucessoCompletoEm || null),   // execução DIRECIONADA (parcial) nunca declara sucesso completo
       ultimoSucessoPorBloco: porBloco,
-      ultimaExecucao: { runId, ok: falhas.length === 0, duracaoMs: Date.now() - inicioTotal, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })) },
+      ultimaExecucao: { runId, origem: ORIGEM, parcial: !!parcial, ok: falhas.length === 0, duracaoMs: Date.now() - inicioTotal, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })) },
     };
     const ok = await firestoreSet('gc_sync_status', 'ultima', doc);
     if (!ok) log.aviso('⚠️  Heartbeat não gravado (escrita falhou)');
   } catch (e) { log.aviso(`⚠️  Heartbeat não gravado (codigo=${codigoSeguro(e)})`); }
 }
 
+// ── TRAVA TRANSACIONAL COMPARTILHADA (Cloud Run Job × GitHub Actions) ─────────────────────────────────────────────
+// Uma execução por vez, em QUALQUER origem. Documento gc_sync_lock/sync-dados {detentor, origem, adquiridaEm, expiraEm}. Expira sozinho (TTL) para que
+// uma falha/queda NUNCA deixe o sync preso; só o detentor libera. Falha ao falar com o Firestore ⇒ NÃO executa (fail-closed).
+const TRAVA_COLECAO = 'gc_sync_lock', TRAVA_DOC = 'sync-dados', TRAVA_TTL_MS = 25 * 60000;
+const ORIGEM = process.env.CLOUD_RUN_JOB ? 'cloudrun' : (process.env.GITHUB_ACTIONS ? 'github' : 'local');
+const DETENTOR = `${ORIGEM}-${String(process.env.CLOUD_RUN_EXECUTION || process.env.GITHUB_RUN_ID || Date.now()).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 60)}`;
+async function adquirirTrava(db) {
+  const ref = db.collection(TRAVA_COLECAO).doc(TRAVA_DOC);
+  return db.runTransaction(async tx => {
+    const snap = await tx.get(ref); const agoraMs = Date.now(); const d = snap.exists ? snap.data() : null;
+    if (d && Number(d.expiraEm) > agoraMs && d.detentor !== DETENTOR) return { ok: false, motivo: 'TRAVA_EM_USO' };
+    tx.set(ref, { detentor: DETENTOR, origem: ORIGEM, adquiridaEm: agoraMs, expiraEm: agoraMs + TRAVA_TTL_MS, assumiuExpirada: !!(d && Number(d.expiraEm) <= agoraMs && d.detentor !== DETENTOR) });
+    return { ok: true, motivo: d && Number(d.expiraEm) <= agoraMs && d.detentor !== DETENTOR ? 'TRAVA_EXPIRADA_ASSUMIDA' : 'TRAVA_ADQUIRIDA' };
+  });
+}
+async function liberarTrava(db) {
+  try {
+    const ref = db.collection(TRAVA_COLECAO).doc(TRAVA_DOC);
+    await db.runTransaction(async tx => { const snap = await tx.get(ref); const d = snap.exists ? snap.data() : null; if (d && d.detentor === DETENTOR) tx.set(ref, { ...d, expiraEm: 0, liberadaEm: Date.now() }); });
+  } catch (_) { /* best-effort: a expiração (TTL) recupera */ }
+}
+/** Blocos pedidos por BLOCOS=vendas,pedidos (execução direcionada); vazio/ausente ⇒ todos. Nomes inválidos ⇒ erro (nada roda). */
+const TODOS_OS_BLOCOS = ['vendas', 'estoque', 'financeiro', 'pedidos', 'catalogo', 'perfil360'];
+function blocosSolicitados() {
+  const bruto = String(process.env.BLOCOS || '').trim(); if (!bruto) return { ok: true, lista: TODOS_OS_BLOCOS.slice(), parcial: false };
+  const lista = [...new Set(bruto.split(',').map(x => x.trim()).filter(Boolean))];
+  if (!lista.length || lista.some(b => !TODOS_OS_BLOCOS.includes(b))) return { ok: false, lista: [], parcial: false };
+  return { ok: true, lista, parcial: lista.length !== TODOS_OS_BLOCOS.length };
+}
+
 // ── MAIN ──────────────────────────────────────────────────────────────────────
 (async () => {
   log.info(`🔄 Iniciando sync — ${agora()}`);
-  const blocos = ['vendas', 'estoque', 'financeiro', 'pedidos', 'catalogo', 'perfil360'];
+  const sel = blocosSolicitados();
+  if (!sel.ok) { registrarFalha('sync', 'BLOCOS_INVALIDOS'); log.erro('❌ BLOCOS inválidos — nada foi executado'); process.exitCode = 1; return; }
+  const db0 = initFirestore();
+  let travaOk = false;
+  if (db0) {
+    try {
+      // intervalo mínimo (disparos periódicos): evita sync duplicado logo após outro
+      const minInt = Number(process.env.INTERVALO_MIN_MINUTOS || 0);
+      if (minInt > 0) {
+        const hb = await firestoreLerReferencia('gc_sync_status', 'ultima'); const ult = hb.ok && hb.dados ? Date.parse(hb.dados.ultimaTentativaEm || '') : NaN;
+        if (Number.isFinite(ult) && Date.now() - ult < minInt * 60000) { log.info('⏭️  SYNC_IGNORADO_INTERVALO — execução recente'); return; }
+      }
+      const t = await adquirirTrava(db0); const motivoTrava = t.motivo;
+      log.info(`🔒 ${motivoTrava} origem=${ORIGEM}`);
+      if (!t.ok) { log.info('⏭️  SYNC_IGNORADO_TRAVA — outra execução em andamento'); return; }
+      travaOk = true;
+    } catch (e) { registrarFalha('sync', 'TRAVA_INDISPONIVEL', codigoSeguro(e)); log.erro('❌ trava indisponível — nada foi executado (fail-closed)'); process.exitCode = 1; return; }
+  }
+  try {
+    await executarSync(sel);
+  } finally { if (travaOk) await liberarTrava(db0); }
+})();
+
+async function executarSync(sel) {
+  const todos = TODOS_OS_BLOCOS;
+  const blocos = sel.lista;
   const inicioTotal = Date.now(); const duracoes = {};
   const medir = (nome, fn) => { const t0 = Date.now(); return Promise.resolve().then(fn).finally(() => { duracoes[nome] = Date.now() - t0; }); };
-  const resultados = await Promise.allSettled([
-    medir('vendas', syncVendas),
-    medir('estoque', syncEstoque),
-    medir('financeiro', syncFinanceiro),
-    medir('pedidos', syncPedidos),
-    medir('catalogo', syncCatalogoProdutos),
-    medir('perfil360', syncPerfil360),
-  ]);
+  const fns = { vendas: syncVendas, estoque: syncEstoque, financeiro: syncFinanceiro, pedidos: syncPedidos, catalogo: syncCatalogoProdutos, perfil360: syncPerfil360 };
+  if (!blocos.includes('vendas')) _resolverVendas30(null);   // Pedidos sem Vendas: sem corroboração (vazio não aceito, dado anterior preservado)
+  const resultados = await Promise.allSettled(blocos.map(b => medir(b, fns[b])));
   resultados.forEach((r, i) => { if (r.status === 'rejected') registrarFalha(blocos[i], 'EXCECAO_NAO_TRATADA', codigoSeguro(r.reason)); });
-  // Heartbeat (monitor de dados desatualizados): só códigos e horários, nenhum dado do negócio. Falha ao gravar NÃO muda o resultado do sync
-  // (o monitor independente alertará por ausência de atualização).
-  await registrarHeartbeat(blocos, inicioTotal, duracoes);
+  await registrarHeartbeat(blocos, inicioTotal, duracoes, sel.parcial);
   // Resumo estruturado (só códigos e contagens — sem dados pessoais) e STATUS DO WORKFLOW: qualquer falha ⇒ erro
   // RESUMO_SYNC: SÓ bloco/código/motivo(enum)/duração. Nenhuma contagem de negócio, valor ou dado pessoal.
   log.info('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo, motivo: f.detalhe && /^[A-Z0-9_]{3,60}$/.test(f.detalhe) ? f.detalhe : undefined })), avisos, duracaoMs: Date.now() - inicioTotal, duracoesMs: duracoes, requisicoesGc: gcCliente.estatisticas().chamadas, retentativasGc: gcCliente.estatisticas().retries }));   // só contagens técnicas da camada HTTP
@@ -889,4 +937,4 @@ async function registrarHeartbeat(blocos, inicioTotal, duracoes) {
   } else {
     log.info('🏁 Sync concluído!');
   }
-})();
+}

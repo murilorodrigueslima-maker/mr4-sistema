@@ -69,7 +69,7 @@ describe('A2.2 — verificações estáticas do código', () => {
     expect(fora).toEqual([]);
   });
   test('toda interpolação em log.* usa só expressões permitidas (bloco, código, motivo, nome de documento, booleano de status)', () => {
-    const PERMITIDAS = [/^bloco$/, /^estQ$/, /^estavelQ$/, /^sig8$/, /^pendQ$/, /^codAceite$/, /^codAceiteB$/, /^idAprovTxt$/, /^codigo$/, /^detalhe$/, /^nome$/, /^av\.motivo$/, /^colecao$/, /^docId$/, /^ops\.map\(o => o\.col \+ '\/' \+ o\.id\)\.join\(', '\)$/, /^codigoSeguro\((e|err)\)$/, /^result\.cursorAdvanced === true$/, /^agora\(\)$/, /^falhas\.length$/, /^falhas\.map\(f => f\.bloco \+ ':' \+ f\.codigo\)\.join\(', '\)$/, /^detalhe \? ' motivo=' \+ detalhe : ''$/,
+    const PERMITIDAS = [/^bloco$/, /^motivoTrava$/, /^ORIGEM$/, /^estQ$/, /^estavelQ$/, /^sig8$/, /^pendQ$/, /^codAceite$/, /^codAceiteB$/, /^idAprovTxt$/, /^codigo$/, /^detalhe$/, /^nome$/, /^av\.motivo$/, /^colecao$/, /^docId$/, /^ops\.map\(o => o\.col \+ '\/' \+ o\.id\)\.join\(', '\)$/, /^codigoSeguro\((e|err)\)$/, /^result\.cursorAdvanced === true$/, /^agora\(\)$/, /^falhas\.length$/, /^falhas\.map\(f => f\.bloco \+ ':' \+ f\.codigo\)\.join\(', '\)$/, /^detalhe \? ' motivo=' \+ detalhe : ''$/,
       /^eOk \? '[^']*' : '[^']*'$/, /^pOk \? '[^']*' : '[^']*'$/];
     const ruins = [];
     for (const { l, n } of linhasLog) for (const m of l.matchAll(/\$\{((?:[^{}]|\{[^{}]*\})*)\}/g)) if (!PERMITIDAS.some(re => re.test(m[1].trim()))) ruins.push({ n, expr: m[1] });

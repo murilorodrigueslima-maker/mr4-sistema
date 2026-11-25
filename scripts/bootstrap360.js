@@ -63,31 +63,13 @@ const db = new Firestore({ projectId: PROJECT_ID, databaseId: '(default)' });
 
 // ── GestãoClick HTTP client ──────────────────────────────────────────────────
 
-function gcRequest(path, params = {}) {
-  return new Promise((resolve, reject) => {
-    const qs = new URLSearchParams({ ...params, limite: '100' }).toString();
-    const url = `${GC_BASE_URL}${path}?${qs}`;
-    const options = {
-      headers: {
-        'access-token':        GC_ACCESS,
-        'secret-access-token': GC_SECRET,
-        'Content-Type':        'application/json',
-      },
-    };
-    https.get(url, options, res => {
-      let body = '';
-      res.on('data', chunk => { body += chunk; });
-      res.on('end', () => {
-        try { resolve(JSON.parse(body)); }
-        catch (e) { reject(new Error('GC JSON parse error: ' + e.message)); }
-      });
-    }).on('error', reject);
-  });
-}
-
-const gcFetchPage = async (endpoint, params) => {
-  const r = await gcRequest(endpoint, params);
-  return { data: Array.isArray(r.data) ? r.data : [], meta: r.meta || {} };
+// Etapa A · A3: camada HTTP única e segura (retentativas controladas, 429/Retry-After, estrutura validada, erros sanitizados).
+// Nenhuma resposta inválida vira lista vazia/parcial: qualquer problema LANÇA e o chamador aborta sem gravar e sem avançar o cursor.
+const gcHttp = require('../functions/lib/gcHttp');
+const gcCliente = gcHttp.criarCliente({ transporte: gcHttp.criarTransporteHttps(https), credenciais: { access: GC_ACCESS, secret: GC_SECRET } });
+const gcFetchPage = async (endpoint, params = {}) => {
+  const j = await gcCliente.get(endpoint, { ...params, limite: '100' }, { tipo: 'lista' });
+  return { data: j.data, meta: j.meta };
 };
 
 // ── Firestore adapters ───────────────────────────────────────────────────────
@@ -345,7 +327,7 @@ async function main() {
 }
 
 main().catch(err => {
-  console.error('\nFALHA FATAL:', err.message);
-  console.error(err.stack);
+  // Erro sanitizado: só código/caminho/página (GcErro) ou a mensagem; nunca corpo bruto da API nem credenciais.
+  console.error('\nFALHA FATAL:', err && err.codigo ? JSON.stringify(err.toJSON ? err.toJSON() : { codigo: err.codigo }) : (err && err.message));
   process.exit(1);
 });

@@ -221,12 +221,10 @@ test('SYNC360-14: fetchAllPagesByProximaPagina para ao receber meta sem proxima_
 
 // ── SYNC360-15: fetchAllPagesByProximaPagina — proteção circular ─────────────
 
-test('SYNC360-15: fetchAllPagesByProximaPagina protege contra paginação circular', async () => {
+test('SYNC360-15: fetchAllPagesByProximaPagina protege contra paginação circular (A3: erro explícito, nunca lista parcial)', async () => {
   const gcFetchPage = jest.fn().mockResolvedValue({ data: [{ id: '1' }], meta: { proxima_pagina: '1' } });
-  const result = await fetchAllPagesByProximaPagina(gcFetchPage, '/vendas', {});
-  // Deve parar após detectar que pagina=1 já foi visitada
+  await expect(fetchAllPagesByProximaPagina(gcFetchPage, '/vendas', {})).rejects.toMatchObject({ name: 'GcErro' });
   expect(gcFetchPage).toHaveBeenCalledTimes(1);
-  expect(result).toHaveLength(1);
 });
 
 // ── SYNC360-16: runBootstrap dryRun=true sem writes ─────────────────────────

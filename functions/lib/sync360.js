@@ -158,30 +158,45 @@ function mesclaProdutosPorId(apiMap, anterior = {}) {
 }
 
 /**
- * Pagina um endpoint GC usando meta.proxima_pagina.
- * NÃO usa meta.total (não é confiável com modificado_desde).
- * Lança exceção se qualquer página falhar — o chamador deve abortar sem writes.
+ * Pagina um endpoint GC usando meta.proxima_pagina e devolve a lista COMPLETA — ou LANÇA erro (Etapa A · A3).
+ * NUNCA devolve lista parcial como se fosse completa: página circular, próxima página que não é a seguinte, página vazia
+ * antes do fim, limite de páginas excedido ou total_registros não alcançado ⇒ exceção sanitizada (GcErro) e o chamador
+ * aborta SEM gravar e SEM avançar o cursor.
+ * `meta.total_registros` só é exigido quando NÃO há filtro `modificado_desde` (com o filtro o total não é confiável).
  *
  * @param {Function} gcFetchPage — (endpoint, params) → Promise<{data, meta}>
+ * @param {object} [opcoes] — { maxPaginas = 400 }
  */
-async function fetchAllPagesByProximaPagina(gcFetchPage, endpoint, params = {}) {
+async function fetchAllPagesByProximaPagina(gcFetchPage, endpoint, params = {}, { maxPaginas = 400 } = {}) {
+  const { GcErro, CODIGOS } = require('./gcHttp');
+  const erro = (cod, d, pagina) => new GcErro(cod, d, { caminho: endpoint, pagina });
   const results = [];
-  let pagina = 1;
+  let pagina = 1, totalPrimeira = null;
   const visitados = new Set();
 
-  while (true) {
-    if (visitados.has(pagina)) break;  // proteção contra paginação circular
+  for (;;) {
+    if (pagina > maxPaginas) throw erro(CODIGOS.LIMITE_PAGINAS, `mais de ${maxPaginas} páginas (abortado, sem truncar)`, pagina);
+    if (visitados.has(pagina)) throw erro(CODIGOS.PAGINACAO_CIRCULAR, 'página já lida', pagina);
     visitados.add(pagina);
 
     const r = await gcFetchPage(endpoint, { ...params, pagina, limite: 100 });
-    const data = Array.isArray(r.data) ? r.data : [];
-    results.push(...data);
+    if (!r || !Array.isArray(r.data)) throw erro(CODIGOS.RESPOSTA_INESPERADA, 'resposta sem lista de dados', pagina);
+    const meta = r.meta || {};
+    if (pagina === 1) { const t = Number(meta.total_registros); totalPrimeira = Number.isInteger(t) && t >= 0 ? t : null; }
+    if (pagina > 1 && r.data.length === 0) throw erro(CODIGOS.PAGINACAO_INCOMPLETA, 'página vazia após página que anunciava continuação', pagina);
+    results.push(...r.data);
 
-    const proxima = (r.meta || {}).proxima_pagina;
-    if (!proxima) break;
-    pagina = Number(proxima);
+    const bruta = meta.proxima_pagina;
+    if (bruta === undefined || bruta === null || bruta === false) break;
+    const proxima = Number(bruta);
+    if (!Number.isInteger(proxima) || proxima < 1) throw erro(CODIGOS.PAGINACAO_INCONSISTENTE, 'proxima_pagina inválida', pagina);
+    if (proxima !== pagina + 1) throw erro(CODIGOS.PAGINACAO_INCONSISTENTE, 'proxima_pagina não é a página seguinte', pagina);
+    pagina = proxima;
   }
 
+  if (!('modificado_desde' in params) && totalPrimeira !== null && results.length < totalPrimeira) {
+    throw erro(CODIGOS.PAGINACAO_INCOMPLETA, `lidos ${results.length} de ${totalPrimeira}`, null);
+  }
   return results;
 }
 

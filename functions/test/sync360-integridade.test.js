@@ -51,43 +51,43 @@ describe('A1 #6 — cursor avançando indevidamente (HTTP 429/500 na página 2 e
     const paginas = ad.gcFetchPage.mock.calls.filter(c => c[0] === '/vendas').map(c => c[1].pagina);
     expect(paginas).toEqual([1, 2]); expect(modificadas).toHaveLength(150); expect(idsAntigas).toHaveLength(50);
   });
-  test('CARACTERIZAÇÃO (defeito atual): processa 100, AVANÇA o cursor até a venda mais nova e ignora as 50 mais antigas', () => {
-    expect(out.erro).toBeNull();
-    expect(out.r.modifiedVendas).toBe(100); expect(out.r.cursorAdvanced).toBe(true);
-    expect(ad._w.syncState.modifiedSinceCursor).toBe(pagina1[0].modificado_em);          // cursor = a mais nova
-    const gravados = new Set(ad._w.vendas.map(v => v.id)); expect(idsAntigas.some(id => gravados.has(id))).toBe(false);
+  test('A3 (corrigido): lote parcial ⇒ ABORTA com erro, NÃO grava vendas/perfis e NÃO avança o cursor', () => {
+    expect(out.erro).not.toBeNull(); expect(out.erro.codigo).toBe('GC_PAGINACAO_INCOMPLETA');
+    expect(ad._w.syncState).toBeNull(); expect(ad._w.vendas).toHaveLength(0);
+    expect(ad.firestoreSetSyncState).not.toHaveBeenCalled(); expect(ad.firestoreUpsertVendas).not.toHaveBeenCalled(); expect(ad.firestoreUpsertPerfil).not.toHaveBeenCalled();
   });
-  test('CARACTERIZAÇÃO (perda PERMANENTE): na execução seguinte, com a API saudável, as 50 vendas nunca mais são lidas', async () => {
-    const todas = jest.fn(async (endpoint) => (endpoint === '/vendas' ? { data: modificadas, meta: {} } : { data: [], meta: {} }));
-    const ad2 = adaptadores(todas, ad._w.syncState.modifiedSinceCursor);               // usa o cursor já avançado
+  test('A3 (corrigido): sem perda permanente — o cursor fica onde estava e a execução seguinte, com a API saudável, lê as 150', async () => {
+    const todas = jest.fn(async (endpoint, params) => {
+      if (endpoint !== '/vendas') return { data: [], meta: {} };
+      const p = Number(params.pagina || 1); const data = modificadas.slice((p - 1) * 100, p * 100);
+      return { data, meta: { proxima_pagina: p === 1 ? 2 : null, total_registros: 150, total_paginas: 2 } };
+    });
+    const ad2 = adaptadores(todas, CURSOR);                                              // cursor ORIGINAL (nunca avançou)
     const r2 = await runIncremental(ad2);
-    const lidas = new Set(ad2._w.vendas.map(v => v.id));
-    expect(idsAntigas.some(id => lidas.has(id))).toBe(false);                           // as 50 continuam perdidas
-    expect(r2.modifiedVendas).toBeLessThan(5);
-  });
-  defeito('DESEJADO: lote parcial ⇒ aborta com erro, NÃO grava vendas/perfis e NÃO avança o cursor', async () => {
-    const ad3 = adaptadores(gcComErroNaPagina2(), CURSOR); const o = await executar(ad3);
-    expect(o.erro).not.toBeNull();
-    expect(ad3.firestoreSetSyncState).not.toHaveBeenCalled();
-    expect(ad3.firestoreUpsertVendas).not.toHaveBeenCalled();
+    expect(r2.modifiedVendas).toBe(150);
+    const lidas = new Set(ad2._w.vendas.map(v => v.id)); expect(idsAntigas.every(id => lidas.has(id))).toBe(true);
   });
 });
 
 describe('A1 #4 (sync360) — paginação incompleta nunca deve ser resultado completo', () => {
-  test('CARACTERIZAÇÃO (defeito atual): fetchAllPagesByProximaPagina encerra EM SILÊNCIO quando a página seguinte vem sem meta', async () => {
-    const r = await fetchAllPagesByProximaPagina(gcComErroNaPagina2(), '/vendas', {});
-    expect(r).toHaveLength(100);                                                         // 100 de 150 devolvidos como se fossem tudo
+  test('A3 (corrigido): fetchAllPagesByProximaPagina NÃO devolve 100 de 150 como se fosse tudo — lança erro', async () => {
+    await expect(fetchAllPagesByProximaPagina(gcComErroNaPagina2(), '/vendas', {})).rejects.toMatchObject({ codigo: 'GC_PAGINACAO_INCOMPLETA' });
   });
-  test('CARACTERIZAÇÃO (defeito atual): página circular termina com `break` silencioso (sem erro)', async () => {
+  test('A3 (corrigido): página circular lança GC_PAGINACAO_INCONSISTENTE/CIRCULAR (sem `break` silencioso)', async () => {
     const gc = jest.fn(async () => ({ data: [venda(1, '2026-11-21 10:00:00')], meta: { proxima_pagina: 1, total_registros: 5 } }));
-    const r = await fetchAllPagesByProximaPagina(gc, '/vendas', {}); expect(r).toHaveLength(1);
+    await expect(fetchAllPagesByProximaPagina(gc, '/vendas', {})).rejects.toMatchObject({ name: 'GcErro' });
   });
-  defeito('DESEJADO: página que some antes do total esperado ⇒ erro (nunca lista parcial)', async () => {
-    await expect(fetchAllPagesByProximaPagina(gcComErroNaPagina2(), '/vendas', {})).rejects.toBeDefined();
+  test('A3: limite de páginas ABORTA (nunca trunca)', async () => {
+    const gc = jest.fn(async (e, p) => ({ data: [venda(p.pagina, '2026-11-21 10:00:00')], meta: { proxima_pagina: p.pagina + 1 } }));
+    await expect(fetchAllPagesByProximaPagina(gc, '/vendas', {}, { maxPaginas: 3 })).rejects.toMatchObject({ codigo: 'GC_LIMITE_PAGINAS' });
   });
-  defeito('DESEJADO: página circular ⇒ erro explícito', async () => {
-    const gc = jest.fn(async () => ({ data: [venda(1, '2026-11-21 10:00:00')], meta: { proxima_pagina: 1, total_registros: 5 } }));
-    await expect(fetchAllPagesByProximaPagina(gc, '/vendas', {})).rejects.toBeDefined();
+  test('A3: lista completa em várias páginas é devolvida inteira', async () => {
+    const gc = jest.fn(async (e, p) => ({ data: [venda(p.pagina * 2, 'x'), venda(p.pagina * 2 + 1, 'x')], meta: { proxima_pagina: p.pagina < 3 ? p.pagina + 1 : null, total_registros: 6 } }));
+    expect(await fetchAllPagesByProximaPagina(gc, '/vendas', {})).toHaveLength(6);
+  });
+  test('A3: sem filtro, total_registros não alcançado ⇒ erro', async () => {
+    const gc = jest.fn(async () => ({ data: [venda(1, 'x')], meta: { proxima_pagina: null, total_registros: 5 } }));
+    await expect(fetchAllPagesByProximaPagina(gc, '/vendas', {})).rejects.toMatchObject({ codigo: 'GC_PAGINACAO_INCOMPLETA' });
   });
 });
 

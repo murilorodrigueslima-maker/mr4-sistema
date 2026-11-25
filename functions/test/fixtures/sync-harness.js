@@ -45,6 +45,7 @@ class DocRef {
   async get() { if (FALHA_LEITURA.includes(this.col + '/' + this.id)) throw new Error('UNAVAILABLE (leitura simulada)'); return new Snap(this.id, (state[this.col] || {})[this.id]); }
   async set(d, opt) { if (FALHA_ESCRITA.includes(this.col + '/' + this.id)) throw new Error('UNAVAILABLE (escrita simulada)'); const cur = (state[this.col] || {})[this.id]; (state[this.col] = state[this.col] || {})[this.id] = opt && opt.merge ? { ...cur, ...clone(d) } : clone(d); writes.push(this.col + '/' + this.id); }
   async update(d) { return this.set(d, { merge: true }); }
+  async create(d) { if ((state[this.col] || {})[this.id] !== undefined) { const e = new Error('ALREADY_EXISTS'); e.code = 6; throw e; } return this.set(d); }
 }
 class CollectionRef extends Query { doc(id) { return new DocRef(this.col, id); } }
 class Firestore {

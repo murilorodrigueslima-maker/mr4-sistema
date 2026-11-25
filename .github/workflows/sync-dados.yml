@@ -3,7 +3,34 @@ name: Sync Dados GestãoClick
 on:
   schedule:
     - cron: '17 */2 * * *'   # a cada 2 horas, no minuto 17 (fora do pico do minuto 0)
-  workflow_dispatch:           # permite rodar manualmente
+  workflow_dispatch:           # execução manual; `acao` ≠ normal só vale aqui (o agendamento NUNCA aceita anomalia)
+    inputs:
+      acao:
+        description: 'normal | solicitar_aceite | confirmar_aceite (recuperação de anomalia de volume; 2 etapas)'
+        required: false
+        default: 'normal'
+        type: choice
+        options: [normal, solicitar_aceite, confirmar_aceite]
+      bloco:
+        description: 'vendas | estoque | catalogo | financeiro | pedidos (só para solicitar/confirmar)'
+        required: false
+        default: ''
+        type: string
+      assinatura8:
+        description: 'ASSINATURA8 mostrada no log da quarentena (8 caracteres hexadecimais)'
+        required: false
+        default: ''
+        type: string
+      motivo:
+        description: 'Justificativa (>= 20 caracteres, 1 linha). Fica só no Firestore, nunca no log.'
+        required: false
+        default: ''
+        type: string
+      aprovacao_id:
+        description: 'ID_APROVACAO da etapa A (só para confirmar_aceite)'
+        required: false
+        default: ''
+        type: string
 
 # Uma execução por vez, SEM cancelar a que está em andamento (as gravações em lote assumem execução única); no máximo uma fica na fila.
 concurrency:
@@ -40,6 +67,12 @@ jobs:
         env:
           GC_ACCESS_TOKEN:        ${{ secrets.GC_ACCESS_TOKEN }}
           GC_SECRET_ACCESS_TOKEN: ${{ secrets.GC_SECRET_ACCESS_TOKEN }}
+          # Recuperação de anomalias (só workflow_dispatch). Entradas vão por ENV (nunca interpoladas no shell) e são validadas pelo script.
+          ACAO_ANOMALIA:          ${{ inputs.acao }}
+          BLOCO_ANOMALIA:         ${{ inputs.bloco }}
+          ASSINATURA8_ANOMALIA:   ${{ inputs.assinatura8 }}
+          MOTIVO_ANOMALIA:        ${{ inputs.motivo }}
+          APROVACAO_ID_ANOMALIA:  ${{ inputs.aprovacao_id }}
         run: node scripts/sync-dados.js
       # SECURITY HOTFIX P0: removido o passo "Commit e push dos dados". Vendas, estoque e catálogo
       # agora vão para o Firestore protegido (painel_cache); data/*.json não é mais publicado.

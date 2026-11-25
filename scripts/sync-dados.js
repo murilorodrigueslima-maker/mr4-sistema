@@ -70,6 +70,57 @@ function lerLista(caminho, params, opcoes = {}) {
   return gcHttp.paginarCompleto(gcCliente, caminho, params, { limite: 100, maxPaginas: MAX_PAGINAS, ...opcoes });
 }
 
+// ── RECUPERAÇÃO SEGURA DE ANOMALIAS (quarentena + aceite humano em duas etapas) ───────────────────────────────────
+// Detalhes e regras: functions/lib/recuperacaoAnomalias.js. NENHUMA anomalia é aprovada automaticamente: a execução agendada só
+// registra leituras/estabilidade; o aceite exige execução MANUAL (workflow_dispatch) em duas etapas. Falha de estado/auditoria ⇒ fail-closed.
+const recup = require('../functions/lib/recuperacaoAnomalias');
+const ENT = (() => {
+  if (process.env.GITHUB_EVENT_NAME !== 'workflow_dispatch') return { ok: true, acao: 'normal' };   // agendado: SEMPRE normal
+  return recup.validarEntradas({ acao: process.env.ACAO_ANOMALIA || 'normal', bloco: process.env.BLOCO_ANOMALIA || '', assinatura8: process.env.ASSINATURA8_ANOMALIA || '', motivo: process.env.MOTIVO_ANOMALIA || '', aprovacaoId: process.env.APROVACAO_ID_ANOMALIA || '' });
+})();
+const MOTIVOS_DE_QUEDA = new Set(['VAZIO_COM_DADOS_ANTERIORES', 'QUEDA_ACIMA_DO_LIMITE', 'QUEDA_OU_VAZIO_ANOMALO']);
+/** Reconciliação por partição (vendas): relê a janela em duas metades e confere união de IDs == leitura completa. null = não se aplica. */
+async function particaoVendas(inicio, fim, idsLidos) {
+  if (!(inicio < fim)) return null;
+  const ms = d => Date.parse(d + 'T00:00:00Z'), dia = m => new Date(m).toISOString().slice(0, 10);
+  const meio = dia((ms(inicio) + ms(fim)) / 2), prox = dia(ms(meio) + 86400000);
+  const a = await lerLista('/vendas', { data_inicio: inicio, data_fim: meio }, { permitirVazio: true });
+  const b = await lerLista('/vendas', { data_inicio: prox, data_fim: fim }, { permitirVazio: true });
+  const uni = new Set([...a.itens, ...b.itens].map(x => String(x.id))), lidos = new Set(idsLidos.map(String));
+  return uni.size === lidos.size && [...uni].every(i => lidos.has(i));
+}
+/** Decide a publicação à luz da recuperação. `av` = {publicar, motivo}. Devolve {publicar, motivo}; qualquer erro ⇒ mantém `av` (bloqueio). */
+async function recuperar(bloco, av, ctx) {
+  const db = initFirestore(); if (!db) return av;
+  const agoraMs = Date.now(), ator = String(process.env.GITHUB_ACTOR || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 39) || 'github';
+  const runId = /^\d{1,20}$/.test(String(process.env.GITHUB_RUN_ID || '')) ? String(process.env.GITHUB_RUN_ID) : null;
+  try {
+    const est = await recup.lerEstado(db, bloco);
+    const gravar = async (estado, eventos) => { if (estado) await recup.gravarEstado(db, estado); for (const ev of eventos) await recup.auditar(db, ev, agoraMs, ator); };
+    if (av.publicar) { const r = recup.registrarNormal(est, { bloco, total: ctx.total }); if (r.eventos.length) await gravar(r.estado, r.eventos); return av; }
+    if (!MOTIVOS_DE_QUEDA.has(av.motivo)) return av;                       // referência ilegível etc.: não é queda de volume
+    let particaoOk = null; if (ctx.particao) { try { particaoOk = await ctx.particao(); } catch (_) { particaoOk = false; } }
+    const r = recup.registrarBloqueio(est, { bloco, agoraMs, total: ctx.total, ids: ctx.ids || [], escopo: ctx.escopo, janelaInicio: ctx.janelaInicio, janelaFim: ctx.janelaFim, janelaDias: ctx.janelaDias, referencia: ctx.referencia, motivo: av.motivo, particaoOk });
+    let estado = r.estado; const eventos = [...r.eventos]; let decisao = av;
+    const estQ = estado.estado, estavelQ = estado.estavel, sig8 = r.assinatura8, pendQ = r.estabilidade.estavel ? '' : ' PENDENCIAS=' + r.estabilidade.motivos.join(',');   // enums/hash curto: nenhum dado do negócio
+    log.info(`  🛑 ${bloco}: QUARENTENA estado=${estQ} ESTAVEL=${estavelQ} ASSINATURA8=${sig8}${pendQ}`);
+    if (ENT.ok && ENT.bloco === bloco && ENT.acao === 'solicitar_aceite') {
+      const x = recup.solicitarAceite(estado, { assinatura8: ENT.assinatura8, motivo: ENT.motivo, ator, agoraMs, runId }); estado = x.estado; eventos.push(...x.eventos);
+      const codAceite = x.codigo, idAprovTxt = x.ok ? ' ID_APROVACAO=' + x.aprovacaoId : '';
+      log.info(`  ↪ aceite (etapa A): ${codAceite}${idAprovTxt}`);
+    } else if (ENT.ok && ENT.bloco === bloco && ENT.acao === 'confirmar_aceite') {
+      const x = recup.confirmarAceite(estado, { id: ENT.aprovacaoId, assinatura8: ENT.assinatura8, ator, agoraMs, leituraAtual: { completa: true, assinatura8: r.assinatura8, particaoOk }, runId });
+      estado = x.estado; eventos.push(...x.eventos); const codAceiteB = x.codigo; log.info(`  ↪ aceite (etapa B): ${codAceiteB}`);
+      if (x.ok && x.publicar) decisao = { publicar: true, motivo: 'APROVADO_HUMANO', quedaPct: null };
+    }
+    await gravar(estado, eventos);      // fail-closed: se isto lançar, cai no catch e o bloqueio é mantido
+    return decisao;
+  } catch (e) {
+    log.aviso(`⚠️  recuperação de anomalias (${bloco}) indisponível (codigo=${codigoSeguro(e)}) — bloqueio mantido`);
+    return av;
+  }
+}
+
 // ── FIRESTORE (opcional) ──────────────────────────────────────────────────────
 // Usa @google-cloud/firestore que suporta nativamente:
 //   - GOOGLE_APPLICATION_CREDENTIALS com arquivo external_account (WIF/OIDC)
@@ -245,7 +296,8 @@ async function syncVendasCorpo() {
   const avVendas = refVendas.ok
     ? gcHttp.avaliarPublicacao({ novo: vendas.length, anterior: anteriorVendas, limiteQuedaPct: LIMITE_QUEDA_PADRAO })
     : { publicar: false, motivo: 'REFERENCIA_ILEGIVEL' };
-  if (!avVendas.publicar) {
+  const decVendas = await recuperar('vendas', avVendas, { total: vendas.length, ids: vendas.map(v => v.id), escopo: ESCOPO_VENDAS, janelaInicio: diasAtras(JANELA_VENDAS_DIAS), janelaFim: hoje(), janelaDias: JANELA_VENDAS_DIAS, referencia: anteriorVendas, particao: () => particaoVendas(diasAtras(JANELA_VENDAS_DIAS), hoje(), vendas.map(v => v.id)) });
+  if (!decVendas.publicar) {
     registrarFalha('vendas', 'PUBLICACAO_BLOQUEADA', avVendas.motivo);
     log.info('  ↩ Mantendo painel_cache/vendas, painel_cache/caixa e display_metrics inalterados');
     return;
@@ -377,7 +429,8 @@ async function syncEstoque() {
   const avEstoque = refEstoque.ok
     ? gcHttp.avaliarPublicacao({ novo: produtos.length, anterior: anteriorEstoque, limiteQuedaPct: LIMITE_QUEDA_PADRAO })
     : { publicar: false, motivo: 'REFERENCIA_ILEGIVEL' };
-  if (!avEstoque.publicar) {
+  const decEstoque = await recuperar('estoque', avEstoque, { total: produtos.length, ids: produtos.map(p => p.id), escopo: 'loja_262759', janelaInicio: '', janelaFim: '', janelaDias: null, referencia: anteriorEstoque });
+  if (!decEstoque.publicar) {
     registrarFalha('estoque', 'PUBLICACAO_BLOQUEADA', avEstoque.motivo);
     log.info('  ↩ Mantendo painel_cache/estoque e painel_cache/estoque_custos inalterados');
     return;
@@ -512,8 +565,9 @@ async function syncFinanceiro() {
     return;
   }
   const totalAnterior = refFin.dados ? (refFin.dados._meta?.lancamentosTotal ?? null) : null;
-  const anomalia = detectarAnomalia('financeiro', lancamentos.length, totalAnterior, 0.70);
-
+  let anomalia = detectarAnomalia('financeiro', lancamentos.length, totalAnterior, 0.70);
+  const decFin = await recuperar('financeiro', anomalia ? { publicar: false, motivo: 'QUEDA_OU_VAZIO_ANOMALO' } : { publicar: true, motivo: 'OK' }, { total: lancamentos.length, ids: lancamentos.map((l, i) => String(l.id ?? l.codigo ?? i)), escopo: 'loja_262759', janelaInicio: '', janelaFim: '', janelaDias: null, referencia: totalAnterior });
+  if (anomalia && decFin.publicar) anomalia = false;
   if (anomalia) {
     // GC retornou quantidade drasticamente menor — NÃO sobrescrever Firestore (e gerar alerta)
     registrarFalha('financeiro', 'PUBLICACAO_BLOQUEADA', 'QUEDA_OU_VAZIO_ANOMALO');
@@ -609,8 +663,9 @@ async function syncPedidos() {
   }
   const totalAnterior = refPed.dados ? (refPed.dados._meta?.pedidosTotal ?? null) : null;
   // vazio corroborado (A2.1) é ausência legítima de vendas: a confirmação independente substitui a regra de queda; demais quedas seguem protegidas
-  const anomalia = vazioCorroborado ? false : detectarAnomalia('pedidos', pedidos.length, totalAnterior, 0.80);
-
+  let anomalia = vazioCorroborado ? false : detectarAnomalia('pedidos', pedidos.length, totalAnterior, 0.80);
+  const decPed = await recuperar('pedidos', anomalia ? { publicar: false, motivo: 'QUEDA_OU_VAZIO_ANOMALO' } : { publicar: true, motivo: 'OK' }, { total: pedidos.length, ids: pedidos.map((p, i) => String(p.numero ?? p.id ?? i)), escopo: 'loja_262759', janelaInicio: '', janelaFim: '', janelaDias: null, referencia: totalAnterior });
+  if (anomalia && decPed.publicar) anomalia = false;
   if (anomalia) {
     registrarFalha('pedidos', 'PUBLICACAO_BLOQUEADA', 'QUEDA_OU_VAZIO_ANOMALO');
     log.info('  ↩ pedidos_cache/latest preservado (anomalia detectada)');
@@ -662,7 +717,8 @@ async function syncCatalogoProdutos() {
   const avCat = refCat.ok
     ? gcHttp.avaliarPublicacao({ novo: catalogo.length, anterior: anteriorCat, limiteQuedaPct: LIMITE_QUEDA_PADRAO })
     : { publicar: false, motivo: 'REFERENCIA_ILEGIVEL' };
-  if (!avCat.publicar) {
+  const decCat = await recuperar('catalogo', avCat, { total: catalogo.length, ids: catalogo.map(p => p.codigo || p.nome), escopo: 'loja_262759', janelaInicio: '', janelaFim: '', janelaDias: null, referencia: anteriorCat });
+  if (!decCat.publicar) {
     registrarFalha('catalogo', 'PUBLICACAO_BLOQUEADA', avCat.motivo);
     log.info('  ↩ Mantendo painel_cache/produtos_catalogo inalterado');
     return;

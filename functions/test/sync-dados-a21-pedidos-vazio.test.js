@@ -134,7 +134,7 @@ describe('A2.1 — avaliarVazioPedidos (função pura): cada condição de corro
 describe('A2.1 — verificações estáticas', () => {
   const src = fs.readFileSync(path.join(ROOT, 'scripts/sync-dados.js'), 'utf8');
   test('permitirVazio só em financeiro (pagamentos) e pedidos; o de pedidos passa por avaliarVazioPedidos', () => {
-    expect((src.match(/permitirVazio: true/g) || []).length).toBe(2);
+    expect((src.match(/permitirVazio: true/g) || []).length).toBe(4);   // financeiro + pedidos + 2 leituras da partição de vendas (metades podem ser vazias)
     const bloco = src.slice(src.indexOf('async function syncPedidos'), src.indexOf('async function syncCatalogoProdutos'));
     expect(bloco).toMatch(/permitirVazio: true/); expect(bloco).toMatch(/avaliarVazioPedidos/);
     expect(src.slice(src.indexOf('async function syncVendasCorpo'), src.indexOf('async function syncEstoque'))).not.toMatch(/permitirVazio/);

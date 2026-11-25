@@ -35,7 +35,7 @@ const PROIBIDOS = [/R\$/, /\bnovo=|\banterior=/, /Vendedor [AB]\b|Vendedor SECRE
 // Remove o que é permitido (hora do sync, JSON do RESUMO, códigos com dígitos) e exige que não restem números soltos
 function semPermitido(log) {
   return log.split('\n').filter(l => !l.startsWith('RESUMO_SYNC '))
-    .map(l => l.replace(/Iniciando sync — [\d/, :]+/, 'Iniciando sync').replace(/[A-Z][A-Z0-9_]*\d[A-Z0-9_]*/g, 'CODIGO').replace(/COM \d+ falha\(s\)/, 'COM N falha(s)').replace(/Perfil360/g, 'Perfil')).join('\n');
+    .map(l => l.replace(/ASSINATURA8=[0-9a-f]{8}/, 'ASSINATURA8=HASH').replace(/ID_APROVACAO=[a-z]+-\d+/, 'ID_APROVACAO=ID').replace(/Iniciando sync — [\d/, :]+/, 'Iniciando sync').replace(/[A-Z][A-Z0-9_]*\d[A-Z0-9_]*/g, 'CODIGO').replace(/COM \d+ falha\(s\)/, 'COM N falha(s)').replace(/Perfil360/g, 'Perfil')).join('\n');
 }
 
 describe.each(MODOS)('A2.2 — log do modo %s', modo => {
@@ -69,7 +69,7 @@ describe('A2.2 — verificações estáticas do código', () => {
     expect(fora).toEqual([]);
   });
   test('toda interpolação em log.* usa só expressões permitidas (bloco, código, motivo, nome de documento, booleano de status)', () => {
-    const PERMITIDAS = [/^bloco$/, /^codigo$/, /^detalhe$/, /^nome$/, /^av\.motivo$/, /^colecao$/, /^docId$/, /^ops\.map\(o => o\.col \+ '\/' \+ o\.id\)\.join\(', '\)$/, /^codigoSeguro\((e|err)\)$/, /^result\.cursorAdvanced === true$/, /^agora\(\)$/, /^falhas\.length$/, /^falhas\.map\(f => f\.bloco \+ ':' \+ f\.codigo\)\.join\(', '\)$/, /^detalhe \? ' motivo=' \+ detalhe : ''$/,
+    const PERMITIDAS = [/^bloco$/, /^estQ$/, /^estavelQ$/, /^sig8$/, /^pendQ$/, /^codAceite$/, /^codAceiteB$/, /^idAprovTxt$/, /^codigo$/, /^detalhe$/, /^nome$/, /^av\.motivo$/, /^colecao$/, /^docId$/, /^ops\.map\(o => o\.col \+ '\/' \+ o\.id\)\.join\(', '\)$/, /^codigoSeguro\((e|err)\)$/, /^result\.cursorAdvanced === true$/, /^agora\(\)$/, /^falhas\.length$/, /^falhas\.map\(f => f\.bloco \+ ':' \+ f\.codigo\)\.join\(', '\)$/, /^detalhe \? ' motivo=' \+ detalhe : ''$/,
       /^eOk \? '[^']*' : '[^']*'$/, /^pOk \? '[^']*' : '[^']*'$/];
     const ruins = [];
     for (const { l, n } of linhasLog) for (const m of l.matchAll(/\$\{((?:[^{}]|\{[^{}]*\})*)\}/g)) if (!PERMITIDAS.some(re => re.test(m[1].trim()))) ruins.push({ n, expr: m[1] });

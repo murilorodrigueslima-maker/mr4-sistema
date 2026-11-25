@@ -248,7 +248,7 @@ describe('ESTÁTICO — o script usa a camada segura e o workflow falha quando o
   const wf = fs.readFileSync(path.join(ROOT, '.github', 'workflows', 'sync-dados.yml'), 'utf8');
   test('sem laços while(true) de paginação, sem fetchGC/chamarGCComRetry; usa gcHttp, lerLista e batch atômico', () => {
     expect(src).not.toMatch(/while \(true\)/); expect(src).not.toMatch(/function (fetchGC|chamarGCComRetry)|await chamarGCComRetry/);
-    expect(src).toMatch(/require\('\.\.\/functions\/lib\/gcHttp'\)/); expect((src.match(/await lerLista\(/g) || []).length).toBe(5);
+    expect(src).toMatch(/require\('\.\.\/functions\/lib\/gcHttp'\)/); expect((src.match(/await lerLista\(/g) || []).length).toBe(7);   // 5 leituras dos blocos + 2 da reconciliação por partição (só durante quarentena)
     expect((src.match(/firestoreBatchSet\(\[/g) || []).length).toBe(2);
   });
   test('A3 concluída: não há mais `JSON.parse(body)` nem https.get cru no script — o Perfil360 usa a mesma camada segura (gcCliente)', () => {
@@ -259,9 +259,9 @@ describe('ESTÁTICO — o script usa a camada segura e o workflow falha quando o
   test('falha ⇒ process.exitCode = 1 e RESUMO_SYNC; permitirVazio SÓ em pagamentos e em Pedidos (este só aceito com corroboração A2.1)', () => {
     expect(src).toMatch(/process\.exitCode = 1/); expect(src).toMatch(/RESUMO_SYNC/);
     // A2.1 ampliou a exceção, de forma deliberada e autorizada: 2 ocorrências, uma em cada bloco; a de Pedidos exige avaliarVazioPedidos
-    expect((src.match(/permitirVazio: true/g) || []).length).toBe(2);
+    expect((src.match(/permitirVazio: true/g) || []).length).toBe(4);   // + 2 na reconciliação por partição de vendas (antes de syncFinanceiro; só em quarentena)
     const iFin = src.indexOf('async function syncFinanceiro'), iPed = src.indexOf('async function syncPedidos'), iCat = src.indexOf('async function syncCatalogoProdutos');
-    const primeira = src.indexOf('permitirVazio: true'), segunda = src.indexOf('permitirVazio: true', primeira + 1);
+    const primeira = src.indexOf('permitirVazio: true', iFin), segunda = src.indexOf('permitirVazio: true', primeira + 1);
     expect(primeira).toBeGreaterThan(iFin); expect(primeira).toBeLessThan(iPed);
     expect(segunda).toBeGreaterThan(iPed); expect(segunda).toBeLessThan(iCat);
     expect(src.slice(iPed, iCat)).toMatch(/avaliarVazioPedidos/);

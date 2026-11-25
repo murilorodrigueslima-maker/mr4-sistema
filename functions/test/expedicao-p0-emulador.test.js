@@ -222,7 +222,7 @@ describe('CRIAÇÃO CONCORRENTE e SYNC CENTRAL', () => {
     await assertFails(fs(U.semMod).collection('expedicao_sync').doc('estado').get());
   });
   test('leitor GC do sync: só GET em /vendas no host oficial', async () => {
-    const chamadas = []; const l = SYNC.criarLeitorVendas({ accessToken: 'a', secretToken: 's', fetchImpl: async (u, o) => { chamadas.push([u, o.method]); return { ok: true, json: async () => ({ data: [], meta: { total_paginas: 1 } }) }; } });
+    const chamadas = []; const l = SYNC.criarLeitorVendas({ accessToken: 'a', secretToken: 's', fetchImpl: async (u, o) => { chamadas.push([u, o.method]); return { status: 200, headers: { get: () => null }, json: async () => ({ data: [], meta: { total_paginas: 1, proxima_pagina: null, total_registros: 0 } }) }; } });
     await l.vendas('2026-09-27', '2026-09-29');
     expect(chamadas).toHaveLength(1); expect(chamadas[0][1]).toBe('GET'); expect(chamadas[0][0]).toMatch(/^https:\/\/api\.gestaoclick\.com\/vendas\?/);
     expect(() => SYNC.criarLeitorVendas({ accessToken: '', secretToken: '' })).toThrow('SECRETS_GC_AUSENTES');

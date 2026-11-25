@@ -5,7 +5,7 @@
 // nunca sobrescreve um pedido que outra tela já avançou. As telas recebem os novos pelo listener.
 // Estado em expedicao_sync/estado: último sucesso (relógio do servidor) + números já vistos na janela, para
 // criar só o que é novo (1 leitura + 1 escrita por execução, fora as criações).
-const GC_BASE = 'https://api.gestaoclick.com';
+const gcHttp = require('../gcHttp');   // Etapa A · A4: camada HTTP única
 const JANELA_DIAS = 2;            // mesma janela que a tela usava (hoje e os 2 dias anteriores)
 const LIMITE_PAGINA = 100;
 const MAX_PAGINAS = 20;           // guarda contra laço infinito na paginação
@@ -13,29 +13,20 @@ const ALREADY_EXISTS = 6;         // código gRPC
 
 function diaFortaleza(ms) { return new Date(ms).toLocaleDateString('sv-SE', { timeZone: 'America/Fortaleza' }); }
 
-/** Cliente GC mínimo: só GET em /vendas no host oficial. */
-function criarLeitorVendas({ fetchImpl = globalThis.fetch, accessToken, secretToken }) {
+/**
+ * Leitor GC: só GET em /vendas no host oficial, via a camada HTTP única (lib/gcHttp — Etapa A · A4).
+ * Resposta inválida, HTTP ≠ 200, 429/5xx (com retentativas controladas), paginação incompleta/repetida/circular ou excesso de
+ * páginas LANÇAM erro sanitizado (código/caminho/página): nunca viram lista vazia/parcial. Quem chama não cria pedidos nem
+ * grava `ultima_ok` em caso de erro. Janela sem vendas (resposta 200 válida e vazia) é um resultado legítimo.
+ */
+function criarLeitorVendas({ fetchImpl = globalThis.fetch, accessToken, secretToken, dormir } = {}) {
   if (!accessToken || !secretToken) { const e = new Error('SECRETS_GC_AUSENTES'); e.codigo = 'SECRETS_GC_AUSENTES'; throw e; }
-  let chamadas = 0;
-  async function pagina(dataInicio, dataFim, n) {
-    const url = new URL(GC_BASE + '/vendas');
-    url.search = new URLSearchParams({ data_inicio: dataInicio, data_fim: dataFim, pagina: String(n), limite: String(LIMITE_PAGINA) }).toString();
-    if (url.origin !== GC_BASE || url.pathname !== '/vendas') throw new Error('GET_ONLY_GUARD');
-    chamadas++;
-    const r = await fetchImpl(url.toString(), { method: 'GET', headers: { 'access-token': accessToken, 'secret-access-token': secretToken } });
-    if (!r.ok) throw new Error('GC HTTP ' + r.status);
-    return r.json();
-  }
+  const cliente = gcHttp.criarCliente({ transporte: fetchImpl, credenciais: { access: accessToken, secret: secretToken }, dormir });
   return {
-    chamadas: () => chamadas,
+    chamadas: () => cliente.estatisticas().chamadas,
     async vendas(dataInicio, dataFim) {
-      let todos = [];
-      for (let n = 1; n <= MAX_PAGINAS; n++) {
-        const j = await pagina(dataInicio, dataFim, n);
-        todos = todos.concat(Array.isArray(j.data) ? j.data : []);
-        if (n >= (Number((j.meta || {}).total_paginas) || 1)) return todos;
-      }
-      throw new Error('PAGINACAO_EXCEDIDA');
+      const r = await gcHttp.paginarCompleto(cliente, '/vendas', { data_inicio: dataInicio, data_fim: dataFim }, { limite: LIMITE_PAGINA, maxPaginas: MAX_PAGINAS, permitirVazio: true, exigirTotal: false });
+      return r.itens;
     },
   };
 }

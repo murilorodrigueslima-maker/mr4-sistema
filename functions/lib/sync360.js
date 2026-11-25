@@ -24,7 +24,12 @@ const PERFIS_360_COLLECTION = 'perfis_360';
 const SYNC_STATE_COLLECTION = 'sync_state';
 const SYNC_STATE_DOC        = 'perfil360';
 const HISTORICO_INICIO      = '2022-03-24';
-const CURSOR_OVERLAP_SECS   = 60;  // 1 minuto de margem para evitar perda no mesmo segundo
+const CURSOR_OVERLAP_SECS   = 60;
+// Etapa C — leitura incremental por DIA (`data_modificado_inicio`, parâmetro documentado e comprovado; `modificado_desde` é IGNORADO pela API).
+const DIA_MS                       = 86400000;
+const SOBREPOSICAO_DIAS            = 1;                // lê o dia do cursor − 24 h (o filtro da API é por dia); o filtro local por hora refina
+const RECONCILIACAO_INTERVALO_MS   = 7 * DIA_MS;       // reconciliação periódica: a cada 7 dias…
+const RECONCILIACAO_JANELA_DIAS    = 30;               // …relê os últimos 30 dias (a partir do cursor) para pegar o que a leitura incremental possa ter perdido  // 1 minuto de margem para evitar perda no mesmo segundo
 
 // Tempo máximo que um lock pode ser mantido antes de ser considerado stale.
 // Protege contra travamentos por processo morto sem liberar o lock.
@@ -402,6 +407,7 @@ async function runIncremental({
   firestoreReleaseLock = null,  // (lockId)            → Promise<void>
   dryRun = false,
   dataReferencia,
+  agoraMs,
 }) {
   // ── Lock de concorrência (opcional) ──────────────────────────────────────────
   // Previne corrida entre cursor, mirror e recálculo de perfil quando dois
@@ -420,7 +426,7 @@ async function runIncremental({
       gcFetchPage, firestoreGetClientes, firestoreGetVendasByCliente,
       firestoreGetVendaById, firestoreGetPerfil, firestoreUpsertVendas,
       firestoreUpsertPerfil, firestoreGetSyncState, firestoreSetSyncState,
-      dryRun, dataReferencia,
+      dryRun, dataReferencia, agoraMs,
     });
   } finally {
     if (firestoreReleaseLock && lockId) {
@@ -446,25 +452,45 @@ async function _runIncrementalCore({
   firestoreSetSyncState,
   dryRun,
   dataReferencia,
+  agoraMs: agoraMsInjetado,
 }) {
   // ── Etapa 1: Cursor + Fetch ───────────────────────────────────────────────────
   const syncState  = await firestoreGetSyncState();
   const cursor     = syncState?.modifiedSinceCursor ?? null;
   const fetchSince = cursor ? buildCursorWithOverlap(cursor, CURSOR_OVERLAP_SECS) : null;
+  const agoraMs    = Number.isFinite(agoraMsInjetado) ? agoraMsInjetado : Date.now();
 
-  // Pagina por proxima_pagina (meta.total não é confiável com modificado_desde)
-  const gcParams = fetchSince ? { modificado_desde: fetchSince } : {};
+  // Etapa C: dia-piso enviado à API (cursor − 24 h; na reconciliação periódica, cursor − 30 dias).
+  const ultimaRecon       = Date.parse(syncState?.lastReconciliationAt || '');
+  const reconciliar       = !!cursor && (!Number.isFinite(ultimaRecon) || agoraMs - ultimaRecon > RECONCILIACAO_INTERVALO_MS);
+  const diasAtras         = reconciliar ? RECONCILIACAO_JANELA_DIAS : SOBREPOSICAO_DIAS;
+  const cursorMs          = cursor ? Date.parse(String(cursor).replace(' ', 'T') + 'Z') : NaN;
+  const pisoDia           = cursor && Number.isFinite(cursorMs) ? new Date(cursorMs - diasAtras * DIA_MS).toISOString().slice(0, 10) : null;
+
+  // Pagina por proxima_pagina (meta.total não é confiável com filtro de modificação). Leitura estrita: erro em vez de lote parcial.
+  const gcParams = pisoDia ? { data_modificado_inicio: pisoDia } : {};
   const todasModificadas = await fetchAllPagesByProximaPagina(gcFetchPage, '/vendas', gcParams);
+
+  // Etapa C: PROTEÇÃO CONTRA FILTRO IGNORADO — com `data_modificado_inicio=<dia>` toda linha tem de ter modificado_em ≥ "<dia> 00:00:00".
+  // Se a API ignorar o filtro (devolve o histórico inteiro), ABORTA com alerta e PRESERVA o cursor (nada é gravado).
+  if (pisoDia) {
+    const v = require('./gcHttp').verificarFiltroModificacao(todasModificadas, { pisoDia });
+    if (v.filtroIgnorado) { const e = new Error(`FILTRO_INCREMENTAL_IGNORADO: ${v.violacoes} de ${v.total} linhas anteriores a ${pisoDia}`); e.codigo = 'FILTRO_INCREMENTAL_IGNORADO'; throw e; }
+  }
 
   // API GestãoClick filtra por DATA apenas (não datetime). Filtro local garante
   // precisão do cursor e elimina registros espúrios para datas futuras extremas.
-  const modifiedVendas = fetchSince
-    ? todasModificadas.filter(v => (v.modificado_em || '') >= fetchSince)
-    : todasModificadas;
+  const modifiedVendas = reconciliar
+    ? todasModificadas                                                    // reconciliação: tudo da janela de 30 dias (idempotente: upsert por id)
+    : fetchSince
+      ? todasModificadas.filter(v => (v.modificado_em || '') >= fetchSince)
+      : todasModificadas;
 
   if (modifiedVendas.length === 0) {
     // Sem delta: cursor mantém valor atual — nenhum modificado_em novo processado.
-    return { creates: 0, updates: 0, unchanged: 0, modifiedVendas: 0, newCursor: cursor, cursorAdvanced: false };
+    // Reconciliação concluída sem nada a fazer: só registra a data (para não repetir a cada ciclo).
+    if (reconciliar && !dryRun) await firestoreSetSyncState({ ...(syncState || {}), lastReconciliationAt: new Date(agoraMs).toISOString() });
+    return { creates: 0, updates: 0, unchanged: 0, modifiedVendas: 0, newCursor: cursor, cursorAdvanced: false, reconciliacao: reconciliar };
   }
 
   // Produtos UMA VEZ (não por cliente)
@@ -541,6 +567,7 @@ async function _runIncrementalCore({
     modifiedVendas: modifiedVendas.length,
     newCursor,        // cursor que SERIA/FOI persistido — disponível em dry-run
     cursorAdvanced: false,
+    reconciliacao: reconciliar,
     dryRun,
   };
 
@@ -560,6 +587,7 @@ async function _runIncrementalCore({
     ...(syncState || {}),
     modifiedSinceCursor: newCursor,
     lastIncrementalAt:   new Date().toISOString(),
+    ...(reconciliar ? { lastReconciliationAt: new Date(agoraMs).toISOString() } : {}),
     engineVersion:       VERSAO_ENGINE,
   });
 

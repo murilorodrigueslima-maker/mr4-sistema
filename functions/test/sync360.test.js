@@ -351,7 +351,7 @@ test('SYNC360-20: runBootstrap dryRun=true NÃO chama firestoreSetSyncState', as
 test('SYNC360-21: runIncremental retorna zero counts quando gcFetchPage retorna vazio', async () => {
   const adapters = mkAdapters();
   adapters.gcFetchPage.mockResolvedValue({ data: [], meta: {} });
-  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: '2026-09-14 12:00:00' });
+  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: '2026-09-14 12:00:00', lastReconciliationAt: new Date().toISOString() });
 
   const r = await runIncremental(adapters);
   expect(r.modifiedVendas).toBe(0);
@@ -421,15 +421,16 @@ test('SYNC360-24: runIncremental passa cursor com overlap para gcFetchPage', asy
   const adapters = mkAdapters({ dryRun: false });
   adapters.gcFetchPage.mockResolvedValue({ data: [], meta: {} });
   adapters.firestoreGetSyncState.mockResolvedValue({
-    modifiedSinceCursor: '2026-09-15 12:01:00',
+    modifiedSinceCursor: '2026-09-15 12:01:00', lastReconciliationAt: new Date().toISOString(),
   });
 
   await runIncremental(adapters);
 
-  // Deve ter chamado gcFetchPage com modificado_desde = cursor - 60s
+  // Etapa C: a API recebe o DIA do cursor − 24 h (data_modificado_inicio); `modificado_desde` é ignorado pela API e não é mais enviado.
   const firstCall = adapters.gcFetchPage.mock.calls[0];
   const params    = firstCall[1];
-  expect(params.modificado_desde).toBe('2026-09-15 12:00:00');
+  expect(params.data_modificado_inicio).toBe('2026-09-14');
+  expect(params.modificado_desde).toBeUndefined();
 });
 
 // ── SYNC360-24b: filtro defensivo local elimina vendas antes do cursor efetivo ─
@@ -447,7 +448,7 @@ test('SYNC360-24b: filtro local remove vendas com modificado_em antes do cursorE
     .mockResolvedValueOnce({ data: [], meta: {} });                         // /produtos
 
   adapters.firestoreGetSyncState.mockResolvedValue({
-    modifiedSinceCursor: '2026-09-15 12:01:00',
+    modifiedSinceCursor: '2026-09-15 12:01:00', lastReconciliationAt: new Date().toISOString(),
   });
   adapters.firestoreGetClientes.mockResolvedValue([mkCliente('docA', '1')]);
   adapters.firestoreGetVendasByCliente.mockResolvedValue([]);

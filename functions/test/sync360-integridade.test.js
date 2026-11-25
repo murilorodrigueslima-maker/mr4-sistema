@@ -21,7 +21,7 @@ function adaptadores(gcFetchPage, cursor) {
     firestoreGetPerfil: jest.fn().mockResolvedValue(null),
     firestoreUpsertVendas: jest.fn(async vs => { w.vendas.push(...vs); }),
     firestoreUpsertPerfil: jest.fn(async (id, p) => { w.perfis[id] = p; }),
-    firestoreGetSyncState: jest.fn().mockResolvedValue(cursor ? { modifiedSinceCursor: cursor } : null),
+    firestoreGetSyncState: jest.fn().mockResolvedValue(cursor ? { modifiedSinceCursor: cursor, lastReconciliationAt: new Date().toISOString() } : null),
     firestoreSetSyncState: jest.fn(async d => { w.syncState = d; }),
     dryRun: false, dataReferencia: '2026-11-22', _w: w,
   };
@@ -106,19 +106,13 @@ const aPartirDoCursor = HISTORICO.filter(v => v.modificado_em >= '2026-11-20 09:
 describe('A1 #5 — filtro incremental IGNORADO pela API (resolvido na Etapa C; o detector puro já existe em gcHttp)', () => {
   let ad, out;
   beforeAll(async () => { ad = adaptadores(gcQueIgnoraOFiltro(), CURSOR); out = await executar(ad); });
-  test('precondição: o código envia o parâmetro ignorado `modificado_desde` e a API devolve o histórico inteiro', () => {
-    expect(ad.gcFetchPage.mock.calls.find(c => c[0] === '/vendas')[1].modificado_desde).toBe('2026-11-20 09:59:00');
+  test('precondição: o código envia o parâmetro VÁLIDO `data_modificado_inicio` (dia do cursor − 24 h) e a API (simulada) ignora o filtro e devolve o histórico inteiro', () => {
+    const p = ad.gcFetchPage.mock.calls.find(c => c[0] === '/vendas')[1];
+    expect(p.data_modificado_inicio).toBe('2026-11-19'); expect(p.modificado_desde).toBeUndefined();
     expect(HISTORICO).toHaveLength(450);
   });
-  test('CARACTERIZAÇÃO (defeito atual): 5 páginas lidas em silêncio (histórico inteiro); só o filtro LOCAL evita erro — nenhum alerta, execução normal', () => {
-    const paginas = ad.gcFetchPage.mock.calls.filter(c => c[0] === '/vendas').map(c => c[1].pagina);
-    expect(paginas).toEqual([1, 2, 3, 4, 5]);
-    expect(out.erro).toBeNull(); expect(out.r.modifiedVendas).toBe(aPartirDoCursor.length); expect(out.r.cursorAdvanced).toBe(true);
-    expect(out.r.alerta).toBeUndefined();
-  });
-  defeito('DESEJADO (Etapa C): filtro ignorado ⇒ ABORTA com alerta FILTRO_INCREMENTAL_IGNORADO e PRESERVA o cursor', async () => {
-    const ad2 = adaptadores(gcQueIgnoraOFiltro(), CURSOR); const o = await executar(ad2);
-    expect(o.erro && o.erro.codigo).toBe('FILTRO_INCREMENTAL_IGNORADO');
-    expect(ad2.firestoreSetSyncState).not.toHaveBeenCalled();
+  test('Etapa C (corrigido): filtro ignorado ⇒ ABORTA com FILTRO_INCREMENTAL_IGNORADO, sem gravar e PRESERVANDO o cursor', () => {
+    expect(out.erro && out.erro.codigo).toBe('FILTRO_INCREMENTAL_IGNORADO');
+    expect(ad.firestoreSetSyncState).not.toHaveBeenCalled(); expect(ad.firestoreUpsertVendas).not.toHaveBeenCalled(); expect(ad.firestoreUpsertPerfil).not.toHaveBeenCalled();
   });
 });

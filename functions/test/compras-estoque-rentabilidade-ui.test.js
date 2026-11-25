@@ -22,7 +22,7 @@ async function tela({ sugestoes, custos, custosNegado = false, html = HTML }) {
   const ctx = { console, Date, Number, String, Object, Math, JSON, Promise, Set, Map, Array, Error, performance: { now: () => 0 }, setTimeout, clearTimeout,
     document: { getElementById: id => (els[id] = els[id] || el()), querySelectorAll: () => [], querySelector: () => el(), addEventListener() {} },
     window: { location: {}, ComprasSimulador: Sim }, initializeApp: () => ({}), getAuth: () => ({}), getFirestore: () => ({}), signOut: async () => {}, verificarAcessoModulo: async () => true,
-    onAuthStateChanged: (a, f) => { cb = f; }, doc: (_, c, i) => c + '/' + i,
+    onAuthStateChanged: (a, f) => { cb = f; }, observarAtualizacao: () => {}, statusPadrao: () => () => {}, onSnapshot: () => () => {}, doc: (_, c, i) => c + '/' + i,
     getDoc: async k => { leituras.push(k); if (k === 'compras_n0_view/custos' && custosNegado) throw new Error('permission-denied'); return { exists: () => k in docs, data: () => docs[k] }; } };
   ctx.globalThis = ctx; vm.createContext(ctx);
   vm.runInContext(script(html) + '\n;globalThis.__E = estado; globalThis.__R = render;', ctx);

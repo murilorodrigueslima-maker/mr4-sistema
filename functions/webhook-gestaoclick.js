@@ -32,5 +32,7 @@ exports.gcWebhookProcessar = onDocumentCreated({ document: `${R.COL_EVENTOS}/{id
   const cfg = await lerConfig(); const evDoc = (await db.collection(R.COL_EVENTOS).doc(ev.params.id).get()).data() || {};
   const { GoogleAuth } = require('google-auth-library');
   const dispararJob = async () => { const c = await new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] }).getClient(); await c.request({ url: 'https://run.googleapis.com/v2/projects/mr4-ponto/locations/southamerica-east1/jobs/mr4-sync-job:run', method: 'POST', data: { overrides: { containerOverrides: [{ env: [{ name: 'MODO_SUJOS', value: '1' }] }] } } }); };
-  const ef = await require('./lib/refreshFila').aplicarModo({ db, modo: cfg.modo, evento: evDoc.evento, dispararJob }); if (ef.efeito) logger.info('WEBHOOK_GC_BLOCOS_MARCADOS', { blocos: ef.blocos });
+  // Financeiro (fin_n1): pede o financeiroSync existente via Cloud Scheduler (jobs:run). Exige permissão específica concedida SÓ na aprovação do ATIVO; sem ela falha de forma inócua.
+  const dispararFinanceiro = async () => { const c = await new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] }).getClient(); await c.request({ url: 'https://cloudscheduler.googleapis.com/v1/projects/mr4-ponto/locations/southamerica-east1/jobs/firebase-schedule-financeiroSync-southamerica-east1:run', method: 'POST', data: {} }); };
+  const ef = await require('./lib/refreshFila').aplicarModo({ db, modo: cfg.modo, evento: evDoc.evento, dispararJob, dispararFinanceiro }); if (ef.efeito) logger.info('WEBHOOK_GC_BLOCOS_MARCADOS', { blocos: ef.blocos });
 });

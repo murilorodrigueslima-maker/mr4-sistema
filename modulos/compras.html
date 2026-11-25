@@ -323,8 +323,9 @@
 <script type="module">
 import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc }            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, onSnapshot }            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { verificarAcessoModulo } from '../js/guard.js';
+import { observarAtualizacao, statusPadrao } from '../js/vivo.js';
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -355,12 +356,7 @@ const fmt = n => (n === null || n === undefined) ? '—' : Number(n).toLocaleStr
 const brl = c => (c === null || c === undefined) ? '—' : (c / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const COB = { COVERAGE_CRITICAL: ['crítica', 'CRITICAL'], COVERAGE_LOW: ['baixa', 'LOW'], COVERAGE_OK: ['ok', 'OK'], COVERAGE_EXCESS: ['excesso', 'EXCESS'], CURRENT_STOCKOUT: ['ruptura', 'STOCKOUT'], NEGATIVE_STOCK: ['negativo', 'NEGATIVE'], INSUFFICIENT_HISTORY: ['histórico curto', 'INS'], NO_DEMAND_OBSERVED: ['sem demanda', 'ND'] };
 
-onAuthStateChanged(auth, async user => {
-  if (!user) { window.location.href = '../login.html'; return; }
-  if (!await verificarAcessoModulo(db, user.uid, 'compras')) { await signOut(auth); window.location.href = '../login.html'; return; }
-  const nome = user.displayName || (user.email || '').split('@')[0] || '?';
-  document.getElementById('userName').textContent = nome;
-  document.getElementById('userAvatar').textContent = nome[0].toUpperCase();
+async function carregarCompras() {
   const t0 = performance.now();
   try {
     const [vSnap, mSnap] = await Promise.all([getDoc(doc(db, 'compras_n0_view', 'sugestoes')), getDoc(doc(db, 'compras_n0', 'meta'))]);
@@ -379,10 +375,21 @@ onAuthStateChanged(auth, async user => {
   } catch (e) {
     document.getElementById('lista').innerHTML = `<div class="vazio">Sem permissão para ver as sugestões de compra (o perfil precisa do módulo Estoque) ou dados indisponíveis.</div>`;
   }
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = '../login.html'; return; }
+  if (!await verificarAcessoModulo(db, user.uid, 'compras')) { await signOut(auth); window.location.href = '../login.html'; return; }
+  const nome = user.displayName || (user.email || '').split('@')[0] || '?';
+  document.getElementById('userName').textContent = nome;
+  document.getElementById('userAvatar').textContent = nome[0].toUpperCase();
+  await carregarCompras();
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('sidebar').style.display = '';
   document.getElementById('mainContent').style.display = '';
   liberarAgente();   // segundo plano: a página nunca espera nem depende do agente
+  // atualização ao vivo: 1 listener em compras_n0_view/sugestoes (marcador gerado_em); ao mudar, roda o MESMO carregador (filtros/aba/ordem ficam em `estado`)
+  observarAtualizacao({ db, fns: { onSnapshot, doc }, colecao: 'compras_n0_view', id: 'sugestoes', marcador: d => d.gerado_em, aoMudar: carregarCompras, aoStatus: statusPadrao() });
 });
 
 function montarCabecalho(v, meta) {

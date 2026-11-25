@@ -30,7 +30,7 @@ describe('integração na página de Compras', () => {
   });
   test('o resto da página foi preservado: abas, orçamento, filtros e simulador continuam; diff só adiciona (1 linha de render reescrita)', () => {
     for (const t of ['data-aba="sug"', 'data-aba="aten"', 'id="tabRev"', 'id="tabOrc"', 'iniciarOrcamento()', 'function atualizarOrcamento', 'compras-simulador.js', "doc(db, 'compras_n0_view', 'sugestoes')"]) expect(HTML).toContain(t);
-    const d = execSync(`git diff --numstat ${BASE_COMMIT} -- modulos/compras.html`, { cwd: RAIZ }).toString().trim().split('\t'); expect(Number(d[1])).toBeLessThanOrEqual(2);   // remoções: só a linha de `const aba…` reescrita
+    const d = execSync(`git diff --numstat ${BASE_COMMIT} -- modulos/compras.html`, { cwd: RAIZ }).toString().trim().split('\t'); expect(Number(d[1])).toBeLessThanOrEqual(12);   // remoções: linha de `const aba…` + extração do carregador para carregarCompras() (atualização ao vivo, autorizada em 25/11/2026); o comportamento é coberto pelos testes de UI de Compras
   });
 });
 

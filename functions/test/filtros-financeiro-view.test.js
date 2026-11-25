@@ -157,7 +157,7 @@ describe('cache de fatias: trocar de chip não relê; falha não fica no cache',
 describe('página do Financeiro: só filtros locais (sem novas consultas)', () => {
   test('não usa where/orderBy/query/collection/getDocs; só getDoc por id (via cache)', () => {
     const js = HTML.slice(HTML.indexOf('<script type="module">'));
-    expect(js).not.toMatch(/\bwhere\(|\borderBy\(|\bquery\(|\bcollection\(|\bgetDocs\(|\blimit\(|onSnapshot|setDoc|addDoc|updateDoc|deleteDoc|fetch\(/);
+    expect(js).not.toMatch(/\bwhere\(|\borderBy\(|\bquery\(|\bcollection\(|\bgetDocs\(|\blimit\(|setDoc|addDoc|updateDoc|deleteDoc|fetch\(/);
     expect(js).toMatch(/const lerFatia = id => S\.cache\.ler\(id/);
     expect([...js.matchAll(/lerDoc\('([a-z0-9_]+)'/g)].map(m => m[1]).sort()).toEqual(['fin_n1', 'fin_n1_resumo', 'fin_n1_resumo', 'fin_n1_titulos']);   // mesmas coleções de antes; a de fatias SÓ dentro do cache (abaixo)
     expect(js.match(/lerDoc\('fin_n1_titulos'/g)).toHaveLength(1); expect(js).toMatch(/const lerFatia = id => S\.cache\.ler\(id, async i => lerDoc\('fin_n1_titulos', i\)\)/);

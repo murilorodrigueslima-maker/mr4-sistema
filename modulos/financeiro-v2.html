@@ -94,7 +94,7 @@ th.ord{cursor:pointer;user-select:none}th.ord:hover{color:var(--text)}
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, onSnapshot, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
 
 // Configuração pública do app Firebase (não é segredo; igual às demais páginas). Esta página só LÊ o Firestore protegido:
@@ -379,6 +379,9 @@ onAuthStateChanged(auth, async u => {
     // Gate do piloto (frontend): a aba só aparece se o BACKEND confirmar (a proteção real fica em aiAgente; esconder a aba nunca é a proteção).
     window.AgenteIaWidget.liberarSePermitido(chamarAgente, 'finance', () => { $('tabAgente').hidden = false; });
   } catch (e) { location.href = '../login.html'; return; }
+  await carregarFin();
+});
+async function carregarFin() {
   try {
     S.ativo = await lerDoc('fin_n1', 'active');
     if (!S.ativo) { S.erro = 'O Financeiro ainda não tem dados sincronizados.'; render(); return; }
@@ -387,7 +390,10 @@ onAuthStateChanged(auth, async u => {
     if (!v.ok) { S.resumo = null; S.erro = 'Os dados financeiros estão indisponíveis no momento (' + v.motivo + ').'; render(); return; }
   } catch (e) { S.erro = (e && e.code === 'permission-denied') ? 'Você não tem acesso ao Financeiro.' : 'Não foi possível carregar o Financeiro.'; render(); return; }
   render();
-});
+}
+// atualização ao vivo: 1 listener em fin_n1/active (ponteiro da geração publicada); ao trocar a geração recarrega com o MESMO carregador (permissões = as de leitura atuais)
+import('../js/vivo.js').then(({ observarAtualizacao, statusPadrao }) => observarAtualizacao({ db, fns: { onSnapshot, doc }, colecao: 'fin_n1', id: 'active', marcador: d => d.geracao, aoStatus: statusPadrao(),
+  aoMudar: async () => { S.erro = null; S.entidades = null; await carregarFin(); } })).catch(() => {});
 </script>
 </body>
 </html>

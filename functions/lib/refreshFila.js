@@ -44,11 +44,13 @@ async function temSujos({ db }) { const s = await db.collection(COL).doc(DOC).ge
  * Efeito OPERACIONAL do webhook: só no modo ATIVO (que exige aprovação do proprietário e nunca é o padrão). Em DESLIGADO/RECEPCAO/SOMBRA
  * a fila não é tocada. `dispararJob` inicia o Cloud Run Job em MODO_SUJOS (a trava compartilhada garante uma execução por vez).
  */
-async function aplicarModo({ db, modo, evento, dispararJob, agoraMs = Date.now() }) {
+async function aplicarModo({ db, modo, evento, dispararJob, dispararFinanceiro, agoraMs = Date.now() }) {
   if (modo !== 'ATIVO') return { efeito: false, blocos: [] };
   const blocos = await marcarSujo({ db, evento, agoraMs });
   if (blocos.length) { try { await dispararJob(); } catch (_) { /* inócuo: os blocos continuam marcados; o sync de 2 h reconcilia */ } }
-  return { efeito: blocos.length > 0, blocos };
+  let financeiroN1 = null;
+  if (dispararFinanceiro) { try { financeiroN1 = (await require('./financeiroGatilho').solicitar({ db, evento, disparar: dispararFinanceiro, agoraMs })).acao; } catch (_) { financeiroN1 = 'FALHA'; } }
+  return financeiroN1 === null ? { efeito: blocos.length > 0, blocos } : { efeito: blocos.length > 0, blocos, financeiroN1 };
 }
 
 module.exports = { aplicarModo, COL, DOC, BLOCOS_POR_EVENTO, BLOCOS_VALIDOS, marcarSujo, reclamarSujos, temSujos };

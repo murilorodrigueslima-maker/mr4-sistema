@@ -880,6 +880,11 @@ service cloud.firestore {
       allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
       allow write: if false;
     }
+    // Sinalizador de atualização ao vivo do CRM Gestão (só marca "mudou"; sem dados de cliente; escrita só por backend).
+    match /crm_gestao_versao/{id} {
+      allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');
+      allow write: if false;
+    }
 
     match /{document=**} {
       allow read, write: if false;

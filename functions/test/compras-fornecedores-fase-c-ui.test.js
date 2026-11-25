@@ -54,7 +54,7 @@ async function tela({ unidades, valores, valoresNegado = false, unidadesNegado =
   const ctx = { console, Date: Data, Number, String, Object, Math, JSON, Promise, Set, Map, Array, Error, performance: { now: () => 0 }, setTimeout, clearTimeout, fetch: (...a) => { redes.push(a[0]); throw new Error('REDE_PROIBIDA'); },
     document: { getElementById: id => (els[id] = els[id] || elemento(id)), querySelectorAll: () => [], querySelector: () => elemento('q'), addEventListener(t, f) { teclas[t] = f; }, body: { classList: { toggle(c, on) { if (on) corpo.add(c); else corpo.delete(c); }, remove(c) { corpo.delete(c); } } } },
     window: { location: {}, ComprasSimulador: Sim }, initializeApp: () => ({}), getAuth: () => ({}), getFirestore: () => ({}), signOut: async () => {}, verificarAcessoModulo: async () => true,
-    onAuthStateChanged: (a, f) => { cb = f; }, doc: (_, c, i) => c + '/' + i,
+    onAuthStateChanged: (a, f) => { cb = f; }, observarAtualizacao: () => {}, statusPadrao: () => () => {}, onSnapshot: () => () => {}, doc: (_, c, i) => c + '/' + i,
     getDoc: async k => { leituras.push(k);
       if (k === 'compras_n0_view/custos') throw new Error('permission-denied');
       if (k === 'compras_n0_fornecedores/valores' && valoresNegado) throw new Error('permission-denied');

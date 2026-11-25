@@ -13,8 +13,10 @@ async function reativacaoGestaoHandler(request, opts = {}) {
   const d = request.data; if (!d || typeof d !== 'object' || Array.isArray(d) || !PERMITIDOS[d.acao]) throw new HttpsError('invalid-argument', 'ACAO_INVALIDA');
   const extras = Object.keys(d).filter(k => !PERMITIDOS[d.acao].includes(k)); if (extras.length) throw new HttpsError('invalid-argument', 'CAMPOS_NAO_PERMITIDOS: ' + extras.join(', '));
   const admin = require('firebase-admin'); const store = opts.db || admin.firestore(); const FV = admin.firestore.FieldValue; const agoraIso = (opts.now ? opts.now() : new Date()).toISOString(); const operadorUid = request.auth.uid;
-  if (d.acao === 'naoContatar') { const r = await RESTR.definirNaoContatar(store, FV, { ...d, operadorUid, agoraIso }); return { ok: true, repetido: r.repetido, naoContatar: r.estado ? r.estado.naoContatar : null }; }
-  if (d.acao === 'devolucao') { const r = await DEV.registrarDevolucao(store, FV, { ...d, operadorUid, agoraIso }); return { ok: true, repetido: r.repetido, reversaoPodeSerNecessaria: !!r.reversaoPodeSerNecessaria }; }
+  // Sinalizador de atualização ao vivo da tela de gestão: UM documento pequeno (sem dados de cliente); melhor-esforço, nunca falha a operação.
+  const sinalizar = async () => { try { await store.collection('crm_gestao_versao').doc('estado').set({ versao: agoraIso, acao: d.acao }); } catch (_) { /* a tela continua com o botão Atualizar */ } };
+  if (d.acao === 'naoContatar') { const r = await RESTR.definirNaoContatar(store, FV, { ...d, operadorUid, agoraIso }); await sinalizar(); return { ok: true, repetido: r.repetido, naoContatar: r.estado ? r.estado.naoContatar : null }; }
+  if (d.acao === 'devolucao') { const r = await DEV.registrarDevolucao(store, FV, { ...d, operadorUid, agoraIso }); await sinalizar(); return { ok: true, repetido: r.repetido, reversaoPodeSerNecessaria: !!r.reversaoPodeSerNecessaria }; }
   if (d.acao === 'venda') {                                                                  // consulta para a gestão conferir a venda CORRETA antes de registrar devolução (sem nome/contato do cliente)
     await OWN.autorizarRevisor(store, operadorUid);
     if (!/^\d{1,20}$/.test(String(d.vendaId))) throw new HttpsError('invalid-argument', 'vendaId inválido');
@@ -29,6 +31,6 @@ async function reativacaoGestaoHandler(request, opts = {}) {
     const rev = await store.collection('carteira_comercial_revisoes').where('estado', '==', 'PENDENTE').get(); const inv = await VND.varrerInvalidacoes(store, FV, { hoje: agoraIso.slice(0, 10), agoraIso, executar: false });
     return { ok: true, revisoesAbertas: rev.docs.map(x => ({ id: x.id, tipo: x.data().tipo, portfolioId: x.data().portfolioId, vendaId: x.data().vendaId, motivos: x.data().motivos, criadoEm: x.data().criadoEm })), invalidacoes: inv };
   }
-  const r = await REV.executarReversao(store, FV, { ...d, operadorUid, agoraIso }); return { ok: true, status: r.status, motivos: r.motivos || null };
+  const r = await REV.executarReversao(store, FV, { ...d, operadorUid, agoraIso }); await sinalizar(); return { ok: true, status: r.status, motivos: r.motivos || null };
 }
 module.exports = { reativacaoGestaoHandler, PERMITIDOS };

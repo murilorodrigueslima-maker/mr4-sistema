@@ -882,7 +882,7 @@ async function registrarHeartbeat(blocos, inicioTotal, duracoes) {
   await registrarHeartbeat(blocos, inicioTotal, duracoes);
   // Resumo estruturado (só códigos e contagens — sem dados pessoais) e STATUS DO WORKFLOW: qualquer falha ⇒ erro
   // RESUMO_SYNC: SÓ bloco/código/motivo(enum)/duração. Nenhuma contagem de negócio, valor ou dado pessoal.
-  log.info('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo, motivo: f.detalhe && /^[A-Z0-9_]{3,60}$/.test(f.detalhe) ? f.detalhe : undefined })), avisos, duracaoMs: Date.now() - inicioTotal, duracoesMs: duracoes }));
+  log.info('RESUMO_SYNC ' + JSON.stringify({ ok: falhas.length === 0, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo, motivo: f.detalhe && /^[A-Z0-9_]{3,60}$/.test(f.detalhe) ? f.detalhe : undefined })), avisos, duracaoMs: Date.now() - inicioTotal, duracoesMs: duracoes, requisicoesGc: gcCliente.estatisticas().chamadas, retentativasGc: gcCliente.estatisticas().retries }));   // só contagens técnicas da camada HTTP
   if (falhas.length) {
     process.exitCode = 1;
     log.erro(`❌ Sync concluído COM ${falhas.length} falha(s): ${falhas.map(f => f.bloco + ':' + f.codigo).join(', ')}`);

@@ -44,7 +44,7 @@ describe.each(MODOS)('A2.2 — log do modo %s', modo => {
   test('nenhum número solto no log (fora hora do sync, códigos e RESUMO_SYNC)', () => { const sobra = semPermitido(r.log).split('\n').filter(l => /\d/.test(l)); expect(sobra).toEqual([]); });
   test('RESUMO_SYNC só com bloco/código/motivo/duração', () => {
     const l = r.log.split('\n').find(x => x.startsWith('RESUMO_SYNC ')); expect(l).toBeTruthy(); const j = JSON.parse(l.slice(12));
-    expect(Object.keys(j).sort()).toEqual(['avisos', 'duracaoMs', 'duracoesMs', 'falhas', 'ok']);
+    expect(Object.keys(j).sort()).toEqual(['avisos', 'duracaoMs', 'duracoesMs', 'falhas', 'ok', 'requisicoesGc', 'retentativasGc']);
     for (const f of j.falhas) { expect(Object.keys(f).every(k => ['bloco', 'codigo', 'motivo'].includes(k))).toBe(true); expect(f.codigo).toMatch(/^[A-Z0-9_]+$/); if (f.motivo) expect(f.motivo).toMatch(/^[A-Z0-9_]+$/); }
     expect(Number.isFinite(j.duracaoMs)).toBe(true); expect(Object.keys(j.duracoesMs).sort()).toEqual(['catalogo', 'estoque', 'financeiro', 'pedidos', 'perfil360', 'vendas']);
     for (const v of Object.values(j.duracoesMs)) expect(Number.isFinite(v)).toBe(true);

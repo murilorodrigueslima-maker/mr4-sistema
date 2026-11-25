@@ -98,3 +98,50 @@ describe('privacidade e processamento em sombra', () => {
     expect(src).not.toMatch(/painel_cache|pedidos_cache|financeiro_cache|vendas_gc|expedicao_pedidos/);
   });
 });
+
+describe('sombra: reprocessamento, comparação com o polling, silêncio e proteção contra exclusão', () => {
+  const dbCom = eventos => { const st = { ...eventos }; const q = { where: () => q, limit: () => q, get: async () => ({ docs: Object.entries(st).filter(([, v]) => v.status === q._s).map(([id, v]) => ({ id, data: () => v })) }) };
+    return { st, collection: () => Object.assign(q, { doc: id => ({ get: async () => ({ exists: !!st[id], data: () => st[id] }), set: async (d) => { st[id] = { ...(st[id] || {}), ...d }; } }) }) }; };
+  test('pendente cuja consulta falha é tentado até 5 vezes e depois fica SOMBRA_FALHA (nunca apagado)', async () => {
+    const db = dbCom({ e1: { status: 'PENDENTE_SOMBRA', recurso: 'vendas', registro_id: '1', recebido_ms: 0, tentativas_sombra: 5 } });
+    const col = db.collection(); col._s = 'PENDENTE_SOMBRA';
+    const r = await W.reprocessarPendentes({ db, buscar: async () => { throw new Error('x'); }, agora: () => 10 * 3600000 });
+    expect(r.falhas).toBe(1); expect(db.st.e1.status).toBe('SOMBRA_FALHA'); expect(db.st.e1).toBeDefined();
+  });
+  test('comparação com o polling: conta presentes, ausentes (cedo × após atraso), origem indisponível e loja divergente', async () => {
+    const base = { status: 'SOMBRA_CONCLUIDA', recurso: 'vendas', recebido_ms: 0 };
+    const db = dbCom({ a: { ...base, registro_id: '1', resultado: 'CONFERIDO' }, b: { ...base, registro_id: '2', resultado: 'CONFERIDO', recebido_ms: 9 * 3600000 }, c: { ...base, registro_id: '3', resultado: 'CONFERIDO' }, d: { ...base, registro_id: '4', resultado: 'ORIGEM_INDISPONIVEL' }, e: { ...base, registro_id: '5', resultado: 'LOJA_DIVERGENTE' } });
+    db.collection()._s = 'SOMBRA_CONCLUIDA';
+    const r = await W.compararComPolling({ db, existeNoPolling: async (_r, id) => id === '1', agora: () => 10 * 3600000 });
+    expect(r).toEqual({ total: 5, no_polling: 1, ausente_ainda_cedo: 1, ausente_apos_atraso: 1, origem_indisponivel: 1, loja_divergente: 1 });
+  });
+  test('silêncio de 24 h só alerta com SOMBRA/ATIVO', () => {
+    expect(W.avaliarSilencio({ modo: 'DESLIGADO', ultimoEventoMs: 0, agoraMs: 99 * 3600000 }).alerta).toBe(false);
+    expect(W.avaliarSilencio({ modo: 'SOMBRA', ultimoEventoMs: 0, agoraMs: 25 * 3600000 }).alerta).toBe(true);
+    expect(W.avaliarSilencio({ modo: 'SOMBRA', ultimoEventoMs: 3600000, agoraMs: 5 * 3600000 }).alerta).toBe(false);
+    expect(W.avaliarSilencio({ modo: 'ATIVO', ultimoEventoMs: null, agoraMs: 1 }).motivo).toBe('NUNCA_RECEBEU');
+  });
+  test('proteção contra exclusões indevidas: o módulo NÃO tem delete/update destrutivo; evento excluído na origem só vira sinalização', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'lib', 'webhooks', 'receptor.js'), 'utf8');
+    expect(src).not.toMatch(/\.delete\(|\.remove\(|recursiveDelete|FieldValue\.delete/);
+    const fn = require('fs').readFileSync(require('path').join(__dirname, '..', 'webhook-gestaoclick.js'), 'utf8'); expect(fn).not.toMatch(/\.delete\(|\.remove\(/);
+  });
+});
+
+describe('HTTP local com eventos sintéticos (sem rede externa)', () => {
+  const http = require('http');
+  test('servidor real: aceita assinado, rejeita adulterado, é idempotente e responde rápido (< 5 s; típico ms)', async () => {
+    const db = fakeDb({ modo: 'SOMBRA' }); const lerConfig = W.criarLeitorConfig({ db });
+    const srv = http.createServer((rq, rs) => { const ch = []; rq.on('data', c => ch.push(c)); rq.on('end', async () => {
+      const r = await W.tratarRequisicao({ req: { metodo: rq.method, cabecalhos: rq.headers, corpoCru: Buffer.concat(ch) }, db, segredo: SEG, lerConfig, serverTimestamp: () => 'TS' });
+      rs.writeHead(r.status, { 'content-type': 'application/json' }); rs.end(JSON.stringify(r.corpo)); }); });
+    await new Promise(r => srv.listen(0, '127.0.0.1', r)); const porta = srv.address().port;
+    const t = Math.floor(Date.now() / 1000);
+    const post = async (corpo, extra = {}) => { const ini = Date.now(); const cru = JSON.stringify(corpo); const resp = await fetch(`http://127.0.0.1:${porta}/`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-webhook-id': corpo.id, 'x-webhook-evento': corpo.evento, 'x-webhook-tentativa': '1', 'x-webhook-assinatura': assinar(cru, t), ...extra }, body: cru }); return { status: resp.status, j: await resp.json(), ms: Date.now() - ini }; };
+    const a = await post(aviso({ id: 'sint-1' })); const dup = await post(aviso({ id: 'sint-1' })); const adul = await post(aviso({ id: 'sint-2' }), { 'x-webhook-assinatura': assinar('{}', t) });
+    const outra = await post(aviso({ id: 'sint-3', loja_id: '424483' }));
+    srv.close();
+    expect([a.status, a.j.codigo]).toEqual([200, 'RECEBIDO']); expect(dup.j.codigo).toBe('DUPLICADO'); expect(adul.status).toBe(401); expect(outra.j.codigo).toBe('LOJA_IGNORADA');
+    expect(Math.max(a.ms, dup.ms, adul.ms, outra.ms)).toBeLessThan(1000); expect(Object.keys(db.st.eventos)).toEqual(['sint-1']);
+  });
+});

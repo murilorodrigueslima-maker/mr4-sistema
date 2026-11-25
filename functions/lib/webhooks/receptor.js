@@ -111,4 +111,46 @@ async function processarSombra({ db, id, buscar, agora = () => Date.now() }) {
   return { ok: true, codigo: resultado };
 }
 
-module.exports = { EVENTOS, MODOS, JANELA_REPLAY_S, COL_EVENTOS, COL_CONFIG, COL_STATUS, verificarAssinatura, normalizarAviso, criarLeitorConfig, tratarRequisicao, processarSombra, sha256 };
+
+/**
+ * Reprocessamento de pendentes em SOMBRA (varredura periódica): eventos cuja consulta falhou (FALHA_CONSULTA) voltam a ser tentados,
+ * no máximo `maxTentativas` vezes; depois ficam SOMBRA_FALHA (visível para conferência — nunca descartados nem apagados).
+ */
+async function reprocessarPendentes({ db, buscar, agora = () => Date.now(), maxTentativas = 5, esperaMinMs = 5 * 60000, limite = 50 }) {
+  const snap = await db.collection(COL_EVENTOS).where('status', '==', 'PENDENTE_SOMBRA').limit(limite).get();
+  let tentados = 0, falhas = 0;
+  for (const doc of snap.docs) {
+    const e = doc.data(); if (agora() - (e.recebido_ms || 0) < esperaMinMs) continue;
+    const n = (e.tentativas_sombra || 0) + 1; tentados++;
+    if (n > maxTentativas) { await db.collection(COL_EVENTOS).doc(doc.id).set({ status: 'SOMBRA_FALHA', resultado: 'FALHA_CONSULTA_DEFINITIVA' }, { merge: true }); falhas++; continue; }
+    await db.collection(COL_EVENTOS).doc(doc.id).set({ tentativas_sombra: n }, { merge: true });
+    await processarSombra({ db, id: doc.id, buscar, agora });
+  }
+  return { tentados, falhas };
+}
+
+/**
+ * Comparação SOMBRA × POLLING: cada evento CONFERIDO de venda deve existir no espelho do polling (`existeNoPolling(recurso, id)`).
+ * Só contagens. Divergências são esperadas por defasagem do polling (a cada ~2 h): `atrasoMs` separa "ainda cedo" de "ausente de fato".
+ */
+async function compararComPolling({ db, existeNoPolling, agora = () => Date.now(), atrasoMs = 3 * 3600000, limite = 500 }) {
+  const snap = await db.collection(COL_EVENTOS).where('status', '==', 'SOMBRA_CONCLUIDA').limit(limite).get();
+  const r = { total: 0, no_polling: 0, ausente_ainda_cedo: 0, ausente_apos_atraso: 0, origem_indisponivel: 0, loja_divergente: 0 };
+  for (const d of snap.docs) {
+    const e = d.data(); r.total++;
+    if (e.resultado === 'ORIGEM_INDISPONIVEL') { r.origem_indisponivel++; continue; }          // venda excluída na origem: preservar histórico, sinalizar (D2) — nada é apagado
+    if (e.resultado === 'LOJA_DIVERGENTE') { r.loja_divergente++; continue; }
+    if (await existeNoPolling(e.recurso, e.registro_id)) r.no_polling++;
+    else if (agora() - (e.recebido_ms || 0) < atrasoMs) r.ausente_ainda_cedo++; else r.ausente_apos_atraso++;
+  }
+  return r;
+}
+
+/** Monitoramento de silêncio: com o webhook ATIVO/SOMBRA, sem nenhum aviso há ≥ 24 h ⇒ alerta (o GC pausa o endereço após falhas repetidas). */
+function avaliarSilencio({ modo, ultimoEventoMs, agoraMs, limiteMs = 24 * 3600000 }) {
+  if (!['SOMBRA', 'ATIVO'].includes(modo)) return { alerta: false, motivo: 'MODO_SEM_MONITORAMENTO' };
+  if (!Number.isFinite(ultimoEventoMs)) return { alerta: true, motivo: 'NUNCA_RECEBEU' };
+  return agoraMs - ultimoEventoMs >= limiteMs ? { alerta: true, motivo: 'SILENCIO_24H' } : { alerta: false, motivo: 'OK' };
+}
+
+module.exports = { reprocessarPendentes, compararComPolling, avaliarSilencio, EVENTOS, MODOS, JANELA_REPLAY_S, COL_EVENTOS, COL_CONFIG, COL_STATUS, verificarAssinatura, normalizarAviso, criarLeitorConfig, tratarRequisicao, processarSombra, sha256 };

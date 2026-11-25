@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Integrações e Credenciais — MR4 Distribuidora</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--orange:#1a73e8;--orange-dk:#1557b0;--bg:#f5f5f5;--white:#FFFFFF;--text:#202124;--muted:#5f6368;--border:#dadce0;--green:#0d904f;--yellow:#e37400;--red:#d93025;--red-bg:rgba(239,68,68,.06);--green-bg:rgba(16,185,129,.08);--yellow-bg:rgba(227,116,0,.08)}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+#loadingScreen{position:fixed;inset:0;background:var(--white);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1rem}
+#loadingScreen .brand{font-size:1.2rem;font-weight:800;color:var(--orange)}
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:.9rem 2rem;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:80}
+.topbar-logo{font-size:1rem;font-weight:800;color:var(--orange)}
+.topbar-div{width:1px;height:18px;background:var(--border)}
+.topbar-title{font-size:.85rem;font-weight:700;letter-spacing:-.2px}
+.topbar-sep{flex:1}
+.btn-back{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none}
+.btn-back:hover{border-color:var(--orange);color:var(--orange)}
+.tabs{display:flex;gap:.25rem;padding:0 2rem;background:var(--white);border-bottom:1px solid var(--border)}
+.tab{padding:.7rem 1rem;font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.tab[aria-current="page"]{color:var(--orange);border-bottom-color:var(--orange)}
+.main{padding:2rem;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:1.25rem}
+.page-title{font-size:1.4rem;font-weight:800;letter-spacing:-.3px}
+.page-sub{font-size:.84rem;color:var(--muted);margin-top:.2rem}
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.card-head{padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.card-title{font-size:.95rem;font-weight:700}
+.card-body{padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.75rem}
+.kv{background:#FAFAFA;border:1px solid var(--border);border-radius:10px;padding:.7rem .9rem}
+.kv .k{font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.kv .v{font-size:.9rem;font-weight:600;margin-top:.2rem;word-break:break-word}
+.badge{display:inline-block;padding:.15rem .6rem;border-radius:20px;font-size:.72rem;font-weight:700}
+.b-ok{background:var(--green-bg);color:var(--green)}.b-warn{background:var(--yellow-bg);color:var(--yellow)}.b-err{background:var(--red-bg);color:var(--red)}.b-off{background:#eee;color:var(--muted)}
+label{font-size:.76rem;font-weight:600;color:var(--muted);display:block;margin-bottom:.25rem}
+input[type=password],input[type=text]{width:100%;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:.84rem;outline:none}
+input:focus{border-color:var(--orange)}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end}.row>*{flex:1;min-width:200px}.row>.btn{flex:0 0 auto;min-width:0}
+.btn{padding:.55rem 1.1rem;border-radius:9px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--white);color:var(--text)}
+.btn:hover{border-color:var(--orange);color:var(--orange)}
+.btn.primary{background:var(--orange);color:#fff;border-color:var(--orange)}.btn.primary:hover{background:var(--orange-dk);color:#fff}
+.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}.btn.danger:hover{background:#b3261e;color:#fff}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.msg{font-size:.8rem;padding:.6rem .8rem;border-radius:8px;display:none}
+.msg.ok{display:block;background:var(--green-bg);color:var(--green)}.msg.err{display:block;background:var(--red-bg);color:var(--red)}.msg.info{display:block;background:var(--yellow-bg);color:var(--yellow)}
+.hint{font-size:.76rem;color:var(--muted)}
+.url{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;word-break:break-all}
+.req{display:flex;gap:.5rem;font-size:.8rem;align-items:flex-start}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--border);background:#FAFAFA}
+td{padding:.6rem .8rem;border-bottom:1px solid var(--border);font-size:.8rem}
+.modos{display:flex;gap:.5rem;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:500;padding:1rem}
+.modal.on{display:flex}.modal-box{background:var(--white);border-radius:14px;padding:1.4rem;max-width:440px;width:100%;display:flex;flex-direction:column;gap:.8rem}
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:900;display:flex;flex-direction:column;gap:.5rem}
+.toast{background:var(--text);color:#fff;padding:.75rem 1.1rem;border-radius:10px;font-size:.8rem;font-weight:600;max-width:320px;border-left:3px solid var(--green)}.toast.err{border-left-color:var(--red)}
+@media(max-width:700px){.topbar,.tabs{padding-left:1rem;padding-right:1rem}.main{padding:1rem}}
+</style>
+</head>
+<body>
+<div id="loadingScreen"><div class="brand">MR4</div><div class="spinner"></div></div>
+<div class="topbar"><span class="topbar-logo">MR4</span><div class="topbar-div"></div><span class="topbar-title">⚙️ Administração</span><div class="topbar-sep"></div><a href="../index.html" class="btn-back">← Sistema</a></div>
+<nav class="tabs" aria-label="Administração"><a class="tab" href="admin.html">Usuários do Sistema</a><a class="tab" href="integracoes.html" aria-current="page">Integrações e Credenciais</a></nav>
+
+<div class="main" id="main" hidden>
+  <div><h1 class="page-title">Integrações e Credenciais</h1>
+  <p class="page-sub">Cadastre e acompanhe as integrações sem usar o terminal. Os segredos ficam somente no Google Secret Manager: depois de salvos, nunca voltam para esta tela.</p></div>
+
+  <div id="semAcesso" class="msg err" role="alert"></div>
+
+  <!-- GestãoClick — API -->
+  <section class="card" id="cardGc" aria-labelledby="tGc">
+    <div class="card-head"><h2 class="card-title" id="tGc">GestãoClick — API</h2><span id="gcBadge" class="badge b-off">—</span></div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="kv"><div class="k">Loja vinculada</div><div class="v" id="gcLoja">—</div></div>
+        <div class="kv"><div class="k">Access Token</div><div class="v" id="gcAcc">—</div></div>
+        <div class="kv"><div class="k">Secret Access Token</div><div class="v" id="gcSec">—</div></div>
+        <div class="kv"><div class="k">Credenciais atualizadas em</div><div class="v" id="gcAtu">—</div></div>
+        <div class="kv"><div class="k">Última conexão bem-sucedida</div><div class="v" id="gcOk">—</div></div>
+        <div class="kv"><div class="k">Versões anteriores preservadas</div><div class="v" id="gcVers">—</div></div>
+      </div>
+      <p class="hint">Somente a loja MR4 DISTRIBUIDORA (ID 262759) é autorizada; consultas à FOCUS PARTS são recusadas. As credenciais novas só substituem as atuais depois de validadas nesta loja.</p>
+      <div class="row">
+        <div><label for="gcAccIn">Novo Access Token</label><input id="gcAccIn" type="password" autocomplete="off" spellcheck="false" placeholder="Cole o Access Token"></div>
+        <div><label for="gcSecIn">Novo Secret Access Token</label><input id="gcSecIn" type="password" autocomplete="off" spellcheck="false" placeholder="Cole o Secret Access Token"></div>
+      </div>
+      <div class="row"><button class="btn primary" id="gcSalvar">Cadastrar / atualizar credenciais</button><button class="btn" id="gcTestar">Testar conexão</button><button class="btn" id="gcReverter">Reverter para a versão anterior</button></div>
+      <div id="gcMsg" class="msg" role="status"></div>
+    </div>
+  </section>
+
+  <!-- GestãoClick — Webhooks -->
+  <section class="card" id="cardWh" aria-labelledby="tWh">
+    <div class="card-head"><h2 class="card-title" id="tWh">GestãoClick — Webhooks</h2><span id="whBadge" class="badge b-off">—</span></div>
+    <div class="card-body">
+      <div><label>URL do receptor (cole no GestãoClick)</label><div class="row"><div class="url kv" id="whUrl">—</div><button class="btn" id="whCopiar">Copiar URL</button></div></div>
+      <div class="grid">
+        <div class="kv"><div class="k">Modo atual</div><div class="v" id="whModo">—</div></div>
+        <div class="kv"><div class="k">Segredo</div><div class="v" id="whSeg">—</div></div>
+        <div class="kv"><div class="k">Último evento recebido</div><div class="v" id="whUlt">—</div></div>
+        <div class="kv"><div class="k">Eventos recebidos</div><div class="v" id="whTot">—</div></div>
+        <div class="kv"><div class="k">Eventos processados</div><div class="v" id="whProc">—</div></div>
+        <div class="kv"><div class="k">Eventos com falha</div><div class="v" id="whFal">—</div></div>
+        <div class="kv"><div class="k">Latência média (GestãoClick → receptor)</div><div class="v" id="whLat">—</div></div>
+      </div>
+      <div class="row"><div><label for="whSegIn">Segredo de autenticação (cadastrar ou substituir)</label><input id="whSegIn" type="password" autocomplete="off" spellcheck="false" placeholder="Cole o segredo exibido pelo GestãoClick"></div><button class="btn primary" id="whSalvar">Salvar segredo</button></div>
+      <div><label>Modo do receptor</label><div class="modos" id="whModos"></div><p class="hint">Evolução em etapas: DESLIGADO → RECEPCAO (só registra) → SOMBRA (confere com a API, sem alterar painéis) → ATIVO (atualiza os painéis). Desligar vale em segundos e o polling continua.</p></div>
+      <div id="whReq"></div>
+      <div class="row"><button class="btn" id="whTeste">Teste seguro</button><button class="btn danger" id="whOff">Desativar webhooks agora</button></div>
+      <div id="whMsg" class="msg" role="status"></div>
+      <div class="wrap"><table><thead><tr><th>Recebido</th><th>Evento</th><th>Modo</th><th>Situação</th><th>Resultado</th><th>Tentativa</th></tr></thead><tbody id="whHist"><tr><td colspan="6">Sem eventos.</td></tr></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- Google Cloud -->
+  <section class="card" id="cardGcp" aria-labelledby="tGcp">
+    <div class="card-head"><h2 class="card-title" id="tGcp">Google Cloud — acompanhamento</h2><span id="gcpBadge" class="badge b-off">—</span></div>
+    <div class="card-body">
+      <div class="grid">
+        <div class="kv"><div class="k">Cloud Run Job</div><div class="v" id="gcpJob">—</div></div>
+        <div class="kv"><div class="k">Cloud Scheduler</div><div class="v" id="gcpSch">—</div></div>
+        <div class="kv"><div class="k">Última sincronização completa</div><div class="v" id="gcpUlt">—</div></div>
+        <div class="kv"><div class="k">Próxima sincronização prevista</div><div class="v" id="gcpProx">—</div></div>
+        <div class="kv"><div class="k">Duração da última execução</div><div class="v" id="gcpDur">—</div></div>
+        <div class="kv"><div class="k">Requisições ao GestãoClick (última execução)</div><div class="v" id="gcpReq">—</div></div>
+        <div class="kv"><div class="k">Monitoramento</div><div class="v" id="gcpMon">—</div></div>
+      </div>
+      <div class="row"><button class="btn primary" id="syncManual">Sincronizar agora</button><button class="btn" id="atualizar">Atualizar status</button></div>
+      <p class="hint">A sincronização manual respeita a trava compartilhada: se já houver uma em andamento, nada é disparado. Nenhuma credencial do Google Cloud é exposta no navegador.</p>
+      <div id="gcpMsg" class="msg" role="status"></div>
+    </div>
+  </section>
+</div>
+
+<!-- Reautenticação -->
+<div class="modal" id="mReauth" role="dialog" aria-modal="true" aria-labelledby="mReauthT"><div class="modal-box">
+  <h3 id="mReauthT">Confirme sua senha</h3><p class="hint">Por segurança, confirme sua senha de acesso para continuar. Ela não é armazenada.</p>
+  <div><label for="reSenha">Senha</label><input id="reSenha" type="password" autocomplete="off"></div>
+  <div id="reMsg" class="msg"></div>
+  <div class="row"><button class="btn" id="reCancelar">Cancelar</button><button class="btn primary" id="reOk">Confirmar</button></div>
+</div></div>
+<!-- Confirmação ATIVO -->
+<div class="modal" id="mAtivo" role="dialog" aria-modal="true" aria-labelledby="mAtivoT"><div class="modal-box">
+  <h3 id="mAtivoT">Ativar webhooks em produção</h3>
+  <p class="hint">No modo ATIVO, cada evento do GestãoClick marca blocos desatualizados e dispara a releitura dos painéis. O polling continua como reconciliação. Para confirmar, digite exatamente:</p>
+  <div class="url kv">ATIVAR WEBHOOKS EM PRODUCAO</div>
+  <div><label for="atFrase">Confirmação</label><input id="atFrase" type="text" autocomplete="off" spellcheck="false"></div>
+  <div class="row"><button class="btn" id="atCancelar">Cancelar</button><button class="btn danger" id="atOk">Ativar</button></div>
+</div></div>
+<div class="toast-wrap" id="toasts" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, reauthenticateWithCredential, EmailAuthProvider } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFunctions, httpsCallable } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+
+const app = initializeApp({ apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto", storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5" });
+const auth = getAuth(app), fns = getFunctions(app, 'southamerica-east1');
+const chamar = nome => httpsCallable(fns, nome);
+const $ = id => document.getElementById(id);
+const FRASE = 'ATIVAR WEBHOOKS EM PRODUCAO';
+const dt = v => { if (!v) return '—'; const d = typeof v === 'number' ? new Date(v) : new Date(v); return isNaN(d) ? '—' : d.toLocaleString('pt-BR'); };
+const ms = v => v == null ? '—' : v < 1000 ? v + ' ms' : (v / 1000).toFixed(1) + ' s';
+const toast = (t, err) => { const e = document.createElement('div'); e.className = 'toast' + (err ? ' err' : ''); e.textContent = t; $('toasts').appendChild(e); setTimeout(() => e.remove(), 5000); };
+const msg = (id, t, k) => { const e = $(id); e.textContent = t || ''; e.className = 'msg' + (t ? ' ' + (k || 'info') : ''); };
+const badge = (id, t, k) => { const e = $(id); e.textContent = t; e.className = 'badge ' + k; };
+const erroTxt = e => ({ 'functions/permission-denied': 'Acesso restrito ao administrador master.', 'functions/unauthenticated': 'Faça login novamente.', 'functions/resource-exhausted': 'Muitas tentativas. Aguarde um pouco e tente de novo.', 'functions/invalid-argument': 'Dados inválidos. Confira os campos.', 'functions/failed-precondition': 'Confirmação de senha necessária.' }[e && e.code] || 'Não foi possível concluir a operação.');
+
+let S = null, reauthOk = 0;
+function pedirSenha() {
+  return new Promise(res => { $('reSenha').value = ''; msg('reMsg', ''); $('mReauth').classList.add('on'); $('reSenha').focus();
+    const fim = v => { $('mReauth').classList.remove('on'); $('reSenha').value = ''; $('reOk').onclick = $('reCancelar').onclick = null; res(v); };
+    $('reCancelar').onclick = () => fim(false);
+    $('reOk').onclick = async () => { try { const u = auth.currentUser; await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, $('reSenha').value)); await u.getIdToken(true); reauthOk = Date.now(); fim(true); }
+      catch (_) { $('reSenha').value = ''; msg('reMsg', 'Senha incorreta.', 'err'); } }; });
+}
+async function comReauth() { if (Date.now() - reauthOk < 4 * 60 * 1000) return true; return pedirSenha(); }
+async function acao(nome, dados, { reauth = false, msgId, ok } = {}) {
+  if (reauth && !await comReauth()) return null;
+  try { const r = (await chamar(nome)(dados || {})).data; if (msgId) msg(msgId, r.mensagem || (r.ok ? (ok || 'Concluído.') : 'Não foi possível concluir (' + (r.codigo || 'ERRO') + ').'), r.ok ? 'ok' : 'err'); return r; }
+  catch (e) { if (e && e.code === 'functions/failed-precondition' && reauth) { reauthOk = 0; if (await pedirSenha()) return acao(nome, dados, { reauth, msgId, ok }); return null; } if (msgId) msg(msgId, erroTxt(e), 'err'); return null; }
+}
+
+function pintar(s) {
+  const g = s.gestaoclick; $('gcLoja').textContent = g.loja.nome + ' — ID ' + g.loja.id; $('gcAcc').textContent = g.accessCadastrado ? '✔ cadastrado' : '✖ não cadastrado'; $('gcSec').textContent = g.secretCadastrado ? '✔ cadastrado' : '✖ não cadastrado';
+  $('gcAtu').textContent = dt(g.atualizadoEm); $('gcOk').textContent = dt(g.ultimaConexaoOkEm); $('gcVers').textContent = g.versoesPreservadas;
+  g.status === 'OPERACIONAL' ? badge('gcBadge', 'Operacional', 'b-ok') : g.status === 'NAO_TESTADA' ? badge('gcBadge', 'Conexão ainda não testada', 'b-warn') : badge('gcBadge', 'Sem credenciais', 'b-err');
+  const w = s.webhook; $('whUrl').textContent = w.url; $('whModo').textContent = w.modo; $('whSeg').textContent = w.segredoCadastrado ? '✔ cadastrado em ' + dt(w.segredoAtualizadoEm) : '✖ não cadastrado';
+  $('whUlt').textContent = dt(w.ultimoEventoRecebidoMs); $('whTot').textContent = w.eventosRecebidos ?? '—'; $('whProc').textContent = w.eventosProcessados ?? '—'; $('whFal').textContent = w.eventosComFalha ?? '—'; $('whLat').textContent = ms(w.latenciaMediaMs);
+  w.status === 'EM_OPERACAO' ? badge('whBadge', 'Modo ' + w.modo, w.modo === 'ATIVO' ? 'b-ok' : 'b-warn') : w.status === 'SEM_SEGREDO' ? badge('whBadge', 'Aguardando segredo', 'b-warn') : badge('whBadge', 'Desligado', 'b-off');
+  const box = $('whModos'); box.textContent = '';
+  for (const m of ['DESLIGADO', 'RECEPCAO', 'SOMBRA', 'ATIVO']) { const b = document.createElement('button'); b.className = 'btn' + (m === w.modo ? ' primary' : ''); b.textContent = m; b.disabled = m === w.modo || !(w.transicoesPermitidas || []).includes(m); b.onclick = () => mudarModo(m); box.appendChild(b); }
+  const rq = $('whReq'); rq.textContent = ''; if (w.modo === 'SOMBRA' || w.modo === 'ATIVO') { const t = document.createElement('label'); t.textContent = 'Requisitos para ATIVO'; rq.appendChild(t); for (const r of w.requisitosAtivo || []) { const d = document.createElement('div'); d.className = 'req'; d.textContent = (r.ok ? '✔ ' : '✖ ') + r.texto; d.style.color = r.ok ? 'var(--green)' : 'var(--muted)'; rq.appendChild(d); } }
+  const tb = $('whHist'); tb.textContent = ''; if (!(w.historico || []).length) { const tr = tb.insertRow(); const c = tr.insertCell(); c.colSpan = 6; c.textContent = 'Sem eventos.'; }
+  for (const h of w.historico || []) { const tr = tb.insertRow(); for (const v of [dt(h.recebidoEm), h.evento, h.modo, h.status, h.resultado || '—', h.tentativa]) tr.insertCell().textContent = v == null ? '—' : v; }
+  const n = s.nuvem; const j = n.job; $('gcpJob').textContent = !j ? '—' : j.indisponivel ? 'indisponível' : j.emExecucao ? 'em execução' : j.ultimaExecucaoFim ? (j.sucesso ? '✔ última execução OK (' + dt(j.ultimaExecucaoFim) + ')' : '✖ última execução com falha') : 'sem execuções';
+  $('gcpSch').textContent = n.agendadores.length ? n.agendadores.map(a => a.indisponivel ? a.nome + ': indisponível' : a.nome + ': ' + a.estado + ' (' + a.agenda + ')').join(' · ') : '—';
+  $('gcpUlt').textContent = dt(n.ultimaSincronizacao); $('gcpProx').textContent = dt(n.proximaSincronizacao); $('gcpDur').textContent = ms(n.duracaoUltimaMs); $('gcpReq').textContent = n.requisicoesGc ?? '— (aparece após a próxima execução)';
+  $('gcpMon').textContent = n.monitoramento ? n.monitoramento + (n.horasDesdeSucesso != null ? ' (' + n.horasDesdeSucesso + ' h desde o último sucesso)' : '') : '—';
+  badge('gcpBadge', n.monitoramento === 'OK' ? 'Saudável' : n.monitoramento || '—', n.monitoramento === 'OK' ? 'b-ok' : n.monitoramento === 'AVISO' ? 'b-warn' : 'b-err');
+}
+async function carregar() { try { S = (await chamar('intStatus')()).data; pintar(S); $('semAcesso').className = 'msg'; $('semAcesso').textContent = ''; $('main').hidden = false; return true; }
+  catch (e) { $('main').hidden = false; for (const id of ['cardGc', 'cardWh', 'cardGcp']) $(id).hidden = true; const m = $('semAcesso'); m.className = 'msg err'; m.textContent = e && e.code === 'functions/permission-denied' ? 'Acesso restrito ao administrador master.' : 'Não foi possível carregar o status agora.'; return false; } }
+
+async function mudarModo(m) {
+  if (m === 'ATIVO') { $('atFrase').value = ''; $('mAtivo').classList.add('on'); $('atCancelar').onclick = () => { $('atFrase').value = ''; $('mAtivo').classList.remove('on'); };
+    $('atOk').onclick = async () => { const f = $('atFrase').value; $('atFrase').value = ''; $('mAtivo').classList.remove('on'); const r = await acao('intWebhookModo', { modo: 'ATIVO', confirmacao: f }, { reauth: true, msgId: 'whMsg', ok: 'Webhooks ativados.' }); if (r) carregar(); }; return; }
+  const r = await acao('intWebhookModo', { modo: m }, { reauth: m !== 'DESLIGADO', msgId: 'whMsg', ok: 'Modo alterado para ' + m + '.' }); if (r) carregar();
+}
+$('gcSalvar').onclick = async () => { const a = $('gcAccIn').value, s = $('gcSecIn').value; if (!a || !s) return msg('gcMsg', 'Preencha os dois campos.', 'err');
+  $('gcSalvar').disabled = true; msg('gcMsg', 'Validando a conexão com a loja ativa…', 'info'); const r = await acao('intGcSalvar', { accessToken: a, secretToken: s }, { reauth: true, msgId: 'gcMsg', ok: 'Credenciais atualizadas.' });
+  $('gcAccIn').value = ''; $('gcSecIn').value = ''; $('gcSalvar').disabled = false; if (r) { if (r.ok) toast('Credenciais do GestãoClick atualizadas'); carregar(); } };
+$('gcTestar').onclick = async () => { msg('gcMsg', 'Testando…', 'info'); const r = await acao('intGcTestar', {}, { msgId: 'gcMsg', ok: 'Conexão com a loja MR4 DISTRIBUIDORA OK.' }); if (r) carregar(); };
+$('gcReverter').onclick = async () => { const r = await acao('intGcReverter', {}, { reauth: true, msgId: 'gcMsg', ok: 'Credenciais anteriores restauradas.' }); if (r) carregar(); };
+$('whSalvar').onclick = async () => { const v = $('whSegIn').value; if (!v) return msg('whMsg', 'Cole o segredo.', 'err'); $('whSalvar').disabled = true; const r = await acao('intWebhookSegredo', { segredo: v }, { reauth: true, msgId: 'whMsg', ok: 'Segredo cadastrado.' });
+  $('whSegIn').value = ''; $('whSalvar').disabled = false; if (r) { if (r.ok) toast('Segredo do webhook cadastrado'); carregar(); } };
+$('whTeste').onclick = async () => { msg('whMsg', 'Executando teste seguro…', 'info'); const r = await acao('intWebhookTeste', {}, { msgId: 'whMsg', ok: 'Teste concluído.' }); if (r && r.latenciaMs != null) toast('Teste: ' + ms(r.latenciaMs)); };
+$('whOff').onclick = async () => { const r = await acao('intWebhookModo', { modo: 'DESLIGADO' }, { msgId: 'whMsg', ok: 'Webhooks desativados. O polling continua.' }); if (r) carregar(); };
+$('whCopiar').onclick = async () => { const t = $('whUrl').textContent; try { await navigator.clipboard.writeText(t); toast('URL copiada'); } catch (_) { const r = document.createRange(); r.selectNodeContents($('whUrl')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selecionada: use Ctrl/Cmd+C', true); } };
+$('syncManual').onclick = async () => { const r = await acao('intSyncManual', {}, { msgId: 'gcpMsg', ok: 'Sincronização iniciada.' }); if (r && r.ok) setTimeout(carregar, 15000); };
+$('atualizar').onclick = carregar;
+onAuthStateChanged(auth, async u => { if (!u) { location.href = '../login.html'; return; } await carregar(); $('loadingScreen').style.display = 'none'; });
+</script>
+</body>
+</html>

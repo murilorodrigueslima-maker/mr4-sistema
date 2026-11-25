@@ -18,6 +18,7 @@ const { onCall, onRequest, HttpsError } = require('firebase-functions/v2/https')
 const { onSchedule }          = require('firebase-functions/v2/scheduler');
 const { onDocumentUpdated, onDocumentWritten, onDocumentWrittenWithAuthContext } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
+const SEGRT = require('./lib/segredosRuntime');   // lê a versão mais recente dos segredos GC (rotação pelo módulo Integrações, sem reimplantar)
 const { distMetros, fortalezaAgora, validarLatLng } = require('./utils');
 const { executarGeracaoFilaSnapshot }               = require('./lib/filaSnapshotGenerator');
 const { executarGeracaoWorklist }                   = require('./lib/worklistGenerator');
@@ -447,6 +448,7 @@ async function gcQueryHandler(request) {
   }
 
   // 6. Verificar credenciais GC (via env da CF — nunca no browser)
+  await SEGRT.atualizarEnvGc();
   const accessToken  = process.env.GC_ACCESS_TOKEN;
   const secretToken  = process.env.GC_SECRET_ACCESS_TOKEN;
   if (!accessToken || !secretToken) {
@@ -573,6 +575,7 @@ async function fetchTodasVendasGC(accessToken, secretToken, dataInicio, dataFim)
 //   - documentos: display_metrics/painel_comercial (TV, formato antigo + campos novos), display_metrics_gestor/painel (restrito),
 //     display_metrics/painel_status (tentativa/sucesso/erro). Lease transacional contra execuções concorrentes.
 async function syncPainelDisplayHandler() {
+  await SEGRT.atualizarEnvGc();
   const accessToken = process.env.GC_ACCESS_TOKEN, secretToken = process.env.GC_SECRET_ACCESS_TOKEN;
   if (!accessToken || !secretToken) throw new Error('Credenciais GC não configuradas.');
   const r = await require('./lib/painelSync').sincronizar({
@@ -689,6 +692,7 @@ exports.expedicaoSyncPedidos = onSchedule({
   maxInstances:    1,
 }, async () => {
   try {
+    await SEGRT.atualizarEnvGc();
     const leitor = expedicaoSync.criarLeitorVendas({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN });
     const r = await expedicaoSync.sincronizar({ db, leitor, dto: GC_OPERACOES.LISTAR_VENDAS.dto, serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp() });
     console.log(JSON.stringify({ evento: 'expedicao_sync', status: 'OK', ...r }));
@@ -731,6 +735,7 @@ exports.reativacaoDiaria = onSchedule({
   schedule: '0 6 * * *', timeZone: 'America/Fortaleza', region: REGION, timeoutSeconds: 300, memory: '512MiB', retryCount: 0, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
 }, async () => {
   try {
+    await SEGRT.atualizarEnvGc();
     const { executarReativacaoDiaria } = require('./lib/reativacaoJob');
     const lookupNome = criarLookupNomeGC({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN });
     const agora = new Date(); const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Fortaleza' }).format(agora);
@@ -781,6 +786,7 @@ exports.gerarWorklistDiaria = onSchedule({
   secrets:         ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
 }, async () => {
   try {
+    await SEGRT.atualizarEnvGc();
     const lookupNome = criarLookupNomeGC({
       accessToken: process.env.GC_ACCESS_TOKEN,
       secretToken: process.env.GC_SECRET_ACCESS_TOKEN,
@@ -820,7 +826,7 @@ exports.comprasSyncManual = onRequest({
   memory:          '1GiB',
   concurrency:     1,
   maxInstances:    1,
-}, (req, res) => comprasEntrypoints.syncManualHandler(req, res, { db }));
+}, async (req, res) => { await SEGRT.atualizarEnvGc(); return comprasEntrypoints.syncManualHandler(req, res, { db }); });
 
 exports.comprasSyncCompleto = onSchedule({
   schedule:        comprasEntrypoints.AGENDA.FULL,
@@ -831,7 +837,7 @@ exports.comprasSyncCompleto = onSchedule({
   memory:          '1GiB',
   retryCount:      0,
   maxInstances:    1,
-}, () => comprasEntrypoints.syncAgendadoHandler('FULL', { db }));
+}, async () => { await SEGRT.atualizarEnvGc(); return comprasEntrypoints.syncAgendadoHandler('FULL', { db }); });
 
 exports.comprasSyncIncremental = onSchedule({
   schedule:        comprasEntrypoints.AGENDA.INCREMENTAL,
@@ -842,7 +848,7 @@ exports.comprasSyncIncremental = onSchedule({
   memory:          '1GiB',
   retryCount:      0,
   maxInstances:    1,
-}, () => comprasEntrypoints.syncAgendadoHandler('INCREMENTAL', { db }));
+}, async () => { await SEGRT.atualizarEnvGc(); return comprasEntrypoints.syncAgendadoHandler('INCREMENTAL', { db }); });
 
 // Agente Financeiro MR4 — Fase 2: sync FULL (GestãoClick SOMENTE GET) → fin_n1 protegido (geração + ponteiro). Sem HTTP, sem callable.
 // Agenda 3/3 h (min 40, America/Fortaleza); trava com lease em fin_n1_ctl/lock; falha preserva a geração ativa.
@@ -856,7 +862,7 @@ exports.financeiroSync = onSchedule({
   memory:          '1GiB',
   retryCount:      0,
   maxInstances:    1,
-}, () => financeiroEntrypoints.syncAgendadoHandler({ db, log: e => console.log(JSON.stringify(e)) }));
+}, async () => { await SEGRT.atualizarEnvGc(); return financeiroEntrypoints.syncAgendadoHandler({ db, log: e => console.log(JSON.stringify(e)) }); });
 
 // N35.11 — Callables da Fila Comercial (canário operacional)
 // CRM 2.0 F1: handlers recebem SÓ `request` (o 2º argumento do onCall v2 é a resposta de streaming, não opções de teste)
@@ -882,7 +888,8 @@ exports.pontoEscalaDefinir  = onCall({ region: REGION }, req => require('./lib/p
 exports.pontoBancoFolga     = onCall({ region: REGION }, req => require('./lib/pontoBanco').folgaHandler(req));
 exports.pontoBancoExcecao   = onCall({ region: REGION }, req => require('./lib/pontoBanco').excecaoHandler(req));
 
-exports.crmContatoReativacao = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, req => {
+exports.crmContatoReativacao = onCall({ region: REGION, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'] }, async req => {
+  await SEGRT.atualizarEnvGc();
   const { contatoReativacaoHandler } = require('./lib/contatoReativacao'); const { criarLookupContatoGC } = require('./lib/contatoGc');
   return contatoReativacaoHandler(req, { lookup: criarLookupContatoGC({ accessToken: process.env.GC_ACCESS_TOKEN, secretToken: process.env.GC_SECRET_ACCESS_TOKEN }) });
 });

@@ -16,16 +16,20 @@ const REGION = 'southamerica-east1';
 const WH_SECRET = defineSecret('GC_WEBHOOK_SECRET'), GC_ACCESS = defineSecret('GC_ACCESS_TOKEN'), GC_SECRET = defineSecret('GC_SECRET_ACCESS_TOKEN');
 const R = require('./lib/webhooks/receptor');
 const lerConfig = R.criarLeitorConfig({ db });
+const SEGRT = require('./lib/segredosRuntime');
 
 exports.webhookGestaoClick = onRequest({ region: REGION, secrets: [WH_SECRET], timeoutSeconds: 10, memory: '256MiB', maxInstances: 5, invoker: 'public', cors: false }, async (req, res) => {
-  const r = await R.tratarRequisicao({ req: { metodo: req.method, cabecalhos: req.headers, corpoCru: req.rawBody }, db, segredo: WH_SECRET.value(), lerConfig,
+  // Segredo lido em tempo de execução (versão mais recente; cache 60 s) ⇒ a troca pelo módulo Integrações vale sem reimplantar. Em DESLIGADO nem consulta o Secret Manager.
+  const cfg0 = await lerConfig(); const segredo = cfg0.modo === 'DESLIGADO' ? null : await SEGRT.lerSegredo('GC_WEBHOOK_SECRET', { reserva: WH_SECRET.value(), ttlMs: 60000 });
+  const r = await R.tratarRequisicao({ req: { metodo: req.method, cabecalhos: req.headers, corpoCru: req.rawBody }, db, segredo, lerConfig,
     serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp(), log: l => (l.status >= 500 ? logger.error : l.status >= 400 ? logger.warn : logger.info)('WEBHOOK_GC', l) });
   res.status(r.status).json(r.corpo);
 });
 
 exports.gcWebhookProcessar = onDocumentCreated({ document: `${R.COL_EVENTOS}/{id}`, region: REGION, secrets: [GC_ACCESS, GC_SECRET], timeoutSeconds: 60, memory: '256MiB', maxInstances: 5, retry: false }, async (ev) => {
   const gcHttp = require('./lib/gcHttp');
-  const cli = gcHttp.criarCliente({ credenciais: { access: GC_ACCESS.value(), secret: GC_SECRET.value() } });
+  const [acc, sec] = [await SEGRT.lerSegredo('GC_ACCESS_TOKEN', { reserva: GC_ACCESS.value() }), await SEGRT.lerSegredo('GC_SECRET_ACCESS_TOKEN', { reserva: GC_SECRET.value() })];
+  const cli = gcHttp.criarCliente({ credenciais: { access: acc, secret: sec } });
   const buscar = async (recurso, id) => { try { const j = await cli.get(`/${recurso}/${encodeURIComponent(id)}`, {}, { tipo: 'detalhe' }); return { status: 200, loja_id: j && j.data && j.data.loja_id }; } catch (e) { if (e && e.status === 404) return { status: 404 }; throw e; } };
   const out = await R.processarSombra({ db, id: ev.params.id, buscar }); logger.info('WEBHOOK_GC_SOMBRA', { resultado: out.codigo });
   // Efeito operacional (marcar bloco desatualizado + disparar o Job) SÓ no modo ATIVO — exige aprovação e nunca é o padrão.

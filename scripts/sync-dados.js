@@ -855,7 +855,7 @@ async function registrarHeartbeat(blocos, inicioTotal, duracoes, parcial = false
       schema: 1, ultimaTentativaEm: agoraIso,
       ultimoSucessoCompletoEm: falhas.length === 0 && !parcial ? agoraIso : (ant.ultimoSucessoCompletoEm || null),   // execução DIRECIONADA (parcial) nunca declara sucesso completo
       ultimoSucessoPorBloco: porBloco,
-      ultimaExecucao: { runId, origem: ORIGEM, parcial: !!parcial, ok: falhas.length === 0, duracaoMs: Date.now() - inicioTotal, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })) },
+      ultimaExecucao: { runId, origem: ORIGEM, parcial: !!parcial, ok: falhas.length === 0, duracaoMs: Date.now() - inicioTotal, requisicoesGc: gcCliente.estatisticas().chamadas, falhas: falhas.map(f => ({ bloco: f.bloco, codigo: f.codigo })) },
     };
     const ok = await firestoreSet('gc_sync_status', 'ultima', doc);
     if (!ok) log.aviso('⚠️  Heartbeat não gravado (escrita falhou)');

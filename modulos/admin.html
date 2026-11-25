@@ -33,6 +33,11 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .btn-back{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:8px;background:none;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:.4rem;transition:all .15s}
 .btn-back:hover{border-color:var(--orange);color:var(--orange)}
 
+/* ABAS */
+.tabs-adm{display:flex;gap:.25rem;padding:0 2rem;background:var(--white);border-bottom:1px solid var(--border)}
+.tab-adm{padding:.7rem 1rem;font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none;border-bottom:2px solid transparent}
+.tab-adm[aria-current="page"]{color:var(--orange);border-bottom-color:var(--orange)}
+@media(max-width:700px){.tabs-adm{padding:0 1rem}}
 /* MAIN */
 .main{padding:2rem;max-width:1100px;margin:0 auto}
 .page-header{margin-bottom:1.75rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap}
@@ -174,6 +179,7 @@ input:disabled{background:#f9fafb;color:var(--muted);cursor:default}
   <div class="topbar-sep"></div>
   <a href="../index.html" class="btn-back">← Sistema</a>
 </div>
+<nav class="tabs-adm" aria-label="Administração"><a class="tab-adm" href="admin.html" aria-current="page">Usuários do Sistema</a><a class="tab-adm" href="integracoes.html">Integrações e Credenciais</a></nav>
 
 <!-- Main -->
 <div class="main">

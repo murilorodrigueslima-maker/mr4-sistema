@@ -189,7 +189,7 @@ test('CURSOR360-07: delta vazio (modifiedVendas=0) mantém cursor e não avança
   const adapters = mkAdapters();
   // gcFetchPage retorna zero vendas após filtro local
   adapters.gcFetchPage.mockResolvedValue({ data: [], meta: {} });
-  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: CURSOR_BASE });
+  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: CURSOR_BASE, lastReconciliationAt: new Date().toISOString() });
 
   const result = await runIncremental(adapters);
 

@@ -115,7 +115,7 @@ test('AUTO360-04: filtro local elimina vendas com modificado_em < cursorEfetivo'
   const vendaDepois = mkVenda('v2', '1', '2026-09-15', 'Concretizada', '100.00', '2026-09-15 12:00:30');
 
   const adapters = mkAdapters();
-  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: cursorPersistido });
+  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: cursorPersistido, lastReconciliationAt: new Date().toISOString() });
   adapters.gcFetchPage
     .mockResolvedValueOnce({ data: [vendaAntes, vendaDepois], meta: {} })
     .mockResolvedValueOnce({ data: [], meta: {} })
@@ -319,10 +319,10 @@ test('AUTO360-12: falha em Perfil360 não afeta tarefas irmãs via allSettled', 
 
 // ── AUTO360-13: delta não faz full-history API fetch ─────────────────────────
 
-test('AUTO360-13: com cursor definido, API é chamada com modificado_desde (não full fetch)', async () => {
+test('AUTO360-13: com cursor definido, API é chamada com data_modificado_inicio (Etapa C; não full fetch)', async () => {
   const cursor = '2026-09-15 10:00:00';
   const adapters = mkAdapters();
-  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: cursor });
+  adapters.firestoreGetSyncState.mockResolvedValue({ modifiedSinceCursor: cursor, lastReconciliationAt: new Date().toISOString() });
 
   await runIncremental(adapters);
 
@@ -330,10 +330,11 @@ test('AUTO360-13: com cursor definido, API é chamada com modificado_desde (não
   const vendasCall = adapters.gcFetchPage.mock.calls.find(c => c[0] === '/vendas');
   expect(vendasCall).toBeDefined();
   const params = vendasCall[1] || {};
-  expect(params.modificado_desde).toBe(buildCursorWithOverlap(cursor, CURSOR_OVERLAP_SECS));
+  expect(params.data_modificado_inicio).toBe('2026-09-14');   // dia do cursor − 24 h (a API ignora modificado_desde)
+  expect(params.modificado_desde).toBeUndefined();
   // Não deve ter chamado sem parâmetro (full-history)
   const semFiltro = adapters.gcFetchPage.mock.calls.some(
-    c => c[0] === '/vendas' && !c[1]?.modificado_desde
+    c => c[0] === '/vendas' && !c[1]?.data_modificado_inicio
   );
   expect(semFiltro).toBe(false);
 });

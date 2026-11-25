@@ -13,7 +13,7 @@ const SRC = fs.readFileSync(path.join(ROOT, 'scripts/sync-dados.js'), 'utf8');
 
 const PREVIO = () => ({
   painel_cache: {
-    vendas: { atualizado_em: 'ANTERIOR', hoje: 999, mes: 90000, vendedores: [{ nome: 'Vendedor SECRETO', faturamento: 123456.78 }], _meta: { vendasTotal: 4, janelaDias: 30, escopo: 'padrao_sem_loja_id', sincronizadoEm: 'ANTERIOR' } },
+    vendas: { atualizado_em: 'ANTERIOR', hoje: 999, mes: 90000, vendedores: [{ nome: 'Vendedor SECRETO', faturamento: 123456.78 }], _meta: { vendasTotal: 4, janelaDias: 30, escopo: 'loja_262759', sincronizadoEm: 'ANTERIOR' } },
     caixa: { atualizado_em: 'ANTERIOR', hoje: 999 }, estoque: { atualizado_em: 'ANTERIOR', total_produtos: 3 }, estoque_custos: { atualizado_em: 'ANTERIOR' }, produtos_catalogo: { atualizado_em: 'ANTERIOR', total: 3 },
   },
   display_metrics: { latest: { atualizado_em: 'ANTERIOR' } },

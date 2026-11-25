@@ -17,6 +17,7 @@ function criarClienteGC({ fetchImpl, accessToken, secretToken, pausaMs = 300, ti
     const url = new URL(BASE + caminho);
     if (url.origin !== BASE) throw new Error('GET_ONLY_GUARD: host bloqueado');
     if (!RECURSOS_PERMITIDOS.some(p => url.pathname === p || url.pathname.startsWith(p + '/'))) throw new Error('GET_ONLY_GUARD: recurso não permitido ' + url.pathname);
+    require('../lojaAtiva').aplicarLojaNaUrl(url);   // Etapa B: só a loja ativa (262759)
     // GET é idempotente: repete (com espera crescente) só em timeout, falha de rede, 429 e 5xx. 4xx ≠ 429 falha na hora.
     for (let t = 1; ; t++) {
       chamadas++;

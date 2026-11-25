@@ -20,7 +20,7 @@ async function buscarVendas({ fetchImpl, tokens, situacaoId, inicio, fim, espera
   const headers = { 'access-token': tokens.access, 'secret-access-token': tokens.secret, 'Content-Type': 'application/json' };
   let out = [], pagina = 1, totalPaginas = 1, totalRegistros = null;
   do {
-    const qs = new URLSearchParams({ situacao_id: situacaoId, data_inicio: inicio, data_fim: fim, limite: '100', pagina: String(pagina) });
+    const qs = new URLSearchParams({ situacao_id: situacaoId, data_inicio: inicio, data_fim: fim, limite: '100', pagina: String(pagina), loja_id: require('./lojaAtiva').LOJA_ATIVA_ID });   // Etapa B: só a loja ativa
     let resp = null, ultimoErro = null;
     for (let t = 0; t <= esperaRetry.length; t++) {
       try {

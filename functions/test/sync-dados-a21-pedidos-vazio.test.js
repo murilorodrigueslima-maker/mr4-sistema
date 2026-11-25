@@ -15,7 +15,7 @@ const HARNESS = path.join(__dirname, 'fixtures', 'sync-harness.js');
 // Estado anterior: vendas de referência = 4 (a fixture "ok" devolve 4 vendas) e Pedidos anterior com 10 itens
 const PREVIO = ({ pedidosTotal = 10 } = {}) => ({
   painel_cache: {
-    vendas: { atualizado_em: 'ANTERIOR', hoje: 999, mes: 90000, vendedores: [], _meta: { vendasTotal: 4, janelaDias: 30, escopo: 'padrao_sem_loja_id', sincronizadoEm: 'ANTERIOR' } },
+    vendas: { atualizado_em: 'ANTERIOR', hoje: 999, mes: 90000, vendedores: [], _meta: { vendasTotal: 4, janelaDias: 30, escopo: 'loja_262759', sincronizadoEm: 'ANTERIOR' } },
     caixa: { atualizado_em: 'ANTERIOR', hoje: 999 },
     estoque: { atualizado_em: 'ANTERIOR', total_produtos: 3, abaixo_minimo: [], sem_giro: [] },
     estoque_custos: { atualizado_em: 'ANTERIOR', valor_total_estoque: 123, margem_baixa: [] },
@@ -112,13 +112,13 @@ describe('A2.1 — vazio INDEVIDO de Pedidos: preserva o último válido e alert
 });
 
 describe('A2.1 — avaliarVazioPedidos (função pura): cada condição de corroboração', () => {
-  const janela = { escopo: 'padrao_sem_loja_id', inicio: '2026-12-24', fim: '2026-12-26' };
-  const ok = { integra: true, escopo: 'padrao_sem_loja_id', inicio: '2026-11-26', fim: '2026-12-26', datas: ['2026-12-20', '2026-12-21'], semData: 0 };
+  const janela = { escopo: 'loja_262759', inicio: '2026-12-24', fim: '2026-12-26' };
+  const ok = { integra: true, escopo: 'loja_262759', inicio: '2026-11-26', fim: '2026-12-26', datas: ['2026-12-20', '2026-12-21'], semData: 0 };
   test('íntegra, mesmo escopo, período cobre a janela, sem vendas na janela ⇒ aceita', () => expect(avaliarVazioPedidos({ vendas30: ok, janela })).toEqual({ aceitar: true, motivo: 'OK_CORROBORADO' }));
   test.each([
     ['sem leitura de vendas', null, 'VENDAS30_NAO_INTEGRA'],
     ['vendas não íntegra', { ...ok, integra: false }, 'VENDAS30_NAO_INTEGRA'],
-    ['escopo diferente', { ...ok, escopo: 'loja_262759' }, 'ESCOPO_INCOMPATIVEL'],
+    ['escopo diferente', { ...ok, escopo: 'padrao_sem_loja_id' }, 'ESCOPO_INCOMPATIVEL'],
     ['período não cobre o início', { ...ok, inicio: '2026-12-25' }, 'PERIODO_INCOMPATIVEL'],
     ['período termina antes (virada de dia)', { ...ok, fim: '2026-12-25' }, 'PERIODO_INCOMPATIVEL'],
     ['vendas vazia', { ...ok, datas: [] }, 'VENDAS30_VAZIA'],
@@ -127,7 +127,7 @@ describe('A2.1 — avaliarVazioPedidos (função pura): cada condição de corro
     ['venda dentro da janela de Pedidos', { ...ok, datas: ['2026-12-20', '2026-12-25'] }, 'INCONSISTENTE_VENDAS_NA_JANELA_DE_PEDIDOS'],
     ['venda no 1º dia da janela', { ...ok, datas: ['2026-12-24'] }, 'INCONSISTENTE_VENDAS_NA_JANELA_DE_PEDIDOS'],
   ])('%s ⇒ NÃO aceita (%s)', (_n, v, motivo) => expect(avaliarVazioPedidos({ vendas30: v, janela })).toEqual({ aceitar: false, motivo }));
-  test('janela inválida ⇒ NÃO aceita', () => expect(avaliarVazioPedidos({ vendas30: ok, janela: { escopo: 'padrao_sem_loja_id', inicio: 'x', fim: 'y' } }).aceitar).toBe(false));
+  test('janela inválida ⇒ NÃO aceita', () => expect(avaliarVazioPedidos({ vendas30: ok, janela: { escopo: 'loja_262759', inicio: 'x', fim: 'y' } }).aceitar).toBe(false));
   test('sem argumentos ⇒ NÃO aceita', () => expect(avaliarVazioPedidos().aceitar).toBe(false));
 });
 

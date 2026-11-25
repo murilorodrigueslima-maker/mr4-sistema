@@ -21,6 +21,13 @@
 
 const BASE = 'https://api.gestaoclick.com';
 
+// ── Etapa B — ISOLAMENTO DE LOJA ─────────────────────────────────────────────────────────────────────────────────
+// Só a loja ATIVA (MR4 DISTRIBUIDORA, loja_id=262759) é consultada. A FOCUS PARTS (424483) está desativada: nenhuma consulta nem
+// importação. O valor fica em UM lugar; os recursos abaixo (os que aceitam `loja_id`) recebem o filtro automaticamente.
+const LOJA_ATIVA_ID = '262759';
+const LOJAS_BLOQUEADAS = Object.freeze(['424483']);
+const RECURSOS_COM_LOJA = Object.freeze(['/vendas', '/pagamentos', '/recebimentos', '/produtos']);
+
 const CODIGOS = Object.freeze({
   CREDENCIAIS_AUSENTES: 'GC_CREDENCIAIS_AUSENTES',
   CAMINHO_INVALIDO: 'GC_CAMINHO_INVALIDO',
@@ -40,6 +47,8 @@ const CODIGOS = Object.freeze({
   PAGINACAO_SEM_TOTAL: 'GC_PAGINACAO_SEM_TOTAL',
   LIMITE_PAGINAS: 'GC_LIMITE_PAGINAS',
   LIMITE_LINHAS: 'GC_LIMITE_LINHAS',
+  LOJA_NAO_AUTORIZADA: 'GC_LOJA_NAO_AUTORIZADA',
+  LOJA_DIVERGENTE: 'GC_LOJA_DIVERGENTE',
 });
 
 /** Erro tipado e sanitizado: só código, status, caminho (sem query) e contagens. Nunca corpo bruto nem credenciais. */
@@ -131,7 +140,7 @@ function criarTransporteHttps(httpsMod = require('https')) {
  * @param {number} [o.timeoutMs=20000]
  * @param {number} [o.pausaMs=0]       pausa após cada sucesso
  */
-function criarCliente({ transporte = (...a) => globalThis.fetch(...a), credenciais, tentativas = 3, backoffMs = [2000, 4000], retryAfterMaxMs = 30000, timeoutMs = 20000, pausaMs = 0, dormir, agora = () => Date.now() } = {}) {
+function criarCliente({ lojaId = LOJA_ATIVA_ID, transporte = (...a) => globalThis.fetch(...a), credenciais, tentativas = 3, backoffMs = [2000, 4000], retryAfterMaxMs = 30000, timeoutMs = 20000, pausaMs = 0, dormir, agora = () => Date.now() } = {}) {
   if (!credenciais || !credenciais.access || !credenciais.secret) throw new GcErro(CODIGOS.CREDENCIAIS_AUSENTES);
   if (!(Number.isInteger(tentativas) && tentativas >= 1 && tentativas <= 5)) throw new GcErro(CODIGOS.CAMINHO_INVALIDO, 'tentativas deve estar entre 1 e 5');
   const esperar = dormir || (ms => new Promise(r => setTimeout(r, ms)));
@@ -142,6 +151,10 @@ function criarCliente({ transporte = (...a) => globalThis.fetch(...a), credencia
     if (typeof caminho !== 'string' || !caminho.startsWith('/') || caminho.startsWith('//') || caminho.includes('?') || caminho.includes('..') || caminho.includes('#')) throw new GcErro(CODIGOS.CAMINHO_INVALIDO, 'caminho inválido');
     const url = new URL(BASE + caminho);
     for (const [k, v] of Object.entries(params || {})) if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+    // Etapa B: loja explícita e única. Pedido de outra loja (ou de loja bloqueada) é RECUSADO; ausência vira a loja ativa.
+    const pedida = url.searchParams.get('loja_id');
+    if (pedida !== null && (LOJAS_BLOQUEADAS.includes(pedida) || (lojaId && pedida !== String(lojaId)))) throw new GcErro(CODIGOS.LOJA_NAO_AUTORIZADA, 'loja não autorizada', { caminho: semQuery(caminho) });
+    if (lojaId && RECURSOS_COM_LOJA.includes(url.pathname)) url.searchParams.set('loja_id', String(lojaId));
     if (url.origin !== BASE || url.protocol !== 'https:') throw new GcErro(CODIGOS.HOST_FORA_DO_GC, 'host fora do GestãoClick', { caminho: semQuery(caminho) });
     const cam = url.pathname;
 
@@ -259,7 +272,12 @@ async function paginarCompleto(cliente, caminho, params = {}, { limite = 100, ma
     const assinatura = `${idDe(lista[0])}|${idDe(lista[lista.length - 1])}`;
     if (assinatura === assinaturaAnterior) throw inc(CODIGOS.PAGINACAO_REPETIDA, 'página repetida', pagina);
     assinaturaAnterior = assinatura;
-    for (const r of lista) { if (!idDe(r)) throw inc(CODIGOS.RESPOSTA_INESPERADA, 'registro sem id', pagina); registros.push(r); }
+    for (const r of lista) {
+      if (!idDe(r)) throw inc(CODIGOS.RESPOSTA_INESPERADA, 'registro sem id', pagina);
+      // Etapa B: registro que declara OUTRA loja contamina o resultado ⇒ aborta a leitura inteira (nada é aproveitado).
+      if (r && r.loja_id !== undefined && r.loja_id !== null && r.loja_id !== '' && String(r.loja_id) !== LOJA_ATIVA_ID) throw inc(CODIGOS.LOJA_DIVERGENTE, 'registro de loja diferente da ativa', pagina);
+      registros.push(r);
+    }
     if (registros.length > maxLinhas) throw inc(CODIGOS.LIMITE_LINHAS, `mais de ${maxLinhas} linhas (abortado, sem truncar)`, pagina);
 
     if (prox === null) {
@@ -341,4 +359,4 @@ function avaliarVazioPedidos({ vendas30, janela } = {}) {
   return { aceitar: true, motivo: 'OK_CORROBORADO' };
 }
 
-module.exports = { BASE, CODIGOS, GcErro, criarCliente, criarTransporteHttps, paginarCompleto, validarEstrutura, verificarFiltroModificacao, avaliarPublicacao, avaliarVazioPedidos, decidirCursor };
+module.exports = { LOJA_ATIVA_ID, LOJAS_BLOQUEADAS, RECURSOS_COM_LOJA, BASE, CODIGOS, GcErro, criarCliente, criarTransporteHttps, paginarCompleto, validarEstrutura, verificarFiltroModificacao, avaliarPublicacao, avaliarVazioPedidos, decidirCursor };

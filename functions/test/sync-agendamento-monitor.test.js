@@ -92,7 +92,7 @@ describe('Function exportada e código do monitor', () => {
 
 // ── Heartbeat gravado pelo sync real (harness) ─────────────────────────────────
 const PREVIO = () => ({
-  painel_cache: { vendas: { atualizado_em: 'ANTERIOR', _meta: { vendasTotal: 4, janelaDias: 30, escopo: 'padrao_sem_loja_id' } }, caixa: {}, estoque: { total_produtos: 3 }, estoque_custos: {}, produtos_catalogo: { total: 3 } },
+  painel_cache: { vendas: { atualizado_em: 'ANTERIOR', _meta: { vendasTotal: 4, janelaDias: 30, escopo: 'loja_262759' } }, caixa: {}, estoque: { total_produtos: 3 }, estoque_custos: {}, produtos_catalogo: { total: 3 } },
   display_metrics: { latest: {} }, pedidos_cache: { latest: { _meta: { pedidosTotal: 4 } } }, financeiro_cache: { latest: { _meta: { lancamentosTotal: 0 } } },
   gc_sync_status: { ultima: { schema: 1, ultimoSucessoCompletoEm: '2026-11-20T10:00:00.000Z', ultimoSucessoPorBloco: { vendas: '2026-11-20T10:00:00.000Z', estoque: '2026-11-20T10:00:00.000Z', financeiro: '2026-11-19T10:00:00.000Z', pedidos: '2026-11-20T10:00:00.000Z', catalogo: '2026-11-20T10:00:00.000Z', perfil360: '2026-11-20T10:00:00.000Z' } } },
 });

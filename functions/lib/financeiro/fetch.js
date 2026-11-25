@@ -29,6 +29,7 @@ function criarClienteGC({ fetchImpl, accessToken, secretToken, pausaMs = 350, ti
     const url = new URL(BASE + caminho);
     if (url.origin !== BASE) throw new Error('GET_ONLY_GUARD: host bloqueado');
     if (!RECURSOS_PERMITIDOS.includes(url.pathname)) throw new Error('GET_ONLY_GUARD: recurso não permitido ' + url.pathname);
+    require('../lojaAtiva').aplicarLojaNaUrl(url);   // Etapa B: só a loja ativa (262759)
     let ultimo;
     for (let t = 1; t <= tentativas; t++) {
       chamadas++;

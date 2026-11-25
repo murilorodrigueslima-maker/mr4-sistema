@@ -18,7 +18,7 @@ jest.setTimeout(240000);
 const ROOT = path.resolve(__dirname, '../..');
 const HARNESS = path.join(__dirname, 'fixtures', 'sync-harness.js');
 
-const REF = n => ({ vendasTotal: n, janelaDias: 30, escopo: 'padrao_sem_loja_id', sincronizadoEm: 'ANTERIOR' });
+const REF = n => ({ vendasTotal: n, janelaDias: 30, escopo: 'loja_262759', sincronizadoEm: 'ANTERIOR' });
 const PREVIO = ({ vendasRef = 118 } = {}) => ({
   painel_cache: {
     vendas: { atualizado_em: 'ANTERIOR', hoje: 999, semana: 5000, mes: 90000, meta_mes: 200000, meta_dia: 8000, meta_semana: 40000, vendedores: [{ nome: 'X', faturamento: 90000, pedidos: 100, ticket_medio: 900 }], _meta: REF(vendasRef) },
@@ -156,7 +156,7 @@ describe('A2 — referência `_meta.vendasTotal`: 1ª execução, virada de mês
     const e = PREVIO(); delete e.painel_cache.vendas._meta;
     const r = rodar('vendas_queda', e);                                                   // 1 venda — sem referência não há o que comparar
     expect(r.writes).toEqual(expect.arrayContaining(GRUPO_VENDAS)); expect(tem(r, 'vendas', 'PUBLICACAO_BLOQUEADA')).toBe(false);
-    expect(r.state.painel_cache.vendas._meta).toMatchObject({ vendasTotal: 1, janelaDias: 30, escopo: 'padrao_sem_loja_id' });
+    expect(r.state.painel_cache.vendas._meta).toMatchObject({ vendasTotal: 1, janelaDias: 30, escopo: 'loja_262759' });
   });
   test('1ª execução absoluta (nenhum documento de vendas): publica', () => {
     const e = PREVIO(); delete e.painel_cache.vendas; const r = rodar('ok', e);
@@ -170,7 +170,7 @@ describe('A2 — referência `_meta.vendasTotal`: 1ª execução, virada de mês
     expect(r.state.painel_cache.vendas._meta.vendasTotal).toBe(4);
   });
   test('referência de OUTRO escopo ou OUTRA janela não é comparável ⇒ tratada como 1ª execução', () => {
-    for (const meta of [{ vendasTotal: 5000, janelaDias: 30, escopo: 'loja_262759' }, { vendasTotal: 5000, janelaDias: 7, escopo: 'padrao_sem_loja_id' }, { vendasTotal: 'x', janelaDias: 30, escopo: 'padrao_sem_loja_id' }, { vendasTotal: -3, janelaDias: 30, escopo: 'padrao_sem_loja_id' }]) {
+    for (const meta of [{ vendasTotal: 5000, janelaDias: 30, escopo: 'padrao_sem_loja_id' }, { vendasTotal: 5000, janelaDias: 7, escopo: 'loja_262759' }, { vendasTotal: 'x', janelaDias: 30, escopo: 'loja_262759' }, { vendasTotal: -3, janelaDias: 30, escopo: 'loja_262759' }]) {
       const e = PREVIO(); e.painel_cache.vendas._meta = meta; const r = rodar('ok', e);
       expect(r.writes).toEqual(expect.arrayContaining(GRUPO_VENDAS)); expect(tem(r, 'vendas', 'PUBLICACAO_BLOQUEADA')).toBe(false);
     }
@@ -216,7 +216,7 @@ describe('A2 — status do workflow e fluxo saudável', () => {
     const r = rodar('ok', {});
     expect(r.exitCode).toBe(0); expect(resumo(r)).toMatchObject({ ok: true, falhas: [], avisos: [] }); expect(Object.keys(resumo(r)).sort()).toEqual(['avisos', 'duracaoMs', 'duracoesMs', 'falhas', 'ok']);
     expect([...r.writes].sort()).toEqual(['display_metrics/latest', 'financeiro_cache/latest', 'gc_sync_status/ultima', 'painel_cache/caixa', 'painel_cache/estoque', 'painel_cache/estoque_custos', 'painel_cache/produtos_catalogo', 'painel_cache/vendas', 'pedidos_cache/latest']);
-    expect(r.state.painel_cache.vendas._meta).toMatchObject({ vendasTotal: 4, janelaDias: 30, escopo: 'padrao_sem_loja_id' });
+    expect(r.state.painel_cache.vendas._meta).toMatchObject({ vendasTotal: 4, janelaDias: 30, escopo: 'loja_262759' });
     expect(r.diskWrites.filter(p => p !== process.env.HARNESS_OUT && !p.includes('a2-sync-'))).toEqual([]);
   });
   test('GestãoClick fora do ar (modo "falha"): todos os caches preservados, workflow com erro, GC_REDE no resumo', () => {
@@ -251,9 +251,10 @@ describe('ESTÁTICO — o script usa a camada segura e o workflow falha quando o
     expect(src).toMatch(/require\('\.\.\/functions\/lib\/gcHttp'\)/); expect((src.match(/await lerLista\(/g) || []).length).toBe(5);
     expect((src.match(/firestoreBatchSet\(\[/g) || []).length).toBe(2);
   });
-  test('o único `JSON.parse(body)` restante é o do Perfil360 (gcReq360) — escopo da A3', () => {
-    const ocorrencias = src.split('\n').filter(l => /JSON\.parse\(body\)/.test(l)); expect(ocorrencias).toHaveLength(1);
-    expect(src.indexOf('JSON.parse(body)')).toBeGreaterThan(src.indexOf('async function syncPerfil360'));
+  test('A3 concluída: não há mais `JSON.parse(body)` nem https.get cru no script — o Perfil360 usa a mesma camada segura (gcCliente)', () => {
+    expect(src.split('\n').filter(l => /JSON\.parse\(body\)/.test(l))).toHaveLength(0);
+    expect(src).not.toMatch(/https\.get\(/); expect(src).not.toMatch(/function gcReq360/);
+    const perfil = src.slice(src.indexOf('async function syncPerfil360')); expect(perfil).toMatch(/gcCliente\.get\(endpoint/);
   });
   test('falha ⇒ process.exitCode = 1 e RESUMO_SYNC; permitirVazio SÓ em pagamentos e em Pedidos (este só aceito com corroboração A2.1)', () => {
     expect(src).toMatch(/process\.exitCode = 1/); expect(src).toMatch(/RESUMO_SYNC/);

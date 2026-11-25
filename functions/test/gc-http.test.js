@@ -48,7 +48,7 @@ describe('gcHttp.criarCliente — sucesso e segurança básica', () => {
   test('parâmetros nulos/indefinidos são omitidos', async () => {
     const f = fila(resp(200, OK())); const { c } = cliente(f);
     await c.get('/vendas', { a: undefined, b: null, c: 0, d: '' });
-    expect(f.chamadas[0].url).toBe(BASE + '/vendas?c=0&d=');
+    expect(f.chamadas[0].url).toBe(BASE + '/vendas?c=0&d=&loja_id=262759');   // Etapa B: loja ativa sempre explícita
   });
 });
 

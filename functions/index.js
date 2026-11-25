@@ -256,6 +256,7 @@ const GC_OPERACOES = {
     path:    () => '/produtos',
     params:  (dados) => {
       const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      require('./lib/lojaAtiva').aplicarLojaNosParams(p, '/produtos');   // Etapa B: só a loja ativa (262759)
       if (dados.pagina) p.set('pagina', String(dados.pagina));
       if (dados.nome)       p.set('nome',       String(dados.nome).replace(/[^a-zA-Z0-9À-ÿ\s./-]/g, '').slice(0, 80));
       if (dados.referencia) p.set('referencia', String(dados.referencia).slice(0, 50));
@@ -290,6 +291,7 @@ const GC_OPERACOES = {
     path:    () => '/vendas',
     params:  (dados) => {
       const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      require('./lib/lojaAtiva').aplicarLojaNosParams(p, '/vendas');   // Etapa B: só a loja ativa (262759)
       if (dados.pagina)         p.set('pagina',          String(dados.pagina));
       if (dados.data_inicio)    p.set('data_inicio',     String(dados.data_inicio).slice(0, 10));
       if (dados.data_fim)       p.set('data_fim',        String(dados.data_fim).slice(0, 10));
@@ -331,6 +333,7 @@ const GC_OPERACOES = {
     path:    () => '/pagamentos',
     params:  (dados) => {
       const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      require('./lib/lojaAtiva').aplicarLojaNosParams(p, '/pagamentos');   // Etapa B: só a loja ativa (262759)
       if (dados.pagina) p.set('pagina', String(dados.pagina));
       return p.toString();
     },
@@ -349,6 +352,7 @@ const GC_OPERACOES = {
     path:    () => '/recebimentos',
     params:  (dados) => {
       const p = new URLSearchParams({ limite: String(dados.limite || 100) });
+      require('./lib/lojaAtiva').aplicarLojaNosParams(p, '/recebimentos');   // Etapa B: só a loja ativa (262759)
       if (dados.pagina) p.set('pagina', String(dados.pagina));
       return p.toString();
     },

@@ -35,7 +35,7 @@ if (!ACCESS_TOKEN || !SECRET_TOKEN) {
 //   • Os grupos podem divergir ENTRE SI no tempo (consultas diferentes; falha de um bloco ≠ falha dos outros): isso
 //     é aceito e agora VISÍVEL (workflow vermelho + RESUMO_SYNC). Perfil360 (syncPerfil360) é tratado na A3.
 const JANELA_VENDAS_DIAS  = 30;
-const ESCOPO_VENDAS       = 'padrao_sem_loja_id';   // a Etapa B passará a 'loja_262759': mudar o escopo ZERA a referência (= 1ª execução)
+const ESCOPO_VENDAS       = 'loja_262759';          // Etapa B: consulta sempre com loja_id=262759 (antes: 'padrao_sem_loja_id'; mudar o escopo ZERA a referência = 1ª execução)
 const LIMITE_QUEDA_PADRAO = 0.70;
 const MAX_PAGINAS         = 400;                    // trava de segurança: ABORTA (GC_LIMITE_PAGINAS), nunca trunca
 const gcCliente = gcHttp.criarCliente({ transporte: gcHttp.criarTransporteHttps(https), credenciais: { access: ACCESS_TOKEN, secret: SECRET_TOKEN } });
@@ -699,31 +699,12 @@ async function syncPerfil360() {
       return;
     }
 
-    const https = require('https');
-    function gcReq360(path, params = {}) {
-      return new Promise((resolve, reject) => {
-        const qs  = new URLSearchParams({ ...params, limite: '100' }).toString();
-        const url = `https://api.gestaoclick.com${path}?${qs}`;
-        https.get(url, {
-          headers: {
-            'access-token':        ACCESS_TOKEN,
-            'secret-access-token': SECRET_TOKEN,
-            'Content-Type':        'application/json',
-          },
-        }, res => {
-          let body = '';
-          res.on('data', c => { body += c; });
-          res.on('end', () => {
-            try { resolve(JSON.parse(body)); }
-            catch (e) { reject(new Error('GC JSON inválido')); }
-          });
-        }).on('error', reject);
-      });
-    }
-
-    const gcFetchPage = async (endpoint, params) => {
-      const r = await gcReq360(endpoint, params);
-      return { data: Array.isArray(r.data) ? r.data : [], meta: r.meta || {} };
+    // Etapa A · A3 / B: o Perfil360 usa a MESMA camada HTTP segura do restante do sync (gcCliente): resposta inválida, 429/5xx
+    // (retentativas controladas) ou paginação incompleta LANÇAM erro — o cursor não avança e nada parcial é gravado — e a
+    // consulta carrega loja_id=262759 (Etapa B). Nenhum corpo bruto/credencial em log.
+    const gcFetchPage = async (endpoint, params = {}) => {
+      const j = await gcCliente.get(endpoint, { ...params, limite: '100' }, { tipo: 'lista' });
+      return { data: j.data, meta: j.meta };
     };
 
     const firestoreGetClientes = async () => {

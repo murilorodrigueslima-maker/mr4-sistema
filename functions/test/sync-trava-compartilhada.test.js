@@ -59,3 +59,16 @@ describe('intervalo mínimo e blocos direcionados', () => {
   test('pedidos sem vendas não trava esperando a corroboração', () => { const r = rodar(base(), { ...CR, BLOCOS: 'pedidos' }); expect(r.exitCode).toBe(0); expect(r.writes).toContain('pedidos_cache/latest'); });
   test('BLOCOS inválido ⇒ erro e NADA executa', () => { const r = rodar(base(), { ...CR, BLOCOS: 'vendas,apagar' }); expect(r.exitCode).not.toBe(0); expect(r.writes).toEqual([]); });
 });
+
+describe('MODO_SUJOS (disparado por webhook): relê só os blocos marcados', () => {
+  const fila = blocos => ({ gc_refresh_fila: { lote: { blocos: Object.fromEntries(blocos.map(b => [b, { sujoDesdeMs: 1, eventos: 3 }])), atualizadoMs: 1 } } });
+  test('fila com vendas+pedidos ⇒ só esses blocos escrevem; a fila é zerada; heartbeat parcial', () => {
+    const r = rodar({ ...base(), ...fila(['vendas', 'pedidos']) }, { ...CR, MODO_SUJOS: '1' });
+    expect(r.exitCode).toBe(0); expect(r.writes).toContain('painel_cache/vendas'); expect(r.writes).toContain('pedidos_cache/latest'); expect(r.writes).not.toContain('painel_cache/estoque'); expect(r.writes).not.toContain('financeiro_cache/latest');
+    expect(r.state.gc_refresh_fila.lote.blocos).toEqual({}); expect(r.state.gc_sync_status.ultima.ultimaExecucao.parcial).toBe(true);
+  });
+  test('fila vazia ⇒ nada a fazer (sem escrita de dados)', () => {
+    const r = rodar({ ...base() }, { ...CR, MODO_SUJOS: '1' }); expect(r.log).toMatch(/SEM_BLOCOS_DESATUALIZADOS/); expect(r.writes.filter(w => !w.startsWith('gc_sync_lock') && !w.startsWith('gc_refresh_fila'))).toEqual([]);
+  });
+  test('a fila nunca contém valores nem dados do negócio', () => { const r = rodar({ ...base(), ...fila(['financeiro']) }, { ...CR, MODO_SUJOS: '1' }); expect(JSON.stringify(r.state.gc_refresh_fila)).not.toMatch(/R\$|valor_total/); });
+});

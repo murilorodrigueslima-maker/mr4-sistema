@@ -873,8 +873,8 @@ async function adquirirTrava(db) {
   return db.runTransaction(async tx => {
     const snap = await tx.get(ref); const agoraMs = Date.now(); const d = snap.exists ? snap.data() : null;
     if (d && Number(d.expiraEm) > agoraMs && d.detentor !== DETENTOR) return { ok: false, motivo: 'TRAVA_EM_USO' };
-    tx.set(ref, { detentor: DETENTOR, origem: ORIGEM, adquiridaEm: agoraMs, expiraEm: agoraMs + TRAVA_TTL_MS, assumiuExpirada: !!(d && Number(d.expiraEm) <= agoraMs && d.detentor !== DETENTOR) });
-    return { ok: true, motivo: d && Number(d.expiraEm) <= agoraMs && d.detentor !== DETENTOR ? 'TRAVA_EXPIRADA_ASSUMIDA' : 'TRAVA_ADQUIRIDA' };
+    tx.set(ref, { detentor: DETENTOR, origem: ORIGEM, adquiridaEm: agoraMs, expiraEm: agoraMs + TRAVA_TTL_MS, assumiuExpirada: !!(d && Number(d.expiraEm) > 0 && Number(d.expiraEm) <= agoraMs && d.detentor !== DETENTOR) });
+    return { ok: true, motivo: d && Number(d.expiraEm) > 0 && Number(d.expiraEm) <= agoraMs && d.detentor !== DETENTOR ? 'TRAVA_EXPIRADA_ASSUMIDA' : 'TRAVA_ADQUIRIDA' };
   });
 }
 async function liberarTrava(db) {
@@ -913,10 +913,35 @@ function blocosSolicitados() {
       travaOk = true;
     } catch (e) { registrarFalha('sync', 'TRAVA_INDISPONIVEL', codigoSeguro(e)); log.erro('❌ trava indisponível — nada foi executado (fail-closed)'); process.exitCode = 1; return; }
   }
+  let selFinal = sel;
+  const modoSujos = process.env.MODO_SUJOS === '1';
   try {
-    await executarSync(sel);
-  } finally { if (travaOk) await liberarTrava(db0); }
+    if (modoSujos && db0) {   // execução disparada por webhook: relê SÓ os blocos marcados como desatualizados (fila gc_refresh_fila)
+      const sujos = await require('../functions/lib/refreshFila').reclamarSujos({ db: db0 });
+      const semSujos = sujos.length === 0, parcialSujos = sujos.length !== TODOS_OS_BLOCOS.length;
+      if (semSujos) {
+        log.info('⏭️  SEM_BLOCOS_DESATUALIZADOS');
+        return;
+      }
+      selFinal = { ok: true, lista: sujos, parcial: parcialSujos };
+    }
+    await executarSync(selFinal);
+  } finally {
+    if (travaOk) await liberarTrava(db0);
+    if (modoSujos && db0) await reenfileirarSeHouverSujos(db0);   // eventos chegaram durante a execução ⇒ nova execução (coalescida)
+  }
 })();
+
+/** Se chegaram eventos durante a execução, dispara OUTRA execução do próprio Job (a trava garante uma por vez). Falha é inócua: o sync de 2 h reconcilia. */
+async function reenfileirarSeHouverSujos(db) {
+  try {
+    if (!(await require('../functions/lib/refreshFila').temSujos({ db }))) return;
+    const job = process.env.CLOUD_RUN_JOB; if (!job) return;
+    const { GoogleAuth } = require('google-auth-library'); const cli = await new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/cloud-platform'] }).getClient();
+    await cli.request({ url: `https://run.googleapis.com/v2/projects/${PROJECT_ID}/locations/southamerica-east1/jobs/${job}:run`, method: 'POST', data: { overrides: { containerOverrides: [{ env: [{ name: 'MODO_SUJOS', value: '1' }] }] } } });
+    log.info('🔁 REEXECUCAO_DISPARADA');
+  } catch (e) { log.aviso(`⚠️  reexecução não disparada (codigo=${codigoSeguro(e)})`); }
+}
 
 async function executarSync(sel) {
   const todos = TODOS_OS_BLOCOS;

@@ -551,7 +551,8 @@
 <script type="module">
   import { initializeApp }                         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged, signOut }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, collection, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { observarAtualizacao, statusPadrao } from '../js/vivo.js';
   import { getFunctions, httpsCallable }           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
   import { verificarAcessoModulo } from '../js/guard.js';
 
@@ -609,6 +610,7 @@
 
     // Agente de Estoque (beta): a aba só aparece se o BACKEND confirmar acesso (módulo Estoque + piloto de gestão). Falha = aba continua oculta; o módulo não depende da IA.
     try { iniciarAgenteEstoque(); } catch (e) { console.warn('Agente indisponível:', (e && e.code) || e); }
+    observarAtualizacao({ db, fns: { doc, onSnapshot }, colecao: 'painel_cache', id: 'estoque', marcador: d => d.atualizado_em, aoMudar: carregarEstoque, aoStatus: statusPadrao() });
   });
 
   function iniciarAgenteEstoque() {

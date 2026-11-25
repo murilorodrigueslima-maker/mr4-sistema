@@ -613,7 +613,7 @@
     </div>
     <div class="last-update" id="lastUpdate" style="display:none">
       <span class="last-update-dot"></span>
-      <span id="lastUpdateText">—</span>
+      <span id="vivoStatus" style="margin-right:.6rem;font-size:.75rem;color:var(--muted,#64748b)"></span><span id="lastUpdateText">—</span>
     </div>
   </div>
 
@@ -761,7 +761,8 @@
 <script type="module">
   import { initializeApp }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged, signOut }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc }              from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, onSnapshot }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { observarAtualizacao, rotuloStatus }      from '../js/vivo.js';
 
   /* ── Firebase ── */
   const app  = initializeApp({
@@ -852,7 +853,8 @@
     document.getElementById('sidebar').style.display       = '';
     document.getElementById('mainContent').style.display   = '';
 
-    loadVendas();
+    loadVendas().then(() => observarAtualizacao({ db, fns: { doc, onSnapshot }, colecao: 'painel_cache', id: 'vendas', marcador: d => d.atualizado_em, aoMudar: loadVendas,
+      aoStatus: st => { const el = document.getElementById('vivoStatus'); if (el) el.textContent = rotuloStatus[st] || ''; } }));
   });
 
   /* ── Load vendas (SECURITY HOTFIX P0: Firestore protegido painel_cache/vendas; antes data/vendas.json público) ── */

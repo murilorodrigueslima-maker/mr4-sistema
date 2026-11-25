@@ -61,7 +61,7 @@ describe('destino existe e carrega', () => {
 
 describe('links antigos (caixa, estoque, vendas) continuam intocados e chegam ao v2', () => {
   test.each(['caixa.html', 'estoque.html', 'vendas.html'])('%s: link para financeiro.html leva ao v2 (caixa e vendas, byte a byte iguais ao main aprovado; estoque.html foi alterado depois, por autorização: UI do agente e filtros da Fase A)', f => {
-    if (temGit && f !== 'estoque.html') expect(git(`diff ${BASE} -- modulos/${f}`)).toBe('');
+    if (temGit && f === 'caixa.html') expect(git(`diff ${BASE} -- modulos/${f}`)).toBe('');   // estoque.html e vendas.html foram alterados depois, por autorização (UI do agente/filtros; atualização ao vivo por listener)
     const html = lerHtml(f); const links = [...html.matchAll(/<a[^>]*href="(\.?\/?financeiro\.html)"/g)].map(m => m[1]); expect(links.length).toBeGreaterThanOrEqual(1);
     for (const l of links) { const resolvido = new URL(l, BASE_URL + f).href; expect(resolvido).toBe(BASE_URL + 'financeiro.html'); expect(navegar(resolvido).destino).toBe(BASE_URL + 'financeiro-v2.html'); }
   });
@@ -69,5 +69,5 @@ describe('links antigos (caixa, estoque, vendas) continuam intocados e chegam ao
 
 dt('escopo: caixa e vendas não aparecem no diff contra o main aprovado', () => {
   const lista = git(`diff --name-only ${BASE}`).split('\n').filter(Boolean);
-  for (const f of ['modulos/caixa.html', 'modulos/vendas.html']) expect(lista).not.toContain(f);   // estoque.html saiu desta lista: alterado depois por autorização (agente e Fase A de filtros)
+  for (const f of ['modulos/caixa.html']) expect(lista).not.toContain(f);   // vendas.html saiu desta lista: alterado depois por autorização (atualização ao vivo); estoque.html idem (agente e Fase A de filtros): alterado depois por autorização (agente e Fase A de filtros)
 });

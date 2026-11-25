@@ -1,8 +1,8 @@
 name: Sync Dados GestãoClick
 
 on:
-  schedule:
-    - cron: '17 */2 * * *'   # a cada 2 horas, no minuto 17 (fora do pico do minuto 0)
+  # O AGENDAMENTO OPERACIONAL FOI TRANSFERIDO para o Cloud Scheduler → Cloud Run Job `mr4-sync-job` (projeto mr4-ponto).
+  # Este workflow fica SÓ como contingência MANUAL (workflow_dispatch); a trava compartilhada (gc_sync_lock) impede execução simultânea com o Job.
   workflow_dispatch:           # execução manual; `acao` ≠ normal só vale aqui (o agendamento NUNCA aceita anomalia)
     inputs:
       acao:

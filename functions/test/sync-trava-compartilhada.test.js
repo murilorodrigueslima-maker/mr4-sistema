@@ -41,9 +41,13 @@ describe('trava compartilhada', () => {
 
 describe('intervalo mínimo e blocos direcionados', () => {
   test('INTERVALO_MIN_MINUTOS: execução recente ⇒ ignora (sem trava, sem escrita)', () => {
-    const e = base(); e.gc_sync_status = { ultima: { ultimaTentativaEm: new Date(AGORA - 20 * 60000).toISOString() } };
+    const e = base(); e.gc_sync_status = { ultima: { ultimoSucessoCompletoEm: new Date(AGORA - 20 * 60000).toISOString() } };
     const r = rodar(e, { ...CR, INTERVALO_MIN_MINUTOS: '60' }); expect(r.log).toMatch(/SYNC_IGNORADO_INTERVALO/); expect(r.writes).toEqual([]);
     const r2 = rodar(e, { ...CR, INTERVALO_MIN_MINUTOS: '10' }); expect(r2.log).not.toMatch(/SYNC_IGNORADO_INTERVALO/); expect(r2.writes).toContain('painel_cache/vendas');
+  });
+  test('execução DIRECIONADA ignora o intervalo mínimo (não é adiada por sync recente) e não o adia', () => {
+    const e = base(); e.gc_sync_status = { ultima: { ultimoSucessoCompletoEm: new Date(AGORA - 20 * 60000).toISOString() } };
+    const r = rodar(e, { ...CR, INTERVALO_MIN_MINUTOS: '60', BLOCOS: 'estoque,catalogo' }); expect(r.log).not.toMatch(/SYNC_IGNORADO_INTERVALO/); expect(r.writes).toContain('painel_cache/estoque'); expect(r.writes).not.toContain('painel_cache/vendas');
   });
   test('BLOCOS=vendas,pedidos: só esses blocos escrevem; heartbeat NÃO declara sucesso completo', () => {
     const e = base(); e.gc_sync_status = { ultima: { ultimoSucessoCompletoEm: '2026-11-25T00:00:00.000Z', ultimaTentativaEm: '2026-11-25T00:00:00.000Z', ultimoSucessoPorBloco: { estoque: 'ANTES' } } };

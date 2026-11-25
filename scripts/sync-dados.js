@@ -903,8 +903,8 @@ function blocosSolicitados() {
     try {
       // intervalo mínimo (disparos periódicos): evita sync duplicado logo após outro
       const minInt = Number(process.env.INTERVALO_MIN_MINUTOS || 0);
-      if (minInt > 0) {
-        const hb = await firestoreLerReferencia('gc_sync_status', 'ultima'); const ult = hb.ok && hb.dados ? Date.parse(hb.dados.ultimaTentativaEm || '') : NaN;
+      if (minInt > 0 && !sel.parcial) {   // só o sync COMPLETO usa o intervalo (execuções direcionadas de estoque/etc. não o adiam)
+        const hb = await firestoreLerReferencia('gc_sync_status', 'ultima'); const ult = hb.ok && hb.dados ? Date.parse(hb.dados.ultimoSucessoCompletoEm || '') : NaN;
         if (Number.isFinite(ult) && Date.now() - ult < minInt * 60000) { log.info('⏭️  SYNC_IGNORADO_INTERVALO — execução recente'); return; }
       }
       const t = await adquirirTrava(db0); const motivoTrava = t.motivo;

@@ -15,7 +15,7 @@ const ago = h => new Date(T0 - h * H).toISOString();
 
 describe('workflow sync-dados.yml', () => {
   const wf = fs.readFileSync(path.join(ROOT, '.github/workflows/sync-dados.yml'), 'utf8');
-  test('cron 17 */2 * * * (fora do minuto 0) e disparo manual preservado', () => { expect(wf).toMatch(/cron: '17 \*\/2 \* \* \*'/); expect(wf).not.toMatch(/cron: '0 \*\/2/); expect(wf).toMatch(/workflow_dispatch:/); });
+  test('GitHub Actions SEM agendamento (contingência manual); o agendamento operacional é o Cloud Scheduler → Cloud Run Job', () => { expect(wf).not.toMatch(/^\s*schedule:/m); expect(wf).not.toMatch(/cron:/); expect(wf).toMatch(/workflow_dispatch:/); expect(wf).toMatch(/Cloud Run Job/); });
   test('concorrência: um grupo, SEM cancelar a execução em andamento', () => { expect(wf).toMatch(/concurrency:\s*\n\s*group: sync-dados\s*\n\s*cancel-in-progress: false/); expect(wf).not.toMatch(/cancel-in-progress: true/); });
   test('timeout-minutes definido e coerente com o histórico (mediana 4,8 min; máx 20,6 min) ⇒ 30', () => { const m = wf.match(/timeout-minutes: (\d+)/); expect(m).toBeTruthy(); expect(Number(m[1])).toBeGreaterThanOrEqual(30); expect(Number(m[1])).toBeLessThanOrEqual(45); });
   test('segurança do workflow preservada: sem continue-on-error, só leitura do repositório, OIDC, segredos só no passo do sync', () => {

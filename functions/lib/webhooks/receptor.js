@@ -14,6 +14,7 @@ const { LOJA_ATIVA_ID, LOJAS_BLOQUEADAS } = require('../gcHttp');
 const EVENTOS = Object.freeze(['venda.cadastrada', 'venda.situacao_alterada', 'recebimento.baixado', 'recebimento.estornado', 'pagamento.baixado', 'pagamento.estornado']);
 const RECURSO_POR_EVENTO = Object.freeze({ 'venda.cadastrada': 'vendas', 'venda.situacao_alterada': 'vendas', 'recebimento.baixado': 'recebimentos', 'recebimento.estornado': 'recebimentos', 'pagamento.baixado': 'pagamentos', 'pagamento.estornado': 'pagamentos' });
 const MODOS = Object.freeze(['DESLIGADO', 'RECEPCAO', 'SOMBRA', 'ATIVO']);
+const NOME_LOJA_ATIVA = 'MR4 DISTRIBUIDORA';   // a venda não traz loja_id, só nome_loja (Fase 0, T5)
 const JANELA_REPLAY_S = 300, MAX_CORPO = 64 * 1024, CACHE_CONFIG_MS = 30000;
 const COL_EVENTOS = 'gc_webhook_eventos', COL_CONFIG = 'gc_webhook_config', DOC_CONFIG = 'estado', COL_STATUS = 'gc_webhook_status';
 
@@ -88,7 +89,8 @@ async function tratarRequisicao({ req, db, segredo, lerConfig, agora = () => Dat
     }
     const tentativa = Number(req.cabecalhos['x-webhook-tentativa']); const ref = db.collection(COL_EVENTOS).doc(a.id);
     const doc = { ...a, tentativa: Number.isInteger(tentativa) && tentativa >= 1 && tentativa <= 20 ? tentativa : 1, corpo_sha256: sha256(corpoCru), recebido_em: serverTimestamp(), recebido_ms: agoraMs, modo: cfg.modo,
-      status: cfg.modo === 'RECEPCAO' ? 'RECEBIDO' : 'PENDENTE_SOMBRA', resultado: null };
+      status: cfg.modo === 'RECEPCAO' ? 'RECEBIDO' : 'PENDENTE_SOMBRA', resultado: null,
+      ...(cfg.modo === 'ATIVO' ? { efeito: 'PENDENTE' } : {}) };                                    // caixa de saída: a varredura reaplica o que não for confirmado
     try { await ref.create(doc); }
     catch (e) { if (e && (e.code === 6 || /already exists/i.test(String(e.message)))) return resp(200, 'DUPLICADO', { id: a.id, evento: a.evento }); throw e; }
     return resp(200, 'RECEBIDO', { id: a.id, evento: a.evento, loja_id: a.loja_id, tentativa: doc.tentativa });
@@ -97,36 +99,51 @@ async function tratarRequisicao({ req, db, segredo, lerConfig, agora = () => Dat
   }
 }
 
+const nomeNormalizado = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toUpperCase();
+
+/** Conferência da loja do registro lido: por `loja_id` quando houver; senão por `nome_loja`. Venda sem nenhum dos dois não é dada como conferida. */
+function conferirLoja(recurso, r) {
+  if (r && r.loja_id) return String(r.loja_id) === LOJA_ATIVA_ID ? 'ID' : 'DIVERGENTE';
+  if (r && r.nome_loja) return nomeNormalizado(r.nome_loja) === NOME_LOJA_ATIVA ? 'NOME' : 'DIVERGENTE';
+  return recurso === 'vendas' ? 'NAO_VERIFICADA' : 'AUSENTE';   // títulos: o filtro primário é o loja_id do aviso
+}
+
 /**
- * Processamento ASSÍNCRONO em SOMBRA: busca o registro na API (GET /{recurso}/{id}, já com loja_id=262759) e só COMPARA existência/loja.
- * NÃO escreve em nenhuma coleção de negócio. Resultado fica no próprio evento. `buscar` = (recurso, id) → {status} | lança.
+ * Processamento ASSÍNCRONO em SOMBRA: busca o registro na API (GET /{recurso}/{id}) e só COMPARA existência/loja.
+ * NÃO escreve em nenhuma coleção de negócio. Resultado fica no próprio evento. `buscar` = (recurso, id) → {status, loja_id?, nome_loja?} | lança.
  */
 async function processarSombra({ db, id, buscar, agora = () => Date.now() }) {
   const ref = db.collection(COL_EVENTOS).doc(id); const s = await ref.get(); if (!s.exists) return { ok: false, codigo: 'EVENTO_INEXISTENTE' };
   const e = s.data(); if (e.status !== 'PENDENTE_SOMBRA') return { ok: true, codigo: 'JA_PROCESSADO' };
-  let resultado;
-  try { const r = await buscar(e.recurso, e.registro_id); resultado = r && r.status === 404 ? 'ORIGEM_INDISPONIVEL' : (r && r.loja_id && String(r.loja_id) !== LOJA_ATIVA_ID ? 'LOJA_DIVERGENTE' : 'CONFERIDO'); }
-  catch (err) { resultado = 'FALHA_CONSULTA'; }
-  await ref.set({ status: resultado === 'FALHA_CONSULTA' ? 'PENDENTE_SOMBRA' : 'SOMBRA_CONCLUIDA', resultado, processado_ms: agora() }, { merge: true });
+  let resultado, conferencia = null;
+  try {
+    const r = await buscar(e.recurso, e.registro_id);
+    if (r && r.status === 404) resultado = 'ORIGEM_INDISPONIVEL';
+    else { conferencia = conferirLoja(e.recurso, r); resultado = conferencia === 'DIVERGENTE' ? 'LOJA_DIVERGENTE' : conferencia === 'NAO_VERIFICADA' ? 'LOJA_NAO_VERIFICADA' : 'CONFERIDO'; }
+  } catch (err) { resultado = 'FALHA_CONSULTA'; }
+  await ref.set({ status: resultado === 'FALHA_CONSULTA' ? 'PENDENTE_SOMBRA' : 'SOMBRA_CONCLUIDA', resultado, conferencia_loja: conferencia, processado_ms: agora() }, { merge: true });
   return { ok: true, codigo: resultado };
 }
 
 
 /**
  * Reprocessamento de pendentes em SOMBRA (varredura periódica): eventos cuja consulta falhou (FALHA_CONSULTA) voltam a ser tentados,
- * no máximo `maxTentativas` vezes; depois ficam SOMBRA_FALHA (visível para conferência — nunca descartados nem apagados).
+ * com espera dobrada (10, 20, 40, 80, 160 min), no máximo `maxTentativas` vezes; depois ficam SOMBRA_FALHA (visível para conferência —
+ * nunca descartados nem apagados). `orcamentoMs` interrompe a rodada antes do tempo limite da Function (o resto fica para a próxima).
  */
-async function reprocessarPendentes({ db, buscar, agora = () => Date.now(), maxTentativas = 5, esperaMinMs = 5 * 60000, limite = 50 }) {
+async function reprocessarPendentes({ db, buscar, agora = () => Date.now(), maxTentativas = 5, esperaMinMs = 5 * 60000, limite = 50, atrasoMs = 30 * 60000, orcamentoMs = Infinity }) {
   const snap = await db.collection(COL_EVENTOS).where('status', '==', 'PENDENTE_SOMBRA').limit(limite).get();
-  let tentados = 0, falhas = 0;
+  const inicio = agora(); let tentados = 0, falhas = 0, atrasados = 0, divergentes = 0;
   for (const doc of snap.docs) {
-    const e = doc.data(); if (agora() - (e.recebido_ms || 0) < esperaMinMs) continue;
+    const e = doc.data(); const idade = agora() - (e.recebido_ms || 0);
+    if (idade >= atrasoMs) atrasados++;
+    if (idade < esperaMinMs || agora() < (e.proxima_sombra_ms || 0) || agora() - inicio >= orcamentoMs) continue;
     const n = (e.tentativas_sombra || 0) + 1; tentados++;
     if (n > maxTentativas) { await db.collection(COL_EVENTOS).doc(doc.id).set({ status: 'SOMBRA_FALHA', resultado: 'FALHA_CONSULTA_DEFINITIVA' }, { merge: true }); falhas++; continue; }
-    await db.collection(COL_EVENTOS).doc(doc.id).set({ tentativas_sombra: n }, { merge: true });
-    await processarSombra({ db, id: doc.id, buscar, agora });
+    await db.collection(COL_EVENTOS).doc(doc.id).set({ tentativas_sombra: n, proxima_sombra_ms: agora() + esperaMinMs * 2 ** n }, { merge: true });
+    if ((await processarSombra({ db, id: doc.id, buscar, agora })).codigo === 'LOJA_DIVERGENTE') divergentes++;
   }
-  return { tentados, falhas };
+  return { tentados, falhas, atrasados, divergentes };
 }
 
 /**
@@ -153,4 +170,4 @@ function avaliarSilencio({ modo, ultimoEventoMs, agoraMs, limiteMs = 24 * 360000
   return agoraMs - ultimoEventoMs >= limiteMs ? { alerta: true, motivo: 'SILENCIO_24H' } : { alerta: false, motivo: 'OK' };
 }
 
-module.exports = { reprocessarPendentes, compararComPolling, avaliarSilencio, EVENTOS, MODOS, JANELA_REPLAY_S, COL_EVENTOS, COL_CONFIG, COL_STATUS, verificarAssinatura, normalizarAviso, criarLeitorConfig, tratarRequisicao, processarSombra, sha256 };
+module.exports = { reprocessarPendentes, compararComPolling, avaliarSilencio, conferirLoja, NOME_LOJA_ATIVA, DOC_CONFIG, EVENTOS, MODOS, JANELA_REPLAY_S, COL_EVENTOS, COL_CONFIG, COL_STATUS, verificarAssinatura, normalizarAviso, criarLeitorConfig, tratarRequisicao, processarSombra, sha256 };

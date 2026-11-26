@@ -1,6 +1,6 @@
 'use strict';
 const G = require('../lib/financeiroGatilho'); const RF = require('../lib/refreshFila');
-const fakeDb = () => { const m = {}; return { m, collection: c => ({ doc: i => ({ _k: c + '/' + i }) }), runTransaction: async fn => fn({ get: async r => ({ exists: r._k in m, data: () => m[r._k] }), set: (r, v) => { m[r._k] = v; } }) }; };
+const fakeDb = () => { const m = {}; return { m, collection: c => ({ doc: i => ({ _k: c + '/' + i, get: async () => ({ exists: (c + '/' + i) in m, data: () => m[c + '/' + i] }) }) }), runTransaction: async fn => fn({ get: async r => ({ exists: r._k in m, data: () => m[r._k] }), set: (r, v) => { m[r._k] = v; } }) }; };
 describe('Gatilho do Financeiro (só ATIVO, coalescido, inócuo em falha)', () => {
   test('primeiro evento dispara; os seguintes dentro de 30 min são coalescidos e marcam pendente', async () => {
     const db = fakeDb(); let n = 0; const disparar = async () => { n++; };
@@ -20,7 +20,11 @@ describe('Gatilho do Financeiro (só ATIVO, coalescido, inócuo em falha)', () =
     const r = await RF.aplicarModo({ db, modo: 'ATIVO', evento: 'recebimento.baixado', dispararJob: async () => { job++; }, dispararFinanceiro: async () => { fin++; } });
     expect(r.blocos).toEqual(['financeiro']); expect(r.financeiroN1).toBe('DISPARADO'); expect(job).toBe(1); expect(fin).toBe(1);
   });
-  test('o módulo não apaga nada nem escreve em fin_n1*', () => { const src = require('fs').readFileSync(require.resolve('../lib/financeiroGatilho'), 'utf8'); expect(src).not.toMatch(/\.delete\(|fin_n1_|'fin_n1'/); });
+  test('o módulo não apaga nada; do Financeiro só LÊ ponteiro e trava (escreve apenas no próprio controle)', async () => {
+    const src = require('fs').readFileSync(require.resolve('../lib/financeiroGatilho'), 'utf8'); expect(src).not.toMatch(/\.delete\(|fin_n1_resumo|fin_n1_titulos/);
+    const db = fakeDb(); for (const t of [1000, 2000, 1000 + G.INTERVALO_MIN_MS]) await G.solicitar({ db, evento: 'recebimento.baixado', disparar: async () => {}, agoraMs: t });
+    expect(Object.keys(db.m)).toEqual(['gc_refresh_fila/financeiro_n1']);
+  });
 });
 describe('Financeiro v2 ao vivo', () => {
   const H = require('fs').readFileSync(require('path').join(__dirname, '..', '..', 'modulos', 'financeiro-v2.html'), 'utf8');

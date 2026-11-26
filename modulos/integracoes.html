@@ -109,6 +109,18 @@ td{padding:.6rem .8rem;border-bottom:1px solid var(--border);font-size:.8rem}
         <div class="kv"><div class="k">Eventos com falha</div><div class="v" id="whFal">—</div></div>
         <div class="kv"><div class="k">Latência média (GestãoClick → receptor)</div><div class="v" id="whLat">—</div></div>
       </div>
+      <details id="whGuia"><summary style="cursor:pointer;font-size:.82rem;font-weight:700;color:var(--orange)">Passo a passo para ligar os webhooks</summary>
+        <ol style="margin:.7rem 0 0 1.2rem;font-size:.8rem;line-height:1.6">
+          <li><b>Antes:</b> com o receptor em DESLIGADO, os avisos são aceitos e <b>descartados</b>. Não marque eventos reais no GestãoClick enquanto estiver assim (a sincronização normal continua cobrindo tudo).</li>
+          <li><b>No GestãoClick</b> (usuário master): abra Integração via API › Documentação e confirme os eventos e a assinatura. Em Webhooks › Adicionar, cole a URL acima. Se a tela permitir salvar sem eventos, salve sem eventos. Copie o segredo (aparece uma única vez).</li>
+          <li><b>Aqui:</b> cole o segredo no campo e clique em <b>Salvar segredo</b>.</li>
+          <li><b>Aqui:</b> mude o modo para <b>RECEPCAO</b> e clique em <b>Teste seguro</b> (deve informar assinatura aceita). Se a tela do GestãoClick não permitiu salvar sem eventos, faça os passos 3 e 4 logo em seguida.</li>
+          <li><b>No GestãoClick:</b> marque os 6 eventos (venda cadastrada, venda com situação alterada, recebimento baixado e estornado, pagamento baixado e estornado), limite à loja MR4 DISTRIBUIDORA (262759) e use "Enviar teste".</li>
+          <li><b>Validar o recebimento:</b> após uma venda ou baixa real, "Eventos recebidos" e o histórico abaixo devem mostrar o aviso em até 1 minuto.</li>
+          <li><b>SOMBRA:</b> mude o modo. Cada aviso passa a ser conferido na API, sem alterar painéis. Deixe alguns dias úteis.</li>
+          <li><b>Comparar:</b> a lista "Requisitos para ATIVO" mostra quantos eventos foram conferidos, divergências e falhas.</li>
+          <li><b>ATIVO:</b> só com a sua aprovação. Peça antes a liberação da permissão que atualiza o Financeiro na hora. Para desligar a qualquer momento: "Desativar webhooks agora".</li>
+        </ol></details>
       <div class="row"><div><label for="whSegIn">Segredo de autenticação (cadastrar ou substituir)</label><input id="whSegIn" type="password" autocomplete="off" spellcheck="false" placeholder="Cole o segredo exibido pelo GestãoClick"></div><button class="btn primary" id="whSalvar">Salvar segredo</button></div>
       <div><label>Modo do receptor</label><div class="modos" id="whModos"></div><p class="hint">Evolução em etapas: DESLIGADO → RECEPCAO (só registra) → SOMBRA (confere com a API, sem alterar painéis) → ATIVO (atualiza os painéis). Desligar vale em segundos e o polling continua.</p></div>
       <div id="whReq"></div>

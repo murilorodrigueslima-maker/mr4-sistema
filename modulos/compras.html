@@ -92,6 +92,11 @@
   details.mot code { font-family: 'JetBrains Mono', monospace; font-size: .68rem; background: var(--bg); padding: .05rem .3rem; border-radius: 3px; margin: .15rem .2rem 0 0; display: inline-block; }
   .vazio { padding: 2rem; text-align: center; color: var(--muted); font-size: .9rem; }
   .lbl { display: none; }
+  /* Compras pendentes antigas: aviso SOMENTE LEITURA (o dado vem pronto do servidor) */
+  .pend-compras { background: var(--white); border: 1px solid var(--border); border-left: 4px solid var(--yellow); border-radius: 8px; padding: .6rem .9rem; font-size: .78rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.5; }
+  .pend-compras b { color: var(--text); } .pend-compras details { margin-top: .4rem; } .pend-compras summary { cursor: pointer; color: var(--blue); font-weight: 600; }
+  .pend-compras .pc { border-top: 1px solid var(--border); padding: .45rem 0; overflow-wrap: anywhere; }
+  .bd.pend { background: var(--yellow-bg); color: var(--yellow); }
   /* Política 1.2 — rentabilidade (só aparece para perfil com custo e servidor com a política 1.2) */
   .resumo-fin { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .75rem .9rem; margin-bottom: 1rem; }
   .resumo-fin .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem .9rem; }
@@ -277,6 +282,8 @@
     (sem lead time). Prioridade P1 = maior prioridade para análise. Estoque negativo não gera unidades extras.
   </div>
 
+  <div class="pend-compras" id="pendCompras" hidden></div>
+
   <div class="resumo-fin" id="resumoFin" hidden></div>
 
   <div class="chips" id="chips"></div>
@@ -370,6 +377,7 @@ async function carregarCompras() {
     for (const r of estado.revisao) estado.fin[r.id] = r.fin;
     montarCabecalho(vSnap.exists() ? vSnap.data() : null, mSnap.exists() ? mSnap.data() : null);
     montarResumoFin();
+    montarPendencias(vSnap.exists() ? vSnap.data().pendencias_compras : null);
     estado.linhas = vSnap.exists() ? (vSnap.data().linhas || []) : [];
     render();
   } catch (e) {
@@ -412,6 +420,24 @@ function montarCabecalho(v, meta) {
       Object.keys(ATENCAO).filter(k => at.por_motivo[k] > 0).map(k => `<option value="${k}">${esc(ATENCAO[k])} (${fmt(at.por_motivo[k])})</option>`).join('');
   }
 }
+
+// ── Compras pendentes antigas (somente leitura): a regra e a lista vêm do servidor; a tela não altera pedido nem sugestão ──
+const dataBr = d => d ? String(d).split('-').reverse().join('/') : 'sem data';
+function montarPendencias(p) {
+  const box = document.getElementById('pendCompras');
+  estado.pend = (p && p.por_produto) || {};
+  if (!p || !(p.precisam_confirmacao > 0)) { box.hidden = true; box.innerHTML = ''; return; }
+  const compra = c => `<div class="pc"><b>Emitida em ${esc(dataBr(c.data_emissao))}</b>${c.idade_dias === null ? '' : ` · há ${fmt(c.idade_dias)} dias`} · situação “${esc(c.situacao)}” · ${fmt(c.unidades)} un · registro ${esc(c.id)}
+    <div>${(c.itens || []).map(i => `${esc(i.codigo || i.produto_id)}${i.nome ? ' ' + esc(i.nome) : ''}: ${fmt(i.quantidade)} un`).join(' · ')}${c.itens_total > (c.itens || []).length ? ` · e mais ${fmt(c.itens_total - c.itens.length)} produto(s)` : ''}</div></div>`;
+  box.innerHTML = `<b>${fmt(p.precisam_confirmacao)} compra(s) pendente(s) há mais de ${fmt(p.idade_max_dias)} dias precisam de confirmação</b> (${fmt(p.unidades)} un em ${fmt(p.produtos)} produto(s)).
+    Confira no GestãoClick se a mercadoria chegou (total ou parte), se o registro é repetido ou se deve ser cancelado. Este aviso não presume recebimento, não altera pedidos e não muda as sugestões, que não descontam pedidos pendentes.
+    <details><summary>Ver compras</summary>${(p.compras || []).map(compra).join('')}${p.lista_truncada ? '<div class="pc">Lista parcial.</div>' : ''}</details>`;
+  box.hidden = false;
+}
+const seloPendente = l => {
+  const x = (estado.pend || {})[l.id];
+  return x ? `<span class="bd pend" title="${fmt(x.unidades)} un em ${fmt(x.compras)} compra(s) sem confirmação">COMPRA PENDENTE ANTIGA · CONFIRMAR</span>` : '';
+};
 
 // ── Política 1.2 · textos legíveis (os códigos e as faixas vêm do servidor; a tela não calcula margem nem define limiar) ──
 const pct = v => (v === null || v === undefined) ? '—' : Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
@@ -587,7 +613,7 @@ function render() {
     const ja = new Set([l.novo_protegido ? 'NEW_PRODUCT_PROTECTED' : '', l.estoque_negativo ? 'NEGATIVE_STOCK' : '']);
     const f = fin ? estado.fin[l.id] : null;
     const b = [l.novo_com_demanda ? '<span class="bd novo">NOVO COM DEMANDA COMPROVADA</span>' : '', l.novo_protegido ? '<span class="bd prot">PRODUTO NOVO · EM PROTEÇÃO</span>' : '', l.estoque_negativo ? '<span class="bd neg">ESTOQUE NEGATIVO</span>' : '',
-      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k) && !(fin && (k === 'NO_COST'))).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`)].join('');
+      ...(l.attention_reasons || []).filter(k => ATENCAO[k] && !ja.has(k) && !SO_DETALHE.includes(k) && !(fin && (k === 'NO_COST'))).map(k => `<span class="bd at">${esc(ATENCAO[k])}</span>`), seloPendente(l)].join('');
     const porque = [...(l.motivos || l.sem_sugestao_por || []), ...(l.motivos ? [] : (l.attention_reasons || []))];
     const ult = !(l.qtd > 0) && l.ultima_venda ? ' · última venda ' + esc(l.ultima_venda.split('-').reverse().join('/')) : '';
     const k = comCusto ? (estado.custos.linhas || {})[l.id] : null;

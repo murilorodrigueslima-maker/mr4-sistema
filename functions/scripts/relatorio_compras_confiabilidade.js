@@ -206,6 +206,13 @@ function gerar(d, log = null) {
   if (log && (log.erros.length || log.ilegiveis.length || log.origemIncompleta)) p(`> Atenção: seções com erro: ${JSON.stringify(log.erros)}; linhas ilegíveis: ${log.ilegiveis.length}; títulos incompletos: ${log.origemIncompleta} (nesse caso a prova por título NÃO foi usada).`);
   p('> A API não informa data de recebimento. Nada aqui presume recebimento; "indício" não é prova. Arquivos: `04A-compras-pendentes.csv`, `04B-sugestoes-cenarios.csv`, `04C-origem-das-compras.csv`, `04D-vendas-mr090-mr091.csv`.');
 
+  const tAtual = totaisSugestao(cenarios[0][1], custos, idsProd), tInt = totaisSugestao(cenarios[3][1], custos, idsProd);
+  p('## 0. Resumo',
+    `- ${antigas.length} compras pendentes antigas (${num(antigas.reduce((s, x) => s + x.unidades, 0))} un, ${brl(antigas.reduce((s, x) => s + x.valor_cents, 0))}). **Nenhuma tem prova de recebimento.** Vereditos: ${Object.entries(antigas.reduce((o, x) => { const v = ind.get(x.id).veredito; o[v] = (o[v] || 0) + 1; return o; }, {})).map(([k, v]) => `${k} ${v}`).join(' · ')}.`,
+    `- Sugestões: a política vigente não desconta pendentes; se (hipótese) 100 % já estivesse no estoque sem lançamento, os produtos afetados iriam de ${tAtual.unidades} para ${tInt.unidades} un sugeridas (${brl(tAtual.capital_cents)} → ${brl(tInt.capital_cents)}).`,
+    `- MR.090/MR.091: ${candidata.length === 1 ? `a diferença aponta para a venda ${candidata[0].id}, presente no MR4 e (hipótese) excluída no GestãoClick` : 'ver seção 4'}.`,
+    `- Origem: ${res.comprovadas.compras} de ${res.total.compras} compras comprovadas (${num(res.comprovadas.unidades)} un, ${brl(res.comprovadas.valor_cents)})${vinculos ? '' : '; **provisório**, falta a prova por título (execução no GestãoClick)'}.`);
+
   p('## 1. Compras pendentes antigas');
   p(tabela(['Compra (id)', 'Nº pedido', 'Emissão', 'Idade (d)', 'Situação', 'Fornecedor', 'Produtos', 'Unidades', 'Valor', 'Veredito'],
     antigas.map(x => [x.id, vinculos && vinculos.get(x.id) ? vinculos.get(x.id).codigo : 'PENDENTE', br(x.data_emissao), x.idade_dias, x.situacao, forn(x.fornecedor_id), x.itens.length, num(x.unidades), brl(x.valor_cents), ind.get(x.id).veredito])

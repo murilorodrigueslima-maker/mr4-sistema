@@ -7,7 +7,8 @@
 //   compras_n0_produtos/bloco_NNN  métricas operacionais + sugestão explicada por produto — SEM custo/faturamento
 //   compras_n0_custos/bloco_NNN    custo cadastrado/último custo de compra/faturamento/valor INDICATIVO — só gestor
 //   compras_n0_base/{v_NNN,c_NNN}  base compacta p/ o incremental (itens de venda/compra SEM cliente) — ninguém lê pelo app
-//   estoque_snapshots/{YYYY-MM-DD} snapshot COMPLETO diário do saldo bruto (dia comercial America/Fortaleza)
+//   estoque_snapshots/{YYYY-MM-DD} snapshot COMPLETO diário do saldo bruto (dia comercial America/Fortaleza); só gravado se a leitura de
+//                                  origem passar na validação; dias fechados recebem os fluxos (historico.js → estoque_historico/*)
 const { dataComercial, mapearProduto, fatosDeVenda, fatosDeCompra, centavos, brutoDaLinha } = require('./canonico');
 const { calcularTudo, RULES_VERSION } = require('./motor');
 const { resumoCalibracao, resumoPolitica } = require('./calibracao');
@@ -16,6 +17,7 @@ const Rent = require('./rentabilidade');
 const Forn = require('./fornecedores');
 const Nomes = require('./nomesFornecedores');
 const Compat = require('./docCompat');
+const Hist = require('./historico');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -304,11 +306,15 @@ async function persistirSnapshot(db, snap, { runId, loteBytesMax = LOTE_BYTES_MA
   const baseMeta = refNova
     ? { base_ativa: refNova, base_docs: { vendas: bv.length, compras: bc.length }, base_bytes: baseBytes, avisos: avisosBase(baseBytes), base_orfas: substituidas.length ? substituidas : null }
     : { base_ativa: metaAnt.base_ativa || null, base_docs: metaAnt.base_docs || { vendas: 0, compras: 0 }, base_bytes: metaAnt.base_bytes ?? snap.meta.base_bytes ?? null, avisos: [], base_orfas: metaAnt.base_orfas || null };
+  // histórico de saldo: o dia só é gravado se a leitura de origem for íntegra (senão fica o último válido do dia, ou o dia fica ausente)
+  const diaSaldo = snap.snapshotEstoque.data_comercial;
+  const referenciaSaldo = await Hist.lerReferencia(db, diaSaldo);
+  const validacaoSaldo = Hist.validarOrigemEstoque(snap.snapshotEstoque, referenciaSaldo);
   const docsVisiveis = [...op.map((b, i) => ['compras_n0_produtos', 'bloco_' + String(i).padStart(3, '0'), { gerado_em: quando, policy_version: pv, indice: i, produtos: b }]),
     ...ct.map((b, i) => ['compras_n0_custos', 'bloco_' + String(i).padStart(3, '0'), { gerado_em: quando, policy_version: pv, indice: i, produtos: b }]),
     ['compras_n0', 'resumo', { ...snap.resumo, blocos: op.length }],
     ['compras_n0', 'meta', { ...snap.meta, ...baseMeta, base_limite_operacional_bytes: BASE_LIMITE_OPERACIONAL_BYTES, ultima_tentativa: quando, ultima_tentativa_ok: true, erro: null }],
-    ['estoque_snapshots', snap.snapshotEstoque.data_comercial, snap.snapshotEstoque],   // mesmo dia: substitui (último sync vence)
+    ...(validacaoSaldo.ok ? [['estoque_snapshots', diaSaldo, snap.snapshotEstoque]] : []),   // mesmo dia: substitui (último sync VÁLIDO vence)
     ...(snap.view ? [['compras_n0_view', 'sugestoes', snap.view.sugestoes], ['compras_n0_view', 'custos', snap.view.custos]] : [])];
   const tam = d => Buffer.byteLength(JSON.stringify(d[2]));
   for (const d of [...docsBase, ...docsVisiveis]) if (tam(d) > DOC_BYTES_MAX) { const e = new Error(`DOC_GRANDE_DEMAIS ${d[0]}/${d[1]}: ${tam(d)} bytes`); e.codigo = 'DOC_GRANDE_DEMAIS'; throw e; }
@@ -335,7 +341,8 @@ async function persistirSnapshot(db, snap, { runId, loteBytesMax = LOTE_BYTES_MA
     if (atual.length) { await gravar(atual); lotes++; }
     await trocar(docsVisiveis); lotes++;
   }
-  snap.persistencia = { lotes, bytes_total: total, maior_doc_bytes: Math.max(...[...docsBase, ...docsVisiveis].map(tam)), base_bytes: snap.base ? baseBytes : null, avisos: snap.base ? avisosBase(baseBytes) : [], geracao: refNova ? refNova.geracao : null };
+  snap.persistencia = { lotes, bytes_total: total, maior_doc_bytes: Math.max(...[...docsBase, ...docsVisiveis].map(tam)), base_bytes: snap.base ? baseBytes : null, avisos: [...(snap.base ? avisosBase(baseBytes) : []), ...(validacaoSaldo.ok ? [] : ['ESTOQUE_DIA_NAO_GRAVADO'])], geracao: refNova ? refNova.geracao : null,
+    estoque_dia: { dia: diaSaldo, gravado: validacaoSaldo.ok, motivos: validacaoSaldo.motivos } };
   // blocos visíveis excedentes (fora da base; mesmo comportamento anterior)
   for (const [col, pref, n] of [['compras_n0_produtos', 'bloco_', op.length], ['compras_n0_custos', 'bloco_', ct.length]]) {
     for (const d of (await db.collection(col).get()).docs) if (d.id.startsWith(pref) && Number(d.id.slice(pref.length)) >= n) await d.ref.delete();
@@ -467,6 +474,7 @@ async function executarSync({ cli, db, agora = new Date(), inicio = '2022-01-01'
     snap.nomesCache = nm.cacheParaGravar;
     snap.meta.ultima_reconciliacao_completa = agora.toISOString();
     await persistirSnapshot(db, snap, { runId });
+    snap.persistencia.historico = await Hist.consolidarHistorico({ db, snap, agora, politica });   // dias fechados; nunca derruba o sync
     return { ok: true, modo: 'FULL', snapshot: snap };
   } catch (e) {
     await registrarFalha(db, agora, e, 'FULL');
@@ -501,6 +509,7 @@ async function executarSyncIncremental({ cli, db, agora = new Date(), fetchMod =
     snap.meta.ultima_reconciliacao_completa = ultFull;
     snap.meta.reconciliacao_atrasada = !ultFull || (agora.getTime() - Date.parse(ultFull)) / 3600000 > politica.sync.full_overdue_after_hours;
     await persistirSnapshot(db, snap, { runId });
+    snap.persistencia.historico = await Hist.consolidarHistorico({ db, snap, agora, politica });
     return { ok: true, modo: 'INCREMENTAL', snapshot: snap };
   } catch (e) {
     await registrarFalha(db, agora, e, 'INCREMENTAL');

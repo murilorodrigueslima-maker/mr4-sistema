@@ -79,6 +79,7 @@ describe('registro estático: TODA callable/onRequest do index.js tem guarda de 
     claimOpportunity: ['lib/canaryCallable.js', /sys\.bloqueado === true/], registerOutcome: ['lib/canaryCallable.js', /sys\.bloqueado === true/], releaseOpportunity: ['lib/canaryCallable.js', /sys\.bloqueado === true/],
     crmConsulta: ['lib/crmConsulta.js', /sys\.bloqueado === true/], aiAgente: ['lib/crmConsulta.js', /sys\.bloqueado === true/],   // aiAgente autoriza por CRM.perfilDeAcesso
     crmReativacaoGestao: ['lib/carteiraOwnership.js', /s\.data\(\)\.bloqueado === true/], crmContatoReativacao: ['lib/contatoReativacao.js', /s\.data\(\)\.bloqueado === true/],
+    crmAtribuicaoRevisao: ['lib/atribuicaoRevisao.js', /OWN\.autorizarRevisor\(store, request\.auth\.uid\)/],   // guarda de bloqueio dentro de autorizarRevisor
     pontoBancoCompensar: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoEstornar: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoLancamento: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/],
     pontoPendenciaDecidir: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoEscalaDefinir: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoFolga: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoExcecao: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoJustificativaDecidir: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/],
     comprasSyncManual: ['index.js', /invoker:\s+'private'/],    // onRequest sem chamada de usuário final: só IAM

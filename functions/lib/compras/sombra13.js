@@ -37,7 +37,7 @@ function montarEntradas({ meta, vendas, compras, produtos, custos, snaps }) {
     return { product_id: m.product_id, code: m.code || null, active: m.active, moves_stock: m.moves_stock, has_composition: !!m.kit, current_stock: m.current_stock,
       registered_cost_cents: c.registered_cost_cents ?? null, sale_price_cents: c.sale_price_cents ?? null,
       // a base operacional não guarda a data de cadastro: quando confiável, a 1ª evidência é equivalente para o motor
-      created_at: m.created_at_reliable ? m.first_evidence_date : null, created_at_reliable: !!m.created_at_reliable, erp_min_stock: null };
+      created_at: m.created_at_reliable ? m.first_evidence_date : null, created_at_reliable: !!m.created_at_reliable, erp_min_stock: null, group_id: m.group_id || null };
   });
   const gravado = new Map(operacionais.map(m => [m.product_id, m.suggestion ? m.suggestion.suggested_qty : 0]));
   return { hoje: meta.data_comercial, geradoEm: meta.ultima_sincronizacao_ok, produtos: lista, vendas, compras,

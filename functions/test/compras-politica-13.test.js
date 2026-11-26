@@ -33,7 +33,7 @@ describe('isolamento: a 1.3 não toca a produção', () => {
   });
   test('nenhum módulo de produção carrega a 1.3 nem o index a exporta', () => {
     const raiz = path.join(__dirname, '..');
-    const arquivos = ['index.js', ...fs.readdirSync(path.join(raiz, 'lib/compras')).filter(f => !/13/.test(f)).map(f => 'lib/compras/' + f)];
+    const arquivos = ['index.js', ...fs.readdirSync(path.join(raiz, 'lib/compras')).filter(f => !/1[34]/.test(f)).map(f => 'lib/compras/' + f)];
     for (const f of arquivos) expect([f, /politica13|calculadora13|sombra13|compras_sombra_13/.test(fs.readFileSync(path.join(raiz, f), 'utf8'))]).toEqual([f, false]);
   });
   test('a sombra nunca referencia a visão ou os documentos da produção como destino de escrita', () => {

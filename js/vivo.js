@@ -3,7 +3,7 @@
 // - 1 listener por documento (sem duplicar), cancelado ao sair (pagehide) e pausado com a aba oculta;
 // - falha de conexão: reconecta com espera crescente e informa o estado; nunca escreve nada; sem laço (o recarregamento não toca o documento).
 const ativos = new Map();
-export function observarAtualizacao({ db, fns, colecao, id, marcador, aoMudar, aoStatus = () => {} }) {
+export function observarAtualizacao({ db, fns, colecao, id, marcador, aoMudar, aoStatus = () => {}, aoPrimeira }) {   // aoPrimeira (opcional): marcador da 1ª leitura
   const chave = colecao + '/' + id;
   if (ativos.has(chave)) ativos.get(chave)();                      // sem listeners duplicados
   let unsub = null, parado = false, tent = 0, timer = null, ultimo, recarregando = false, pendente = false;
@@ -19,14 +19,14 @@ export function observarAtualizacao({ db, fns, colecao, id, marcador, aoMudar, a
     aoStatus('conectando');
     unsub = fns.onSnapshot(fns.doc(db, colecao, id), snap => {
       tent = 0; aoStatus('ao_vivo');
-      if (!snap.exists()) return;
+      if (!snap.exists()) { if (aoPrimeira && ultimo === undefined) { ultimo = ''; aoPrimeira(''); } return; }   // com aoPrimeira, a criação do documento conta como mudança
       const m = String(marcador(snap.data()) ?? '');
-      if (ultimo === undefined) { ultimo = m; return; }             // 1ª leitura = a que a tela já mostra
+      if (ultimo === undefined) { ultimo = m; if (aoPrimeira) aoPrimeira(m); return; }             // 1ª leitura = a que a tela já mostra
       if (m !== ultimo) { ultimo = m; rodar(); }
     }, err => {
       unsub = null; aoStatus('reconectando');
       if (err && err.code === 'permission-denied') { aoStatus('sem_permissao'); return; }
-      timer = setTimeout(iniciar, [5000, 15000, 60000][Math.min(tent++, 2)]);
+      timer = setTimeout(() => { if (!document.hidden) iniciar(); }, [5000, 15000, 60000][Math.min(tent++, 2)]);   // oculta: reassina ao voltar
     });
   };
   const pausarSeOculta = () => { if (parado) return; if (document.hidden) { if (unsub) { unsub(); unsub = null; aoStatus('pausado'); } } else iniciar(); };

@@ -728,6 +728,16 @@ exports.auditClientes         = onDocumentWrittenWithAuthContext({ document: 'cl
 exports.auditInteracoesFila   = onDocumentWritten({ document: 'interacoes_fila/{oppId}', region: REGION, retry: true }, ev => _aud().interacoes(ev));
 
 
+// INF-02 — atualização ao vivo do CRM/Fila: qualquer escrita numa fonte da fila muda `crm_fila_versao/estado` (documento único,
+// sem dados pessoais); as telas observam só ele em vez de chamar crmConsulta a cada 20 s. Um gatilho por fonte (lib/filaSinal.FONTES).
+const FILA_SINAL = require('./lib/filaSinal');
+const _gatilhoSinalFila = document => onDocumentWritten({ document, region: REGION, retry: true, maxInstances: 5, memory: '256MiB' },
+  ev => FILA_SINAL.sinalizarFila({ db, FieldValue: require('firebase-admin/firestore').FieldValue, eventId: ev.id, eventTime: ev.time }));
+exports.sinalFilaAtendimentos = _gatilhoSinalFila(FILA_SINAL.FONTES.sinalFilaAtendimentos);
+exports.sinalFilaWorklist     = _gatilhoSinalFila(FILA_SINAL.FONTES.sinalFilaWorklist);
+exports.sinalFilaReservas     = _gatilhoSinalFila(FILA_SINAL.FONTES.sinalFilaReservas);
+exports.sinalFilaRestricoes   = _gatilhoSinalFila(FILA_SINAL.FONTES.sinalFilaRestricoes);
+
 // B3.3 — reativação comercial: job diário 06:00 (Fortaleza) e processador de vendas/cancelamentos (de hora em hora). Ambos NASCEM DESLIGADOS:
 // só agem com carteira_comercial_config/reativacao.modo='ATIVO' E carteira_comercial_config/motor.motorAtivo='B3'; verificam a saúde antes de escrever
 // (disjuntor desliga o motor sem apagar nada). Kill switch: scripts/b3_desligar.js.

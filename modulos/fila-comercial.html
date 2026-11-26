@@ -28,6 +28,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 .topbar-title .material-symbols-outlined{font-size:1.15rem;color:var(--blue)}
 .topbar-spacer{flex:1}
 .topbar-user{font-size:.78rem;font-weight:500;color:var(--muted)}
+.topbar-vivo{font-size:.72rem;color:var(--muted);white-space:nowrap}
+button.topbar-back{background:var(--white);font-family:inherit;cursor:pointer}button.topbar-back:disabled{opacity:.55;cursor:wait}
 
 /* ── LAYOUT ── */
 .app{display:flex;flex:1;overflow:hidden}
@@ -224,7 +226,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
 @media(max-width:700px){
   .main{padding:.85rem .75rem}
   .detail-overlay{width:100%;top:54px}
-  .topbar-user{display:none}
+  .topbar-user,.topbar-vivo,.bt-txt{display:none}
 }
 </style>
 </head>
@@ -249,6 +251,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);displ
     Fila Comercial
   </div>
   <div class="topbar-spacer"></div>
+  <span class="topbar-vivo" id="vivoStatus" aria-live="polite"></span>
+  <button class="topbar-back" id="btnAtualizar" type="button" title="Atualizar agora" aria-label="Atualizar agora">
+    <span class="material-symbols-outlined" style="font-size:.9rem">refresh</span><span class="bt-txt">Atualizar</span>
+  </button>
   <div class="topbar-user" id="topbarUser"></div>
 </div>
 
@@ -367,6 +373,7 @@ import {
   getFunctions, httpsCallable,
   connectFunctionsEmulator,
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { observarFila, ROTULO_FILA } from '../js/fila-ao-vivo.js';
 
 const app = initializeApp({
   apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8",
@@ -497,23 +504,27 @@ async function carregarSnapshot() {
 // ── Listener da Worklist V2 (N35.15) — único ──────────────────────────────────
 
 // S1 — a worklist e os atendimentos chegam por crmConsulta { acao:'fila' } (escopo aplicado no servidor); as Rules não permitem
-// mais ao vendedor ler fila_comercial/worklist nem interacoes_fila direto. Polling de 20 s + recarga após cada ação.
-let _carregandoFila = false, _refazerFila = false;
-async function carregarFilaEscopo() {
-  if (_carregandoFila) { _refazerFila = true; return; } _carregandoFila = true;
+// mais ao vendedor ler fila_comercial/worklist nem interacoes_fila direto. INF-02: sem polling curto — recarrega quando o
+// sinalizador muda (js/fila-ao-vivo.js), após cada ação e pelo botão Atualizar.
+let _filaViva = null;
+async function lerFilaEscopo() {
   try {
     const r = await _crmConsulta({ acao: 'fila' });
     worklistDoc = (r.data && r.data.worklist) || null;
     operationalMap = new Map(((r.data && r.data.interacoes) || []).map(e => [e.opportunityInstanceId, e]));
     renderizarFila();
     if (clienteSelecionado && clienteSelecionado.opportunityInstanceId) atualizarDetalheOperacional(clienteSelecionado.opportunityInstanceId);
-  } catch (e) { console.warn('[fila-comercial] fila:', e.code, e.message); }
-  finally { _carregandoFila = false; if (_refazerFila) { _refazerFila = false; carregarFilaEscopo(); } }
+    return r.data ? r.data.versao : undefined;
+  } catch (e) { console.warn('[fila-comercial] fila:', e.code, e.message); return null; }
 }
+function carregarFilaEscopo() { return _filaViva ? _filaViva.atualizar() : Promise.resolve(); }
 function iniciarListenerWorklist() {
-  carregarFilaEscopo();
-  if (!_tickWl) _tickWl = setInterval(() => { renderizarFila(); if (!document.hidden) carregarFilaEscopo(); }, 20000);
-  if (!window.__filaVis) { window.__filaVis = true; document.addEventListener('visibilitychange', () => { if (!document.hidden) carregarFilaEscopo(); }); }
+  if (_filaViva) return;
+  _filaViva = observarFila({ db, fns: { doc, onSnapshot }, carregar: lerFilaEscopo,
+    aoStatus: st => { document.getElementById('vivoStatus').textContent = ROTULO_FILA[st] || ''; } });
+  // re-render local (sem leituras): expiração de claim e virada do dia
+  if (!_tickWl) _tickWl = setInterval(() => { if (!document.hidden) renderizarFila(); }, 20000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) renderizarFila(); });
 }
 function iniciarListenerOperacional() { /* S1: unificado em iniciarListenerWorklist (uma chamada traz worklist + atendimentos) */ }
 
@@ -570,6 +581,10 @@ function inicializar() {
   iniciarListenerOperacional();
   iniciarListenerWorklist();
 
+  document.getElementById('btnAtualizar').addEventListener('click', async e => {
+    const b = e.currentTarget; b.disabled = true;
+    try { await Promise.all([carregarSnapshot(), carregarFilaEscopo()]); } finally { b.disabled = false; }
+  });
   document.getElementById('detailClose').addEventListener('click', fecharDetalhe);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') { fecharDetalhe(); fecharModal(); } });
   document.getElementById('outcomeCancelBtn').addEventListener('click', fecharModal);

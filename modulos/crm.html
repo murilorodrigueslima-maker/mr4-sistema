@@ -33,6 +33,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 .spacer{flex:1}
 .user{font-size:.8rem;color:var(--muted)}
 .legacy{font-size:.75rem;color:var(--faint);text-decoration:none}
+.vivo{font-size:.72rem;color:var(--faint);white-space:nowrap}#btnAtualizar[hidden]{display:none}
 /* layout */
 main{max-width:1180px;margin:0 auto;padding:1.1rem 1.25rem 3rem}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;margin-bottom:1.25rem}
@@ -159,7 +160,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 .ag-foot{font-size:.72rem;color:var(--faint);margin-top:.6rem}
 @media (max-width:900px){.ag-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.agenda{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:560px){main{padding:.8rem .8rem 3rem}.topbar{padding:0 .7rem}.tabs{margin-left:0}.user,.legacy{display:none}.grid{grid-template-columns:1fr}.agenda{grid-template-columns:1fr}}
+@media (max-width:560px){main{padding:.8rem .8rem 3rem}.topbar{padding:0 .7rem}.tabs{margin-left:0}.user,.legacy,.vivo,.bt-txt{display:none}.grid{grid-template-columns:1fr}.agenda{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -173,6 +174,8 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
     <button class="tab" role="tab" id="tabAgente" aria-selected="false" hidden>Agente</button>
   </nav>
   <div class="spacer"></div>
+  <span class="vivo" id="vivoStatus" aria-live="polite"></span>
+  <button class="btn" id="btnAtualizar" type="button" title="Atualizar agora" aria-label="Atualizar agora" hidden><span class="ms">refresh</span><span class="bt-txt">Atualizar</span></button>
   <a class="legacy" href="fila-comercial.html">Fila (versão anterior)</a>
   <span class="user" id="user"></span>
 </header>
@@ -221,6 +224,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, collection, onSnapshot, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+import { observarFila, ROTULO_FILA } from '../js/fila-ao-vivo.js';
 
 // Configuração pública do app Firebase (não é segredo; mesma de fila-comercial.html)
 const app = initializeApp({
@@ -411,16 +415,23 @@ function atualizarIndicadores() {
 }
 
 // S1 — substitui os antigos listeners diretos (worklist + interacoes_fila): chamada única, escopo aplicado no backend.
-let _carregandoFila = false, _refazerFila = false;
-async function carregarFila(primeira) {
-  if (_carregandoFila) { _refazerFila = true; return; } _carregandoFila = true;
+// INF-02 — sem polling curto: observarFila (js/fila-ao-vivo.js) serializa e chama lerFila só quando o sinalizador muda.
+let _filaViva = null, _filaPrimeira = true;
+async function lerFila() {
+  const primeira = _filaPrimeira; _filaPrimeira = false;
   try {
     const r = await fnConsulta({ acao: 'fila' });
     S.doc = (r.data && r.data.worklist) || null;
     S.opMap = new Map(((r.data && r.data.interacoes) || []).map(e => [e.opportunityInstanceId, e]));
     S.reativacoes = (r.data && r.data.escopo === 'VENDEDOR' && r.data.reativacoes) || [];     // B3.1: reservas de reativação (só as minhas)
-  } catch (e) { console.warn('[crm] fila:', e.code || e.message); if (primeira) toast('Não foi possível carregar a lista de hoje.', true); }
-  finally { _carregandoFila = false; S.docCarregado = true; S.opCarregado = true; render(); if (_refazerFila) { _refazerFila = false; carregarFila(false); } }
+    return r.data ? r.data.versao : undefined;
+  } catch (e) { console.warn('[crm] fila:', e.code || e.message); if (primeira) toast('Não foi possível carregar a lista de hoje.', true); return null; }
+  finally { S.docCarregado = true; S.opCarregado = true; render(); }
+}
+function carregarFila() { return _filaViva ? _filaViva.atualizar() : Promise.resolve(); }
+async function atualizarAgora(botao) {
+  botao.disabled = true;
+  try { await carregarFila(); atualizarIndicadores(); } finally { botao.disabled = false; }
 }
 
 // ── Ações (servidor valida tudo: dono, payload, datas, observação) ──────────────────────────────────
@@ -544,6 +555,7 @@ document.addEventListener('input', e => {
   } else if (t.dataset.a === 'data') { S.sel[id] = { ...(S.sel[id] || {}), data: t.value }; render(); const d = document.getElementById('dt-' + id); if (d) d.focus(); }
 });
 document.getElementById('drFechar').addEventListener('click', fecharCliente);
+document.getElementById('btnAtualizar').addEventListener('click', e => atualizarAgora(e.currentTarget));
 document.getElementById('drawerBg').addEventListener('click', fecharCliente);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharCliente(); });
 function trocarAba(aba) {
@@ -612,9 +624,10 @@ onAuthStateChanged(auth, async u => {
   document.getElementById('carregando').hidden = true;
   document.getElementById('viewHoje').hidden = false;
   // S1: leitura da fila com ESCOPO NO SERVIDOR (crmConsulta 'fila'); as Rules não permitem mais ao vendedor ler worklist/interacoes direto.
-  carregarFila(true);
-  setInterval(() => { if (!document.hidden) carregarFila(false); }, 20000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) carregarFila(false); });
+  if (!_filaViva) _filaViva = observarFila({ db, fns: { doc, onSnapshot }, carregar: lerFila,
+    aoStatus: st => { document.getElementById('vivoStatus').textContent = ROTULO_FILA[st] || ''; } });
+  document.getElementById('btnAtualizar').hidden = false;
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
   setInterval(render, 60000);          // virada de dia / expiração de claim sem recarregar
   atualizarIndicadores();
 });

@@ -867,6 +867,14 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // INF-02 — sinalizador ao vivo do CRM/Fila: só { versao, atualizadoEm } (sem dados pessoais). Quem usa a fila lê o documento
+    // (get; sem listagem); escrita só por backend (gatilhos). O conteúdo da fila continua vindo de crmConsulta (escopo no servidor).
+    match /crm_fila_versao/{id} {
+      allow get:   if isGestor() || temAcessoModulo('fila-comercial-gestao') || temAcessoModulo('fila-comercial-operar');
+      allow list:  if false;
+      allow write: if false;
+    }
+
     // ── B3.1 — registro de conflitos, trilha de NÃO CONTATAR e revisões da gestão (escrita só por backend; leitura só da gestão) ──
     match /identidade_conflitos/{id} {
       allow read:  if isGestor() || temAcessoModulo('fila-comercial-gestao');

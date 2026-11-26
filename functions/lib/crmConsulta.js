@@ -15,6 +15,7 @@ const { calcularRecorrencia } = require('./recorrencia');
 const { calcularTendencia } = require('./tendenciaComercial');
 const { REF_FATURAMENTO_ALTO } = require('./priorizadorOportunidades');
 const T = require('./crmTimeline');
+const { lerVersao } = require('./filaSinal');
 
 const ACOES = ['cliente', 'cartoes', 'indicadores', 'fila', 'clientesMeus', 'clienteBusca'];
 const PERMITIDOS = { cliente: ['acao', 'entidade'], cartoes: ['acao', 'entidades'], indicadores: ['acao', 'vendedorUid'], fila: ['acao'], clientesMeus: ['acao'], clienteBusca: ['acao', 'campo', 'valor'] };
@@ -23,6 +24,7 @@ const MAX_CARTOES = 80;
 const MAX_COMPRAS = 60;
 const JANELA_VENDA_APOS_CONTATO_DIAS = 30;    // indicador do topo: contato até 30 dias antes da venda
 const CAMPOS_VENDA = ['id', 'cliente_id', 'data', 'nome_situacao', 'valor_total', 'vendedor_id', 'nome_vendedor', 'produtos'];
+const MAX_IN = 30;                            // limite do operador 'in' do Firestore
 
 class ErroCrm extends Error { constructor(tipo, codigo) { super(codigo); this.tipo = tipo; this.codigo = codigo; } }
 const falha = (tipo, codigo) => { throw new ErroCrm(tipo, codigo); };
@@ -55,6 +57,26 @@ const hojeFortaleza = iso => T.diaComercial(iso);
 const somarDias = (ymd, n) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const ultimoOutcome = e => { const o = ((e && e.eventos) || []).filter(x => x && x.tipo === 'OUTCOME_REGISTERED'); return o.length ? o[o.length - 1] : null; };
 
+// INF-02 — leituras ESCOPADAS de interacoes_fila (substituem a leitura da coleção inteira sem mudar o resultado; índices automáticos).
+const emLotes = lista => { const out = []; for (let i = 0; i < lista.length; i += MAX_IN) out.push(lista.slice(i, i + MAX_IN)); return out; };
+/** União das consultas, sem repetir documento e na mesma ordem da leitura completa (id do documento). */
+async function unirEstados(consultas) {
+  const porId = new Map();
+  for (const s of await Promise.all(consultas.map(c => c.get()))) for (const d of s.docs) porId.set(d.id, d.data());
+  return [...porId.keys()].sort().map(id => porId.get(id));
+}
+const consultasPorCampo = (store, campo, valores) => emLotes([...new Set(valores.filter(Boolean))]).map(l => store.collection('interacoes_fila').where(campo, 'in', l));
+
+/** Entidades com claim ou evento do próprio vendedor. */
+function somarAtendidas(ents, uid, estados) {
+  for (const e of estados) {
+    if (!e || !e.commercialEntityId) continue;
+    const tocou = (e.claimAtual && e.claimAtual.operadorId === uid) || ((e.eventos || []).some(x => x && x.operadorId === uid));
+    if (tocou) ents.add(e.commercialEntityId);
+  }
+  return ents;
+}
+
 /** Entidades que o vendedor pode abrir: worklist (qualquer dia), reservas/atendimentos próprios e carteira própria. */
 async function escopoVendedor(store, uid, wl, estados) {
   const ents = new Set();
@@ -64,11 +86,7 @@ async function escopoVendedor(store, uid, wl, estados) {
     for (const a of Object.values(wl.atribuicoes || {})) if (a && a.uid === uid && a.commercialEntityId) ents.add(a.commercialEntityId);
     for (const r of Object.values(wl.pendenciasRetidas || {})) if (r && r.uid === uid && r.commercialEntityId) ents.add(r.commercialEntityId);
   }
-  for (const e of estados) {
-    if (!e || !e.commercialEntityId) continue;
-    const tocou = (e.claimAtual && e.claimAtual.operadorId === uid) || ((e.eventos || []).some(x => x && x.operadorId === uid));
-    if (tocou) ents.add(e.commercialEntityId);
-  }
+  somarAtendidas(ents, uid, estados);
   // B3.1: reservas de reativação ATIVAS do próprio vendedor autorizam abrir o cliente (reserva ≠ ownership)
   const rs = await store.collection('carteira_reativacoes').where('destinoUid', '==', uid).where('estado', '==', 'RESERVADA').get();
   rs.docs.forEach(d => ents.add('GC_NATIVE:' + String(d.data().portfolioId).slice(3)));
@@ -152,12 +170,9 @@ async function consultarCliente(store, acesso, entidade, agoraIso) {
   const wl = wlSnap.exists ? wlSnap.data() : null;
   let estados = estSnap.docs.map(d => d.data());
   if (!acesso.gestao) {
-    // atalho: cliente da worklist / estados do próprio cliente já decidem; só então varre interacoes_fila
+    // worklist, reservas e estados DO PRÓPRIO cliente (já carregados) decidem: outros documentos de interacoes_fila
+    // só acrescentariam outras entidades ao escopo (INF-02: sem varrer a coleção).
     let permitido = (await escopoVendedor(store, acesso.uid, wl, estados)).has(entidade);
-    if (!permitido) {
-      const todos = (await store.collection('interacoes_fila').get()).docs.map(d => d.data());
-      permitido = (await escopoVendedor(store, acesso.uid, wl, todos)).has(entidade);
-    }
     if (!permitido && cli.gcId) {
       const cart = await store.collection('carteira_comercial').doc('GC:' + cli.gcId).get();
       permitido = cart.exists && cart.data().ownerUid === acesso.uid;
@@ -249,8 +264,9 @@ async function consultarCartoes(store, acesso, entidades) {
   const wl = wlSnap.exists ? wlSnap.data() : null;
   let permitidas = new Set(entidades);
   if (!acesso.gestao) {
-    const todos = (await store.collection('interacoes_fila').get()).docs.map(d => d.data());
-    const escopo = await escopoVendedor(store, acesso.uid, wl, todos);
+    const escopo = await escopoVendedor(store, acesso.uid, wl, []);
+    // só os atendimentos das entidades pedidas que a worklist/reservas ainda não autorizaram
+    somarAtendidas(escopo, acesso.uid, await unirEstados(consultasPorCampo(store, 'commercialEntityId', entidades.filter(e => !escopo.has(e)))));
     permitidas = new Set(entidades.filter(e => escopo.has(e)));
   }
   const mr4 = [...permitidas].filter(e => e.startsWith('MR4_LINKED:'));
@@ -276,22 +292,23 @@ async function consultarIndicadores(store, acesso, vendedorUid, agoraIso) {
   const alvo = vendedorUid && acesso.gestao ? vendedorUid : acesso.uid;
   if (vendedorUid && !acesso.gestao && vendedorUid !== acesso.uid) falha('permission-denied', 'SEM_PERMISSAO');
   const hoje = hojeFortaleza(agoraIso);
-  const [estSnap, painelSnap, sysSnap] = await Promise.all([
-    store.collection('interacoes_fila').get(),
+  const inicioJanela = somarDias(hoje, -(JANELA_VENDA_APOS_CONTATO_DIAS + 7));
+  const col = store.collection('interacoes_fila');
+  // INF-02: só atendimentos movimentados na janela (todo escritor grava atualizadoEm = instante do último evento) + retornos abertos
+  const [estados, painelSnap, sysSnap] = await Promise.all([
+    unirEstados([col.where('atualizadoEm', '>=', inicioJanela), col.where('nextFollowUpAt', '>', '')]),
     store.collection('display_metrics').doc('painel_comercial').get(),
     store.collection('sistema_usuarios').doc(alvo).get(),
   ]);
-  const estados = estSnap.docs.map(d => d.data());
   let contatosHoje = 0, retornosAtrasados = 0, retornosHoje = 0;
-  const contatadosRecentes = new Map();    // entidade → estados
-  const inicioJanela = somarDias(hoje, -(JANELA_VENDA_APOS_CONTATO_DIAS + 7));
+  const contatadosRecentes = new Set();    // entidades
   for (const e of estados) {
     for (const x of e.eventos || []) {
       if (x && x.tipo === 'OUTCOME_REGISTERED' && x.operadorId === alvo && x.timestamp) {
         const dia = T.diaComercial(x.timestamp);
         if (dia === hoje) contatosHoje++;
         if (dia >= inicioJanela && T.OUTCOMES_CONTATO.includes(x.outcome)) {
-          if (!contatadosRecentes.has(e.commercialEntityId)) contatadosRecentes.set(e.commercialEntityId, []);
+          contatadosRecentes.add(e.commercialEntityId);
         }
       }
     }
@@ -300,13 +317,30 @@ async function consultarIndicadores(store, acesso, vendedorUid, agoraIso) {
       if (e.nextFollowUpAt < hoje) retornosAtrasados++; else if (e.nextFollowUpAt === hoje) retornosHoje++;
     }
   }
-  for (const e of estados) if (contatadosRecentes.has(e.commercialEntityId)) contatadosRecentes.get(e.commercialEntityId).push(e);
   // vendas após contato nos últimos 7 dias (contato do vendedor até 30 dias antes; mesmo dia = indeterminado)
   let vendasAposContato7d = 0, indeterminadas7d = 0;
   const inicio7 = somarDias(hoje, -6);
-  for (const [ent, ests] of contatadosRecentes) {
+  // INF-02: cada venda é avaliada isoladamente contra os contatos e só as de 7 dias contam → UMA consulta das vendas
+  // recentes, em vez de ler o histórico completo de cada cliente contatado.
+  const recentes = new Map();      // cliente_id (texto) → vendas
+  if (contatadosRecentes.size) {
+    const s = await store.collection('vendas_gc').where('data', '>=', inicio7).select(...CAMPOS_VENDA).get();
+    for (const d of s.docs) {
+      const v = { id: d.id, ...d.data() }; const k = String(v.cliente_id);
+      if (!recentes.has(k)) recentes.set(k, []);
+      recentes.get(k).push(v);
+    }
+  }
+  const comVendas = [];
+  for (const ent of contatadosRecentes) {
     const cli = await resolverCliente(store, ent);
-    const vendas = await vendasDoCliente(store, cli.gcId);
+    const vendas = cli.gcId ? recentes.get(cli.gcId) : null;
+    if (vendas) comVendas.push({ ent, vendas });
+  }
+  // contatos ANTERIORES à janela também decidem APOS × INDETERMINADO: busca o histórico só dos clientes que venderam
+  const historico = await unirEstados(consultasPorCampo(store, 'commercialEntityId', comVendas.map(x => x.ent)));
+  for (const { ent, vendas } of comVendas) {
+    const ests = historico.filter(e => e.commercialEntityId === ent);
     const proprios = ests.map(e => ({ ...e, eventos: (e.eventos || []).filter(x => x.operadorId === alvo) }));
     for (const r of T.vendasAposContato({ estados: proprios, vendas })) {
       if (r.venda.data < inicio7 || r.venda.data > hoje) continue;
@@ -350,13 +384,13 @@ async function itensReativacao(store, reservas, hojeYmd) {
   return out;
 }
 async function consultarFila(store, acesso) {
-  const [wlSnap, intSnap] = await Promise.all([store.collection('fila_comercial').doc('worklist').get(), store.collection('interacoes_fila').get()]);
+  const versao = await lerVersao(store);            // INF-02: ANTES dos dados (mudança concorrente gera nova versão → a tela recarrega)
+  const wlSnap = await store.collection('fila_comercial').doc('worklist').get();
   const wl = wlSnap.exists ? wlSnap.data() : null;
-  const estados = intSnap.docs.map(d => d.data());
   const hojeYmd = T.diaComercial(new Date().toISOString());
   if (acesso.gestao) {
-    const todas = await store.collection('carteira_reativacoes').where('estado', '==', 'RESERVADA').get();
-    return { escopo: 'GESTAO', worklist: wl, interacoes: estados, reativacoes: (await itensReativacao(store, todas.docs, hojeYmd)).map((it, i) => ({ ...it, destinoUid: todas.docs[i].data().destinoUid })) };
+    const [intSnap, todas] = await Promise.all([store.collection('interacoes_fila').get(), store.collection('carteira_reativacoes').where('estado', '==', 'RESERVADA').get()]);
+    return { versao, escopo: 'GESTAO', worklist: wl, interacoes: intSnap.docs.map(d => d.data()), reativacoes: (await itensReativacao(store, todas.docs, hojeYmd)).map((it, i) => ({ ...it, destinoUid: todas.docs[i].data().destinoUid })) };
   }
   const uid = acesso.uid;
   const minhasReservas = await store.collection('carteira_reativacoes').where('destinoUid', '==', uid).where('estado', '==', 'RESERVADA').get();
@@ -371,6 +405,11 @@ async function consultarFila(store, acesso) {
       vendedoresRotulos: { [uid]: (wl.vendedoresRotulos || {})[uid] || 'Vendedor' } };
     if (minha) for (const k of Object.keys(minha)) if (Array.isArray(minha[k])) for (const it of minha[k]) if (it && it.opportunityInstanceId) minhasOpps.add(it.opportunityInstanceId);
   }
+  // INF-02: candidatos por consulta (claim próprio, retornos abertos, oportunidades da própria worklist/reservas);
+  // o filtro de escopo abaixo continua sendo a única autorização.
+  const col = store.collection('interacoes_fila');
+  const estados = await unirEstados([col.where('claimAtual.operadorId', '==', uid), col.where('nextFollowUpAt', '>', ''),
+    ...consultasPorCampo(store, 'opportunityInstanceId', [...minhasOpps, ...oppsReativ])]);
   const outcomes = e => (e.eventos || []).filter(x => x && x.tipo === 'OUTCOME_REGISTERED');
   const interacoes = [];
   for (const e of estados) {
@@ -380,7 +419,7 @@ async function consultarFila(store, acesso) {
     const claim = e.claimAtual && e.claimAtual.operadorId !== uid ? { ...e.claimAtual, operadorId: 'OUTRO' } : e.claimAtual;
     interacoes.push({ ...e, claimAtual: claim, eventos: (e.eventos || []).map(x => (x && x.operadorId && x.operadorId !== uid ? { tipo: x.tipo, outcome: x.outcome, timestamp: x.timestamp, operadorId: 'OUTRO' } : x)) });
   }
-  return { escopo: 'VENDEDOR', worklist, interacoes, reativacoes };
+  return { versao, escopo: 'VENDEDOR', worklist, interacoes, reativacoes };
 }
 
 async function crmConsulta(store, { operadorUid, data, agoraIso }) {

@@ -17,6 +17,8 @@ const COLL_DEC = 'carteira_reativacao_decisoes', COLL_DEC_SOMBRA = 'carteira_rea
 const REGRA_VERSAO = 'B3.2';
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
 const sha8 = x => crypto.createHash('sha256').update(JSON.stringify(x)).digest('hex').slice(0, 16);
+const TIPOS_EVENTO_B3 = Object.freeze(['TRANSFERIR_REATIVACAO', 'CRIAR_VIA_REATIVACAO', 'CRIAR_PRIMEIRA_VENDA', 'RENOVAR_OWNER', 'COBERTURA_RENOVA_OWNER', 'COBERTURA_PAUSA']);
+const CHAVE_EVENTO_B3 = new RegExp('^B3:(' + TIPOS_EVENTO_B3.join('|') + '):(\\d+)$');
 const idDec = (vendaId, rev) => `B3_${String(vendaId).replace(/[^A-Za-z0-9_-]/g, '_')}_r${rev}`;
 /** Campos da venda que mudam a decisão (data, cliente, vendedor, validade). Outras edições não geram nova revisão. */
 const revisaoVenda = (v, hoje, devolucoes) => sha8([String(v.data || '').slice(0, 10), normalizeGestaoClickId(v.cliente_id), normalizeGestaoClickId(v.vendedor_id), validarVenda(v, hoje) || 'VALIDA', devolucoes && devolucoes.get(String(v.id)) === 'TOTAL' ? 'DEV_TOTAL' : '']);
@@ -28,6 +30,16 @@ function docDecisao(v, d, modo, rev, rv, agoraIso, runId) {
   const extras = Object.keys(doc).filter(k => !CAMPOS.includes(k)); if (extras.length) throw new Error('DECISAO_FORA_DA_WHITELIST:' + extras.join(','));
   return doc;
 }
+/** Venda posterior à ativação: data >= corte e, havendo corteTs, cadastrado_em (hora de Fortaleza, UTC-3) >= corteTs; sem cadastrado_em ⇒ só se a DATA for posterior ao dia do corte (conservador). */
+function ehPosCorte(v, corte, corteTs) {
+  const data = String(v.data || '');
+  if (data.slice(0, 10) < corte || data.length < 10) return false;
+  if (!corteTs) return true;
+  const c = String(v.cadastrado_em || '');
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(c)) return Date.parse(c.replace(' ', 'T') + '-03:00') >= corteTs;
+  return data.slice(0, 10) > corte;
+}
+const lerCorteTs = cfg => (cfg && cfg.corteTs && !isNaN(Date.parse(cfg.corteTs)) ? Date.parse(cfg.corteTs) : null);
 /** Modo efetivo: ausente/inválido ⇒ DESLIGADO; FORCAR_DRY limita a DRY. */
 function modoEfetivo(cfg, forcarDry) {
   const m = ['DESLIGADO', 'DRY', 'SOMBRA', 'ATIVO'].includes(cfg && cfg.modo) ? cfg.modo : 'DESLIGADO';
@@ -36,7 +48,12 @@ function modoEfetivo(cfg, forcarDry) {
   return m;
 }
 
-async function processarVendas(store, FieldValue, { agoraIso, forcarDry = FORCAR_DRY, runId = null, modoForcado = null, cfgOverride = null } = {}) {
+/**
+ * @param fontes opcional (leitura incremental): async ({ hoje, modo, corte, corteTs, completo }) → { ctx, decisoes, eventos }.
+ *   `completo()` é a leitura integral (o padrão). `eventos` = null (varre todo o histórico) ou async (idsProcessadas) → documentos de histórico a reavaliar.
+ *   A REGRA é a mesma nos dois casos: só muda quais documentos são lidos.
+ */
+async function processarVendas(store, FieldValue, { agoraIso, forcarDry = FORCAR_DRY, runId = null, modoForcado = null, cfgOverride = null, fontes = null } = {}) {
   const cfgSnap = cfgOverride ? null : await store.doc(REF_CONFIG.join('/')).get(); const cfg = cfgOverride || (cfgSnap.exists ? cfgSnap.data() : null);       // cfgOverride: simulação (dry-run de impacto) sem depender do documento de configuração
   const modo = modoForcado ? modoEfetivo({ modo: modoForcado }, forcarDry) : modoEfetivo(cfg, forcarDry);
   if (modo === 'DESLIGADO') return { status: 'DESLIGADO' };
@@ -48,16 +65,19 @@ async function processarVendas(store, FieldValue, { agoraIso, forcarDry = FORCAR
     if (!h.ok) { await SA.dispararDisjuntor(store, FieldValue, h.violacoes, { agoraIso, origem: 'PROCESSADOR_VENDAS' }); return { status: 'DISJUNTOR', violacoes: h.violacoes }; }
     const m = MOTOR.lerMotor((await store.doc(MOTOR.REF.join('/')).get()).data()); if (m !== 'B3') return { status: 'MOTOR_NAO_B3', motor: m };
   }
-  const corteTs = cfg && cfg.corteTs && !isNaN(Date.parse(cfg.corteTs)) ? Date.parse(cfg.corteTs) : null;
-  /** Venda posterior ao instante de ativação: cadastrado_em (hora de Fortaleza, UTC-3) >= corteTs; sem cadastrado_em ⇒ só se a DATA for posterior ao dia do corte (conservador). */
-  const depoisDoCorte = v => { if (!corteTs) return true; const c = String(v.cadastrado_em || ''); if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(c)) return Date.parse(c.replace(' ', 'T') + '-03:00') >= corteTs; return String(v.data).slice(0, 10) > corte; };
-  const ctx = await carregarContexto(store, { hoje });
-  const decSnap = await store.collection(modo === 'ATIVO' ? COLL_DEC : COLL_DEC_SOMBRA).get(); const feitas = new Map();               // vendaId → { revisao, revisaoVenda }
-  decSnap.docs.forEach(d => { const x = d.data(); const k = String(x.vendaId); if (!feitas.has(k) || x.revisao > feitas.get(k).revisao) feitas.set(k, x); });
+  const corteTs = lerCorteTs(cfg);
+  const completo = async () => {
+    const ctx = await carregarContexto(store, { hoje });
+    const decSnap = await store.collection(modo === 'ATIVO' ? COLL_DEC : COLL_DEC_SOMBRA).get();
+    return { ctx, decisoes: decSnap.docs.map(d => d.data()), eventos: null };
+  };
+  const carga = fontes ? await fontes({ hoje, modo, corte, corteTs, completo }) : await completo();
+  const ctx = carga.ctx; const feitas = new Map();                                       // vendaId → { revisao, revisaoVenda }
+  carga.decisoes.forEach(x => { const k = String(x.vendaId); if (!feitas.has(k) || x.revisao > feitas.get(k).revisao) feitas.set(k, x); });
   const out = { status: 'OK', modo, corte, hoje, vendasAvaliadas: 0, ignoradasAntesDoCorte: 0, jaProcessadas: 0, novas: 0, novasRevisoes: 0, foraDeOrdem: [], decisoes: {}, aplicadas: 0, erros: [], porClienteComRevisao: [] };
   const aGravar = [];
   for (const [gc, todas] of ctx.vendasPorCliente) {
-    const posCorte = todas.filter(v => String(v.data || '').slice(0, 10) >= corte && String(v.data || '').length >= 10 && depoisDoCorte(v)).sort((a, b) => (R.chaveOrdem(a) < R.chaveOrdem(b) ? -1 : 1));
+    const posCorte = todas.filter(v => ehPosCorte(v, corte, corteTs)).sort((a, b) => (R.chaveOrdem(a) < R.chaveOrdem(b) ? -1 : 1));
     out.ignoradasAntesDoCorte += todas.length - posCorte.length; if (!posCorte.length) continue;
     const pend = posCorte.filter(v => { const f = feitas.get(String(v.id)); return !f || f.revisaoVenda !== revisaoVenda(v, hoje, ctx.devolucoes); });
     out.vendasAvaliadas += posCorte.length; out.jaProcessadas += posCorte.length - pend.length; if (!pend.length) continue;
@@ -91,15 +111,16 @@ async function processarVendas(store, FieldValue, { agoraIso, forcarDry = FORCAR
   }
   // invalidações: transferências/criações cuja venda deixou de valer ⇒ reversão (DRY: só relata; ATIVO: executa/encaminha à gestão); renovações invalidadas ⇒ revisão
   if (modo === 'ATIVO' && out.erros.length) { const SA = require('./reativacaoSaude'); await SA.dispararDisjuntor(store, FieldValue, out.erros.map(e => ({ tipo: 'ERRO_NO_PROCESSAMENTO_DE_VENDAS', vendaId: e.vendaId })), { agoraIso, origem: 'PROCESSADOR_VENDAS' }); out.status = 'DISJUNTOR_ERRO'; return out; }
-  out.reversoes = await varrerInvalidacoes(store, FieldValue, { hoje, agoraIso, executar: modo === 'ATIVO', devolucoes: ctx.devolucoes });
+  const eventos = carga.eventos ? await carga.eventos(aGravar.map(g => String(g.v.id))) : null;
+  out.reversoes = await varrerInvalidacoes(store, FieldValue, { hoje, agoraIso, executar: modo === 'ATIVO', eventos });
   return out;
 }
 
-/** Eventos criados pelo B3 (chaves B3:…:<vendaId>) cuja venda hoje é inválida. */
-async function varrerInvalidacoes(store, FieldValue, { hoje, agoraIso, executar }) {
-  const evs = await store.collection('carteira_comercial_historico').where('schemaVersion', '==', 'historico-v2').get(); const r = { candidatas: 0, reverter: 0, ambiguas: 0, renovacoesInvalidadas: 0, executadas: 0, detalhes: [] };
+/** Eventos criados pelo B3 (chaves B3:…:<vendaId>) cuja venda hoje é inválida. `eventos` (opcional) limita a documentos já selecionados; sem ele, varre todo o histórico. */
+async function varrerInvalidacoes(store, FieldValue, { hoje, agoraIso, executar, eventos = null }) {
+  const evs = eventos ? { docs: eventos } : await store.collection('carteira_comercial_historico').where('schemaVersion', '==', 'historico-v2').get(); const r = { candidatas: 0, reverter: 0, ambiguas: 0, renovacoesInvalidadas: 0, executadas: 0, detalhes: [] };
   for (const d of evs.docs) {
-    const e = d.data(); const m = /^B3:(TRANSFERIR_REATIVACAO|CRIAR_VIA_REATIVACAO|CRIAR_PRIMEIRA_VENDA|RENOVAR_OWNER|COBERTURA_RENOVA_OWNER|COBERTURA_PAUSA):(\d+)$/.exec(e.chaveIdempotencia || ''); if (!m) continue;
+    const e = d.data(); const m = CHAVE_EVENTO_B3.exec(e.chaveIdempotencia || ''); if (!m) continue;
     const vendaId = m[2]; const sv = await store.collection('vendas_gc').doc(vendaId).get(); const dev = await store.collection('carteira_comercial_devolucoes').where('vendaId', '==', vendaId).get();
     const invalida = !sv.exists || !!validarVenda({ id: sv.id, ...sv.data() }, hoje) || dev.docs.some(x => x.data().tipo === 'TOTAL'); if (!invalida) continue;
     if (['TRANSFERIR_REATIVACAO', 'CRIAR_VIA_REATIVACAO', 'CRIAR_PRIMEIRA_VENDA'].includes(m[1])) {
@@ -113,4 +134,4 @@ async function varrerInvalidacoes(store, FieldValue, { hoje, agoraIso, executar 
   }
   return r;
 }
-module.exports = { FORCAR_DRY, REF_CONFIG, COLL_DEC, COLL_DEC_SOMBRA, modoEfetivo, processarVendas, varrerInvalidacoes, revisaoVenda, idDec, docDecisao };
+module.exports = { FORCAR_DRY, REF_CONFIG, COLL_DEC, COLL_DEC_SOMBRA, REGRA_VERSAO, TIPOS_EVENTO_B3, CHAVE_EVENTO_B3, modoEfetivo, processarVendas, varrerInvalidacoes, revisaoVenda, ehPosCorte, lerCorteTs, idDec, docDecisao };

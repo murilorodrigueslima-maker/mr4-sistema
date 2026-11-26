@@ -19,6 +19,7 @@ const Nomes = require('./nomesFornecedores');
 const Compat = require('./docCompat');
 const Hist = require('./historico');
 const Conf = require('./confiabilidade');
+const Sobre = require('../vendasOrigem/sobreposicao');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -507,13 +508,19 @@ async function executarSyncIncremental({ cli, db, agora = new Date(), fetchMod =
     const mv = fetchMod.mesclarRegistros(base.vendas, ve.registros.map(compactarVenda));
     const mc = fetchMod.mesclarRegistros(base.compras, co.registros.map(compactarCompra));
     const nm = await prepararNomes({ cli, db, fetchMod, politica, agora, modo: 'INCREMENTAL' });
-    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: mv.registros, brutosCompras: mc.registros, agora, politica, modo: 'INCREMENTAL', nomesFornecedores: nm.nomes, nomesMeta: nm.meta, ultimoCompleto: metaAnterior.ultima_reconciliacao_completa || null,
+    // Vendas excluídas/canceladas na origem com invalidação ATIVA (modo APLICAR): marcadas só no CÁLCULO (lib/vendasOrigem).
+    const so = Sobre.sobrepor(mv.registros, new Set(ve.registros.map(x => String(x.id))), await Sobre.lerInvalidacoes(db));
+    const snap = montarSnapshot({ brutosProdutos: pr.produtos, brutosVendas: so.registros, brutosCompras: mc.registros, agora, politica, modo: 'INCREMENTAL', nomesFornecedores: nm.nomes, nomesMeta: nm.meta, ultimoCompleto: metaAnterior.ultima_reconciliacao_completa || null,
       estatisticas: { produtos: pr.estatisticas, vendas: ve.estatisticas, compras: co.estatisticas, lookback_dias: plano.lookback_dias,
         mescla: { vendas: { inseridos: mv.inseridos, substituidos: mv.substituidos, ignorados: mv.ignorados }, compras: { inseridos: mc.inseridos, substituidos: mc.substituidos, ignorados: mc.ignorados } } } });
     const ultFull = metaAnterior.ultima_reconciliacao_completa || null;
     snap.meta.ultima_reconciliacao_completa = ultFull;
     snap.meta.reconciliacao_atrasada = !ultFull || (agora.getTime() - Date.parse(ultFull)) / 3600000 > politica.sync.full_overdue_after_hours;
+    // a base gravada mantém o registro ORIGINAL (nada é apagado nem reescrito por causa da invalidação; reversível)
+    const baseCalculo = snap.base;
+    if (so.aplicadas) { snap.meta.estatisticas.vendas_invalidadas_na_origem = so.aplicadas; snap.base = { ...baseCalculo, vendas: mv.registros.map(compactarVenda) }; }
     await persistirSnapshot(db, snap, { runId });
+    snap.base = baseCalculo;
     snap.persistencia.historico = await Hist.consolidarHistorico({ db, snap, agora, politica });
     return { ok: true, modo: 'INCREMENTAL', snapshot: snap };
   } catch (e) {

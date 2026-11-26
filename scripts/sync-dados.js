@@ -925,12 +925,29 @@ function blocosSolicitados() {
       }
       selFinal = { ok: true, lista: sujos, parcial: parcialSujos };
     }
+    const inicioMs = Date.now();
     await executarSync(selFinal);
+    if (travaOk && !selFinal.parcial) await reconciliarVendasOrigem(db0, inicioMs);
   } finally {
     if (travaOk) await liberarTrava(db0);
     if (modoSujos && db0) await reenfileirarSeHouverSujos(db0);   // eventos chegaram durante a execução ⇒ nova execução (coalescida)
   }
 })();
+
+// ── VENDAS EXCLUÍDAS/CANCELADAS NA ORIGEM (functions/lib/vendasOrigem) ───────────────────────────────────────────
+// Depois dos blocos e DENTRO da trava compartilhada (não concorre com o Perfil360). DESLIGADA por padrão
+// (vendas_origem_config/reconciliacao.modo). Isolada: nunca muda o resultado do sync. Log só com o status.
+const VEXC_PRAZO_MS = 15 * 60000;   // a trava vale 25 min: sync demorado ⇒ fica para a próxima execução
+async function reconciliarVendasOrigem(db, inicioMs) {
+  try {
+    if (Date.now() - inicioMs > VEXC_PRAZO_MS) { log.info('  VEXC_SYNC status=SEM_TEMPO'); return; }
+    const { criarLeitorGc } = require('../functions/lib/estoqueReconciliacao');
+    const r = await require('../functions/lib/vendasOrigem/execucao').executar({ db, agoraMs: Date.now(), runId: `${DETENTOR}-${Date.now()}`,
+      criarLeitor: o => criarLeitorGc({ transporte: gcHttp.criarTransporteHttps(https), credenciais: { access: ACCESS_TOKEN, secret: SECRET_TOKEN }, ...o }) });
+    const codigo = r.status;
+    if (codigo !== 'DESLIGADO') log.info(`  VEXC_SYNC status=${codigo}`);
+  } catch (e) { log.aviso(`⚠️  VEXC_SYNC falhou (isolado) codigo=${codigoSeguro(e)}`); }
+}
 
 /** Se chegaram eventos durante a execução, dispara OUTRA execução do próprio Job (a trava garante uma por vez). Falha é inócua: o sync de 2 h reconcilia. */
 async function reenfileirarSeHouverSujos(db) {

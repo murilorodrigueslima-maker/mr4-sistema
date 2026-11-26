@@ -731,6 +731,8 @@ exports.auditInteracoesFila   = onDocumentWritten({ document: 'interacoes_fila/{
 // B3.3 — reativação comercial: job diário 06:00 (Fortaleza) e processador de vendas/cancelamentos (de hora em hora). Ambos NASCEM DESLIGADOS:
 // só agem com carteira_comercial_config/reativacao.modo='ATIVO' E carteira_comercial_config/motor.motorAtivo='B3'; verificam a saúde antes de escrever
 // (disjuntor desliga o motor sem apagar nada). Kill switch: scripts/b3_desligar.js.
+// O processador de vendas é INCREMENTAL, com trava e uma varredura completa por dia (lib/reativacaoIncremental.js);
+// reativacao.incremental=false volta a varrer tudo em cada execução, sem implantar.
 exports.reativacaoDiaria = onSchedule({
   schedule: '0 6 * * *', timeZone: 'America/Fortaleza', region: REGION, timeoutSeconds: 300, memory: '512MiB', retryCount: 0, secrets: ['GC_ACCESS_TOKEN', 'GC_SECRET_ACCESS_TOKEN'],
 }, async () => {
@@ -747,10 +749,10 @@ exports.reativacaoVendas = onSchedule({
   schedule: '50 * * * *', timeZone: 'America/Fortaleza', region: REGION, timeoutSeconds: 300, memory: '512MiB', retryCount: 0,
 }, async () => {
   try {
-    const { processarVendas } = require('./lib/reativacaoVendas'); const agora = new Date();
-    const r = await processarVendas(db, admin.firestore.FieldValue, { agoraIso: agora.toISOString(), runId: 'sch-' + agora.toISOString().slice(0, 13) });
-    console.log('[reativacao-vendas]', JSON.stringify({ status: r.status, modo: r.modo, novas: r.novas, aplicadas: r.aplicadas, erros: r.erros && r.erros.length, reversoes: r.reversoes && { executadas: r.reversoes.executadas, ambiguas: r.reversoes.ambiguas } }));
-  } catch (err) { console.error('[reativacao-vendas] ERRO:', err.message); }
+    const { executarReativacaoVendas, resumoLog } = require('./lib/reativacaoIncremental'); const agora = new Date();
+    const r = await executarReativacaoVendas(db, admin.firestore.FieldValue, { agoraIso: agora.toISOString(), runId: 'sch-' + agora.toISOString().slice(0, 13) });
+    console.log('[reativacao-vendas]', JSON.stringify(resumoLog(r)));
+  } catch (err) { console.error('[reativacao-vendas] ERRO:', err.message, JSON.stringify(err.resumoExecucao || {})); }
 });
 
 exports.concluirRevisaoEspelho = onDocumentUpdated(

@@ -191,10 +191,12 @@ describe('TELA — verificações estáticas (compras.html)', () => {
   test('lê SÓ a visão já processada + meta; nada de GestãoClick, base, blocos ou coleções inteiras no navegador', () => {
     const docs = [...js.matchAll(/doc\(db,\s*'([a-z0-9_]+)',\s*'([a-z0-9_]+)'\)/g)].map(m => m[1] + '/' + m[2]).sort();
     // Fase C: a aba Fornecedores lê, sob demanda, os 2 documentos agregados da coleção PRÓPRIA compras_n0_fornecedores (unidades e valores; Rules distintas)
-    expect(docs).toEqual(['compras_n0/meta', 'compras_n0_fornecedores/unidades', 'compras_n0_fornecedores/valores', 'compras_n0_view/custos', 'compras_n0_view/sugestoes']);
+    // Gestão interna: +1 leitura do controle de origem, que as Rules só liberam à gestão (decide se as abas de gestão aparecem)
+    expect(docs).toEqual(['compras_n0/meta', 'compras_n0_fornecedores/unidades', 'compras_n0_fornecedores/valores', 'compras_n0_view/custos', 'compras_n0_view/sugestoes', 'compras_origem_controle/atual']);
     expect(js).not.toMatch(/gcQuery|collection\(|getDocs|compras_n0_base|compras_n0_produtos|compras_n0_custos|api\.gestaoclick/);
-    // Agente de Compras (IA): ÚNICO callable permitido no navegador é o aiAgente (somente leitura; permissão e escopo no backend). Qualquer outro continua proibido.
-    const chamadas = js.split('\n').filter(l => /httpsCallable\(/.test(l)); expect(chamadas.length).toBeGreaterThan(0); for (const l of chamadas) expect(l).toMatch(/'aiAgente'/);
+    // Callables permitidas no navegador: o Agente de Compras (somente leitura) e as 4 da gestão interna (permissão e validação no
+    // backend; nenhuma fala com o ERP nem altera pedido ou sugestão). Qualquer outra continua proibida.
+    const chamadas = js.split('\n').filter(l => /httpsCallable\(/.test(l)); expect(chamadas.length).toBeGreaterThan(0); for (const l of chamadas) expect(l).toMatch(/'(aiAgente|gestaoComprasDados|gestaoComprasParametrosSalvar|gestaoComprasPendenciaConfirmar|gestaoComprasOrigemConfirmar)'/);
   });
   test('linguagem: sugestão de compra, não pedido; nenhuma ação que envie algo a fornecedor', () => {
     expect(html).toMatch(/Sugestões de compra/); expect(html).toMatch(/Sugestão de compra não é pedido/);

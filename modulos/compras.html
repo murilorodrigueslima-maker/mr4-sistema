@@ -97,6 +97,7 @@
   .pend-compras b { color: var(--text); } .pend-compras details { margin-top: .4rem; } .pend-compras summary { cursor: pointer; color: var(--blue); font-weight: 600; }
   .pend-compras .pc { border-top: 1px solid var(--border); padding: .45rem 0; overflow-wrap: anywhere; }
   .bd.pend { background: var(--yellow-bg); color: var(--yellow); }
+  .cg-link { border: 0; background: none; color: var(--blue); font: inherit; font-weight: 600; cursor: pointer; padding: 0 .2rem; text-decoration: underline; }
   /* Política 1.2 — rentabilidade (só aparece para perfil com custo e servidor com a política 1.2) */
   .resumo-fin { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .75rem .9rem; margin-bottom: 1rem; }
   .resumo-fin .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .6rem .9rem; }
@@ -283,6 +284,7 @@
   </div>
 
   <div class="pend-compras" id="pendCompras" hidden></div>
+  <div class="pend-compras" id="origemAviso" hidden></div>
 
   <div class="resumo-fin" id="resumoFin" hidden></div>
 
@@ -295,6 +297,9 @@
     <button data-aba="rev" id="tabRev" hidden>Revisar rentabilidade</button>
     <button data-aba="orc" id="tabOrc" hidden>Planejar orçamento</button>
     <button data-aba="agente" id="tabAgente" hidden>Agente</button>
+    <button data-aba="g-param" id="tabParam" hidden>Parâmetros</button>
+    <button data-aba="g-pend" id="tabPendG" hidden>Compras antigas</button>
+    <button data-aba="g-orig" id="tabOrigem" hidden>Origem das compras</button>
   </div>
   <div class="revchips" id="revChips" hidden></div>
   <div class="orc" id="painelOrc" hidden></div>
@@ -305,6 +310,7 @@
   </div>
 
   <div id="painelForn" hidden></div>
+  <div id="painelGestao" hidden></div>
 
   <div class="filtros" id="barraFiltros">
     <input type="search" id="busca" placeholder="Buscar produto ou código…" autocomplete="off">
@@ -327,6 +333,7 @@
 
 <script src="../js/compras-simulador.js"></script>
 <script src="agente-ia-widget.js"></script>
+<script src="compras-gestao.js"></script>
 <script type="module">
 import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -378,6 +385,7 @@ async function carregarCompras() {
     montarCabecalho(vSnap.exists() ? vSnap.data() : null, mSnap.exists() ? mSnap.data() : null);
     montarResumoFin();
     montarPendencias(vSnap.exists() ? vSnap.data().pendencias_compras : null);
+    atalhoPendencias();
     estado.linhas = vSnap.exists() ? (vSnap.data().linhas || []) : [];
     render();
   } catch (e) {
@@ -396,6 +404,7 @@ onAuthStateChanged(auth, async user => {
   document.getElementById('sidebar').style.display = '';
   document.getElementById('mainContent').style.display = '';
   liberarAgente();   // segundo plano: a página nunca espera nem depende do agente
+  liberarGestao();   // idem: abas de gestão só aparecem quando as Rules permitem
   // atualização ao vivo: 1 listener em compras_n0_view/sugestoes (marcador gerado_em); ao mudar, roda o MESMO carregador (filtros/aba/ordem ficam em `estado`)
   observarAtualizacao({ db, fns: { onSnapshot, doc }, colecao: 'compras_n0_view', id: 'sugestoes', marcador: d => d.gerado_em, aoMudar: carregarCompras, aoStatus: statusPadrao() });
 });
@@ -584,6 +593,15 @@ function render() {
   document.getElementById('painelAgente').hidden = !agt;
   document.getElementById('painelForn').hidden = !forn;
   if (!forn && FORN.sel) { FORN.sel = null; document.body.classList.remove('fp-lock'); }   // sair da aba fecha o painel de produtos
+  const secaoG = aba.startsWith('g-') ? SECAO_GESTAO[aba] : null;
+  document.getElementById('painelGestao').hidden = !secaoG;
+  document.getElementById('resumoFin').style.display = secaoG ? 'none' : '';
+  if (secaoG) {   // abas de gestão: tela própria
+    for (const id of ['lista', 'contagem', 'barraFiltros', 'chips']) document.getElementById(id).style.display = 'none';
+    document.getElementById('revChips').hidden = true;
+    if (gestao) gestao.abrir(secaoG);
+    window.__comprasPerf.renders.push(Math.round((performance.now() - t0) * 10) / 10); return;
+  }
   if (forn) {   // aba Fornecedores: tela própria; as demais abas não são tocadas
     for (const id of ['lista', 'contagem', 'barraFiltros', 'chips']) document.getElementById(id).style.display = 'none';
     document.getElementById('revChips').hidden = true;
@@ -914,6 +932,43 @@ function ligarDrawer(dbox) {
   const c = document.getElementById('fpSoCorrente'); if (c) c.addEventListener('change', e => { FORN.soMesCorrente = e.target.checked; renderDrawer.focado = true; renderDrawer(); renderDrawer.focado = false; });
 }
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && FORN.sel) fFechar(); });
+
+// ── Gestão interna (parâmetros, compras antigas, origem): só aparece para quem as Rules deixam ler a classificação de origem.
+// Os dados vêm de Cloud Functions (compras-gestao.js desenha); nada vai ao GestãoClick e as sugestões não mudam. Falha isolada.
+let gestao = null;
+const SECAO_GESTAO = { 'g-param': 'FORNECEDORES', 'g-pend': 'PENDENCIAS', 'g-orig': 'ORIGEM' };
+function irPara(aba) { estado.aba = aba; estado.prioridade = ''; sincronizarAbas(); render(); }
+async function liberarGestao() {
+  try {
+    if (!window.ComprasGestao) return;
+    const controle = await getDoc(doc(db, 'compras_origem_controle', 'atual'));   // permissão negada → abas continuam ocultas
+    const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
+    const fns = getFunctions(app, 'southamerica-east1');
+    const prazo = { timeout: 120000 }, dados = f => async p => (await f(p)).data;   // permissão e validação são do servidor
+    gestao = window.ComprasGestao.montar(document.getElementById('painelGestao'), { aoMudarOrigem: avisoOrigem,
+      dados: dados(httpsCallable(fns, 'gestaoComprasDados', prazo)),
+      parametros: dados(httpsCallable(fns, 'gestaoComprasParametrosSalvar', prazo)),
+      pendencia: dados(httpsCallable(fns, 'gestaoComprasPendenciaConfirmar', prazo)),
+      origem: dados(httpsCallable(fns, 'gestaoComprasOrigemConfirmar', prazo)) });
+    for (const id of ['tabParam', 'tabPendG', 'tabOrigem']) document.getElementById(id).hidden = false;
+    document.getElementById('tabs').style.flexWrap = 'wrap';   // com as 3 abas a mais, nenhuma fica escondida atrás da rolagem
+    atalhoPendencias();
+    avisoOrigem(controle.exists() ? controle.data().resumo : null);
+  } catch (_) { /* sem permissão de gestão ou módulo indisponível: nada muda na página */ }
+}
+function atalhoPendencias() {
+  const box = document.getElementById('pendCompras');
+  if (!gestao || box.hidden || box.querySelector('#pendIr')) return;
+  box.insertAdjacentHTML('beforeend', '<div><button type="button" class="cg-link" id="pendIr">Ver detalhes e registrar a situação</button></div>');
+  box.querySelector('#pendIr').addEventListener('click', () => irPara('g-pend'));
+}
+function avisoOrigem(r) {
+  const box = document.getElementById('origemAviso');
+  if (!r || !(r.isoladas > 0)) { box.hidden = true; box.innerHTML = ''; return; }
+  box.innerHTML = `<b>${fmt(r.isoladas)} compra(s) sem comprovação de origem</b> estão isoladas das recomendações novas até confirmação. As sugestões desta tela (política vigente) não mudaram. <button type="button" class="cg-link" id="origemVer">Ver e confirmar</button>`;
+  box.hidden = false;
+  document.getElementById('origemVer').addEventListener('click', () => irPara('g-orig'));
+}
 
 // ── Agente de Compras (IA): aba OCULTA por padrão; só aparece depois que o BACKEND confirma o acesso (modo 'acesso'). Esconder a aba nunca é a proteção. ──
 const AGENTE_FORMATOS = { capitalSugerido: 'brl', receitaPotencial: 'brl', lucroBrutoPotencial: 'brl', capitalNecessario: 'brl', custoUnitario: 'brl', precoUnitario: 'brl', impactoReceitaDia: 'brl', lucroPotencial: 'brl', cestaCapital: 'brl',

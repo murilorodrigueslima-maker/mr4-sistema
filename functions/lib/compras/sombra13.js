@@ -25,7 +25,8 @@ async function lerEntradas(db) {
   const base = await carregarBase(db);
   if (!base) throw new Error('BASE_AUSENTE');
   const [produtos, custos, snaps] = [await todos('compras_n0_produtos'), await todos('compras_n0_custos'), await todos('estoque_snapshots')];
-  return montarEntradas({ meta, vendas: base.vendas, compras: base.compras, produtos, custos, snaps });
+  const { isoladas } = await require('./origem').lerControle(db);
+  return { ...montarEntradas({ meta, vendas: base.vendas, compras: base.compras, produtos, custos, snaps }), comprasIsoladas: isoladas };
 }
 
 /** Converte os documentos já lidos nas entradas da sombra (também usada com cópias locais). */
@@ -49,7 +50,10 @@ const mediana = a => { if (!a.length) return 0; const o = [...a].sort((x, y) => 
 const soma = (a, f) => a.reduce((s, x) => s + (f(x) || 0), 0);
 
 function calcularSombra(entradas, { politica13 = POLITICA_1_3_SOMBRA, politica12 = POLITICA_1_2 } = {}) {
-  const { hoje, produtos, vendas, compras, snapshots } = entradas;
+  const { hoje, produtos, vendas, compras, snapshots, comprasIsoladas } = entradas;
+  // origem sem comprovação: fica FORA da recomendação nova (prazo, último fornecedor e trânsito). A referência 1.2 usa todas, como em
+  // produção; a reconstrução do saldo passado (séries) também, porque descreve o estoque físico observado.
+  const comprasUso = require('./origem').isolarCompras(compras, comprasIsoladas);
   const cfg = politica13;
   const fatosVenda = vendas.flatMap(fatosDeVenda), fatosCompra = compras.flatMap(fatosDeCompra);
   const r12 = calcularTudo({ produtos, fatosVenda, fatosCompra, hoje, politica: politica12 });
@@ -58,8 +62,8 @@ function calcularSombra(entradas, { politica13 = POLITICA_1_3_SOMBRA, politica12
   const t = series.n - 1;
   const fatos = new Map(produtos.map(p => [p.product_id, K.caracteristicas(series.porId.get(p.product_id), series, t, cfg)]));
   const abc = K.classificar(produtos.map(p => { const f = fatos.get(p.product_id); return { id: p.product_id, receita: f.anual.valor, margem: f.anual.margem, volume: f.anual.u }; }), cfg);
-  const prazos = K.estimarPrazos(compras, hoje, cfg);
-  const transito = K.emTransito(compras, hoje, cfg);
+  const prazos = K.estimarPrazos(comprasUso, hoje, cfg);
+  const transito = K.emTransito(comprasUso, hoje, cfg);
 
   const linhas = produtos.map(p => {
     const id = p.product_id, f = fatos.get(id), m = m12.get(id), classe = abc.get(id).classe;
@@ -115,6 +119,7 @@ function calcularSombra(entradas, { politica13 = POLITICA_1_3_SOMBRA, politica12
   }
   const confere = linhas.filter(l => entradas.sugestaoGravada12 && entradas.sugestaoGravada12.has(l.product_id));
   return { hoje, gerado_em_dados: entradas.geradoEm || null, policy_version: cfg.policy_version, baseline_version: politica12.policy_version, politica: cfg, linhas,
+    compras_isoladas_por_origem: compras.length - comprasUso.length,
     resumo: resumir(linhas, { cfg, prazos, aloc, conferidos: confere.length, divergentes: confere.filter(l => entradas.sugestaoGravada12.get(l.product_id) !== l.v12.qtd).length }) };
 }
 

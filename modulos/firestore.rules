@@ -493,6 +493,42 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // COMPRAS — GESTÃO INTERNA (parâmetros por fornecedor, situação de pendências antigas, origem das compras; há custo/valor e decisão
+    // do gestor): leitura só da gestão (GESTOR + (admin | módulo 'estoque'), não bloqueado). Escrita SÓ pelas Cloud Functions (Admin SDK);
+    // o histórico é append-only no backend e nenhum cliente cria, altera ou apaga.
+    match /compras_fornecedor_parametros/{fornecedorId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+      match /historico/{versaoId} {
+        allow read:  if temModulo('estoque') && naoBloqueado();
+        allow write: if false;
+      }
+    }
+    match /compras_pendencias_confirmacao/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+      match /historico/{versaoId} {
+        allow read:  if temModulo('estoque') && naoBloqueado();
+        allow write: if false;
+      }
+    }
+    match /compras_origem/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+    }
+    match /compras_origem_controle/{docId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+    }
+    match /compras_origem_confirmacao/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+      match /historico/{versaoId} {
+        allow read:  if temModulo('estoque') && naoBloqueado();
+        allow write: if false;
+      }
+    }
+
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
 

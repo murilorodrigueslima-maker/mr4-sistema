@@ -198,12 +198,13 @@ function vincularTitulosACompras(compras, titulos, lojaDoTitulo = () => 'FILTRO'
   const porCodigo = {};
   for (const w of compras || []) { const c = semWrapper(w); if (c.codigo === undefined || c.codigo === null || c.codigo === '') continue; (porCodigo[String(c.codigo)] || (porCodigo[String(c.codigo)] = [])).push({ id: String(c.id), fornecedor_id: c.fornecedor_id ? String(c.fornecedor_id) : '' }); }
   const out = new Map(), estados = {};
-  const de = id => out.get(id) || out.set(id, { titulos: 0, soma_cents: 0, pagos: 0, soma_paga_cents: 0, loja_no_registro: 0, conflitos: 0 }).get(id);
+  const de = id => out.get(id) || out.set(id, { titulos: 0, soma_cents: 0, pagos: 0, soma_paga_cents: 0, loja_no_registro: 0, conflitos: 0, vencimentos: [] }).get(id);
   for (const t of titulos || []) {
     const v = vincularCompra(t, porCodigo);
     estados[v.estado] = (estados[v.estado] || 0) + 1;
     if (v.estado === 'CONFIRMADO') {
       const x = de(v.compra_id); x.titulos++; x.soma_cents += t.final_amount_cents || 0;
+      if (t.due_date) x.vencimentos.push(t.due_date);
       if (t.settled_flag === true) { x.pagos++; x.soma_paga_cents += t.final_amount_cents || 0; }
       if (lojaDoTitulo(t.source_id) === 'REGISTRO') x.loja_no_registro++;
     } else if (v.estado === 'CONFLITO_FORNECEDOR' || v.estado === 'CODIGO_DUPLICADO') for (const c of porCodigo[v.codigo] || []) de(c.id).conflitos++;
@@ -235,8 +236,8 @@ const NIVEIS = Object.freeze({
   SEM_PROVA: 'nenhuma evidência disponível',
 });
 /**
- * Marca de origem por compra. `usar_em_decisao_automatica` = só com prova (título ou entrada). A marca é DADO para relatório e
- * revisão: não é lida pelo motor nem muda a política vigente.
+ * Marca de origem por compra. `usar_em_decisao_automatica` = só com prova (título ou entrada). A marca não é lida pelo motor nem
+ * muda a política vigente; a versão persistida (só por título) fica em origem.js e isola as recomendações novas.
  */
 function classificarOrigem({ compras, vinculos = null, entradas = new Map(), custo = new Map() }) {
   return (compras || []).map(semWrapper).map(c => {

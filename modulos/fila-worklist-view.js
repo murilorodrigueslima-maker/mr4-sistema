@@ -16,6 +16,24 @@
     CONTATO_INVALIDO: 'Contato inválido',
   };
 
+  // COM-02 — perguntas opcionais do funil por resultado (espelha CAPTURA_OUTCOMES do servidor, que é quem valida).
+  var CAPTURA_PERGUNTAS = [
+    { campo: 'interesse', rotulo: 'Demonstrou interesse em comprar?', resultados: ['CONVERSA_REALIZADA', 'PEDIU_RETORNO'] },
+    { campo: 'proposta', rotulo: 'Enviou orçamento ou proposta?', resultados: ['CONVERSA_REALIZADA', 'PEDIU_RETORNO', 'SEM_INTERESSE_AGORA'] },
+  ];
+  function perguntasDoResultado(outcome) {
+    return CAPTURA_PERGUNTAS.filter(function (p) { return p.resultados.indexOf(outcome) >= 0; });
+  }
+  /** Campos a enviar: só os respondidos e que se aplicam ao resultado escolhido. Sem resposta = campo ausente. */
+  function camposCaptura(outcome, respostas) {
+    var out = {};
+    perguntasDoResultado(outcome).forEach(function (p) {
+      var v = respostas && respostas[p.campo];
+      if (v === 'SIM' || v === 'NAO') out[p.campo] = v;
+    });
+    return out;
+  }
+
   function dataComercial(date) {
     var partes = new Intl.DateTimeFormat('en-US', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(date || new Date());
     var p = function (t) { return partes.filter(function (x) { return x.type === t; })[0].value; };
@@ -269,6 +287,9 @@
     humanizarValorLegado: humanizarValorLegado,
     sinaisLegadosSeguros: sinaisLegadosSeguros,
     OUTCOME_LABELS: OUTCOME_LABELS,
+    // COM-02
+    perguntasDoResultado: perguntasDoResultado,
+    camposCaptura: camposCaptura,
   };
   root.FilaWorklistView = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

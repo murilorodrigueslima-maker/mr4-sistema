@@ -81,7 +81,8 @@ main{max-width:1180px;margin:0 auto;padding:1.1rem 1.25rem 3rem}
 .chips{display:flex;flex-wrap:wrap;gap:.35rem}
 .chip{border:1px solid var(--border);background:var(--white);border-radius:99px;padding:.32rem .7rem;font-size:.78rem;font-weight:600;color:var(--text)}
 .chip[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
-.reg label{font-size:.74rem;font-weight:600;color:var(--muted)}
+.reg label,.cap-l{font-size:.74rem;font-weight:600;color:var(--muted)}
+.cap .chips{margin-top:.25rem}
 .reg input[type=date]{border:1px solid var(--border);border-radius:8px;padding:.35rem .5rem;font:inherit;font-size:.82rem}
 .reg textarea{border:1px solid var(--border);border-radius:8px;padding:.45rem .55rem;font:inherit;font-size:.82rem;resize:vertical;min-height:52px;width:100%}
 .cont{font-size:.7rem;color:var(--faint);text-align:right}
@@ -246,6 +247,9 @@ const fnContato = httpsCallable(funcs, 'crmContatoReativacao');       // telefon
 const fnAgente = httpsCallable(funcs, 'aiAgente');          // IA SOMENTE no backend (chave no Secret Manager); o navegador nunca vê chave nem dados fora do escopo
 const AV = window.AgenteComercialView;
 const V = window.CrmView;
+// COM-02: o JS pode estar em cache (5 min) logo após uma publicação — sem as funções novas, a tela segue como antes.
+const FW = window.FilaWorklistView || {};
+const perguntasCaptura = r => (FW.perguntasDoResultado ? FW.perguntasDoResultado(r) : []);
 
 const S = { contatos: {}, uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
   indicadores: null, aba: 'hoje', aberto: null, sel: {}, enviando: new Set(), erros: {} };
@@ -366,6 +370,8 @@ function painelRegistro(id) {
   return `<div class="reg" data-reg="${esc(id)}">
     <div class="chips">${V.RESULTADOS.map(x => `<button class="chip" data-a="res" data-id="${esc(id)}" data-res="${x.codigo}" aria-pressed="${sel.resultado === x.codigo}">${esc(x.rotulo)}</button>`).join('')}</div>
     ${r && r.exigeData ? `<div><label for="dt-${esc(id)}">Retornar em</label><br><input type="date" id="dt-${esc(id)}" data-a="data" data-id="${esc(id)}" min="${lim.min}" max="${lim.max}" value="${esc(sel.data || '')}"></div>` : ''}
+    ${r ? perguntasCaptura(r.codigo).map(q => `<div class="cap" role="group" aria-label="${esc(q.rotulo)}"><span class="cap-l">${esc(q.rotulo)} (opcional)</span><div class="chips">${[['SIM', 'Sim'], ['NAO', 'Não']].map(([v, t]) =>
+      `<button class="chip" data-a="cap" data-id="${esc(id)}" data-campo="${q.campo}" data-v="${v}" aria-pressed="${sel[q.campo] === v}">${t}</button>`).join('')}</div></div>`).join('') : ''}
     <div><label for="nt-${esc(id)}">${exigeMotivo ? 'Motivo do follow-up (obrigatório)' : 'Observação (opcional)'}</label>
       <textarea id="nt-${esc(id)}" data-a="nota" data-id="${esc(id)}" maxlength="400" placeholder="Ex.: estoque alto de LED, pediu para ver multimídia no mês que vem">${esc(sel.nota || '')}</textarea>
       <div class="cont ${nota.ok ? '' : 'excede'}" id="ct-${esc(id)}">${nota.tamanho}/${V.NOTA_MAX}</div></div>
@@ -462,6 +468,7 @@ async function salvar(id) {
     const payload = { opportunityInstanceId: id, outcome: sel.resultado, requestId: (sel.rid = sel.rid || novoRequestId()) };   // S6: retry seguro (mesmo id até salvar)
     if (sel.resultado === 'PEDIU_RETORNO') payload.scheduledFor = sel.data;
     if (nota.texto) payload.nota = nota.texto;
+    if (FW.camposCaptura) Object.assign(payload, FW.camposCaptura(sel.resultado, sel));       // COM-02: só o que foi respondido
     const r = await fnOutcome(payload);
     delete S.sel[id];
     toast(r.data.nextFollowUpAt ? `Resultado salvo. Retorno: ${V.rotuloDia(r.data.nextFollowUpAt, hoje())}.` : 'Resultado salvo.');
@@ -534,6 +541,9 @@ document.addEventListener('click', e => {
   const a = b.dataset.a, id = b.dataset.id;
   if (a === 'registrar') { S.sel[id] = S.sel[id] || {}; render(); const r = document.querySelector(`[data-reg="${CSS.escape(id)}"] .chip`); if (r) r.focus(); }
   else if (a === 'res') { S.sel[id] = { ...(S.sel[id] || {}), resultado: b.dataset.res }; delete S.erros[id]; render(); }
+  else if (a === 'cap') {                                                                   // COM-02: tocar de novo desmarca
+    const s = S.sel[id] || {}, campo = b.dataset.campo; S.sel[id] = { ...s, [campo]: s[campo] === b.dataset.v ? null : b.dataset.v }; delete S.erros[id]; render();
+  }
   else if (a === 'salvar') salvar(id);
   else if (a === 'fecharReg') { delete S.sel[id]; delete S.erros[id]; render(); }
   else if (a === 'iniciar') iniciar(id);

@@ -27,6 +27,7 @@ const {
   EVENT_TYPES,
   isCooledDown,
   normalizarNota,
+  normalizarCaptura,
 } = require('./filaOperacional');
 const { sanitizeCommercialDisplayName } = require('./nomeExibicao');
 
@@ -236,7 +237,8 @@ async function claimOpportunityHandler(request, opts = {}) {
 
 /**
  * Registra resultado de um atendimento.
- * Entrada: { opportunityInstanceId, outcome, scheduledFor? (YYYY-MM-DD para PEDIU_RETORNO), nota? (≤280, CRM 2.0 F1) }
+ * Entrada: { opportunityInstanceId, outcome, scheduledFor? (YYYY-MM-DD para PEDIU_RETORNO), nota? (≤280, CRM 2.0 F1),
+ *            interesse?, proposta? ('SIM'|'NAO', COM-02 — opcionais; gravados em eventos[].meta) }
  * Saída:   { estado, outcome, nextFollowUpAt, cooledUntil }
  *
  * Apenas o owner do claim pode registrar outcome.
@@ -252,7 +254,7 @@ async function registerOutcomeHandler(request, opts = {}) {
 
   await verificarPermissaoFila(uid);
 
-  validarPayload(request.data, ['opportunityInstanceId', 'outcome', 'scheduledFor', 'nota', 'requestId']);
+  validarPayload(request.data, ['opportunityInstanceId', 'outcome', 'scheduledFor', 'nota', 'requestId', 'interesse', 'proposta']);
   const { opportunityInstanceId, outcome, scheduledFor, nota, requestId } = request.data || {};
   validarOppId(opportunityInstanceId);
 
@@ -282,6 +284,10 @@ async function registerOutcomeHandler(request, opts = {}) {
   let notaLimpa;
   try { notaLimpa = normalizarNota(nota); }
   catch (e) { throw new HttpsError('invalid-argument', 'Observação inválida: ' + e.message + '.'); }
+  // COM-02: interesse/proposta opcionais (funil comercial)
+  let captura;
+  try { captura = normalizarCaptura(outcome, request.data); }
+  catch (e) { throw new HttpsError('invalid-argument', 'Campo inválido: ' + e.message + '.'); }
 
   const store  = db();
   const ref    = store.collection(COLL).doc(opportunityInstanceId);
@@ -313,7 +319,7 @@ async function registerOutcomeHandler(request, opts = {}) {
       throw new HttpsError('permission-denied', 'Apenas o responsável pelo atendimento pode registrar resultado.');
     }
 
-    const meta = {};
+    const meta = { ...captura };
     if (outcome === OUTCOMES.PEDIU_RETORNO && scheduledFor) {
       meta.scheduledFor = scheduledFor;
     }

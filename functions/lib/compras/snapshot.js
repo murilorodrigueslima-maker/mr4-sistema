@@ -18,6 +18,7 @@ const Forn = require('./fornecedores');
 const Nomes = require('./nomesFornecedores');
 const Compat = require('./docCompat');
 const Hist = require('./historico');
+const Conf = require('./confiabilidade');
 
 // Limites de ARMAZENAMENTO (não são regra de negócio). Firestore: documento ≤ 1 MiB; commit ≤ 10 MiB e ≤ 500 operações.
 const BLOCO = 150;                       // produtos por documento (medido: ~430 KB com a sugestão explicada)
@@ -233,6 +234,10 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
   const cont = o => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Array.isArray(v) ? v.length : cont(v)]));
   const pol = resumoPolitica(r);
   delete pol.stockout_not_suggested_detail;   // detalhe por produto fica fora do resumo compartilhado
+  const view = montarView(r, porId, custos, agora, hoje, financeiro, financeiro ? politica.profitability.view.soft_limit_bytes : null);
+  // SOMENTE LEITURA/visibilidade: compras pendentes antigas a confirmar no ERP. Não toca sugestões; sem pendência antiga o campo não existe.
+  const pendencias = Conf.blocoPendencias(brutosCompras, hoje, porId);
+  if (pendencias) view.sugestoes.pendencias_compras = pendencias;
   return {
     resumo: { versao: RULES_VERSION, policy_version: r.policy_version, politica: semRentabilidade(r.politica), gerado_em: agora.toISOString(), data_comercial: hoje, fuso: politica.stock_snapshot.timezone, modo_sync: modo,
       produtos: produtos.length, contagens: cont(r.agregados), listas: r.agregados, data_venda_mais_antiga: r.data_venda_mais_antiga,
@@ -243,7 +248,7 @@ function montarSnapshot({ brutosProdutos, brutosVendas, brutosCompras, agora = n
     snapshotEstoque: montarSnapshotEstoque(produtos, agora, politica),
     // Fase B (vendas por fornecedor): agregados puros dos MESMOS fatos canônicos; ainda NÃO são gravados (persistência e Rules = Fase C)
     fornecedores: Forn.montarFornecedores({ produtos, fatosVenda, fatosCompra, hoje, agora, modo, ultimoCompleto, nomes: nomesFornecedores, nomesMeta, sync: politica.sync, config: politica.supplier_sales || Forn.DEFAULTS }),
-    view: montarView(r, porId, custos, agora, hoje, financeiro, financeiro ? politica.profitability.view.soft_limit_bytes : null),
+    view,
     base: { layout: layoutDaPolitica(politica), vendas: brutosVendas.map(compactarVenda), compras: brutosCompras.map(compactarCompra) },
   };
 }

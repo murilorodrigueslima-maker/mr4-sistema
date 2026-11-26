@@ -452,6 +452,15 @@ service cloud.firestore {
       allow read:  if dia.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && temAcessoModulo('estoque');
       allow write: if false;
     }
+    // HISTÓRICO DE ESTOQUE (agregados dos snapshots; escrita só Admin SDK). Mesmo menor privilégio:
+    //   operacional (unidades, dias sem estoque, cobertura, risco; SEM R$): módulo 'estoque'
+    //   capital em R$ (resumo_valor e valor_{dia}): GESTOR + (admin | módulo 'estoque'), não bloqueado
+    //   demais documentos (ex.: custos_vigentes): ninguém pelo app
+    match /estoque_historico/{docId} {
+      allow read:  if (docId in ['resumo', 'produtos', 'estado'] && temAcessoModulo('estoque')) ||
+                      ((docId == 'resumo_valor' || docId.matches('^valor_[0-9]{4}-[0-9]{2}-[0-9]{2}$')) && temModulo('estoque') && naoBloqueado());
+      allow write: if false;
+    }
     // base compacta do sync incremental (itens de venda/compra com valores, SEM cliente): só o Admin SDK
     match /compras_n0_base/{docId} {
       allow read, write: if false;

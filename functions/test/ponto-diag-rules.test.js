@@ -2,14 +2,13 @@
 /**
  * DIAGNÓSTICO TÉCNICO DO PONTO — Firestore Rules (EMULADOR; dados 100% sintéticos; nada de produção).
  *
- * Testes de CARACTERIZAÇÃO:
- *   "CONFIRMADO Dxx" afirma o comportamento ATUAL que consideramos defeito. Passa hoje; ao corrigir, deve falhar e ser
- *   invertido (assertSucceeds → assertFails) junto com a correção.
+ * Antes testes de caracterização do defeito; INVERTIDOS na correção:
+ *   "CORRIGIDO Dxx" afirma que a escrita indevida agora é negada.
  *   "CONTROLE" afirma uma proteção que já funciona e não pode regredir.
  * Nenhuma regra trabalhista é avaliada aqui — só quem consegue escrever o quê e com que trilha.
  *
- * Porta padrão 8270 (nunca a 8080). Rodar:
- *   FIRESTORE_EMULATOR_HOST=localhost:8270 npx jest --runInBand test/ponto-diag
+ * Porta padrão 8310 (nunca a 8080). Rodar:
+ *   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-diag
  */
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const { serverTimestamp } = require('@firebase/firestore');
@@ -18,7 +17,7 @@ const { resolve } = require('path');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 jest.setTimeout(60000);
 
-const [HOST, PORT] = (process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8270').split(':');
+const [HOST, PORT] = (process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310').split(':');
 if (!['localhost', '127.0.0.1'].includes(HOST)) throw new Error('Este diagnóstico só roda no emulador local.');
 const PROJECT_ID = 'demo-ponto-diag-rules';
 const RULES = readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8');
@@ -82,94 +81,71 @@ describe('CONTROLE — proteções que funcionam', () => {
 });
 
 describe('Batidas (registros)', () => {
-  test('CONFIRMADO D01: gestor oculta uma batida do cálculo sem criar correção, sem autor e sem justificativa', async () => {
-    const ref = db(G).doc(`registros/${F_E}_${DIA}_entrada`);
-    await assertSucceeds(ref.update({ substituidoPor: 'registro-que-nao-existe' }));
-    const r = await ler(`registros/${F_E}_${DIA}_entrada`);
-    expect(M.registrosEfetivos([r])).toHaveLength(0);                       // some do Espelho e do Banco
-    expect(Object.keys(r).filter(k => /substituid|aprovad|autor/i.test(k))).toEqual(['substituidoPor']);   // nem quem, nem quando
+  test('CORRIGIDO D01 (E1): gestor não oculta batida', async () => {
+    await assertFails(db(G).doc(`registros/${F_E}_${DIA}_entrada`).update({ substituidoPor: 'registro-que-nao-existe' }));
+    expect(M.registrosEfetivos([await ler(`registros/${F_E}_${DIA}_entrada`)])).toHaveLength(1);
   });
-  test('CONFIRMADO D02: gestor cria pelo cliente um registro com aparência de batida do funcionário, com hora e "criadoEm" escolhidos', async () => {
+  test('CORRIGIDO D02 (E1): gestor não cria registro pelo cliente', async () => {
     const id = `${F_E}_2026-09-29_entrada`;
-    await assertSucceeds(db(G).doc('registros/' + id).set({ id, funcId: F_E, data: '2026-09-29', tipo: 'entrada', tipoLabel: 'Entrada', hora: '07:00:00', modalidade: 'PRESENCIAL', dentroRaio: true, criadoEm: new Date('2020-01-01T00:00:00Z') }));
-    const r = await ler('registros/' + id);
-    expect(r.lancadoPorJustificativa).toBeUndefined();
-    expect(r.aprovadoPorUid).toBeUndefined();
-    expect(M.buildOrigemBatidas([r], '2026-09').dias['2026-09-29'].entrada.origem).toBe('batida');   // Espelho exibe como batida normal
+    await assertFails(db(G).doc('registros/' + id).set({ id, funcId: F_E, data: '2026-09-29', tipo: 'entrada', tipoLabel: 'Entrada', hora: '07:00:00', modalidade: 'PRESENCIAL', dentroRaio: true, criadoEm: new Date('2020-01-01T00:00:00Z') }));
   });
 });
 
 describe('Créditos de jornada e cadastro', () => {
-  test('CONFIRMADO D03: crédito é criado com data do cliente, sobrescrito e apagado sem nenhuma trilha', async () => {
+  test('CORRIGIDO D03 (E1: não apaga; histórico do relançamento vem da trilha da E2; autor obrigatório na E4)', async () => {
     const ref = db(G).doc(`creditos_jornada/cred_${F_E}_${DIA}`);
-    await assertSucceeds(ref.update({ minutos: 0, motivo: 'Folga compensatória', criadoEm: '2001-01-01T00:00:00Z' }));
-    await assertSucceeds(ref.delete());
-    expect(await ler(`creditos_jornada/cred_${F_E}_${DIA}`)).toBeNull();
+    await assertFails(ref.delete());
+    expect(await ler(`creditos_jornada/cred_${F_E}_${DIA}`)).not.toBeNull();
   });
-  test('CONFIRMADO D04: aceita segundo crédito no mesmo funcionário e dia (ID livre)', async () => {
-    await assertSucceeds(db(G).doc('creditos_jornada/id-qualquer').set({ funcId: F_E, data: DIA, minutos: 60, motivo: 'Falta justificada' }));
+  test('CORRIGIDO D04 (E1): não aceita segundo crédito no mesmo funcionário e dia', async () => {
+    await assertFails(db(G).doc('creditos_jornada/id-qualquer').set({ funcId: F_E, data: DIA, minutos: 60, motivo: 'Falta justificada' }));
   });
-  test('CONFIRMADO D05: usuário com módulo ponto altera o PRÓPRIO cadastro (jornada, modalidade, início do banco)', async () => {
-    await assertSucceeds(db(DR).doc('funcionarios/' + F_DR).update({ modalidade: 'HOME_OFFICE', jornada: 4, inicioBancoHoras: '2026-09-28' }));
+  test('CORRIGIDO D05 (E1): usuário com módulo ponto não altera o próprio cadastro de ponto', async () => {
+    await assertFails(db(DR).doc('funcionarios/' + F_DR).update({ modalidade: 'HOME_OFFICE', jornada: 4, inicioBancoHoras: '2026-09-28' }));
   });
-  test('CONFIRMADO D06: cadastro de funcionário com marcações pode ser apagado pelo cliente', async () => {
-    await assertSucceeds(db(G).doc('funcionarios/' + F_E).delete());
+  test('D06 parcial (E1: nunca o próprio; a exclusão dos demais só é negada na E4)', async () => {
+    await assertFails(db(DR).doc('funcionarios/' + F_DR).delete());
   });
 });
 
 describe('Justificativas', () => {
-  test('CONFIRMADO D07: gestor reescreve o pedido do funcionário (horário e texto) antes da decisão', async () => {
-    await assertSucceeds(db(G).doc('justificativas/j-pend').update({ horarioPonto: '19:30', descricao: 'Texto trocado' }));
+  test('CORRIGIDO D07/D08/D09 (E1): pedido não é reescrito, decidida não muda nem vai para mês protegido', async () => {
+    await assertFails(db(G).doc('justificativas/j-pend').update({ horarioPonto: '19:30', descricao: 'Texto trocado' }));
+    await assertFails(db(G).doc('justificativas/j-aprov').update({ motivo: 'Férias', descricao: 'Alterado depois', data: '2026-09-30' }));
+    await assertFails(db(G).doc('justificativas/j-aprov').update({ data: MES_FECHADO + '-10' }));
   });
-  test('CONFIRMADO D08: conteúdo de justificativa já APROVADA pode ser alterado depois da decisão', async () => {
-    await assertSucceeds(db(G).doc('justificativas/j-aprov').update({ motivo: 'Férias', descricao: 'Alterado depois', data: '2026-09-30' }));
-  });
-  test('CONFIRMADO D09: justificativa pode ser movida PARA DENTRO de um mês protegido', async () => {
-    await assertSucceeds(db(G).doc('justificativas/j-aprov').update({ data: MES_FECHADO + '-10' }));
-  });
-  test('CONFIRMADO D10: a trava "aprovar correção só no servidor" é contornada em duas escritas (ou criando já aprovada)', async () => {
+  test('CORRIGIDO D10 (E1): nenhum dos dois contornos funciona', async () => {
     const ref = db(G).doc('justificativas/j-pend');
-    await assertFails(ref.update({ status: 'aprovado' }));                          // controle: caminho direto negado
-    await assertSucceeds(ref.update({ tipoPonto: null }));
-    await assertSucceeds(ref.update({ status: 'aprovado' }));
-    await assertSucceeds(ref.update({ tipoPonto: 'saida' }));
-    expect(await ler('justificativas/j-pend')).toMatchObject({ status: 'aprovado', tipoPonto: 'saida' });
-    await assertSucceeds(db(G).doc('justificativas/j-nasce-aprovada').set({ funcId: F_E, data: DIA, tipoPonto: 'saida', horarioPonto: '18:00', status: 'aprovado', lancadoPorGestor: false }));
-    const col = await db(G).collection('ponto_justificativas_decisoes').get();
-    expect(col.size).toBe(0);                                                        // nenhuma trilha de decisão
+    await assertFails(ref.update({ tipoPonto: null }));
+    await assertFails(ref.update({ status: 'aprovado' }));
+    await assertFails(db(G).doc('justificativas/j-nasce-aprovada').set({ funcId: F_E, data: DIA, tipoPonto: 'saida', horarioPonto: '18:00', status: 'aprovado', lancadoPorGestor: true }));
   });
-  test('CONFIRMADO D11: funcionário grava campos reservados à gestão (evidenciaGestao, nome de terceiro, dados de decisão)', async () => {
-    await assertSucceeds(db(E).doc('justificativas/j-func').set({ funcId: F_E, funcNome: 'Outro Nome', data: DIA, motivo: 'Ponto não batido', descricao: '', tipoPonto: 'saida', horarioPonto: '18:00',
+  test('CORRIGIDO D11 (E1): funcionário não grava campos reservados à gestão', async () => {
+    await assertFails(db(E).doc('justificativas/j-func').set({ funcId: F_E, funcNome: 'Outro Nome', data: DIA, motivo: 'Ponto não batido', descricao: '', tipoPonto: 'saida', horarioPonto: '18:00',
       status: 'pendente', lancadoPorGestor: false, evidenciaGestao: 'x', registroEfetivoId: 'qualquer', criadoEm: '2000-01-01T00:00:00Z' }));
-    expect(M.temEvidenciaJustificativa(await ler('justificativas/j-func'))).toBe(true);
   });
 });
 
 describe('Espelhos', () => {
-  test('CONFIRMADO D12: gestor grava um espelho como ASSINADO pelo funcionário (sem o funcionário)', async () => {
-    await assertSucceeds(db(G).doc('espelhos/esp-aberto').update({ assinado: true, status: 'assinado', assinadoPor: F_E, assinadoEm: serverTimestamp(), assinaturaImg: 'data:image/png;base64,AAAA' }));
-    expect(await ler('espelhos/esp-aberto')).toMatchObject({ assinado: true, assinadoPor: F_E });
+  test('CORRIGIDO D12 (E1): gestor não grava assinatura', async () => {
+    await assertFails(db(G).doc('espelhos/esp-aberto').update({ assinado: true, status: 'assinado', assinadoPor: F_E, assinadoEm: serverTimestamp(), assinaturaImg: 'data:image/png;base64,AAAA' }));
   });
-  test('CONFIRMADO D13: snapshot de espelho em assinatura muda sem mudar o hash; a assinatura com o hash antigo é aceita', async () => {
-    await assertSucceeds(db(G).doc('espelhos/esp-aberto').update({ snapshot: { totais: { saldo: -999 } } }));
-    await assertSucceeds(db(E).doc('espelhos/esp-aberto').update({ assinado: true, status: 'assinado', hashAssinado: 'hash-original', assinadoEm: serverTimestamp(), assinadoPor: F_E, assinaturaImg: 'x' }));
-    expect((await ler('espelhos/esp-aberto')).snapshot.totais.saldo).toBe(-999);
+  test('CORRIGIDO D13 (E1, parte das Rules): snapshot não muda sem o hash mudar', async () => {
+    await assertFails(db(G).doc('espelhos/esp-aberto').update({ snapshot: { totais: { saldo: -999 } } }));
   });
-  test('CONFIRMADO D14: marcar espelho assinado como "substituido" (sem v2) faz o Banco recalcular o mês congelado', async () => {
+  test('CORRIGIDO D14 (E1): cliente não marca espelho assinado como substituído', async () => {
+    await assertFails(db(G).doc('espelhos/esp-assinado').update({ substituido: true }));
     const f = { id: F_E, jornada: 8 };
     const dados = [{ mes: MES_FECHADO, regs: [], cred: [], just: [] }];
-    const montar = esp => M.montarMesesBanco(f, dados, [esp], '2026-09-30', '2026-09-29', '2026-09')[0];
-    expect(montar(await ler('espelhos/esp-assinado')).origem).toBe('SNAPSHOT_ASSINADO');
-    await assertSucceeds(db(G).doc('espelhos/esp-assinado').update({ substituido: true }));
-    expect(montar(await ler('espelhos/esp-assinado')).origem).toBe('MOTOR');
+    expect(M.montarMesesBanco(f, dados, [await ler('espelhos/esp-assinado')], '2026-09-30', '2026-09-29', '2026-09')[0].origem).toBe('SNAPSHOT_ASSINADO');
   });
 });
 
 describe('Bloqueio de usuário', () => {
-  test('CONFIRMADO D15: funcionário BLOQUEADO continua lendo, criando justificativa e assinando espelho', async () => {
+  test('CORRIGIDO D15 (E1): funcionário bloqueado não lê, não cria justificativa e não assina', async () => {
     const f = db(BL);
-    await assertSucceeds(f.doc('funcionarios/' + F_BL).get());
-    await assertSucceeds(f.doc('justificativas/j-bl').set({ funcId: F_BL, data: DIA, motivo: 'Férias', status: 'pendente', lancadoPorGestor: false }));
-    await assertSucceeds(f.doc('espelhos/esp-bloq').update({ assinado: true, status: 'assinado', hashAssinado: 'hb', assinadoEm: serverTimestamp(), assinadoPor: F_BL, assinaturaImg: 'x' }));
+    await assertFails(f.doc('funcionarios/' + F_BL).get());
+    await assertFails(f.doc('justificativas/j-bl').set({ funcId: F_BL, data: DIA, motivo: 'Férias', status: 'pendente', lancadoPorGestor: false }));
+    await assertFails(f.doc('espelhos/esp-bloq').update({ assinado: true, status: 'assinado', hashAssinado: 'hb', assinadoEm: serverTimestamp(), assinadoPor: F_BL, assinaturaImg: 'x' }));
   });
 });

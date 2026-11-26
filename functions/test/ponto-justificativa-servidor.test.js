@@ -158,14 +158,13 @@ describe('regras do banco de dados (período protegido e aprovação de correç�
     await assertFails(g.doc('creditos_jornada/c1').set({ funcId: 'F1', data: '2026-05-12', minutos: 480, motivo: 'Atestado médico' }));
     await assertFails(g.doc('justificativas/pm').update({ status: 'rejeitado', respondidoPorUid: 'g', respondidoPorEmail: 'g@x', respondidoEm: serverTimestamp() }));
     // fora da competência protegida continua funcionando
-    await assertSucceeds(g.doc('creditos_jornada/c2').set({ funcId: 'F1', data: '2026-10-12', minutos: 480, motivo: 'Atestado médico' }));
+    await assertSucceeds(g.doc('creditos_jornada/cred_F1_2026-10-12').set({ funcId: 'F1', data: '2026-10-12', minutos: 480, motivo: 'Atestado médico' }));
     await assertSucceeds(u.doc('justificativas/nova3').set({ id: 'nova3', funcId: 'F1', data: '2026-10-12', motivo: 'Atestado médico', status: 'pendente', lancadoPorGestor: false }));
   });
-  test('aprovar CORREÇÃO DE BATIDA direto no cliente é negado; rejeitar e ocorrências seguem como antes', async () => {
+  test('NENHUMA decisão é gravada direto no cliente (aprovar, rejeitar ou ocorrência): só o servidor', async () => {
     const g = ctx('g');
-    await assertFails(g.doc('justificativas/p1').update({ status: 'aprovado', respondidoPorUid: 'g', respondidoPorEmail: 'g@x', respondidoEm: serverTimestamp() }));
-    await assertSucceeds(g.doc('justificativas/p1').update({ status: 'rejeitado', obsGestor: 'Sem prova', respondidoPorUid: 'g', respondidoPorEmail: 'g@x', respondidoEm: serverTimestamp() }));
-    await assertSucceeds(g.doc('justificativas/p2').update({ status: 'aprovado', respondidoPorUid: 'g', respondidoPorEmail: 'g@x', respondidoEm: serverTimestamp() }));
+    for (const [id, status] of [['p1', 'aprovado'], ['p1', 'rejeitado'], ['p2', 'aprovado']])
+      await assertFails(g.doc('justificativas/' + id).update({ status, respondidoPorUid: 'g', respondidoPorEmail: 'g@x', respondidoEm: serverTimestamp() }));
   });
   test('trilhas e marcadores sem escrita de cliente', async () => {
     for (const p of ['ponto_meses_protegidos/x', 'ponto_justificativas_decisoes/x', 'ponto_justificativas_lock/x']) { await assertFails(ctx('g').doc(p).set({ a: 1 })); await assertFails(ctx('u').doc(p).set({ a: 1 })); }

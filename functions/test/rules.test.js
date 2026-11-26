@@ -151,9 +151,9 @@ test('D — funcionario não pode criar registro diretamente (bypass bloqueado)'
 });
 
 // ─── Teste E: gestor pode criar registro (lançamento manual) ──────────────────
-test('E — gestor pode criar registro manual em registros', async () => {
+test('E — gestor NÃO cria registro pelo cliente (correção é só pelo servidor)', async () => {
   const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-  await assertSucceeds(
+  await assertFails(
     db.collection('registros').doc('reg-gestor').set({
       funcId:    FUNC_ID,
       authUid:   UID_GESTOR,
@@ -292,12 +292,12 @@ test('M — funcionario não pode criar justificativa com lancadoPorGestor=true'
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ─── Teste N: gestor aprova com próprio UID/email → permitido ─────────────────
-test('N — gestor aprova justificativa com próprio UID e email → permitido', async () => {
+test('N — gestor NÃO decide pelo cliente, nem com o próprio UID e email (só o servidor)', async () => {
   await testEnv.withSecurityRulesDisabled(async ctx => {
     await seedJustifPendente(ctx.firestore());
   });
   const db = ctxGestor().firestore();
-  await assertSucceeds(
+  await assertFails(
     db.collection('justificativas').doc('justif-auditoria').update({
       status:             'aprovado',
       obsGestor:          '',
@@ -412,12 +412,12 @@ test('U — funcionario cria justificativa pendente (fluxo legítimo preservado)
 });
 
 // ─── Teste V: update legítimo sem campos de auditoria continua funcionando ────
-test('V — gestor pode atualizar obsGestor sem tocar campos de auditoria', async () => {
+test('V — gestor NÃO altera justificativa pelo cliente (nem observação)', async () => {
   await testEnv.withSecurityRulesDisabled(async ctx => {
     await seedJustifPendente(ctx.firestore());
   });
   const db = ctxGestor().firestore();
-  await assertSucceeds(
+  await assertFails(
     db.collection('justificativas').doc('justif-auditoria').update({
       obsGestor: 'Gestor adicionou nota sem responder ainda',
     })
@@ -427,8 +427,8 @@ test('V — gestor pode atualizar obsGestor sem tocar campos de auditoria', asyn
 // ─── Teste W: merge — campo extra em creditos_jornada preservado ──────────────
 test('W — batch.set(merge:true) preserva campo extra preexistente em creditos_jornada', async () => {
   await testEnv.withSecurityRulesDisabled(async ctx => {
-    await ctx.firestore().collection('creditos_jornada').doc('cred-merge-test').set({
-      id: 'cred-merge-test', funcId: FUNC_ID, funcNome: 'Func Teste',
+    await ctx.firestore().collection('creditos_jornada').doc('cred_' + FUNC_ID + '_2026-09-01').set({
+      id: 'cred_' + FUNC_ID + '_2026-09-01', funcId: FUNC_ID, funcNome: 'Func Teste',
       data: '2026-09-01', minutos: 480, motivo: 'Atestado',
       criadoEm: '2026-09-01T08:00:00.000Z',
       observacao: 'campo-extra-preexistente',
@@ -438,8 +438,8 @@ test('W — batch.set(merge:true) preserva campo extra preexistente em creditos_
   const db = ctxGestor().firestore();
   const batch = db.batch();
   batch.set(
-    db.collection('creditos_jornada').doc('cred-merge-test'),
-    { id:'cred-merge-test', funcId:FUNC_ID, funcNome:'Func Teste',
+    db.collection('creditos_jornada').doc('cred_' + FUNC_ID + '_2026-09-01'),
+    { id:'cred_' + FUNC_ID + '_2026-09-01', funcId:FUNC_ID, funcNome:'Func Teste',
       data:'2026-09-01', minutos:480, motivo:'Atestado',
       criadoEm: new Date().toISOString() },
     { merge: true }
@@ -448,7 +448,7 @@ test('W — batch.set(merge:true) preserva campo extra preexistente em creditos_
 
   // Lê com gestor (tem acesso de leitura) para verificar o campo extra
   const dbRead = ctxGestor().firestore();
-  const snap = await dbRead.collection('creditos_jornada').doc('cred-merge-test').get();
+  const snap = await dbRead.collection('creditos_jornada').doc('cred_' + FUNC_ID + '_2026-09-01').get();
   expect(snap.data().observacao).toBe('campo-extra-preexistente');
 });
 

@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-10-07 (S5: users/sistema_usuarios só escrevem por ADMIN REAL; antes 2026-09-24 Camila dual-role ponto)
+// Versão: 2026-11-26 (PONTO INTEGRIDADE E1: originais imutáveis, justificativa/espelho/crédito/cadastro protegidos; antes 2026-10-07 S5)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -15,7 +15,7 @@
 // Criação de registros de ponto:
 //   Funcionários NÃO podem criar registros diretamente.
 //   Toda criação é feita pela Cloud Function registrarPonto (Admin SDK).
-//   Gestores podem criar registros manualmente (lançamento).
+//   Correções são registros COMPLEMENTARES criados pela Cloud Function pontoJustificativaDecidir. Nenhum cliente grava em `registros`.
 
 rules_version = '2';
 
@@ -59,12 +59,19 @@ service cloud.firestore {
         get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('bloqueado', false) != true;
     }
 
-    // Funcionário ativo: autenticado, role='funcionario', ativo=true
+    // Funcionário ativo: autenticado, role='funcionario', ativo=true e NÃO bloqueado (E1/D15; +1 leitura em sistema_usuarios).
+    // Sem doc em sistema_usuarios não há registro de bloqueio a respeitar (mesmo critério de isGestor e das Functions).
     function isFuncionario() {
       return isAuthed() &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         meuPerfil().role == 'funcionario' &&
-        meuPerfil().ativo == true;
+        meuPerfil().ativo == true &&
+        naoBloqueadoPonto();
+    }
+
+    function naoBloqueadoPonto() {
+      return !exists(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)) ||
+        get(/databases/$(database)/documents/sistema_usuarios/$(request.auth.uid)).data.get('bloqueado', false) != true;
     }
 
     // Retorna o funcionarioId vinculado ao UID do funcionário logado
@@ -189,87 +196,122 @@ service cloud.firestore {
       allow write: if isAdminReal();
     }
 
+    // ── PONTO — auxiliares de integridade (E1, 26/11/2026) ─────────────────────
+    function gestaoPonto() {
+      return temModulo('ponto') || temAcessoModulo('ponto');
+    }
+    function alterados() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+    // campo opcional de identidade: se presente (create) tem de ser o próprio autor
+    function autorSeCriado(campo) {
+      return !(campo in request.resource.data) || request.resource.data[campo] == request.auth.uid;
+    }
+    // campo opcional de identidade: se ALTERADO (update) tem de ser o próprio autor
+    function autorSeAlterado(campo) {
+      return !alterados().hasAny([campo]) || request.resource.data[campo] == request.auth.uid;
+    }
+    function dataValida(d) {
+      return d is string && d.matches('^20[0-9]{2}-[0-9]{2}-[0-9]{2}$');
+    }
+    // o nome gravado tem de ser o do cadastro (tolerante a cadastro inexistente/sem nome)
+    function nomeDoCadastro(fid, nome) {
+      return !exists(/databases/$(database)/documents/funcionarios/$(fid)) ||
+        get(/databases/$(database)/documents/funcionarios/$(fid)).data.get('nome', nome) == nome;
+    }
+    // campos do cadastro que mudam o CÁLCULO ou a forma de bater ponto: ninguém altera os próprios (D05).
+    // A comparação é por VALOR (a tela regrava jornada/modalidade em todo salvamento).
+    function cadastroPontoInalterado() {
+      return float(request.resource.data.get('jornada', 8)) == float(resource.data.get('jornada', 8)) &&
+        request.resource.data.get('modalidade', 'PRESENCIAL') == resource.data.get('modalidade', 'PRESENCIAL') &&
+        !alterados().hasAny(['inicioBancoHoras', 'controleBancoHoras', 'afastamentoBanco', 'escalas', 'inativo', 'inativadoEm', 'inativadoPorUid', 'motivoInativacao']);
+    }
+
     // ── Coleção: funcionarios ──────────────────────────────────────────────────
 
     match /funcionarios/{funcId} {
-      allow read:  if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && funcId == meuFuncId());
-      allow write: if temModulo('ponto') || temAcessoModulo('ponto');
+      allow read:   if gestaoPonto() || (isFuncionario() && funcId == meuFuncId());
+      allow create: if gestaoPonto() && naoEhProprioPonto(funcId);
+      allow update: if gestaoPonto() && (naoEhProprioPonto(funcId) || cadastroPontoInalterado());
+      // E1: nunca o próprio cadastro. A exclusão dos demais continua (botão "Remover" da tela atual) até a etapa E4.
+      allow delete: if gestaoPonto() && naoEhProprioPonto(funcId);
     }
 
     // ── Coleção: registros ─────────────────────────────────────────────────────
-    // Funcionários NÃO podem criar registros diretamente.
-    // Criação ocorre via Cloud Function registrarPonto (Admin SDK).
-    // Gestores podem criar, editar e deletar (lançamento manual, correções).
+    // E1 (D01/D02): batida original e correção são gravadas SOMENTE pelo servidor (registrarPonto / pontoJustificativaDecidir).
+    // Nenhum cliente — funcionário, gestor ou administrador — cria, altera, oculta (substituidoPor) ou apaga.
 
     match /registros/{regId} {
-      allow read:             if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      // PONTO 2.0 F0 (P0-02): batida original é IMUTÁVEL e não pode ser apagada pelo cliente.
-      //   create: lançamento administrativo (ex.: correção aprovada) — nunca do próprio ponto;
-      //   update: só marcar a substituição por uma correção, uma única vez, sem tocar hora/tipo/data;
-      //   delete: proibido (a trilha fica completa).
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId) &&
-        !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', ''));
-      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
-        naoEhProprioPonto(resource.data.funcId) &&
-        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) &&
-        !('substituidoPor' in resource.data) &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['substituidoPor', 'substituidoEm', 'substituidoPorJustificativa']);
-      allow delete: if false;
+      allow read: if gestaoPonto() || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create, update, delete: if false;
     }
 
     // ── Coleção: justificativas ────────────────────────────────────────────────
 
-    match /justificativas/{justifId} {
-      allow read:   if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
-      allow create: if !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', '')) && (((temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId)) || (
-        isFuncionario() &&
+    // pedido do FUNCIONÁRIO: lista fechada de campos (D11); nasce pendente e identificado como dele
+    function justifDoFuncionarioValida(justifId) {
+      return request.resource.data.keys().hasOnly(['id', 'funcId', 'funcNome', 'data', 'motivo', 'descricao', 'tipoPonto', 'horarioPonto',
+          'anexo', 'anexoNome', 'anexoTipo', 'status', 'lancadoPorGestor', 'criadoEm', 'authUid']) &&
         request.resource.data.funcId == meuFuncId() &&
         request.resource.data.status == 'pendente' &&
-        request.resource.data.lancadoPorGestor == false
-      ));
-      // Identidade: quando gravados, respondidoPorUid/Email devem corresponder ao caller.
-      // Server timestamp: respondidoEm deve ser avaliado no momento do servidor (request.time).
-      // Imutabilidade: após a resposta, esses três campos não podem ser alterados nem removidos.
-      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
-        naoEhProprioPonto(resource.data.funcId) &&                                    // PONTO 2.0 F0 (P1-05)
-        naoEhProprioPonto(request.resource.data.funcId) &&
-        // FASE 4.4: período protegido é imutável; APROVAR correção de batida (tipoPonto) só pelo servidor (pontoJustificativaDecidir:
-        // transação, conflitos, par de almoço, auditoria). Rejeição/observação e demais ocorrências seguem como antes.
-        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) &&
-        !(request.resource.data.get('status', '') == 'aprovado' && resource.data.get('tipoPonto', null) != null && resource.data.get('status', '') != 'aprovado') &&
-        // PONTO 2.0 F0: decisão só a partir de 'pendente' (impede 2ª aprovação/reversão silenciosa)
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) || resource.data.status == 'pendente') &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorUid']) ||
-         request.resource.data.respondidoPorUid == request.auth.uid) &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoPorEmail']) ||
-         request.resource.data.respondidoPorEmail == request.auth.token.email) &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['respondidoEm']) ||
-         request.resource.data.respondidoEm == request.time) &&
-        (!('respondidoPorUid'   in resource.data) ||
-         ('respondidoPorUid'   in request.resource.data &&
-          resource.data.respondidoPorUid   == request.resource.data.respondidoPorUid)) &&
-        (!('respondidoPorEmail' in resource.data) ||
-         ('respondidoPorEmail' in request.resource.data &&
-          resource.data.respondidoPorEmail == request.resource.data.respondidoPorEmail)) &&
-        (!('respondidoEm'       in resource.data) ||
-         ('respondidoEm'       in request.resource.data &&
-          resource.data.respondidoEm       == request.resource.data.respondidoEm));
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && resource.data.status == 'pendente' && naoEhProprioPonto(resource.data.funcId) &&
+        request.resource.data.lancadoPorGestor == false &&
+        request.resource.data.get('id', justifId) == justifId &&
+        autorSeCriado('authUid') &&
+        (!('funcNome' in request.resource.data) || nomeDoCadastro(request.resource.data.funcId, request.resource.data.funcNome));
+    }
+    // lançamento da GESTÃO: sempre identificado (lancadoPorGestor), sem campos de decisão, e correção de batida só nasce pendente (D10)
+    function justifDaGestaoValida(justifId) {
+      return request.resource.data.keys().hasOnly(['id', 'funcId', 'funcNome', 'data', 'motivo', 'descricao', 'tipoPonto', 'horarioPonto',
+          'anexo', 'anexoNome', 'anexoTipo', 'status', 'lancadoPorGestor', 'criadoEm', 'authUid', 'evidenciaGestao', 'origemFila',
+          'propostoPorUid', 'propostoPorEmail', 'lancadoPorUid', 'lancadoPorEmail', 'lancadoEm']) &&
+        request.resource.data.lancadoPorGestor == true &&
+        request.resource.data.status in ['pendente', 'aprovado'] &&
+        (request.resource.data.get('tipoPonto', null) == null || request.resource.data.status == 'pendente') &&
+        request.resource.data.get('id', justifId) == justifId &&
+        autorSeCriado('authUid') && autorSeCriado('propostoPorUid') && autorSeCriado('lancadoPorUid');
+    }
+
+    match /justificativas/{justifId} {
+      allow read:   if gestaoPonto() || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow create: if dataValida(request.resource.data.get('data', null)) &&
+        !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', '')) && (
+          (gestaoPonto() && naoEhProprioPonto(request.resource.data.funcId) && justifDaGestaoValida(justifId)) ||
+          (isFuncionario() && justifDoFuncionarioValida(justifId))
+        );
+      // E1 (D07–D10): conteúdo e decisão nunca são alterados pelo cliente. Decisão (aprovar, rejeitar, pedir informação) só pelo
+      // servidor (pontoJustificativaDecidir: transação, conflitos, mês protegido e trilha).
+      allow update: if false;
+      // E1: exclusão apenas de pedido PENDENTE (botão "Excluir" da tela atual) até a etapa E4; decidida nunca é apagada.
+      allow delete: if gestaoPonto() && resource.data.status == 'pendente' && naoEhProprioPonto(resource.data.funcId) &&
         !mesProtegido(resource.data.funcId, resource.data.get('data', ''));
     }
 
     // ── Coleção: creditos_jornada ──────────────────────────────────────────────
+    // E1 (D03/D04): um único crédito por funcionário e dia (ID cred_{funcId}_{data}), campos e valores validados, nunca apagado.
+
+    function creditoValido(creditoId) {
+      return creditoId == 'cred_' + request.resource.data.funcId + '_' + request.resource.data.data &&
+        dataValida(request.resource.data.data) &&
+        request.resource.data.minutos is number && request.resource.data.minutos >= 0 && request.resource.data.minutos <= 1440 &&
+        request.resource.data.motivo is string && request.resource.data.motivo.size() > 0 &&
+        request.resource.data.get('id', creditoId) == creditoId;
+    }
 
     match /creditos_jornada/{creditoId} {
-      allow read:  if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow read:  if gestaoPonto() || (isFuncionario() && resource.data.funcId == meuFuncId());
       // PONTO 2.0 F0 (P1-05): crédito de jornada nunca no próprio ponto
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(request.resource.data.funcId) &&
-        !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', ''));
-      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId) && naoEhProprioPonto(request.resource.data.funcId) &&
-        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) && !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', ''));
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && naoEhProprioPonto(resource.data.funcId) &&
-        !mesProtegido(resource.data.funcId, resource.data.get('data', ''));
+      allow create: if gestaoPonto() && naoEhProprioPonto(request.resource.data.funcId) &&
+        !mesProtegido(request.resource.data.funcId, request.resource.data.get('data', '')) &&
+        creditoValido(creditoId) &&
+        request.resource.data.keys().hasOnly(['id', 'funcId', 'funcNome', 'data', 'minutos', 'motivo', 'criadoEm', 'lancadoPorUid', 'lancadoPorEmail', 'lancadoEm']) &&
+        autorSeCriado('lancadoPorUid');
+      // relançamento do mesmo dia (tela atual): funcionário e data não mudam
+      allow update: if gestaoPonto() && naoEhProprioPonto(resource.data.funcId) &&
+        !mesProtegido(resource.data.funcId, resource.data.get('data', '')) &&
+        creditoValido(creditoId) &&
+        alterados().hasOnly(['id', 'funcNome', 'minutos', 'motivo', 'criadoEm', 'lancadoPorUid', 'lancadoPorEmail', 'lancadoEm']) &&
+        autorSeAlterado('lancadoPorUid');
+      allow delete: if false;
     }
 
     // ── Banco de horas acumulativo e compensação de faltas ─────────────────────
@@ -337,52 +379,87 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Trilha APPEND-ONLY do ponto (gatilhos do servidor: antes/depois, autor do contexto de autenticação). Nenhum cliente grava.
+    // ponto_trilha_blobs guarda o conteúdo grande que seria perdido numa alteração/exclusão (anexo, foto, assinatura).
+    match /ponto_trilha/{x} {
+      allow read: if gestaoPonto();
+      allow write: if false;
+    }
+    match /ponto_trilha_blobs/{x} {
+      allow read: if gestaoPonto();
+      allow write: if false;
+    }
+
     // ── Coleção: espelhos ──────────────────────────────────────────────────────
 
+    // revisão (reabertura): nasce ligada a uma versão ASSINADA do mesmo funcionário e mês, com justificativa
+    function revisaoValida() {
+      return request.resource.data.get('versaoAnteriorId', null) == null || (
+        request.resource.data.get('motivoRevisao', '') is string && request.resource.data.get('motivoRevisao', '').size() > 0 &&
+        get(/databases/$(database)/documents/espelhos/$(request.resource.data.versaoAnteriorId)).data.funcId == request.resource.data.funcId &&
+        get(/databases/$(database)/documents/espelhos/$(request.resource.data.versaoAnteriorId)).data.mes == request.resource.data.mes &&
+        get(/databases/$(database)/documents/espelhos/$(request.resource.data.versaoAnteriorId)).data.assinado == true);
+    }
+    // gestão sobre espelho NÃO assinado: só o conteúdo gerado; snapshot não muda sem o hash mudar (D13)
+    function gestaoAtualizaAberto() {
+      return resource.data.assinado == false &&
+        alterados().hasOnly(['snapshot', 'hashSnapshot', 'geradoEm', 'geradoPor', 'geradoPorUid', 'mesLabel', 'status']) &&
+        (!alterados().hasAny(['snapshot']) || alterados().hasAny(['hashSnapshot'])) &&
+        request.resource.data.get('status', '') != 'assinado' &&
+        autorSeAlterado('geradoPorUid');
+    }
+    // gestão sobre espelho ASSINADO: só abrir revisão, uma vez, com justificativa, criando a nova versão no mesmo lote (D14)
+    function gestaoAbreRevisao(espelhoId) {
+      return resource.data.assinado == true &&
+        resource.data.get('substituido', false) != true &&
+        alterados().hasOnly(['versaoSucessoraId', 'revisaoEmAndamento', 'revisaoAbertaEm', 'motivoRevisao', 'revisaoAbertaPorUid']) &&
+        request.resource.data.revisaoEmAndamento == true &&
+        request.resource.data.motivoRevisao is string && request.resource.data.motivoRevisao.size() > 0 &&
+        (resource.data.get('versaoSucessoraId', null) == null ||
+         !exists(/databases/$(database)/documents/espelhos/$(resource.data.versaoSucessoraId))) &&
+        getAfter(/databases/$(database)/documents/espelhos/$(request.resource.data.versaoSucessoraId)).data.versaoAnteriorId == espelhoId &&
+        autorSeAlterado('revisaoAbertaPorUid');
+    }
+
     match /espelhos/{espelhoId} {
-      allow read: if temModulo('ponto') || temAcessoModulo('ponto') || (isFuncionario() && resource.data.funcId == meuFuncId());
+      allow read: if gestaoPonto() || (isFuncionario() && resource.data.funcId == meuFuncId());
 
-      // Gestor/dual-role cria: espelho sempre nasce não-assinado.
-      allow create: if (temModulo('ponto') || temAcessoModulo('ponto')) && request.resource.data.assinado == false && naoEhProprioPonto(request.resource.data.funcId);
+      // Gestão cria: sempre não assinado e sem nenhum dado de assinatura ou de substituição (D12).
+      allow create: if gestaoPonto() && naoEhProprioPonto(request.resource.data.funcId) &&
+        request.resource.data.assinado == false &&
+        request.resource.data.get('assinaturaImg', null) == null &&
+        request.resource.data.get('assinadoEm', null) == null &&
+        request.resource.data.get('assinadoPor', null) == null &&
+        !request.resource.data.keys().hasAny(['hashAssinado', 'assinadoPorUid', 'substituido', 'substituidoEm']) &&
+        request.resource.data.get('status', '') != 'assinado' &&
+        autorSeCriado('geradoPorUid') &&
+        revisaoValida();
 
-      // Gestor atualiza:
-      //   Campos estruturais (funcId, mes, versao, versaoAnteriorId) são imutáveis após create.
-      //   Espelho não-assinado: snapshot/hash/status/revisão podem ser atualizados.
-      //   Espelho assinado: snapshot, hash e campos de assinatura são imutáveis.
-      //   Finalização de v1 (revisaoEmAndamento/substituido) é feita pela Cloud Function (Admin SDK).
-      allow update: if (temModulo('ponto') || temAcessoModulo('ponto')) &&
-        naoEhProprioPonto(resource.data.funcId) &&                                    // PONTO 2.0 F0 (P1-05)
-        !request.resource.data.diff(resource.data).affectedKeys()
-          .hasAny(['funcId', 'mes', 'versao', 'versaoAnteriorId', 'hashAssinado']) &&   // hashAssinado: só o funcionário, ao assinar
-        (
-          !resource.data.assinado ||
-          !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['snapshot', 'hashSnapshot', 'assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor'])
-        );
+      // Gestão NUNCA grava assinatura (D12) nem marca "substituído" (D14: só a Cloud Function, após a nova versão assinada).
+      allow update: if gestaoPonto() && naoEhProprioPonto(resource.data.funcId) &&
+        (gestaoAtualizaAberto() || gestaoAbreRevisao(espelhoId));
 
-      // Funcionário assina espelho próprio:
-      //   - Somente espelhos não-assinados (transição false → true).
-      //   - assinadoEm deve ser serverTimestamp() — não aceitamos timestamp do cliente.
-      //   - Espelho deve ter snapshot e hash antes de poder ser assinado.
-      //   - Se status for enviado, deve ser 'assinado'.
-      //   - Somente os campos de assinatura podem ser alterados.
-      //   - PONTO 2.0 SIGNED_SNAPSHOT: hashAssinado (hash do espelho que o funcionário viu) deve ser igual ao
-      //     hashSnapshot atual do documento → se o gestor reenviar outra versão no meio, a assinatura é recusada.
+      // Funcionário assina espelho próprio (identidade autenticada):
+      //   - somente transição não assinado → assinado, com snapshot e hash;
+      //   - assinadoEm = serverTimestamp(); hashAssinado = hash do documento visto (SIGNED_SNAPSHOT);
+      //   - assinadoPor = nome do próprio cadastro; assinadoPorUid, quando enviado, = uid autenticado.
       allow update: if isFuncionario() &&
         resource.data.funcId == meuFuncId() &&
-        !resource.data.assinado &&
+        resource.data.assinado == false &&
         resource.data.snapshot != null &&
         resource.data.hashSnapshot != null &&
         request.resource.data.assinado == true &&
         request.resource.data.assinadoEm == request.time &&
         request.resource.data.hashAssinado == resource.data.hashSnapshot &&
-        request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor', 'status', 'hashAssinado']) &&
-        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status']) ||
-          request.resource.data.status == 'assinado');
+        request.resource.data.assinaturaImg is string && request.resource.data.assinaturaImg.size() > 0 &&
+        request.resource.data.assinadoPor is string &&
+        nomeDoCadastro(resource.data.funcId, request.resource.data.assinadoPor) &&
+        alterados().hasOnly(['assinado', 'assinaturaImg', 'assinadoEm', 'assinadoPor', 'status', 'hashAssinado', 'assinadoPorUid']) &&
+        autorSeAlterado('assinadoPorUid') &&
+        (!alterados().hasAny(['status']) || request.resource.data.status == 'assinado');
 
-      // Gestor/dual-role exclui: apenas espelhos não assinados.
-      allow delete: if (temModulo('ponto') || temAcessoModulo('ponto')) && !resource.data.assinado && naoEhProprioPonto(resource.data.funcId);
+      // E1: versões do espelho são preservadas (nenhuma tela exclui espelho).
+      allow delete: if false;
     }
 
     // ── Coleção: avaliacoes ────────────────────────────────────────────────────

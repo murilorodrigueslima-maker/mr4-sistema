@@ -9,7 +9,7 @@
  * J3 — respondidoEm é sentinel serverTimestamp (não string)
  * J4 — funcionário NÃO pode atualizar justificativa → DENIED
  * J5 — gestor SEM módulo 'ponto' NÃO pode atualizar justificativa → DENIED
- * J6 — gestor COM módulo 'ponto' atualiza justificativa → ALLOWED
+ * J6 — gestor COM módulo 'ponto' não atualiza pelo cliente (E1) → DENIED
  * J7 — justificativas legadas (sem respondidoPorUid) não são afetadas por J6
  *
  * Pré-requisito:
@@ -243,11 +243,11 @@ describe('J4-J7 — Emulator: Rules justificativas', () => {
     );
   });
 
-  test('J6 — gestor COM módulo ponto atualiza justificativa → ALLOWED', async () => {
+  test('J6 — gestor COM módulo ponto NÃO atualiza pelo cliente (E1: decisão só no servidor) → DENIED', async () => {
     await testEnv.withSecurityRulesDisabled(async ctx => {
       await ctx.firestore().collection('justificativas').doc('justif-j6').set(JUSTIF_PENDENTE);
     });
-    await assertSucceeds(
+    await assertFails(
       ctxGestorPonto().firestore().collection('justificativas').doc('justif-j6').update({
         status:             'aprovada',
         obsGestor:          'Aprovado pelo gestor',
@@ -258,7 +258,7 @@ describe('J4-J7 — Emulator: Rules justificativas', () => {
     );
   });
 
-  test('J7 — justificativas legadas (sem audit trail) não são afetadas por operações J6', async () => {
+  test('J7 — justificativas legadas (sem audit trail) permanecem intactas', async () => {
     const ID_LEGADA   = 'justif-legada-j7';
     const ID_OPERACAO = 'justif-operacao-j7';
 
@@ -271,7 +271,7 @@ describe('J4-J7 — Emulator: Rules justificativas', () => {
     });
 
     // Gestor atualiza APENAS o doc de operação (não o legado)
-    await assertSucceeds(
+    await assertFails(
       ctxGestorPonto().firestore().collection('justificativas').doc(ID_OPERACAO).update({
         status:             'rejeitada',
         obsGestor:          'Não justificado',

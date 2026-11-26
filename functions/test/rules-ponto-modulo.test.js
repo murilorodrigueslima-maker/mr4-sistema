@@ -152,9 +152,9 @@ describe('PM-1: gestor ativo + módulo ponto → ALLOW', () => {
     const db = testEnv.authenticatedContext(UID_GESTOR_PONTO).firestore();
     await assertSucceeds(db.collection('registros').doc('reg-ponto').get());
   });
-  test('escreve em registros (admin write)', async () => {
+  test('NÃO escreve em registros (E1: só o servidor)', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR_PONTO).firestore();
-    await assertSucceeds(
+    await assertFails(
       db.collection('registros').doc('reg-novo').set({
         funcId: FUNC_ID_PONTO, data: '2026-09-02', tipo: 'entrada', hora: '08:00:00',
       })
@@ -207,8 +207,8 @@ describe('PM-2: gestor ativo + admin=true + modulos=[] → ALLOW', () => {
   test('escreve creditos_jornada', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR_ADMIN).firestore();
     await assertSucceeds(
-      db.collection('creditos_jornada').doc('cred-admin').set({
-        funcId: FUNC_ID_PONTO, minutos: 480, motivo: 'Feriado',
+      db.collection('creditos_jornada').doc('cred_' + FUNC_ID_PONTO + '_2026-09-02').set({
+        funcId: FUNC_ID_PONTO, data: '2026-09-02', minutos: 480, motivo: 'Feriado municipal',
       })
     );
   });

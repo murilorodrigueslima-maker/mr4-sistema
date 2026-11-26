@@ -4,6 +4,7 @@
 // (payloads exatos da página em produção) bloqueado, duas telas (stale), criação concorrente, auditoria
 // exatamente-uma-vez, falha de escrita sem efeito, sync central e escopo/leitura dos listeners.
 process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+const [EMU_HOST, EMU_PORTA] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const firebase = require('firebase/compat/app'); require('firebase/compat/firestore');
 const admin = require('firebase-admin');
@@ -27,7 +28,7 @@ async function semear(db) {
   await db.collection('sistema_usuarios').doc(U.outroMod).set({ nome: 'O', modulos: ['demandas'], admin: false, bloqueado: false });
 }
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: EMU_HOST, port: Number(EMU_PORTA) } });
   adm = (admin.apps.find(a => a && a.name === 'exp-p0') || admin.initializeApp({ projectId: PROJECT_ID }, 'exp-p0')).firestore();
 });
 afterAll(async () => { await env.cleanup(); });
@@ -200,6 +201,12 @@ describe('CRIAÇÃO CONCORRENTE e SYNC CENTRAL', () => {
     const r = await SYNC.sincronizar({ db: adm, leitor: leitorFalso([venda('1000500')]), dto, serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp() });   // sync central também tenta
     expect(r).toMatchObject({ criados: 0, existentes: 1 });
     expect((await ler('1000500')).coluna).toBe('se');
+  });
+  test('sync central: horário de cadastro do GestãoClick vira "venda recebida"; sem ele o pedido é criado como antes', async () => {
+    const comHora = { ...venda('1000650'), cadastrado_em: '2026-09-29 09:15:00' };
+    await SYNC.sincronizar({ db: adm, leitor: leitorFalso([comHora, venda('1000651')]), dto, agora: new Date('2026-09-29T10:00:00-03:00'), serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp() });
+    expect((await ler('1000650')).vendaCadastradaEm).toBe(Date.parse('2026-09-29T09:15:00-03:00'));
+    expect(await ler('1000651')).not.toHaveProperty('vendaCadastradaEm');
   });
   test('sync central: identidade = codigo (não o id de 9 dígitos); cria só o inexistente; 2ª execução não cria nada; nunca sobrescreve', async () => {
     await semearPedido('1000601', 'pr');

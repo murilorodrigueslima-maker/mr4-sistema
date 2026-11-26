@@ -267,7 +267,46 @@
   /** Formas de pagamento para a tabela (a fonte pode ser ambígua: "Boleto Inter/Pix" fica como está). */
   function linhasFormas(nat) { return (nat.por_forma || []).map(function (f) { return { forma: f.forma, ambigua: !!f.ambigua, aberto: f.aberto, vencido: f.vencido }; }); }
 
-  return { TZ: TZ, STALE_HORAS: STALE_HORAS, TAM_PAGINA_FATIA: TAM_PAGINA_FATIA, FAIXAS: FAIXAS, FILTROS: FILTROS, esc: esc, brl: brl, dataBR: dataBR, dataComercial: dataComercial, dataHoraBR: dataHoraBR, somarDias: somarDias, frescor: frescor,
+  // ═══ ALERTAS INTERNOS — calculados SÓ do resumo (já carregado) e, para concentração, do documento de entidades. Nenhuma consulta, envio ou escrita.
+  // "Vencido" é fato aritmético (vencimento anterior à data dos dados e título em aberto no ERP); não classifica cliente nem fornecedor.
+  var FAIXAS_ALERTA = [['ate7', '1–7 dias', ['D1_A_7'], 'atencao'], ['de8a30', '8–30 dias', ['D8_A_15', 'D16_A_30'], 'atencao'], ['de31a90', '31–90 dias', ['D31_A_60', 'D61_A_90'], 'alerta'],
+    ['de91a365', '91–365 dias', ['D91_A_180', 'D181_A_365'], 'alerta'], ['mais365', 'Mais de 365 dias', ['ACIMA_365'], 'alerta']];
+  var LIMIAR_CONCENTRACAO = { maior: 20, top5: 50 };   // % do valor; só destaca para revisão
+  function participacao(parte, total) { return total > 0 ? Math.round(parte / total * 1000) / 10 : null; }
+  function pctBR(p) { return p == null ? '—' : p.toFixed(1).replace('.', ',') + '%'; }
+  function faixasAlerta(nat) {
+    var env = nat.envelhecimento || {}, total = (nat.vencido || {}).c || 0;
+    return FAIXAS_ALERTA.map(function (f) {
+      var n = 0, c = 0; f[2].forEach(function (k) { var x = env[k] || { n: 0, c: 0 }; n += x.n; c += x.c; });
+      return { id: f[0], rotulo: f[1], n: n, c: c, pct: participacao(c, total), tom: n ? f[3] : 'neutro' };
+    });
+  }
+  function concentracaoDe(lista, campo, total) {
+    var ord = (lista || []).filter(function (e) { return e[campo] && e[campo].c > 0; }).sort(function (a, b) { return b[campo].c - a[campo].c || String(a.chave).localeCompare(String(b.chave)); });
+    if (!ord.length || !(total > 0)) return null;
+    var cinco = ord.slice(0, 5).reduce(function (s, e) { return s + e[campo].c; }, 0), maior = participacao(ord[0][campo].c, total), top5 = participacao(cinco, total);
+    return { nome: ord[0].nome || 'Sem cadastro', quantas: ord.length, maiorPct: maior, maiorC: ord[0][campo].c, top5Pct: top5, top5C: cinco, tom: (maior >= LIMIAR_CONCENTRACAO.maior || top5 >= LIMIAR_CONCENTRACAO.top5) ? 'atencao' : 'neutro' };
+  }
+  /** r = resumo da geração; entidades = documento de entidades (opcional; ignorado se for de outra geração); hoje = data comercial atual (YYYY-MM-DD). */
+  function modeloAlertas(r, entidades, hoje) {
+    var R = r.receber, P = r.pagar;
+    var linha = function (id, titulo, x, nat, filtro) { return { id: id, titulo: titulo, n: x.n, c: x.c, tom: x.n ? 'atencao' : 'neutro', natureza: nat, filtro: filtro }; };
+    var vencimentos = [linha('receber_hoje', 'A receber · vence hoje', R.hoje, 'RECEBER', 'hoje'), linha('pagar_hoje', 'A pagar · vence hoje', P.hoje, 'PAGAR', 'hoje'),
+      linha('receber_7d', 'A receber · de hoje a 7 dias', R.prox_7d, 'RECEBER', 'd7'), linha('pagar_7d', 'A pagar · de hoje a 7 dias', P.prox_7d, 'PAGAR', 'd7')];
+    var fr = faixasAlerta(R), fp = faixasAlerta(P);
+    var faixas = fr.map(function (f, i) { return { id: f.id, rotulo: f.rotulo, tom: (f.n || fp[i].n) ? FAIXAS_ALERTA[i][3] : 'neutro', receber: f, pagar: fp[i] }; });
+    var conc = null;
+    if (entidades && entidades.geracao === r.geracao) conc = [
+      { id: 'receber_aberto', titulo: 'Clientes · em aberto', dados: concentracaoDe(entidades.receber, 'aberto', R.abertos.c) },
+      { id: 'receber_vencido', titulo: 'Clientes · vencido', dados: concentracaoDe(entidades.receber, 'vencido', R.vencido.c) },
+      { id: 'pagar_aberto', titulo: 'Fornecedores · em aberto', dados: concentracaoDe(entidades.pagar, 'aberto', P.abertos.c) },
+      { id: 'pagar_vencido', titulo: 'Fornecedores · vencido', dados: concentracaoDe(entidades.pagar, 'vencido', P.vencido.c) },
+    ];
+    return { referencia: r.data_comercial, outraData: !!(hoje && r.data_comercial && hoje !== r.data_comercial), vencimentos: vencimentos, faixas: faixas,
+      vencido: { receber: R.vencido, pagar: P.vencido }, conferencia: { receber: R.requer_conferencia.n, pagar: P.requer_conferencia.n }, concentracao: conc, limiar: LIMIAR_CONCENTRACAO };
+  }
+
+  return { modeloAlertas: modeloAlertas, pctBR: pctBR, LIMIAR_CONCENTRACAO: LIMIAR_CONCENTRACAO, TZ: TZ, STALE_HORAS: STALE_HORAS, TAM_PAGINA_FATIA: TAM_PAGINA_FATIA, FAIXAS: FAIXAS, FILTROS: FILTROS, esc: esc, brl: brl, dataBR: dataBR, dataComercial: dataComercial, dataHoraBR: dataHoraBR, somarDias: somarDias, frescor: frescor,
     linhasEnvelhecimento: linhasEnvelhecimento, modeloCards: modeloCards, rotuloFiltro: rotuloFiltro, planoLeitura: planoLeitura, novaLista: novaLista, precisaMais: precisaMais, proximaFatia: proximaFatia, aplicarFatia: aplicarFatia,
     statusRotulo: statusRotulo, textoVinculo: textoVinculo, modeloLinha: modeloLinha, validarGeracao: validarGeracao, linhasFormas: linhasFormas,
     FILTROS_EXTRA: FILTROS_EXTRA, defFiltro: defFiltro, PERIODOS: PERIODOS, normalizar: normalizar, termosBusca: termosBusca, textoBuscavel: textoBuscavel, casaBusca: casaBusca, intervaloPeriodo: intervaloPeriodo, rotuloPeriodo: rotuloPeriodo,

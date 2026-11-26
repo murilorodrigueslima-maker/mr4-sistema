@@ -2,14 +2,18 @@
 'use strict';
 /**
  * COM-02 — medição da conversão comercial. SOMENTE LEITURA (REST do Firestore: GET, runQuery, batchGet; nenhuma escrita).
- * Imprime apenas AGREGADOS, com vendedores rotulados V1, V2… (ordem = nº de vendas em 12 meses). Sem nomes de clientes ou pessoas.
+ * Imprime apenas AGREGADOS, com vendedores rotulados V1, V2… (ordem = nº de vendas no recorte, até 12 meses). Sem nomes de clientes ou pessoas.
  *
  * Uso:  node scripts/ops/medir-conversao.js [--corte AAAA-MM-DD] [--desde AAAA-MM-DD] [--janela 14] [--cache /caminho/fora/do/repo.json]
+ *                                             [--ambiguos /caminho/fora/do/repo.csv]
+ *   --ambiguos  grava a lista de casos ambíguos para validação do dono: ID do pedido no GestãoClick, ID da oportunidade (hash),
+ *               cliente anonimizado (C001…) e vendedores V1, V2… Sem nomes, telefones ou documentos. Arquivo interno (modo 600).
+ *   Loja: o espelho é alimentado só pela loja 262759. Se um documento trouxer `loja_id` diferente, é descartado e contado.
  *   --corte  último dia com vendas completas (padrão: ontem, fuso de Fortaleza)
  *   --desde  início do recorte de vendas (padrão: 13 meses antes do corte). Clientes contatados sem compra no recorte são consultados à parte.
  *   --cache  reaproveita a leitura (se o arquivo existir, não consulta nada). Contém IDs e valores: nunca versionar.
  * Autenticação: `gcloud auth print-access-token` da sessão local (o token fica só em memória; nunca é impresso ou gravado).
- * Custo típico: ~8 mil leituras.
+ * Custo típico: ~8 mil leituras (menos com --desde mais recente: bastam 180 dias antes do 1º contato).
  */
 const fs = require('fs'), path = require('path'), { execFileSync } = require('child_process');
 const RAIZ = path.resolve(__dirname, '..', '..');
@@ -18,7 +22,9 @@ const { validarVenda } = require(path.join(RAIZ, 'functions/lib/carteiraRegra'))
 const { diaComercial } = require(path.join(RAIZ, 'functions/lib/crmTimeline'));
 
 const BASE = 'https://firestore.googleapis.com/v1/projects/mr4-ponto/databases/(default)/documents';
-const CAMPOS_VENDA = ['id', 'cliente_id', 'data', 'nome_situacao', 'valor_total', 'vendedor_id', 'cadastrado_em'];
+const CAMPOS_VENDA = ['id', 'cliente_id', 'data', 'nome_situacao', 'valor_total', 'vendedor_id', 'cadastrado_em', 'loja_id'];
+const LOJA = '262759';
+const daLoja = v => v.loja_id === undefined || v.loja_id === null || v.loja_id === '' || String(v.loja_id) === LOJA;
 const arg = (n, padrao) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : padrao; };
 const somarDias = (ymd, n) => { const d = new Date(ymd + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 
@@ -105,18 +111,52 @@ function rotular(dados, corte) {
     const u = dados.usuarios.find(x => x.uid === uid);
     rotuloUid[uid] = (u && u.gc && rotuloGc[u.gc]) || 'V' + (++n) + ' (sem vínculo GC)';
   }
-  return { rotuloUid, vendasPorVendedor12m: Object.fromEntries(ordemGc.map(id => [rotuloGc[id], porGc[id]])) };
+  return { rotuloUid, rotuloGc, vendasPorVendedor12m: Object.fromEntries(ordemGc.map(id => [rotuloGc[id], porGc[id]])) };
 }
 
-function relatorio(dados, { corte, janela }) {
-  const { rotuloUid, vendasPorVendedor12m } = rotular(dados, corte);
-  const r = u => rotuloUid[u] || 'desconhecido';
-  const entrada = {
-    estados: dados.estados, vendas: dados.vendas, gcIdPorEntidade: dados.gcIdPorEntidade,
+/** CSV interno (separador ';', decimal ',', BOM): sem nomes; cliente = C001…, vendedor = V1, V2…. Puro. */
+function csvAmbiguos(casos, { rotuloUid, rotuloGc }) {
+  const lista = C.casosAmbiguos(casos);
+  const anon = new Map([...new Set(lista.map(k => k.gc))].sort((a, b) => Number(a) - Number(b) || (a < b ? -1 : 1)).map((gc, i) => [gc, 'C' + String(i + 1).padStart(3, '0')]));
+  const cel = x => { const t = String(x == null ? '' : x); return /[;"\r\n]/.test(t) || /^[=+\-@]/.test(t) ? '"' + (/^[=+\-@]/.test(t) ? "'" : '') + t.replace(/"/g, '""') + '"' : t; };
+  const colunas = ['caso', 'prioridade', 'pedido_gc_id', 'data_pedido', 'valor', 'situacao_pedido', 'cliente_anonimo', 'oportunidade', 'tipo_oportunidade', 'vendedor_contato',
+    'vendedor_pedido', 'data_contato', 'dias_apos_contato', 'resultado_contato', 'nivel_proposto', 'motivo', 'sinais', 'pergunta', 'decisao_dono (SIM/NAO/NAO_SEI)', 'observacao'];
+  const linhas = lista.map((k, i) => ['A' + String(i + 1).padStart(3, '0'), k.prioridade, k.vendaId, k.data, k.valor.toFixed(2).replace('.', ','), k.venda.situacaoNome, anon.get(k.gc), k.opp, k.tipo,
+    rotuloUid[k.operadorId] || 'desconhecido', rotuloGc[k.vendedorPedidoId] || (k.vendedorPedidoId ? 'outro' : 'sem vendedor'), k.contatoDia, k.diasAposContato, k.contatoOutcome,
+    k.nivel, k.motivo, k.sinais.join(' '), k.pergunta, '', '']);
+  return { texto: '\uFEFF' + [colunas, ...linhas].map(l => l.map(cel).join(';')).join('\r\n') + '\r\n', linhas: lista.length,
+    porPrioridade: lista.reduce((m, k) => { m[k.prioridade] = (m[k.prioridade] || 0) + 1; return m; }, {}),
+    porMotivo: lista.reduce((m, k) => { m[k.nivel + ':' + k.motivo] = (m[k.nivel + ':' + k.motivo] || 0) + 1; return m; }, {}) };
+}
+
+function montarEntrada(dados, { corte, janela }) {
+  return {
+    estados: dados.estados, vendas: dados.vendas.filter(daLoja), gcIdPorEntidade: dados.gcIdPorEntidade,
     devolucoes: new Map(dados.devolucoes.slice().sort((a, b) => (a.tipo === 'TOTAL') - (b.tipo === 'TOTAL')).map(d => [d.vendaId, d.tipo])),   // TOTAL prevalece
     vendedorGcPorUid: Object.fromEntries(dados.usuarios.filter(u => u.gc).map(u => [u.uid, u.gc])),
     opcoes: { dataCorte: corte, janelaDias: janela },
   };
+}
+
+/** Funil separado e níveis de atribuição, por janela: regra atual (último toque) × proposta por evidência. */
+function comparativo(entrada, rotulo) {
+  const resumo = (janelaDias, extra) => {
+    const f = C.calcularFunil({ ...entrada, opcoes: { ...entrada.opcoes, janelaDias, ...extra } });
+    const t = f.total;
+    return { etapas: t.etapas, pedidos: t.pedidos, faturamento: t.faturamento, maduras: t.maduras, taxaConvertidas: t.taxas.convertidasSobreBase, exclusoes: f.exclusoes,
+      porVendedor: Object.fromEntries(Object.entries(f.porVendedor).map(([u, x]) => [rotulo(u), { etapas: x.etapas, pedidos: x.pedidos, faturamento: x.faturamento }]).sort()) };
+  };
+  return Object.fromEntries(C.JANELAS_SENSIBILIDADE.map(j => {
+    const { porNivel, porMotivo } = C.calcularFunil({ ...entrada, opcoes: { ...entrada.opcoes, janelaDias: j } }).evidencia;
+    return [j, { niveis: porNivel, motivos: porMotivo, ultimoToque: resumo(j, {}), evidenciaProvavel: resumo(j, { atribuicao: 'EVIDENCIA' }),
+      evidenciaSoAtribuida: resumo(j, { atribuicao: 'EVIDENCIA', nivelMinimo: C.NIVEIS.ATRIBUIDA }) }];
+  }));
+}
+
+function relatorio(dados, { corte, janela }) {
+  const { rotuloUid, rotuloGc, vendasPorVendedor12m } = rotular(dados, corte);
+  const r = u => rotuloUid[u] || 'desconhecido';
+  const entrada = montarEntrada(dados, { corte, janela });
   const f = C.calcularFunil(entrada);
   const porRotulo = res => Object.fromEntries(Object.entries(res).map(([u, x]) => [r(u), x]).sort());
   const resultados = {}, tipos = {};
@@ -147,10 +187,14 @@ function relatorio(dados, { corte, janela }) {
   const linhas = C.JANELAS_SENSIBILIDADE.map(j => ({ janelaDias: j, ...C.linhaDeBase({ ...entrada, opcoes: { ...entrada.opcoes, janelaDias: j } }) }));
   return {
     meta: { lidoEm: dados.lidoEm, corte, janelaDias: janela, vendasDesde: dados.desde, leituras: dados.leituras, consultasHistorico: dados.consultasHistorico,
-      interacoes: dados.estados.length, vendasLidas: dados.vendas.length, devolucoes: dados.devolucoes.length, primeiroContato: inicio, ultimoContato: dias1[dias1.length - 1] || null,
+      interacoes: dados.estados.length, vendasLidas: dados.vendas.length, vendasOutraLoja: dados.vendas.filter(v => !daLoja(v)).length,
+      vendasSemCampoLoja: dados.vendas.filter(v => v.loja_id === undefined || v.loja_id === null || v.loja_id === '').length,
+      situacoesNoRecorte: dados.vendas.reduce((m, v) => { m[v.nome_situacao] = (m[v.nome_situacao] || 0) + 1; return m; }, {}), devolucoes: dados.devolucoes.length, primeiroContato: inicio, ultimoContato: dias1[dias1.length - 1] || null,
       ultimoCadastroDeVenda: dados.vendas.map(v => v.cadastrado_em || '').sort().pop() || null },
     vendasPorVendedor12m, resultadosPorVendedor: resultados,
     total: f.total, porVendedor: porRotulo(f.porVendedor), exclusoes: f.exclusoes,
+    funilEAtribuicao: comparativo(entrada, r),
+    ambiguos: (({ texto, ...resto }) => resto)(csvAmbiguos(f.evidencia.casos, { rotuloUid, rotuloGc })),
     sensibilidade: C.sensibilidade(entrada),
     sensibilidadePorVendedor: Object.fromEntries(C.JANELAS_SENSIBILIDADE.map(j => [j, Object.fromEntries(Object.entries(porRotulo(C.calcularFunil({ ...entrada, opcoes: { ...entrada.opcoes, janelaDias: j } }).porVendedor))
       .map(([k, x]) => [k, { convertidas: x.oportunidades.convertidas, reativadas: x.oportunidades.reativadas, pedidos: x.pedidos, faturamento: x.faturamento, base: x.maduras.base, convertidasMaduras: x.maduras.convertidas }]))])),
@@ -165,12 +209,18 @@ async function main() {
   const corte = arg('corte', somarDias(diaComercial(new Date().toISOString()), -1));
   const desde = arg('desde', somarDias(corte, -395));
   const janela = Number(arg('janela', C.JANELA_PADRAO_DIAS));
-  const cache = arg('cache', null);
-  if (cache && path.resolve(cache).startsWith(RAIZ + path.sep)) throw new Error('--cache deve ficar FORA do repositório');
+  const cache = arg('cache', null), ambiguos = arg('ambiguos', null);
+  for (const [n, x] of [['cache', cache], ['ambiguos', ambiguos]]) if (x && path.resolve(x).startsWith(RAIZ + path.sep)) throw new Error(`--${n} deve ficar FORA do repositório`);
   let dados;
   if (cache && fs.existsSync(cache)) dados = JSON.parse(fs.readFileSync(cache, 'utf8'));
   else { dados = await ler(desde); if (cache) fs.writeFileSync(cache, JSON.stringify(dados), { mode: 0o600 }); }
   console.log(JSON.stringify(relatorio(dados, { corte, janela }), null, 1));
+  if (ambiguos) {
+    const { rotuloUid, rotuloGc } = rotular(dados, corte);
+    const csv = csvAmbiguos(C.calcularFunil(montarEntrada(dados, { corte, janela })).evidencia.casos, { rotuloUid, rotuloGc });
+    fs.writeFileSync(ambiguos, csv.texto, { mode: 0o600 });
+    console.error(`casos ambíguos: ${csv.linhas} linhas em ${ambiguos}`);
+  }
 }
 if (require.main === module) main().catch(e => { console.error('ERRO:', e.message); process.exit(1); });
-module.exports = { relatorio, rotular };
+module.exports = { relatorio, rotular, csvAmbiguos, montarEntrada, daLoja, CAMPOS_VENDA };

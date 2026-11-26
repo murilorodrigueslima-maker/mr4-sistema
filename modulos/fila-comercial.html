@@ -158,7 +158,7 @@ button.topbar-back{background:var(--white);font-family:inherit;cursor:pointer}bu
 .modal-box{
   background:#fff;border-radius:16px;padding:1.5rem;width:min(440px,100%);
   box-shadow:0 20px 60px rgba(0,0,0,.18);animation:mIn .18s ease;
-  max-height:calc(100vh - 2rem);overflow-y:auto;
+  max-height:calc(100vh - 2rem);max-height:calc(100dvh - 2rem);overflow-y:auto;
 }
 @keyframes mIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
 .modal-title{font-size:.95rem;font-weight:800;margin-bottom:1rem;color:var(--text)}
@@ -179,6 +179,8 @@ button.topbar-back{background:var(--white);font-family:inherit;cursor:pointer}bu
 }
 .followup-input:focus{border-color:var(--blue)}
 .captura-row{margin-bottom:.75rem}
+.captura-row label{display:block}
+@media (max-width:600px){.captura-row select.followup-input{font-size:16px;min-height:44px}}   /* toque e sem zoom automático no iPhone */
 .modal-err{color:var(--red);font-size:.75rem;min-height:1.1rem;margin-bottom:.5rem}
 .modal-foot{display:flex;gap:.6rem;justify-content:flex-end}
 .btn-modal-cancel{
@@ -470,13 +472,16 @@ let modalOppId        = null;
 let modalOutcomeSel   = null;
 
 // COM-02 — perguntas opcionais do funil (JS em cache sem as funções novas ⇒ modal igual ao anterior)
+let modalCaptura = {};   // respostas do modal aberto: trocar o resultado não apaga o que já foi respondido
 function renderCaptura(outcome) {
+  Object.assign(modalCaptura, respostasCaptura());
   const f = window.FilaWorklistView;
   const qs = f && f.perguntasDoResultado ? f.perguntasDoResultado(outcome) : [];
   document.getElementById('capturaSection').innerHTML = qs.map(q => `<div class="captura-row">
-    <label class="followup-label" for="cap-${q.campo}">${esc(q.rotulo)}</label>
+    <label class="followup-label" for="cap-${q.campo}">${esc(q.rotulo)} (opcional)</label>
     <select class="followup-input" id="cap-${q.campo}" data-campo="${q.campo}"><option value="">Não informar</option><option value="SIM">Sim</option><option value="NAO">Não</option></select>
   </div>`).join('');
+  document.querySelectorAll('#capturaSection select').forEach(s => { s.value = modalCaptura[s.dataset.campo] || ''; });
 }
 function respostasCaptura() {
   const out = {};
@@ -1210,7 +1215,7 @@ function abrirModal(oppId) {
   // Reset
   document.getElementById('followupDate').value = '';
   document.getElementById('followupSection').classList.remove('visible');
-  renderCaptura(null);
+  document.getElementById('capturaSection').innerHTML = ''; modalCaptura = {};   // nada de resposta do atendimento anterior
   document.getElementById('outcomeErr').textContent = '';
   document.getElementById('outcomeOkBtn').disabled = true;
   document.getElementById('outcomeModal').classList.add('open');

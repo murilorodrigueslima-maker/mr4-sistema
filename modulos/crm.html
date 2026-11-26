@@ -162,11 +162,13 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 @media (max-width:900px){.ag-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.agenda{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){main{padding:.8rem .8rem 3rem}.topbar{padding:0 .7rem}.tabs{margin-left:0}.user,.legacy,.vivo,.bt-txt{display:none}.grid{grid-template-columns:1fr}.agenda{grid-template-columns:1fr}}
+/* celular: cabeçalho nunca fica mais largo que a tela (o botão Atualizar empurrava a página e deslocava os toques) */
+@media (max-width:560px){.topbar{height:auto;min-height:56px;flex-wrap:wrap;gap:.4rem;padding:.4rem .7rem}}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <a class="back" href="../index.html"><span class="ms">arrow_back</span> Sistema</a>
+  <a class="back" href="../index.html" aria-label="Voltar ao Sistema"><span class="ms">arrow_back</span><span class="bt-txt">Sistema</span></a>
   <div class="brand"><span class="ms">support_agent</span> CRM</div>
   <a id="linkGestao" class="back" href="crm-gestao.html" hidden>Gestão da reativação</a>
   <nav class="tabs" role="tablist">
@@ -371,7 +373,7 @@ function painelRegistro(id) {
     <div class="chips">${V.RESULTADOS.map(x => `<button class="chip" data-a="res" data-id="${esc(id)}" data-res="${x.codigo}" aria-pressed="${sel.resultado === x.codigo}">${esc(x.rotulo)}</button>`).join('')}</div>
     ${r && r.exigeData ? `<div><label for="dt-${esc(id)}">Retornar em</label><br><input type="date" id="dt-${esc(id)}" data-a="data" data-id="${esc(id)}" min="${lim.min}" max="${lim.max}" value="${esc(sel.data || '')}"></div>` : ''}
     ${r ? perguntasCaptura(r.codigo).map(q => `<div class="cap" role="group" aria-label="${esc(q.rotulo)}"><span class="cap-l">${esc(q.rotulo)} (opcional)</span><div class="chips">${[['SIM', 'Sim'], ['NAO', 'Não']].map(([v, t]) =>
-      `<button class="chip" data-a="cap" data-id="${esc(id)}" data-campo="${q.campo}" data-v="${v}" aria-pressed="${sel[q.campo] === v}">${t}</button>`).join('')}</div></div>`).join('') : ''}
+      `<button class="chip" id="cap-${esc(id)}-${q.campo}-${v}" data-a="cap" data-id="${esc(id)}" data-campo="${q.campo}" data-v="${v}" aria-pressed="${sel[q.campo] === v}">${t}</button>`).join('')}</div></div>`).join('') : ''}
     <div><label for="nt-${esc(id)}">${exigeMotivo ? 'Motivo do follow-up (obrigatório)' : 'Observação (opcional)'}</label>
       <textarea id="nt-${esc(id)}" data-a="nota" data-id="${esc(id)}" maxlength="400" placeholder="Ex.: estoque alto de LED, pediu para ver multimídia no mês que vem">${esc(sel.nota || '')}</textarea>
       <div class="cont ${nota.ok ? '' : 'excede'}" id="ct-${esc(id)}">${nota.tamanho}/${V.NOTA_MAX}</div></div>

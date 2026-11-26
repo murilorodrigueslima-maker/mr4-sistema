@@ -90,7 +90,7 @@ th.ord{cursor:pointer;user-select:none}th.ord:hover{color:var(--text)}
 <main id="main"><div class="carregando" id="carregando">Carregando o Financeiro…</div></main>
 
 <script src="agente-ia-widget.js?v=20261001a"></script>
-<script src="financeiro-view.js?v=20261001b"></script>   <!-- versão no endereço: o Pages guarda arquivos por 10 min; mudou a lógica → troque o sufixo -->
+<script src="financeiro-view.js?v=20261126a"></script>   <!-- versão no endereço: o Pages guarda arquivos por 10 min; mudou a lógica → troque o sufixo -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -134,6 +134,33 @@ const tabelaAging = nat => `<table><thead><tr><th>Atraso</th><th class="n">Títu
 const tabelaFormas = nat => { const ls = V.linhasFormas(nat); return ls.length ? `<table><thead><tr><th>Forma</th><th class="n">Em aberto</th><th class="n">Vencido</th></tr></thead><tbody>${ls.map(l => `<tr><td>${esc(l.forma)}${l.ambigua ? ' <span class="sub">(a fonte não distingue boleto de Pix)</span>' : ''}</td><td class="n">${esc(V.brl(l.aberto.c))}</td><td class="n">${esc(V.brl(l.vencido.c))}</td></tr>`).join('')}</tbody></table>` : '<div class="vazio">Sem títulos em aberto.</div>'; };
 const tabelaPlano = nat => { const ls = (nat.por_plano || []).slice(0, 12); return ls.length ? `<table><thead><tr><th>Plano de contas</th><th class="n">Em aberto</th><th class="n">Vencido</th></tr></thead><tbody>${ls.map(l => `<tr><td>${esc(l.nome)}</td><td class="n">${esc(V.brl(l.aberto.c))}</td><td class="n">${esc(V.brl(l.vencido.c))}</td></tr>`).join('')}</tbody></table>` : '<div class="vazio">—</div>'; };
 
+// ── Alertas internos (só leitura do que já está em memória; concentração usa o documento de entidades, lido apenas se o usuário pedir) ──
+const verLista = (nat, filtro, rotulo) => `<button type="button" class="limpar" data-ir="${esc(nat + ':' + filtro)}">${esc(rotulo)}</button>`;
+function concentracaoHtml(a) {
+  if (!a.concentracao) return (S.entErro ? `<div class="erro">${esc(S.entErro)}</div>` : '') + '<button type="button" class="mais" data-conc="1">Ver concentração por cliente e fornecedor</button>';
+  return `<div class="scroll"><table><thead><tr><th>Recorte</th><th>Maior</th><th class="n">Parte do maior</th><th class="n">5 maiores</th></tr></thead><tbody>${a.concentracao.map(x => x.dados ? `<tr><td>${esc(x.titulo)}${x.dados.tom === 'atencao' ? ' ' + tag('Concentrado', 'atencao') : ''}</td><td>${esc(x.dados.nome)}</td><td class="n">${esc(V.pctBR(x.dados.maiorPct))}<div class="sub">${esc(V.brl(x.dados.maiorC))}</div></td><td class="n">${esc(V.pctBR(x.dados.top5Pct))}<div class="sub">${esc(V.brl(x.dados.top5C))}</div></td></tr>` : `<tr><td>${esc(x.titulo)}</td><td colspan="3" class="sub">Sem valores</td></tr>`).join('')}</tbody></table></div>
+  <div class="info">Destaque quando o maior passa de ${esc(a.limiar.maior)}% ou os 5 maiores passam de ${esc(a.limiar.top5)}% do valor.</div>`;
+}
+function blocoAlertas() {
+  const a = V.modeloAlertas(S.resumo, S.entidades, V.dataComercial(new Date()));
+  const celula = f => `<td class="n">${esc(f.n)}</td><td class="n">${esc(V.brl(f.c))}<div class="sub">${esc(V.pctBR(f.pct))} do vencido</div></td>`;
+  const conf = a.conferencia.receber + a.conferencia.pagar;
+  return `<div class="bloco" id="alertas"><h2>Alertas internos de vencimento e atraso</h2>
+  <div class="info">Referência: ${esc(V.dataBR(a.referencia))}. Aviso só para a equipe: nada é enviado a clientes e nenhum título é alterado. Vencido = em aberto no ERP; pode haver baixa ainda não registrada.</div>
+  ${a.outraData ? `<div class="aviso stale">Os alertas usam a data dos dados (${esc(V.dataBR(a.referencia))}), que não é a de hoje. “Vence hoje” e “7 dias” contam a partir dessa data.</div>` : ''}
+  <div class="duas"><div class="scroll"><table><thead><tr><th>Vencimentos</th><th class="n">Títulos</th><th class="n">Valor</th><th></th></tr></thead><tbody>${a.vencimentos.map(v => `<tr><td>${v.n ? tag(v.titulo, v.tom) : esc(v.titulo)}</td><td class="n">${esc(v.n)}</td><td class="n">${esc(V.brl(v.c))}</td><td>${v.n ? verLista(v.natureza, v.filtro, 'Ver lista') : ''}</td></tr>`).join('')}</tbody></table>
+  ${conf ? `<div class="info">${esc(conf)} ${conf === 1 ? 'título requer' : 'títulos requerem'} conferência (fora dos totais). ${verLista('CONFERIR', 'conferencia', 'Ver conferência')}</div>` : ''}</div>
+  <div class="scroll"><table><thead><tr><th>Vencidos por faixa</th><th class="n">A receber</th><th class="n">Valor</th><th class="n">A pagar</th><th class="n">Valor</th></tr></thead><tbody>${a.faixas.map(f => `<tr><td>${f.tom === 'neutro' ? esc(f.rotulo) : tag(f.rotulo, f.tom)}</td>${celula(f.receber)}${celula(f.pagar)}</tr>`).join('')}</tbody></table>
+  <div class="info">${a.vencido.receber.n ? verLista('RECEBER', 'vencidas', 'Ver vencidos a receber') : ''} ${a.vencido.pagar.n ? verLista('PAGAR', 'vencidas', 'Ver vencidos a pagar') : ''}</div></div></div>
+  <h2 style="margin-top:.8rem">Concentração</h2>${concentracaoHtml(a)}</div>`;
+}
+function irPara(destino) {
+  const [nat, filtro] = destino.split(':');
+  if (nat === 'CONFERIR') S.aba = 'conferir';
+  else { S.filtro[nat] = filtro; S.crit[nat] = V.criteriosVazios(); S.aba = nat === 'PAGAR' ? 'pagar' : 'receber'; }   // sem filtros antigos: a lista corresponde ao alerta
+  render();
+}
+
 function renderGeral() {
   const r = S.resumo, m = V.modeloCards(r);
   const vinc = r.receber.vinculos || {}, vc = r.pagar.vinculos || {};
@@ -141,6 +168,7 @@ function renderGeral() {
   <div class="grade">${m.principais.map(card).join('')}</div>
   <div class="grade">${m.secundarios.map(c => card({ ...c, sec: true })).join('')}</div>
   <div class="rodape">Fluxo programado = ${esc(m.definicaoFluxo)}.</div>
+  ${blocoAlertas()}
   <div class="duas">
     <div class="bloco"><h2>Vencidos a pagar · por atraso</h2><div class="scroll">${tabelaAging(r.pagar)}</div></div>
     <div class="bloco"><h2>Vencidos a receber · por atraso</h2><div class="scroll">${tabelaAging(r.receber)}</div></div>
@@ -338,6 +366,8 @@ document.addEventListener('click', e => {
   if (t.dataset.rm) { const n = t.dataset.nat, novo = V.removerCriterio({ situacao: S.filtro[n], criterios: S.crit[n], ordem: S.ordem[n] }, t.dataset.rm); const mudouSit = novo.situacao !== S.filtro[n]; S.filtro[n] = novo.situacao; S.crit[n] = novo.criterios; render(); return; }
   if (t.dataset.limpar) { const n = t.dataset.limpar, novo = V.limparFiltros({ situacao: S.filtro[n], criterios: S.crit[n], ordem: S.ordem[n] }); S.filtro[n] = novo.situacao; S.crit[n] = novo.criterios; render(); return; }
   if (t.dataset.maisconf) { carregarConf(t.dataset.maisconf, true); return; }
+  if (t.dataset.ir) { irPara(t.dataset.ir); return; }
+  if (t.dataset.conc) { t.disabled = true; t.textContent = 'Carregando…'; S.entErro = null; garantirEntidades(); return; }
 });
 document.addEventListener('click', e => {
   const th = e.target.closest('th[data-ordem]'); if (!th) return;

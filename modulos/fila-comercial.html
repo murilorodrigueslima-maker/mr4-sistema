@@ -1117,7 +1117,7 @@ function renderDetalheOperacional(oppId, op) {
       ? new Date(op.nextFollowUpAt + 'T12:00:00').toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
       : null;
     const followupMsg = dt ? `Retorno agendado para ${esc(dt)}.` : 'Retorno agendado.';
-    const past = op.nextFollowUpAt && op.nextFollowUpAt <= new Date().toISOString().slice(0, 10);
+    const past = op.nextFollowUpAt && op.nextFollowUpAt <= hojeComercial();
     return `<div class="op-detail-box">
       <div class="op-detail-state"><span class="op-badge aguardando">⏰ Aguardando retorno</span></div>
       <div class="op-followup-row">${followupMsg}${past ? ' <strong style="color:var(--yellow)">— Data vencida</strong>' : ''}</div>
@@ -1236,8 +1236,7 @@ async function confirmarOutcome() {
   if (modalOutcomeSel === 'PEDIU_RETORNO') {
     scheduledFor = document.getElementById('followupDate').value;
     if (!scheduledFor) { errEl.textContent = 'Informe a data do retorno.'; return; }
-    const hoje = new Date().toISOString().slice(0, 10);
-    if (scheduledFor <= hoje) { errEl.textContent = 'A data deve ser futura (após hoje).'; return; }
+    if (scheduledFor <= hojeComercial()) { errEl.textContent = 'A data deve ser futura (após hoje).'; return; }
   }
 
   const okBtn = document.getElementById('outcomeOkBtn');
@@ -1264,6 +1263,11 @@ async function confirmarOutcome() {
 }
 
 // ── Utilitário ────────────────────────────────────────────────────────────────
+
+// "Hoje" no fuso comercial (America/Fortaleza), como o servidor. A data UTC recusava "amanhã" depois das 21h.
+function hojeComercial() {
+  return window.FilaWorklistView ? window.FilaWorklistView.dataComercial(new Date()) : new Date().toISOString().slice(0, 10);
+}
 
 function esc(str) {
   if (str == null) return '';

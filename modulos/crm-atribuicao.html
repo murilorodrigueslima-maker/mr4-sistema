@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRM · Revisão de atribuição — MR4</title>
+<link rel="icon" type="image/png" href="../assets/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--blue:#1a73e8;--blue-lt:#e8f0fe;--bg:#f5f6f8;--white:#fff;--text:#202124;--muted:#5f6368;--border:#dadce0;--green:#0d904f;--green-lt:#e6f4ea;--amber:#b06000;--amber-lt:#fef3e2;--red:#c5221f;--red-lt:#fce8e6;--radius:10px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+.topbar{position:sticky;top:0;z-index:20;min-height:56px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;flex-wrap:wrap;gap:.6rem;padding:.4rem 1rem}
+.back{font-size:.8rem;font-weight:600;color:var(--muted);text-decoration:none;padding:.35rem .65rem;border:1px solid var(--border);border-radius:8px}
+.brand{font-weight:700}.spacer{flex:1}
+main{max-width:1040px;margin:0 auto;padding:1rem 1rem 3rem}
+.aviso{background:var(--amber-lt);color:var(--amber);border-radius:var(--radius);padding:.65rem .8rem;margin-bottom:.8rem;font-size:.85rem}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem;margin-bottom:.5rem}
+.kpi{background:var(--white);border:1px solid var(--border);border-top:4px solid var(--border);border-radius:var(--radius);padding:.7rem .85rem;min-width:0}
+.kpi.COMPROVADA{border-top-color:var(--green)}.kpi.PROVAVEL{border-top-color:var(--blue)}.kpi.AGUARDANDO{border-top-color:var(--amber)}.kpi.NAO_ATRIBUIDA{border-top-color:var(--muted)}
+.kpi h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}
+.kpi .v{font-size:1.55rem;font-weight:700}.kpi .s{font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
+.nota{font-size:.78rem;color:var(--muted);margin-bottom:1rem}
+.filtros{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin-bottom:.9rem}
+label{display:block;font-size:.76rem;font-weight:600;color:var(--muted);margin-bottom:.2rem}
+input,select,textarea{width:100%;padding:.5rem .6rem;border:1px solid var(--border);border-radius:8px;font:inherit;background:#fff;color:var(--text)}
+button{font:inherit;cursor:pointer}
+button.btn{padding:.5rem .9rem;border-radius:8px;border:1px solid var(--blue);background:var(--blue);color:#fff;font-weight:600}
+button.btn.sec{background:#fff;color:var(--blue)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.caso{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:.85rem 1rem;margin-bottom:.8rem;overflow-wrap:anywhere;min-width:0}
+details,.wrap{max-width:100%;min-width:0}
+.caso-top{display:flex;flex-wrap:wrap;gap:.4rem .6rem;align-items:center}
+.cli{font-weight:700;font-size:1rem}
+.pill{display:inline-block;padding:.05rem .55rem;border-radius:99px;background:var(--blue-lt);color:var(--blue);font-size:.72rem;font-weight:600}
+.pill.a{background:var(--amber-lt);color:var(--amber)}.pill.r{background:var(--red-lt);color:var(--red)}.pill.g{background:var(--green-lt);color:var(--green)}.pill.n{background:var(--bg);color:var(--muted)}
+.fatos{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.6rem;margin:.6rem 0}
+.fato{background:var(--bg);border-radius:8px;padding:.5rem .65rem;font-size:.86rem}.fato h4{font-size:.7rem;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+.sinais{display:flex;flex-wrap:wrap;gap:.3rem;margin:.3rem 0}
+.pergunta{font-weight:600;margin:.4rem 0}
+details{margin:.4rem 0}summary{cursor:pointer;color:var(--blue);font-weight:600;padding:.3rem 0}
+.wrap{overflow-x:auto}table{width:100%;min-width:560px;border-collapse:collapse;font-size:.8rem;margin:.3rem 0 .6rem}th,td{text-align:left;padding:.35rem .45rem;border-bottom:1px solid var(--border);vertical-align:top;overflow-wrap:normal}th{color:var(--muted);font-weight:600}   /* no celular a tabela rola dentro do quadro, sem partir palavras */
+tr.destaque td{background:var(--blue-lt)}
+.decidir{border-top:1px solid var(--border);padding-top:.6rem;margin-top:.5rem}
+.chips{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
+.chip{border:1px solid var(--border);background:#fff;border-radius:999px;padding:.45rem .9rem;font-weight:600;min-height:40px;color:var(--text)}
+.chip[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.acoes{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-top:.5rem}
+.decisao-atual{background:var(--green-lt);border-radius:8px;padding:.5rem .65rem;font-size:.85rem;margin-top:.5rem}
+.msg{margin:.5rem 0;padding:.5rem .7rem;border-radius:8px;font-size:.85rem}.msg.ok{background:var(--green-lt);color:var(--green)}.msg.err{background:var(--red-lt);color:var(--red)}.msg.info{background:var(--amber-lt);color:var(--amber)}
+.vazio{color:var(--muted);padding:1rem 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:1rem;background:#202124;color:#fff;border-radius:8px;padding:.6rem 1rem;display:none;z-index:50;max-width:92vw}.toast.err{background:var(--red)}
+[hidden]{display:none!important}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){main{padding:.8rem .7rem 3rem}input,select,textarea{font-size:16px}.fatos{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" href="crm-gestao.html">← Gestão</a><span class="brand">Revisão de atribuição</span><span class="spacer"></span>
+  <button class="btn sec" id="btnAtualizar" type="button" hidden>Atualizar</button>
+</header>
+<main>
+  <div id="carregando" class="msg info">Verificando acesso…</div>
+  <div id="conteudo" hidden>
+    <div class="aviso">Pedido depois do contato <b>não prova</b> que o contato causou a venda. Suas decisões ficam registradas com seu nome e <b>não alteram comissão, meta nem carteira</b>.</div>
+    <div id="provisorio" class="msg info" hidden></div>
+    <div class="kpis" id="kpis"></div>
+    <p class="nota" id="notaBase"></p>
+    <div class="filtros">
+      <div><label for="fFila">Mostrar</label><select id="fFila"><option value="pendentes">Aguardando revisão</option><option value="decididos">Já decididos</option><option value="todos">Todos os pedidos ligados a contatos</option></select></div>
+      <div><label for="fPrio">Prioridade</label><select id="fPrio"><option value="">Todas</option><option value="1">1 · sinais em conflito</option><option value="2">2 · prazo longo ou só tentativa</option><option value="3">3 · recompra</option></select></div>
+      <div><label for="fVend">Vendedor do contato</label><select id="fVend"><option value="">Todos</option></select></div>
+      <div><label for="fJanela">Janela após o contato</label><select id="fJanela"><option value="7">7 dias</option><option value="14" selected>14 dias</option><option value="30">30 dias</option></select></div>
+      <div><label for="fBusca">Cliente ou nº do pedido</label><input id="fBusca" type="search" autocomplete="off"></div>
+    </div>
+    <p class="nota" id="contagem" aria-live="polite"></p>
+    <div id="lista"></div>
+  </div>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="crm-atribuicao-view.js"></script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFunctions, httpsCallable, connectFunctionsEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js';
+
+// Configuração pública do app Firebase (não é segredo; mesma das demais telas)
+const app = initializeApp({
+  apiKey:"AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8", authDomain:"mr4-ponto.firebaseapp.com", projectId:"mr4-ponto",
+  storageBucket:"mr4-ponto.firebasestorage.app", messagingSenderId:"848211361584", appId:"1:848211361584:web:2732e1893122f4a23452f5"
+});
+const auth = getAuth(app), db = getFirestore(app), funcs = getFunctions(app, 'southamerica-east1');
+const _isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+if (_isLocal) {
+  connectFirestoreEmulator(db, 'localhost', 8080);
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+  connectFunctionsEmulator(funcs, 'localhost', 5001);
+}
+const fnRevisao = httpsCallable(funcs, 'crmAtribuicaoRevisao', { timeout: 60000 });
+const V = window.CrmAtribuicaoView;
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const msgErro = e => (e && e.message ? String(e.message).replace(/^functions\//, '') : 'Erro inesperado.');
+const S = { dados: null, sel: {}, abertos: new Set(), enviando: new Set(), erros: {}, mantidos: new Set(), carregando: false };
+function toast(msg, err) { const t = $('toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3500); }
+
+function renderIndicadores() {
+  const i = V.indicadores(S.dados.casos, S.dados.base);
+  $('provisorio').hidden = !i.provisorio;
+  $('provisorio').textContent = i.provisorio ? `Resultado PROVISÓRIO: ${i.porSituacao.AGUARDANDO.pedidos} pedido(s) concluído(s) ainda aguardam revisão e podem mudar os números abaixo.` : '';
+  $('kpis').innerHTML = V.SITUACOES.map(s => {
+    const x = i.porSituacao[s];
+    const origem = s === 'PROVAVEL' ? `<div class="s">${x.pelaRegra} pela regra · ${x.peloGestor} pela gestão</div>` : s === 'COMPROVADA' ? '<div class="s">só por decisão da gestão</div>' : s === 'NAO_ATRIBUIDA' ? '<div class="s">só por decisão da gestão</div>' : '<div class="s">ainda sem decisão</div>';
+    return `<div class="kpi ${s}" data-sit="${s}"><h3>${esc(V.ROTULO_SITUACAO[s])}</h3><div class="v">${esc(V.percentual(x.taxa))}</div>
+      <div class="s">${x.oportunidades} de ${i.base} oportunidades</div><div class="s">${x.pedidos} pedido(s) · ${x.clientes} cliente(s) · ${esc(V.moedaBR(x.valor))}</div>${origem}</div>`;
+  }).join('');
+  $('notaBase').textContent = `Percentuais sobre ${i.base} oportunidades em que o cliente respondeu e os ${S.dados.janelaDias} dias já passaram; cada uma conta uma vez (a melhor situação), e ${i.semPedido} não têm pedido ligado. `
+    + `Pedidos e valores: todos os concluídos. Vendas até ${V.dataBR(S.dados.dataCorte)}. ${i.foraDosIndicadores} pedido(s) não concluído(s) ficam fora.`
+    + (S.dados.devolucaoRegistrada ? '' : ' Devoluções: nenhuma registrada (não medidas).');
+}
+
+function opcoesVendedor() {
+  const atual = $('fVend').value, nomes = [...new Set(S.dados.casos.map(c => c.contato.por))].sort();
+  $('fVend').innerHTML = '<option value="">Todos</option>' + nomes.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  $('fVend').value = nomes.includes(atual) ? atual : '';
+}
+
+function contexto(c) {
+  const contatos = c.contatos.map(x => `<tr class="${x.opportunityInstanceId === c.opportunityInstanceId ? 'destaque' : ''}"><td>${esc(V.dataBR(x.diaRegistro))}<br>${x.horaInicio ? 'iniciado ' + esc(x.horaInicio) + ' · ' : ''}registrado ${esc(x.horaRegistro)}</td>
+    <td>${esc(x.por)}</td><td><b>${esc(V.ROTULO_RESULTADO[x.resultado] || x.resultado)}</b>${x.retornoEm ? '<br>retorno ' + esc(V.dataBR(x.retornoEm)) : ''}</td>
+    <td>Interesse: ${x.interesse === 'SIM' ? 'sim' : x.interesse === 'NAO' ? 'não' : 'não informado'}<br>Proposta: ${x.proposta === 'SIM' ? 'sim' : x.proposta === 'NAO' ? 'não' : 'não informada'}</td><td>${x.observacao ? '“' + esc(x.observacao) + '”' : '—'}</td></tr>`).join('');
+  const p = c.pedido;
+  const itens = p.itens.length ? `<p><b>Itens do pedido:</b> ${p.itens.map(i => `${esc(i.quantidade)}× ${esc(i.nome)}`).join('; ')}${p.totalItens > p.itens.length ? ` e mais ${p.totalItens - p.itens.length}` : ''}</p>` : '';
+  const outros = c.outrosPedidos.length ? `<div class="wrap"><table><thead><tr><th>Outro pedido</th><th>Data</th><th>Valor</th><th>Situação</th><th>Vendedor</th></tr></thead><tbody>${c.outrosPedidos.map(o =>
+    `<tr><td>${esc(o.vendaId)}</td><td>${esc(V.dataBR(o.data))}</td><td>${esc(V.moedaBR(o.valor))}</td><td>${esc(o.situacao || '')}</td><td>${esc(o.vendedor || '')}</td></tr>`).join('')}</tbody></table></div>` : '<p class="nota">Nenhum outro pedido deste cliente perto das datas.</p>';
+  return `<details data-ctx="${esc(c.vendaId)}" ${S.abertos.has(c.vendaId) ? 'open' : ''}><summary>Contatos registrados (${c.contatos.length}), itens e outros pedidos</summary>${itens}
+    <div class="wrap"><table><thead><tr><th>Quando</th><th>Quem</th><th>Resultado</th><th>Interesse / proposta</th><th>Observação</th></tr></thead><tbody>${contatos}</tbody></table></div>
+    <p class="nota">Linhas destacadas: oportunidade avaliada. A hora é a do registro, que pode não ser a hora do contato.</p>${outros}</details>`;
+}
+
+function cartao(c) {
+  const sit = V.situacao(c), p = c.pedido, sel = S.sel[c.vendaId] || {}, val = V.validarDecisao(sel), env = S.enviando.has(c.vendaId);
+  const id = esc(c.vendaId);
+  const etiqueta = sit.codigo === 'COMPROVADA' ? 'g' : sit.codigo === 'AGUARDANDO' ? 'a' : sit.codigo === 'PROVAVEL' ? '' : 'n';
+  const r = c.revisao;
+  const decisaoAtual = r ? `<div class="decisao-atual">${V.desatualizada(c) ? '<b>Decisão antiga (o caso mudou — decida de novo):</b> ' : '<b>Decidido:</b> '}${esc((V.DECISOES.find(d => d.codigo === r.decisao) || {}).rotulo || r.decisao)} · ${esc(r.por)} · ${esc(new Date(r.em).toLocaleString('pt-BR', { timeZone: 'America/Fortaleza', dateStyle: 'short', timeStyle: 'short' }))}${r.revisao > 1 ? ` · ${r.revisao}ª versão` : ''}<br>“${esc(r.observacao)}”</div>` : '';
+  const aberto = V.pendente(c) || sel.editando;
+  const form = aberto ? `<div class="decidir">
+    <div class="chips" role="group" aria-label="Decisão">${V.DECISOES.map(d => `<button type="button" class="chip" id="d-${id}-${d.codigo}" data-a="decisao" data-id="${id}" data-v="${d.codigo}" aria-pressed="${sel.decisao === d.codigo}" title="${esc(d.ajuda)}">${esc(d.rotulo)}</button>`).join('')}</div>
+    <label for="obs-${id}">Observação (obrigatória): em que você se baseou?</label>
+    <textarea id="obs-${id}" data-a="obs" data-id="${id}" rows="2" maxlength="${V.OBS_MAX}" placeholder="Ex.: conferi o orçamento enviado no WhatsApp">${esc(sel.observacao || '')}</textarea>
+    ${S.erros[c.vendaId] ? `<div class="msg err">${esc(S.erros[c.vendaId])}</div>` : ''}
+    <div class="acoes"><button type="button" class="btn" data-a="salvar" data-id="${id}" ${val.ok && !env ? '' : 'disabled'}>${env ? 'Salvando…' : 'Salvar decisão'}</button>${sel.editando ? `<button type="button" class="btn sec" data-a="desistir" data-id="${id}">Cancelar</button>` : ''}</div></div>`
+    : `<div class="acoes"><button type="button" class="btn sec" data-a="editar" data-id="${id}">${r ? 'Alterar decisão' : 'Avaliar este pedido'}</button></div>`;
+  return `<article class="caso" data-venda="${id}">
+    <div class="caso-top"><span class="cli">${esc(c.cliente)}</span><span class="pill ${etiqueta}">${esc(V.ROTULO_SITUACAO[sit.codigo])}</span>${c.prioridade ? `<span class="pill n">prioridade ${esc(c.prioridade)}</span>` : ''}</div>
+    <div class="fatos">
+      <div class="fato"><h4>Pedido ${id}</h4>${esc(V.dataBR(p.data))}${p.hora ? ' às ' + esc(p.hora) : ''} · <b>${esc(V.moedaBR(p.valor))}</b><br>Vendedor do pedido: <b>${esc(p.vendedor)}</b><br>Situação: ${esc(p.situacao || '—')}${p.concluido ? '' : ' <span class="pill r">não conta nos indicadores</span>'}</div>
+      <div class="fato"><h4>Contato avaliado</h4>${esc(V.dataBR(c.contato.dia))} · <b>${esc(V.ROTULO_RESULTADO[c.contato.resultado] || c.contato.resultado)}</b><br>Registrado por: <b>${esc(c.contato.por)}</b><br>Pedido ${esc(V.distancia(c.contato.diasAntesDoPedido))}</div>
+      <div class="fato"><h4>Sugestão da regra (não é decisão)</h4>${esc(V.ROTULO_SISTEMA[c.sistema.nivel] || c.sistema.nivel)}: ${esc(V.ROTULO_MOTIVO[c.sistema.motivo] || c.sistema.motivo)}
+        <div class="sinais">${c.sistema.sinais.map(s => `<span class="pill a">${esc(V.ROTULO_SINAL[s] || s)}</span>`).join('')}</div></div>
+    </div>
+    ${c.pergunta && V.pendente(c) ? `<div class="pergunta">${esc(c.pergunta)}</div>` : ''}
+    ${contexto(c)}${decisaoAtual}${form}
+  </article>`;
+}
+
+const filtroAtual = () => ({ fila: $('fFila').value, prioridade: $('fPrio').value, vendedor: $('fVend').value, busca: $('fBusca').value });
+const casoDe = id => S.dados.casos.find(c => c.vendaId === id);
+function renderLista() {
+  const f = filtroAtual();
+  const visiveis = V.filtrar(S.dados.casos, f);
+  const pend = S.dados.casos.filter(V.pendente).length;
+  $('contagem').textContent = `${visiveis.length} caso(s) na lista · ${pend} aguardando revisão no total · ${S.dados.casos.filter(V.decidido).length} já decididos.`;
+  $('lista').innerHTML = visiveis.length ? visiveis.map(cartao).join('') : `<div class="vazio">${f.fila === 'pendentes' && !pend ? 'Nada aguardando revisão.' : 'Nenhum caso com este filtro.'}</div>`;
+}
+/** Redesenha só um cartão (não perde o que está sendo digitado nos outros). */
+function redesenhar(id) {
+  const el = document.querySelector(`.caso[data-venda="${CSS.escape(id)}"]`), c = casoDe(id); if (!el || !c) return;
+  const foco = document.activeElement && el.contains(document.activeElement) ? document.activeElement.id : null;
+  el.outerHTML = cartao(c);
+  if (foco) { const n = document.getElementById(foco); if (n) n.focus({ preventScroll: true }); }
+}
+
+async function carregar() {
+  if (S.carregando) return; S.carregando = true; $('btnAtualizar').disabled = true;
+  $('carregando').hidden = false; $('carregando').className = 'msg info'; $('carregando').textContent = 'Montando a lista a partir dos contatos e pedidos…';
+  try {
+    const r = await fnRevisao({ acao: 'listar', janelaDias: Number($('fJanela').value) });
+    S.dados = r.data; S.erros = {};
+    $('carregando').hidden = true; $('conteudo').hidden = false;
+    opcoesVendedor(); renderIndicadores(); renderLista();
+  } catch (e) {
+    $('carregando').className = 'msg err';
+    $('carregando').textContent = e.code === 'functions/permission-denied' ? 'Esta tela é só da gestão.' : 'Não foi possível montar a lista: ' + msgErro(e) + ' Toque em Atualizar para tentar de novo.';
+    if (S.dados) $('conteudo').hidden = false;
+  } finally { S.carregando = false; $('btnAtualizar').disabled = false; }
+}
+
+const novoRequestId = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12);
+async function salvar(id) {
+  const c = casoDe(id), sel = S.sel[id] || {}, val = V.validarDecisao(sel);
+  if (!c || !val.ok || S.enviando.has(id)) return;
+  S.enviando.add(id); delete S.erros[id]; redesenhar(id);
+  try {
+    // mesmo requestId enquanto o conteúdo não mudar: repetir após falha de rede não duplica a decisão
+    const assinatura = sel.decisao + '|' + val.texto;
+    if (sel.assinatura !== assinatura) { sel.assinatura = assinatura; sel.requestId = novoRequestId(); }
+    const r = await fnRevisao({ acao: 'decidir', janelaDias: S.dados.janelaDias, vendaId: c.vendaId, opportunityInstanceId: c.opportunityInstanceId,
+      decisao: sel.decisao, observacao: val.texto, revisaoVista: c.revisao ? c.revisao.revisao : 0, requestId: sel.requestId });
+    c.revisao = r.data.revisao; delete S.sel[id];
+    toast('Decisão salva.'); renderIndicadores();
+  } catch (e) { S.erros[id] = msgErro(e); toast('Não foi salvo.', true); }
+  finally {
+    S.enviando.delete(id);
+    if (!S.erros[id] && !V.filtrar([c], filtroAtual()).length) renderLista(); else redesenhar(id);
+  }
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b || b.tagName !== 'BUTTON') return;
+  const a = b.dataset.a, id = b.dataset.id;
+  if (a === 'decisao') { S.sel[id] = { ...(S.sel[id] || {}), decisao: b.dataset.v }; delete S.erros[id]; redesenhar(id); }
+  else if (a === 'salvar') salvar(id);
+  else if (a === 'editar') { const c = casoDe(id); S.sel[id] = { editando: true, decisao: c.revisao ? c.revisao.decisao : null, observacao: '' }; redesenhar(id); }
+  else if (a === 'desistir') { delete S.sel[id]; delete S.erros[id]; redesenhar(id); }
+});
+document.addEventListener('input', e => {
+  const t = e.target; if (!t.dataset || t.dataset.a !== 'obs') return;
+  const id = t.dataset.id; S.sel[id] = { ...(S.sel[id] || {}), observacao: t.value };
+  const bt = document.querySelector(`[data-a="salvar"][data-id="${CSS.escape(id)}"]`);
+  if (bt) bt.disabled = !(V.validarDecisao(S.sel[id]).ok && !S.enviando.has(id));
+});
+document.addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.ctx) { if (d.open) S.abertos.add(d.dataset.ctx); else S.abertos.delete(d.dataset.ctx); } }, true);
+for (const id of ['fFila', 'fPrio', 'fVend']) $(id).addEventListener('change', () => { if (S.dados) renderLista(); });
+$('fBusca').addEventListener('input', () => { if (S.dados) renderLista(); });
+$('fJanela').addEventListener('change', carregar);
+$('btnAtualizar').addEventListener('click', carregar);
+
+onAuthStateChanged(auth, async u => {
+  if (!u) { location.href = '../login.html'; return; }
+  try {
+    const us = await getDoc(doc(db, 'users', u.uid)), ss = await getDoc(doc(db, 'sistema_usuarios', u.uid));
+    const role = us.exists() && us.data().ativo ? us.data().role : null;
+    // só exibição: quem manda é o servidor (crmAtribuicaoRevisao recusa quem não é gestão)
+    const pode = role && ss.exists() && ss.data().bloqueado !== true && (role === 'gestor' || (ss.data().modulos || []).includes('fila-comercial-gestao'));
+    if (!pode) { $('carregando').className = 'msg err'; $('carregando').textContent = 'Esta tela é só da gestão.'; return; }
+  } catch (e) { location.href = '../login.html'; return; }
+  $('btnAtualizar').hidden = false;
+  carregar();
+});
+</script>
+</body>
+</html>

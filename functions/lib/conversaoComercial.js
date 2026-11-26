@@ -356,7 +356,7 @@ function resumir(opps, contexto) {
  *                                        acima é "histórico desconhecido" se o mapa não foi fornecido
  * @param {object} p.opcoes              { janelaDias=14, base='CONVERSA', mesmoDia='ordem', dataCorte, inicio?, fim?,
  *                                          atribuicao='ULTIMO_TOQUE'|'EVIDENCIA', nivelMinimo='PROVAVEL', prazoProvavelDias=7 }
- * @returns {{ parametros, total, porVendedor, pedidos, exclusoes, evidencia }}  porVendedor: uid → resumo (cada oportunidade em UM vendedor);
+ * @returns {{ parametros, total, porVendedor, pedidos, exclusoes, evidencia, coorte }}  porVendedor: uid → resumo (cada oportunidade em UM vendedor);
  *          exclusoes: pedidos perto de algum contato qualificado que NÃO contaram, por motivo (todas as coortes);
  *          evidencia: { porNivel, porMotivo, casos } da coorte, calculada nas duas regras
  */
@@ -470,6 +470,8 @@ function calcularFunil(p) {
     total: { ...resumir(coorte, contexto), oportunidadesComMaisDeUmVendedor: coorte.filter(x => x.operadores.size > 1).length },
     porVendedor, pedidos: coorte.flatMap(x => x.pedidos), exclusoes,
     evidencia: resumirEvidencia(casos.filter(k => naCoorte.has(k.opp))),
+    // uma linha por oportunidade da coorte: `base` = denominador das taxas (vínculo GC, cliente respondeu, janela encerrada)
+    coorte: coorte.map(x => ({ opp: x.opp, base: x.vinculo && x.contatada && x.madura && x.qualificada })),
   };
 }
 

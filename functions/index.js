@@ -890,6 +890,9 @@ exports.crmConsulta        = onCall({ region: REGION }, req => crmConsultaHandle
 const { reativacaoGestaoHandler } = require('./lib/reativacaoGestaoCallable');
 exports.crmReativacaoGestao = onCall({ region: REGION }, req => reativacaoGestaoHandler(req));
 
+// COM-03 — revisão humana da atribuição comercial (gestão): lista os casos ambíguos na hora e grava só a decisão + auditoria.
+exports.crmAtribuicaoRevisao = onCall({ region: REGION, timeoutSeconds: 60 }, req => require('./lib/atribuicaoRevisao').atribuicaoRevisaoHandler(req));
+
 // Telefone do cliente nos cartões de reativação: consulta o GestãoClick sob demanda, autoriza ANTES no backend; número nunca é gravado/logado.
 // Banco de horas: compensação de faltas / estorno (validação e saldo NO BACKEND, transação atômica). Desligado até banco_horas_config/politica ativar.
 exports.pontoBancoCompensar = onCall({ region: REGION }, req => require('./lib/pontoBanco').compensarHandler(req));

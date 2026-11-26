@@ -17,14 +17,18 @@ const DOC_BYTES_MAX = 900 * 1024;
 const DIAS_DE_SERIE = 400;            // cobre a janela de 365 dias com folga
 
 // ── Leitura (somente get) ───────────────────────────────────────────────────────────────────────────────────────
-async function lerEntradas(db) {
+/** `snapshotsDesde` (AAAA-MM-DD) limita a leitura dos saldos diários aos que o cálculo usa; ausente = todos. */
+async function lerEntradas(db, { snapshotsDesde = null } = {}) {
   const { carregarBase } = require('./snapshot');
-  const todos = async c => (await db.collection(c).get()).docs.map(d => [d.id, d.data()]);
+  const ler = async q => (await q.get()).docs.map(d => [d.id, d.data()]);
+  const todos = c => ler(db.collection(c));
   const meta = (await db.collection('compras_n0').doc('meta').get()).data();
   if (!meta || !meta.data_comercial) throw new Error('SEM_SNAPSHOT_DE_COMPRAS');
   const base = await carregarBase(db);
   if (!base) throw new Error('BASE_AUSENTE');
-  const [produtos, custos, snaps] = [await todos('compras_n0_produtos'), await todos('compras_n0_custos'), await todos('estoque_snapshots')];
+  const saldos = db.collection('estoque_snapshots');
+  const [produtos, custos, snaps] = [await todos('compras_n0_produtos'), await todos('compras_n0_custos'),
+    await ler(snapshotsDesde ? saldos.orderBy(require('firebase-admin/firestore').FieldPath.documentId()).startAt(snapshotsDesde) : saldos)];
   return montarEntradas({ meta, vendas: base.vendas, compras: base.compras, produtos, custos, snaps });
 }
 

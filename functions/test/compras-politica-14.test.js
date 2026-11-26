@@ -200,7 +200,7 @@ describe('ajuste manual e saídas', () => {
   });
   test('totais batem com as linhas; rótulo de simulação; justificativa em linguagem de negócio', () => {
     const r = A.simular(dados(variado()), { orcamento_cents: 100000 });
-    expect(r.rotulo).toBe('SIMULAÇÃO — não é recomendação operacional; nenhum pedido é criado');
+    expect(r.rotulo).toBe('PLANEJAMENTO (SIMULAÇÃO) — estimativa; não substitui a política 1.2; nenhum pedido é criado');
     expect(r.linhas.reduce((s, l) => s + l.valor_cents, 0)).toBe(r.totais.capital_cents);
     const l = r.linhas.find(x => x.qtd > 0);
     expect(l.justificativa.join(' ')).toMatch(/Prazo .*Posição .*Chance de faltar/);
@@ -292,9 +292,13 @@ describe('isolamento e cópia do navegador', () => {
   test('o motor é puro: sem require, rede, relógio ou sorteio', () => {
     expect(ler('functions/lib/compras/alocacao14.js')).not.toMatch(/require\(|fetch\(|Date\.now|new Date|Math\.random|XMLHttpRequest|localStorage/);
   });
-  test('nenhum módulo de produção carrega a 1.4', () => {
-    const arquivos = ['index.js', ...fs.readdirSync(path.join(RAIZ, 'functions/lib/compras')).filter(f => !/1[34]/.test(f)).map(f => 'lib/compras/' + f)];
-    for (const f of arquivos) expect([f, /alocacao14|sombra14|compras_sombra_14/.test(ler('functions/' + f))]).toEqual([f, false]);
+  test('nenhum módulo do sync ou da política vigente carrega a 1.4; só a base do planejamento (a pedido da gestão)', () => {
+    const arquivos = fs.readdirSync(path.join(RAIZ, 'functions/lib/compras')).filter(f => !/1[34]|^simuladorBase\.js$/.test(f)).map(f => 'lib/compras/' + f);
+    for (const f of arquivos) expect([f, /alocacao14|sombra14|compras_sombra_14|simuladorBase/.test(ler('functions/' + f))]).toEqual([f, false]);
+    const index = ler('functions/index.js');
+    expect(index).not.toMatch(/alocacao14|sombra14|simuladorBase/);
+    expect(index.match(/comprasSimuladorCallable/g)).toHaveLength(1);                      // um único ponto de entrada, carregado só na chamada
+    expect(index).toMatch(/exports\.planejamentoComprasAtualizar = onCall\(/);
   });
   test('a sombra 1.4 não tem destino de escrita fora da própria coleção', () => {
     const src = ler('functions/lib/compras/sombra14.js');
@@ -303,16 +307,20 @@ describe('isolamento e cópia do navegador', () => {
   });
 });
 
-describe('simulador (tela): só leitura, só gestão, rótulo visível, emulador só em localhost', () => {
+describe('planejamento (tela): só leitura no banco, só gestão, rótulo visível, emulador só em localhost', () => {
   const html = ler('modulos/compras-simulador14.html');
-  test('nenhuma API de escrita nem função de servidor', () => {
-    expect(html).not.toMatch(/setDoc|addDoc|updateDoc|deleteDoc|writeBatch|runTransaction|httpsCallable|firebase-functions|XMLHttpRequest|sendBeacon|fetch\(/);
-    const colecoes = [...html.matchAll(/doc\(db,\s*'([a-z_0-9]+)'/g)].map(m => m[1]);
-    expect([...new Set(colecoes)].sort()).toEqual(['compras_sombra_14', 'sistema_usuarios', 'users']);
+  test('nenhuma API de escrita; a única função de servidor é a que regera a base do próprio planejamento', () => {
+    expect(html).not.toMatch(/setDoc|addDoc|updateDoc|deleteDoc|writeBatch|runTransaction|XMLHttpRequest|sendBeacon|fetch\(/);
+    expect([...html.matchAll(/httpsCallable\(fns, '([A-Za-z0-9_]+)'/g)].map(m => m[1])).toEqual(['planejamentoComprasAtualizar']);
+    const colecoes = [...html.matchAll(/(?:doc\(db,|ler\()\s*'([a-z_0-9]+)'/g)].map(m => m[1]);
+    expect([...new Set(colecoes)].sort()).toEqual(['compras_fornecedor_parametros', 'compras_n0', 'compras_origem', 'compras_pendencias_confirmacao', 'compras_sombra_14', 'sistema_usuarios', 'users']);
   });
-  test('rótulo de simulação visível e módulo compartilhado', () => {
-    expect(html).toContain('SIMULAÇÃO — não é recomendação operacional; nenhum pedido é criado');
+  test('rótulos visíveis e módulos compartilhados', () => {
+    expect(html).toContain(A.ROTULO);
+    expect(html).toContain('Dado não confirmado');
+    expect(html).toContain('Estimativa');
     expect(html).toContain('<script src="../js/compras-alocacao14.js"></script>');
+    expect(html).toContain('<script src="../js/compras-planejamento.js"></script>');
   });
   test('emulador somente em localhost, com projeto de demonstração e sem a porta de outro servidor', () => {
     expect(html).toMatch(/const LOCAL = location\.hostname === 'localhost' \|\| location\.hostname === '127\.0\.0\.1';/);
@@ -320,6 +328,12 @@ describe('simulador (tela): só leitura, só gestão, rótulo visível, emulador
     expect(html).not.toMatch(/\b(8080|9099)\b/);
   });
   test('acesso conferido na tela além das Rules', () => { expect(html).toMatch(/role !== 'gestor'/); });
+  test('o atalho na tela de Compras nasce escondido e só aparece com o custo liberado (gestão)', () => {
+    const compras = ler('modulos/compras.html');
+    expect(compras).toMatch(/id="navPlanejamento" style="display:none"/);
+    expect(compras).toMatch(/id="linkPlanejamento" style="display:none"/);
+    expect(compras).toMatch(/a\.style\.display = estado\.custos \? '' : 'none'/);
+  });
 });
 
 // ── Backtest sem vazamento de futuro ───────────────────────────────────────────────────────────────────────────

@@ -4,8 +4,9 @@
 <style>body{font-family:system-ui,sans-serif;max-width:520px;margin:3rem auto;padding:0 1rem}button{display:block;width:100%;padding:.7rem;margin:.5rem 0;font:inherit;cursor:pointer}#st{color:#555}</style></head>
 <body>
 <h1>Harness local (emuladores)</h1>
-<p>Dados fictícios. Só funciona em localhost, com os emuladores 8210/9210.</p>
-<button type="button" data-u="gestor">Entrar como gestor de teste</button>
+<p>Dados fictícios. Só funciona em localhost, com os emuladores 8320/9320/5321.</p>
+<button type="button" data-u="gestor">Entrar como gestor de teste (planejamento de compra)</button>
+<button type="button" data-u="gestor" data-para="compras">Entrar como gestor de teste (tela de Compras, com o menu)</button>
 <button type="button" data-u="funcionario">Entrar como funcionário de teste (deve ter acesso negado)</button>
 <p id="st">—</p>
 <script type="module">
@@ -14,17 +15,17 @@ import { getAuth, signInWithEmailAndPassword, signOut, connectAuthEmulator } fro
 if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') throw new Error('somente localhost');
 const app = initializeApp({ apiKey: 'demo-chave-local', authDomain: 'demo-mr4-sim14.firebaseapp.com', projectId: 'demo-mr4-sim14' });
 const auth = getAuth(app);
-connectAuthEmulator(auth, 'http://127.0.0.1:9210', { disableWarnings: true });
+connectAuthEmulator(auth, 'http://127.0.0.1:9320', { disableWarnings: true });
 const usuarios = await (await fetch('/__harness/usuarios.json')).json();
-async function entrar(chave) {
+async function entrar(chave, para) {
   const u = usuarios[chave], st = document.getElementById('st');
-  try { await signOut(auth); await signInWithEmailAndPassword(auth, u.email, u.senha); location.href = '/modulos/compras-simulador14.html'; }
+  try { await signOut(auth); await signInWithEmailAndPassword(auth, u.email, u.senha); location.href = para === 'compras' ? '/modulos/compras.html' : '/modulos/compras-simulador14.html'; }
   catch (e) { st.textContent = 'Falhou: ' + (e.code || e.message); }
 }
-document.querySelectorAll('button[data-u]').forEach(b => b.addEventListener('click', () => entrar(b.dataset.u)));
+document.querySelectorAll('button[data-u]').forEach(b => b.addEventListener('click', () => entrar(b.dataset.u, b.dataset.para)));
 // atalho para captura automática: /login.html?como=gestor
-const como = new URLSearchParams(location.search).get('como');
-if (como && usuarios[como]) entrar(como);
+const q = new URLSearchParams(location.search), como = q.get('como');
+if (como && usuarios[como]) entrar(como, q.get('para'));
 document.getElementById('st').textContent = 'Pronto.';
 </script>
 </body>

@@ -4,49 +4,56 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex">
-<title>MR4 — Simulador de compra (1.4)</title>
+<title>MR4 — Planejamento de compra</title>
 <link rel="icon" type="image/png" href="../assets/logo.png">
 <style>
-  /* Simulador de orçamento (Política 1.4, modo sombra). Só LEITURA de compras_sombra_14 (gestão). Todo cálculo roda no navegador
-     com o mesmo módulo dos testes (js/compras-alocacao14.js). Nada é gravado no servidor e nenhum pedido é criado. */
+  /* PLANEJAMENTO DE COMPRA (Política 1.4 em sombra). Só LEITURA no navegador (base compras_sombra_14 e cadastros, gestão).
+     A única chamada ao servidor é planejamentoComprasAtualizar, que regera a base própria do planejamento. Nenhum pedido é criado. */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root { --blue: #1a73e8; --blue-bg: #e8f0fe; --bg: #f5f5f5; --white: #fff; --text: #202124; --muted: #5f6368; --border: #dadce0;
-    --green: #0d904f; --yellow: #8a4b00; --yellow-bg: #fef3d0; --red: #b3261e; --red-bg: #fce8e6; }
+    --green: #0d904f; --yellow: #8a4b00; --yellow-bg: #fef3d0; --red: #b3261e; --red-bg: #fce8e6;
+    --serie14: #2a78d6; --serie13: #eb6834; --serie12: #1baf7a; --grade: #e6e6e3; }
   body { font-family: Inter, system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+  [hidden] { display: none !important; }
   .faixa { position: sticky; top: 0; z-index: 50; background: #ffdd57; color: #3c2a00; font-weight: 700; text-align: center; padding: .55rem 1rem; border-bottom: 2px solid #c99700; letter-spacing: .2px; }
-  .wrap { max-width: 1320px; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 1rem 1.25rem 3rem; }
   header.topo { display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end; justify-content: space-between; margin-bottom: .75rem; }
-  h1 { font-size: 1.3rem; } h2 { font-size: 1rem; margin-bottom: .6rem; }
+  h1 { font-size: 1.3rem; } h2 { font-size: .95rem; margin-bottom: .6rem; }
   .sub { color: var(--muted); font-size: .8rem; margin-top: .2rem; line-height: 1.5; }
   a { color: var(--blue); }
   .cartao { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .9rem 1rem; margin-bottom: .9rem; }
-  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: .8rem 1rem; align-items: start; }
+  .campos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .8rem 1rem; align-items: start; }
+  .campo { display: flex; flex-direction: column; gap: .25rem; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; min-width: 0; }
   .campo .sub, .campo .chips, .campo .linha { text-transform: none; font-weight: 400; letter-spacing: 0; }
-  #presets button { padding: .2rem .45rem; font-size: .74rem; }
-  .campo select, .campo > input[type=text] { width: 100%; }
-  .campo { display: flex; flex-direction: column; gap: .25rem; font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
+  .campo select, .campo > input[type=text], .campo > input[type=number] { width: 100%; }
   input, select, button { font: inherit; }
   input[type=text], input[type=number], input[type=search], select { padding: .45rem .6rem; border: 1px solid var(--border); border-radius: 8px; background: var(--white); color: var(--text); font-size: .85rem; text-transform: none; font-weight: 400; max-width: 100%; }
   select[multiple] { min-height: 6.4rem; }
   button { border: 1px solid var(--border); background: var(--white); border-radius: 8px; padding: .45rem .8rem; cursor: pointer; font-size: .82rem; color: var(--text); }
+  button:disabled { opacity: .55; cursor: default; }
   button.pri { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
-  button.sel { background: var(--blue-bg); border-color: var(--blue); color: var(--blue); font-weight: 600; }
   .linha { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
-  .curvas label { display: inline-flex; align-items: center; gap: .3rem; margin-right: .7rem; font-size: .85rem; text-transform: none; color: var(--text); font-weight: 400; }
-  details.avancado { margin-top: .8rem; } details.avancado summary { cursor: pointer; color: var(--blue); font-size: .82rem; margin-bottom: .6rem; }
+  #presets button { padding: .2rem .45rem; font-size: .74rem; }
+  .marcas label { display: inline-flex; align-items: center; gap: .3rem; margin-right: .7rem; font-size: .85rem; text-transform: none; color: var(--text); font-weight: 400; }
+  details.bloco { margin-top: .8rem; } details.bloco > summary { cursor: pointer; color: var(--blue); font-size: .85rem; margin-bottom: .6rem; }
   .chips { display: flex; flex-wrap: wrap; gap: .3rem; margin-top: .3rem; }
   .chip { background: var(--blue-bg); color: var(--blue); border-radius: 999px; padding: .15rem .5rem; font-size: .75rem; text-transform: none; font-weight: 600; border: 0; }
-  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: .6rem; margin-bottom: .9rem; }
+  .selo { display: inline-block; font-size: .6rem; font-weight: 700; letter-spacing: .3px; border-radius: 4px; padding: .05rem .3rem; vertical-align: middle; text-transform: uppercase; }
+  .selo.est { background: var(--blue-bg); color: #174ea6; }
+  .selo.ndc { background: var(--yellow-bg); color: var(--yellow); }
+  .selo.inf { background: #e6f4ea; color: #0b6b3a; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: .6rem; margin-bottom: .9rem; }
   .kpi { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .6rem .8rem; }
   .kpi .k { font-size: .66rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .3px; }
   .kpi .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: .15rem; }
   .kpi .n { font-size: .72rem; color: var(--muted); }
   .alerta { border-left: 4px solid #c99700; background: var(--yellow-bg); color: var(--yellow); border-radius: 6px; padding: .5rem .8rem; font-size: .82rem; margin-bottom: .5rem; }
   .alerta.erro { border-color: var(--red); background: var(--red-bg); color: var(--red); }
+  .alerta.info { border-color: var(--blue); background: var(--blue-bg); color: #174ea6; }
   .abas { display: flex; gap: .25rem; border-bottom: 1px solid var(--border); margin-bottom: .7rem; overflow-x: auto; }
   .abas button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; white-space: nowrap; color: var(--muted); }
-  .abas button.sel { border-bottom-color: var(--blue); color: var(--blue); background: none; }
-  .rolagem { overflow-x: auto; background: var(--white); border: 1px solid var(--border); border-radius: 10px; }
+  .abas button.sel { border-bottom-color: var(--blue); color: var(--blue); font-weight: 600; }
+  .rolagem { overflow-x: auto; background: var(--white); border: 1px solid var(--border); border-radius: 10px; margin-bottom: .7rem; }
   table { width: 100%; border-collapse: collapse; font-size: .8rem; font-variant-numeric: tabular-nums; }
   th { text-align: right; font-size: .64rem; text-transform: uppercase; letter-spacing: .2px; color: var(--muted); padding: .45rem .4rem; background: #fafafa; border-bottom: 1px solid var(--border); vertical-align: bottom; }
   td { text-align: right; padding: .45rem .4rem; border-top: 1px solid var(--border); vertical-align: top; }
@@ -54,79 +61,133 @@
   td .nome { font-weight: 600; overflow-wrap: anywhere; min-width: 180px; }
   td .cod { color: var(--muted); font-size: .7rem; }
   td input.qtd { width: 76px; text-align: right; padding: .25rem .4rem; }
+  td input.forn { width: 92px; text-align: right; padding: .25rem .4rem; }
   tr.ajustado td { background: #fffbea; }
   .sit { font-size: .72rem; color: var(--muted); text-align: left; min-width: 120px; }
   td details summary { cursor: pointer; color: var(--blue); font-size: .72rem; }
   td details ul { margin: .3rem 0 0 1rem; color: var(--muted); font-size: .74rem; line-height: 1.5; min-width: 340px; max-width: 520px; }
   .vazio { padding: 1.5rem; text-align: center; color: var(--muted); }
-  .nota { font-size: .75rem; color: var(--muted); line-height: 1.55; margin-top: .6rem; }
-  #carregando { padding: 3rem 1rem; text-align: center; color: var(--muted); }
-  @media (max-width: 700px) { .wrap { padding: .8rem; } .campos { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .nota { font-size: .75rem; color: var(--muted); line-height: 1.55; margin: .4rem 0 .7rem; }
+  .grafico { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: .7rem .7rem .4rem; margin-bottom: .7rem; position: relative; }
+  .grafico svg { width: 100%; height: auto; display: block; }
+  .legenda { display: flex; flex-wrap: wrap; gap: .9rem; font-size: .76rem; color: var(--muted); margin-bottom: .4rem; }
+  .legenda i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: .3rem; }
+  .dica { position: absolute; pointer-events: none; background: var(--white); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.12); padding: .45rem .6rem; font-size: .74rem; white-space: nowrap; z-index: 5; }
+  #carregando { padding: 3rem 1rem; text-align: center; color: var(--muted); line-height: 1.8; }
+  @media (max-width: 700px) { .wrap { padding: .8rem; } .campos { grid-template-columns: 1fr; } .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .faixa { font-size: .78rem; } }
 </style>
 </head>
 <body>
-<div class="faixa" role="note">SIMULAÇÃO — não é recomendação operacional; nenhum pedido é criado</div>
-<div id="carregando">Carregando a base da simulação…</div>
+<div class="faixa" role="note">PLANEJAMENTO (SIMULAÇÃO) — estimativa; não substitui a política 1.2; nenhum pedido é criado</div>
+<div id="carregando">Carregando a base do planejamento…</div>
 <div class="wrap" id="app" hidden>
   <header class="topo">
     <div>
-      <h1>Simulador de orçamento de compra</h1>
+      <h1>Planejamento de compra</h1>
       <div class="sub" id="sub">—</div>
     </div>
-    <div class="linha"><a href="compras.html">Voltar para Compras &amp; Estoque</a><button id="btnSair" type="button">Sair</button></div>
+    <div class="linha"><button type="button" id="btnAtualizar">Atualizar base</button><a href="compras.html">Voltar para Compras &amp; Estoque</a><button id="btnSair" type="button">Sair</button></div>
   </header>
+  <div id="avisosBase" aria-live="polite"></div>
 
-  <section class="cartao" aria-label="Entradas da simulação">
+  <section class="cartao" aria-label="Orçamento">
+    <h2>Quanto há para comprar</h2>
     <div class="campos">
-      <div class="campo"><label for="orcamento">Orçamento de compra (R$)</label>
-        <input type="text" id="orcamento" inputmode="decimal" autocomplete="off" value="49.000" aria-describedby="orcAjuda">
+      <div class="campo"><label for="orcamento">Orçamento total desta compra (R$)</label>
+        <input type="text" id="orcamento" inputmode="decimal" autocomplete="off" value="49.000">
         <span class="linha" id="presets"></span>
-        <span class="sub" id="orcAjuda">Em branco = sem teto (mostra o capital para atingir todos os alvos).</span>
       </div>
-      <label class="campo">Cobertura desejada (dias após a chegada)
-        <select id="cobModo"><option value="">Padrão por curva (A 30 · B 21 · C 15)</option><option value="n">Mesmo número para todos</option></select>
-        <input type="number" id="cobDias" min="0" max="365" value="30" hidden>
+      <label class="campo">Orçamento por semana (R$)<input type="text" id="orcSemana" inputmode="decimal" autocomplete="off" placeholder="não informado"></label>
+      <label class="campo">Orçamento por mês (R$)<input type="text" id="orcMes" inputmode="decimal" autocomplete="off" placeholder="não informado"></label>
+      <label class="campo">Já comprometido nesta semana (R$)<input type="text" id="usadoSemana" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+      <label class="campo">Já comprometido neste mês (R$)<input type="text" id="usadoMes" inputmode="decimal" autocomplete="off" placeholder="0"></label>
+    </div>
+    <p class="nota" id="limiteTxt"></p>
+  </section>
+
+  <section class="cartao" aria-label="Produtos">
+    <h2>Quais produtos</h2>
+    <div class="campos">
+      <label class="campo">Fornecedores (nada marcado = todos)<select id="fForn" multiple></select></label>
+      <label class="campo">Categorias (nada marcado = todas)<select id="fCat" multiple></select></label>
+      <label class="campo">Marcas<select id="fMarca" multiple></select><span class="sub" id="marcaAjuda"></span></label>
+      <div class="campo"><span>Curva ABC (importância)</span>
+        <span class="marcas linha" id="abc"><label><input type="checkbox" value="A" checked> A</label><label><input type="checkbox" value="B" checked> B</label><label><input type="checkbox" value="C" checked> C</label></span>
+        <span style="margin-top:.4rem">Curva XYZ (regularidade da venda)</span>
+        <span class="marcas linha" id="xyz"><label><input type="checkbox" value="X" checked> X</label><label><input type="checkbox" value="Y" checked> Y</label><label><input type="checkbox" value="Z" checked> Z</label></span>
+      </div>
+      <div class="campo"><label for="priBusca">Produtos prioritários (código ou nome)</label>
+        <span class="linha"><input type="search" id="priBusca" list="prodLista" autocomplete="off" style="flex:1"><button type="button" id="priAdd">Priorizar</button><button type="button" id="excAdd">Excluir</button></span>
+        <span class="chips" id="priChips"></span><span class="chips" id="excChips"></span>
+        <datalist id="prodLista"></datalist>
+      </div>
+    </div>
+  </section>
+
+  <section class="cartao" aria-label="Regras de compra">
+    <h2>Regras desta simulação</h2>
+    <div class="campos">
+      <div class="campo"><label for="cobModo">Cobertura desejada (dias após a chegada)</label>
+        <select id="cobModo"><option value="">Padrão por curva (A 30 · B 21 · C 15)</option><option value="n">Mesmo número para todos</option><option value="abc">Um número por curva</option></select>
+        <input type="number" id="cobDias" min="0" max="365" value="30" hidden aria-label="Dias de cobertura">
+        <span class="linha" id="cobABC" hidden>A <input type="number" id="cobA" min="0" max="365" value="30" style="width:70px"> B <input type="number" id="cobB" min="0" max="365" value="21" style="width:70px"> C <input type="number" id="cobC" min="0" max="365" value="15" style="width:70px"></span>
+      </div>
+      <label class="campo">Nível de serviço (chance de não faltar)
+        <select id="nivel"><option value="">Padrão por curva e regularidade (80% a 97%)</option><option value="0.8">80% para todos</option><option value="0.9">90% para todos</option><option value="0.95">95% para todos</option><option value="0.97">97% para todos</option><option value="0.98">98% para todos</option></select>
       </label>
-      <label class="campo">Nível de serviço
-        <select id="nivel"><option value="">Padrão por curva e variabilidade (80% a 97%)</option><option value="0.8">80% para todos</option><option value="0.9">90% para todos</option><option value="0.95">95% para todos</option><option value="0.97">97% para todos</option><option value="0.98">98% para todos</option></select>
-      </label>
+      <div class="campo"><label for="prazoModo">Prazo de reposição</label>
+        <select id="prazoModo"><option value="DADOS">Cadastro do fornecedor ou histórico</option><option value="FIXO">Mesmo prazo para todos (cenário)</option><option value="FATOR">Histórico × fator (cenário)</option></select>
+        <input type="number" id="prazoDias" min="0" max="365" value="14" hidden aria-label="Prazo em dias">
+        <input type="number" id="prazoFator" min="0.1" max="10" step="0.1" value="1.5" hidden aria-label="Fator sobre o prazo">
+      </div>
+      <label class="campo">Quantidade mínima por produto, se não cadastrada<input type="number" id="minPadrao" min="1" step="1" placeholder="1 (unidade avulsa)"></label>
+      <label class="campo">Múltiplo de embalagem, se não cadastrado<input type="number" id="multPadrao" min="1" step="1" placeholder="1 (unidade avulsa)"></label>
+      <div class="campo"><label for="minModo">Pedido mínimo por fornecedor</label>
+        <select id="minModo"><option value="CADASTRADO">Só os cadastrados ou digitados</option><option value="HISTORICO_P10">Premissa: pedido pequeno usual de cada fornecedor</option><option value="VALOR">Premissa: valor igual para os sem cadastro</option><option value="NENHUM">Sem mínimo</option></select>
+        <input type="text" id="minValor" inputmode="decimal" placeholder="Valor mínimo (R$)" hidden aria-label="Valor mínimo em reais">
+      </div>
       <label class="campo">Pedidos antigos "A receber" (mais de 90 dias)
         <select id="antigos"><option value="IGNORAR">Ignorar (não presume recebimento)</option><option value="PARCIAL">Cenário: receber 50%</option><option value="TUDO">Cenário: receber tudo</option></select>
       </label>
       <label class="campo">Compras sem origem comprovada
         <select id="origem"><option value="REVISAR">Não decidem sozinhas (revisão manual)</option><option value="INCLUIR">Cenário: tratar como válidas</option></select>
       </label>
-      <label class="campo">Pedido mínimo por fornecedor
-        <select id="minModo"><option value="CADASTRADO">Só os informados</option><option value="HISTORICO_P10">Premissa: pedido pequeno usual de cada fornecedor</option><option value="VALOR">Premissa: valor igual para todos</option><option value="NENHUM">Sem mínimo</option></select>
-        <input type="text" id="minValor" inputmode="decimal" placeholder="Valor mínimo (R$)" hidden>
-      </label>
     </div>
-    <div class="campos" style="margin-top:.8rem">
-      <label class="campo">Fornecedores (nada marcado = todos)<select id="fForn" multiple></select></label>
-      <label class="campo">Categorias (nada marcado = todas)<select id="fCat" multiple></select></label>
-      <label class="campo">Marcas<select id="fMarca" multiple></select><span class="sub" id="marcaAjuda"></span></label>
-      <div class="campo"><span>Curvas</span>
-        <span class="curvas linha"><label><input type="checkbox" value="A" checked> A</label><label><input type="checkbox" value="B" checked> B</label><label><input type="checkbox" value="C" checked> C</label></span>
-        <label for="priBusca" style="margin-top:.4rem">Produtos prioritários (código ou nome)</label>
-        <span class="linha"><input type="search" id="priBusca" list="priLista" autocomplete="off" style="flex:1"><button type="button" id="priAdd">Adicionar</button></span>
-        <datalist id="priLista"></datalist>
-        <span class="chips" id="priChips"></span>
+    <details class="bloco" id="detForn"><summary>Por fornecedor: teto de dinheiro, prazo, mínimos e embalagem</summary>
+      <p class="nota">Em branco = usa o cadastro do fornecedor (quando existe) ou o histórico. O que for digitado aqui vale só nesta simulação. Teto 0 = não comprar deste fornecedor.</p>
+      <div class="rolagem" style="max-height:360px;overflow:auto"><table><thead><tr><th class="esq">Fornecedor</th><th class="esq">Cadastro</th><th>Teto nesta compra (R$)</th><th>Prazo (dias)</th><th>Pedido mínimo (R$)</th><th>Pedido mínimo (un)</th><th>Mínimo por produto</th><th>Múltiplo</th></tr></thead><tbody id="tabForn"></tbody></table></div>
+    </details>
+    <details class="bloco" id="detProd"><summary>Mínimo e múltiplo de um produto específico</summary>
+      <span class="linha"><input type="search" id="embBusca" list="prodLista" autocomplete="off" placeholder="Código ou nome" aria-label="Produto" style="min-width:260px">
+        <input type="number" id="embMin" min="1" step="1" placeholder="Mínimo" aria-label="Quantidade mínima" style="width:110px"><input type="number" id="embMult" min="1" step="1" placeholder="Múltiplo" aria-label="Múltiplo de embalagem" style="width:110px"><button type="button" id="embAdd">Aplicar</button></span>
+      <span class="chips" id="embChips"></span>
+    </details>
+    <details class="bloco" id="detGrande"><summary>Pedidos grandes de cliente distribuidor (opcional)</summary>
+      <p class="nota">Reserva parte do orçamento para ter em estoque o tamanho de um pedido grande (percentil das linhas de venda de cada produto nos últimos 12 meses). Custa capital parado.
+      <b>No teste histórico de 2026, com o mesmo capital médio, a reserva não aumentou os pedidos grandes atendidos por completo; com orçamento semanal apertado, piorou um pouco</b>: por isso vem desligada.
+      Para atender pedidos maiores, aumentar a cobertura (em dias) funcionou melhor. Use a reserva para ver quanto custaria.</p>
+      <div class="campos">
+        <label class="campo">Reserva para pedido grande<select id="pgUsar"><option value="">Desligada (padrão)</option><option value="1">Ligada</option></select></label>
+        <label class="campo">Tamanho considerado grande<select id="pgPerc"><option value="80">Percentil 80 das linhas</option><option value="90" selected>Percentil 90 das linhas</option><option value="95">Percentil 95 das linhas</option></select></label>
+        <label class="campo">Limite em dias de venda<input type="number" id="pgDias" min="0" max="365" value="60"></label>
+        <label class="campo">Parte máxima do orçamento (%)<input type="number" id="pgFracao" min="0" max="100" value="20"></label>
       </div>
-    </div>
-    <details class="avancado"><summary>Premissas avançadas</summary>
+    </details>
+    <details class="bloco"><summary>Premissas avançadas</summary>
       <div class="campos">
         <label class="campo">Correção de dias sem estoque<select id="censura"><option value="1">Completa (estimativa cautelosa)</option><option value="0.5" selected>Metade (padrão)</option><option value="0">Nenhuma (só venda observada)</option></select></label>
-        <label class="campo">Quando comprar<select id="gatilho"></select></label>
-        <label class="campo">Embalagem<select id="multiplo"><option value="">Cadastrada (ou unidade avulsa)</option><option value="1">Premissa: múltiplo observado nas compras passadas</option></select></label>
+        <label class="campo">Quando comprar<select id="gatilho"><option value="MARGINAL">Qualquer produto abaixo do alvo (usa melhor o capital, mais pedidos)</option><option value="PONTO">Só abaixo do ponto de reposição (menos pedidos)</option></select></label>
+        <label class="campo">Embalagem observada<select id="multiplo"><option value="">Não usar</option><option value="1">Premissa: múltiplo observado nas compras passadas</option></select></label>
         <label class="campo">Fator manual de demanda (evento/sazonalidade)<input type="number" id="fator" min="0.1" max="5" step="0.05" value="1"></label>
+        <label class="campo">Custo de manter estoque parado (% ao ano)<input type="number" id="manter" min="0" max="200" step="1" value="30"></label>
       </div>
     </details>
     <div class="linha" style="margin-top:.8rem">
-      <button type="button" class="pri" id="btnSimular">Simular</button>
+      <button type="button" class="pri" id="btnSimular">Calcular</button>
       <button type="button" id="btnLimpar">Desfazer ajustes manuais</button>
-      <input type="text" id="nomeCenario" placeholder="Nome do cenário" maxlength="40">
+      <input type="text" id="nomeCenario" placeholder="Nome do cenário" maxlength="40" aria-label="Nome do cenário">
       <button type="button" id="btnSalvar">Salvar cenário nesta sessão</button>
-      <button type="button" id="btnCsv">Baixar CSV da simulação</button>
+      <button type="button" id="btnCsv">Baixar lista de planejamento (CSV)</button>
     </div>
   </section>
 
@@ -134,44 +195,54 @@
   <div class="kpis" id="kpis"></div>
 
   <div class="abas" id="abas" role="tablist">
-    <button type="button" data-aba="lista" class="sel">Lista recomendada</button>
+    <button type="button" data-aba="lista" class="sel">Lista de planejamento</button>
     <button type="button" data-aba="forn">Por fornecedor</button>
-    <button type="button" data-aba="fora">Não contemplados por orçamento</button>
+    <button type="button" data-aba="plano">Plano semanal e mensal</button>
+    <button type="button" data-aba="comp">Comparar 1.2 × 1.3 × 1.4</button>
+    <button type="button" data-aba="efi">Eficiência do capital</button>
+    <button type="button" data-aba="fora">Não contemplados</button>
     <button type="button" data-aba="rev">Revisão manual e demais</button>
-    <button type="button" data-aba="cen">Comparar cenários</button>
+    <button type="button" data-aba="cen">Cenários salvos</button>
   </div>
   <div id="conteudo"></div>
-  <p class="nota">Indicadores são <b>ESTIMATIVAS do modelo de demanda</b>; não são medição nem promessa de resultado.
-  "Atendimento" é a parte das unidades procuradas, de hoje até 30 dias após a chegada, que o estoque atenderia. "Rupturas" e "risco de faltar" olham só os 30 dias após a chegada (o que esta compra pode mudar). "Margem preservada" é preço médio realizado menos custo cadastrado, sem impostos, comissões e frete.
-  Prazo de entrega, nível de serviço e custo de faltar são premissas a confirmar.</p>
+  <p class="nota"><span class="selo est">Estimativa</span> Todos os indicadores saem de um modelo de demanda; não são medição nem promessa de resultado.
+  <span class="selo ndc">Dado não confirmado</span> marca o que ninguém conferiu (prazo, embalagem, compra pendente, origem). Custo é o cadastrado no sistema, ainda sem confirmação; preço é a média realizada.
+  "Atendimento" é a parte das unidades procuradas, de hoje até 30 dias após a chegada, que o estoque atenderia. "Rupturas" e "risco de ruptura" olham só os 30 dias após a chegada (o que esta compra pode mudar). "Margem preservada" é preço realizado menos custo, sem impostos, comissões e frete.</p>
 </div>
 
 <script src="../js/compras-alocacao14.js"></script>
+<script src="../js/compras-planejamento.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, collection, getDocs, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-// Em localhost a página usa SOMENTE o emulador, com projeto de demonstração (não alcança a produção nem por engano).
+// Em localhost a página usa SOMENTE os emuladores, com projeto de demonstração (não alcança a produção nem por engano).
 const LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 const app = initializeApp(LOCAL ? { apiKey: 'demo-chave-local', authDomain: 'demo-mr4-sim14.firebaseapp.com', projectId: 'demo-mr4-sim14' }
   : { apiKey: 'AIzaSyDJRQYM4K43Bc1Lfg4EhfBz-aNtkPprAs8', authDomain: 'mr4-ponto.firebaseapp.com', projectId: 'mr4-ponto', storageBucket: 'mr4-ponto.firebasestorage.app', messagingSenderId: '848211361584', appId: '1:848211361584:web:2732e1893122f4a23452f5' });
 const auth = getAuth(app), db = getFirestore(app);
-if (LOCAL) { connectFirestoreEmulator(db, '127.0.0.1', 8210); connectAuthEmulator(auth, 'http://127.0.0.1:9210', { disableWarnings: true }); }
+if (LOCAL) { connectFirestoreEmulator(db, '127.0.0.1', 8320); connectAuthEmulator(auth, 'http://127.0.0.1:9320', { disableWarnings: true }); }
 
-const M = window.Compras14;
+const M = window.Compras14, P = window.ComprasPlano;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const num = (v, c = 0) => (v === null || v === undefined || !Number.isFinite(v)) ? '—' : v.toLocaleString('pt-BR', { maximumFractionDigits: c, minimumFractionDigits: c });
 const brl = c => (c === null || c === undefined) ? '—' : (c / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: Math.abs(c) >= 100000 ? 0 : 2 });
+const mil = c => num(c / 100000, c % 100000 === 0 ? 0 : 1);
 const pct = (v, c = 1) => (v === null || v === undefined) ? '—' : num(v, c) + '%';
-const CHAVE = 'compras14_cenarios';
-const S = { dados: null, meta: null, res: null, ajustes: {}, prioritarios: [], aba: 'lista', limite: 100, erro: null };
+const dataBr = d => (d ? String(d).split('-').reverse().join('/') : '—');
+const mesBr = m => m.split('-').reverse().join('/');
+const EST = '<span class="selo est">Estimativa</span>', NDC = '<span class="selo ndc">Dado não confirmado</span>';
+const CHAVE = 'compras_planejamento_cenarios';
+const S = { base: null, cad: {}, dados: null, meta: null, res: null, cfg: null, comp: null, ajustes: {}, prioritarios: [], excluidos: [], porProduto: {}, porForn: {}, aba: 'lista', limite: 100, erro: null, atualizando: false, tentouAtualizar: false, semanas: 8, limiar: 1 };
 const SIT_FORN = { ATENDE_O_MINIMO: 'Atende o mínimo', SEM_MINIMO_INFORMADO: 'Sem mínimo informado', COMPLETADO_ATE_O_MINIMO: 'Completado até o mínimo', FORA_POR_NAO_ATINGIR_O_MINIMO: 'Fora: não atinge o mínimo', ABAIXO_DO_MINIMO: 'Abaixo do mínimo (ajuste manual)' };
-const ALERTAS = { AJUSTES_ULTRAPASSAM_O_ORCAMENTO: 'Os ajustes manuais ultrapassam o orçamento informado.', FORNECEDOR_ABAIXO_DO_MINIMO: 'Há fornecedor abaixo do pedido mínimo.',
+const ALERTAS = { AJUSTES_ULTRAPASSAM_O_ORCAMENTO: 'Os ajustes manuais ultrapassam o limite desta compra.', AJUSTES_ULTRAPASSAM_O_TETO_DO_FORNECEDOR: 'Os ajustes manuais ultrapassam o teto de algum fornecedor.',
+  AJUSTES_FORA_DO_MINIMO_OU_MULTIPLO: 'Há ajuste manual fora da quantidade mínima ou do múltiplo.', FORNECEDOR_ABAIXO_DO_MINIMO: 'Há fornecedor abaixo do pedido mínimo.',
   HA_PRODUTOS_SEM_ORIGEM_COMPROVADA: 'Há produtos cuja compra não tem origem comprovada: ficaram em revisão manual.', HA_PRODUTOS_EM_REVISAO_MANUAL: 'Há produtos em falta longa sem venda recente: confirme se continuam em linha antes de comprar.' };
 
 function parar(msg) { $('carregando').hidden = false; $('app').hidden = true; $('carregando').innerHTML = msg; }
+const voltar = '<br><a href="compras.html">Voltar para Compras</a>';
 
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = '../login.html'; return; }
@@ -179,77 +250,188 @@ onAuthStateChanged(auth, async user => {
     const [u, s] = await Promise.all([getDoc(doc(db, 'users', user.uid)), getDoc(doc(db, 'sistema_usuarios', user.uid))]);
     const perfil = u.exists() ? u.data() : null, sis = s.exists() ? s.data() : null;
     if (!perfil || perfil.role !== 'gestor' || perfil.ativo !== true || !sis || sis.bloqueado || !(sis.admin === true || (sis.modulos || []).includes('estoque'))) {
-      parar('<b>Acesso restrito.</b><br>O simulador é exclusivo da gestão com o módulo Estoque.<br><a href="compras.html">Voltar para Compras</a>'); return;
+      parar('<b>Acesso restrito.</b><br>O planejamento é exclusivo da gestão com o módulo Estoque.' + voltar); return;
     }
-    await carregar();
+    await abrir();
   } catch (e) {
-    parar('Não foi possível ler a base da simulação (' + esc(e.code || e.message) + ').<br><a href="compras.html">Voltar para Compras</a>');
+    parar('Não foi possível ler a base do planejamento (' + esc(e.code || e.message) + ').' + voltar);
   }
 });
 $('btnSair').addEventListener('click', async () => { await signOut(auth); window.location.href = '../login.html'; });
 
-async function carregar() {
-  const m = await getDoc(doc(db, 'compras_sombra_14', 'meta'));
-  if (!m.exists()) { parar('A base da simulação ainda não foi gerada.<br><a href="compras.html">Voltar para Compras</a>'); return; }
-  S.meta = m.data();
-  const blocos = await Promise.all(Array.from({ length: S.meta.blocos }, (_, i) => getDoc(doc(db, 'compras_sombra_14', 'bloco_' + String(i).padStart(3, '0')))));
-  if (blocos.some(b => !b.exists() || b.data().gerado_em !== S.meta.gerado_em)) { parar('A base da simulação está incompleta (geração em andamento). Recarregue em instantes.'); return; }
-  S.dados = { itens: blocos.flatMap(b => JSON.parse(b.data().itens_json)), fornecedores: JSON.parse(S.meta.fornecedores_json || '{}') };
-  montarFiltros();
-  $('sub').textContent = `Política ${S.meta.policy_version} (não aprovada) · dados do dia ${S.meta.data_comercial.split('-').reverse().join('/')} · ${num(S.dados.itens.length)} produtos com demanda · somente leitura`;
-  $('carregando').hidden = true; $('app').hidden = false;
-  rodar();
+// ── Base: leitura, atualização pela função do servidor (sem terminal) e cadastros ───────────────────────────────
+const lerMeta = async () => { const m = await getDoc(doc(db, 'compras_sombra_14', 'meta')); return m.exists() ? m.data() : null; };
+const utilizavel = m => !!m && m.formato === 2;
+function aviso(texto, tipo = 'info') { $('avisosBase').innerHTML = texto ? `<div class="alerta ${tipo === 'info' ? 'info' : tipo === 'erro' ? 'erro' : ''}">${texto}</div>` : ''; }
+
+async function pedirAtualizacao(forcar) {
+  const { getFunctions, httpsCallable, connectFunctionsEmulator } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
+  const fns = getFunctions(app, 'southamerica-east1');
+  if (LOCAL) connectFunctionsEmulator(fns, '127.0.0.1', 5321);
+  return (await httpsCallable(fns, 'planejamentoComprasAtualizar', { timeout: 300000 })({ forcar })).data;
+}
+const RESPOSTA = { JA_ATUALIZADA: 'A base já está atualizada.', EM_ANDAMENTO: 'Uma atualização já está em andamento. Tente de novo em instantes.', SEM_DADOS_DE_COMPRAS: 'O sistema ainda não tem dados de compras sincronizados.', SINCRONIZACAO_EM_ANDAMENTO: 'A sincronização de compras está em andamento. Tente de novo em alguns minutos.' };
+/** Atualiza e recarrega mantendo as entradas da tela. Falha = continua com a base anterior. */
+async function atualizar(forcar) {
+  if (S.atualizando) return;
+  S.atualizando = true; $('btnAtualizar').disabled = true;
+  aviso('Atualizando a base do planejamento com os dados mais recentes de Compras…');
+  let texto = '', tipo = 'info';
+  try {
+    const r = await pedirAtualizacao(forcar);
+    if (r.status === 'ATUALIZADA') texto = 'Base atualizada.';
+    else texto = RESPOSTA[r.status] || 'Atualização não concluída.';
+    const m = await lerMeta();
+    if (utilizavel(m) && (!S.meta || m.gerado_em !== S.meta.gerado_em)) await carregar(m);
+  } catch (e) {
+    tipo = 'erro'; texto = 'Não foi possível atualizar a base agora' + (S.meta ? '; a tela segue com a base anterior' : '') + ' (' + esc(e.code || e.message) + ').';
+  } finally { S.atualizando = false; $('btnAtualizar').disabled = false; }
+  if (!S.meta) { parar('A base do planejamento ainda não está disponível.<br>' + texto + '<br><button type="button" id="tentar">Tentar de novo</button>' + voltar); $('tentar').addEventListener('click', () => location.reload()); return; }
+  aviso(texto, tipo);
+}
+$('btnAtualizar').addEventListener('click', () => atualizar(true));
+
+async function abrir() {
+  const [meta, n0] = await Promise.all([lerMeta(), getDoc(doc(db, 'compras_n0', 'meta'))]);
+  const dadosNovos = n0.exists() ? n0.data().ultima_sincronizacao_ok || null : null;
+  if (utilizavel(meta)) {
+    await carregar(meta);
+    if (dadosNovos && meta.dados_gerados_em !== dadosNovos) atualizar(false);        // em segundo plano: a tela já está utilizável
+  } else {
+    parar('Preparando a base do planejamento pela primeira vez (pode levar um minuto)…');
+    await atualizar(false);
+  }
 }
 
+/** Cadastros opcionais: ausentes ou ilegíveis = nada é presumido. */
+async function lerCadastros() {
+  const falhas = [];
+  const ler = async (nome, rotulo) => { try { return Object.fromEntries((await getDocs(collection(db, nome))).docs.map(d => [d.id, d.data()])); } catch (_) { falhas.push(rotulo); return {}; } };
+  const [parametros, pendencias, origem] = await Promise.all([ler('compras_fornecedor_parametros', 'cadastro de fornecedores'), ler('compras_pendencias_confirmacao', 'confirmação de compras pendentes'), ler('compras_origem', 'origem das compras')]);
+  return { parametros, pendencias, origem, falhas };
+}
+
+async function carregar(meta) {
+  const ids = Array.from({ length: meta.blocos }, (_, i) => 'bloco_' + String(i).padStart(3, '0'));
+  const [blocos, cad] = await Promise.all([Promise.all(ids.map(id => getDoc(doc(db, 'compras_sombra_14', id)))), lerCadastros()]);
+  if (blocos.some(b => !b.exists() || b.data().gerado_em !== meta.gerado_em)) { if (!S.meta) parar('A base do planejamento está sendo gravada. Recarregue em instantes.' + voltar); return; }
+  const estado = S.dados ? estadoDaTela() : null;
+  S.meta = meta; S.cad = cad;
+  S.base = { itens: blocos.flatMap(b => JSON.parse(b.data().itens_json)), fornecedores: JSON.parse(meta.fornecedores_json || '{}'), pendentes: JSON.parse(meta.pendentes_json || '[]') };
+  S.dados = P.aplicarCadastros(S.base, cad);
+  montarEntradas();
+  const quando = meta.gerado_em ? new Date(meta.gerado_em).toLocaleString('pt-BR') : '—';
+  $('sub').innerHTML = `Dados de Compras do dia ${dataBr(meta.data_comercial)} · base preparada em ${esc(quando)} · ${num(S.dados.itens.length)} produtos · cadastro de ${num(S.dados.cadastro.fornecedores_com_cadastro)} de ${num(S.dados.cadastro.fornecedores)} fornecedores · somente leitura`;
+  $('carregando').hidden = true; $('app').hidden = false;
+  if (estado) aplicarEstado(estado); else rodar();
+}
+
+// ── Entradas ────────────────────────────────────────────────────────────────────────────────────────────────────
 const nomeForn = id => (id ? ((S.dados.fornecedores[id] || {}).nome || 'Fornecedor #' + id) : 'Sem fornecedor identificado');
 const rotuloItem = i => `${i.codigo || i.id} · ${i.nome || 'produto sem nome na visão'}`;
-function opcoes(sel, pares) { sel.innerHTML = pares.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join(''); }
-function montarFiltros() {
+const codigoDe = id => { const i = S.dados.itens.find(x => x.id === id); return i ? (i.codigo || i.id) : id; };
+function opcoes(sel, pares) { const antes = new Set([...sel.selectedOptions].map(o => o.value)); sel.innerHTML = pares.map(([v, t]) => `<option value="${esc(v)}"${antes.has(v) ? ' selected' : ''}>${esc(t)}</option>`).join(''); }
+const CAMPOS_FORN = [['teto', 'Teto'], ['prazo', 'Prazo'], ['minValor', 'Pedido mínimo em reais'], ['minUn', 'Pedido mínimo em unidades'], ['minProd', 'Mínimo por produto'], ['mult', 'Múltiplo']];
+function resumoCadastro(f) {
+  const p = f.parametros;
+  if (!p) return NDC + '<div class="cod">sem cadastro</div>';
+  const informado = c => p.fontes[c] === 'MANUAL';
+  const selo = ['prazoMedioDias', 'valorMinimoCents', 'qtdMinima', 'multiploPadrao'].some(c => p[c] && !informado(c)) ? `${EST}` : '<span class="selo inf">Cadastrado</span>';
+  const partes = [p.origem === 'IMPORTADO' ? 'importado' : p.origem === 'NACIONAL' ? 'nacional' : null, p.confiabilidadePrazo ? 'prazo: confiança ' + { ALTA: 'alta', MEDIA: 'média', BAIXA: 'baixa' }[p.confiabilidadePrazo] : null,
+    p.frequenciaReposicaoDias ? 'reposição a cada ' + num(p.frequenciaReposicaoDias) + ' d' : null, p.condicoesPagamento].filter(Boolean);
+  return `${selo}<div class="cod">${esc(partes.join(' · '))}</div>`;
+}
+function montarEntradas() {
   const it = S.dados.itens, unicos = f => [...new Set(it.map(f).filter(Boolean))];
-  opcoes($('fForn'), unicos(i => i.fornecedor_id).map(id => [id, nomeForn(id)]).sort((a, b) => a[1].localeCompare(b[1], 'pt-BR')));
+  const forns = unicos(i => i.fornecedor_id).map(id => [id, nomeForn(id)]).sort((a, b) => a[1].localeCompare(b[1], 'pt-BR'));
+  opcoes($('fForn'), forns);
   opcoes($('fCat'), unicos(i => i.categoria).sort((a, b) => a.localeCompare(b, 'pt-BR')).map(c => [c, c]));
   const marcas = unicos(i => i.marca).sort((a, b) => a.localeCompare(b, 'pt-BR'));
   opcoes($('fMarca'), marcas.map(c => [c, c]));
   $('fMarca').disabled = !marcas.length;
-  $('marcaAjuda').textContent = marcas.length ? '' : 'O sistema ainda não recebe a marca dos produtos.';
-  $('priLista').innerHTML = it.map(i => `<option value="${esc(rotuloItem(i))}"></option>`).join('');
-  $('censura').value = String(M.PARAMETROS.censura_peso);
-  $('presets').innerHTML = [40, 50, 60, 80, 100, 120, 150, 191].map(v => `<button type="button" data-orc="${v * 1000}">${v} mil</button>`).join('');
-  const padrao = M.PARAMETROS.gatilho, nomes = { PONTO: 'Só abaixo do ponto de reposição (menos pedidos)', MARGINAL: 'Qualquer produto abaixo do alvo (usa melhor o capital, mais pedidos)' };
-  opcoes($('gatilho'), [padrao, padrao === 'PONTO' ? 'MARGINAL' : 'PONTO'].map(k => [k, nomes[k]]));
+  $('marcaAjuda').innerHTML = marcas.length ? '' : NDC + ' O sistema ainda não recebe a marca dos produtos.';
+  $('prodLista').innerHTML = it.map(i => `<option value="${esc(rotuloItem(i))}"></option>`).join('');
+  $('presets').innerHTML = [40, 50, 60, 80, 100, 120, 150].map(v => `<button type="button" data-orc="${v * 1000}">${v} mil</button>`).join('');
+  $('tabForn').innerHTML = forns.map(([id, nome]) => {
+    const f = S.dados.fornecedores[id] || {}, p = f.parametros || {}, v = S.porForn[id] || {};
+    const amostra = it.find(i => i.fornecedor_id === id);
+    const dica = { teto: 'sem teto', prazo: p.prazoMedioDias ? num(p.prazoMedioDias) : amostra ? num(amostra.prazo_dias) + (String(amostra.prazo_fonte).startsWith('PREMISSA') ? ' (premissa)' : ' (hist.)') : '—', minValor: f.minimo_cents ? num(f.minimo_cents / 100, 2) : '—', minUn: f.minimo_un ? num(f.minimo_un) : '—', minProd: '—', mult: p.multiploPadrao ? num(p.multiploPadrao) : '—' };
+    return `<tr><td class="esq">${esc(nome)}</td><td class="esq">${resumoCadastro(f)}</td>${CAMPOS_FORN.map(([c, rotulo]) => `<td><input class="forn" inputmode="decimal" data-forn="${esc(id)}" data-campo="${c}" value="${esc(v[c] || '')}" placeholder="${esc(dica[c])}" aria-label="${rotulo} de ${esc(nome)}"></td>`).join('')}</tr>`;
+  }).join('');
+  desenharChips();
+  const falta = {};
+  for (const i of it) for (const c of i.nao_confirmado || []) falta[c] = (falta[c] || 0) + 1;
+  S.qualidade = falta;
 }
+$('tabForn').addEventListener('input', e => { const t = e.target; if (!t.dataset.forn) return; const x = (S.porForn[t.dataset.forn] ||= {}); if (t.value.trim()) x[t.dataset.campo] = t.value.trim(); else delete x[t.dataset.campo]; });
 
-/** Aceita "12500", "12.500" e "12.500,50". Vazio = sem teto; inválido = NaN. */
+/** Aceita "12500", "12.500" e "12.500,50". Vazio = null; inválido = NaN. */
 function dinheiro(texto) {
   const t = String(texto || '').trim().replace(/^R\$\s*/, '');
   if (!t) return null;
   if (!/^(\d{1,3}(\.\d{3})+|\d+)(,\d{1,2})?$/.test(t)) return NaN;
   return Math.round(Number(t.replace(/\./g, '').replace(',', '.')) * 100);
 }
+function reais(id, nome) { const v = dinheiro($(id).value); if (Number.isNaN(v)) throw new Error(`${nome} inválido. Informe em reais (ex.: 49000 ou 49.000,00).`); return v; }
+function numero(texto, nome, { inteiro = false, min = 0 } = {}) {
+  const t = String(texto || '').trim();
+  if (!t) return null;
+  const v = Number(t.replace(',', '.'));
+  if (!Number.isFinite(v) || v < min || (inteiro && !Number.isInteger(v))) throw new Error(`${nome} inválido.`);
+  return v;
+}
 const marcados = id => [...$(id).selectedOptions].map(o => o.value);
+const caixas = id => [...document.querySelectorAll(`#${id} input:checked`)].map(c => c.value);
+function orcamentos() {
+  const o = { total_cents: reais('orcamento', 'Orçamento total'), semanal_cents: reais('orcSemana', 'Orçamento semanal'), mensal_cents: reais('orcMes', 'Orçamento mensal'),
+    comprometido_semana_cents: reais('usadoSemana', 'Comprometido na semana') || 0, comprometido_mes_cents: reais('usadoMes', 'Comprometido no mês') || 0 };
+  return { ...o, limite: P.limiteDaCompra(o) };
+}
 function lerConfig() {
-  const orc = dinheiro($('orcamento').value);
-  if (Number.isNaN(orc)) throw new Error('Orçamento inválido. Informe em reais (ex.: 49000 ou 49.000,00).');
-  const minValor = dinheiro($('minValor').value);
-  if ($('minModo').value === 'VALOR' && !(minValor > 0)) throw new Error('Informe o valor do pedido mínimo.');
-  const curvas = [...document.querySelectorAll('.curvas input:checked')].map(c => c.value);
-  if (!curvas.length) throw new Error('Marque ao menos uma curva.');
-  const modo = $('minModo').value;
+  const orc = orcamentos();
+  const abc = caixas('abc'), xyz = caixas('xyz');
+  if (!abc.length || !xyz.length) throw new Error('Marque ao menos uma curva ABC e uma XYZ.');
+  const modo = $('minModo').value, minValor = reais('minValor', 'Pedido mínimo');
+  if (modo === 'VALOR' && !(minValor > 0)) throw new Error('Informe o valor do pedido mínimo.');
+  const tetos = {}, prazos = {}, minimos = {}, embForn = {};
+  for (const [id, v] of Object.entries(S.porForn)) {
+    const nome = nomeForn(id), teto = dinheiro(v.teto), minR = dinheiro(v.minValor);
+    if (Number.isNaN(teto) || Number.isNaN(minR)) throw new Error('Valor inválido para ' + nome + '.');
+    if (teto !== null) tetos[id] = teto;
+    const prazo = numero(v.prazo, 'Prazo de ' + nome); if (prazo !== null) prazos[id] = prazo;
+    const minUn = numero(v.minUn, 'Pedido mínimo (un) de ' + nome, { inteiro: true, min: 1 });
+    if (minR !== null || minUn !== null) minimos[id] = { ...(minR !== null ? { cents: minR } : {}), ...(minUn !== null ? { un: minUn } : {}) };
+    const mp = numero(v.minProd, 'Mínimo por produto de ' + nome, { inteiro: true, min: 1 }), mu = numero(v.mult, 'Múltiplo de ' + nome, { inteiro: true, min: 1 });
+    if (mp !== null || mu !== null) embForn[id] = { ...(mp !== null ? { minimo: mp } : {}), ...(mu !== null ? { multiplo: mu } : {}) };
+  }
+  const prazoModo = $('prazoModo').value;
   const c = {
-    orcamento_cents: orc, transito: { antigos: $('antigos').value }, origem: $('origem').value, censura_peso: Number($('censura').value), gatilho: $('gatilho').value,
-    usar_multiplo_observado: $('multiplo').value === '1', fator_demanda: Number($('fator').value),
-    minimo_fornecedor: { modo: modo === 'VALOR' ? 'CADASTRADO' : modo, valor_padrao_cents: modo === 'VALOR' ? minValor : null },
-    filtros: { fornecedores: marcados('fForn'), categorias: marcados('fCat'), marcas: marcados('fMarca'), curvas: curvas.length === 3 ? [] : curvas },
-    prioritarios: [...S.prioritarios], ajustes: { ...S.ajustes },
+    orcamento_cents: orc.limite.cents, orcamento_fornecedor_cents: tetos,
+    prazo: { modo: prazoModo === 'FIXO' ? 'FIXO' : 'DADOS', dias: prazoModo === 'FIXO' ? numero($('prazoDias').value, 'Prazo') ?? 14 : null, fator: prazoModo === 'FATOR' ? numero($('prazoFator').value, 'Fator de prazo', { min: 0.1 }) ?? 1 : 1, por_fornecedor: prazos },
+    embalagem: { minimo_padrao: numero($('minPadrao').value, 'Quantidade mínima', { inteiro: true, min: 1 }), multiplo_padrao: numero($('multPadrao').value, 'Múltiplo', { inteiro: true, min: 1 }), por_fornecedor: embForn, por_produto: { ...S.porProduto } },
+    transito: { antigos: $('antigos').value }, origem: $('origem').value, censura_peso: Number($('censura').value), gatilho: $('gatilho').value,
+    usar_multiplo_observado: $('multiplo').value === '1', fator_demanda: Number($('fator').value), custo_manutencao_anual: (numero($('manter').value, 'Custo de manter') ?? 30) / 100,
+    pedido_grande: { usar: $('pgUsar').value === '1', percentil: Number($('pgPerc').value), teto_dias: numero($('pgDias').value, 'Limite em dias') ?? 60, fracao_max_orcamento: (numero($('pgFracao').value, 'Parte do orçamento') ?? 20) / 100 },
+    minimo_fornecedor: { modo: modo === 'VALOR' ? 'CADASTRADO' : modo, valor_padrao_cents: modo === 'VALOR' ? minValor : null, por_fornecedor: minimos },
+    filtros: { fornecedores: marcados('fForn'), categorias: marcados('fCat'), marcas: marcados('fMarca'), curvas: abc.length === 3 ? [] : abc, xyz: xyz.length === 3 ? [] : xyz },
+    prioritarios: [...S.prioritarios], excluidos: [...S.excluidos], ajustes: { ...S.ajustes },
   };
-  if ($('cobModo').value === 'n') c.cobertura_dias = Number($('cobDias').value);
+  const dias = id => numero($(id).value, 'Cobertura') ?? 0;
+  if ($('cobModo').value === 'n') c.cobertura_dias = dias('cobDias');
+  if ($('cobModo').value === 'abc') c.cobertura_dias = { A: dias('cobA'), B: dias('cobB'), C: dias('cobC') };
   if ($('nivel').value) c.nivel_servico = Number($('nivel').value);
-  return c;
+  return { cfg: c, orc };
 }
 
 function rodar() {
-  try { S.erro = null; S.res = M.simular(S.dados, lerConfig()); }
-  catch (e) { S.erro = String(e.message || e); }
+  try {
+    S.erro = null;
+    const { cfg, orc } = lerConfig();
+    S.cfg = cfg; S.orc = orc; S.comp = null; S.res = M.simular(S.dados, cfg);
+    const NOMES = { total: 'orçamento total', semanal: 'teto semanal', mensal: 'teto mensal' };
+    $('limiteTxt').innerHTML = orc.limite.cents === null ? 'Nenhum orçamento informado: <b>sem teto</b> (mostra o capital para levar todos os produtos ao alvo).'
+      : `Limite desta compra: <b>${brl(orc.limite.cents)}</b> (definido pelo ${NOMES[orc.limite.limitante]}). Vale o menor entre total, semanal e mensal, já descontado o comprometido.`;
+  } catch (e) { S.erro = String(e.message || e); }
   desenhar();
 }
 
@@ -257,56 +439,66 @@ function desenhar() {
   const a = $('alertas');
   if (S.erro) { a.innerHTML = `<div class="alerta erro">${esc(S.erro)}</div>`; return; }
   const r = S.res, t = r.totais, nAj = r.linhas.filter(l => l.ajustado).length;
-  a.innerHTML = [...r.alertas.map(k => ALERTAS[k] || k), ...(nAj ? [`${num(nAj)} produto(s) com ajuste manual.`] : [])].map(x => `<div class="alerta">${esc(x)}</div>`).join('');
-  const k = (titulo, valor, nota = '') => `<div class="kpi"><div class="k">${titulo}</div><div class="v">${valor}</div><div class="n">${nota}</div></div>`;
+  const q = S.qualidade || {};
+  const qualidade = Object.entries(P.NAO_CONFIRMADO).filter(([k]) => q[k]).map(([k, nome]) => `${esc(nome)}: ${num(q[k])}`).join(' · ');
+  const itensAlerta = [...r.alertas.map(k => ALERTAS[k] || k), ...(nAj ? [`${num(nAj)} produto(s) com ajuste manual.`] : []),
+    ...(S.cad.falhas.length ? [`Não foi possível ler: ${S.cad.falhas.join(', ')}. Nada foi presumido a partir deles.`] : []),
+    ...(S.dados.cadastro.campos_ignorados.length ? [`${num(S.dados.cadastro.campos_ignorados.length)} campo(s) do cadastro de fornecedores com valor inválido foram ignorados.`] : [])];
+  a.innerHTML = itensAlerta.map(x => `<div class="alerta">${esc(x)}</div>`).join('') + (qualidade ? `<div class="alerta">${NDC} Produtos na base — ${qualidade}.</div>` : '');
+  const k = (titulo, valor, nota = '', estimado = true) => `<div class="kpi"><div class="k">${titulo} ${estimado ? EST : ''}</div><div class="v">${valor}</div><div class="n">${nota}</div></div>`;
+  const pg = t.pedido_grande;
   $('kpis').innerHTML = [
-    k('Compra simulada', brl(t.capital_cents), t.orcamento_cents === null ? 'sem teto' : `saldo ${brl(t.saldo_cents)} de ${brl(t.orcamento_cents)}`),
+    k('Capital desta compra', brl(t.capital_cents), t.orcamento_cents === null ? 'sem teto' : `saldo ${brl(t.saldo_cents)} de ${brl(t.orcamento_cents)}`, false),
     k('Capital para todos os alvos', brl(t.capital_necessario_cents), 'com os mesmos critérios, sem teto'),
-    k('Atendimento estimado', pct(t.atendimento_pct), `sem comprar: ${pct(t.atendimento_sem_compra_pct)}`),
+    k('Atendimento', pct(t.atendimento_pct), `sem comprar: ${pct(t.atendimento_sem_compra_pct)}`),
     k('Atendimento curva A', pct(t.atendimento_A_pct), `sem comprar: ${pct(t.atendimento_A_sem_compra_pct)}`),
     k('Rupturas previstas', num(t.rupturas_previstas, 0), `produtos, 30 dias após a chegada; sem comprar: ${num(t.rupturas_sem_compra, 0)}`),
-    k('Curva A sem falta prevista', pct(t.disponibilidade_A_pct), `sem comprar: ${pct(t.disponibilidade_A_sem_compra_pct)}`),
+    k('Curva A sem ruptura', pct(t.disponibilidade_A_pct), `sem comprar: ${pct(t.disponibilidade_A_sem_compra_pct)}`),
+    k('Cobertura atual → projetada', `${num(t.cobertura_antes_dias, 0)} → ${num(t.cobertura_depois_dias, 0)} dias`, 'a custo, produtos no escopo'),
+    k('Pronto para pedido grande', pct(t.pedido_grande_pct), `chance média na chegada; sem comprar: ${pct(t.pedido_grande_sem_compra_pct)}${pg ? ` · reserva ${brl(pg.capital_reservado_cents)}, manter custa ${brl(pg.custo_anual_cents)}/ano` : ''}`),
     k('Margem potencial preservada', brl(t.margem_preservada_cents), 'vendas que deixam de ser perdidas'),
-    k('Cobertura do estoque', `${num(t.cobertura_antes_dias, 0)} → ${num(t.cobertura_depois_dias, 0)} dias`, 'a custo, produtos no escopo'),
-    k('Produtos · fornecedores', `${num(t.produtos_contemplados)} · ${num(t.pedidos_fornecedores)}`, `${num(t.unidades)} unidades`),
+    k('Produtos · fornecedores', `${num(t.produtos_contemplados)} · ${num(t.pedidos_fornecedores)}`, `${num(t.unidades)} unidades`, false),
     k('Risco de sobra em 90 dias', brl(t.excesso_90d_cents), `acima de 180 dias: ${brl(t.acima_do_excesso_cents)}`),
-    k('Capital de giro (30 dias)', brl(t.capital_giro_liquido_cents), 'compra menos o custo que a venda extra devolve'),
+    k('Custo de manter esta compra', brl(t.capital_cents * S.cfg.custo_manutencao_anual), `por ano, se ficasse parada (${num(S.cfg.custo_manutencao_anual * 100)}% ao ano, premissa)`),
   ].join('');
   desenharAba();
 }
 
-const produtoHtml = l => `<div class="nome">${esc(l.nome || 'Produto sem nome na visão')}</div><div class="cod">${esc(l.codigo || l.id)} · ${esc(l.categoria || 'sem categoria')}</div>
+const selosDe = id => { const i = S.dados.itens.find(x => x.id === id); return i && i.nao_confirmado.length ? `<span class="selo ndc" title="${esc(i.nao_confirmado.map(c => P.NAO_CONFIRMADO[c]).join('; '))}">Não confirmado: ${esc(i.nao_confirmado.map(c => ({ PRAZO_ESTIMADO: 'prazo', EMBALAGEM_NAO_INFORMADA: 'embalagem', PENDENTE_SEM_CONFIRMACAO: 'compra pendente', ORIGEM_NAO_COMPROVADA: 'origem', SEM_FORNECEDOR: 'fornecedor' }[c] || c)).join(', '))}</span>` : ''; };
+const produtoHtml = l => `<div class="nome">${esc(l.nome || 'Produto sem nome na visão')}</div><div class="cod">${esc(l.codigo || l.id)} · ${esc(l.categoria || 'sem categoria')}</div>${selosDe(l.id)}
   <details><summary>Por quê?</summary><ul>${l.justificativa.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>`;
 const dias = v => (v === null ? '—' : v > 999 ? '999+' : num(v, 0));
 const risco = v => (v === null ? '—' : num(v * 100, 0) + '%');
-function tabelaProdutos(linhas, vazio, extra) {
-  if (!linhas.length) return `<div class="rolagem"><div class="vazio">${vazio}</div></div>`;
+const vazio = t => `<div class="rolagem"><div class="vazio">${t}</div></div>`;
+const maisHtml = (vis, total) => (total > vis ? `<div class="linha" style="margin-bottom:.7rem"><button type="button" id="mais">Mostrar mais (${num(vis)} de ${num(total)})</button></div>` : '');
+function tabelaProdutos(linhas, textoVazio, extra) {
+  if (!linhas.length) return vazio(textoVazio);
   const vis = linhas.slice(0, S.limite);
-  return `<div class="rolagem"><table><thead><tr><th class="esq">Produto</th><th class="esq">Fornecedor</th><th>Curva</th><th>Estoque + a caminho</th><th>Quantidade</th><th>Valor</th><th>Cobertura (dias)</th><th title="Chance de alguma venda não atendida nos 30 dias após a chegada">Risco de faltar (após chegada)</th><th>Margem preservada</th>${extra ? '<th>Falta para o alvo</th>' : ''}<th class="esq">Situação</th></tr></thead><tbody>
+  return `<div class="rolagem"><table><thead><tr><th class="esq">Produto</th><th class="esq">Fornecedor</th><th>Curva</th><th>Estoque + a caminho</th><th>Quantidade</th><th>Valor</th><th>Cobertura atual → projetada (dias)</th><th title="Chance de alguma venda não atendida nos 30 dias após a chegada">Risco de ruptura (sem → com)</th><th>Margem preservada</th>${extra ? '<th>Falta para o alvo</th>' : ''}<th class="esq">Situação</th></tr></thead><tbody>
     ${vis.map(l => `<tr class="${l.ajustado ? 'ajustado' : ''}"><td class="esq">${produtoHtml(l)}</td><td class="esq">${esc(nomeForn(l.fornecedor_id))}</td><td>${l.classe}${l.xyz}</td><td>${num(l.estoque)} + ${num(l.a_caminho)}</td>
-      <td><input class="qtd" type="number" min="0" step="1" value="${l.qtd}" data-id="${esc(l.id)}" aria-label="Quantidade de ${esc(l.codigo || l.id)}" ${l.custo_cents > 0 ? '' : 'disabled'}>${l.ajustado ? `<div class="cod">recomendado ${num(l.qtd_recomendada)}</div>` : ''}</td>
-      <td>${brl(l.valor_cents)}</td><td>${dias(l.cobertura_antes)} → ${dias(l.cobertura_depois)}</td><td>${risco(l.risco_antes)} → ${risco(l.risco_depois)}</td><td>${brl(l.margem_preservada_cents)}</td>${extra ? `<td>${brl(l.falta_para_o_alvo_cents)}</td>` : ''}<td class="sit esq">${l.ajustado ? '<b>Ajuste manual</b><br>' : ''}${esc(l.motivo_texto)}</td></tr>`).join('')}
-    </tbody></table></div>${linhas.length > vis.length ? `<div class="linha" style="margin-top:.5rem"><button type="button" id="mais">Mostrar mais (${num(vis.length)} de ${num(linhas.length)})</button></div>` : ''}`;
+      <td><input class="qtd" type="number" min="0" step="1" value="${l.qtd}" data-id="${esc(l.id)}" aria-label="Quantidade de ${esc(l.codigo || l.id)}" ${l.custo_cents > 0 ? '' : 'disabled'}>${l.ajustado ? `<div class="cod">recomendado ${num(l.qtd_recomendada)}</div>` : ''}${l.multiplo > 1 || l.minimo > 1 ? `<div class="cod">mín. ${num(l.minimo)} · múlt. ${num(l.multiplo)}</div>` : ''}</td>
+      <td>${brl(l.valor_cents)}</td><td>${dias(l.cobertura_antes)} → ${dias(l.cobertura_depois)}</td><td>${risco(l.risco_antes)} → ${risco(l.risco_depois)}</td><td>${brl(l.margem_preservada_cents)}</td>${extra ? `<td>${brl(l.falta_para_o_alvo_cents)}</td>` : ''}<td class="sit esq">${l.ajustado ? '<b>Ajuste manual</b><br>' : ''}${esc(l.motivo_texto)}${l.reservado_pedido_grande ? `<br>${num(l.reservado_pedido_grande)} un para pedido grande` : ''}</td></tr>`).join('')}
+    </tbody></table></div>${maisHtml(vis.length, linhas.length)}`;
 }
 
 function desenharAba() {
   const r = S.res, c = $('conteudo');
   if (!r) return;
-  document.querySelectorAll('#abas button').forEach(b => b.classList.toggle('sel', b.dataset.aba === S.aba));
+  document.querySelectorAll('#abas button').forEach(b => { const sel = b.dataset.aba === S.aba; b.classList.toggle('sel', sel); b.setAttribute('aria-selected', sel); });
   if (S.aba === 'lista') c.innerHTML = tabelaProdutos(r.linhas.filter(l => l.qtd > 0 || l.ajustado), 'Nenhuma compra nesta simulação.');
   else if (S.aba === 'fora') {
     const total = r.nao_contemplados.reduce((s, l) => s + l.falta_para_o_alvo_cents, 0);
-    c.innerHTML = `<p class="nota" style="margin-bottom:.5rem">${num(r.nao_contemplados.length)} produto(s) ficaram sem parte ou toda a quantidade por falta de orçamento. Faltam ${brl(total)} para levá-los ao alvo.</p>` + tabelaProdutos(r.nao_contemplados, 'Nenhum produto ficou de fora por falta de orçamento.', true);
+    c.innerHTML = `<p class="nota">${num(r.nao_contemplados.length)} produto(s) ficaram sem parte ou toda a quantidade por falta de dinheiro (limite da compra ou teto do fornecedor). Faltam ${brl(total)} para levá-los ao alvo.</p>` + tabelaProdutos(r.nao_contemplados, 'Nenhum produto ficou de fora por falta de orçamento.', true);
   } else if (S.aba === 'rev') {
-    const grupos = r.linhas.filter(l => !(l.qtd > 0) && !l.ajustado && !['SEM_ORCAMENTO', 'PARCIAL_POR_ORCAMENTO'].includes(l.motivo));
+    const grupos = r.linhas.filter(l => !(l.qtd > 0) && !l.ajustado && !M.SEM_ORCAMENTO_ALGUM.includes(l.motivo));
     const ordem = ['ORIGEM_NAO_COMPROVADA', 'REVISAR_RUPTURA_LONGA', 'MARGEM_NAO_POSITIVA', 'FORNECEDOR_ABAIXO_DO_MINIMO', 'RETORNO_INSUFICIENTE'];
     grupos.sort((a, b) => ((ordem.indexOf(a.motivo) + 1) || 99) - ((ordem.indexOf(b.motivo) + 1) || 99) || b.margem_preservada_cents - a.margem_preservada_cents || (b.risco_antes || 0) - (a.risco_antes || 0));
-    c.innerHTML = tabelaProdutos(grupos, 'Nada em revisão.');
-  } else if (S.aba === 'forn') {
-    c.innerHTML = r.fornecedores.length ? `<div class="rolagem"><table><thead><tr><th class="esq">Fornecedor</th><th>Valor</th><th>Produtos</th><th>Unidades</th><th>Pedido mínimo</th><th class="esq">Situação</th></tr></thead><tbody>
-      ${r.fornecedores.map(f => `<tr><td class="esq">${esc(f.nome)}</td><td>${brl(f.valor_cents)}</td><td>${num(f.produtos)}</td><td>${num(f.unidades)}</td><td>${f.minimo ? `${f.minimo.cents ? brl(f.minimo.cents) : num(f.minimo.un) + ' un'}${f.minimo.fonte.startsWith('PREMISSA') ? ' (premissa)' : ''}` : '—'}</td><td class="sit esq">${esc(SIT_FORN[f.situacao] || f.situacao)}</td></tr>`).join('')}
-      </tbody></table></div>` : '<div class="rolagem"><div class="vazio">Nenhum fornecedor com compra nesta simulação.</div></div>';
-  } else desenharCenarios();
+    c.innerHTML = '<p class="nota">Produtos que não entram sozinhos (revisão, estoque suficiente, excluídos, fornecedor abaixo do mínimo). Digite uma quantidade para incluir manualmente.</p>' + tabelaProdutos(grupos, 'Nada em revisão.');
+  } else if (S.aba === 'forn') desenharFornecedores();
+  else if (S.aba === 'plano') desenharPlano();
+  else if (S.aba === 'comp') desenharComparacao();
+  else if (S.aba === 'efi') desenharEficiencia();
+  else desenharCenarios();
   c.querySelectorAll('input.qtd').forEach(i => i.addEventListener('change', () => {
     const q = Number(i.value);
     if (!Number.isInteger(q) || q < 0) { i.value = r.linhas.find(l => l.id === i.dataset.id).qtd; return; }
@@ -317,54 +509,189 @@ function desenharAba() {
   const mais = $('mais'); if (mais) mais.addEventListener('click', () => { S.limite += 100; desenharAba(); });
 }
 
+function desenharFornecedores() {
+  const r = S.res, c = $('conteudo');
+  if (!r.fornecedores.length) { c.innerHTML = vazio('Nenhum fornecedor com compra nesta simulação.'); return; }
+  const total = r.fornecedores.reduce((s, f) => s + f.valor_cents, 0);
+  c.innerHTML = `<div class="rolagem"><table id="tabValores"><thead><tr><th class="esq">Fornecedor</th><th>Valor</th><th>Parte da compra</th><th>Produtos</th><th>Unidades</th><th>Teto</th><th>Pedido mínimo</th><th class="esq">Situação</th><th class="esq">Cadastro</th></tr></thead><tbody>
+    ${r.fornecedores.map(f => { const cad = S.dados.fornecedores[f.fornecedor_id] || {}, teto = S.cfg.orcamento_fornecedor_cents[f.fornecedor_id];
+      const m = f.minimo, nat = m ? (m.fonte.startsWith('PREMISSA') ? ' <span class="selo ndc">premissa</span>' : m.fonte === 'CADASTRADO' && cad.minimo_natureza !== 'INFORMADO' ? ' ' + EST : '') : '';
+      return `<tr><td class="esq">${esc(f.nome)}</td><td>${brl(f.valor_cents)}</td><td>${total ? pct(100 * f.valor_cents / total, 0) : '—'}</td><td>${num(f.produtos)}</td><td>${num(f.unidades)}</td><td>${teto === undefined ? '—' : brl(teto)}</td><td>${m ? `${m.cents ? brl(m.cents) : num(m.un) + ' un'}${nat}` : '—'}</td><td class="sit esq">${esc(SIT_FORN[f.situacao] || f.situacao)}</td><td class="esq">${f.fornecedor_id ? resumoCadastro(cad) : NDC}</td></tr>`; }).join('')}
+    <tr><td class="esq"><b>Total</b></td><td><b>${brl(total)}</b></td><td></td><td><b>${num(r.totais.produtos_contemplados)}</b></td><td><b>${num(r.totais.unidades)}</b></td><td colspan="4"></td></tr></tbody></table></div>`;
+}
+
+function comparacao() { if (!S.comp) S.comp = P.comparar(S.dados, S.cfg); return S.comp; }
+function desenharComparacao() {
+  const c = $('conteudo'), cp = comparacao();
+  if (!cp.disponivel) { c.innerHTML = vazio('A base atual não traz as regras 1.2 e 1.3. Use "Atualizar base".'); return; }
+  const colunas = [{ nome: 'Sem comprar', totais: cp.sem_compra }, ...cp.regras];
+  const ind = [['Capital usado', t => brl(t.capital_cents)], ['Atendimento', t => pct(t.atendimento_pct)], ['Atendimento curva A', t => pct(t.atendimento_A_pct)], ['Rupturas previstas', t => num(t.rupturas_previstas, 0)], ['Curva A sem ruptura', t => pct(t.disponibilidade_A_pct)], ['Pronto para pedido grande', t => pct(t.pedido_grande_pct)],
+    ['Margem preservada', t => brl(t.margem_preservada_cents)], ['Cobertura projetada (dias)', t => num(t.cobertura_depois_dias, 0)], ['Produtos', t => num(t.produtos_contemplados)], ['Fornecedores', t => num(t.pedidos_fornecedores)], ['Unidades', t => num(t.unidades)], ['Risco de sobra 90 dias', t => brl(t.excesso_90d_cents)]];
+  const porId = new Map(S.res.linhas.map(l => [l.id, l]));
+  const ids = [...porId.keys()].filter(id => cp.regras.some(r => r.qtd.get(id)));
+  const custo = id => porId.get(id).custo_cents || 0;
+  const q = (i, id) => cp.regras[i].qtd.get(id) || 0;
+  ids.sort((a, b) => Math.abs(q(2, b) - q(0, b)) * custo(b) - Math.abs(q(2, a) - q(0, a)) * custo(a) || String(a).localeCompare(String(b)));
+  const vis = ids.slice(0, S.limite);
+  c.innerHTML = `<p class="nota">${EST} Mesmo dinheiro, mesmos filtros, mesmas prioridades, tetos e embalagem. A 1.2 e a 1.3 usam as próprias regras de quantidade (cobertura, nível de serviço e prazo digitados acima só mudam a 1.4) e não completam pedido mínimo.
+    <b>Os indicadores são calculados pelo modelo da 1.4, o que a favorece por construção.</b> No teste histórico de 2026 a vantagem da 1.4 sobre regras simples foi modesta e não valeu em todos os casos.</p>
+    <div class="rolagem"><table id="tabComparacao"><thead><tr><th class="esq">Indicador</th>${colunas.map(x => `<th>${esc(x.nome)}</th>`).join('')}</tr></thead><tbody>
+    ${ind.map(([n, f]) => `<tr><td class="esq">${n}</td>${colunas.map(x => `<td>${f(x.totais)}</td>`).join('')}</tr>`).join('')}
+    <tr><td class="esq">Fornecedores abaixo do pedido mínimo</td><td>—</td>${cp.regras.map(x => `<td>${num(x.fornecedores_abaixo_do_minimo.length)}</td>`).join('')}</tr></tbody></table></div>
+    <p class="nota">Quantidade por produto (maiores diferenças em reais entre 1.2 e 1.4 primeiro). Os ajustes manuais não entram na comparação.</p>
+    ${vis.length ? `<div class="rolagem"><table><thead><tr><th class="esq">Produto</th><th class="esq">Fornecedor</th><th>Curva</th><th>1.2 (un)</th><th>1.3 (un)</th><th>1.4 (un)</th><th>Valor 1.2</th><th>Valor 1.3</th><th>Valor 1.4</th></tr></thead><tbody>
+    ${vis.map(id => { const l = porId.get(id); return `<tr><td class="esq"><div class="nome">${esc(l.nome || 'Produto sem nome na visão')}</div><div class="cod">${esc(l.codigo || l.id)}</div></td><td class="esq">${esc(nomeForn(l.fornecedor_id))}</td><td>${l.classe}${l.xyz}</td>${[0, 1, 2].map(i => `<td>${num(q(i, id))}</td>`).join('')}${[0, 1, 2].map(i => `<td>${brl(q(i, id) * custo(id))}</td>`).join('')}</tr>`; }).join('')}</tbody></table></div>${maisHtml(vis.length, ids.length)}` : vazio('Nenhuma regra compra nada com estas entradas.')}`;
+}
+
+// ── Eficiência do capital: calculada no navegador para os filtros escolhidos ────────────────────────────────────
+function desenharEficiencia() {
+  const c = $('conteudo'), f = P.criarFronteira(S.dados, S.cfg);
+  const curva = f.orcamentos.map((_, i) => f.ponto(i));
+  if (curva.length < 2 || curva[0].r14.atendimento_pct === null) { c.innerHTML = vazio('Não há produtos que precisem de compra neste escopo.'); return; }
+  const rd = P.retornoDecrescente(curva, { limiar: S.limiar });
+  const atual = S.res.totais;
+  const frase = rd.ponto ? `A partir de cerca de <b>${brl(rd.ponto.capital_cents)}</b>, cada R$ 10 mil a mais acrescentam menos de ${num(S.limiar, 1)} ponto de atendimento.` : `Não há ponto: até o capital total, cada trecho ainda rende ${num(S.limiar, 1)} ponto ou mais por R$ 10 mil.`;
+  const noventa = rd.noventa ? ` 90% de todo o ganho possível é obtido com cerca de <b>${brl(rd.noventa.capital_cents)}</b>.` : '';
+  const SERIES = [['r14', '1.4', 'var(--serie14)'], ['r13', '1.3', 'var(--serie13)'], ['r12', '1.2', 'var(--serie12)']];
+  const W = Math.max(340, Math.min(1100, c.clientWidth - 20)), H = W < 600 ? 300 : 360, m = { e: 44, d: 36, t: 14, b: 40 };
+  const xs = curva.flatMap(p => SERIES.map(([k]) => p[k].capital_cents)), ys = curva.flatMap(p => SERIES.map(([k]) => p[k].atendimento_pct));
+  if (atual.atendimento_pct !== null) { xs.push(atual.capital_cents); ys.push(atual.atendimento_pct); }
+  const xMax = Math.max(...xs, 1), y0 = Math.floor((Math.min(...ys) - 1) / 5) * 5, y1 = Math.min(100, Math.ceil((Math.max(...ys) + 1) / 5) * 5);
+  const X = v => m.e + (W - m.e - m.d) * v / xMax, Y = v => H - m.b - (H - m.t - m.b) * (v - y0) / (y1 - y0 || 1);
+  const passoY = (y1 - y0) > 30 ? 10 : 5, marcasY = []; for (let v = y0; v <= y1; v += passoY) marcasY.push(v);
+  const bruto = xMax / 100000 / (W < 600 ? 3 : 6), base = 10 ** Math.floor(Math.log10(bruto || 1)), passoX = [1, 2, 5, 10].map(k => k * base).find(k => k >= bruto) * 100000;
+  const marcasX = []; for (let v = 0; v <= xMax; v += passoX) marcasX.push(v);
+  const caminho = k => { let d = ''; let ult = -1; for (const p of curva) { const x = p[k]; if (x.capital_cents <= ult) continue; ult = x.capital_cents; d += (d ? 'L' : 'M') + X(x.capital_cents).toFixed(1) + ' ' + Y(x.atendimento_pct).toFixed(1); } return d; };
+  const ultimo = k => curva.reduce((a, p) => (p[k].capital_cents > a.capital_cents ? p[k] : a), curva[0][k]);
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Atendimento estimado por capital desta compra, nas regras 1.2, 1.3 e 1.4">
+    ${marcasY.map(v => `<line x1="${m.e}" x2="${W - m.d}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grade)"/><text x="${m.e - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="11" fill="var(--muted)">${num(v)}%</text>`).join('')}
+    ${marcasX.map(v => `<text x="${X(v)}" y="${H - m.b + 16}" text-anchor="middle" font-size="11" fill="var(--muted)">${mil(v)}</text>`).join('')}
+    <text x="${(W + m.e - m.d) / 2}" y="${H - 6}" text-anchor="middle" font-size="11" fill="var(--muted)">capital desta compra (R$ mil)</text>
+    ${rd.ponto ? `<line x1="${X(rd.ponto.capital_cents)}" x2="${X(rd.ponto.capital_cents)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--muted)" stroke-dasharray="4 4"/><text x="${X(rd.ponto.capital_cents) - 5}" y="${H - m.b - 8}" text-anchor="end" font-size="11" fill="var(--text)">retorno decrescente</text>` : ''}
+    ${SERIES.slice().reverse().map(([k, , cor]) => `<path d="${caminho(k)}" fill="none" stroke="${cor}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`).join('')}
+    ${SERIES.map(([k, nome]) => { const u = ultimo(k); return `<text x="${X(u.capital_cents) + 4}" y="${Y(u.atendimento_pct) + (k === 'r13' ? 12 : k === 'r14' ? -4 : 4)}" font-size="11" font-weight="700" fill="var(--text)">${nome}</text>`; }).join('')}
+    ${atual.atendimento_pct !== null ? `<circle cx="${X(atual.capital_cents)}" cy="${Y(atual.atendimento_pct)}" r="5" fill="var(--serie14)" stroke="var(--white)" stroke-width="2"/><text x="${X(atual.capital_cents) + 8}" y="${Y(atual.atendimento_pct) + 15}" font-size="11" fill="var(--text)">esta simulação</text>` : ''}
+    <line id="mira" y1="${m.t}" y2="${H - m.b}" stroke="var(--text)" stroke-opacity=".35" visibility="hidden"/>
+    <rect id="alvoMouse" x="${m.e}" y="${m.t}" width="${W - m.e - m.d}" height="${H - m.t - m.b}" fill="transparent"/>
+  </svg>`;
+  c.innerHTML = `<p class="nota">${EST} Calculado agora para os filtros e regras escolhidos: o mesmo escopo comprado com orçamentos de zero até ${brl(f.capital_necessario_cents)} (capital que leva tudo ao alvo da 1.4). Compara a compra de hoje, não o estoque médio do ano.
+      O modelo é o mesmo que a 1.4 usa para decidir, por isso a comparação a favorece.</p>
+    <div class="linha" style="margin-bottom:.6rem"><label for="limiar">Considerar retorno decrescente abaixo de</label><input type="number" id="limiar" min="0.05" step="0.1" value="${S.limiar}" style="width:80px"> <span>ponto de atendimento por R$ 10 mil</span></div>
+    <div class="alerta info" id="fraseRetorno">${frase}${noventa}</div>
+    <div class="grafico"><div class="legenda">${SERIES.map(([, nome, cor]) => `<span><i style="background:${cor}"></i>Política ${nome}</span>`).join('')}</div>${svg}<div class="dica" id="dica" hidden></div></div>
+    <div class="rolagem"><table id="tabFronteira"><thead><tr><th>Orçamento</th><th>1.4: usado</th><th>1.4: atendimento</th><th>1.4: curva A</th><th>1.4: rupturas</th><th>1.4: margem preservada</th><th>Ganho 1.4 por R$ 10 mil (pontos)</th><th>1.3: atendimento</th><th>1.2: atendimento</th></tr></thead><tbody>
+      ${curva.map((p, i) => { const ant = i ? curva[i - 1].r14 : null, d = ant && p.r14.capital_cents > ant.capital_cents ? (p.r14.atendimento_pct - ant.atendimento_pct) / ((p.r14.capital_cents - ant.capital_cents) / 1000000) : null;
+        return `<tr><td>${brl(p.orcamento_cents)}</td><td>${brl(p.r14.capital_cents)}</td><td>${pct(p.r14.atendimento_pct)}</td><td>${pct(p.r14.atendimento_A_pct)}</td><td>${num(p.r14.rupturas_previstas, 0)}</td><td>${brl(p.r14.margem_preservada_cents)}</td><td>${d === null ? '—' : num(d, 2)}</td><td>${pct(p.r13.atendimento_pct)}</td><td>${pct(p.r12.atendimento_pct)}</td></tr>`; }).join('')}
+    </tbody></table></div>`;
+  $('limiar').addEventListener('change', e => { const v = Number(e.target.value); if (v > 0) { S.limiar = v; desenharEficiencia(); } });
+  const alvo = c.querySelector('#alvoMouse'), mira = c.querySelector('#mira'), dica = $('dica'), el = c.querySelector('svg');
+  const mover = ev => {
+    const cx = (ev.touches ? ev.touches[0] : ev).clientX, caixa = el.getBoundingClientRect(), x = (cx - caixa.left) * W / caixa.width;
+    const p = curva.reduce((a, b) => (Math.abs(X(b.r14.capital_cents) - x) < Math.abs(X(a.r14.capital_cents) - x) ? b : a));
+    const px = X(p.r14.capital_cents);
+    mira.setAttribute('x1', px); mira.setAttribute('x2', px); mira.setAttribute('visibility', 'visible');
+    dica.hidden = false;
+    dica.innerHTML = `<b>Orçamento ${brl(p.orcamento_cents)}</b>${SERIES.map(([k, nome]) => `<div>${nome}: ${pct(p[k].atendimento_pct)} com ${brl(p[k].capital_cents)}</div>`).join('')}`;
+    const g = dica.parentElement.getBoundingClientRect(), esquerda = caixa.left - g.left + px * caixa.width / W;
+    dica.style.left = Math.max(4, esquerda + (esquerda > g.width / 2 ? -dica.offsetWidth - 10 : 10)) + 'px'; dica.style.top = (caixa.top - g.top + 20) + 'px';
+  };
+  alvo.addEventListener('mousemove', mover); alvo.addEventListener('touchstart', mover, { passive: true });
+  alvo.addEventListener('mouseleave', () => { dica.hidden = true; mira.setAttribute('visibility', 'hidden'); });
+}
+
+// ── Plano semanal e mensal ──────────────────────────────────────────────────────────────────────────────────────
+function desenharPlano() {
+  const c = $('conteudo'), o = S.orc;
+  const plano = P.planoSemanal(S.dados, S.cfg, { semanas: S.semanas, hoje: S.meta.data_comercial, total_cents: o.total_cents, semanal_cents: o.semanal_cents, mensal_cents: o.mensal_cents, comprometido_semana_cents: o.comprometido_semana_cents, comprometido_mes_cents: o.comprometido_mes_cents });
+  const cab = `<div class="linha" style="margin-bottom:.6rem"><label for="semanas">Horizonte</label><select id="semanas">${[4, 8, 12].map(n => `<option value="${n}"${n === S.semanas ? ' selected' : ''}>${n} semanas</option>`).join('')}</select></div>`;
+  if (plano.erro) c.innerHTML = cab + vazio(esc(plano.erro) + ' Informe em "Quanto há para comprar" e calcule de novo.');
+  else {
+    const meses = plano.meses.map(x => x.mes);
+    c.innerHTML = cab + `<p class="nota">${EST} Projeção grosseira pela venda média, sem variação: compra a cada semana com o dinheiro que resta, recebe depois do prazo e desconta a venda. O atendimento tende a ficar otimista. O teto por fornecedor vale para cada semana; o orçamento total, se informado, vale para o período todo. Ajustes manuais não entram.</p>
+      <div class="rolagem"><table id="tabPlano"><thead><tr><th>Semana</th><th class="esq">A partir de</th><th>Limite</th><th>Compra</th><th>Produtos</th><th>Fornecedores</th><th>Atendimento na semana</th><th>Produtos zerados no fim</th><th>Estoque a custo no fim</th></tr></thead><tbody>
+      ${plano.semanas.map(s => `<tr><td>${s.semana}</td><td class="esq">${dataBr(s.data)}</td><td>${s.limite_cents === null ? 'sem teto' : brl(s.limite_cents)}${s.limitante ? `<div class="cod">${s.limitante}</div>` : ''}</td><td>${brl(s.usado_cents)}</td><td>${num(s.produtos)}</td><td>${num(s.fornecedores)}</td><td>${pct(s.atendimento_pct)}</td><td>${num(s.zerados_no_fim)}</td><td>${brl(s.estoque_custo_fim_cents)}</td></tr>`).join('')}
+      <tr><td colspan="3" class="esq"><b>Total do período</b></td><td><b>${brl(plano.usado_cents)}</b></td><td colspan="2"></td><td><b>${pct(plano.atendimento_pct)}</b></td><td colspan="2"></td></tr></tbody></table></div>
+      <div class="rolagem"><table id="tabMeses"><thead><tr><th class="esq">Fornecedor</th>${meses.map(m => `<th>${mesBr(m)}</th>`).join('')}<th>Total</th></tr></thead><tbody>
+      <tr><td class="esq"><b>Todos</b></td>${plano.meses.map(m => `<td><b>${brl(m.usado_cents)}</b></td>`).join('')}<td><b>${brl(plano.usado_cents)}</b></td></tr>
+      ${plano.por_fornecedor.map(f => `<tr><td class="esq">${esc(nomeForn(f.fornecedor_id))}</td>${meses.map(m => `<td>${f.meses[m] ? brl(f.meses[m]) : '—'}</td>`).join('')}<td>${brl(f.total_cents)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  $('semanas').addEventListener('change', e => { S.semanas = Number(e.target.value); desenharPlano(); });
+}
+
 // ── Cenários: guardados só no navegador, enquanto a aba estiver aberta ──
 function lerCenarios() { try { return JSON.parse(sessionStorage.getItem(CHAVE) || '[]'); } catch (_) { return S.memoria || []; } }
 function guardarCenarios(l) { S.memoria = l; try { sessionStorage.setItem(CHAVE, JSON.stringify(l)); } catch (_) { /* sem armazenamento: vale só em memória */ } }
-const CAMPOS = ['orcamento', 'cobModo', 'cobDias', 'nivel', 'antigos', 'origem', 'minModo', 'minValor', 'censura', 'gatilho', 'multiplo', 'fator'];
+const CAMPOS = ['orcamento', 'orcSemana', 'orcMes', 'usadoSemana', 'usadoMes', 'cobModo', 'cobDias', 'cobA', 'cobB', 'cobC', 'nivel', 'prazoModo', 'prazoDias', 'prazoFator', 'minPadrao', 'multPadrao', 'antigos', 'origem', 'minModo', 'minValor', 'pgUsar', 'pgPerc', 'pgDias', 'pgFracao', 'censura', 'gatilho', 'multiplo', 'fator', 'manter'];
 function estadoDaTela() {
   return { campos: Object.fromEntries(CAMPOS.map(id => [id, $(id).value])), filtros: { fForn: marcados('fForn'), fCat: marcados('fCat'), fMarca: marcados('fMarca') },
-    curvas: [...document.querySelectorAll('.curvas input')].map(c => c.checked), prioritarios: [...S.prioritarios], ajustes: { ...S.ajustes } };
+    abc: caixas('abc'), xyz: caixas('xyz'), prioritarios: [...S.prioritarios], excluidos: [...S.excluidos], ajustes: { ...S.ajustes }, porProduto: JSON.parse(JSON.stringify(S.porProduto)), porForn: JSON.parse(JSON.stringify(S.porForn)) };
 }
 function aplicarEstado(e) {
-  for (const id of CAMPOS) $(id).value = e.campos[id];
+  for (const id of CAMPOS) if (e.campos[id] !== undefined) $(id).value = e.campos[id];
   for (const [id, vals] of Object.entries(e.filtros)) [...$(id).options].forEach(o => { o.selected = vals.includes(o.value); });
-  document.querySelectorAll('.curvas input').forEach((c, i) => { c.checked = e.curvas[i]; });
-  S.prioritarios = [...e.prioritarios]; S.ajustes = { ...e.ajustes };
-  ajustarVisibilidade(); desenharPrioritarios(); rodar();
+  for (const g of ['abc', 'xyz']) document.querySelectorAll(`#${g} input`).forEach(c => { c.checked = e[g].includes(c.value); });
+  S.prioritarios = [...e.prioritarios]; S.excluidos = [...e.excluidos]; S.ajustes = { ...e.ajustes }; S.porProduto = JSON.parse(JSON.stringify(e.porProduto)); S.porForn = JSON.parse(JSON.stringify(e.porForn));
+  document.querySelectorAll('#tabForn input').forEach(i => { i.value = (S.porForn[i.dataset.forn] || {})[i.dataset.campo] || ''; });
+  ajustarVisibilidade(); desenharChips(); rodar();
 }
 function desenharCenarios() {
   const lista = lerCenarios(), c = $('conteudo');
-  if (!lista.length) { c.innerHTML = '<div class="rolagem"><div class="vazio">Nenhum cenário salvo. Ajuste as entradas, dê um nome e use "Salvar cenário nesta sessão".</div></div>'; return; }
-  const linhas = [['Orçamento', t => t.orcamento_cents === null ? 'sem teto' : brl(t.orcamento_cents)], ['Compra simulada', t => brl(t.capital_cents)], ['Atendimento', t => pct(t.atendimento_pct)], ['Atendimento A', t => pct(t.atendimento_A_pct)],
-    ['Rupturas previstas', t => num(t.rupturas_previstas, 0)], ['Curva A sem falta', t => pct(t.disponibilidade_A_pct)], ['Margem preservada', t => brl(t.margem_preservada_cents)], ['Cobertura depois (dias)', t => num(t.cobertura_depois_dias, 0)],
-    ['Produtos', t => num(t.produtos_contemplados)], ['Fornecedores', t => num(t.pedidos_fornecedores)], ['Risco de sobra 90 dias', t => brl(t.excesso_90d_cents)], ['Capital de giro 30 dias', t => brl(t.capital_giro_liquido_cents)]];
-  c.innerHTML = `<div class="rolagem"><table id="tabCenarios"><thead><tr><th class="esq">Indicador</th>${lista.map((x, i) => `<th>${esc(x.nome)}<div class="linha" style="justify-content:flex-end;margin-top:.25rem"><button type="button" data-abrir="${i}">Abrir</button><button type="button" data-remover="${i}">Remover</button></div></th>`).join('')}</tr></thead><tbody>
+  if (!lista.length) { c.innerHTML = vazio('Nenhum cenário salvo. Ajuste as entradas, dê um nome e use "Salvar cenário nesta sessão".'); return; }
+  const linhas = [['Limite da compra', t => t.orcamento_cents === null ? 'sem teto' : brl(t.orcamento_cents)], ['Capital da compra', t => brl(t.capital_cents)], ['Atendimento', t => pct(t.atendimento_pct)], ['Atendimento A', t => pct(t.atendimento_A_pct)],
+    ['Rupturas previstas', t => num(t.rupturas_previstas, 0)], ['Curva A sem ruptura', t => pct(t.disponibilidade_A_pct)], ['Pronto para pedido grande', t => pct(t.pedido_grande_pct)], ['Margem preservada', t => brl(t.margem_preservada_cents)], ['Cobertura projetada (dias)', t => num(t.cobertura_depois_dias, 0)],
+    ['Produtos', t => num(t.produtos_contemplados)], ['Fornecedores', t => num(t.pedidos_fornecedores)], ['Risco de sobra 90 dias', t => brl(t.excesso_90d_cents)]];
+  c.innerHTML = `<div class="rolagem"><table id="tabCenarios"><thead><tr><th class="esq">Indicador ${EST}</th>${lista.map((x, i) => `<th>${esc(x.nome)}<div class="linha" style="justify-content:flex-end;margin-top:.25rem"><button type="button" data-abrir="${i}">Abrir</button><button type="button" data-remover="${i}">Remover</button></div></th>`).join('')}</tr></thead><tbody>
     ${linhas.map(([n, f]) => `<tr><td class="esq">${n}</td>${lista.map(x => `<td>${f(x.totais)}</td>`).join('')}</tr>`).join('')}
     <tr><td class="esq">Produtos com quantidade diferente do 1º cenário</td>${lista.map(x => { const a = lista[0].qtd, ids = new Set([...Object.keys(a), ...Object.keys(x.qtd)]); return `<td>${num([...ids].filter(id => (a[id] || 0) !== (x.qtd[id] || 0)).length)}</td>`; }).join('')}</tr>
-    <tr><td class="esq">Escopo (filtros) e dados</td>${lista.map(x => `<td>${num(x.totais.produtos_no_escopo)} produtos<br><span class="cod">${esc(x.data)}</span></td>`).join('')}</tr></tbody></table></div>
+    <tr><td class="esq">Escopo (filtros) e dados</td>${lista.map(x => `<td>${num(x.totais.produtos_no_escopo)} produtos<br><span class="cod">${esc(dataBr(x.data))}</span></td>`).join('')}</tr></tbody></table></div>
     <p class="nota">Compare cenários com o mesmo escopo e as mesmas premissas de demanda: mudar filtros ou a correção de falta muda a base do percentual.</p>`;
   c.querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => { S.aba = 'lista'; aplicarEstado(lerCenarios()[Number(b.dataset.abrir)].estado); }));
   c.querySelectorAll('[data-remover]').forEach(b => b.addEventListener('click', () => { const l = lerCenarios(); l.splice(Number(b.dataset.remover), 1); guardarCenarios(l); desenharCenarios(); }));
 }
 
-function desenharPrioritarios() {
-  $('priChips').innerHTML = S.prioritarios.map(id => { const i = S.dados.itens.find(x => x.id === id); return `<button type="button" class="chip" data-pri="${esc(id)}" title="Remover">${esc(i ? (i.codigo || i.id) : id)} ×</button>`; }).join('');
-  $('priChips').querySelectorAll('[data-pri]').forEach(b => b.addEventListener('click', () => { S.prioritarios = S.prioritarios.filter(x => x !== b.dataset.pri); desenharPrioritarios(); rodar(); }));
+function desenharChips() {
+  const chip = (tipo, id, texto) => `<button type="button" class="chip" data-tipo="${tipo}" data-id="${esc(id)}" title="Remover">${esc(texto)} ×</button>`;
+  $('priChips').innerHTML = S.prioritarios.map(id => chip('pri', id, 'prioritário ' + codigoDe(id))).join('');
+  $('excChips').innerHTML = S.excluidos.map(id => chip('exc', id, 'excluído ' + codigoDe(id))).join('');
+  $('embChips').innerHTML = Object.entries(S.porProduto).map(([id, v]) => chip('emb', id, `${codigoDe(id)}:${v.minimo ? ' mín. ' + v.minimo : ''}${v.multiplo ? ' múlt. ' + v.multiplo : ''}`)).join('');
 }
-function ajustarVisibilidade() { $('cobDias').hidden = $('cobModo').value !== 'n'; $('minValor').hidden = $('minModo').value !== 'VALOR'; }
-
-$('presets').addEventListener('click', e => { const v = e.target.dataset.orc; if (!v) return; $('orcamento').value = Number(v).toLocaleString('pt-BR'); rodar(); });
-$('cobModo').addEventListener('change', ajustarVisibilidade);
-$('minModo').addEventListener('change', ajustarVisibilidade);
-$('btnSimular').addEventListener('click', () => { S.limite = 100; rodar(); });
-$('orcamento').addEventListener('keydown', e => { if (e.key === 'Enter') rodar(); });
-$('btnLimpar').addEventListener('click', () => { S.ajustes = {}; rodar(); });
-$('priAdd').addEventListener('click', () => {
-  const v = $('priBusca').value.trim().toLowerCase();
-  if (!v) return;
-  const i = S.dados.itens.find(x => rotuloItem(x).toLowerCase() === v) || S.dados.itens.find(x => String(x.codigo || x.id).toLowerCase() === v);
-  if (i && !S.prioritarios.includes(i.id)) { S.prioritarios.push(i.id); $('priBusca').value = ''; desenharPrioritarios(); rodar(); }
+for (const id of ['priChips', 'excChips', 'embChips']) $(id).addEventListener('click', e => {
+  const b = e.target.closest('[data-tipo]'); if (!b) return;
+  if (b.dataset.tipo === 'pri') S.prioritarios = S.prioritarios.filter(x => x !== b.dataset.id);
+  else if (b.dataset.tipo === 'exc') S.excluidos = S.excluidos.filter(x => x !== b.dataset.id);
+  else delete S.porProduto[b.dataset.id];
+  desenharChips(); rodar();
 });
+function acharProduto(campo) {
+  const v = $(campo).value.trim().toLowerCase();
+  if (!v) return null;
+  return S.dados.itens.find(x => rotuloItem(x).toLowerCase() === v) || S.dados.itens.find(x => String(x.codigo || x.id).toLowerCase() === v) || null;
+}
+function marcarProduto(lista) {
+  const i = acharProduto('priBusca'); if (!i) return;
+  S.prioritarios = S.prioritarios.filter(x => x !== i.id); S.excluidos = S.excluidos.filter(x => x !== i.id);
+  S[lista].push(i.id); $('priBusca').value = ''; desenharChips(); rodar();
+}
+$('priAdd').addEventListener('click', () => marcarProduto('prioritarios'));
+$('excAdd').addEventListener('click', () => marcarProduto('excluidos'));
+$('embAdd').addEventListener('click', () => {
+  const i = acharProduto('embBusca'); if (!i) return;
+  const min = Number($('embMin').value), mult = Number($('embMult').value);
+  const v = { ...(Number.isInteger(min) && min >= 1 ? { minimo: min } : {}), ...(Number.isInteger(mult) && mult >= 1 ? { multiplo: mult } : {}) };
+  if (!Object.keys(v).length) return;
+  S.porProduto[i.id] = v; $('embBusca').value = $('embMin').value = $('embMult').value = ''; desenharChips(); rodar();
+});
+
+function ajustarVisibilidade() {
+  $('cobDias').hidden = $('cobModo').value !== 'n'; $('cobABC').hidden = $('cobModo').value !== 'abc';
+  $('prazoDias').hidden = $('prazoModo').value !== 'FIXO'; $('prazoFator').hidden = $('prazoModo').value !== 'FATOR';
+  $('minValor').hidden = $('minModo').value !== 'VALOR';
+}
+$('presets').addEventListener('click', e => { const v = e.target.dataset.orc; if (!v) return; $('orcamento').value = Number(v).toLocaleString('pt-BR'); rodar(); });
+for (const id of ['cobModo', 'prazoModo', 'minModo']) $(id).addEventListener('change', ajustarVisibilidade);
+$('btnSimular').addEventListener('click', () => { S.limite = 100; rodar(); });
+for (const id of ['orcamento', 'orcSemana', 'orcMes', 'usadoSemana', 'usadoMes']) $(id).addEventListener('keydown', e => { if (e.key === 'Enter') rodar(); });
+$('btnLimpar').addEventListener('click', () => { S.ajustes = {}; rodar(); });
 $('abas').addEventListener('click', e => { const a = e.target.dataset.aba; if (!a) return; S.aba = a; S.limite = 100; desenharAba(); });
 $('btnSalvar').addEventListener('click', () => {
   rodar(); if (S.erro) return;
@@ -373,12 +700,19 @@ $('btnSalvar').addEventListener('click', () => {
   l.push({ nome: $('nomeCenario').value.trim() || 'Cenário ' + (l.length + 1), data: S.meta.data_comercial, totais: S.res.totais, qtd: Object.fromEntries(S.res.linhas.filter(x => x.qtd > 0).map(x => [x.id, x.qtd])), estado: estadoDaTela() });
   guardarCenarios(l); $('nomeCenario').value = ''; S.aba = 'cen'; desenharAba();
 });
+function premissasDoArquivo() {
+  const c = S.res.config, o = S.orc;
+  return [`Limite desta compra: ${o.limite.cents === null ? 'sem teto' : brl(o.limite.cents) + ' (' + o.limite.limitante + ')'}`,
+    `Cobertura: ${typeof c.cobertura_dias === 'number' ? c.cobertura_dias + ' dias' : 'A ' + c.cobertura_dias.A + ' · B ' + c.cobertura_dias.B + ' · C ' + c.cobertura_dias.C + ' dias'}`,
+    `Nível de serviço: ${typeof c.nivel_servico === 'number' ? Math.round(c.nivel_servico * 100) + '%' : 'padrão por curva'}`,
+    `Reserva para pedido grande: ${c.pedido_grande.usar ? 'percentil ' + c.pedido_grande.percentil : 'desligada'}`];
+}
 $('btnCsv').addEventListener('click', () => {
   if (!S.res || S.erro) return;
-  const texto = '﻿' + M.ROTULO + '\n' + M.csv(S.res.linhas.filter(l => l.qtd > 0 || l.ajustado || l.falta_para_o_alvo_cents > 0));
+  const texto = '﻿' + P.csvPlanejamento(S.res, { comparacao: comparacao(), dados: S.dados, data: dataBr(S.meta.data_comercial), premissas: premissasDoArquivo() });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([texto], { type: 'text/csv;charset=utf-8' }));
-  a.download = `SIMULACAO-compra-${S.meta.data_comercial}.csv`;
+  a.download = `PLANEJAMENTO-nao-e-pedido-${S.meta.data_comercial}.csv`;
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
 </script>

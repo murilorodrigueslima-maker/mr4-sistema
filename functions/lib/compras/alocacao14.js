@@ -16,9 +16,11 @@
   // − custo de manter a unidade pelo tempo até ela sair
   // O orçamento vai, lote a lote, para o maior valor por real investido (retornos decrescentes por produto).
 
-  const ROTULO = 'SIMULAÇÃO — não é recomendação operacional; nenhum pedido é criado';
+  const ROTULO = 'PLANEJAMENTO (SIMULAÇÃO) — estimativa; não substitui a política 1.2; nenhum pedido é criado';
   const CLASSES = ['A', 'B', 'C'];
+  const PERCENTIS = [80, 90, 95];
   const EPS = 1e-9;
+  const SEM_LIMITE = Number.MAX_SAFE_INTEGER;
 
   function congelar(o) { Object.values(o).forEach(v => { if (v && typeof v === 'object') congelar(v); }); return Object.freeze(o); }
 
@@ -46,7 +48,13 @@
     transito: { antigos: 'IGNORAR', fracao_parcial: 0.5 },   // pedidos "A receber/Em aberto" com mais de 90 dias: IGNORAR | PARCIAL | TUDO
     origem: 'REVISAR',                                       // compra sem origem comprovada: REVISAR (não decide sozinha) | INCLUIR
     minimo_fornecedor: { modo: 'CADASTRADO', valor_padrao_cents: null, por_fornecedor: {}, cobertura_max_dias: 90 },   // modo: CADASTRADO | NENHUM | HISTORICO_P10
-    filtros: { fornecedores: [], categorias: [], marcas: [], curvas: [] },
+    filtros: { fornecedores: [], categorias: [], marcas: [], curvas: [], xyz: [] },
+    orcamento_fornecedor_cents: {},                          // { id: centavos } teto por fornecedor nesta compra
+    prazo: { modo: 'DADOS', dias: null, fator: 1, por_fornecedor: {} },   // DADOS = prazo do item; FIXO = `dias` para todos; `por_fornecedor` (tela) prevalece
+    embalagem: { minimo_padrao: null, multiplo_padrao: null, por_fornecedor: {}, por_produto: {} },   // tela: produto > fornecedor > cadastro do item > padrão > 1
+    // Pedido grande (cliente distribuidor): reserva parte do orçamento para ter, na posição, o tamanho de linha de venda do percentil escolhido.
+    // PREMISSA opcional, desligada por padrão: no teste histórico não melhorou o resultado no mesmo capital (ver documento).
+    pedido_grande: { usar: false, percentil: 90, teto_dias: 60, fracao_max_orcamento: 0.2, min_linhas: 10, somar_prazo: false },
     prioritarios: [],
     excluidos: [],
     ajustes: {},                                             // { produto: quantidade } — ajuste manual da simulação
@@ -91,6 +99,19 @@
     if (!['REVISAR', 'INCLUIR'].includes(c.origem)) e.push('origem desconhecida');
     if (!['CADASTRADO', 'NENHUM', 'HISTORICO_P10'].includes(c.minimo_fornecedor.modo)) e.push('minimo_fornecedor.modo desconhecido');
     for (const [id, q] of Object.entries(c.ajustes)) if (!(Number.isInteger(q) && q >= 0)) e.push('ajuste inválido: ' + id);
+    for (const [id, v] of Object.entries(c.orcamento_fornecedor_cents)) if (!(num(v) && v >= 0)) e.push('teto do fornecedor inválido: ' + id);
+    if (!['DADOS', 'FIXO'].includes(c.prazo.modo)) e.push('prazo.modo desconhecido');
+    if (c.prazo.modo === 'FIXO' && !(num(c.prazo.dias) && c.prazo.dias >= 0 && c.prazo.dias <= 365)) e.push('prazo.dias deve estar entre 0 e 365');
+    if (!(num(c.prazo.fator) && c.prazo.fator > 0 && c.prazo.fator <= 10)) e.push('prazo.fator deve estar entre 0 e 10');
+    for (const [id, v] of Object.entries(c.prazo.por_fornecedor)) if (!(num(v) && v >= 0 && v <= 365)) e.push('prazo do fornecedor inválido: ' + id);
+    const inteiro1 = v => Number.isInteger(v) && v >= 1 && v <= 1000000;
+    for (const k of ['minimo_padrao', 'multiplo_padrao']) if (c.embalagem[k] !== null && !inteiro1(c.embalagem[k])) e.push('embalagem.' + k + ' deve ser inteiro ≥ 1');
+    for (const g of ['por_fornecedor', 'por_produto']) for (const [id, v] of Object.entries(c.embalagem[g])) for (const k of ['minimo', 'multiplo']) if (v[k] !== undefined && !inteiro1(v[k])) e.push('embalagem inválida: ' + id);
+    const pg = c.pedido_grande;
+    if (!PERCENTIS.includes(pg.percentil)) e.push('pedido_grande.percentil deve ser 80, 90 ou 95');
+    if (!(num(pg.teto_dias) && pg.teto_dias >= 0)) e.push('pedido_grande.teto_dias deve ser ≥ 0');
+    if (!(num(pg.fracao_max_orcamento) && pg.fracao_max_orcamento >= 0 && pg.fracao_max_orcamento <= 1)) e.push('pedido_grande.fracao_max_orcamento deve estar entre 0 e 1');
+    if (!(num(pg.min_linhas) && pg.min_linhas >= 1)) e.push('pedido_grande.min_linhas deve ser ≥ 1');
     return e;
   }
 
@@ -153,7 +174,8 @@
     const vObs = item.v_observada === undefined || item.v_observada === null ? item.v || 0 : item.v_observada;
     const base = item.novo ? item.v || 0 : vObs + cfg.censura_peso * ((item.v || 0) - vObs);
     const v = Math.max(0, base) * cfg.fator_demanda;
-    const L = Math.max(0, item.prazo_dias || 0), sL = Math.max(0, item.prazo_desvio || 0), R = cfg.revisao_dias;
+    const prazo = prazoDe(item, cfg), L = prazo.dias, sL = prazo.desvio;
+    const R = item.revisao_dias > 0 ? item.revisao_dias : cfg.revisao_dias;
     const C = coberturaDe(classe, cfg);
     const sd = Math.max(0, item.sd_dia || 0) * cfg.fator_demanda;
     const variancia = (T, comPrazo) => T * sd * sd + (comPrazo ? (v * sL) ** 2 : 0);
@@ -175,17 +197,45 @@
     const margem = Math.max(0, preco - custo);
     const penalidade = cfg.peso_indisponibilidade[chave] * Math.max(margem, cfg.piso_penalidade_preco * preco);
     const penalidadeEvento = cfg.peso_indisponibilidade[chave] * cfg.custo_ruptura_cents;
-    const multiploObs = cfg.usar_multiplo_observado && item.multiplo_observado > 1 ? item.multiplo_observado : 1;
-    const multiplo = Math.max(1, item.multiplo_un > 1 ? item.multiplo_un : multiploObs);
-    const minimo = acimaMultiplo(Math.max(1, item.minimo_un || 1), multiplo);
-    const lote = Math.max(multiplo, acimaMultiplo(Math.max(1, Math.ceil((alvo - posicao) / 60)), multiplo));   // granularidade do cálculo (≤ ~60 lotes por produto)
-    return { item, id: item.id, classe, chave, v, v_observada: vObs, L, sL, R, C, sd, cresc, nivel, D1, D2, ponto, alvo, posicao, estoque, transito: tr,
-      custo, preco, margem, penalidade, penalidadeEvento, multiplo, minimo, lote, fornecedor: item.fornecedor_id || null };
+    const { multiplo, minimo } = embalagemDe(item, cfg);
+    const grande = pedidoGrande(item, cfg, v, L);
+    const lote = Math.max(multiplo, acimaMultiplo(Math.max(1, Math.ceil((Math.max(alvo, grande.piso) - posicao) / 60)), multiplo));   // granularidade do cálculo (≤ ~60 lotes por produto)
+    return { item, id: item.id, classe, chave, v, v_observada: vObs, L, sL, prazo_fonte: prazo.fonte, R, C, sd, cresc, nivel, D1, D2, ponto, alvo, posicao, estoque, transito: tr,
+      custo, preco, margem, penalidade, penalidadeEvento, multiplo, minimo, lote, grande, fornecedor: item.fornecedor_id || null };
+  }
+
+  /** Prazo usado: o informado na tela para o fornecedor > prazo fixo da simulação > o do item. Prazo simulado leva 25 % de incerteza (PREMISSA). */
+  function prazoDe(item, cfg) {
+    const f = item.fornecedor_id ? cfg.prazo.por_fornecedor[item.fornecedor_id] : undefined;
+    if (f !== undefined) return { dias: f, desvio: f * 0.25, fonte: 'SIMULADO_FORNECEDOR' };
+    if (cfg.prazo.modo === 'FIXO') return { dias: cfg.prazo.dias, desvio: cfg.prazo.dias * 0.25, fonte: 'SIMULADO_GERAL' };
+    const dias = Math.max(0, item.prazo_dias || 0), desvio = Math.max(0, item.prazo_desvio || 0), x = cfg.prazo.fator;
+    return { dias: dias * x, desvio: desvio * x, fonte: x === 1 ? item.prazo_fonte : 'SIMULADO_FATOR' };
+  }
+
+  /** Mínimo e múltiplo: tela (produto > fornecedor) > cadastro do item > múltiplo observado (opção) > padrão da simulação > unidade avulsa. */
+  function embalagemDe(item, cfg) {
+    const E = cfg.embalagem, p = E.por_produto[item.id] || {}, f = (item.fornecedor_id && E.por_fornecedor[item.fornecedor_id]) || {};
+    const observado = cfg.usar_multiplo_observado && item.multiplo_observado > 1 ? item.multiplo_observado : null;
+    const multiplo = Math.max(1, p.multiplo ?? f.multiplo ?? (item.multiplo_un > 1 || item.multiplo_cadastrado ? item.multiplo_un : null) ?? observado ?? E.multiplo_padrao ?? 1);
+    const minimo = Math.max(1, p.minimo ?? f.minimo ?? (item.minimo_un > 1 || item.minimo_cadastrado ? item.minimo_un : null) ?? E.minimo_padrao ?? 1);
+    return { multiplo, minimo: acimaMultiplo(minimo, multiplo) };
+  }
+
+  /**
+   * Tamanho de pedido grande do produto: percentil do tamanho das linhas de venda dos últimos 12 meses (observado; vendas limitadas por
+   * falta de estoque aparecem menores). `piso` = posição mínima buscada pela reserva (0 quando desligada ou sem amostra).
+   */
+  function pedidoGrande(item, cfg, v, L) {
+    const G = cfg.pedido_grande, x = item.linhas_venda;
+    const q = x && x.n >= G.min_linhas && x['p' + G.percentil] > 0 ? x['p' + G.percentil] : 0;
+    const piso = G.usar && q > 0 && v > 0 ? Math.min(Math.ceil(q), Math.ceil(v * G.teto_dias - EPS)) + (G.somar_prazo ? Math.ceil(v * L - EPS) : 0) : 0;
+    return { un: q ? Math.ceil(q) : 0, linhas: q ? x.n : 0, piso };
   }
 
   const dentro = (lista, v) => !lista || !lista.length || lista.includes(v === null || v === undefined ? '' : v);
   function noFiltro(item, f) {
-    return dentro(f.fornecedores, item.fornecedor_id) && dentro(f.categorias, item.categoria) && dentro(f.marcas, item.marca) && dentro(f.curvas, item.classe);
+    return dentro(f.fornecedores, item.fornecedor_id) && dentro(f.categorias, item.categoria) && dentro(f.marcas, item.marca) && dentro(f.curvas, item.classe) && dentro(f.xyz, item.xyz);
   }
 
   /** Por que o produto pode (null) ou não pode disputar o orçamento automaticamente. Produto prioritário supera revisões, nunca falta de custo/demanda. */
@@ -201,9 +251,9 @@
       if (it.origem_comprovada === false && cfg.origem === 'REVISAR') return 'ORIGEM_NAO_COMPROVADA';
       if (it.nao_comprar) return 'MARCADO_NAO_COMPRAR';
       if (!(p.margem > 0)) return 'MARGEM_NAO_POSITIVA';
-      if (cfg.gatilho === 'PONTO' && p.posicao >= p.ponto) return 'ACIMA_DO_PONTO';
+      if (cfg.gatilho === 'PONTO' && p.posicao >= p.ponto && !(p.posicao < p.grande.piso)) return 'ACIMA_DO_PONTO';
     }
-    if (p.posicao >= p.alvo) return 'ESTOQUE_SUFICIENTE';
+    if (p.posicao >= Math.max(p.alvo, p.grande.piso)) return 'ESTOQUE_SUFICIENTE';
     return null;
   }
 
@@ -241,16 +291,20 @@
 
   /**
    * Compra lote a lote os candidatos na ordem do valor por real. `estado` é compartilhado entre as fases.
-   * opts: { limite(p) nível máximo; minimoRazao (null = aceita qualquer); parar() encerra a fase }
+   * opts: { limite(p) nível máximo; minimoRazao (null = aceita qualquer); parar() encerra a fase; razao(p, nivel, n) ordem própria;
+   *         teto (centavos que a fase pode gastar); semCorte = a fase não registra o motivo de quem não coube }
    */
   function comprarFase(lista, estado, cfg, opts) {
     const fila = criarFila();
+    const razaoDe = opts.razao || ((p, nivel, n) => valorDoLote(p, nivel, n, cfg) / (n * p.custo));
+    const tetoForn = p => { const t = p.fornecedor ? cfg.orcamento_fornecedor_cents[p.fornecedor] : undefined; return t === undefined ? SEM_LIMITE : t - (estado.gastoForn.get(p.fornecedor) || 0); };
+    let restaFase = opts.teto === undefined ? SEM_LIMITE : opts.teto;
     const proximo = p => {
       const q = estado.qtd.get(p.id) || 0, nivel = p.posicao + q, falta = opts.limite(p) - nivel;
       if (!(falta > 0)) return null;
       let n = Math.min(p.lote, acimaMultiplo(falta, p.multiplo));
       if (q === 0) n = Math.max(n, p.minimo);
-      return { p, n, razao: valorDoLote(p, nivel, n, cfg) / (n * p.custo) };
+      return { p, n, razao: razaoDe(p, nivel, n) };
     };
     for (const p of lista) { const x = proximo(p); if (x) fila.por(x); }
     while (fila.tamanho) {
@@ -260,17 +314,21 @@
         for (const y of [x, ...fila.itens]) estado.corte.set(y.p.id, 'RETORNO_INSUFICIENTE');
         break;
       }
-      if (x.n * p.custo > estado.resta) {
-        const cabe = abaixoMultiplo(Math.floor(estado.resta / p.custo + EPS), p.multiplo);
+      const doForn = tetoForn(p), disponivel = Math.min(estado.resta, doForn, restaFase);
+      if (x.n * p.custo > disponivel) {
+        const cabe = abaixoMultiplo(Math.floor(disponivel / p.custo + EPS), p.multiplo);
         const precisa = q === 0 ? p.minimo : p.multiplo;
-        if (cabe >= precisa && cabe < x.n) fila.por({ p, n: cabe, razao: valorDoLote(p, p.posicao + q, cabe, cfg) / (cabe * p.custo) });
-        else estado.corte.set(p.id, 'SEM_ORCAMENTO');
+        if (cabe >= precisa && cabe < x.n) fila.por({ p, n: cabe, razao: razaoDe(p, p.posicao + q, cabe) });
+        else if (!opts.semCorte) estado.corte.set(p.id, doForn < Math.min(estado.resta, restaFase) ? 'SEM_ORCAMENTO_DO_FORNECEDOR' : 'SEM_ORCAMENTO');
         continue;
       }
       estado.qtd.set(p.id, q + x.n);
-      estado.resta -= x.n * p.custo;
-      estado.objetivo += x.razao * x.n * p.custo;
+      estado.resta -= x.n * p.custo; restaFase -= x.n * p.custo;
+      if (p.fornecedor) estado.gastoForn.set(p.fornecedor, (estado.gastoForn.get(p.fornecedor) || 0) + x.n * p.custo);
+      // objetivo = valor esperado em centavos (comparável entre fases, mesmo quando a ordem da fase é outra)
+      estado.objetivo += (opts.razao ? valorDoLote(p, p.posicao + q, x.n, cfg) : x.razao * x.n * p.custo);
       if (opts.registrar) estado.ultimaRazao = x.razao;
+      if (opts.marcar) estado.grande.set(p.id, (estado.grande.get(p.id) || 0) + x.n);
       estado.corte.delete(p.id);
       const y = proximo(p);
       if (y) fila.por(y);
@@ -295,9 +353,9 @@
   }
   const atingeMinimo = (t, m) => t.cents >= m.cents && t.un >= m.un;
 
-  /** Uma passada completa: prioritários até o ponto de reposição → fornecedores a completar → disputa geral. */
+  /** Uma passada completa: prioritários até o ponto de reposição → fornecedores a completar → reserva para pedido grande → disputa geral. */
   function passada(candidatos, cfg, fornecedores, prioritarios, excluidosForn, completar) {
-    const estado = { qtd: new Map(), corte: new Map(), resta: cfg.orcamento_cents === null ? Number.MAX_SAFE_INTEGER : cfg.orcamento_cents, objetivo: 0, ultimaRazao: null, inviaveis: new Set() };
+    const estado = { qtd: new Map(), corte: new Map(), resta: cfg.orcamento_cents === null ? SEM_LIMITE : cfg.orcamento_cents, objetivo: 0, ultimaRazao: null, inviaveis: new Set(), gastoForn: new Map(), grande: new Map() };
     const lista = candidatos.filter(p => !excluidosForn.has(p.fornecedor));
     const pri = lista.filter(p => prioritarios.has(p.id));
     comprarFase(pri, estado, cfg, { limite: p => Math.max(p.ponto, p.posicao + 1), minimoRazao: null });
@@ -310,6 +368,10 @@
       if (!pronto()) comprarFase(doForn, estado, cfg, { limite: p => Math.max(p.alvo, Math.ceil(p.v * cfg.minimo_fornecedor.cobertura_max_dias)), minimoRazao: null, parar: pronto });
       if (!pronto()) estado.inviaveis.add(id);
     }
+    if (cfg.pedido_grande.usar) comprarFase(lista.filter(p => p.grande.piso > 0), estado, cfg, { limite: p => p.grande.piso, minimoRazao: null, marcar: true, semCorte: true,
+      teto: cfg.orcamento_cents === null ? undefined : Math.floor(cfg.orcamento_cents * cfg.pedido_grande.fracao_max_orcamento),
+      // ordem: margem esperada das linhas grandes por real investido (mais frequentes e mais baratas primeiro)
+      razao: p => p.grande.linhas * p.margem / p.custo });
     comprarFase(lista, estado, cfg, { limite: p => p.alvo, minimoRazao: cfg.retorno_minimo, registrar: true });
     return estado;
   }
@@ -338,11 +400,12 @@
     for (const p of candidatos) {
       const q = estado.qtd.get(p.id) || 0;
       if (fora.has(p.fornecedor)) motivos.set(p.id, 'FORNECEDOR_ABAIXO_DO_MINIMO');
-      else if (q === 0) motivos.set(p.id, estado.corte.get(p.id) || 'SEM_ORCAMENTO');
+      else if (q === 0) motivos.set(p.id, estado.corte.get(p.id) || (p.posicao >= p.alvo ? 'ESTOQUE_SUFICIENTE' : 'SEM_ORCAMENTO'));
+      else if (estado.corte.get(p.id) === 'SEM_ORCAMENTO_DO_FORNECEDOR') motivos.set(p.id, 'PARCIAL_POR_TETO_DO_FORNECEDOR');
       else if (estado.corte.get(p.id) === 'SEM_ORCAMENTO' || (p.posicao + q < p.alvo && estado.corte.get(p.id) !== 'RETORNO_INSUFICIENTE')) motivos.set(p.id, 'PARCIAL_POR_ORCAMENTO');
       else motivos.set(p.id, 'CONTEMPLADO');
     }
-    return { qtd: estado.qtd, motivos, decisoes, usado_cents: candidatos.reduce((s, p) => s + (estado.qtd.get(p.id) || 0) * p.custo, 0), retorno_marginal: estado.ultimaRazao, objetivo_cents: estado.objetivo };
+    return { qtd: estado.qtd, grande: estado.grande, motivos, decisoes, usado_cents: candidatos.reduce((s, p) => s + (estado.qtd.get(p.id) || 0) * p.custo, 0), retorno_marginal: estado.ultimaRazao, objetivo_cents: estado.objetivo };
   }
 
   // ── Indicadores (ESTIMATIVA pelo modelo de demanda; janela: prazo de entrega + horizonte) ───────────────────────
@@ -359,12 +422,15 @@
     const atendida = q => ateChegada + amostras.reduce((s, d) => s + esperadoAte(depois, Math.max(0, p.posicao - d) + q), 0) / PONTOS;
     // chance de a sobra da chegada mais a compra não cobrirem a procura do horizonte
     const falta = q => amostras.reduce((s, d) => s + probAoMenos(depois, Math.floor(Math.max(0, p.posicao - d) + q) + 1), 0) / PONTOS;
+    // chance de, na chegada, a sobra mais a compra cobrirem de uma vez uma linha do tamanho grande observado
+    const grande = q => (p.grande.un ? amostras.filter(d => Math.max(0, p.posicao - d) + q >= p.grande.un - EPS).length / PONTOS : null);
     const base = atendida(0), faltaBase = p.v > 0 ? falta(0) : 0, faltaAntes = probAoMenos(antes, p.posicao + 1);
     return q => {
       const x = p.posicao + q, servida = q > 0 ? atendida(q) : base;
       const sobra = n => n - esperadoAte(d90, n);
       return { demanda: antes.mu + depois.mu, atendida: servida, atendida_sem_compra: base, p_falta: q > 0 && p.v > 0 ? falta(q) : faltaBase, p_falta_sem_compra: faltaBase, p_falta_antes_da_chegada: faltaAntes,
         margem_preservada_cents: p.margem * Math.max(0, servida - base), recuperado_cmv_cents: p.custo * Math.max(0, servida - base),
+        p_pedido_grande: grande(q), p_pedido_grande_sem_compra: grande(0),
         cobertura_antes: p.v > 0 ? p.posicao / p.v : null, cobertura_depois: p.v > 0 ? x / p.v : null,
         excesso_90d_cents: q > 0 ? p.custo * Math.max(0, sobra(x) - sobra(p.posicao)) : 0,
         acima_excesso_cents: p.v > 0 ? p.custo * Math.max(0, Math.min(q, x - p.v * cfg.excesso_dias)) : p.custo * q };
@@ -374,7 +440,7 @@
 
   /** Indicadores agregados para QUALQUER lista de quantidades (usado pela 1.4, pelos ajustes manuais e para avaliar outras regras). */
   function avaliar(prontos, qtd, cfg, medidores) {
-    const t = { demanda: 0, atendida: 0, atendidaSem: 0, demandaA: 0, atendidaA: 0, atendidaSemA: 0, rupturas: 0, rupturasSem: 0, nA: 0, dispA: 0, dispSemA: 0, margem: 0, recuperado: 0, excesso90: 0, acima: 0, estoqueCusto: 0, compra: 0, cmvDia: 0, capital: 0, unidades: 0, produtos: 0, escopo: 0 };
+    const t = { demanda: 0, atendida: 0, atendidaSem: 0, demandaA: 0, atendidaA: 0, atendidaSemA: 0, rupturas: 0, rupturasSem: 0, nA: 0, dispA: 0, dispSemA: 0, margem: 0, recuperado: 0, excesso90: 0, acima: 0, estoqueCusto: 0, compra: 0, cmvDia: 0, capital: 0, unidades: 0, produtos: 0, escopo: 0, pgPeso: 0, pg: 0, pgSem: 0 };
     const forn = new Set();
     for (const p of prontos) {
       const q = qtd.get(p.id) || 0;
@@ -385,6 +451,7 @@
       const x = m(q);
       t.escopo++; t.demanda += x.demanda; t.atendida += x.atendida; t.atendidaSem += x.atendida_sem_compra; t.rupturas += x.p_falta; t.rupturasSem += x.p_falta_sem_compra;
       if (p.classe === 'A') { t.demandaA += x.demanda; t.atendidaA += x.atendida; t.atendidaSemA += x.atendida_sem_compra; t.nA++; t.dispA += 1 - x.p_falta; t.dispSemA += 1 - x.p_falta_sem_compra; }
+      if (x.p_pedido_grande !== null) { t.pgPeso += p.grande.linhas; t.pg += p.grande.linhas * x.p_pedido_grande; t.pgSem += p.grande.linhas * x.p_pedido_grande_sem_compra; }
       t.margem += x.margem_preservada_cents; t.recuperado += x.recuperado_cmv_cents; t.excesso90 += x.excesso_90d_cents; t.acima += x.acima_excesso_cents;
       t.estoqueCusto += p.posicao * p.custo; t.compra += q * p.custo; t.cmvDia += p.v * p.custo;
     }
@@ -397,6 +464,7 @@
       rupturas_previstas: t.rupturas, rupturas_sem_compra: t.rupturasSem,
       disponibilidade_A_pct: pct(t.dispA, t.nA), disponibilidade_A_sem_compra_pct: pct(t.dispSemA, t.nA),
       margem_preservada_cents: Math.round(t.margem),
+      pedido_grande_pct: pct(t.pg, t.pgPeso), pedido_grande_sem_compra_pct: pct(t.pgSem, t.pgPeso),
       cobertura_antes_dias: t.cmvDia > 0 ? t.estoqueCusto / t.cmvDia : null, cobertura_depois_dias: t.cmvDia > 0 ? (t.estoqueCusto + t.compra) / t.cmvDia : null,
       excesso_90d_cents: Math.round(t.excesso90), acima_do_excesso_cents: Math.round(t.acima),
       capital_giro_liquido_cents: Math.round(t.capital - t.recuperado),
@@ -408,20 +476,23 @@
   const reais = c => 'R$ ' + (c / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const MOTIVOS = {
     CONTEMPLADO: 'Contemplado', PARCIAL_POR_ORCAMENTO: 'Parcial: orçamento acabou', SEM_ORCAMENTO: 'Não contemplado: falta de orçamento',
+    PARCIAL_POR_TETO_DO_FORNECEDOR: 'Parcial: teto do fornecedor', SEM_ORCAMENTO_DO_FORNECEDOR: 'Não contemplado: teto do fornecedor',
     RETORNO_INSUFICIENTE: 'Não compensa: retorno esperado abaixo do corte', FORNECEDOR_ABAIXO_DO_MINIMO: 'Fornecedor não atinge o pedido mínimo',
     ACIMA_DO_PONTO: 'Estoque ainda acima do ponto de reposição', ESTOQUE_SUFICIENTE: 'Estoque suficiente', REVISAR_RUPTURA_LONGA: 'Revisão manual: falta longa sem venda recente',
     ORIGEM_NAO_COMPROVADA: 'Revisão manual: compra sem origem comprovada', MARGEM_NAO_POSITIVA: 'Revisão manual: preço realizado não supera o custo',
     MARCADO_NAO_COMPRAR: 'Marcado para não comprar', SEM_DEMANDA: 'Sem demanda prevista', SEM_CUSTO: 'Sem custo cadastrado', EXCLUIDO_PELO_USUARIO: 'Excluído pelo usuário', FORA_DO_FILTRO: 'Fora do filtro', FORA_DA_REPOSICAO: 'Fora da reposição (regra vigente)',
   };
-  const PRAZOS = { CONFIG_PRODUTO: 'cadastrado', CONFIG_FORNECEDOR: 'cadastrado no fornecedor', PROXY_FORNECEDOR: 'aproximado pelo histórico do fornecedor', PROXY_GERAL: 'aproximado pelo histórico geral', PREMISSA_SEM_DADO: 'premissa', PREMISSA_IMPORTADO: 'premissa de importado' };
-  function justificar(p, q, motivo, m, cfg, decisaoForn) {
+  const PRAZOS = { CONFIG_PRODUTO: 'cadastrado', CONFIG_FORNECEDOR: 'cadastrado no fornecedor', PROXY_FORNECEDOR: 'aproximado pelo histórico do fornecedor', PROXY_GERAL: 'aproximado pelo histórico geral', PREMISSA_SEM_DADO: 'premissa', PREMISSA_IMPORTADO: 'premissa de importado', CADASTRO_INFORMADO: 'informado no cadastro do fornecedor', CADASTRO_ESTIMADO: 'cadastro do fornecedor, valor estimado', SIMULADO_FORNECEDOR: 'definido nesta simulação para o fornecedor', SIMULADO_GERAL: 'definido nesta simulação', SIMULADO_FATOR: 'ajustado por fator nesta simulação' };
+  const SEM_ORCAMENTO_ALGUM = ['SEM_ORCAMENTO', 'PARCIAL_POR_ORCAMENTO', 'SEM_ORCAMENTO_DO_FORNECEDOR', 'PARCIAL_POR_TETO_DO_FORNECEDOR'];
+  function justificar(p, q, motivo, m, cfg, decisaoForn, unGrande = 0) {
     const it = p.item, L = [];
     L.push(`Classe ${p.classe}${p.chave[1]} · venda prevista ${num(p.v, 2)}/dia${p.v > p.v_observada + 1e-9 ? ` (observada ${num(p.v_observada, 2)}; corrigida por falta de estoque, estimativa)` : ''}${p.cresc > 1 ? ` · sinal de crescimento +${num((p.cresc - 1) * 100, 0)}% na cobertura` : ''}.`);
-    L.push(`Prazo ${num(p.L, 0)} dias (${PRAZOS[it.prazo_fonte] || 'não informado'}) + ${num(p.R, 0)} de revisão; cobertura ${num(p.C, 0)} dias.`);
+    L.push(`Prazo ${num(p.L, 0)} dias (${PRAZOS[p.prazo_fonte] || 'não informado'}) + ${num(p.R, 0)} de revisão; cobertura ${num(p.C, 0)} dias.`);
     L.push(`Posição ${num(p.posicao, 0)} un (estoque ${num(p.estoque, 0)} + a caminho ${num(p.transito.recente, 0)}${p.transito.antigo_total ? ` + pedido antigo considerado ${num(p.transito.antigo_considerado, 0)} de ${num(p.transito.antigo_total, 0)}` : ''}) · ponto de reposição ${num(p.ponto, 0)} (${num(p.nivel * 100, 0)}% de nível de serviço) · alvo ${num(p.alvo, 0)}.`);
     if (m) L.push(`Chance de faltar nos ${num(cfg.horizonte_dias, 0)} dias após a chegada: ${num(m.p_falta_sem_compra * 100, 0)}% sem compra → ${num(m.p_falta * 100, 0)}% com ${num(q, 0)} un. Antes da chegada (não evitável por esta compra): ${num(m.p_falta_antes_da_chegada * 100, 0)}%. Margem preservada estimada: ${reais(m.margem_preservada_cents)}.`);
     if (q > 0 && p.custo > 0) L.push(`Valor esperado destas unidades por real investido: ${num(valorDoLote(p, p.posicao, q, cfg) / (q * p.custo), 2)} (margem unitária ${reais(p.margem)}, custo ${reais(p.custo)}).`);
     if (p.multiplo > 1 || p.minimo > 1) L.push(`Embalagem: mínimo ${p.minimo}, múltiplo ${p.multiplo}.`);
+    if (m && p.grande.un) L.push(`Pedido grande (percentil ${cfg.pedido_grande.percentil} das linhas de venda: ${num(p.grande.un, 0)} un, ${num(p.grande.linhas, 0)} linhas em 12 meses): chance de ter estoque para ele na chegada ${num(m.p_pedido_grande_sem_compra * 100, 0)}% sem compra → ${num(m.p_pedido_grande * 100, 0)}%.${unGrande > 0 ? ` ${num(unGrande, 0)} un entraram pela reserva para pedido grande (custo ${reais(unGrande * p.custo)}; manter parado custa cerca de ${reais(unGrande * p.custo * cfg.custo_manutencao_anual)} por ano).` : ''}`);
     if (it.origem_comprovada === false) L.push(`Atenção: origem de abastecimento não comprovada (${it.origem_motivo || 'sem detalhe'}).`);
     if (decisaoForn) L.push(decisaoForn === 'COMPLETADO_ATE_O_MINIMO' ? 'O fornecedor foi completado até o pedido mínimo.' : 'O fornecedor ficou de fora por não atingir o pedido mínimo com retorno suficiente.');
     L.push(MOTIVOS[motivo] || motivo);
@@ -445,6 +516,11 @@
     totais.saldo_cents = cfg.orcamento_cents === null ? null : cfg.orcamento_cents - totais.capital_cents;
     totais.retorno_marginal = aloc.retorno_marginal;
     if (!opts.semNecessario) totais.capital_necessario_cents = cfg.orcamento_cents === null ? aloc.usado_cents : alocar(prontos, { ...cfg, orcamento_cents: null }, fornecedores).usado_cents;
+    // custo explícito da reserva para pedido grande: unidades compradas por ela e o custo anual de mantê-las
+    if (cfg.pedido_grande.usar) {
+      const reservado = prontos.reduce((s, p) => s + (aloc.grande.get(p.id) || 0) * p.custo, 0);
+      totais.pedido_grande = { capital_reservado_cents: Math.round(reservado), custo_anual_cents: Math.round(reservado * cfg.custo_manutencao_anual), taxa_anual: cfg.custo_manutencao_anual };
+    }
 
     const linhas = [];
     for (const p of prontos) {
@@ -458,12 +534,14 @@
       linhas.push({ id: p.id, codigo: it.codigo || null, nome: it.nome || null, categoria: it.categoria || null, marca: it.marca || null, fornecedor_id: p.fornecedor, classe: p.classe, xyz: p.chave[1],
         estado: it.estado, estoque: p.estoque, a_caminho: p.posicao - p.estoque, posicao: p.posicao, ponto: p.ponto, alvo: p.alvo, multiplo: p.multiplo, minimo: p.minimo,
         qtd_recomendada: rec, qtd: q, ajustado, custo_cents: p.custo, valor_cents: q * p.custo, motivo, motivo_texto: MOTIVOS[motivo] || motivo,
-        falta_para_o_alvo_cents: motivo === 'SEM_ORCAMENTO' || motivo === 'PARCIAL_POR_ORCAMENTO' ? Math.max(0, acimaMultiplo(Math.max(0, p.alvo - p.posicao), p.multiplo) - q) * p.custo : 0,
+        falta_para_o_alvo_cents: SEM_ORCAMENTO_ALGUM.includes(motivo) ? Math.max(0, acimaMultiplo(Math.max(0, p.alvo - p.posicao), p.multiplo) - q) * p.custo : 0,
+        prazo_dias: p.L, prazo_fonte: p.prazo_fonte, prazo_texto: PRAZOS[p.prazo_fonte] || 'não informado', pedido_grande_un: p.grande.un || null, reservado_pedido_grande: aloc.grande.get(p.id) || 0,
+        risco_pedido_grande: m && m.p_pedido_grande !== null ? 1 - m.p_pedido_grande : null,
         valor_por_real: q > 0 && p.custo > 0 && p.v > 0 ? valorDoLote(p, p.posicao, q, cfg) / (q * p.custo) : null,
         ordem_recomendada: rec > 0 && p.custo > 0 && p.v > 0 ? valorDoLote(p, p.posicao, rec, cfg) / (rec * p.custo) : null,
         cobertura_antes: m ? m.cobertura_antes : null, cobertura_depois: m ? m.cobertura_depois : null, risco_antes: m ? m.p_falta_sem_compra : null, risco_depois: m ? m.p_falta : null,
         margem_preservada_cents: m ? Math.round(m.margem_preservada_cents) : 0, excesso_90d_cents: m ? Math.round(m.excesso_90d_cents) : 0,
-        justificativa: [...justificar(p, q, motivo, m, cfg, aloc.decisoes[p.fornecedor]), ...(ajustado ? [`Ajuste manual: ${num(q, 0)} un (recomendado ${num(rec, 0)}).`] : [])] });
+        justificativa: [...justificar(p, q, motivo, m, cfg, aloc.decisoes[p.fornecedor], aloc.grande.get(p.id) || 0), ...(ajustado ? [`Ajuste manual: ${num(q, 0)} un (recomendado ${num(rec, 0)}).`] : [])] });
     }
     // a ordem segue a RECOMENDAÇÃO (um ajuste manual não faz a linha mudar de lugar)
     linhas.sort((a, b) => (b.qtd_recomendada > 0) - (a.qtd_recomendada > 0) || (b.ordem_recomendada || 0) - (a.ordem_recomendada || 0) || (b.falta_para_o_alvo_cents - a.falta_para_o_alvo_cents) || String(a.id).localeCompare(String(b.id)));
@@ -484,6 +562,8 @@
     const lista = [...porForn.values()].sort((a, b) => b.valor_cents - a.valor_cents || String(a.nome).localeCompare(String(b.nome)));
     const alertas = [];
     if (cfg.orcamento_cents !== null && totais.capital_cents > cfg.orcamento_cents) alertas.push('AJUSTES_ULTRAPASSAM_O_ORCAMENTO');
+    if (lista.some(g => g.fornecedor_id && cfg.orcamento_fornecedor_cents[g.fornecedor_id] !== undefined && g.valor_cents > cfg.orcamento_fornecedor_cents[g.fornecedor_id])) alertas.push('AJUSTES_ULTRAPASSAM_O_TETO_DO_FORNECEDOR');
+    if (linhas.some(l => l.ajustado && l.qtd > 0 && (l.qtd < l.minimo || l.qtd % l.multiplo !== 0))) alertas.push('AJUSTES_FORA_DO_MINIMO_OU_MULTIPLO');
     if (lista.some(g => g.situacao === 'ABAIXO_DO_MINIMO')) alertas.push('FORNECEDOR_ABAIXO_DO_MINIMO');
     if (linhas.some(l => l.motivo === 'ORIGEM_NAO_COMPROVADA')) alertas.push('HA_PRODUTOS_SEM_ORIGEM_COMPROVADA');
     if (linhas.some(l => l.motivo === 'REVISAR_RUPTURA_LONGA')) alertas.push('HA_PRODUTOS_EM_REVISAO_MANUAL');
@@ -492,16 +572,16 @@
   }
 
   const COLUNAS = ['produto', 'codigo', 'nome', 'fornecedor_id', 'categoria', 'classe', 'xyz', 'estoque', 'a_caminho', 'qtd_recomendada', 'qtd_simulada', 'custo_reais', 'valor_reais', 'situacao', 'cobertura_antes_dias', 'cobertura_depois_dias', 'risco_falta_antes_pct', 'risco_falta_depois_pct', 'margem_preservada_reais', 'justificativa'];
-  /** CSV (";" e vírgula decimal). Textos que começam como fórmula são neutralizados para planilhas. */
-  function csv(linhas, { comNomes = true } = {}) {
+  /** CSV (";" e vírgula decimal). Textos que começam como fórmula são neutralizados para planilhas. `extras` = { coluna: linha => valor }. */
+  function csv(linhas, { comNomes = true, extras = {} } = {}) {
     const dec = (x, c = 2) => (x === null || x === undefined || !Number.isFinite(x) ? '' : String(Math.round(x * 10 ** c) / 10 ** c).replace('.', ','));
     const texto = x => { let s = x === null || x === undefined ? '' : String(x); if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(,\d+)?$/.test(s)) s = "'" + s; return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
-    const cols = COLUNAS.filter(c => comNomes || c !== 'nome');
+    const cols = [...COLUNAS.filter(c => comNomes || c !== 'nome'), ...Object.keys(extras)];
     const linha = l => ({ produto: l.id, codigo: l.codigo, nome: l.nome, fornecedor_id: l.fornecedor_id, categoria: l.categoria, classe: l.classe, xyz: l.xyz, estoque: dec(l.estoque), a_caminho: dec(l.a_caminho), qtd_recomendada: l.qtd_recomendada, qtd_simulada: l.qtd,
       custo_reais: dec(l.custo_cents / 100), valor_reais: dec(l.valor_cents / 100), situacao: l.motivo_texto, cobertura_antes_dias: dec(l.cobertura_antes, 0), cobertura_depois_dias: dec(l.cobertura_depois, 0),
       risco_falta_antes_pct: dec(l.risco_antes === null ? null : l.risco_antes * 100, 0), risco_falta_depois_pct: dec(l.risco_depois === null ? null : l.risco_depois * 100, 0), margem_preservada_reais: dec(l.margem_preservada_cents / 100), justificativa: (l.justificativa || []).join(' ') });
-    return [[...cols].join(';'), ...linhas.map(l => { const o = linha(l); return cols.map(c => texto(o[c])).join(';'); })].join('\n') + '\n';
+    return [[...cols].join(';'), ...linhas.map(l => { const o = linha(l); for (const [c, f] of Object.entries(extras)) o[c] = f(l); return cols.map(c => texto(o[c])).join(';'); })].join('\n') + '\n';
   }
 
-  return { ROTULO, PARAMETROS, MOTIVOS, configurar, validar, distribuicao, probAoMenos, esperadoAte, quantil, aCaminho, preparar, noFiltro, impedimento, valorDoLote, somaDias, minimoDoFornecedor, alocar, avaliar, medidor, justificar, simular, csv };
+  return { ROTULO, PARAMETROS, MOTIVOS, PRAZOS, PERCENTIS, SEM_ORCAMENTO_ALGUM, configurar, validar, distribuicao, probAoMenos, esperadoAte, quantil, aCaminho, preparar, prazoDe, embalagemDe, pedidoGrande, noFiltro, impedimento, valorDoLote, somaDias, minimoDoFornecedor, alocar, avaliar, medidor, justificar, simular, csv };
 });

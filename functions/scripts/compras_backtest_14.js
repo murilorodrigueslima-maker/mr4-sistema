@@ -8,6 +8,7 @@
  * fronteira     backtest 05/01–25/11/2026 SEM vazamento de futuro: capital médio × atendimento por família de regra
  * sensibilidade prazo real, demanda reprimida e pedido mínimo por fornecedor
  * resumir       refaz as tabelas derivadas (mesmo capital, retornos decrescentes) de uma execução já salva
+ * pedidos-grandes  reserva para linhas de venda grandes: linhas grandes atendidas por completo × capital médio (só com --partes)
  */
 const fs = require('fs');
 const path = require('path');
@@ -32,8 +33,27 @@ function montar(pasta) {
   dados.empiricos = B13.prazosEmpiricos(dados.ent.compras);
   return montarDe(dados);
 }
+/** Linhas de venda por produto (produto somado na mesma venda): { id: { dia: [quantidades na ordem do número da venda] } }. */
+function linhasPorDia(fatosVenda, inicio) {
+  const porVenda = new Map();
+  fatosVenda.forEach((f, i) => {
+    if (!f.counts_as_demand || !f.date || !(f.qty > 0) || !f.product_id) return;
+    const k = [f.product_id, f.date, f.sale_id === null ? 'sem-id-' + i : f.sale_id].join('\u0000');
+    porVenda.set(k, (porVenda.get(k) || 0) + f.qty);
+  });
+  const out = new Map();
+  for (const [k, q] of [...porVenda].sort(([a], [b]) => a.localeCompare(b))) {
+    const [id, data] = k.split('\u0000'), t = diffDias(inicio, data);
+    const dias = out.get(id) || out.set(id, new Map()).get(id);
+    (dias.get(t) || dias.set(t, []).get(t)).push(q);
+  }
+  return out;
+}
 function montarDe(dados) {
   const bt = B13.montarBacktest(dados, P13);
+  bt.linhas = linhasPorDia(dados.fatosVenda, dados.series.inicio);
+  const fatosDe = new Map();
+  for (const f of dados.fatosVenda) if (f.product_id) (fatosDe.get(f.product_id) || fatosDe.set(f.product_id, []).get(f.product_id)).push(f);
   const G = S14.GERACAO.crescimento;
   bt.itens14 = new Map(bt.revisoes.map(t => {
     const mapa = bt.fatos.get(t);
@@ -50,7 +70,9 @@ function montarDe(dados) {
         custo_cents: Math.round(u.custo * 100), preco_cents: Math.round(x.f.preco_cents || 0),
         v: novo ? x.eleg.velocidade_novo : x.prev.v, v_observada: novo ? x.eleg.velocidade_novo : x.prev.v_observada, sd_dia: x.variab.desvio_semanal_ajustado / Math.sqrt(7),
         esporadico: x.variab.semanas_com_venda < P13.seguranca.min_semanas_com_venda, novo, prazo_dias: x.prazo.dias, prazo_desvio: x.prazo.desvio_dias, prazo_fonte: x.prazo.fonte,
-        crescimento_fator: g, origem_comprovada: true, transito: {} };
+        crescimento_fator: g, origem_comprovada: true, transito: {},
+        // tamanho das linhas de venda como era conhecido na véspera
+        linhas_venda: S14.linhasDeVenda(fatosDe.get(id) || [], dados.series.datas[t - 1]).get(id) || null };
     })];
   }));
   return { dados, bt };
@@ -90,11 +112,12 @@ function simular(m, c) {
   const n = universo.length;
   const est = universo.map(u => u.estoque0), fila = universo.map(() => []);
   const rev = new Set(revisoes), corte = diffDias(dados.series.inicio, CORTE_METADE);
-  const zero = () => ({ dem: 0, atendida: 0, diasComDemanda: 0, diasZerado: 0, margemPerdida: 0, estoque: 0, transito: 0, dias: 0, excesso: 0, diasExc: 0, linhas: 0, pedidosForn: 0, comprado: 0, revisoes: 0, demA: 0, atA: 0, zA: 0, nA: 0 });
+  const zero = () => ({ linhasV: 0, linhasOk: 0, grandes: 0, grandesOk: 0, unGrandes: 0, unGrandesOk: 0, dem: 0, atendida: 0, diasComDemanda: 0, diasZerado: 0, margemPerdida: 0, estoque: 0, transito: 0, dias: 0, excesso: 0, diasExc: 0, linhas: 0, pedidosForn: 0, comprado: 0, revisoes: 0, demA: 0, atA: 0, zA: 0, nA: 0 });
   const per = { total: zero(), m1: zero(), m2: zero() };
   let capitalMax = 0;
   const futuro = universo.map(u => { const a = new Float64Array(i1 + 2); for (let i = i1; i >= 0; i--) a[i] = a[i + 1] + u.s.dem[i]; return a; });
   const ultimaPrev = universo.map(() => 0);
+  const corteGrande = universo.map(() => null);          // linha "grande" = percentil 90 conhecido na véspera da última revisão (≥ 2 un, ≥ 10 linhas)
   const prazoReal = (k, t) => (c.prazoReal === undefined || c.prazoReal === 'empirico' ? emp[Math.floor(B13.sorteio('prazo', universo[k].p.product_id, t) * emp.length)] : c.prazoReal);
   const cfg13 = c.ciclo13 === undefined ? P13 : comConfig(P13, { ciclo_dias: Object.fromEntries(CLS.map(a => [a, Math.max(0.01, P13.ciclo_dias[a] * c.ciclo13)])) });
   const cfg14 = c.politica === '14' ? A.configurar({ ...(c.cfg14 || {}), origem: 'INCLUIR', ...(c.minimoForn ? { minimo_fornecedor: { modo: 'CADASTRADO', valor_padrao_cents: c.minimoForn * 100 } } : { minimo_fornecedor: { modo: 'NENHUM' } }) }) : null;
@@ -103,6 +126,7 @@ function simular(m, c) {
     const alvos = [per.total, dados.series.datas[t] < CORTE_METADE ? per.m1 : per.m2];
     for (let k = 0; k < n; k++) { const q = fila[k]; for (let j = q.length - 1; j >= 0; j--) if (q[j][0] <= t) { est[k] += q[j][1]; q.splice(j, 1); } }
     if (rev.has(t)) {
+      bt.itens14.get(t).forEach((it, k) => { const x = it.linhas_venda; corteGrande[k] = x && x.n >= 10 && x.p90 >= 2 ? x.p90 : null; });
       const mapa = fatos.get(t), ocupado = universo.reduce((s, u, k) => s + (est[k] + soma(fila[k], o => o[1])) * u.custo, 0);
       let resta = Math.min(c.orcSemana ?? Infinity, c.teto ? Math.max(0, c.teto - ocupado) : Infinity);
       let lista = [];
@@ -157,6 +181,13 @@ function simular(m, c) {
       const u = universo[k];
       let d = u.s.dem[t];
       if (c.descensurada && K.indisponivel(u.s, t)) d += ultimaPrev[k];
+      const doDia = bt.linhas && bt.linhas.get(u.p.product_id);
+      let saldo = est[k];
+      for (const q of (doDia && doDia.get(t)) || []) {          // linha a linha: atendida por completo ou não
+        const sai = Math.min(saldo, q), grande = corteGrande[k] !== null && q >= corteGrande[k];
+        for (const g of alvos) { g.linhasV++; if (sai >= q) g.linhasOk++; if (grande) { g.grandes++; if (sai >= q) g.grandesOk++; g.unGrandes += q; g.unGrandesOk += sai; } }
+        saldo -= sai;
+      }
       const v = Math.min(est[k], d); est[k] -= v;
       const rec90 = futuro[k][Math.max(0, t - 89)] - futuro[k][t + 1];
       const A_ = u.classeInicial === 'A';
@@ -174,7 +205,8 @@ function simular(m, c) {
   const fechar = g => ({ atendido_pct: r1(100 * g.atendida / g.dem), atendido_A_pct: r1(100 * g.atA / g.demA), falta_pct: r1(100 * g.diasZerado / g.diasComDemanda), falta_A_pct: r1(100 * g.zA / g.nA),
     estoque_medio: Math.round(g.estoque / g.dias), transito_medio: Math.round(g.transito / g.dias), capital_medio: Math.round((g.estoque + g.transito) / g.dias),
     excesso_medio: g.diasExc ? Math.round(g.excesso / g.diasExc) : null, margem_perdida: Math.round(g.margemPerdida), compra_total: Math.round(g.comprado), compra_semana: Math.round(g.comprado / Math.max(1, g.revisoes)),
-    linhas: g.linhas, pedidos_fornecedor: g.pedidosForn, margem_perdida_ano: Math.round(g.margemPerdida * 365 / g.dias) });
+    linhas: g.linhas, pedidos_fornecedor: g.pedidosForn, margem_perdida_ano: Math.round(g.margemPerdida * 365 / g.dias),
+    linhas_completas_pct: r1(100 * g.linhasOk / g.linhasV), grandes: g.grandes, grandes_completas_pct: r1(100 * g.grandesOk / g.grandes), grandes_un_pct: r1(100 * g.unGrandesOk / g.unGrandes) });
   return { ...fechar(per.total), capital_pico: Math.round(capitalMax), metade1: fechar(per.m1), metade2: fechar(per.m2) };
 }
 
@@ -270,6 +302,32 @@ function mesmoCapital(runs, recorte = r => r) {
     for (const cap of CAPITAIS) { const m = misturaNoCapital(pts, cap); out.push({ familia: fam, capital: cap, ...Object.fromEntries(INDICADORES.map(k => [k, m ? m(k) : null])) }); }
   }
   return out;
+}
+
+// ── pedidos grandes: a reserva melhora o atendimento de linhas grandes no MESMO capital? ─────────────────────────
+const CAPITAIS_PG = [275000, 300000, 325000, 350000, 400000];
+const IND_PG = ['grandes_completas_pct', 'grandes_un_pct', 'linhas_completas_pct', 'atendido_pct', 'margem_perdida_ano'];
+function casosPedidoGrande() {
+  const f = [], add = (familia, nome, c) => f.push({ familia, nome, c });
+  for (const m of [0, 0.25, 0.5, 1, 1.5, 2, 3]) add('1.4 sem reserva', `cobertura x ${m}`, { politica: '14', cfg14: cobertura(m) });
+  for (const k of [1, 1.5, 2, 2.5, 3, 3.5, 4]) add('dias x k', `dias x ${k}`, { politica: 'dias', k });
+  const variantes = { 'reserva P80 60 dias': { percentil: 80 }, 'reserva P90 60 dias': {}, 'reserva P95 60 dias': { percentil: 95 }, 'reserva P90 30 dias': { teto_dias: 30 }, 'reserva P90 120 dias': { teto_dias: 120 }, 'reserva P90 60 dias + prazo': { somar_prazo: true } };
+  for (const [nome, v] of Object.entries(variantes)) for (const m of [0, 0.25, 0.5, 1, 1.5, 2]) add(nome, `${nome} · cobertura x ${m}`, { politica: '14', cfg14: { ...cobertura(m), pedido_grande: { usar: true, ...v } } });
+  for (const o of [9000, 12000, 15000, 22000, 28000]) {
+    add('semana: sem reserva', `R$ ${o / 1000} mil`, { politica: '14', orcSemana: o });
+    for (const fr of [0.1, 0.2, 0.4]) add(`semana: reserva ${fr * 100}%`, `R$ ${o / 1000} mil`, { politica: '14', orcSemana: o, cfg14: { pedido_grande: { usar: true, fracao_max_orcamento: fr } } });
+    add('semana: dias x 2,5 rateado', `R$ ${o / 1000} mil`, { politica: 'dias', k: 2.5, orcSemana: o, rateio: true });
+  }
+  return f;
+}
+function pedidosGrandes(m, log = () => {}) {
+  const runs = casosPedidoGrande().map((f, i, t) => { if (i % 10 === 0) log(`  ${i}/${t.length}`); return { familia: f.familia, nome: f.nome, r: simular(m, f.c) }; });
+  const mesmo = [];
+  for (const recorte of ['ano', 'metade1', 'metade2']) for (const familia of [...new Set(runs.filter(r => !r.familia.startsWith('semana')).map(r => r.familia))]) {
+    const pts = runs.filter(r => r.familia === familia).map(r => (recorte === 'ano' ? r.r : r.r[recorte]));
+    for (const capital of CAPITAIS_PG) mesmo.push({ recorte, familia, capital, ...Object.fromEntries(IND_PG.map(k => [k, noCapital(pts, capital, k, k !== 'margem_perdida_ano')])) });
+  }
+  return { runs, mesmo_capital: mesmo };
 }
 
 // ── ajuste de parâmetros: só a 1ª metade escolhe ────────────────────────────────────────────────────────────────
@@ -418,7 +476,7 @@ function principal(argv = process.argv.slice(2)) {
     const arq = path.join(a.saida, 'sensibilidade.json');
     if (fs.existsSync(arq)) { const s = JSON.parse(fs.readFileSync(arq, 'utf8')); for (const v of Object.values(s)) v.mesmo_capital = mesmoCapital(v.runs); grava('sensibilidade.json', JSON.stringify(s, null, 1)); }
   }
-  if (!['ajuste', 'fronteira', 'sensibilidade'].some(p => partes.has(p))) return;
+  if (!['ajuste', 'fronteira', 'sensibilidade', 'pedidos-grandes'].some(p => partes.has(p))) return;
   log('preparando backtest (fatos por semana, sem futuro)');
   const m = montar(a['de-arquivo']);
   const universo = { produtos: m.bt.universo.length, A: m.bt.universo.filter(u => u.classeInicial === 'A').length, estoque_inicial: Math.round(soma(m.bt.universo, u => u.estoque0 * u.custo)), revisoes: m.bt.revisoes.length };
@@ -433,6 +491,13 @@ function principal(argv = process.argv.slice(2)) {
     const runs = [...familias(extra14).map(f => ({ ...f, mecanismo: f.c.teto ? 'teto de capital' : 'livre' })), ...porOrcamento(extra14).map(f => ({ ...f, mecanismo: 'orçamento semanal' }))]
       .map((f, i, t) => { if (i % 10 === 0) log(`  ${i}/${t.length}`); return { familia: f.familia, nome: f.nome, mecanismo: f.mecanismo, c: f.c, r: simular(m, f.c) }; });
     gravarResumo(grava, universo, runs);
+  }
+  if (partes.has('pedidos-grandes')) {
+    log('pedidos grandes');
+    const pg = pedidosGrandes(m, log);
+    grava('pedidos-grandes.json', JSON.stringify({ universo, ...pg }, null, 1));
+    grava('E3-pedidos-grandes-simulacoes.csv', csv(pg.runs.flatMap(r => [['ano', r.r], ['1a metade', r.r.metade1], ['2a metade', r.r.metade2]].map(([recorte, x]) => ({ familia: r.familia, nome: r.nome, recorte, ...x }))), ['familia', 'nome', 'recorte', 'capital_medio', 'atendido_pct', 'linhas_completas_pct', 'grandes', 'grandes_completas_pct', 'grandes_un_pct', 'margem_perdida_ano', 'excesso_medio', 'linhas']));
+    grava('E3-pedidos-grandes-mesmo-capital.csv', csv(pg.mesmo_capital, ['recorte', 'familia', 'capital', ...IND_PG]));
   }
   if (partes.has('sensibilidade')) {
     log('sensibilidade');
@@ -453,4 +518,4 @@ function principal(argv = process.argv.slice(2)) {
 }
 
 if (require.main === module) principal();
-module.exports = { principal, montar, montarDe, simular, resumirFronteira, misturaNoCapital, fronteira, noCapital, retornoDecrescente, porUrgencia, rateado, semPequenos, familias, porOrcamento, mesmoCapital, hoje, VARIANTES, ORCAMENTOS };
+module.exports = { principal, montar, montarDe, linhasPorDia, casosPedidoGrande, pedidosGrandes, simular, resumirFronteira, misturaNoCapital, fronteira, noCapital, retornoDecrescente, porUrgencia, rateado, semPequenos, familias, porOrcamento, mesmoCapital, hoje, VARIANTES, ORCAMENTOS };

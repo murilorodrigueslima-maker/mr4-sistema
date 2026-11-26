@@ -35,6 +35,7 @@
   .nav-section { font-size: .65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; padding: .5rem 1.25rem; }
   .nav-item { display: flex; align-items: center; gap: .6rem; padding: .6rem 1.25rem; font-size: .85rem; color: var(--text); text-decoration: none; }
   .nav-item:hover { background: var(--bg); }
+  .link-plan { display: none; margin-left: auto; font-size: .8rem; font-weight: 600; color: var(--blue); text-decoration: none; padding: .35rem .7rem; border: 1px solid var(--blue); border-radius: 999px; white-space: nowrap; }
   .nav-item.active { background: var(--blue-bg); color: var(--blue); font-weight: 600; border-right: 3px solid var(--blue); }
   .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); }
   .btn-sair { width: 100%; padding: .55rem; border: 1px solid var(--border); background: var(--white); border-radius: 8px; cursor: pointer; font: inherit; font-size: .8rem; color: var(--muted); }
@@ -229,6 +230,7 @@
   }
   @media (max-width: 900px) {
     .sidebar { display: none !important; }
+    .link-plan { display: inline-block; }   /* sem a barra lateral, o atalho fica no topo (só aparece para a gestão) */
     .main { margin-left: 0; padding: 1rem 1rem 3rem; }
     .chips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .row.head { display: none; }
@@ -261,6 +263,7 @@
   <nav class="sidebar-nav">
     <div class="nav-section">Módulos</div>
     <a class="nav-item active" href="compras.html">🛒 Compras &amp; Estoque</a>
+    <a class="nav-item" href="compras-simulador14.html" id="navPlanejamento" style="display:none">🧮 Planejamento de compra</a>
     <a class="nav-item" href="expedicao.html">🚚 Expedição</a>
     <a class="nav-item" href="ponto.html">📍 Ponto</a>
     <a class="nav-item" href="garantia.html">🛡️ Garantia</a>
@@ -275,6 +278,7 @@
       <h1>Sugestões de compra</h1>
       <div class="sub" id="sub">—</div>
     </div>
+    <a class="link-plan" href="compras-simulador14.html" id="linkPlanejamento" style="display:none">🧮 Planejamento de compra</a>
     <span class="fresh" id="fresh">—</span>
   </div>
   <div class="aviso">
@@ -370,6 +374,8 @@ async function carregarCompras() {
     try { const c = await getDoc(doc(db, 'compras_n0_view', 'custos')); estado.custos = c.exists() ? c.data() : null; }
     catch (_) { estado.custos = null; }   // perfil sem permissão de custo: Rules negam; nada é baixado
     window.__comprasPerf.load_ms = Math.round(performance.now() - t0);
+    // Planejamento de compra: só aparece para quem as Rules deixam ler custo (gestão com módulo Estoque); sem leitura extra
+    for (const id of ['navPlanejamento', 'linkPlanejamento']) { const a = document.getElementById(id); if (a) a.style.display = estado.custos ? '' : 'none'; }
     estado.fin = Object.fromEntries(Object.entries((estado.custos && estado.custos.linhas) || {}).filter(([, k]) => k && k.fin).map(([id, k]) => [id, k.fin]));
     estado.finOn = Object.keys(estado.fin).length > 0;   // só com custo liberado E servidor na Política 1.2
     // produtos fora da lista operacional que pedem revisão financeira (linhas enxutas, só no documento de custos)

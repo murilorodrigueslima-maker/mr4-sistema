@@ -1,7 +1,8 @@
 'use strict';
 // AGENTE COMPRAS & ESTOQUE MR4 — Política 1.4 em SOMBRA: monta as ENTRADAS do simulador a partir das leituras já existentes
-// de Compras e grava SOMENTE na coleção própria compras_sombra_14 (só gestão). Não é exportado em functions/index.js, não tem
-// agenda, não cria pedido e não altera nada de produção. Loja: dados do sync de Compras (loja ativa 262759).
+// de Compras e grava SOMENTE na coleção própria compras_sombra_14 (só gestão). Chamado pelo comando manual e pela callable
+// planejamentoComprasAtualizar (simuladorBase.js); não tem agenda, não cria pedido e não altera nada de produção (a 1.2 e o sync
+// não dependem deste arquivo). Loja: dados do sync de Compras (loja ativa 262759).
 const { somarDias, diffDias, parseData, situacaoCompra, fatosDeVenda } = require('./canonico');
 const K = require('./calculadora13');
 const S13 = require('./sombra13');
@@ -10,6 +11,8 @@ const A = require('./alocacao14');
 const Compat = require('./docCompat');
 
 const COLECAO = 'compras_sombra_14';
+const FORMATO = 2;                      // 2 = base do planejamento (regras 1.2/1.3 por produto, pedidos grandes, compras pendentes)
+const LINHAS_JANELA_DIAS = 365;         // tamanho das linhas de venda (pedido grande)
 const RE_DOC = /^(meta|bloco_\d{3})$/;
 const BLOCO = 150;
 const DOC_BYTES_MAX = 900 * 1024;
@@ -18,7 +21,8 @@ const DOC_BYTES_MAX = 900 * 1024;
 const GERACAO = Object.freeze({
   // Compras sem prova de que são da loja ativa não decidem sozinhas. A lista vem de quem confere a origem (relatório de
   // confiabilidade das compras, coluna usar_em_decisao_automatica) — ver lerOrigemCsv e --origem no comando.
-  origem: { compras_sem_origem: [], fornecedores_sem_origem: [], exigir_fornecedor: true },
+  // compras_com_origem: confirmadas pela gestão (coleção compras_origem), prevalecem sobre as demais listas
+  origem: { compras_sem_origem: [], compras_com_origem: [], fornecedores_sem_origem: [], exigir_fornecedor: true },
   fornecedores: {},                  // { id: { minimo_cents, minimo_un } }
   marcas: {},                        // { produto: 'marca' } — o ERP lido pelo sistema não informa marca
   crescimento: { janela_dias: 90, min_dias_com_venda: 6, min_dias_disponiveis: 45, razao_minima: 1.2, inclinacao: 0.25, teto: 0.10 },
@@ -40,6 +44,7 @@ function lerOrigemCsv(texto) {
 /** Compra com origem comprovada = com fornecedor identificado e fora das listas informadas como sem prova. */
 function origemDaCompra(c, cfg) {
   const o = cfg.origem, forn = c.fornecedor_id ? String(c.fornecedor_id) : null;
+  if ((o.compras_com_origem || []).includes(String(c.id))) return null;
   if (o.compras_sem_origem.includes(String(c.id))) return 'MARCADA_SEM_ORIGEM';
   if (!forn) return o.exigir_fornecedor ? 'SEM_FORNECEDOR' : null;
   if (o.fornecedores_sem_origem.includes(forn)) return 'FORNECEDOR_MARCADO';
@@ -62,6 +67,22 @@ function categoriasPorGrupo(produtos, cad) {
   const porGrupo = new Map();
   for (const p of produtos) { const c = cad.produtos.get(p.product_id); if (p.group_id && c && c.grupo && !porGrupo.has(p.group_id)) porGrupo.set(p.group_id, c.grupo); }
   return new Map(produtos.map(p => [p.product_id, (p.group_id && porGrupo.get(p.group_id)) || null]));
+}
+
+/**
+ * Tamanho das linhas de venda por produto (soma do produto dentro da mesma venda) nos últimos 365 dias. É a venda OBSERVADA:
+ * quando faltou estoque o cliente pode ter levado menos, então o tamanho "grande" real tende a ser igual ou maior.
+ */
+function linhasDeVenda(fatosVenda, hoje, janela = LINHAS_JANELA_DIAS) {
+  const desde = somarDias(hoje, -janela), porVenda = new Map();
+  fatosVenda.forEach((f, i) => {
+    if (!f.counts_as_demand || !f.date || f.date <= desde || f.date > hoje || !(f.qty > 0) || !f.product_id) return;
+    const k = f.product_id + '\u0000' + (f.sale_id === null ? 'sem-id-' + i : f.sale_id);
+    porVenda.set(k, (porVenda.get(k) || 0) + f.qty);
+  });
+  const porId = new Map();
+  for (const [k, q] of porVenda) { const id = k.slice(0, k.indexOf('\u0000')); (porId.get(id) || porId.set(id, []).get(id)).push(q); }
+  return new Map([...porId].map(([id, a]) => [id, { n: a.length, p50: K.r2(K.quantil(a, 0.5)), p80: K.r2(K.quantil(a, 0.8)), p90: K.r2(K.quantil(a, 0.9)), p95: K.r2(K.quantil(a, 0.95)), max: K.r2(Math.max(...a)) }]));
 }
 
 /**
@@ -95,6 +116,7 @@ function calcular(entradas, { config = {}, politica13 = POLITICA_1_3_SOMBRA } = 
   }
 
   const fatosVenda = vendas.flatMap(fatosDeVenda);
+  const tamanhos = linhasDeVenda(fatosVenda, hoje);
   const series = K.montarSeries({ produtos, fatosVenda, comprasBrutas: compras, snapshots, inicio: somarDias(hoje, -S13.DIAS_DE_SERIE), hoje });
   const t = series.n - 1, G = cfg.crescimento;
   const crescimento = id => {
@@ -120,7 +142,11 @@ function calcular(entradas, { config = {}, politica13 = POLITICA_1_3_SOMBRA } = 
       prazo_dias: prazo.dias, prazo_desvio: K.r2(prazo.desvio_dias), prazo_fonte: prazo.fonte, importado: !!(p.importado || (politica13.prazo.fornecedores[prazo.fornecedor_id] || {}).importado),
       minimo_un: emb.minimo_un, multiplo_un: emb.multiplo_un, multiplo_observado: qs.length >= cfg.multiplo_observado.min_compras ? qs.reduce(mdc) : 1,
       nao_comprar: !!p.nao_comprar, crescimento_fator: g.fator, crescimento_razao: g.razao,
-      origem_comprovada: !motivo, origem_motivo: motivo ? ROTULO_ORIGEM[motivo] : null,
+      origem_comprovada: !motivo, origem_motivo: motivo ? ROTULO_ORIGEM[motivo] : null, ultima_compra_id: u ? u.id : null,
+      linhas_venda: tamanhos.get(id) || null,
+      // regras de comparação, calculadas pelos próprios motores: 1.2 (vigente) e 1.3 (sombra)
+      r12: { q: l.v12.qtd, abc: l.v12.classe, v: K.r3(l.v12.velocidade) },
+      r13: p.nao_comprar ? null : { v: d.velocidade, rop: d.ponto_reposicao, alvo: d.estoque_alvo },
     };
   });
 
@@ -132,12 +158,18 @@ function calcular(entradas, { config = {}, politica13 = POLITICA_1_3_SOMBRA } = 
   }
 
   const antigas = compras.filter(c => situacaoCompra(c.nome_situacao) === 'PENDENTE' && parseData(c.data_emissao) && diffDias(parseData(c.data_emissao), hoje) > politica13.transito.idade_max_dias);
+  // compras pendentes, item a item, para a tela aplicar a confirmação (recebida, duplicada, cancelada) sem nova geração
+  const noEscopo = new Set(itens.map(i => i.id));
+  const pendentes = compras.filter(c => situacaoCompra(c.nome_situacao) === 'PENDENTE' && parseData(c.data_emissao) && parseData(c.data_emissao) <= hoje).map(c => ({
+    id: String(c.id), data: parseData(c.data_emissao), antiga: diffDias(parseData(c.data_emissao), hoje) > politica13.transito.idade_max_dias, fornecedor_id: c.fornecedor_id ? String(c.fornecedor_id) : null, sem_origem: !!origemDaCompra(c, cfg),
+    itens: itensDe(c).filter(it => Number(it.quantidade) > 0 && noEscopo.has(String(it.produto_id))).map(it => [String(it.produto_id), Number(it.quantidade)]),
+  })).filter(c => c.itens.length);
   const resumo = {
     itens: itens.length, elegiveis: itens.filter(i => i.estado === 'ELEGIVEL').length, em_revisao_falta_longa: itens.filter(i => i.estado === 'REVISAR_RUPTURA_LONGA').length,
     sem_origem_comprovada: itens.filter(i => !i.origem_comprovada).length, sem_nome: itens.filter(i => !i.nome).length, sem_categoria: itens.filter(i => !i.categoria).length, com_marca: itens.filter(i => i.marca).length,
     compras_sem_origem: semOrigem.length, lista_de_origem_informada: cfg.origem.compras_sem_origem.length, compras_pendentes_antigas: antigas.length, compras_pendentes_antigas_un: antigas.reduce((s, c) => s + itensDe(c).reduce((a, i) => a + (Number(i.quantidade) || 0), 0), 0),
   };
-  return { hoje, gerado_em_dados: entradas.geradoEm || null, itens, fornecedores, resumo, base };
+  return { hoje, gerado_em_dados: entradas.geradoEm || null, itens, fornecedores, pendentes, resumo, base };
 }
 
 /** Documentos da sombra 1.4 (texto JSON por bloco; sem clientes, sem documentos fiscais). Leitura só gestão pelas Rules. */
@@ -148,7 +180,7 @@ function documentos(res, agora = new Date()) {
     const fatia = res.itens.slice(i, i + BLOCO);
     blocos.push(['bloco_' + String(i / BLOCO).padStart(3, '0'), { ...base, indice: i / BLOCO, n: fatia.length, itens_json: JSON.stringify(fatia) }]);
   }
-  return [...blocos, ['meta', { ...base, status: 'SOMBRA_NAO_APROVADA', dados_gerados_em: res.gerado_em_dados, blocos: blocos.length, itens: res.itens.length, fornecedores_json: JSON.stringify(res.fornecedores), resumo: res.resumo }]];
+  return [...blocos, ['meta', { ...base, formato: FORMATO, status: 'SOMBRA_NAO_APROVADA', dados_gerados_em: res.gerado_em_dados, blocos: blocos.length, itens: res.itens.length, fornecedores_json: JSON.stringify(res.fornecedores), pendentes_json: JSON.stringify(res.pendentes || []), resumo: res.resumo }]];
 }
 
 /** Grava SOMENTE em compras_sombra_14. Valida todos os documentos antes da primeira escrita. */
@@ -169,10 +201,10 @@ async function persistir(db, res, { agora = new Date() } = {}) {
 }
 
 /** Leitura (somente get): entradas da sombra 1.3 + os dois documentos que trazem nomes e categorias. */
-async function lerEntradas(db) {
-  const entradas = await S13.lerEntradas(db);
+async function lerEntradas(db, opcoes) {
+  const entradas = await S13.lerEntradas(db, opcoes);
   const d = async (c, id) => (await db.collection(c).doc(id).get()).data() || null;
   return { ...entradas, view: await d('compras_n0_view', 'sugestoes'), fornecedores: { unidades: await d('compras_n0_fornecedores', 'unidades'), nomes: await d('compras_n0_fornecedores', 'nomes') } };
 }
 
-module.exports = { COLECAO, RE_DOC, GERACAO, lerOrigemCsv, origemDaCompra, cadastro, calcular, documentos, persistir, lerEntradas };
+module.exports = { COLECAO, FORMATO, DIAS_DE_SERIE: S13.DIAS_DE_SERIE, RE_DOC, GERACAO, lerOrigemCsv, origemDaCompra, linhasDeVenda, cadastro, calcular, documentos, persistir, lerEntradas };

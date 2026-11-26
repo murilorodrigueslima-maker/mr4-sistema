@@ -500,6 +500,19 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // PLANEJAMENTO DE COMPRA — LEITURA dos cadastros usados pelo simulador (mesmo critério do custo: GESTOR + (admin | módulo
+    // 'estoque'), não bloqueado). Aqui só `read`: a ESCRITA destas coleções pertence ao módulo de cadastros. [início leitura-planejamento]
+    match /compras_fornecedor_parametros/{fornecedorId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+    }
+    match /compras_pendencias_confirmacao/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+    }
+    match /compras_origem/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+    }
+    // [fim leitura-planejamento]
+
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
 

@@ -4,6 +4,7 @@
 // (payloads exatos da página em produção) bloqueado, duas telas (stale), criação concorrente, auditoria
 // exatamente-uma-vez, falha de escrita sem efeito, sync central e escopo/leitura dos listeners.
 process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+const [EMU_HOST, EMU_PORTA] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const firebase = require('firebase/compat/app'); require('firebase/compat/firestore');
 const admin = require('firebase-admin');
@@ -27,7 +28,7 @@ async function semear(db) {
   await db.collection('sistema_usuarios').doc(U.outroMod).set({ nome: 'O', modulos: ['demandas'], admin: false, bloqueado: false });
 }
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: EMU_HOST, port: Number(EMU_PORTA) } });
   adm = (admin.apps.find(a => a && a.name === 'exp-p0') || admin.initializeApp({ projectId: PROJECT_ID }, 'exp-p0')).firestore();
 });
 afterAll(async () => { await env.cleanup(); });

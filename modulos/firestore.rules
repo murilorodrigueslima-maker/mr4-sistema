@@ -582,6 +582,39 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Expedição: medição opcional (js/expedicao-medicao-core.js) ────────────
+    // NÃO altera o pedido nem a máquina de estados. Desligada por padrão: sem expedicao_config/medicao.ativa == true
+    // nenhum registro é aceito. Registros imutáveis, 1 por pedido+versão (+ motivo), autor e horário do servidor.
+    match /expedicao_config/{docId} {
+      allow read:  if expAcesso();
+      allow create, update: if docId == 'medicao' && isGestor() &&
+        request.resource.data.keys().hasOnly(['ativa', 'atualizadoEm', 'atualizadoPor']) &&
+        request.resource.data.ativa is bool &&
+        request.resource.data.atualizadoEm == request.time && request.resource.data.atualizadoPor == request.auth.uid;
+      allow delete: if false;
+    }
+    function expMedicaoLigada() {
+      return exists(/databases/$(database)/documents/expedicao_config/medicao) &&
+             get(/databases/$(database)/documents/expedicao_config/medicao).data.get('ativa', false) == true;
+    }
+    function expMedicaoOk(id) {
+      let d = request.resource.data;
+      let p = get(/databases/$(database)/documents/expedicao_pedidos/$(d.pedido)).data;
+      let base = d.pedido + (d.tipo == 'CONFERENCIA' ? '_conf_v' : '_oc_v') + string(d.versao);
+      return d.versao is int && d.versao == p.get('versao', 0) && d.em == request.time && d.por == request.auth.uid &&
+        ((d.tipo == 'CONFERENCIA' && p.coluna == 'pr' && id == base &&
+            d.keys().hasOnly(['pedido', 'tipo', 'versao', 'em', 'por'])) ||
+         (d.tipo == 'OCORRENCIA' && p.coluna in ['se', 'pr'] &&
+            d.keys().hasOnly(['pedido', 'tipo', 'versao', 'em', 'por', 'motivo', 'retrabalho']) &&
+            d.motivo in ['PRODUTO_ERRADO', 'QUANTIDADE_ERRADA', 'ITEM_ESQUECIDO', 'NAO_LOCALIZADO', 'SEM_SALDO_FISICO', 'AVARIA', 'VENDA_ALTERADA'] &&
+            d.retrabalho is bool && id == base + '_' + d.motivo));
+    }
+    match /expedicao_medicao/{registroId} {
+      allow read:   if expAcesso();
+      allow create: if expAcesso() && expMedicaoLigada() && expMedicaoOk(registroId);
+      allow update, delete: if false;
+    }
+
     // ── Coleções: marketing ────────────────────────────────────────────────────
     // Conteúdos de pipeline, ideias e legendas do módulo de marketing.
 

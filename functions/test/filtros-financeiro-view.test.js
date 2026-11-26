@@ -179,5 +179,5 @@ describe('página do Financeiro: só filtros locais (sem novas consultas)', () =
 });
 
 describe('cache do navegador (GitHub Pages guarda arquivos por ~10 min)', () => {
-  test('o HTML referencia o financeiro-view.js com versão nova (a lógica mudou na Fase A e nos alertas internos)', () => { expect(HTML).toMatch(/financeiro-view\.js\?v=20261126a/); expect(HTML).not.toMatch(/financeiro-view\.js\?v=20261001[ab]/); });
+  test('o HTML referencia o financeiro-view.js com versão nova (a lógica mudou na Fase A, nos alertas internos e nos indicadores)', () => { expect(HTML).toMatch(/financeiro-view\.js\?v=20261126b/); expect(HTML).not.toMatch(/financeiro-view\.js\?v=20261001[ab]/); });
 });

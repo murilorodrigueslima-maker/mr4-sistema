@@ -36,6 +36,8 @@ table{width:100%;border-collapse:collapse;font-size:.83rem}
 th{font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);text-align:left;padding:.35rem .5rem;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:.42rem .5rem;border-bottom:1px solid var(--border-lt);vertical-align:top}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.indic td:first-child{font-weight:600;width:30%}table.indic td:first-child .sub{font-weight:400}table.indic td:nth-child(2){width:18%}
+@media(max-width:640px){table.indic thead{display:none}table.indic,table.indic tbody,table.indic tr,table.indic td{display:block}table.indic td,table.indic td:first-child,table.indic td:nth-child(2){width:auto;border:0;padding:.15rem 0}table.indic tr{border-bottom:1px solid var(--border);padding:.45rem 0}}
 tr.destaque td{font-weight:700;background:#FFF7ED}
 .scroll{overflow-x:auto}
 .chips{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.6rem}
@@ -90,7 +92,7 @@ th.ord{cursor:pointer;user-select:none}th.ord:hover{color:var(--text)}
 <main id="main"><div class="carregando" id="carregando">Carregando o Financeiro…</div></main>
 
 <script src="agente-ia-widget.js?v=20261001a"></script>
-<script src="financeiro-view.js?v=20261126a"></script>   <!-- versão no endereço: o Pages guarda arquivos por 10 min; mudou a lógica → troque o sufixo -->
+<script src="financeiro-view.js?v=20261126b"></script>   <!-- versão no endereço: o Pages guarda arquivos por 10 min; mudou a lógica → troque o sufixo -->
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, connectAuthEmulator } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -112,7 +114,7 @@ if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
 const V = window.FinanceiroView, esc = V.esc;
 const S = { ativo: null, resumo: null, entidades: null, aba: 'geral', listas: {}, filtro: { PAGAR: 'vencidas', RECEBER: 'vencidas' }, busca: '', erro: null,
   crit: { PAGAR: V.criteriosVazios(), RECEBER: V.criteriosVazios() }, ordem: { PAGAR: { campo: null, dir: 'asc' }, RECEBER: { campo: null, dir: 'asc' } }, painel: { PAGAR: false, RECEBER: false },
-  refPref: { PAGAR: 'vencimento', RECEBER: 'vencimento' }, cache: V.criarCacheFatias() };   // cache de fatias por id: trocar de chip/filtro NÃO relê o que já foi lido
+  refPref: { PAGAR: 'vencimento', RECEBER: 'vencimento' }, hist: null, cache: V.criarCacheFatias() };   // cache de fatias por id: trocar de chip/filtro NÃO relê o que já foi lido
 const $ = id => document.getElementById(id);
 const lerDoc = async (col, id) => { const s = await getDoc(doc(db, col, id)); return s.exists() ? s.data() : null; };
 
@@ -152,7 +154,51 @@ function blocoAlertas() {
   ${conf ? `<div class="info">${esc(conf)} ${conf === 1 ? 'título requer' : 'títulos requerem'} conferência (fora dos totais). ${verLista('CONFERIR', 'conferencia', 'Ver conferência')}</div>` : ''}</div>
   <div class="scroll"><table><thead><tr><th>Vencidos por faixa</th><th class="n">A receber</th><th class="n">Valor</th><th class="n">A pagar</th><th class="n">Valor</th></tr></thead><tbody>${a.faixas.map(f => `<tr><td>${f.tom === 'neutro' ? esc(f.rotulo) : tag(f.rotulo, f.tom)}</td>${celula(f.receber)}${celula(f.pagar)}</tr>`).join('')}</tbody></table>
   <div class="info">${a.vencido.receber.n ? verLista('RECEBER', 'vencidas', 'Ver vencidos a receber') : ''} ${a.vencido.pagar.n ? verLista('PAGAR', 'vencidas', 'Ver vencidos a pagar') : ''}</div></div></div>
-  <h2 style="margin-top:.8rem">Concentração</h2>${concentracaoHtml(a)}</div>`;
+  <h2 style="margin-top:.8rem">Concentração</h2>${concentracaoHtml(a)}
+  ${indicadoresHtml()}</div>`;
+}
+// ── Indicadores de atraso (a receber): fórmula e denominador sempre à vista. Safra e recebidos após o vencimento só depois do clique.
+const titulos = n => n === 1 ? '1 título' : `${n} títulos`;
+const resultado = (x, de) => `<strong>${esc(V.pctBR(x.pctC))}</strong> ${esc(de)}<div class="sub">${esc(V.pctBR(x.pctN))} dos títulos</div>`;
+const conta = x => `${esc(V.brl(x.c))} ÷ ${esc(V.brl(x.totalC))}<div class="sub">${esc(x.n)} ÷ ${esc(titulos(x.totalN))}</div>`;
+const nd = x => `<tr><td>${esc(x.nome)}</td><td>${tag('Não disponível', 'neutro')}</td><td class="sub">${esc(x.dado.motivo)} Falta: ${esc(x.dado.falta)}</td></tr>`;
+function indicadoresHtml() {
+  const i = V.modeloIndicadores(S.resumo);
+  const h = S.hist && S.hist.geracao === S.resumo.geracao ? S.hist : null;      // resultado de outra geração nunca é reaproveitado
+  const d = h && h.dados, aguarda = '<span class="sub">Use o botão abaixo para calcular.</span>';
+  const linha = (nome, res, calc) => `<tr><td>${nome}</td><td>${res}</td><td>${calc}</td></tr>`;
+  return `<div id="indicadores"><h2 style="margin-top:.8rem">Indicadores de atraso · a receber</h2>
+  <div class="info">Cada indicador responde a uma pergunta e tem o seu próprio denominador: não são comparáveis entre si. Posição em ${esc(V.dataBR(i.referencia))}. “Vencido” e “recebido” seguem a baixa registrada no ERP; “requer conferência” fica fora das contas.</div>
+  <div class="scroll"><table class="indic"><thead><tr><th>Indicador</th><th>Resultado</th><th>Fórmula e denominador</th></tr></thead><tbody>
+  ${linha('1 · Vencido na carteira em aberto<div class="sub">Do que ainda falta receber, quanto já venceu?</div>', resultado(i.carteira, 'do valor em aberto'),
+    `vencido em aberto ÷ carteira em aberto (vencidos + hoje + a vencer)<div>${conta(i.carteira)}</div><div class="sub">O denominador não inclui o que já foi recebido.</div>`)}
+  ${linha('2 · Safra: venceu e não foi recebido<div class="sub">Do que venceu no período, quanto segue sem baixa?</div>', d ? resultado(d.safra.periodo, 'do que venceu') + `<div class="sub">${esc(V.pctBR(d.safra.periodo.mais30.pctC))} há mais de 30 dias</div>` : aguarda,
+    `vencido em aberto ÷ tudo que venceu no período (em aberto + recebido)${d ? `<div>${conta(d.safra.periodo)}</div><div class="sub">Vencimentos de ${esc(V.dataBR(d.safra.periodo.de))} a ${esc(V.dataBR(d.safra.periodo.ate))}. Por mês, na tabela abaixo.</div>` : ''}`)}
+  ${linha('3 · Inadimplência por faixa de atraso<div class="sub">Há quanto tempo o vencido está parado?</div>', '<span class="sub">Tabela abaixo.</span>',
+    `vencido da faixa ÷ carteira em aberto (${esc(V.brl(i.carteira.totalC))})<div class="sub">As faixas somam o indicador 1. É o valor sem baixa no ERP, não uma avaliação de cliente.</div>`)}
+  ${linha('4 · Valores recuperados (recebidos após o vencimento)<div class="sub">Do que foi recebido, quanto entrou com atraso?</div>', d ? resultado(d.recuperados.total, 'do valor recebido') : aguarda,
+    `recebido com data de baixa posterior ao vencimento ÷ tudo que foi recebido nos últimos 365 dias${d ? `<div>${conta(d.recuperados.total)}</div><div class="sub">Baixas de ${esc(V.dataBR(d.recuperados.de))} a ${esc(V.dataBR(d.recuperados.ate))}.</div>` : ''}<div class="sub">Conta a data da baixa (inclui compensação após fim de semana); não significa que houve cobrança.</div>`)}
+  ${nd({ nome: '5 · Renegociados', dado: i.renegociados })}
+  ${linha(`6 · Títulos antigos (vencidos há mais de ${esc(i.antigos.dias)} dias)<div class="sub">Quanto do atraso é antigo?</div>`, resultado(i.antigos.vencido, 'do vencido') + `<div class="sub">${esc(V.pctBR(i.antigos.aberto.pctC))} da carteira em aberto</div>`,
+    `vencido há mais de ${esc(i.antigos.dias)} dias ÷ vencido em aberto<div>${conta(i.antigos.vencido)}</div><div class="sub">Sobre a carteira: ${esc(V.brl(i.antigos.aberto.c))} ÷ ${esc(V.brl(i.antigos.aberto.totalC))}</div>`)}
+  ${nd({ nome: '7 · Pagamentos parciais', dado: i.parciais })}
+  </tbody></table></div>
+  <div class="scroll" style="margin-top:.7rem"><table><thead><tr><th>3 · Faixa de atraso</th><th class="n">Títulos</th><th class="n">Valor</th><th class="n">% da carteira em aberto</th><th class="n">% do vencido</th></tr></thead><tbody>${i.faixas.map(f => `<tr><td>${esc(f.rotulo)}</td><td class="n">${esc(f.aberto.n)}</td><td class="n">${esc(V.brl(f.aberto.c))}</td><td class="n">${esc(V.pctBR(f.aberto.pctC))}</td><td class="n">${esc(V.pctBR(f.pctVencidoC))}</td></tr>`).join('')}
+  <tr class="destaque"><td>Total vencido</td><td class="n">${esc(i.carteira.n)}</td><td class="n">${esc(V.brl(i.carteira.c))}</td><td class="n">${esc(V.pctBR(i.carteira.pctC))}</td><td class="n">${esc(V.pctBR(i.carteira.c ? 100 : null))}</td></tr></tbody></table></div>
+  ${d ? historicoHtml(d) : historicoBotao(h)}</div>`;
+}
+function historicoBotao(h) {
+  if (h && h.carregando) return '<div class="carregando">Calculando safra e recebidos após o vencimento…</div>';
+  const c = V.custoHistorico(S.resumo, S.cache);
+  return `${h && h.erro ? `<div class="erro" style="margin-top:.6rem">${esc(h.erro)}</div>` : ''}<button type="button" class="mais" data-hist="1">Calcular safra e recuperados (${c.pendentes ? `lê ${esc(c.pendentes)} ${c.pendentes === 1 ? 'fatia' : 'fatias'}, ~${esc(String(c.mb).replace('.', ','))} MB` : 'já carregado, sem nova leitura'})</button>`;
+}
+function historicoHtml(d) {
+  const R = d.recuperados;
+  const lr = (rotulo, x, cls) => `<tr class="${cls || ''}"><td>${esc(rotulo)}</td><td class="n">${esc(x.n)}</td><td class="n">${esc(V.brl(x.c))}</td><td class="n">${esc(V.pctBR(x.pctC))}</td><td class="n">${esc(V.pctBR(x.pctN))}</td></tr>`;
+  return `<div class="scroll" style="margin-top:.8rem"><table><thead><tr><th>2 · Mês do vencimento</th><th class="n">Venceu</th><th class="n">Sem baixa</th><th class="n">% do valor</th><th class="n">% dos títulos</th></tr></thead><tbody>${d.safra.meses.map(m => `<tr><td>${esc(m.rotulo)}${m.parcial ? `<div class="sub">até ${esc(V.dataBR(m.ate))} (em andamento)</div>` : ''}</td><td class="n">${esc(V.brl(m.totalC))}<div class="sub">${esc(titulos(m.totalN))}</div></td><td class="n">${esc(V.brl(m.c))}<div class="sub">${esc(titulos(m.n))}</div></td><td class="n">${esc(V.pctBR(m.pctC))}</td><td class="n">${esc(V.pctBR(m.pctN))}</td></tr>`).join('')}</tbody></table>
+  <div class="info">% = sem baixa ÷ venceu no mês. Meses recentes tiveram menos tempo para receber. Só meses inteiros com recebidos disponíveis (o mês em andamento vai até a véspera).</div></div>
+  <div class="scroll" style="margin-top:.8rem"><table><thead><tr><th>4 · Recebido em relação ao vencimento</th><th class="n">Títulos</th><th class="n">Valor</th><th class="n">% do valor</th><th class="n">% dos títulos</th></tr></thead><tbody>${lr('Até o vencimento', R.ateVencimento)}${R.faixas.map(f => lr('Atraso de ' + f.rotulo.toLowerCase(), f)).join('')}${lr('Total após o vencimento', R.total, 'destaque')}</tbody></table>
+  <div class="info">% sobre ${esc(V.brl(R.total.totalC))} recebidos (${esc(titulos(R.total.totalN))}).${R.semVencimento ? ` ${esc(titulos(R.semVencimento))} sem vencimento ficaram fora.` : ''} Valor integral do título; um vencimento alterado no ERP não é detectável.</div></div>`;
 }
 function irPara(destino) {
   const [nat, filtro] = destino.split(':');
@@ -184,7 +230,7 @@ function renderGeral() {
 // ── listas paginadas (uma fatia por vez; nunca a base inteira) + busca/filtros/ordenação LOCAIS sobre o que já foi carregado ──
 function chaveLista(nat) { return nat + ':' + S.filtro[nat]; }
 const PAGINA_MIN = 50;       // para "Pagas": quantos itens tentar mostrar por vez (lê fatias em sequência até chegar nisso ou acabar)
-const KB_POR_FATIA = 54;     // medido (geração ativa): ~54 KB por fatia de 250 títulos
+const KB_POR_FATIA = V.KB_POR_FATIA;     // medido (geração ativa): ~54 KB por fatia de 250 títulos
 const lerFatia = id => S.cache.ler(id, async i => lerDoc('fin_n1_titulos', i));   // 1 leitura por id por sessão
 async function carregarMais(nat, reiniciar, tudo) {
   const k = chaveLista(nat);
@@ -301,6 +347,21 @@ async function carregarConf(nat, maisUma) {
   render();
 }
 
+// ── safra e recebidos após o vencimento: SÓ por clique; fatias VENCIDO + PAGO a receber, pelo mesmo cache das listas (fatia já lida não é relida) ──
+async function carregarHistorico() {
+  const resumo = S.resumo, geracao = resumo.geracao;
+  if (S.hist && S.hist.geracao === geracao && (S.hist.carregando || S.hist.dados)) return;
+  const estado = S.hist = { geracao, carregando: true }; render();
+  try {
+    const plano = V.planoHistorico(resumo), docs = [];
+    for (let i = 0; i < plano.length; i += 5) docs.push(...await Promise.all(plano.slice(i, i + 5).map(f => lerFatia(f.id))));
+    const dados = V.modeloHistorico(resumo, docs);
+    if (!dados.ok) throw new Error(dados.motivo);
+    Object.assign(estado, { carregando: false, dados });
+  } catch (e) { Object.assign(estado, { carregando: false, erro: 'Não disponível: não foi possível carregar ou conferir os títulos desta posição. Nenhum percentual foi calculado. Recarregue a página e tente novamente.' }); }
+  if (S.hist === estado && S.aba === 'geral') render();      // não redesenha outra aba (o Agente guarda a conversa na tela)
+}
+
 // ── fornecedores / clientes (documento de entidades, sob demanda) ──
 async function garantirEntidades() {
   if (S.entidades || S.entErro) return;
@@ -368,6 +429,7 @@ document.addEventListener('click', e => {
   if (t.dataset.maisconf) { carregarConf(t.dataset.maisconf, true); return; }
   if (t.dataset.ir) { irPara(t.dataset.ir); return; }
   if (t.dataset.conc) { t.disabled = true; t.textContent = 'Carregando…'; S.entErro = null; garantirEntidades(); return; }
+  if (t.dataset.hist) { carregarHistorico(); return; }
 });
 document.addEventListener('click', e => {
   const th = e.target.closest('th[data-ordem]'); if (!th) return;

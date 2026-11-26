@@ -1,6 +1,7 @@
 /* MR4 Financeiro v2 — lógica de apresentação PURA (sem DOM, sem rede). Testada em Node; carregada pelo navegador como window.FinanceiroView.
  * Regras de produto: nenhum saldo/caixa/capacidade; "Requer conferência" separado; >365 sempre visível; "Boleto Inter/Pix" ambíguo;
- * fluxo programado rotulado; nenhum percentual de inadimplência; fuso America/Fortaleza. */
+ * fluxo programado rotulado; percentuais de atraso SÓ nos indicadores, sempre com fórmula e denominador à vista, sem classificar cliente;
+ * o que a fonte não informa aparece como "não disponível" (nunca estimado); fuso America/Fortaleza. */
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory(); else root.FinanceiroView = factory();
 })(typeof self !== 'undefined' ? self : this, function () {
@@ -306,7 +307,91 @@
       vencido: { receber: R.vencido, pagar: P.vencido }, conferencia: { receber: R.requer_conferencia.n, pagar: P.requer_conferencia.n }, concentracao: conc, limiar: LIMIAR_CONCENTRACAO };
   }
 
-  return { modeloAlertas: modeloAlertas, pctBR: pctBR, LIMIAR_CONCENTRACAO: LIMIAR_CONCENTRACAO, TZ: TZ, STALE_HORAS: STALE_HORAS, TAM_PAGINA_FATIA: TAM_PAGINA_FATIA, FAIXAS: FAIXAS, FILTROS: FILTROS, esc: esc, brl: brl, dataBR: dataBR, dataComercial: dataComercial, dataHoraBR: dataHoraBR, somarDias: somarDias, frescor: frescor,
+  // ═══ INDICADORES DE ATRASO (somente A RECEBER) — cada um com numerador e denominador explícitos. Nada é estimado: o que a fonte não informa fica "não disponível".
+  // Do resumo (já carregado): 1 vencido ÷ carteira em aberto · 3 faixa de atraso · 6 antigos. Das fatias VENCIDO + PAGO (só por clique): 2 safra · 4 recebidos após o vencimento.
+  var KB_POR_FATIA = 54;                    // medido na geração ativa: ~54 KB por fatia de 250 títulos
+  var DIAS_ANTIGO = 365;
+  /** Sem dado na fonte: o texto diz por quê e o que falta para medir. Nunca vira número. */
+  var NAO_DISPONIVEL = {
+    renegociados: { motivo: 'Os dados recebidos do ERP não marcam acordo ou renegociação nem guardam o vencimento anterior: um título reprogramado aparece como um título comum.',
+      falta: 'marcação de renegociação no ERP trazida pela sincronização, ou histórico do vencimento de cada título.' },
+    parciais: { motivo: 'A API do ERP não informa valor pago nem saldo restante: cada título é tratado como integral. Parte já baixada de uma mesma venda não comprova pagamento parcial.',
+      falta: 'valor pago e saldo por título (ou a lista de baixas) vindos do ERP.' },
+  };
+  /** parte e total no formato { n, c }. */
+  function razao(parte, total) { return { n: parte.n, c: parte.c, totalN: total.n, totalC: total.c, pctN: participacao(parte.n, total.n), pctC: participacao(parte.c, total.c) }; }
+  function modeloIndicadores(r) {
+    var R = r.receber, antigos = (R.envelhecimento || {}).ACIMA_365 || { n: 0, c: 0 };
+    return { referencia: r.data_comercial,
+      carteira: razao(R.vencido, R.abertos),                                                                    // 1
+      faixas: faixasAlerta(R).map(function (f) { return { id: f.id, rotulo: f.rotulo, aberto: razao(f, R.abertos), pctVencidoC: f.pct }; }),   // 3
+      antigos: { dias: DIAS_ANTIGO, aberto: razao(antigos, R.abertos), vencido: razao(antigos, R.vencido) },     // 6
+      renegociados: NAO_DISPONIVEL.renegociados, parciais: NAO_DISPONIVEL.parciais,                              // 5 e 7
+    };
+  }
+  /** Fatias necessárias para safra e recebidos após o vencimento (todas as VENCIDO e PAGO a receber, nada além). */
+  function planoHistorico(r) { return planoLeitura(r.geracao, 'RECEBER', 'vencidas', r).concat(planoLeitura(r.geracao, 'RECEBER', 'pagas', r)); }
+  function custoHistorico(r, cache) {
+    var plano = planoHistorico(r), pend = plano.filter(function (f) { return !(cache && cache.tem(f.id)); }).length;
+    return { fatias: plano.length, pendentes: pend, mb: Math.round(pend * KB_POR_FATIA / 1024 * 10) / 10 };
+  }
+  function diasEntre(a, b) { return Math.round((new Date(b + 'T12:00:00Z').getTime() - new Date(a + 'T12:00:00Z').getTime()) / 86400000); }
+  var ATRASOS_RECEBIDO = [['ate3', '1–3 dias', 1, 3], ['de4a7', '4–7 dias', 4, 7], ['de8a30', '8–30 dias', 8, 30], ['de31a90', '31–90 dias', 31, 90], ['de91a180', '91–180 dias', 91, 180], ['de181a365', '181–365 dias', 181, 365], ['mais365', 'Mais de 365 dias', 366, Infinity]];
+  function somaDe(itens) { return { n: itens.length, c: itens.reduce(function (s, i) { return s + i.val; }, 0) }; }
+  /**
+   * Safra e recebidos após o vencimento. `docs` = documentos das fatias do planoHistorico(r).
+   * FALHA FECHADA: se as fatias não conferirem com os totais do resumo (outra geração, fatia faltando/repetida, soma diferente) não devolve número.
+   */
+  function modeloHistorico(r, docs) {
+    var falha = function (motivo) { return { ok: false, motivo: motivo }; };
+    var plano = planoHistorico(r);
+    if (!docs || docs.length !== plano.length) return falha('FATIAS_INCOMPLETAS');
+    var g = { VENCIDO: [], PAGO: [] }, vistos = {};
+    for (var k = 0; k < docs.length; k++) {
+      var d = docs[k];
+      if (!d || d.geracao !== r.geracao || d.natureza !== 'RECEBER' || !g[d.grupo]) return falha('FATIA_DE_OUTRA_ORIGEM');
+      for (var j = 0; j < (d.itens || []).length; j++) {
+        var it = d.itens[j];
+        if (vistos[it.id] || typeof it.val !== 'number' || !isFinite(it.val)) return falha('TITULO_REPETIDO_OU_SEM_VALOR');
+        vistos[it.id] = true; g[d.grupo].push(it);
+      }
+    }
+    var R = r.receber, hoje = r.data_comercial, venc = somaDe(g.VENCIDO), pagos = g.PAGO;
+    if (!validaYmd(hoje)) return falha('SEM_DATA_DOS_DADOS');
+    if (venc.n !== R.vencido.n || venc.c !== R.vencido.c) return falha('VENCIDO_DIFERE_DO_RESUMO');
+    if (pagos.length !== ((R.detalhe.PAGO || {}).titulos || 0)) return falha('RECEBIDOS_DIFEREM_DO_RESUMO');
+    if (pagos.some(function (i) { return !validaYmd(i.sd); })) return falha('RECEBIDO_SEM_DATA_DE_BAIXA');
+    var ult30 = somaDe(pagos.filter(function (i) { var x = diasEntre(i.sd, hoje); return x >= 0 && x < 30; })), ref30 = (R.pago || {}).ultimos_30d;
+    if (ref30 && (ult30.n !== ref30.n || ult30.c !== ref30.c)) return falha('RECEBIDOS_30D_DIFEREM_DO_RESUMO');
+
+    // 2 · SAFRA: do que VENCEU no período (vencimento antes da data dos dados), a parte que segue sem baixa. Denominador = vencidos em aberto + já recebidos com o mesmo período de vencimento.
+    var janela = (r.retencao && r.retencao.pagos_detalhe_dias) || 365, inicio = somarDias(hoje, -janela), ontem = somarDias(hoje, -1);
+    var safraDe = function (de, ate) {
+      var no = function (i) { return !!i.v && i.v >= de && i.v <= ate; };
+      var a = somaDe(g.VENCIDO.filter(no)), p = somaDe(pagos.filter(no));
+      return razao(a, { n: a.n + p.n, c: a.c + p.c });
+    };
+    var meses = [], y = +inicio.slice(0, 4), m = +inicio.slice(5, 7);
+    if (inicio.slice(8) !== '01') { m++; if (m > 12) { m = 1; y++; } }                 // só meses inteiros dentro do detalhe retido
+    for (;;) {
+      var mes = y + '-' + (m < 10 ? '0' : '') + m, de = mes + '-01'; if (de > ontem) break;
+      var fim = mes + '-' + ultimoDiaDoMes(y, m), parcial = fim > ontem;
+      meses.push(Object.assign({ mes: mes, rotulo: (m < 10 ? '0' : '') + m + '/' + y, de: de, ate: parcial ? ontem : fim, parcial: parcial }, safraDe(de, parcial ? ontem : fim)));
+      m++; if (m > 12) { m = 1; y++; }
+    }
+    var periodo = Object.assign({ de: inicio, ate: ontem, dias: janela }, safraDe(inicio, ontem));
+    var mais30 = safraDe(inicio, somarDias(hoje, -31));     // mesmo denominador do período; numerador só com mais de 30 dias de atraso
+    periodo.mais30 = razao({ n: mais30.n, c: mais30.c }, { n: periodo.totalN, c: periodo.totalC });
+
+    // 4 · RECEBIDOS APÓS O VENCIMENTO: data da baixa posterior ao vencimento. Denominador = todas as baixas do detalhe retido que têm vencimento.
+    var comV = pagos.filter(function (i) { return validaYmd(i.v); }), total = somaDe(comV);
+    var atrasados = comV.filter(function (i) { return i.sd > i.v; });
+    var recuperados = { de: inicio, ate: hoje, dias: janela, semVencimento: pagos.length - comV.length, total: razao(somaDe(atrasados), total), ateVencimento: razao(somaDe(comV.filter(function (i) { return i.sd <= i.v; })), total),
+      faixas: ATRASOS_RECEBIDO.map(function (f) { return Object.assign({ id: f[0], rotulo: f[1] }, razao(somaDe(atrasados.filter(function (i) { var x = diasEntre(i.v, i.sd); return x >= f[2] && x <= f[3]; })), total)); }) };
+    return { ok: true, geracao: r.geracao, referencia: hoje, safra: { periodo: periodo, meses: meses }, recuperados: recuperados };
+  }
+
+  return { modeloAlertas: modeloAlertas, modeloIndicadores: modeloIndicadores, modeloHistorico: modeloHistorico, planoHistorico: planoHistorico, custoHistorico: custoHistorico, KB_POR_FATIA: KB_POR_FATIA, pctBR: pctBR, LIMIAR_CONCENTRACAO: LIMIAR_CONCENTRACAO, TZ: TZ, STALE_HORAS: STALE_HORAS, TAM_PAGINA_FATIA: TAM_PAGINA_FATIA, FAIXAS: FAIXAS, FILTROS: FILTROS, esc: esc, brl: brl, dataBR: dataBR, dataComercial: dataComercial, dataHoraBR: dataHoraBR, somarDias: somarDias, frescor: frescor,
     linhasEnvelhecimento: linhasEnvelhecimento, modeloCards: modeloCards, rotuloFiltro: rotuloFiltro, planoLeitura: planoLeitura, novaLista: novaLista, precisaMais: precisaMais, proximaFatia: proximaFatia, aplicarFatia: aplicarFatia,
     statusRotulo: statusRotulo, textoVinculo: textoVinculo, modeloLinha: modeloLinha, validarGeracao: validarGeracao, linhasFormas: linhasFormas,
     FILTROS_EXTRA: FILTROS_EXTRA, defFiltro: defFiltro, PERIODOS: PERIODOS, normalizar: normalizar, termosBusca: termosBusca, textoBuscavel: textoBuscavel, casaBusca: casaBusca, intervaloPeriodo: intervaloPeriodo, rotuloPeriodo: rotuloPeriodo,

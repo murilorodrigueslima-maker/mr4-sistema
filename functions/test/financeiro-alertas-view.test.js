@@ -70,7 +70,7 @@ describe('página: alertas sem consulta nova, sem envio e sem escrita', () => {
 
   /** Executa o bloco de alertas + irPara da própria página, sem navegador. */
   function montar(entidades, hoje = HOJE) {
-    const S = { resumo: g.resumo, entidades, entErro: null, aba: 'geral', filtro: { PAGAR: 'vencidas', RECEBER: 'abertas' }, crit: { PAGAR: V.criteriosVazios(), RECEBER: { ...V.criteriosVazios(), busca: 'x' } } };
+    const S = { resumo: g.resumo, entidades, entErro: null, hist: null, cache: V.criarCacheFatias(), aba: 'geral', filtro: { PAGAR: 'vencidas', RECEBER: 'abertas' }, crit: { PAGAR: V.criteriosVazios(), RECEBER: { ...V.criteriosVazios(), busca: 'x' } } };
     const Vf = { ...V, dataComercial: () => hoje };
     const ctx = { S, V: Vf, esc: V.esc, tag: (t, tom) => `<span class="tag ${V.esc(tom)}">${V.esc(t)}</span>`, render: () => {} };
     vm.createContext(ctx); vm.runInContext(bloco + '\nthis.blocoAlertas = blocoAlertas; this.irPara = irPara;', ctx);
@@ -81,7 +81,8 @@ describe('página: alertas sem consulta nova, sem envio e sem escrita', () => {
     expect(sem).toMatch(/data-conc="1"/); expect(sem).toMatch(/Mais de 365 dias/); expect(sem).not.toMatch(/undefined|NaN|\[object/); expect(sem).not.toMatch(/aviso stale/);
     const com = montar(g.entidades, '2026-09-29').blocoAlertas();
     expect(com).not.toMatch(/data-conc/); expect(com).toMatch(/Clientes · em aberto/); expect(com).toMatch(/aviso stale/); expect(com).not.toMatch(/undefined|NaN|\[object/);
-    expect(com).not.toMatch(/inadimpl/i);
+    // os alertas (antes do quadro de indicadores) seguem sem falar em inadimplência; o termo só nomeia o indicador 3 (financeiro-indicadores-view.test.js)
+    expect(com.slice(0, com.indexOf('id="indicadores"'))).not.toMatch(/inadimpl/i); expect(com).not.toMatch(/inadimplente/i);
   });
   test('nome vindo do ERP é escapado', () => {
     const ruim = { ...g.entidades, receber: g.entidades.receber.map(e => ({ ...e, nome: '<img src=x onerror=alert(1)>' })) };

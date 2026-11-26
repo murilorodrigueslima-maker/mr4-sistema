@@ -331,6 +331,26 @@ function normalizarNota(nota) {
   return limpa;
 }
 
+// COM-02 — captura mínima para o funil comercial: `interesse` e `proposta` ('SIM' | 'NAO'), SEMPRE OPCIONAIS.
+// Ausente = não informado (nunca é tratado como 'NAO'). Não altera transição, cooldown, follow-up, carteira, meta ou comissão.
+const CAPTURA_VALORES = Object.freeze(['SIM', 'NAO']);
+const CAPTURA_OUTCOMES = Object.freeze({
+  interesse: Object.freeze([OUTCOMES.CONVERSA_REALIZADA, OUTCOMES.PEDIU_RETORNO]),   // SEM_INTERESSE_AGORA já declara a ausência
+  proposta:  Object.freeze([OUTCOMES.CONVERSA_REALIZADA, OUTCOMES.PEDIU_RETORNO, OUTCOMES.SEM_INTERESSE_AGORA]),
+});
+/** Devolve só os campos informados. Lança Error para valor desconhecido ou campo incompatível com o resultado. */
+function normalizarCaptura(outcome, dados) {
+  const out = {};
+  for (const campo of Object.keys(CAPTURA_OUTCOMES)) {
+    const v = dados ? dados[campo] : undefined;
+    if (v === undefined || v === null) continue;
+    if (!CAPTURA_VALORES.includes(v)) throw new Error(`${campo} deve ser SIM ou NAO`);
+    if (!CAPTURA_OUTCOMES[campo].includes(outcome)) throw new Error(`${campo} não se aplica ao resultado ${outcome}`);
+    out[campo] = v;
+  }
+  return out;
+}
+
 /**
  * Registra o resultado de um atendimento e transiciona o estado.
  * Só pode ser chamado quando estado = EM_ATENDIMENTO.
@@ -401,6 +421,10 @@ function registrarOutcome(estado, operadorId, outcome, isoNow, meta = {}) {
     if (nota) metaFinal.temNota = true;
   }
   if (metaFinal.temNota !== true) delete metaFinal.temNota;
+  // COM-02: mesma defesa em profundidade para a captura do funil
+  const captura = normalizarCaptura(outcome, metaFinal);
+  delete metaFinal.interesse; delete metaFinal.proposta;
+  Object.assign(metaFinal, captura);
   const evento = {
     tipo:         EVENT_TYPES.OUTCOME_REGISTERED,
     operadorId:   operadorId.trim(),
@@ -468,6 +492,9 @@ module.exports = {
   getOperadorAtual,
   normalizarNota,
   NOTA_MAX_CHARS,
+  normalizarCaptura,
+  CAPTURA_VALORES,
+  CAPTURA_OUTCOMES,
   getUltimoOutcome,
   // N35.9C
   getConsecutiveSemRespostaCount,

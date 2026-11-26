@@ -200,8 +200,42 @@ header{
 
 @media(max-width:1200px){.kanban{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.kanban{grid-template-columns:1fr}.hd-date,.hd-div{display:none}.summary{overflow-x:auto}.sum-item{min-width:90px}}
+@media(max-width:700px){header{flex-wrap:wrap}}
 @media(max-width:480px){.live-badge,.countdown,.hd-logo{display:none}header{padding:.7rem 1rem;gap:.6rem}.hd-title{font-size:.76rem}}
 
+.card-med{display:flex;align-items:center;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+.btn-med{flex:1;padding:.5rem .7rem;border:1.5px solid var(--pr-brd);border-radius:9px;background:none;color:var(--pr);font-size:.78rem;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+.btn-med:hover{background:var(--pr-bg)}
+.btn-med.problema{flex:0 0 auto;border-color:var(--border);color:var(--sub)}
+.btn-med.problema:hover{border-color:var(--ag);color:var(--ag);background:rgba(227,116,0,.07)}
+.btn-med:disabled{opacity:.45;cursor:progress}
+.med-feito{flex:1;font-size:.76rem;font-weight:700;color:var(--pr);background:var(--pr-bg);border:1px solid var(--pr-brd);border-radius:9px;padding:.45rem .7rem}
+.med-ocorr{font-size:.72rem;font-weight:700;color:var(--ag);white-space:nowrap}
+.motivo-lista{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.1rem}
+.motivo-opt{padding:.6rem .85rem;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;font-size:.84rem;font-weight:600;color:var(--text);text-align:left;font-family:inherit}
+.motivo-opt.sel{border-color:var(--ag);background:rgba(227,116,0,.09);color:var(--ag)}
+.med-modal{max-width:980px;min-width:0;max-height:92vh;overflow-y:auto;padding:1.4rem}
+.med-barra{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;margin-bottom:.7rem}
+.med-barra select{padding:.55rem .7rem;border-radius:9px;border:1.5px solid var(--border);font:inherit;font-size:.83rem;background:var(--surface);color:var(--text)}
+.med-custo{font-size:.76rem;color:var(--dim)}
+.med-captura{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap;font-size:.8rem;color:var(--sub);padding:.6rem .8rem;background:var(--bg);border:1px solid var(--border);border-radius:9px;margin-bottom:.9rem}
+.med-captura span{flex:1;min-width:220px}
+.med-modal .btn-cancel:disabled{opacity:.4;cursor:not-allowed}
+#medSaida{font-size:.82rem}
+#medSaida h4{margin:1rem 0 .4rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;color:var(--sub)}
+.med-aviso{padding:.6rem .8rem;background:rgba(227,116,0,.08);border:1px solid rgba(227,116,0,.25);border-radius:9px;line-height:1.5}
+.med-obs{font-size:.74rem;color:var(--dim);margin-top:.35rem}
+.med-nums{display:grid;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:.5rem;margin-top:.8rem}
+.med-num{border:1px solid var(--border);border-radius:9px;padding:.5rem .65rem}
+.med-num span{display:block;font-size:.66rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.med-num strong{font-size:1.25rem;font-family:var(--mono)}
+.med-rolagem{overflow-x:auto}
+.med-tab{border-collapse:collapse;width:100%;font-size:.76rem}
+.med-tab th,.med-tab td{border-bottom:1px solid var(--border-lt);padding:.35rem .5rem;text-align:left;white-space:nowrap}
+.med-tab th{font-size:.66rem;text-transform:uppercase;color:var(--dim)}
+.med-tab td:last-child{white-space:normal;min-width:150px}
+
+.btn-med:focus-visible,.motivo-opt:focus-visible,
 .btn-act:focus-visible,.btn-cancel-card:focus-visible,.btn-reabrir-card:focus-visible,
 .btn-cancel:focus-visible,.btn-confirm:focus-visible,.btn-confirm-red:focus-visible,
 .hd-back:focus-visible,.envio-opt:focus-visible{outline:2px solid var(--btn);outline-offset:2px}
@@ -222,6 +256,7 @@ header{
   <span class="hd-date" id="hdDate"></span>
   <div class="live-badge"><span class="live-dot"></span>Ao vivo</div>
   <span class="countdown" id="countdown">⏳ conectando…</span>
+  <button class="hd-back" id="btnMedicao" style="display:none" onclick="abrirMedicao()">📊 Medição</button>
   <a class="hd-back" id="btnSyncManual" href="https://github.com/murilorodrigueslima-maker/mr4-sistema/actions/workflows/sync-dados.yml" target="_blank" title="Forçar sincronização agora">⚡ Sync</a>
   <a class="hd-back" href="../index.html">← Sistema</a>
 </header>
@@ -301,16 +336,59 @@ header{
   </div>
 </div>
 
+<!-- Modal: registrar problema (captura opcional da medição) -->
+<div class="modal-overlay" id="problemaOverlay">
+  <div class="modal">
+    <div class="modal-title">⚠️ Registrar problema</div>
+    <div class="modal-info" id="problemaInfo"></div>
+    <div class="modal-sub">O que aconteceu?</div>
+    <div class="motivo-lista" id="problemaMotivos"></div>
+    <div style="font-size:.76rem;color:var(--sub);margin-bottom:1rem;">Serve para melhorar o processo. Não move o pedido e não bloqueia o despacho.</div>
+    <div class="modal-foot" style="flex-wrap:wrap">
+      <button class="btn-cancel" onclick="fecharProblemaModal()">Voltar</button>
+      <button class="btn-confirm" id="btnProblemaOk" onclick="confirmarProblema(false)" disabled>Resolvido sem separar de novo</button>
+      <button class="btn-confirm" id="btnProblemaRefez" onclick="confirmarProblema(true)" disabled style="background:var(--ag)">Precisou separar de novo</button>
+    </div>
+  </div>
+</div>
+
+<!-- Painel de medição (só gestor; leituras apenas ao clicar em Calcular) -->
+<div class="modal-overlay" id="medicaoOverlay">
+  <div class="modal med-modal">
+    <div class="modal-title">📊 Medição da expedição</div>
+    <div class="med-barra">
+      <select id="medPeriodo" aria-label="Período">
+        <option value="semana-passada">Semana passada (seg–dom)</option>
+        <option value="7d" selected>Últimos 7 dias</option>
+        <option value="hoje">Hoje</option>
+        <option value="30d">Últimos 30 dias (≈ 2 mil leituras)</option>
+      </select>
+      <button class="btn-confirm" id="medCalcular">Calcular</button>
+      <button class="btn-cancel" id="medCopiar" disabled>Copiar relatório</button>
+      <span class="med-custo" id="medCusto"></span>
+      <span style="flex:1"></span>
+      <button class="btn-cancel" onclick="fecharMedicao()">Fechar</button>
+    </div>
+    <div class="med-captura">
+      <span>Botões opcionais “Conferido” e “Problema”: <strong id="medCapturaEstado">DESLIGADA</strong></span>
+      <button class="btn-cancel" id="medCapturaBotao">Ligar</button>
+    </div>
+    <div id="medSaida"></div>
+  </div>
+</div>
+
 <div class="toast-wrap" id="toastWrap"></div>
 
 <!-- Núcleo da máquina de estados (mesmo código dos testes) -->
 <script src="../js/expedicao-core.js"></script>
+<!-- Medição: cálculo e registros opcionais (mesmo código do relatório semanal e dos testes) -->
+<script src="../js/expedicao-medicao-core.js"></script>
 
 <!-- Firebase: Auth + Firestore (listeners do conjunto operacional + transações) -->
 <script type="module">
 import { initializeApp }          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { getFirestore, collection, doc, getDoc, query, where, onSnapshot, runTransaction, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getFirestore, collection, doc, getDoc, query, where, onSnapshot, runTransaction, serverTimestamp, Timestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 import { verificarAcessoModulo } from '../js/guard.js';
 
 const app  = initializeApp({
@@ -344,6 +422,29 @@ window._expOuvir = (inicioDiaMs, h) => {
 };
 window._expOuvirSync = cb => onSnapshot(doc(db, 'expedicao_sync', 'estado'), s => cb(s.exists() ? s.data() : null), () => cb(null));
 
+// ── Medição (opcional). Sem documento de configuração, ou sem Rules publicadas, tudo fica como antes (desligado).
+// 1 leitura por abertura; os registros só são ouvidos com a captura LIGADA (últimos 3 dias).
+window._expOuvirMedicao = (cbConfig, cbRegistros) => {
+  let parar = null;
+  onSnapshot(doc(db, 'expedicao_config', 'medicao'), s => {
+    const cfg = s.exists() ? s.data() : null;
+    cbConfig(cfg);
+    if (cfg && cfg.ativa === true && !parar) {
+      parar = onSnapshot(query(collection(db, 'expedicao_medicao'), where('em', '>=', Timestamp.fromMillis(Date.now() - 3 * 86400000))),
+        q => cbRegistros(q.docs.map(d => d.data({ serverTimestamps: 'estimate' }))), () => cbRegistros([]));
+    } else if ((!cfg || cfg.ativa !== true) && parar) { parar(); parar = null; cbRegistros([]); }
+  }, () => cbConfig(null));
+};
+// registro imutável: transação (não fica enfileirado offline) que nunca sobrescreve um registro existente
+window._expRegistrar = (id, dados) => runTransaction(db, async t => {
+  const ref = doc(db, 'expedicao_medicao', id);
+  if ((await t.get(ref)).exists()) return 'JA_REGISTRADO';
+  t.set(ref, dados);
+  return 'OK';
+});
+// o painel (e suas consultas) só é carregado quando o gestor abre
+window._expPainelMedicao = async opcoes => (await import('../js/expedicao-medicao-tela.js')).montar({ db, ...opcoes });
+
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href='../login.html'; return; }
   // FAIL CLOSED dual-role (P0 fix 2026-09-22)
@@ -360,6 +461,7 @@ onAuthStateChanged(auth, async user => {
   document.getElementById('loadingScreen').style.display='none';
   ['mainHeader','mainSummary','mainKanban'].forEach(id=>document.getElementById(id).style.display='');
   window.iniciarPainel();
+  if(papel==='gestor') document.getElementById('btnMedicao').style.display='';
 });
 </script>
 
@@ -370,6 +472,7 @@ const CFG={
   sync_atrasado_s:180,   // sem sync central há mais de 3 min → aviso na tela
 };
 const EXP=window.ExpedicaoCore;
+const MED=window.ExpedicaoMedicao;   // ausente = captura desligada
 
 // ── ENVIOS ────────────────────────────────────────────────────────────────────
 const ENVIO={
@@ -395,6 +498,11 @@ const S={
   cdAtual:null,
   envioSel:null,
   modalMode:null,
+  medCfg:null,       // expedicao_config/medicao
+  medRegs:[],        // expedicao_medicao (últimos 3 dias), só com a captura ligada
+  medPainel:null,
+  probNum:null,
+  probMotivo:null,
   cancelNum:null,
   audioUnlocked:false,
 };
@@ -477,6 +585,9 @@ window.iniciarPainel = function(){
   toast('⏳ Carregando pedidos...','t-info',2000);
   ouvir();
   window._expOuvirSync(d=>{S.sync=d;atualizarSync();});
+  if(MED&&window._expOuvirMedicao)window._expOuvirMedicao(
+    cfg=>{S.medCfg=cfg;if(!MED.configAtiva(cfg))fecharProblemaModal();if(S.medPainel)S.medPainel.mostrarCaptura();render();},
+    regs=>{S.medRegs=regs;render();});
   atualizarHeader();
   setInterval(tickElapsed,8000);
   setInterval(atualizarHeader,30000);
@@ -619,6 +730,87 @@ window.confirmarReabrir=async function(){
   if(await executar(numero,'REABRIR',{motivo}))toast(`↩ Pedido #${numero} reaberto — ${limparNome(cliente)}`,'t-warn');
 };
 
+// ── MEDIÇÃO: captura opcional (1 clique; não move o pedido, não bloqueia o despacho) ──
+function medicaoLigada(){return !!MED&&MED.configAtiva(S.medCfg);}
+function registrosDe(numero){return S.medRegs.filter(r=>String(r.pedido)===String(numero));}
+
+async function registrar(numero,tipo,extra){
+  const p=S.pedidos[numero];
+  if(!p||S.processando.has(numero))return null;
+  S.processando.add(numero);render();
+  try{
+    const {id,dados}=MED.planejarRegistro({pedido:p,tipo,...(extra||{}),uid:window._expUsuario.uid,config:S.medCfg,serverTimestamp:window._expServerTimestamp});
+    return await window._expRegistrar(id,dados);
+  }catch(e){
+    toast(`Pedido #${numero}: registro não salvo (o pedido pode ter mudado). O quadro não foi alterado.`,'t-warn',5000);
+    return null;
+  }finally{
+    S.processando.delete(numero);render();
+  }
+}
+
+window.marcarConferido=async function(numero){
+  const r=await registrar(numero,'CONFERENCIA');
+  if(r==='OK')toast(`Conferência do pedido #${numero} registrada`,'t-success');
+  else if(r==='JA_REGISTRADO')toast(`Pedido #${numero} já estava conferido.`,'t-info');
+};
+
+window.abrirProblemaModal=function(numero){
+  const p=S.pedidos[numero];
+  if(!p||!medicaoLigada())return;
+  S.probNum=numero;S.probMotivo=null;
+  document.getElementById('problemaInfo').innerHTML=`<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}`;
+  document.getElementById('problemaMotivos').innerHTML=MED.MOTIVOS.map(m=>
+    `<button type="button" class="motivo-opt" data-motivo="${m.id}" onclick="selMotivo(this)">${m.rotulo}</button>`).join('');
+  document.getElementById('btnProblemaOk').disabled=true;
+  document.getElementById('btnProblemaRefez').disabled=true;
+  document.getElementById('problemaOverlay').classList.add('open');
+};
+window.selMotivo=function(el){
+  document.querySelectorAll('.motivo-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');S.probMotivo=el.dataset.motivo;
+  document.getElementById('btnProblemaOk').disabled=false;
+  document.getElementById('btnProblemaRefez').disabled=false;
+};
+window.fecharProblemaModal=function(){
+  document.getElementById('problemaOverlay').classList.remove('open');
+  S.probNum=S.probMotivo=null;
+};
+window.confirmarProblema=async function(retrabalho){
+  if(!S.probNum||!S.probMotivo)return;
+  const numero=S.probNum, motivo=S.probMotivo;
+  fecharProblemaModal();
+  const r=await registrar(numero,'OCORRENCIA',{motivo,retrabalho});
+  if(r==='OK')toast(`Problema registrado no pedido #${numero}`,'t-warn');
+  else if(r==='JA_REGISTRADO')toast(`Esse problema já estava registrado no pedido #${numero}.`,'t-info');
+};
+
+function medicaoNoCard(p,dis){
+  if(!medicaoLigada()||!MED.COLUNAS_OCORRENCIA.includes(p.coluna))return'';
+  const regs=registrosDe(p.numero), n=regs.filter(r=>r.tipo==='OCORRENCIA').length;
+  let conf='';
+  if(p.coluna==='pr'){
+    const c=regs.find(r=>r.tipo==='CONFERENCIA'&&Number(r.versao)===Number(p.versao||0));
+    const t=c&&MED.emMs(c.em);
+    conf=c?`<span class="med-feito">✔ Conferido${t?' '+horaFmt(t):''}</span>`
+          :`<button class="btn-med"${dis} onclick="marcarConferido('${p.numero}')">✔ Conferido</button>`;
+  }
+  return`<div class="card-med">${conf}<button class="btn-med problema"${dis} onclick="abrirProblemaModal('${p.numero}')">⚠ Problema</button>${n?`<span class="med-ocorr">${n} registrado${n>1?'s':''}</span>`:''}</div>`;
+}
+
+// ── PAINEL DE MEDIÇÃO (gestor) ───────────────────────────────────────────────
+window.abrirMedicao=async function(){
+  if(!window._expUsuario||window._expUsuario.papel!=='gestor')return;
+  document.getElementById('medicaoOverlay').classList.add('open');
+  if(S.medPainel){S.medPainel.mostrarCaptura();return;}
+  try{
+    S.medPainel=await window._expPainelMedicao({uid:window._expUsuario.uid,ativos:()=>Object.values(S.ativos),captura:medicaoLigada});
+  }catch(e){fecharMedicao();toast('❌ Não foi possível abrir a medição. O quadro segue funcionando.','t-error',5000);}
+};
+window.fecharMedicao=function(){document.getElementById('medicaoOverlay').classList.remove('open');};
+document.getElementById('problemaOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('problemaOverlay'))fecharProblemaModal();});
+document.getElementById('medicaoOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('medicaoOverlay'))fecharMedicao();});
+
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render(){
   const ag=getColuna('ag');
@@ -701,7 +893,7 @@ function renderCard(p){
     <span class="card-items">${p.itens} item${p.itens>1?'s':''}</span>
     <span class="card-val">${brl(p.valor)}</span>
   </div>
-  <div class="card-foot">${botao}${cancelBtn}</div>
+  <div class="card-foot">${botao}${cancelBtn}</div>${medicaoNoCard(p,dis)}
 </div>`;
 }
 

@@ -36,7 +36,7 @@ beforeAll(async () => {
     await db.collection('users').doc(U.func1).set({ role: 'funcionario', ativo: true, funcionarioId: F.f1 });
     await db.collection('users').doc(U.func2).set({ role: 'funcionario', ativo: true, funcionarioId: F.f2 });
     let b = db.batch(), k = 0;
-    for (const r of FX.regs) { b.set(db.collection('registros').doc(r.id), r); if (++k % 400 === 0) { await b.commit(); b = db.batch(); } }
+    for (const r of FX.regs) { b.set(db.collection('registros').doc(r.id), r); if (++k % 100 === 0) { await b.commit(); b = db.batch(); } }
     for (const j of FX.just) b.set(db.collection('justificativas').doc(j.id), j);
     await b.commit();
   });

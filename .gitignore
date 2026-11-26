@@ -40,3 +40,4 @@ relatorios-privados/
 mr4-relatorios-privados/
 dist/
 .firebase/
+functions/node_modules

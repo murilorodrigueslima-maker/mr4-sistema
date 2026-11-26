@@ -583,35 +583,61 @@ service cloud.firestore {
     }
 
     // ── Expedição: medição opcional (js/expedicao-medicao-core.js) ────────────
-    // NÃO altera o pedido nem a máquina de estados. Desligada por padrão: sem expedicao_config/medicao.ativa == true
-    // nenhum registro é aceito. Registros imutáveis, 1 por pedido+versão (+ motivo), autor e horário do servidor.
+    // NÃO altera o pedido, os eventos nem a máquina de estados. Desligada por padrão: sem expedicao_config/medicao.ativa
+    // == true nenhum registro é aceito. Registros imutáveis, ids determinísticos, autor e horário do servidor.
     match /expedicao_config/{docId} {
       allow read:  if expAcesso();
       allow create, update: if docId == 'medicao' && isGestor() &&
-        request.resource.data.keys().hasOnly(['ativa', 'atualizadoEm', 'atualizadoPor']) &&
-        request.resource.data.ativa is bool &&
+        request.resource.data.keys().hasOnly(['ativa', 'inicio', 'horaInicio', 'horaFim', 'atualizadoEm', 'atualizadoPor']) &&
+        request.resource.data.ativa is bool && expJanelaOk(request.resource.data) &&
         request.resource.data.atualizadoEm == request.time && request.resource.data.atualizadoPor == request.auth.uid;
       allow delete: if false;
+    }
+    // início do acompanhamento (AAAA-MM-DD) e expediente (horas inteiras), ambos opcionais
+    function expJanelaOk(c) {
+      return (!('inicio' in c) || (c.inicio is string && c.inicio.matches('20[0-9]{2}-[01][0-9]-[0-3][0-9]'))) &&
+             (!('horaInicio' in c || 'horaFim' in c) || (c.horaInicio is int && c.horaFim is int &&
+                c.horaInicio >= 0 && c.horaFim <= 24 && c.horaInicio < c.horaFim));
     }
     function expMedicaoLigada() {
       return exists(/databases/$(database)/documents/expedicao_config/medicao) &&
              get(/databases/$(database)/documents/expedicao_config/medicao).data.get('ativa', false) == true;
     }
+    // campos comuns; "lote" e "depois" (registrado depois do fato) são opcionais
+    function expRegistroBase(d, extras) {
+      return d.keys().hasOnly(['pedido', 'tipo', 'versao', 'em', 'por', 'lote', 'loteTam', 'depois'].concat(extras)) &&
+             d.pedido is string && d.versao is int && d.em == request.time && d.por == request.auth.uid &&
+             (!('depois' in d) || d.depois == true) &&
+             (!('lote' in d || 'loteTam' in d) || (d.lote is string && d.lote.matches('L[0-9a-z-]{6,40}') &&
+                d.loteTam is int && d.loteTam >= 1 && d.loteTam <= 30));
+    }
+    // anotação de uma transição: precisa existir o evento daquela versão, com a mesma ação e feito por quem anota
+    function expMarcaOk(id) {
+      let d = request.resource.data;
+      let e = get(/databases/$(database)/documents/expedicao_pedidos/$(d.pedido)/eventos/$('v' + string(d.versao))).data;
+      return expRegistroBase(d, ['etapa']) && id == d.pedido + '_marca_v' + string(d.versao) &&
+             ('lote' in d || 'depois' in d) && d.etapa in ['INICIAR_SEPARACAO', 'MARCAR_SEPARADO', 'DESPACHAR'] &&
+             e.acao == d.etapa && e.por == request.auth.uid;
+    }
+    // conferência (início/fim), entrega e ocorrência: sempre na versão ATUAL do pedido e na coluna certa
     function expMedicaoOk(id) {
       let d = request.resource.data;
       let p = get(/databases/$(database)/documents/expedicao_pedidos/$(d.pedido)).data;
-      let base = d.pedido + (d.tipo == 'CONFERENCIA' ? '_conf_v' : '_oc_v') + string(d.versao);
-      return d.versao is int && d.versao == p.get('versao', 0) && d.em == request.time && d.por == request.auth.uid &&
-        ((d.tipo == 'CONFERENCIA' && p.coluna == 'pr' && id == base &&
-            d.keys().hasOnly(['pedido', 'tipo', 'versao', 'em', 'por'])) ||
-         (d.tipo == 'OCORRENCIA' && p.coluna in ['se', 'pr'] &&
-            d.keys().hasOnly(['pedido', 'tipo', 'versao', 'em', 'por', 'motivo', 'retrabalho']) &&
-            d.motivo in ['PRODUTO_ERRADO', 'QUANTIDADE_ERRADA', 'ITEM_ESQUECIDO', 'NAO_LOCALIZADO', 'SEM_SALDO_FISICO', 'AVARIA', 'VENDA_ALTERADA'] &&
-            d.retrabalho is bool && id == base + '_' + d.motivo));
+      let v = d.pedido + '_';
+      return d.versao == p.get('versao', 0) &&
+        ((d.tipo == 'CONFERENCIA_INICIO' && p.coluna == 'pr' && id == v + 'confini_v' + string(d.versao) && expRegistroBase(d, [])) ||
+         (d.tipo == 'CONFERENCIA' && p.coluna == 'pr' && id == v + 'conf_v' + string(d.versao) && expRegistroBase(d, [])) ||
+         (d.tipo == 'ENTREGA' && p.coluna == 'de' && p.envio in ['uber-mr4', 'rota-manha', 'rota-tarde'] &&
+            id == v + 'entrega_v' + string(d.versao) && expRegistroBase(d, [])) ||
+         (d.tipo == 'OCORRENCIA' && p.coluna in ['se', 'pr', 'de'] && expRegistroBase(d, ['motivo', 'retrabalho']) &&
+            d.motivo in ['PRODUTO_ERRADO', 'QUANTIDADE_ERRADA', 'ITEM_ESQUECIDO', 'NAO_LOCALIZADO', 'SEM_SALDO_FISICO', 'AVARIA', 'VENDA_ALTERADA', 'NAO_ENTREGUE'] &&
+            (d.motivo != 'NAO_ENTREGUE' || p.coluna == 'de') &&
+            d.retrabalho is bool && id == v + 'oc_v' + string(d.versao) + '_' + d.motivo));
     }
     match /expedicao_medicao/{registroId} {
       allow read:   if expAcesso();
-      allow create: if expAcesso() && expMedicaoLigada() && expMedicaoOk(registroId);
+      allow create: if expAcesso() && expMedicaoLigada() &&
+        (request.resource.data.tipo == 'MARCA' ? expMarcaOk(registroId) : expMedicaoOk(registroId));
       allow update, delete: if false;
     }
 

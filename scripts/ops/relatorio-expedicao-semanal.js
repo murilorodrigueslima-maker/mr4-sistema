@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * Relatório semanal da Expedição (loja 262759) — SOMENTE LEITURA. Só agregados; operadores como O1, O2.
+ * Relatório semanal da Expedição (loja 262759) — SOMENTE LEITURA. Só agregados do processo; nada por pessoa.
  * Não grava nada no Firestore: usa apenas :runQuery e GET. Não lê nome, cidade nem dados de cliente.
  *
  * Uso:
@@ -9,7 +9,8 @@
  *   node scripts/ops/relatorio-expedicao-semanal.js --periodo 30d --com-vendas
  *   node scripts/ops/relatorio-expedicao-semanal.js --de 2026-11-30 --ate 2026-12-06 --saida ~/relatorios
  * Opções:
- *   --periodo hoje|7d|semana-passada|30d   --de/--ate AAAA-MM-DD
+ *   --periodo hoje|7d|semana-passada|30d|acompanhamento   --de/--ate AAAA-MM-DD
+ *                       (acompanhamento = 7 dias a partir da data de início configurada na tela)
  *   --com-vendas        lê vendas_gc para estimar venda → início (+1 leitura por venda do período)
  *   --saida PASTA       grava .md e .json (sem isso, só imprime)
  *   --max-leituras N    trava de custo (padrão 8000)
@@ -21,7 +22,7 @@ const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const M = require('../../js/expedicao-medicao-core.js');
 
-const CAMPOS_PEDIDO = ['numero', 'data', 'ingresadoEm', 'movidoEm', 'coluna', 'saidaEm', 'versao', 'itens', 'valor', 'origem', 'criadoEm', 'vendedor'];
+const CAMPOS_PEDIDO = ['numero', 'data', 'ingresadoEm', 'movidoEm', 'coluna', 'saidaEm', 'versao', 'itens', 'valor', 'origem', 'criadoEm', 'vendedor', 'envio', 'vendaCadastradaEm'];
 const CAMPOS_VENDA = ['data', 'valor_total', 'cadastrado_em', 'produtos', 'nome_vendedor'];
 const CAMPOS_EVENTO = ['pedido', 'de', 'para', 'acao', 'versao', 'em', 'por'];   // sem o motivo (texto livre) de reabertura
 
@@ -113,7 +114,7 @@ function montar(dados, { inicioMs, fimMs, agoraMs }) {
     notas.push(`Venda ligada por aproximação (data + valor + nº de linhas + vendedor): ${v.ligados} de ${v.total} pedidos que entraram no período (${M.pct(v.total ? v.ligados / v.total : null)}). O espelho de vendas é atualizado a cada poucas horas: vendas recentes podem faltar.`);
   }
   notas.push(`Captura opcional: ${M.configAtiva(dados.config) ? 'LIGADA' : 'DESLIGADA'} no momento da geração; ${dados.registros.length} registro(s) desde o início do período.`);
-  const r = M.calcular({ pedidos: dados.pedidos, eventos: dados.eventos, registros: dados.registros, ativos: dados.ativos, vendaMs, inicioMs, fimMs, agoraMs });
+  const r = M.calcular({ pedidos: dados.pedidos, eventos: dados.eventos, registros: dados.registros, ativos: dados.ativos, vendaMs, config: dados.config, inicioMs, fimMs, agoraMs });
   return { r, notas };
 }
 
@@ -134,19 +135,22 @@ function argumentos(argv) {
   if (!Number.isInteger(o.maxLeituras) || o.maxLeituras < 1) throw new Error('MAX_LEITURAS_INVALIDO');
   return o;
 }
-function intervaloDe(o, agoraMs) {
+function intervaloDe(o, agoraMs, config) {
   if (o.de || o.ate) {
     const ok = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '') && !Number.isNaN(Date.parse(s));
     if (!ok(o.de) || !ok(o.ate) || o.de > o.ate) throw new Error('USE --de AAAA-MM-DD --ate AAAA-MM-DD');
     return { de: o.de, ate: o.ate, inicioMs: Date.parse(o.de + 'T00:00:00-03:00'), fimMs: Date.parse(o.ate + 'T00:00:00-03:00') + 86400000 };
   }
-  return M.periodo(o.periodo, agoraMs);
+  return M.periodo(o.periodo, agoraMs, config);
 }
 
 async function executar(argv, { agoraMs = Date.now(), escrever = s => process.stdout.write(s + '\n'), fetchImpl } = {}) {
-  const o = argumentos(argv), p = intervaloDe(o, agoraMs);
+  const o = argumentos(argv);
   const db = criarCliente({ projeto: o.projeto, emulador: o.emulador, maxLeituras: o.maxLeituras, fetchImpl,
     obterToken: () => execFileSync('gcloud', ['auth', 'print-access-token'], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() });
+  // o acompanhamento depende da data configurada: nesse caso a configuração é lida antes (+1 leitura)
+  const cfg = o.periodo === 'acompanhamento' && !o.de && !o.ate ? await db.documento(`${M.CFG_DOC.colecao}/${M.CFG_DOC.id}`) : null;
+  const p = intervaloDe(o, agoraMs, cfg);
   const dados = await coletar(db, { ...p, comVendas: o.comVendas });
   const { r, notas } = montar(dados, { ...p, agoraMs });
   notas.push(`Leituras do Firestore nesta execução: ${db.leituras()} (somente leitura).`);

@@ -79,7 +79,7 @@ describe('RULES — registros opcionais', () => {
   });
   test('ocorrência: motivos da lista em se/pr; vários motivos no mesmo ciclo; fora disso, nega', async () => {
     await semear('200', 'se', 1); await semear('300', 'ag', 0); await semear('400', 'de', 3); await ligar();
-    for (const motivo of M.MOTIVO_IDS) await assertSucceeds(gravar(U.func, plano(U.func, '200', 'se', 1, 'OCORRENCIA', { motivo, retrabalho: true })));
+    for (const motivo of M.MOTIVO_IDS.filter(m => m !== 'NAO_ENTREGUE')) await assertSucceeds(gravar(U.func, plano(U.func, '200', 'se', 1, 'OCORRENCIA', { motivo, retrabalho: true })));
     const p = plano(U.func, '200', 'se', 1, 'OCORRENCIA', { motivo: 'AVARIA' });
     await assertFails(gravar(U.func, p, { motivo: 'OUTRO' }, '200_oc_v1_OUTRO'));
     await semear('201', 'se', 1);
@@ -87,7 +87,10 @@ describe('RULES — registros opcionais', () => {
     await assertFails(gravar(U.func, q, { retrabalho: 'sim' }));
     await assertFails(gravar(U.func, q, { nota: 'x' }));
     await assertFails(gravar(U.func, q, {}, '201_oc_v1_PRODUTO_ERRADO'));
-    for (const [n, col, v] of [['300', 'se', 0], ['400', 'pr', 3]]) await assertFails(gravar(U.func, plano(U.func, n, col, v, 'OCORRENCIA', { motivo: 'AVARIA' })));
+    await assertFails(gravar(U.func, plano(U.func, '300', 'se', 0, 'OCORRENCIA', { motivo: 'AVARIA' })));   // o real está em "ag"
+    await assertSucceeds(gravar(U.func, plano(U.func, '400', 'de', 3, 'OCORRENCIA', { motivo: 'NAO_ENTREGUE' })));
+    const r = plano(U.func, '201', 'se', 1, 'OCORRENCIA', { motivo: 'AVARIA' });
+    await assertFails(gravar(U.func, r, { motivo: 'NAO_ENTREGUE' }, '201_oc_v1_NAO_ENTREGUE'));          // antes da saída não existe
   });
   test('registro não toca o pedido: o fluxo normal segue (com e sem conferência)', async () => {
     await semear('500', 'pr'); await semear('501', 'pr'); await ligar();
@@ -95,6 +98,64 @@ describe('RULES — registros opcionais', () => {
     const adapter = { transacao: fn => { const db = fs(U.func); return db.runTransaction(t => fn({ ler: async n => (await t.get(db.collection(COL).doc(n))).data(), atualizar: (n, c) => t.update(db.collection(COL).doc(n), c), criarEvento: (n, id, d) => t.set(db.collection(COL).doc(n).collection('eventos').doc(id), d) })); } };
     for (const n of ['500', '501']) await assertSucceeds(C.executarAcao(adapter, n, 'DESPACHAR', 'pr', { envio: 'retirada' }, { uid: U.func, papel: 'funcionario', agoraMs: Date.now(), serverTimestamp: TS }));
     await assertFails(gravar(U.func, plano(U.func, '501', 'pr', 3)));        // já despachado
+  });
+});
+
+describe('RULES — janela de 7 dias, entrega, lote e atraso', () => {
+  const cfg = (o = {}) => fs(U.gestor).doc('expedicao_config/medicao').set({ ativa: true, atualizadoEm: TS(), atualizadoPor: U.gestor, ...o });
+  test('configuração: início AAAA-MM-DD e expediente inteiro coerente; só gestor', async () => {
+    await assertSucceeds(cfg({ inicio: '2026-11-30', horaInicio: 7, horaFim: 19 }));
+    await assertSucceeds(cfg({ inicio: '2026-12-07' }));
+    for (const o of [{ inicio: '30/11/2026' }, { inicio: 20261130 }, { horaInicio: 8 }, { horaFim: 18 }, { horaInicio: 19, horaFim: 7 }, { horaInicio: 7.5, horaFim: 18 }, { horaInicio: 0, horaFim: 25 }, { dias: 30 }]) await assertFails(cfg(o));
+    await assertFails(fs(U.func).doc('expedicao_config/medicao').set({ ativa: true, inicio: '2026-11-30', atualizadoEm: TS(), atualizadoPor: U.func }));
+  });
+  const semearDe = async (n, envio) => { await semear(n, 'de', 3); await admin(db => db.doc(`${COL}/${n}`).update({ envio })); };
+  test('entrega: só em "de", envio com entrega, uma por saída, imutável', async () => {
+    await semearDe('600', 'rota-manha'); await semearDe('601', 'retirada'); await semear('602', 'pr'); await ligar();
+    const p = M.planejarRegistro({ pedido: { numero: '600', coluna: 'de', versao: 3, envio: 'rota-manha' }, tipo: 'ENTREGA', uid: U.func, config: { ativa: true }, serverTimestamp: TS });
+    await assertSucceeds(gravar(U.func, p)); await assertFails(gravar(U.gestor, p, { por: U.gestor }));
+    await assertFails(fs(U.gestor).collection(REG).doc(p.id).delete());
+    await assertFails(gravar(U.func, p, { pedido: '601' }, '601_entrega_v3'));
+    await assertFails(gravar(U.func, p, { pedido: '602', versao: 2 }, '602_entrega_v2'));
+    await assertFails(gravar(U.func, p, { motivo: 'AVARIA' }, '600_entrega_v3'));
+  });
+  test('conferência com início; lote e "depois" validados', async () => {
+    await semear('610', 'pr'); await semear('611', 'pr'); await ligar();
+    const lote = M.novoLote();
+    await assertSucceeds(gravar(U.func, plano(U.func, '610', 'pr', 2, 'CONFERENCIA_INICIO', { lote, loteTam: 2, depois: true })));
+    await assertSucceeds(gravar(U.func, plano(U.func, '610', 'pr', 2, 'CONFERENCIA', { lote, loteTam: 2 })));
+    const p = plano(U.func, '611', 'pr', 2);
+    for (const o of [{ depois: false }, { depois: 'sim' }, { lote }, { loteTam: 2 }, { lote: 'x', loteTam: 2 }, { lote, loteTam: 31 }, { lote, loteTam: 0 }, { lote, loteTam: '2' }, { etapa: 'DESPACHAR' }]) await assertFails(gravar(U.func, p, o));
+  });
+  test('marca de transição: só quem fez, com o evento daquela versão; não altera o pedido nem os eventos', async () => {
+    await semear('620', 'ag', 0); await ligar();
+    const adapter = uid => ({ transacao: fn => { const db = fs(uid); return db.runTransaction(t => fn({ ler: async n => (await t.get(db.collection(COL).doc(n))).data(), atualizar: (n, c) => t.update(db.collection(COL).doc(n), c), criarEvento: (n, id, d) => t.set(db.collection(COL).doc(n).collection('eventos').doc(id), d) })); } });
+    await assertSucceeds(C.executarAcao(adapter(U.func), '620', 'INICIAR_SEPARACAO', 'ag', { envio: 'rota-tarde' }, { uid: U.func, papel: 'funcionario', agoraMs: Date.now(), serverTimestamp: TS }));
+    const m = (uid, o = {}) => M.planejarMarca({ pedido: '620', versao: 1, etapa: 'INICIAR_SEPARACAO', uid, config: { ativa: true }, serverTimestamp: TS, lote: M.novoLote(), loteTam: 2, ...o });
+    const p = m(U.func);
+    await assertFails(gravar(U.gestor, m(U.gestor)));                                            // não foi ele que clicou
+    await assertFails(gravar(U.func, p, { etapa: 'DESPACHAR' }));
+    await assertFails(gravar(U.func, p, { versao: 2 }, '620_marca_v2'));                         // não existe evento v2
+    await assertFails(gravar(U.func, { id: p.id, dados: { pedido: '620', tipo: 'MARCA', versao: 1, etapa: 'INICIAR_SEPARACAO', em: TS(), por: U.func } }));   // sem lote nem atraso
+    await assertFails(gravar(U.func, p, { texto: 'x' }));
+    await assertSucceeds(gravar(U.func, p));
+    await assertFails(gravar(U.func, m(U.func)));                                                // imutável
+    // o pedido avançou: ainda é possível anotar a versão antiga (o evento existe)
+    await assertSucceeds(C.executarAcao(adapter(U.func), '620', 'MARCAR_SEPARADO', 'se', {}, { uid: U.func, papel: 'funcionario', agoraMs: Date.now(), serverTimestamp: TS }));
+    await assertSucceeds(gravar(U.func, M.planejarMarca({ pedido: '620', versao: 2, etapa: 'MARCAR_SEPARADO', uid: U.func, config: { ativa: true }, serverTimestamp: TS, depois: true })));
+    let ev; await admin(async db => { ev = (await db.doc(`${COL}/620/eventos/v1`).get()).data(); });
+    expect(ev).not.toHaveProperty('lote');
+    await assertFails(fs(U.gestor).doc(`${COL}/620/eventos/v1`).update({ lote: 'Labcdef-1' }));    // eventos seguem imutáveis
+    await ligar(false); await assertFails(gravar(U.func, M.planejarMarca({ pedido: '620', versao: 2, etapa: 'MARCAR_SEPARADO', uid: U.func, config: { ativa: true }, serverTimestamp: TS, depois: true }), {}, '620_marca_v2'));
+  });
+  test('pedido com horário da venda (sync novo) segue o fluxo pela tela; a tela não consegue alterar o campo', async () => {
+    await semear('630', 'ag', 0); await admin(db => db.doc(`${COL}/630`).update({ vendaCadastradaEm: Date.now() - 1000 }));
+    const db = fs(U.func), b = db.batch();
+    b.update(db.doc(`${COL}/630`), { coluna: 'se', envio: 'retirada', versao: 1, ultimoEventoId: 'v1', atualizadoEm: TS(), atualizadoPor: U.func, movidoEm: Date.now(), vendaCadastradaEm: 1 });
+    b.set(db.doc(`${COL}/630/eventos/v1`), { pedido: '630', de: 'ag', para: 'se', acao: 'INICIAR_SEPARACAO', versao: 1, em: TS(), por: U.func, origem: 't' });
+    await assertFails(b.commit());
+    const adapter = { transacao: fn => db.runTransaction(t => fn({ ler: async n => (await t.get(db.collection(COL).doc(n))).data(), atualizar: (n, c) => t.update(db.collection(COL).doc(n), c), criarEvento: (n, id, d) => t.set(db.collection(COL).doc(n).collection('eventos').doc(id), d) })) };
+    await assertSucceeds(C.executarAcao(adapter, '630', 'INICIAR_SEPARACAO', 'ag', { envio: 'retirada' }, { uid: U.func, papel: 'funcionario', agoraMs: Date.now(), serverTimestamp: TS }));
   });
 });
 
@@ -120,5 +181,9 @@ describe('relatório semanal contra o emulador (REST, somente leitura)', () => {
     expect(r.resultado.pendentes.ag.total).toBe(1);
     expect(saida.join('\n')).not.toMatch(/NAO-PODE-SAIR|uid-secreto|Vendedor Teste/);
     expect(r.leituras).toBeLessThan(15);
+    // período "acompanhamento": usa a data configurada na tela
+    await admin(db => db.doc('expedicao_config/medicao').set({ ativa: true, inicio: '2026-11-30' }));
+    const a = await S.executar(['--emulador', process.env.FIRESTORE_EMULATOR_HOST, '--projeto', PROJECT_ID, '--periodo', 'acompanhamento'], { agoraMs: Date.parse('2026-12-07T10:00:00-03:00'), escrever: () => {} });
+    expect(a.resultado.periodo).toMatchObject({ de: '2026-11-30', ate: '2026-12-06' }); expect(a.resultado.contagens.entradas).toBe(2);
   });
 });

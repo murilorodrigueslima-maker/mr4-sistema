@@ -202,6 +202,12 @@ describe('CRIAÇÃO CONCORRENTE e SYNC CENTRAL', () => {
     expect(r).toMatchObject({ criados: 0, existentes: 1 });
     expect((await ler('1000500')).coluna).toBe('se');
   });
+  test('sync central: horário de cadastro do GestãoClick vira "venda recebida"; sem ele o pedido é criado como antes', async () => {
+    const comHora = { ...venda('1000650'), cadastrado_em: '2026-09-29 09:15:00' };
+    await SYNC.sincronizar({ db: adm, leitor: leitorFalso([comHora, venda('1000651')]), dto, agora: new Date('2026-09-29T10:00:00-03:00'), serverTimestamp: () => admin.firestore.FieldValue.serverTimestamp() });
+    expect((await ler('1000650')).vendaCadastradaEm).toBe(Date.parse('2026-09-29T09:15:00-03:00'));
+    expect(await ler('1000651')).not.toHaveProperty('vendaCadastradaEm');
+  });
   test('sync central: identidade = codigo (não o id de 9 dígitos); cria só o inexistente; 2ª execução não cria nada; nunca sobrescreve', async () => {
     await semearPedido('1000601', 'pr');
     const ts = () => admin.firestore.FieldValue.serverTimestamp();

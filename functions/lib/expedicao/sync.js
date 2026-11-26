@@ -31,9 +31,18 @@ function criarLeitorVendas({ fetchImpl = globalThis.fetch, accessToken, secretTo
   };
 }
 
-/** Mesmo documento que a tela antiga criava (compatível com o histórico), + versão 0 e origem. */
+/** `cadastrado_em` do GestãoClick ("AAAA-MM-DD HH:MM:SS", hora de Fortaleza) → ms; null se ausente, ilegível ou no futuro. */
+function cadastroMs(s, agoraMs) {
+  const m = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})/.exec(String(s || ''));
+  const t = m ? Date.parse(m[1] + 'T' + m[2] + '-03:00') : NaN;
+  return Number.isFinite(t) && t <= agoraMs + 600000 ? t : null;
+}
+
+/** Mesmo documento que a tela antiga criava (compatível com o histórico), + versão 0, origem e horário da venda. */
 function pedidoNovo(v, agoraMs, criadoEm) {
+  const venda = cadastroMs(v.cadastradoEm, agoraMs);
   return {
+    ...(venda != null ? { vendaCadastradaEm: venda } : {}),   // "venda recebida" (medição); telas antigas ignoram o campo
     numero: String(v.numero), data: v.data || diaFortaleza(agoraMs), hora: v.hora || '',
     ingresadoEm: agoraMs, movidoEm: agoraMs, coluna: 'ag',
     cliente: v.cliente || '—', vendedor: v.vendedor || '—', itens: Number(v.itens || 1), valor: Number(v.valor || 0), cidade: v.cidade || '',
@@ -51,7 +60,7 @@ async function sincronizar({ db, leitor, dto, agora = new Date(), serverTimestam
   const refEstado = db.collection('expedicao_sync').doc('estado');
   const estado = (await refEstado.get()).data() || {};
   const conhecidos = new Set(estado.numeros_recentes || []);
-  const vendas = (await leitor.vendas(inicio, fim)).map(dto).filter(v => v.numero);
+  const vendas = (await leitor.vendas(inicio, fim)).map(bruta => ({ ...dto(bruta), cadastradoEm: bruta && bruta.cadastrado_em })).filter(v => v.numero);
   const vistos = [...new Set(vendas.map(v => String(v.numero)))];
   let criados = 0, existentes = 0;
   for (const v of vendas) {

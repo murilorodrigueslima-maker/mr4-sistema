@@ -862,6 +862,15 @@ exports.comprasSyncIncremental = onSchedule({
   maxInstances:    1,
 }, async () => { await SEGRT.atualizarEnvGc(); return comprasEntrypoints.syncAgendadoHandler('INCREMENTAL', { db }); });
 
+// ── COMPRAS — gestão interna (parâmetros por fornecedor, pendências antigas, origem). Sem GestãoClick e sem secrets: só Firestore.
+// Autorização no próprio handler: gestor ativo, não bloqueado, com admin ou módulo 'estoque'. (Fora do agendador de Compras.)
+const _gestaoCompras = () => require('./lib/comprasGestao');
+const OPC_GESTAO_COMPRAS = { region: REGION, memory: '512MiB', timeoutSeconds: 120, maxInstances: 3 };
+exports.gestaoComprasDados               = onCall(OPC_GESTAO_COMPRAS, req => _gestaoCompras().dadosHandler(req, { db }));
+exports.gestaoComprasParametrosSalvar    = onCall(OPC_GESTAO_COMPRAS, req => _gestaoCompras().salvarParametrosHandler(req, { db }));
+exports.gestaoComprasPendenciaConfirmar  = onCall(OPC_GESTAO_COMPRAS, req => _gestaoCompras().confirmarPendenciaHandler(req, { db }));
+exports.gestaoComprasOrigemConfirmar     = onCall(OPC_GESTAO_COMPRAS, req => _gestaoCompras().confirmarOrigemHandler(req, { db }));
+
 // Agente Financeiro MR4 — Fase 2: sync FULL (GestãoClick SOMENTE GET) → fin_n1 protegido (geração + ponteiro). Sem HTTP, sem callable.
 // Agenda 3/3 h (min 40, America/Fortaleza); trava com lease em fin_n1_ctl/lock; falha preserva a geração ativa.
 const financeiroEntrypoints = require('./lib/financeiro/entrypoints');

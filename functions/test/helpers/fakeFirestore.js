@@ -37,6 +37,7 @@ function criarFake() {
   return {
     dados,
     collection: n => new Collection(n),
+    batch() { const ops = []; return { set: (r, v, o) => ops.push(() => r._set(v, o)), delete: r => ops.push(() => col(r.c).delete(r.id)), commit: async () => { ops.forEach(o => o()); } }; },
     doc: p => { const [c, id, resto] = p.split('/'); if (resto) throw new Error('SUBCOLECAO_NAO_SUPORTADA'); return new Doc(c, id); },
     runTransaction(fn) {
       const exec = async () => {

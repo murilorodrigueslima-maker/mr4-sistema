@@ -13,7 +13,7 @@ const crypto = require('crypto');
 
 const SCHEMA = 'audit-v1';
 const COLECAO = 'audit_log';
-const CATEGORIAS = Object.freeze({ SECURITY: 'SECURITY', CRM: 'CRM', COMMERCIAL: 'COMMERCIAL' });
+const CATEGORIAS = Object.freeze({ SECURITY: 'SECURITY', CRM: 'CRM', COMMERCIAL: 'COMMERCIAL', PURCHASING: 'PURCHASING' });
 const SEGREDO = /senha|password|token|secret|credential|api[_-]?key/i;
 
 const hashCurto = v => (v === undefined || v === null || v === '' ? null : 'sha256:' + crypto.createHash('sha256').update(String(v).trim().toLowerCase()).digest('hex').slice(0, 16));

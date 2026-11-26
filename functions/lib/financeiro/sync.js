@@ -45,6 +45,12 @@ async function executarSyncFinanceiro({ cli, db, agora = new Date(), runId = nov
     const g = A.construirGeracao({ canon, vendasPorCodigo, comprasPorCodigo, agora, geracao, hoje });
     const estatisticas = { run_id: runId, geracao, titulos_pagar: ap.titulos.length, titulos_receber: ar.titulos.length, paginas: ap.estatisticas.paginas + ar.estatisticas.paginas, indices: ix.estatisticas, gets: cli.chamadas(), retries: cli.retries ? cli.retries() : 0, janela: { inicio: INICIO_TITULOS, fim } };
     const pub = await P.publicarGeracao(db, { geracao, resumo: g.resumo, entidades: g.entidades, fatias: g.fatias, runId, agora, estatisticas, aoProgredir: batida });
+    // Origem das compras (loja ativa): reaproveita os títulos e o índice já lidos (nenhum GET a mais). Isolado: nunca derruba o financeiro.
+    try {
+      const lojaPorTitulo = new Map(ap.titulos.map(t => [String(t.id), t.loja_id]));
+      const org = await require('../compras/origem').persistirOrigem(db, { compras: ix.compras, titulos: canon.filter(t => t.natureza === 'PAGAR'), lojaPorTitulo, agora, runId, geracaoFinanceiro: geracao });
+      evento('origem_compras', org.gravado ? { status: 'OK', alteradas: org.alteradas, total: org.resumo.total, isoladas: org.resumo.isoladas } : { status: 'NAO_GRAVADA', motivo: org.motivo });
+    } catch (e) { evento('origem_compras', { status: 'ERRO', erro: sanitizarErro(e) }); }
     const dur = relogio().getTime() - t0;
     evento('fim', { status: 'OK', geracao, duracao_ms: dur, paginas: estatisticas.paginas, titulos: estatisticas.titulos_pagar + estatisticas.titulos_receber, gets: estatisticas.gets, retries: estatisticas.retries, documentos: pub.ids.length, removidos: pub.removidos });
     return { ok: true, geracao, estatisticas, resumo: g.resumo };

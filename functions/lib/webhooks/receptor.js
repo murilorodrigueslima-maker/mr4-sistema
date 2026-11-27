@@ -3,13 +3,13 @@
  * Receptor de WEBHOOKS do GestãoClick (arquitetura aprovada; NÃO ATIVO em produção).
  *
  * Segurança: endpoint isolado, só POST, corpo CRU, assinatura HMAC-SHA256 (`X-Webhook-Assinatura: t=<epoch>,v1=<hex>` sobre `t + "." + corpo`)
- * em tempo constante, janela anti-replay de 5 min, idempotência por `X-Webhook-Id` (create-only), validação da LOJA ATIVA (262759),
+ * em tempo constante, janela anti-replay de 5 min, idempotência por `X-Webhook-Id` (create-only), validação da LOJA ÚNICA (262759; a configuração não acrescenta outra),
  * resposta 2xx rápida (só grava e responde; processamento é assíncrono), chave de desligamento (kill switch) e modos:
  *   DESLIGADO (padrão; responde 200 sem gravar) · RECEPCAO (grava o aviso; não processa) · SOMBRA (grava + processa em sombra: só COMPARA, sem efeitos) · ATIVO (reservado: exige autorização).
  * Privacidade: nada de nome/CPF/valores/corpo cru — só ids, evento, loja, recurso, horários, tentativa e SHA-256 do corpo.
  */
 const crypto = require('crypto');
-const { LOJA_ATIVA_ID, LOJAS_BLOQUEADAS } = require('../gcHttp');
+const { LOJA_ATIVA_ID } = require('../gcHttp');
 
 const EVENTOS = Object.freeze(['venda.cadastrada', 'venda.situacao_alterada', 'recebimento.baixado', 'recebimento.estornado', 'pagamento.baixado', 'pagamento.estornado']);
 const RECURSO_POR_EVENTO = Object.freeze({ 'venda.cadastrada': 'vendas', 'venda.situacao_alterada': 'vendas', 'recebimento.baixado': 'recebimentos', 'recebimento.estornado': 'recebimentos', 'pagamento.baixado': 'pagamentos', 'pagamento.estornado': 'pagamentos' });
@@ -58,7 +58,7 @@ function criarLeitorConfig({ db, agora = () => Date.now() }) {
     let cfg = { modo: 'DESLIGADO', lojasPermitidas: [LOJA_ATIVA_ID], eventosAtivos: EVENTOS.slice() };
     try { const s = await db.collection(COL_CONFIG).doc(DOC_CONFIG).get(); if (s.exists) { const d = s.data(); cfg = { modo: MODOS.includes(d.modo) ? d.modo : 'DESLIGADO', lojasPermitidas: Array.isArray(d.lojasPermitidas) && d.lojasPermitidas.length ? d.lojasPermitidas.map(String) : [LOJA_ATIVA_ID], eventosAtivos: Array.isArray(d.eventosAtivos) ? d.eventosAtivos.filter(e => EVENTOS.includes(e)) : EVENTOS.slice() }; } }
     catch (_) { /* ilegível ⇒ DESLIGADO */ }
-    cfg.lojasPermitidas = cfg.lojasPermitidas.filter(l => !LOJAS_BLOQUEADAS.includes(l));   // a loja desativada NUNCA é permitida, mesmo por configuração
+    cfg.lojasPermitidas = cfg.lojasPermitidas.filter(l => l === LOJA_ATIVA_ID);             // LOJA ÚNICA: a configuração só pode restringir, nunca acrescentar outra
     cache = cfg; quando = t; return cfg;
   };
 }
@@ -84,7 +84,7 @@ async function tratarRequisicao({ req, db, segredo, lerConfig, agora = () => Dat
     if (!n.ok) return resp(n.codigo === 'EVENTO_NAO_SUPORTADO' ? 200 : 400, n.codigo, { id: n.id, evento: n.evento });   // evento não suportado: entregue (sem reprocesso do GC)
     const a = n.aviso;
     if (!cfg.eventosAtivos.includes(a.evento)) return resp(200, 'EVENTO_DESATIVADO', { id: a.id, evento: a.evento });
-    if (!cfg.lojasPermitidas.includes(a.loja_id)) {                                      // outra loja (ex.: FOCUS PARTS): registra só o fato, ignora o conteúdo
+    if (a.loja_id !== LOJA_ATIVA_ID || !cfg.lojasPermitidas.includes(a.loja_id)) {      // outra loja (ex.: FOCUS PARTS): registra só o fato, ignora o conteúdo
       return resp(200, 'LOJA_IGNORADA', { id: a.id, evento: a.evento, loja_id: a.loja_id });
     }
     const tentativa = Number(req.cabecalhos['x-webhook-tentativa']); const ref = db.collection(COL_EVENTOS).doc(a.id);
@@ -106,6 +106,18 @@ function conferirLoja(recurso, r) {
   if (r && r.loja_id) return String(r.loja_id) === LOJA_ATIVA_ID ? 'ID' : 'DIVERGENTE';
   if (r && r.nome_loja) return nomeNormalizado(r.nome_loja) === NOME_LOJA_ATIVA ? 'NOME' : 'DIVERGENTE';
   return recurso === 'vendas' ? 'NAO_VERIFICADA' : 'AUSENTE';   // títulos: o filtro primário é o loja_id do aviso
+}
+
+/**
+ * Portão do efeito operacional: só um aviso da loja única cuja ORIGEM foi conferida na API libera efeito.
+ *  'LIBERADO'  : conferência concluída com resultado CONFERIDO (títulos sem dado de loja contam como conferidos — ver conferirLoja);
+ *  'AGUARDAR'  : conferência ainda não concluída (consulta pendente ou falhou e será repetida);
+ *  'BLOQUEADO' : outra loja, loja não verificada, registro indisponível (404), falha definitiva, aviso sem conferência ou ilegível.
+ */
+function liberacaoDoEfeito(e) {
+  if (!e || String(e.loja_id) !== LOJA_ATIVA_ID) return 'BLOQUEADO';
+  if (e.status === 'PENDENTE_SOMBRA') return 'AGUARDAR';
+  return e.status === 'SOMBRA_CONCLUIDA' && e.resultado === 'CONFERIDO' ? 'LIBERADO' : 'BLOQUEADO';
 }
 
 /**
@@ -170,4 +182,4 @@ function avaliarSilencio({ modo, ultimoEventoMs, agoraMs, limiteMs = 24 * 360000
   return agoraMs - ultimoEventoMs >= limiteMs ? { alerta: true, motivo: 'SILENCIO_24H' } : { alerta: false, motivo: 'OK' };
 }
 
-module.exports = { reprocessarPendentes, compararComPolling, avaliarSilencio, conferirLoja, NOME_LOJA_ATIVA, DOC_CONFIG, EVENTOS, MODOS, JANELA_REPLAY_S, COL_EVENTOS, COL_CONFIG, COL_STATUS, verificarAssinatura, normalizarAviso, criarLeitorConfig, tratarRequisicao, processarSombra, sha256 };
+module.exports = { liberacaoDoEfeito, reprocessarPendentes, compararComPolling, avaliarSilencio, conferirLoja, NOME_LOJA_ATIVA, DOC_CONFIG, EVENTOS, MODOS, JANELA_REPLAY_S, COL_EVENTOS, COL_CONFIG, COL_STATUS, verificarAssinatura, normalizarAviso, criarLeitorConfig, tratarRequisicao, processarSombra, sha256 };

@@ -52,7 +52,7 @@ describe('SOMBRA (WHK-01)', () => {
 
 describe('ATIVO: recuperação e borda final', () => {
   test('efeito não confirmado (processador interrompido) é reaplicado uma vez; um único disparo do Job', async () => {
-    const c = cena({ eventos: { a: pendente({ status: 'SOMBRA_CONCLUIDA' }), b: ev({ evento: 'venda.cadastrada', recurso: 'vendas', efeito: 'PENDENTE' }), novo: ev({ efeito: 'PENDENTE', recebido_ms: AG - MIN }) } });
+    const c = cena({ eventos: { a: pendente({ status: 'SOMBRA_CONCLUIDA', resultado: 'CONFERIDO' }), b: ev({ evento: 'venda.cadastrada', recurso: 'vendas', efeito: 'PENDENTE' }), novo: ev({ efeito: 'PENDENTE', recebido_ms: AG - MIN }) } });
     const r = await c.rodar(); expect(r.efeitos.recuperados).toBe(2); expect(c.n).toMatchObject({ job: 1, fin: 1 });
     expect(c.db.st.gc_webhook_eventos.a.efeito).toBe('APLICADO'); expect(c.db.st.gc_webhook_eventos.novo.efeito).toBe('PENDENTE');
     expect(Object.keys(c.db.st.gc_refresh_fila.lote.blocos).sort()).toEqual(['financeiro', 'pedidos', 'perfil360', 'vendas']);
@@ -122,5 +122,51 @@ describe('conferência de loja (WHK-02)', () => {
   test('loja_id, quando existe, manda; título sem dados de loja segue conferido pelo aviso', async () => {
     expect((await rodar('recebimentos', { status: 200, loja_id: '424483', nome_loja: 'MR4 DISTRIBUIDORA' })).codigo).toBe('LOJA_DIVERGENTE');
     expect((await rodar('recebimentos', { status: 200 })).doc).toMatchObject({ resultado: 'CONFERIDO', conferencia_loja: 'AUSENTE' });
+  });
+});
+
+describe('ATIVO: efeito só com a origem conferida', () => {
+  const NEGATIVOS = {
+    divergente: { status: 'SOMBRA_CONCLUIDA', resultado: 'LOJA_DIVERGENTE' }, semProva: { status: 'SOMBRA_CONCLUIDA', resultado: 'LOJA_NAO_VERIFICADA' },
+    indisponivel: { status: 'SOMBRA_CONCLUIDA', resultado: 'ORIGEM_INDISPONIVEL' }, definitiva: { status: 'SOMBRA_FALHA', resultado: 'FALHA_CONSULTA_DEFINITIVA' },
+    semConferencia: { status: 'RECEBIDO', resultado: null }, outraLoja: { status: 'SOMBRA_CONCLUIDA', resultado: 'CONFERIDO', loja_id: '999999' }, semLoja: { loja_id: undefined },
+  };
+  const semEfeito = c => { expect(c.n.job).toBe(0); expect(c.n.fin).toBe(0); expect(c.db.st.gc_refresh_fila).toBeUndefined(); };
+
+  test.each(Object.keys(NEGATIVOS))('%s: nenhum efeito, no processador e na varredura; o aviso fica marcado BLOQUEADO (não apagado)', async nome => {
+    const evDoc = ev({ efeito: 'PENDENTE', ...NEGATIVOS[nome] });
+    const p = cena({ eventos: { a: evDoc } });
+    expect(await V.aplicarEfeito({ ...p.dep, modo: 'ATIVO', id: 'a', evDoc, agoraMs: AG })).toMatchObject({ efeito: false, conferencia: 'BLOQUEADO' });
+    semEfeito(p); expect(p.db.st.gc_webhook_eventos.a.efeito).toBe('BLOQUEADO');
+    const c = cena({ eventos: { a: evDoc } }); const r = await c.rodar();
+    semEfeito(c); expect(r.efeitos).toMatchObject({ recuperados: 0, bloqueados: 1 }); expect(c.db.st.gc_webhook_eventos.a.efeito).toBe('BLOQUEADO');
+    expect(c.logger.alertas().some(l => l.motivos.includes('EFEITO_BLOQUEADO_SEM_CONFERENCIA'))).toBe(true);
+  });
+
+  test('consulta que falhou: o efeito ESPERA (sem gastar tentativa) e é aplicado depois que a sombra confere', async () => {
+    const c = cena({ eventos: { a: pendente({ recebido_ms: AG }) } }); const falha = async () => { throw new Error('503'); };
+    expect(await V.aplicarEfeito({ ...c.dep, modo: 'ATIVO', id: 'a', evDoc: c.db.st.gc_webhook_eventos.a, agoraMs: AG })).toMatchObject({ efeito: false, conferencia: 'AGUARDAR' });
+    for (const m of [10, 20]) await c.rodar(AG + m * MIN, { buscar: falha });
+    semEfeito(c); expect(c.db.st.gc_webhook_eventos.a).toMatchObject({ efeito: 'PENDENTE' }); expect(c.db.st.gc_webhook_eventos.a.efeito_tentativas).toBeUndefined();
+    await c.rodar(AG + 60 * MIN);                                    // a consulta volta a funcionar: a sombra confere
+    expect(c.db.st.gc_webhook_eventos.a.resultado).toBe('CONFERIDO'); semEfeito(c);
+    await c.rodar(AG + 70 * MIN);                                    // rodada seguinte aplica
+    expect(c.n).toMatchObject({ job: 1, fin: 1 }); expect(c.db.st.gc_webhook_eventos.a.efeito).toBe('APLICADO');
+  });
+
+  test('muitos avisos aguardando conferência não impedem aplicar o que já foi conferido', async () => {
+    const eventos = Object.fromEntries(Array.from({ length: 40 }, (_, i) => ['w' + i, pendente({ recebido_ms: AG - 20 * MIN })])); eventos.ok = ev({ efeito: 'PENDENTE' });
+    const c = cena({ eventos }); const r = await c.rodar(); expect(r.efeitos.recuperados).toBe(1); expect(c.db.st.gc_webhook_eventos.ok.efeito).toBe('APLICADO'); expect(c.n.job).toBe(1);
+  });
+
+  test('LOJA ÚNICA: configuração não consegue acrescentar outra loja', async () => {
+    for (const lojasPermitidas of [['262759', '999999'], ['999999']]) {
+      const db = dbWebhook({ gc_webhook_config: { estado: { modo: 'ATIVO', lojasPermitidas } } }); const cfg = await R.criarLeitorConfig({ db })();
+      expect(cfg.lojasPermitidas.filter(l => l !== '262759')).toEqual([]);
+      const crypto = require('crypto'); const corpo = Buffer.from(JSON.stringify({ id: 'x9', evento: 'venda.cadastrada', loja_id: '999999', dados: { id: '1' } })); const t = Math.floor(AG / 1000);
+      const sig = `t=${t},v1=${crypto.createHmac('sha256', 'segredo-de-teste').update(`${t}.`).update(corpo).digest('hex')}`;
+      const r = await R.tratarRequisicao({ req: { metodo: 'POST', cabecalhos: { 'x-webhook-assinatura': sig }, corpoCru: corpo }, db, segredo: 'segredo-de-teste', lerConfig: R.criarLeitorConfig({ db }), agora: () => AG });
+      expect(r.corpo.codigo).toBe('LOJA_IGNORADA'); expect(db.st.gc_webhook_eventos).toBeUndefined();
+    }
   });
 });

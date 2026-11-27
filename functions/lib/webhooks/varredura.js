@@ -4,6 +4,8 @@
  *   DESLIGADO / RECEPCAO / configuração ausente ou ilegível : 1 leitura (a configuração) e NADA mais.
  *   SOMBRA : repete as conferências pendentes (só consulta o GestãoClick; nenhum efeito operacional) + monitor.
  *   ATIVO  : além disso, reaplica efeitos não confirmados (processador interrompido) e retoma a pendência do Financeiro.
+ *            Efeito SÓ para aviso com a origem conferida (receptor.liberacaoDoEfeito): sem conferência concluída ele espera; conferência
+ *            negativa marca `efeito: BLOQUEADO` (o registro fica; o polling do sync continua cobrindo).
  * Alertas = log estruturado `WEBHOOK_GC_ALERTA` (Cloud Logging → política de alerta); só códigos, contagens e horas.
  * Nada é apagado.
  */
@@ -13,24 +15,35 @@ const RF = require('../refreshFila');
 
 const MIN = 60000, H = 60 * MIN;
 const ESPERA_EFEITO_MS = 5 * MIN, MAX_TENTATIVAS_EFEITO = 5, LIMITE = 25;
+const LIMITE_PENDENTES = 200;   // lidos por rodada: quem aguarda conferência não ocupa as 25 vagas de aplicação
 const ATRASADO_MS = 30 * MIN, FINANCEIRO_ATRASADO_MS = 4 * H, REPETICAO_ALERTA_MS = 6 * H, ORCAMENTO_SOMBRA_MS = 150000;
 const DOC_MONITOR = 'monitor';
 
-/** Efeito operacional de UM evento (só ATIVO). Marca `efeito: APLICADO` apenas quando nada ficou por registrar. */
+/** Efeito operacional de UM evento (só ATIVO e só com a origem conferida). Marca `efeito: APLICADO` apenas quando nada ficou por registrar. */
 async function aplicarEfeito({ db, modo, id, evDoc, dispararJob, dispararFinanceiro, agoraMs = Date.now() }) {
+  if (modo !== 'ATIVO') return { efeito: false, blocos: [] };
+  const conferencia = R.liberacaoDoEfeito(evDoc);
+  if (conferencia !== 'LIBERADO') {
+    if (conferencia === 'BLOQUEADO' && evDoc && evDoc.efeito === 'PENDENTE') await db.collection(R.COL_EVENTOS).doc(id).set({ efeito: 'BLOQUEADO', efeito_ms: agoraMs }, { merge: true });
+    return { efeito: false, blocos: [], conferencia };
+  }
   const ef = await RF.aplicarModo({ db, modo, evento: evDoc.evento, eventoMs: evDoc.recebido_ms, dispararJob, dispararFinanceiro, agoraMs });
-  if (modo === 'ATIVO' && evDoc.efeito === 'PENDENTE' && ef.financeiroN1 !== 'FALHA') await db.collection(R.COL_EVENTOS).doc(id).set({ efeito: 'APLICADO', efeito_ms: agoraMs }, { merge: true });
+  if (evDoc.efeito === 'PENDENTE' && ef.financeiroN1 !== 'FALHA') await db.collection(R.COL_EVENTOS).doc(id).set({ efeito: 'APLICADO', efeito_ms: agoraMs }, { merge: true });
   return ef;
 }
 
 /** Avisos recebidos em ATIVO cujo efeito não foi confirmado (processador caiu, transação falhou, gatilho não disparou). */
 async function recuperarEfeitos({ db, dispararJob, dispararFinanceiro, agoraMs }) {
-  const snap = await db.collection(R.COL_EVENTOS).where('efeito', '==', 'PENDENTE').limit(LIMITE).get();
-  const r = { recuperados: 0, atrasados: 0, falhas: 0 }; let marcouBlocos = false;
+  const snap = await db.collection(R.COL_EVENTOS).where('efeito', '==', 'PENDENTE').limit(LIMITE_PENDENTES).get();
+  const r = { recuperados: 0, atrasados: 0, falhas: 0, bloqueados: 0 }; let marcouBlocos = false, aplicados = 0;
   for (const doc of snap.docs) {
     const e = doc.data(), idade = agoraMs - (e.recebido_ms || 0);
     if (idade < ESPERA_EFEITO_MS) continue;                                   // o processador ainda pode estar trabalhando
+    const conferencia = R.liberacaoDoEfeito(e);
+    if (conferencia === 'AGUARDAR') { if (idade >= ATRASADO_MS) r.atrasados++; continue; }   // não gasta tentativa: a sombra repete a consulta
+    if (conferencia === 'LIBERADO' && ++aplicados > LIMITE) continue;
     try {
+      if (conferencia === 'BLOQUEADO') { await aplicarEfeito({ db, modo: 'ATIVO', id: doc.id, evDoc: e, agoraMs }); r.bloqueados++; continue; }
       const n = (e.efeito_tentativas || 0) + 1; const ref = db.collection(R.COL_EVENTOS).doc(doc.id);
       if (n > MAX_TENTATIVAS_EFEITO) { await ref.set({ efeito: 'FALHA' }, { merge: true }); r.falhas++; continue; }
       await ref.set({ efeito_tentativas: n }, { merge: true });
@@ -58,6 +71,7 @@ async function monitorar({ db, modo, config, resumo, logger, agoraMs }) {
   if (sombra && sombra.divergentes > 0) pontuais.push('LOJA_DIVERGENTE');
   if (efeitos && efeitos.atrasados > 0) motivos.push('EFEITO_PENDENTE_ATRASADO');
   if (efeitos && efeitos.falhas > 0) pontuais.push('EFEITO_FALHA_DEFINITIVA');
+  if (efeitos && efeitos.bloqueados > 0) pontuais.push('EFEITO_BLOQUEADO_SEM_CONFERENCIA');
   const f = financeiro && financeiro.estado;
   if (f && f.pendente) {
     if (financeiro.acao === 'ESGOTADO') motivos.push('FINANCEIRO_TENTATIVAS_ESGOTADAS');
@@ -67,7 +81,7 @@ async function monitorar({ db, modo, config, resumo, logger, agoraMs }) {
   }
   for (const etapa of resumo.erros) motivos.push('ERRO_ETAPA_' + etapa);
 
-  const contagens = { sombraAtrasados: sombra ? sombra.atrasados : 0, sombraFalhas: sombra ? sombra.falhas : 0, lojaDivergente: sombra ? sombra.divergentes : 0, efeitosAtrasados: efeitos ? efeitos.atrasados : 0, efeitosFalhas: efeitos ? efeitos.falhas : 0, tentativasFinanceiro: f ? f.tentativas || 0 : 0, horasSemAviso: referencia ? Math.round((agoraMs - referencia) / H * 10) / 10 : null };
+  const contagens = { sombraAtrasados: sombra ? sombra.atrasados : 0, sombraFalhas: sombra ? sombra.falhas : 0, lojaDivergente: sombra ? sombra.divergentes : 0, efeitosAtrasados: efeitos ? efeitos.atrasados : 0, efeitosFalhas: efeitos ? efeitos.falhas : 0, efeitosBloqueados: efeitos ? efeitos.bloqueados : 0, tentativasFinanceiro: f ? f.tentativas || 0 : 0, horasSemAviso: referencia ? Math.round((agoraMs - referencia) / H * 10) / 10 : null };
   const emitir = (nivel, tipo, lista) => logger[nivel]('WEBHOOK_GC_ALERTA', { alerta: 'WEBHOOK_GC', tipo, nivel, modo, motivos: lista, ...contagens });
   const nivelDe = l => l.some(m => /SILENCIO|NUNCA|FALHA|ESGOTAD|DIVERGENTE|ERRO/.test(m)) ? 'error' : 'warn';
   if (pontuais.length) emitir(nivelDe(pontuais), 'OCORRENCIA', pontuais);

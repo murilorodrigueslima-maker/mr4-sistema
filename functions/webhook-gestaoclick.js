@@ -53,10 +53,11 @@ exports.webhookGestaoClick = onRequest({ region: REGION, secrets: [WH_SECRET], t
 exports.gcWebhookProcessar = onDocumentCreated({ document: `${R.COL_EVENTOS}/{id}`, region: REGION, secrets: [GC_ACCESS, GC_SECRET], timeoutSeconds: 60, memory: '256MiB', maxInstances: 5, retry: false }, async (ev) => {
   const id = ev.params.id;
   try { const out = await R.processarSombra({ db, id, buscar: criarBuscar({ tentativas: 2, timeoutMs: 10000, retryAfterMaxMs: 5000 }) }); (out.codigo === 'LOJA_DIVERGENTE' ? logger.warn : logger.info)('WEBHOOK_GC_SOMBRA', { resultado: out.codigo }); }
-  catch (e) { logger.error('WEBHOOK_GC_SOMBRA', { resultado: 'ERRO_INTERNO' }); }   // não impede o efeito do modo ATIVO; a varredura repete a conferência
-  // Efeito operacional (marcar bloco desatualizado + disparar o Job + pendência do Financeiro) SÓ no modo ATIVO — exige aprovação e nunca é o padrão.
+  catch (e) { logger.error('WEBHOOK_GC_SOMBRA', { resultado: 'ERRO_INTERNO' }); }   // o efeito fica retido; a varredura repete a conferência
+  // Efeito operacional (marcar bloco desatualizado + disparar o Job + pendência do Financeiro) SÓ no modo ATIVO — exige aprovação e nunca é o padrão —
+  // e SÓ com a origem conferida: consulta pendente espera a varredura; conferência negativa bloqueia.
   const cfg = await lerConfig(); const evDoc = (await db.collection(R.COL_EVENTOS).doc(id).get()).data() || {};
-  const ef = await V.aplicarEfeito({ db, modo: cfg.modo, id, evDoc, dispararJob, dispararFinanceiro }); if (ef.efeito) logger.info('WEBHOOK_GC_BLOCOS_MARCADOS', { blocos: ef.blocos, financeiroN1: ef.financeiroN1 });
+  const ef = await V.aplicarEfeito({ db, modo: cfg.modo, id, evDoc, dispararJob, dispararFinanceiro }); if (ef.efeito) logger.info('WEBHOOK_GC_BLOCOS_MARCADOS', { blocos: ef.blocos, financeiroN1: ef.financeiroN1 }); else if (ef.conferencia) logger.warn('WEBHOOK_GC_EFEITO_RETIDO', { conferencia: ef.conferencia });
 });
 
 exports.gcWebhookVarredura = onSchedule({ schedule: 'every 10 minutes', timeZone: 'America/Fortaleza', region: REGION, secrets: [GC_ACCESS, GC_SECRET], timeoutSeconds: 300, memory: '256MiB', retryCount: 0, maxInstances: 1 }, async () => {

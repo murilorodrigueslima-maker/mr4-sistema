@@ -16,8 +16,16 @@ test('DESLIGADO por ausência de configuração: varredura e processador não di
   await P.gcWebhookProcessar.run({ params: { id: 'a' } }); expect(mockChamadas).toEqual([]); expect(mockDb.n.gravacoes).toBe(0);
 });
 test('ATIVO (somente neste teste): processador marca, dispara Job e Financeiro e confirma o efeito', async () => {
-  mockDb = dbWebhook({ gc_webhook_config: { estado: { modo: 'ATIVO' } }, gc_webhook_eventos: { b: evento({ efeito: 'PENDENTE' }) } });
+  mockDb = dbWebhook({ gc_webhook_config: { estado: { modo: 'ATIVO' } }, gc_webhook_eventos: { b: evento({ efeito: 'PENDENTE', loja_id: '262759', status: 'SOMBRA_CONCLUIDA', resultado: 'CONFERIDO' }) } });
   jest.resetModules(); const Q = require('../webhook-gestaoclick');                        // novo leitor de configuração (sem o cache de 30 s)
   await Q.gcWebhookProcessar.run({ params: { id: 'b' } });
   expect(mockChamadas.map(u => new URL(u).host).sort()).toEqual(['cloudscheduler.googleapis.com', 'run.googleapis.com']); expect(mockDb.st.gc_webhook_eventos.b.efeito).toBe('APLICADO');
+});
+test('ATIVO com a conferência falhando (sem acesso ao ERP): o processador NÃO marca bloco nem dispara nada; o efeito espera', async () => {
+  mockChamadas.length = 0;
+  mockDb = dbWebhook({ gc_webhook_config: { estado: { modo: 'ATIVO' } }, gc_webhook_eventos: { c: evento({ efeito: 'PENDENTE', loja_id: '262759', status: 'PENDENTE_SOMBRA' }) } });
+  jest.resetModules(); const Q = require('../webhook-gestaoclick');
+  await Q.gcWebhookProcessar.run({ params: { id: 'c' } });
+  expect(mockChamadas.map(u => new URL(u).host).filter(h => /^(run|cloudscheduler)\./.test(h))).toEqual([]);
+  expect(mockDb.st.gc_refresh_fila).toBeUndefined(); expect(mockDb.st.gc_webhook_eventos.c).toMatchObject({ status: 'PENDENTE_SOMBRA', efeito: 'PENDENTE', resultado: 'FALHA_CONSULTA' });
 });

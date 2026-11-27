@@ -564,6 +564,9 @@ function dataCurtaFmt(dataStr){
   return `${d}/${m}`;
 }
 
+// Escape: dado do pedido (ERP ou gravado no banco) nunca vira marcação (escHtml) nem código em atributo on* (escJs).
+function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
 function numCurto(n){return String(n||'');}
 function limparNome(s){return (s||'').replace(/^\d{2,3}[\.\d]*\s+/,'').trim()||s;}
 function elapsedFmt(ts){
@@ -702,8 +705,8 @@ function abrirModal(numero,modo){
     document.getElementById('btnConfirm').textContent='Confirmar Despacho';
   }
   document.getElementById('modalInfo').innerHTML=
-    `<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}<br>
-     <span style="opacity:.7;font-size:.72rem">${p.itens} item${p.itens>1?'s':''} · ${brl(p.valor)} · Vendedor: ${p.vendedor}</span>`;
+    `<strong>#${escHtml(numCurto(p.numero))}</strong> — ${escHtml(limparNome(p.cliente))}<br>
+     <span style="opacity:.7;font-size:.72rem">${escHtml(p.itens)} item${p.itens>1?'s':''} · ${brl(p.valor)} · Vendedor: ${escHtml(p.vendedor)}</span>`;
   document.getElementById('modalOverlay').classList.add('open');
 }
 
@@ -738,8 +741,8 @@ window.abrirCancelModal=function(numero){
   S.cancelNum=numero;
   const p=S.pedidos[numero];
   document.getElementById('cancelInfo').innerHTML=
-    `<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}<br>
-     <span style="opacity:.7;font-size:.72rem">Coluna atual: ${({ag:'Aguardando',se:'Separando',pr:'Pronto p/ Despacho'}[p.coluna]||p.coluna)}</span>`;
+    `<strong>#${escHtml(numCurto(p.numero))}</strong> — ${escHtml(limparNome(p.cliente))}<br>
+     <span style="opacity:.7;font-size:.72rem">Coluna atual: ${escHtml({ag:'Aguardando',se:'Separando',pr:'Pronto p/ Despacho'}[p.coluna]||p.coluna)}</span>`;
   document.getElementById('cancelOverlay').classList.add('open');
 };
 window.fecharCancelModal=function(){
@@ -763,8 +766,8 @@ window.abrirReabrirModal=function(numero){
   const p=S.pedidos[numero];
   document.getElementById('reabrirMotivo').value='';
   document.getElementById('reabrirInfo').innerHTML=
-    `<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}<br>
-     <span style="opacity:.7;font-size:.72rem">Despachado em: ${p.saidaEm?new Date(p.saidaEm).toLocaleString('pt-BR'):'—'} · Envio: ${ENVIO[p.envio]?.label||p.envio||'—'}</span>`;
+    `<strong>#${escHtml(numCurto(p.numero))}</strong> — ${escHtml(limparNome(p.cliente))}<br>
+     <span style="opacity:.7;font-size:.72rem">Despachado em: ${p.saidaEm?new Date(p.saidaEm).toLocaleString('pt-BR'):'—'} · Envio: ${escHtml(ENVIO[p.envio]?.label||p.envio||'—')}</span>`;
   document.getElementById('reabrirOverlay').classList.add('open');
 };
 window.fecharReabrirModal=function(){
@@ -835,7 +838,7 @@ window.abrirProblemaModal=function(numero){
   const p=S.pedidos[numero];
   if(!p||!medicaoLigada())return;
   S.probNum=numero;S.probMotivo=null;
-  document.getElementById('problemaInfo').innerHTML=`<strong>#${numCurto(p.numero)}</strong> — ${limparNome(p.cliente)}`;
+  document.getElementById('problemaInfo').innerHTML=`<strong>#${escHtml(numCurto(p.numero))}</strong> — ${escHtml(limparNome(p.cliente))}`;
   document.getElementById('problemaMotivos').innerHTML=MED.motivosDaColuna(p.coluna).map(m=>
     `<button type="button" class="motivo-opt" data-motivo="${m.id}" onclick="selMotivo(this)">${m.rotulo}</button>`).join('');
   document.getElementById('btnProblemaOk').disabled=true;
@@ -865,7 +868,7 @@ function medicaoNoCard(p,dis){
   if(!medicaoLigada()||!MED.COLUNAS_OCORRENCIA.includes(p.coluna))return'';
   const n=registrosDe(p.numero).filter(r=>r.tipo==='OCORRENCIA').length;
   const feito=(rotulo,r)=>{const t=MED.emMs(r.em);return`<span class="med-feito">✔ ${rotulo}${t?' '+horaFmt(t):''}</span>`;};
-  const botao=(acao,rotulo,cls)=>`<button class="btn-med${cls?' '+cls:''}"${dis} onclick="${acao}('${p.numero}')">${rotulo}</button>`;
+  const botao=(acao,rotulo,cls)=>`<button class="btn-med${cls?' '+cls:''}"${dis} onclick="${acao}('${escJs(p.numero)}')">${rotulo}</button>`;
   let principal='';
   if(p.coluna==='pr'){
     const c=registroDe(p,'CONFERENCIA'), ini=registroDe(p,'CONFERENCIA_INICIO');
@@ -878,7 +881,7 @@ function medicaoNoCard(p,dis){
     const e=registroDe(p,'ENTREGA');
     principal=e?feito('Entregue',e):botao('marcarEntregue','✔ Entregue');
   }
-  return`<div class="card-med">${principal}<button class="btn-med problema"${dis} onclick="abrirProblemaModal('${p.numero}')">⚠ Problema</button>${n?`<span class="med-ocorr">${n} registrado${n>1?'s':''}</span>`:''}</div>`;
+  return`<div class="card-med">${principal}<button class="btn-med problema"${dis} onclick="abrirProblemaModal('${escJs(p.numero)}')">⚠ Problema</button>${n?`<span class="med-ocorr">${n} registrado${n>1?'s':''}</span>`:''}</div>`;
 }
 
 // ── LOTE: selecionar vários e fazer a mesma ação de uma vez. Cada pedido segue a MESMA transação individual; o lote é só anotado. ──
@@ -966,7 +969,7 @@ function abrirModalLote(acao,nums){
   const n=nums.length, plural=n>1?'s':'';
   document.getElementById('modalTitle').textContent=despacho?`🚀 Despachar ${n} pedido${plural}`:`📦 Iniciar separação de ${n} pedido${plural}`;
   document.getElementById('btnConfirm').textContent=despacho?'Confirmar Despacho':'Iniciar Separação';
-  document.getElementById('modalInfo').innerHTML=`<strong>${n} pedido${plural}</strong><br><span style="opacity:.7;font-size:.72rem">${nums.map(x=>'#'+numCurto(x)).join(' · ')}</span>`;
+  document.getElementById('modalInfo').innerHTML=`<strong>${n} pedido${plural}</strong><br><span style="opacity:.7;font-size:.72rem">${nums.map(x=>'#'+escHtml(numCurto(x))).join(' · ')}</span>`;
   document.getElementById('modalOverlay').classList.add('open');
 }
 async function confirmarLoteModal(){
@@ -1022,7 +1025,7 @@ function seloLote(p,dis){
   if(!medicaoLigada()||p.coluna!=='se')return'';
   const lote=loteDoPedido(p); if(!lote)return'';
   const n=getColuna('se').filter(x=>loteDoPedido(x)===lote).length; if(n<2)return'';
-  return`<div class="lote-selo"><span>Lote ${lote.slice(-4).toUpperCase()} · ${n} em separação</span><button type="button" class="btn-lote"${dis} onclick="concluirLote('${lote}')">✓ Concluir lote (${n})</button></div>`;
+  return`<div class="lote-selo"><span>Lote ${escHtml(String(lote).slice(-4).toUpperCase())} · ${n} em separação</span><button type="button" class="btn-lote"${dis} onclick="concluirLote('${escJs(lote)}')">✓ Concluir lote (${n})</button></div>`;
 }
 
 // ── PAINEL DE MEDIÇÃO (gestor) ───────────────────────────────────────────────
@@ -1083,10 +1086,10 @@ function renderCard(p){
   // Linha de data/hora do pedido
   let dataHoraHtml='';
   if(ehDiaAnterior){
-    dataHoraHtml=`<span class="card-data-badge">${dataCurtaFmt(p.data)}</span>`;
+    dataHoraHtml=`<span class="card-data-badge">${escHtml(dataCurtaFmt(p.data))}</span>`;
   }
   if(p.hora){
-    dataHoraHtml+=`<span class="card-hora">${p.hora}</span>`;
+    dataHoraHtml+=`<span class="card-hora">${escHtml(p.hora)}</span>`;
   }else if(!ehDiaAnterior){
     // Sem hora do GC e pedido de hoje — mostra hora em que chegou ao board
     dataHoraHtml+=`<span class="card-hora">${horaFmt(p.ingresadoEm)}</span>`;
@@ -1095,18 +1098,18 @@ function renderCard(p){
   let botao='';
   let cancelBtn='';
   if(p.coluna==='ag'){
-    botao=`<button class="btn-act b-iniciar"${dis} onclick="iniciarSeparacao('${p.numero}')">${proc?'⏳ Salvando…':'▶ Iniciar Separação'}</button>`;
-    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${p.numero}')">✕</button>`;
+    botao=`<button class="btn-act b-iniciar"${dis} onclick="iniciarSeparacao('${escJs(p.numero)}')">${proc?'⏳ Salvando…':'▶ Iniciar Separação'}</button>`;
+    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${escJs(p.numero)}')">✕</button>`;
   }else if(p.coluna==='se'){
-    botao=`<button class="btn-act b-separado"${dis} onclick="marcarSeparado('${p.numero}')">${proc?'⏳ Salvando…':'✓ Marcar Separado'}</button>`;
-    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${p.numero}')">✕</button>`;
+    botao=`<button class="btn-act b-separado"${dis} onclick="marcarSeparado('${escJs(p.numero)}')">${proc?'⏳ Salvando…':'✓ Marcar Separado'}</button>`;
+    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${escJs(p.numero)}')">✕</button>`;
   }else if(p.coluna==='pr'){
-    botao=`<button class="btn-act b-despachar"${dis} onclick="abrirDespacho('${p.numero}')">${proc?'⏳ Salvando…':'🚀 Despachar'}</button>`;
-    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${p.numero}')">✕</button>`;
+    botao=`<button class="btn-act b-despachar"${dis} onclick="abrirDespacho('${escJs(p.numero)}')">${proc?'⏳ Salvando…':'🚀 Despachar'}</button>`;
+    cancelBtn=`<button class="btn-cancel-card"${dis} onclick="abrirCancelModal('${escJs(p.numero)}')">✕</button>`;
   }else if(p.coluna==='de'){
     botao=`<span class="dispatch-time">🕐 Saiu ${horaFmt(p.saidaEm)}</span>`;
     // Reabrir: só para gestor (as Rules também exigem gestor + motivo)
-    if(window._expUsuario&&window._expUsuario.papel==='gestor')cancelBtn=`<button class="btn-reabrir-card"${dis} onclick="abrirReabrirModal('${p.numero}')">↩ Reabrir</button>`;
+    if(window._expUsuario&&window._expUsuario.papel==='gestor')cancelBtn=`<button class="btn-reabrir-card"${dis} onclick="abrirReabrirModal('${escJs(p.numero)}')">↩ Reabrir</button>`;
   }
 
   // no modo lote, o cartão da coluna escolhida só seleciona (evita ação individual por engano)
@@ -1114,22 +1117,22 @@ function renderCard(p){
   let rodape=`${botao}${cancelBtn}`, extras=seloLote(p,dis)+medicaoNoCard(p,dis);
   if(emLote){
     const marcado=S.sel.nums.has(String(p.numero));
-    rodape=selecionavel(p)?`<button type="button" class="btn-sel${marcado?' on':''}" aria-pressed="${marcado}" onclick="selecionar('${p.numero}')">${marcado?'☑ No lote':'☐ Incluir no lote'}</button>`
+    rodape=selecionavel(p)?`<button type="button" class="btn-sel${marcado?' on':''}" aria-pressed="${marcado}" onclick="selecionar('${escJs(p.numero)}')">${marcado?'☑ No lote':'☐ Incluir no lote'}</button>`
       :`<span class="sel-nao">${proc?'⏳ Salvando…':'Não precisa de confirmação'}</span>`;
     extras='';
   }
 
-  return`<div class="card${al?' alerta':''}${proc?' processando':''}" id="card-${p.numero}">
+  return`<div class="card${al?' alerta':''}${proc?' processando':''}" id="card-${escHtml(p.numero)}">
   <div class="card-top">
-    <span class="card-num">#${numCurto(p.numero)}</span>
+    <span class="card-num">#${escHtml(numCurto(p.numero))}</span>
     ${dataHoraHtml}
-    <span class="card-elapsed ${ec}" id="el-${p.numero}">${elapsedFmt(p.ingresadoEm)}</span>
+    <span class="card-elapsed ${ec}" id="el-${escHtml(p.numero)}">${elapsedFmt(p.ingresadoEm)}</span>
   </div>
-  <div class="card-cliente">${limparNome(p.cliente)}${p.cidade?`<span class="card-cidade">${p.cidade}</span>`:''}</div>
-  <div class="card-envio"><span class="badge-envio ${ev.cls}">${ev.icon} ${ev.label}</span></div>
-  <div class="card-vendedor"><span class="card-vendedor-icon">👤</span>${p.vendedor||'—'}</div>
+  <div class="card-cliente">${escHtml(limparNome(p.cliente))}${p.cidade?`<span class="card-cidade">${escHtml(p.cidade)}</span>`:''}</div>
+  <div class="card-envio"><span class="badge-envio ${ev.cls}">${ev.icon} ${escHtml(ev.label)}</span></div>
+  <div class="card-vendedor"><span class="card-vendedor-icon">👤</span>${escHtml(p.vendedor||'—')}</div>
   <div class="card-meta">
-    <span class="card-items">${p.itens} item${p.itens>1?'s':''}</span>
+    <span class="card-items">${escHtml(p.itens)} item${p.itens>1?'s':''}</span>
     <span class="card-val">${brl(p.valor)}</span>
   </div>
   <div class="card-foot">${rodape}</div>${extras}
@@ -1161,7 +1164,7 @@ function toast(msg,tipo='t-info',dur=3500){
   const el=document.createElement('div');
   const icons={'t-success':'✅','t-info':'📬','t-warn':'⚠️','t-error':'❌'};
   el.className=`toast ${tipo}`;
-  el.innerHTML=`<span class="toast-icon">${icons[tipo]||'💬'}</span><span class="toast-msg">${msg}</span>`;
+  el.innerHTML=`<span class="toast-icon">${icons[tipo]||'💬'}</span><span class="toast-msg">${escHtml(msg)}</span>`;
   wrap.appendChild(el);
   setTimeout(()=>{el.classList.add('out');setTimeout(()=>el.remove(),300);},dur);
 }

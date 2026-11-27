@@ -525,6 +525,10 @@ function atualizarStats(lista) {
   document.getElementById('statBloq').textContent   = lista.filter(u =>  u.bloqueado).length;
 }
 
+// Escape: dado externo ou gravado no banco nunca vira marcação (escH) nem código em atributo on* (escJs).
+function escH(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
+
 function renderTabela(lista) {
   const tbody = document.getElementById('tbodyUsuarios');
   if (!lista.length) {
@@ -544,8 +548,8 @@ function renderTabela(lista) {
     if (isAdmin) cargoCls += ' admin';
     else if ((cargo).toLowerCase().includes('gerente')) cargoCls += ' gerente';
     const cargoHtml = isAdmin
-      ? `<span class="${cargoCls}">${cargo} ⭐</span>`
-      : `<span class="${cargoCls}">${cargo}</span>`;
+      ? `<span class="${cargoCls}">${escH(cargo)} ⭐</span>`
+      : `<span class="${cargoCls}">${escH(cargo)}</span>`;
 
     // Módulos
     let modsHtml;
@@ -579,10 +583,10 @@ function renderTabela(lista) {
       <tr>
         <td>
           <div class="user-cell">
-            <div class="avatar" style="${bloq?'opacity:.4':'background:var(--orange)'}">${iniciais}</div>
+            <div class="avatar" style="${bloq?'opacity:.4':'background:var(--orange)'}">${escH(iniciais)}</div>
             <div>
-              <div class="user-name">${nome}</div>
-              <div class="user-email">${email}</div>
+              <div class="user-name">${escH(nome)}</div>
+              <div class="user-email">${escH(email)}</div>
             </div>
           </div>
         </td>
@@ -591,8 +595,8 @@ function renderTabela(lista) {
         <td>${statusHtml}</td>
         <td>
           <div class="actions-cell">
-            <button class="btn-icon" title="Editar" aria-label="Editar usuário" onclick="abrirModalEditar('${u.uid}')">✏️</button>
-            <button class="btn-icon del" title="Remover" aria-label="Remover usuário" onclick="abrirDelModal('${u.uid}')">🗑️</button>
+            <button class="btn-icon" title="Editar" aria-label="Editar usuário" onclick="abrirModalEditar('${escJs(u.uid)}')">✏️</button>
+            <button class="btn-icon del" title="Remover" aria-label="Remover usuário" onclick="abrirDelModal('${escJs(u.uid)}')">🗑️</button>
           </div>
         </td>
       </tr>`;
@@ -884,33 +888,33 @@ function renderTabelaPonto() {
     if (!user) {
       statusHtml = `<span class="ponto-badge ponto-sem-conta"><span class="status-dot"></span>Sem conta</span>`;
       acoesHtml  = f.email
-        ? `<button class="btn-sm btn-sm-primary" id="btn-criar-${f.id}" onclick="pedirConfirmacaoCriar('${f.id}')">Criar acesso ao ponto</button>`
+        ? `<button class="btn-sm btn-sm-primary" id="btn-criar-${escH(f.id)}" onclick="pedirConfirmacaoCriar('${escJs(f.id)}')">Criar acesso ao ponto</button>`
         : `<span style="font-size:.72rem;color:var(--muted)">Sem e-mail no cadastro</span>`;
     } else if (user.ativo) {
       statusHtml = `<span class="ponto-badge ponto-ativo"><span class="status-dot"></span>Ativo</span>`;
-      acoesHtml  = `<button class="btn-sm btn-sm-secondary" id="btn-reset-${f.id}" onclick="pedirConfirmacaoReset('${f.id}')">↻ Redefinir senha</button>`;
+      acoesHtml  = `<button class="btn-sm btn-sm-secondary" id="btn-reset-${escH(f.id)}" onclick="pedirConfirmacaoReset('${escJs(f.id)}')">↻ Redefinir senha</button>`;
       // N35.17.1: conta existe mas sem perfil administrativo → cria o perfil pela tela (sem Firebase Console)
       if (!todosUsuarios.some(x => x.uid === user.uid)) {
-        acoesHtml += ` <button class="btn-sm btn-sm-primary" id="btn-perfil-${f.id}" onclick="abrirModalPerfil('${f.id}')">Configurar perfil</button>`;
+        acoesHtml += ` <button class="btn-sm btn-sm-primary" id="btn-perfil-${escH(f.id)}" onclick="abrirModalPerfil('${escJs(f.id)}')">Configurar perfil</button>`;
       }
     } else {
       statusHtml = `<span class="ponto-badge ponto-desativado"><span class="status-dot"></span>Conta desativada</span>`;
-      acoesHtml  = `<span style="font-size:.72rem;color:var(--muted)">ativo=false em users/${user.uid}</span>`;
+      acoesHtml  = `<span style="font-size:.72rem;color:var(--muted)">ativo=false em users/${escH(user.uid)}</span>`;
     }
 
     return `
       <tr>
         <td>
           <div class="user-cell">
-            <div class="avatar">${iniciais}</div>
+            <div class="avatar">${escH(iniciais)}</div>
             <div>
-              <div class="user-name">${f.nome || '—'}</div>
-              <div class="user-email">ID: ${f.id}</div>
+              <div class="user-name">${escH(f.nome || '—')}</div>
+              <div class="user-email">ID: ${escH(f.id)}</div>
             </div>
           </div>
         </td>
         <td>${statusHtml}</td>
-        <td style="font-size:.8rem;color:var(--muted)">${email}</td>
+        <td style="font-size:.8rem;color:var(--muted)">${escH(email)}</td>
         <td><div class="actions-cell">${acoesHtml}</div></td>
       </tr>`;
   }).join('');
@@ -948,8 +952,8 @@ window.pedirConfirmacaoReset = function(funcId) {
   document.getElementById('pontoModalTitulo').textContent = 'Redefinir senha';
   document.getElementById('pontoModalMsg').innerHTML      =
     `Enviar um e-mail de redefinição de senha para:<br>
-     <strong>${nome}</strong><br>
-     <span style="font-size:.85rem;color:var(--muted)">${email}</span><br><br>
+     <strong>${escH(nome)}</strong><br>
+     <span style="font-size:.85rem;color:var(--muted)">${escH(email)}</span><br><br>
      <small style="color:var(--muted)">O funcionário receberá um link para definir uma nova senha. O link expira em 1 hora.</small>`;
   document.getElementById('pontoModalConfirm').textContent = 'Enviar';
   document.getElementById('pontoModalOverlay').classList.add('show');
@@ -965,8 +969,8 @@ window.pedirConfirmacaoCriar = function(funcId) {
   document.getElementById('pontoModalTitulo').textContent = 'Criar acesso ao ponto';
   document.getElementById('pontoModalMsg').innerHTML      =
     `Criar conta de acesso para:<br>
-     <strong>${nome}</strong><br>
-     <span style="font-size:.85rem;color:var(--muted)">${email}</span><br><br>
+     <strong>${escH(nome)}</strong><br>
+     <span style="font-size:.85rem;color:var(--muted)">${escH(email)}</span><br><br>
      <small style="color:var(--muted)">Um e-mail será enviado ao funcionário para que ele mesmo defina a senha.<br>
      Nenhuma senha será exibida ou armazenada.</small>`;
   document.getElementById('pontoModalConfirm').textContent = 'Criar e enviar e-mail';

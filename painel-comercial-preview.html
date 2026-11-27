@@ -224,6 +224,7 @@ function selo(){
 setInterval(selo, 15000);
 const dm = s => s.slice(8,10) + '/' + s.slice(5,7);
 const num = (n, c) => String(n).replace('.', ',');
+function escH(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function render(d){
   const g = d.geral || d.equipe || {}, meta = (d.geral && d.geral.meta) || (d.configuracao && d.configuracao.metaEquipe) || 0;
@@ -267,7 +268,7 @@ function render(d){
           <div><span class="ico s">${IC.coins}</span><div><div class="l">Ticket médio</div><div class="v">${T.brl(o.ticketMes||0)}</div></div></div></div></div>`;
     }
     const pc = o.meta ? (o.totalMes / o.meta) * 100 : 0, f = T.faltaEPorDia(o.totalMes, o.meta, dias);
-    return `<div class="card seller"><div class="top"><div class="nm">${nome}</div>${badge ? `<span class="tag ${badge.c}">${badge.t}</span>` : ''}</div>
+    return `<div class="card seller"><div class="top"><div class="nm">${escH(nome)}</div>${badge ? `<span class="tag ${badge.c}">${badge.t}</span>` : ''}</div>
       <div class="vl"><div class="n tot">${T.brl(o.totalMes)}</div><div class="pc"><div class="n ${pc >= 100 ? 'gr' : ''}">${T.pct(pc)}</div><div>da meta</div></div></div>
       <div class="mt">Meta: <b>${T.brl(o.meta)}</b></div>
       <div class="bar"><i class="${pc >= 100 ? 'ok' : ''}" style="width:${Math.min(100,pc)}%"></i></div>

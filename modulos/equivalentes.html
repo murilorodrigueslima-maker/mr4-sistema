@@ -382,7 +382,7 @@ function cardHtml(g) {
 
   const qt = prods.length;
   return `
-    <div class="group-card" id="gc-${g.id}">
+    <div class="group-card" id="gc-${escH(g.id)}">
       <div class="group-head">
         <span class="group-ico">🔗</span>
         <div class="group-info">
@@ -390,8 +390,8 @@ function cardHtml(g) {
           ${g.descricao ? `<div class="group-desc">${esc(g.descricao)}</div>` : ''}
         </div>
         <div class="group-acts">
-          <button class="btn-ico edit" title="Editar"   onclick="abrirEdicao('${g.id}')">✏️</button>
-          <button class="btn-ico del"  title="Excluir"  onclick="abrirDel('${g.id}')">🗑️</button>
+          <button class="btn-ico edit" title="Editar"   onclick="abrirEdicao('${escJs(g.id)}')">✏️</button>
+          <button class="btn-ico del"  title="Excluir"  onclick="abrirDel('${escJs(g.id)}')">🗑️</button>
         </div>
       </div>
       <div class="group-body">
@@ -571,6 +571,10 @@ function esc(s) {
   return String(s || '')
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// Escape: dado externo ou gravado no banco nunca vira marcação (escH) nem código em atributo on* (escJs).
+function escH(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
 
 function fmtData(iso) {
   try {

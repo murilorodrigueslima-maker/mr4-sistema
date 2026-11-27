@@ -353,7 +353,7 @@ async function carregarUsuarios() {
 function renderSelectUsuarios() {
   const sel = document.getElementById('fResponsavel');
   sel.innerHTML = USUARIOS.map(u=>
-    `<option value="${u.uid}" data-nome="${u.nome||u.email}">${u.nome||u.email}</option>`
+    `<option value="${escH(u.uid)}" data-nome="${escH(u.nome||u.email)}">${escH(u.nome||u.email)}</option>`
   ).join('');
 }
 
@@ -441,14 +441,14 @@ function renderLista() {
     const prazoHtml = d.prazo ? prazoTag(d.prazo, d.status) : '';
     const sou = d.responsavelId === CURRENT_USER?.uid;
     return `
-    <div class="demanda-card${d.status==='concluida'?' concluida':''}${demandaAtualId===d.id?' selected':''}" onclick="abrirDetalhe('${d.id}')">
+    <div class="demanda-card${d.status==='concluida'?' concluida':''}${demandaAtualId===d.id?' selected':''}" onclick="abrirDetalhe('${escJs(d.id)}')">
       <div class="card-top">
-        <div class="prio-dot" style="background:${prioColor}" title="Prioridade ${PRIO_LABEL[d.prioridade]}"></div>
+        <div class="prio-dot" style="background:${prioColor}" title="Prioridade ${escH(PRIO_LABEL[d.prioridade])}"></div>
         <div class="card-body">
           <div class="card-titulo">${escHtml(d.titulo||'—')}</div>
           ${d.descricao?`<div class="card-desc">${escHtml(d.descricao)}</div>`:''}
           <div class="card-footer">
-            <span class="card-badge badge-${d.status}">${statusLabel(d.status)}</span>
+            <span class="card-badge badge-${escH(d.status)}">${escH(statusLabel(d.status))}</span>
             <span class="card-pessoa">Para: <strong>${escHtml(d.responsavelNome||'—')}</strong>${sou?' (você)':''}</span>
             ${prazoHtml}
             <span class="card-date">${formatData(d.criadoEm)}</span>
@@ -477,8 +477,8 @@ function renderDetalhe(d) {
   // Meta badges
   const prioColor = PRIO_COLOR[d.prioridade]||'#9CA3AF';
   document.getElementById('detMeta').innerHTML = `
-    <span class="card-badge badge-${d.status}">${statusLabel(d.status)}</span>
-    <span class="card-badge" style="background:${prioColor}22;color:${prioColor}">${PRIO_LABEL[d.prioridade]||'Normal'}</span>
+    <span class="card-badge badge-${escH(d.status)}">${escH(statusLabel(d.status))}</span>
+    <span class="card-badge" style="background:${prioColor}22;color:${prioColor}">${escH(PRIO_LABEL[d.prioridade]||'Normal')}</span>
     ${d.status==='concluida'&&d.concluidoEm?`<span class="card-badge" style="background:#D1FAE5;color:#065F46">✅ Concluída em ${formatData(d.concluidoEm)}</span>`:''}
   `;
 
@@ -653,6 +653,9 @@ function formatData2(iso){
   return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
 }
 function escHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// Escape: dado externo ou gravado no banco nunca vira marcação (escH) nem código em atributo on* (escJs).
+function escH(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
 
 document.getElementById('modalOverlay').addEventListener('click',e=>{ if(e.target===e.currentTarget) fecharModal(); });
 </script>

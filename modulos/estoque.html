@@ -1162,7 +1162,7 @@
         <td>${p.fabricante ? `<span class="eq-td-fab">${eqEsc(p.fabricante)}</span>` : '<span style="color:var(--muted);font-size:.7rem">—</span>'}</td>
       </tr>`).join('');
     return `
-      <div class="eq-card" id="eqc-${g.id}">
+      <div class="eq-card" id="eqc-${eqEsc(g.id)}">
         <div class="eq-card-head">
           <span class="eq-card-ico">🔗</span>
           <div class="eq-card-info">
@@ -1170,8 +1170,8 @@
             ${g.descricao ? `<div class="eq-card-desc">${eqEsc(g.descricao)}</div>` : ''}
           </div>
           <div class="eq-card-acts">
-            <button class="eq-btn-ico edit" title="Editar"  onclick="eqAbrirEdicao('${g.id}')">✏️</button>
-            <button class="eq-btn-ico del"  title="Excluir" onclick="eqAbrirDel('${g.id}')">🗑️</button>
+            <button class="eq-btn-ico edit" title="Editar"  onclick="eqAbrirEdicao('${escJs(g.id)}')">✏️</button>
+            <button class="eq-btn-ico del"  title="Excluir" onclick="eqAbrirDel('${escJs(g.id)}')">🗑️</button>
           </div>
         </div>
         <div class="eq-card-body">
@@ -1327,6 +1327,8 @@
   function eqEsc(s) {
     return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
+  // Escape: dado externo ou gravado no banco nunca vira marcação (eqEsc) nem código em atributo on* (escJs).
+  function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
   function eqFmtData(iso) {
     try { return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}); } catch { return ''; }
   }

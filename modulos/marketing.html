@@ -404,6 +404,10 @@ function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(
 function hoje(){ return new Date().toISOString().slice(0,10); }
 function fmtData(d){ if(!d)return'—'; const[y,m,dd]=d.split('-'); return`${dd}/${m}`; }
 
+// Escape: dado externo ou gravado no banco nunca vira marcação (escH) nem código em atributo on* (escJs).
+function escH(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
+
 function toast(msg){
   const el=document.createElement('div');
   el.className='toast';el.textContent=msg;
@@ -474,15 +478,15 @@ function renderCard(c){
   const tipoCls = TIPO_CLS[c.tipo]||'t-post';
   const prox = ETAPA_PROX[c.etapa];
   return `
-    <div class="card" onclick="editarConteudo('${c.id}')">
-      <div class="card-tipo ${tipoCls}">${c.tipo||'Post'}</div>
-      <div class="card-titulo">${c.titulo||'Sem título'}</div>
-      ${c.desc?`<div class="card-desc">${c.desc}</div>`:''}
+    <div class="card" onclick="editarConteudo('${escJs(c.id)}')">
+      <div class="card-tipo ${tipoCls}">${escH(c.tipo||'Post')}</div>
+      <div class="card-titulo">${escH(c.titulo||'Sem título')}</div>
+      ${c.desc?`<div class="card-desc">${escH(c.desc)}</div>`:''}
       <div class="card-foot">
-        <div class="card-data">${fmtData(c.data)}</div>
+        <div class="card-data">${escH(fmtData(c.data))}</div>
         <div class="card-acoes" onclick="event.stopPropagation()">
-          ${prox?`<button class="btn-sm avancar" title="Avançar etapa" onclick="avancarEtapa('${c.id}')">→</button>`:''}
-          <button class="btn-sm del" title="Excluir" onclick="excluirConteudo('${c.id}')">🗑</button>
+          ${prox?`<button class="btn-sm avancar" title="Avançar etapa" onclick="avancarEtapa('${escJs(c.id)}')">→</button>`:''}
+          <button class="btn-sm del" title="Excluir" onclick="excluirConteudo('${escJs(c.id)}')">🗑</button>
         </div>
       </div>
     </div>`;
@@ -580,12 +584,12 @@ function renderIdeias(){
     <div class="ideia-item">
       <div class="ideia-icon">💡</div>
       <div class="ideia-txt">
-        <div class="ideia-nome">${i.texto}</div>
-        <div class="ideia-meta">${i.tipo||'Reels'} · ${new Date(i.criadoEm).toLocaleDateString('pt-BR')}</div>
+        <div class="ideia-nome">${escH(i.texto)}</div>
+        <div class="ideia-meta">${escH(i.tipo||'Reels')} · ${new Date(i.criadoEm).toLocaleDateString('pt-BR')}</div>
       </div>
       <div class="ideia-acoes">
-        <button class="btn-sm" title="Criar conteúdo a partir desta ideia" onclick="ideiaPraConteudo('${i.id}')">🎬</button>
-        <button class="btn-sm del" title="Excluir" onclick="excluirIdeia('${i.id}')">🗑</button>
+        <button class="btn-sm" title="Criar conteúdo a partir desta ideia" onclick="ideiaPraConteudo('${escJs(i.id)}')">🎬</button>
+        <button class="btn-sm del" title="Excluir" onclick="excluirIdeia('${escJs(i.id)}')">🗑</button>
       </div>
     </div>`).join('');
 }
@@ -636,7 +640,7 @@ function renderLegendas(){
   // Filtros
   const cats = ['Todos',...new Set(legendas.map(l=>l.cat))];
   document.getElementById('filtros-legenda').innerHTML = cats.map(c=>
-    `<button class="filtro-btn${filtroLegenda===c?' ativo':''}" onclick="setFiltroLeg('${c}')">${c}</button>`
+    `<button class="filtro-btn${filtroLegenda===c?' ativo':''}" onclick="setFiltroLeg('${escJs(c)}')">${escH(c)}</button>`
   ).join('');
 
   const lista = filtroLegenda==='Todos' ? legendas : legendas.filter(l=>l.cat===filtroLegenda);
@@ -644,12 +648,12 @@ function renderLegendas(){
   if(!lista.length){ grid.innerHTML='<div style="color:var(--muted);font-size:.85rem;padding:1rem">Nenhuma legenda nesta categoria.</div>'; return; }
   grid.innerHTML = lista.map(l=>`
     <div class="legenda-card">
-      <div class="legenda-cat">${l.cat||'Geral'}</div>
-      <div class="legenda-nome">${l.nome}</div>
-      <div class="legenda-texto">${l.texto}</div>
+      <div class="legenda-cat">${escH(l.cat||'Geral')}</div>
+      <div class="legenda-nome">${escH(l.nome)}</div>
+      <div class="legenda-texto">${escH(l.texto)}</div>
       <div class="legenda-foot">
-        <button class="btn-copiar" id="cp-${l.id}" onclick="copiarLegenda('${l.id}')">📋 Copiar</button>
-        <button class="btn-sm del" onclick="excluirLegenda('${l.id}')">🗑</button>
+        <button class="btn-copiar" id="cp-${escH(l.id)}" onclick="copiarLegenda('${escJs(l.id)}')">📋 Copiar</button>
+        <button class="btn-sm del" onclick="excluirLegenda('${escJs(l.id)}')">🗑</button>
       </div>
     </div>`).join('');
 }
@@ -701,7 +705,7 @@ function renderCalendario(){
     html += `
       <div class="cal-dia${isHoje?' hoje':''}">
         <div class="cal-dia-num">${d}</div>
-        ${postsHoje.map(p=>`<div class="cal-post-chip" onclick="editarConteudo('${p.id}')" title="${p.titulo}">${p.tipo} — ${p.titulo.substring(0,12)}</div>`).join('')}
+        ${postsHoje.map(p=>`<div class="cal-post-chip" onclick="editarConteudo('${escJs(p.id)}')" title="${escH(p.titulo)}">${escH(p.tipo)} — ${escH(p.titulo.substring(0,12))}</div>`).join('')}
       </div>`;
   }
 

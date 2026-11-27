@@ -509,6 +509,9 @@ function mesAtual(){const n=new Date();return`${n.getFullYear()}-${String(n.getM
 function diasDesde(ts){return Math.floor((Date.now()-ts)/86400000);}
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtData(ts){if(!ts)return'—';return new Date(ts).toLocaleDateString('pt-BR');}
+// Escape: dado do ERP ou gravado no banco nunca vira marcação (escHtml) nem código em atributo on* (escJs).
+function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
 
 function toast(msg,err=false,dur=4000){
   const el=document.createElement('div');
@@ -564,12 +567,12 @@ function renderVisaoGeral(){
       const dias=diasDesde(g.substituidoEm||g.criadoEm);
       return`<div class="alerta-item">
         <div class="alerta-item-info">
-          <div class="alerta-item-nome">${g.prodNome||'—'} · <span style="font-weight:400">${g.fornec||'Fornecedor não informado'}</span></div>
-          <div class="alerta-item-sub">Cliente: ${g.cliNome||'—'} · Valor: R$ ${brl(g.valor)}</div>
+          <div class="alerta-item-nome">${escHtml(g.prodNome||'—')} · <span style="font-weight:400">${escHtml(g.fornec||'Fornecedor não informado')}</span></div>
+          <div class="alerta-item-sub">Cliente: ${escHtml(g.cliNome||'—')} · Valor: R$ ${brl(g.valor)}</div>
         </div>
         <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap">
           <span class="alerta-dias">${dias}d parado</span>
-          <button class="btn-primary" style="padding:.35rem .8rem;font-size:.75rem" onclick="mudarEtapaRapido('${g.id}','enviado')">✈️ Marcar enviado</button>
+          <button class="btn-primary" style="padding:.35rem .8rem;font-size:.75rem" onclick="mudarEtapaRapido('${escJs(g.id)}','enviado')">✈️ Marcar enviado</button>
         </div>
       </div>`;
     }).join('');
@@ -590,20 +593,20 @@ function linhaTabela(g){
   const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
   const base=g.recebidoEm?new Date(g.recebidoEm).getTime():g.criadoEm;
   const dias=Math.floor((Date.now()-base)/86400000);
-  const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+g.id+'\')">⚠️ GC</button>'):'—';
+  const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+escJs(g.id)+'\')">⚠️ GC</button>'):'—';
   const faseTag=et.fase===2?'<span style="font-size:.6rem;background:#fee2e2;color:#ef4444;border-radius:4px;padding:.1rem .35rem;font-weight:700">F2</span>':'<span style="font-size:.6rem;background:#dbeafe;color:#3b82f6;border-radius:4px;padding:.1rem .35rem;font-weight:700">F1</span>';
   return`<tr>
-    <td><div style="font-weight:600">${g.cliNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.cliTel||''}</div></td>
-    <td><div style="font-weight:600">${g.prodNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.prodCod?'#'+g.prodCod:''}</div></td>
-    <td style="font-size:.82rem">${g.fornec||'—'}</td>
+    <td><div style="font-weight:600">${escHtml(g.cliNome||'—')}</div><div style="font-size:.72rem;color:var(--muted)">${escHtml(g.cliTel||'')}</div></td>
+    <td><div style="font-weight:600">${escHtml(g.prodNome||'—')}</div><div style="font-size:.72rem;color:var(--muted)">${escHtml(g.prodCod?'#'+g.prodCod:'')}</div></td>
+    <td style="font-size:.82rem">${escHtml(g.fornec||'—')}</td>
     <td><div style="display:flex;align-items:center;gap:.35rem">${faseTag}<span class="etapa-badge ${et.cls}" style="color:var(--c,#888);border-color:var(--c,#888);background:rgba(0,0,0,.03)">${et.icon} ${et.nome}</span></div></td>
-    <td style="font-size:.78rem;color:var(--muted)">${g.recebidoEm||'—'}</td>
+    <td style="font-size:.78rem;color:var(--muted)">${escHtml(g.recebidoEm||'—')}</td>
     <td><span style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</span></td>
     <td>${gcBadge}</td>
     <td><div style="display:flex;gap:.3rem">
-      <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
-      <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${g.id}')">✏️</button>
-      <button class="btn-xs" title="Avançar etapa" aria-label="Avançar etapa" onclick="abrirModalEtapa('${g.id}')">→</button>
+      <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${escJs(g.id)}')">🖨️</button>
+      <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${escJs(g.id)}')">✏️</button>
+      <button class="btn-xs" title="Avançar etapa" aria-label="Avançar etapa" onclick="abrirModalEtapa('${escJs(g.id)}')">→</button>
     </div></td>
   </tr>`;
 }
@@ -625,15 +628,15 @@ function renderKoluna(e){
       ${lista.length?lista.map(g=>{
         const dias=diasCard(g);
         const gcTag=g.substCod&&!g.lancadoGC?'<span style="font-size:.6rem;color:var(--yellow)">⚠️ sem GC</span>':'';
-        return`<div class="card ${e.cls}" onclick="abrirModalEtapa('${g.id}')">
-          <div class="card-titulo">${g.prodNome||'Sem nome'}</div>
-          <div class="card-sub">${g.cliNome||'—'}${g.fornec?' · '+g.fornec:''}</div>
+        return`<div class="card ${e.cls}" onclick="abrirModalEtapa('${escJs(g.id)}')">
+          <div class="card-titulo">${escHtml(g.prodNome||'Sem nome')}</div>
+          <div class="card-sub">${escHtml(g.cliNome||'—')}${escHtml(g.fornec?' · '+g.fornec:'')}</div>
           <div class="card-foot">
             <span class="card-dias${dias>7?' urgente':''}">${dias}d</span>
             <div class="card-acoes" onclick="event.stopPropagation()">
               ${gcTag}
-              <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
-              <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${g.id}')">✏️</button>
+              <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${escJs(g.id)}')">🖨️</button>
+              <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${escJs(g.id)}')">✏️</button>
             </div>
           </div>
         </div>`;
@@ -660,10 +663,10 @@ function renderKanbanF2(){
     lista.innerHTML = prontas.map(g=>`
       <div style="background:var(--white);border:1px solid var(--border);border-left:3px solid var(--orange);border-radius:9px;padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div>
-          <div style="font-size:.84rem;font-weight:700">${g.prodNome||'—'} · <span style="font-weight:400">${g.cliNome||'—'}</span></div>
-          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Fornecedor: ${g.fornec||'não informado'} · Recebido: ${g.recebidoEm||'—'}</div>
+          <div style="font-size:.84rem;font-weight:700">${escHtml(g.prodNome||'—')} · <span style="font-weight:400">${escHtml(g.cliNome||'—')}</span></div>
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.15rem">Fornecedor: ${escHtml(g.fornec||'não informado')} · Recebido: ${escHtml(g.recebidoEm||'—')}</div>
         </div>
-        <button class="btn-primary" style="padding:.35rem .85rem;font-size:.75rem" onclick="mudarEtapaRapido('${g.id}','ag_envio')">🚚 Iniciar envio</button>
+        <button class="btn-primary" style="padding:.35rem .85rem;font-size:.75rem" onclick="mudarEtapaRapido('${escJs(g.id)}','ag_envio')">🚚 Iniciar envio</button>
       </div>`).join('');
   } else {
     wrap.style.display='none';
@@ -693,20 +696,20 @@ function renderHistorico(){
     const et=ETAPA_MAP[g.etapa]||ETAPAS[0];
     const base=g.recebidoEm?new Date(g.recebidoEm).getTime():g.criadoEm;
     const dias=Math.floor((Date.now()-base)/86400000);
-    const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+g.id+'\')">⚠️ Lançar</button>'):'—';
+    const gcBadge=g.substCod?(g.lancadoGC?'<span class="badge-gc">✓ GC</span>':'<button class="btn-xs" style="width:auto;padding:0 .4rem;font-size:.65rem;color:var(--yellow);border-color:var(--yellow)" onclick="abrirModalGC(\''+escJs(g.id)+'\')">⚠️ Lançar</button>'):'—';
     const faseTag=et.fase===2?'<span style="font-size:.6rem;background:#fee2e2;color:#ef4444;border-radius:4px;padding:.1rem .35rem;font-weight:700">F2</span>':'<span style="font-size:.6rem;background:#dbeafe;color:#3b82f6;border-radius:4px;padding:.1rem .35rem;font-weight:700">F1</span>';
     return`<tr>
-      <td><div style="font-weight:600">${g.cliNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.cliTel||''}</div></td>
-      <td><div style="font-weight:600">${g.prodNome||'—'}</div><div style="font-size:.72rem;color:var(--muted)">${g.prodCod?'#'+g.prodCod:''}</div></td>
-      <td style="font-size:.82rem">${g.fornec||'—'}</td>
+      <td><div style="font-weight:600">${escHtml(g.cliNome||'—')}</div><div style="font-size:.72rem;color:var(--muted)">${escHtml(g.cliTel||'')}</div></td>
+      <td><div style="font-weight:600">${escHtml(g.prodNome||'—')}</div><div style="font-size:.72rem;color:var(--muted)">${escHtml(g.prodCod?'#'+g.prodCod:'')}</div></td>
+      <td style="font-size:.82rem">${escHtml(g.fornec||'—')}</td>
       <td><div style="display:flex;align-items:center;gap:.3rem">${faseTag}<span class="etapa-badge ${et.cls}" style="color:var(--c,#888);border-color:rgba(0,0,0,.1)">${et.icon} ${et.nome}</span></div></td>
-      <td style="font-size:.78rem;color:var(--muted)">${g.recebidoEm||'—'}</td>
+      <td style="font-size:.78rem;color:var(--muted)">${escHtml(g.recebidoEm||'—')}</td>
       <td>${gcBadge}</td>
       <td style="font-size:.8rem;${dias>7?'color:var(--red);font-weight:700':''}">${dias}d</td>
       <td><div style="display:flex;gap:.3rem">
-        <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${g.id}')">🖨️</button>
-        <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${g.id}')">✏️</button>
-        <button class="btn-xs del" title="Excluir" aria-label="Excluir garantia" onclick="excluirGarantia('${g.id}')">🗑</button>
+        <button class="btn-xs" title="Recibo" aria-label="Imprimir recibo" onclick="abrirRecibo('${escJs(g.id)}')">🖨️</button>
+        <button class="btn-xs" title="Editar" aria-label="Editar garantia" onclick="editarGarantia('${escJs(g.id)}')">✏️</button>
+        <button class="btn-xs del" title="Excluir" aria-label="Excluir garantia" onclick="excluirGarantia('${escJs(g.id)}')">🗑</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -810,7 +813,7 @@ window.abrirModalEtapa=function(id){
   // Fase 1
   html+=`<div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#3B82F6;margin:.5rem 0 .35rem">👤 Fase 1 — Cliente</div>`;
   html+=FASE1.map(e=>`
-    <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${id}','${e.id}')">
+    <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${escJs(id)}','${e.id}')">
       <span style="font-size:1.1rem">${e.icon}</span> ${e.nome}
       ${g.etapa===e.id?'<span style="margin-left:auto;font-size:.72rem;color:var(--orange)">Atual</span>':''}
     </div>`).join('');
@@ -818,7 +821,7 @@ window.abrirModalEtapa=function(id){
   if(fase1Ok){
     html+=`<div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#EF4444;margin:.85rem 0 .35rem">🏭 Fase 2 — Fornecedor</div>`;
     html+=FASE2.map(e=>`
-      <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${id}','${e.id}')">
+      <div class="etapa-opt${g.etapa===e.id?' atual':''}" onclick="mudarEtapaRapido('${escJs(id)}','${e.id}')">
         <span style="font-size:1.1rem">${e.icon}</span> ${e.nome}
         ${g.etapa===e.id?'<span style="margin-left:auto;font-size:.72rem;color:var(--orange)">Atual</span>':''}
       </div>`).join('');
@@ -850,10 +853,10 @@ window.abrirModalGC=function(id){
   const motivo=`Garantia - ${g.cliNome||'Cliente'}`;
   document.getElementById('gc-motivo-txt').textContent=motivo;
   document.getElementById('gc-dados').innerHTML=`
-    <div class="gc-linha"><span class="gc-key">Produto</span><span class="gc-val">${g.substNome||g.prodNome||'—'}</span></div>
-    <div class="gc-linha"><span class="gc-key">Código GC</span><span class="gc-val">${g.substCod||g.prodCod||'—'}</span></div>
+    <div class="gc-linha"><span class="gc-key">Produto</span><span class="gc-val">${escHtml(g.substNome||g.prodNome||'—')}</span></div>
+    <div class="gc-linha"><span class="gc-key">Código GC</span><span class="gc-val">${escHtml(g.substCod||g.prodCod||'—')}</span></div>
     <div class="gc-linha"><span class="gc-key">Tipo</span><span class="gc-val">Saída (−1 unidade)</span></div>
-    <div class="gc-linha"><span class="gc-key">Motivo</span><span class="gc-val">${motivo}</span></div>
+    <div class="gc-linha"><span class="gc-key">Motivo</span><span class="gc-val">${escHtml(motivo)}</span></div>
     <div class="gc-linha"><span class="gc-key">Valor</span><span class="gc-val">R$ ${brl(g.valor)}</span></div>`;
   document.getElementById('modalGC').classList.add('show');
 };
@@ -878,7 +881,6 @@ window.fecharModal=function(id){document.getElementById(id).classList.remove('sh
 // ── AUTOCOMPLETE GESTÃOCLICK ─────────────────────────────────────────────────
 
 function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); }; }
-function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 function gcExtrairLista(d){
   if(Array.isArray(d))      return d;
@@ -1024,7 +1026,7 @@ async function carregarFornecedores(){
     const snap = await window._getDocs(window._col('fornecedores_custo'));
     const lista = snap.docs.map(d=>d.data().nome).filter(Boolean).sort();
     const dl = document.getElementById('fornec-datalist');
-    dl.innerHTML = lista.map(n=>`<option value="${n}">`).join('');
+    dl.innerHTML = lista.map(n=>`<option value="${escHtml(n)}">`).join('');
   }catch(e){ console.warn('fornecedores:', e); }
 }
 
@@ -1054,30 +1056,30 @@ function gerarHtmlRecibo(g){
       </div>
       <div class="recibo-titulo">
         <h2>Recibo de Garantia</h2>
-        <div class="proto">Protocolo: #${proto}</div>
+        <div class="proto">Protocolo: #${escHtml(proto)}</div>
         <div class="proto" style="margin-top:.1rem">Emitido em: ${dataEmissao}</div>
       </div>
     </div>
 
     <div class="recibo-bloco">
       <div class="recibo-bloco-titulo">👤 Dados do Cliente</div>
-      <div class="recibo-linha"><label>Nome:</label><span>${g.cliNome||'—'}</span></div>
-      <div class="recibo-linha"><label>Telefone / WhatsApp:</label><span>${g.cliTel||'—'}</span></div>
+      <div class="recibo-linha"><label>Nome:</label><span>${escHtml(g.cliNome||'—')}</span></div>
+      <div class="recibo-linha"><label>Telefone / WhatsApp:</label><span>${escHtml(g.cliTel||'—')}</span></div>
     </div>
 
     <div class="recibo-bloco">
       <div class="recibo-bloco-titulo">📦 Produto em Garantia</div>
-      <div class="recibo-linha"><label>Produto:</label><span>${g.prodNome||'—'}</span></div>
-      ${g.prodCod?`<div class="recibo-linha"><label>Código:</label><span>${g.prodCod}</span></div>`:''}
-      <div class="recibo-linha"><label>Fornecedor:</label><span>${g.fornec||'—'}</span></div>
-      <div class="recibo-linha"><label>Prazo de Garantia:</label><span>${g.prazo||'A verificar'}</span></div>
+      <div class="recibo-linha"><label>Produto:</label><span>${escHtml(g.prodNome||'—')}</span></div>
+      ${g.prodCod?`<div class="recibo-linha"><label>Código:</label><span>${escHtml(g.prodCod)}</span></div>`:''}
+      <div class="recibo-linha"><label>Fornecedor:</label><span>${escHtml(g.fornec||'—')}</span></div>
+      <div class="recibo-linha"><label>Prazo de Garantia:</label><span>${escHtml(g.prazo||'A verificar')}</span></div>
       <div class="recibo-linha"><label>Valor do Produto:</label><span>${valorFmt}</span></div>
-      <div class="recibo-linha"><label>Data de Recebimento:</label><span>${dataFmt}</span></div>
+      <div class="recibo-linha"><label>Data de Recebimento:</label><span>${escHtml(dataFmt)}</span></div>
     </div>
 
     <div class="recibo-bloco">
       <div class="recibo-bloco-titulo">🔧 Defeito Relatado</div>
-      <div class="recibo-defeito">${g.defeito||'Não informado'}</div>
+      <div class="recibo-defeito">${escHtml(g.defeito||'Não informado')}</div>
     </div>
 
     <div class="recibo-bloco">
@@ -1087,13 +1089,13 @@ function gerarHtmlRecibo(g){
 
     ${g.substNome?`<div class="recibo-bloco">
       <div class="recibo-bloco-titulo">🔄 Produto Entregue ao Cliente</div>
-      <div class="recibo-linha"><label>Produto substituto:</label><span>${g.substNome}</span></div>
-      ${g.substCod?`<div class="recibo-linha"><label>Código:</label><span>${g.substCod}</span></div>`:''}
+      <div class="recibo-linha"><label>Produto substituto:</label><span>${escHtml(g.substNome)}</span></div>
+      ${g.substCod?`<div class="recibo-linha"><label>Código:</label><span>${escHtml(g.substCod)}</span></div>`:''}
     </div>`:''}
 
     ${g.obs?`<div class="recibo-bloco">
       <div class="recibo-bloco-titulo">📝 Observações</div>
-      <div class="recibo-defeito">${g.obs}</div>
+      <div class="recibo-defeito">${escHtml(g.obs)}</div>
     </div>`:''}
 
     <div class="recibo-bloco">
@@ -1110,7 +1112,7 @@ function gerarHtmlRecibo(g){
     <div class="recibo-assinaturas">
       <div class="recibo-assin-box">
         <div class="recibo-assin-linha"></div>
-        <div class="recibo-assin-label">Assinatura do Cliente<br>${g.cliNome||''}</div>
+        <div class="recibo-assin-label">Assinatura do Cliente<br>${escHtml(g.cliNome||'')}</div>
       </div>
       <div class="recibo-assin-box">
         <div class="recibo-assin-linha"></div>
@@ -1119,7 +1121,7 @@ function gerarHtmlRecibo(g){
     </div>
 
     <div class="recibo-rodape">
-      MR4 Distribuidora · Protocolo #${proto} · Emitido em ${dataEmissao}
+      MR4 Distribuidora · Protocolo #${escHtml(proto)} · Emitido em ${dataEmissao}
     </div>
   </div>`;
 }

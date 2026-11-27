@@ -1037,9 +1037,9 @@ function atualizarContadores() {
   const sidebarEstados = document.getElementById('sidebarEstados');
   if(sidebarEstados) {
     sidebarEstados.innerHTML = estadosOrdenados.map(([uf, cnt], i) => `
-      <div class="sidebar-item" id="filter-estado__${uf}" onclick="setFilter('estado:${uf}')">
+      <div class="sidebar-item" id="filter-estado__${escH(uf)}" onclick="setFilter('estado:${escJs(uf)}')">
         <span style="display:flex;align-items:center;gap:.4rem">
-          <span class="sidebar-dot" style="background:${estadoCores[i%estadoCores.length]}"></span>${uf}
+          <span class="sidebar-dot" style="background:${estadoCores[i%estadoCores.length]}"></span>${escH(uf)}
         </span>
         <span class="sidebar-item-count">${cnt}</span>
       </div>`).join('');
@@ -1118,28 +1118,28 @@ function renderLista(lista) {
   const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente', PF:'tag-pf', PJ:'tag-pj' };
   body.innerHTML = lista.map(c => {
     const ini = (c.nome||'?')[0].toUpperCase();
-    const tags = [(c.tipo||'PF'), ...(c.tags||[])].map(t=>`<span class="tag ${tagClasses[t]||''}">${t}</span>`).join('');
+    const tags = [(c.tipo||'PF'), ...(c.tags||[])].map(t=>`<span class="tag ${tagClasses[t]||''}">${escH(t)}</span>`).join('');
     const gAberta = GARANTIAS.filter(g=>normalizar(g.clienteNome)===normalizar(c.nome)&&!['encerrado','reprovado'].includes(g.status));
     const wpp = (c.telefone||'').replace(/\D/g,'');
     const unreadDot = temMsgNaoLida(c) ? `<div class="contact-unread-dot" title="Mensagem não lida"></div>` : '';
     const esqTag = isEsquecido(c) ? `<span class="tag tag-esquecido">⏰ Esquecido</span>` : '';
     const hoje3 = new Date().toISOString().slice(0,10);
-    const followupDot = (c.followUp && c.followUp <= hoje3) ? `<div class="contact-followup-dot" title="Follow-up: ${c.followUp}"></div>` : '';
+    const followupDot = (c.followUp && c.followUp <= hoje3) ? `<div class="contact-followup-dot" title="Follow-up: ${escH(c.followUp)}"></div>` : '';
     return `
-    <div class="contact-row${clienteAtualId===c.id?' selected':''}" onclick="abrirDetalhe('${c.id}')">
+    <div class="contact-row${clienteAtualId===c.id?' selected':''}" onclick="abrirDetalhe('${escJs(c.id)}')">
       ${gAberta.length?`<div class="garantia-indicator">🛡️ ${gAberta.length}</div>`:''}
       ${unreadDot}${followupDot}
-      <div class="contact-avatar">${ini}</div>
+      <div class="contact-avatar">${escH(ini)}</div>
       <div class="contact-main">
-        <div class="contact-nome">${c.nome}</div>
-        <div class="contact-sub">${c.telefone||'—'}${c.email?` · ${c.email}`:''}</div>
+        <div class="contact-nome">${escH(c.nome)}</div>
+        <div class="contact-sub">${escH(c.telefone||'—')}${c.email?` · ${escH(c.email)}`:''}</div>
         <div class="contact-tags">${tags}${esqTag}</div>
       </div>
       <div class="contact-meta">
-        <div class="contact-city">${c.cidade||''}</div>
+        <div class="contact-city">${escH(c.cidade||'')}</div>
         <div class="contact-actions">
           ${wpp?`<button class="action-btn wpp" title="WhatsApp" onclick="event.stopPropagation();window.open('https://wa.me/55${wpp}','_blank')">💬</button>`:''}
-          <button class="action-btn edit" title="Editar" onclick="event.stopPropagation();editarCliente('${c.id}')">✏️</button>
+          <button class="action-btn edit" title="Editar" onclick="event.stopPropagation();editarCliente('${escJs(c.id)}')">✏️</button>
         </div>
       </div>
     </div>`;
@@ -1181,8 +1181,8 @@ window.abrirDetalhe = function(id) {
   if(wppBtn){ if(wpp){ wppBtn.dataset.wpp = wpp; } }
 
   document.getElementById('detContacts').innerHTML = [
-    c.telefone ? `<div class="detail-contact-item">📱 ${c.telefone}</div>` : '',
-    c.email    ? `<div class="detail-contact-item">✉️ ${c.email}</div>` : '',
+    c.telefone ? `<div class="detail-contact-item">📱 ${escH(c.telefone)}</div>` : '',
+    c.email    ? `<div class="detail-contact-item">✉️ ${escH(c.email)}</div>` : '',
   ].join('');
 
   // Info tab
@@ -1205,7 +1205,7 @@ window.abrirDetalhe = function(id) {
   const followUpDate = document.getElementById('iFollowUpDate');
   if(c.followUp) {
     const isV = c.followUp < hojeStr, isH = c.followUp === hojeStr;
-    followUpEl.innerHTML = `<span class="followup-indicator ${isV?'vencido':isH?'hoje':'futuro'}">${isV?'⚠️':'📅'} ${c.followUp}</span>`;
+    followUpEl.innerHTML = `<span class="followup-indicator ${isV?'vencido':isH?'hoje':'futuro'}">${isV?'⚠️':'📅'} ${escH(c.followUp)}</span>`;
     if(followUpDate) followUpDate.value = c.followUp;
   } else {
     followUpEl.textContent = '—';
@@ -1215,7 +1215,7 @@ window.abrirDetalhe = function(id) {
   document.getElementById('iEmail').textContent = c.email||'—';
   const tagClasses = { VIP:'tag-vip', Atacado:'tag-atacado', Varejo:'tag-varejo', Inadimplente:'tag-inadimplente' };
   document.getElementById('iTags').innerHTML = (c.tags||[]).length
-    ? (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}">${t}</span>`).join('')
+    ? (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}">${escH(t)}</span>`).join('')
     : '<span style="font-size:.8rem;color:var(--muted)">Sem tags</span>';
 
   // Pipeline
@@ -1231,8 +1231,8 @@ window.abrirDetalhe = function(id) {
   const sColor={recebido:'#6B7280',em_teste:'#F59E0B',aprovado:'#10B981',substituido:'#3B82F6',ag_envio:'#EF4444',enviado:'#8B5CF6',encerrado:'#9CA3AF',reprovado:'#9CA3AF'};
   document.getElementById('garantiasList').innerHTML = gList.length
     ? gList.map(g=>`<div class="garantia-row">
-        <div><div class="garantia-row-nome">${g.produtoNome||'Produto'}</div><div class="garantia-row-def">${g.defeito||''}</div></div>
-        <span class="g-status" style="background:${sColor[g.status]||'#6B7280'}22;color:${sColor[g.status]||'#6B7280'}">${sLabel[g.status]||g.status}</span>
+        <div><div class="garantia-row-nome">${escH(g.produtoNome||'Produto')}</div><div class="garantia-row-def">${escH(g.defeito||'')}</div></div>
+        <span class="g-status" style="background:${sColor[g.status]||'#6B7280'}22;color:${sColor[g.status]||'#6B7280'}">${escH(sLabel[g.status]||g.status)}</span>
       </div>`).join('')
     : '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:1.5rem 0">Nenhuma garantia.</div>';
 
@@ -1295,7 +1295,7 @@ function renderNotas(c) {
   document.getElementById('notasList').innerHTML = notas.length
     ? notas.map((n,i)=>`<div class="nota-item">
         <div class="nota-data">${formatarData(n.data)}</div>
-        <div class="nota-texto">${n.texto}</div>
+        <div class="nota-texto">${escH(n.texto)}</div>
         <button class="nota-del" onclick="deletarNota(${i})">✕</button>
       </div>`).join('')
     : '<div style="color:var(--muted);font-size:.8rem;padding:.5rem 0">Nenhuma anotação ainda.</div>';
@@ -1337,6 +1337,9 @@ function formatarTelefone55(tel) {
 }
 
 function escapeHtml(t){ return (t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); }
+// Escape: dado externo ou gravado no banco nunca vira marcação (escH) nem código em atributo on* (escJs).
+function escH(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function escJs(v){return String(v==null?'':v).replace(/[^A-Za-z0-9 _.:@+-]/g,c=>'\\u'+c.charCodeAt(0).toString(16).padStart(4,'0'));}
 
 
 // ── Reconectar WhatsApp via QR Code ───────────────────────────────────────────
@@ -1414,12 +1417,12 @@ function subscribeToMsgs(phone) {
       },
       err => {
         empty.style.display='flex'; msgs.style.display='none';
-        empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro</div><div class="chat-empty-sub">${err.message}</div>`;
+        empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro</div><div class="chat-empty-sub">${escH(err.message)}</div>`;
       }
     );
   } catch(e) {
     empty.style.display='flex'; msgs.style.display='none';
-    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro</div><div class="chat-empty-sub">${e.message}</div>`;
+    empty.innerHTML=`<div class="chat-empty-icon">⚠️</div><div class="chat-empty-title">Erro</div><div class="chat-empty-sub">${escH(e.message)}</div>`;
   }
 }
 
@@ -1647,17 +1650,17 @@ function renderInbox(chats) {
     const previewCls = lastFromMe ? ' fromme' : '';
 
     const unreadRing = unread > 0 ? '<div class="unread-ring"></div>' : '';
-    const avatarImg  = `<img alt="" data-phone="${phone}" onload="this.classList.add('loaded')" onerror="this.remove()">`;
+    const avatarImg  = `<img alt="" data-phone="${escH(phone)}" onload="this.classList.add('loaded')" onerror="this.remove()">`;
     const criarBtn   = cliente
       ? `<div class="inbox-client-tag">CRM ✓</div>`
-      : `<button class="inbox-criar-btn" onclick="event.stopPropagation();criarClienteDoInbox('${phone}','${(chat.name||'').replace(/'/g,"\\'")}')">+ Criar</button>`;
+      : `<button class="inbox-criar-btn" onclick="event.stopPropagation();criarClienteDoInbox('${escJs(phone)}','${escJs(chat.name||'')}')">+ Criar</button>`;
 
-    const statusDot  = status ? `<span class="status-dot ${status}"></span>` : '';
+    const statusDot  = status ? `<span class="status-dot ${escH(status)}"></span>` : '';
     const esperaBadge = espera ? `<span style="font-size:.6rem;font-weight:700;padding:.1rem .35rem;border-radius:20px;background:${isAlerta?'#FEE2E2':'#F3F4F6'};color:${espera.cor}">${espera.txt}</span>` : '';
-    const pinIcon    = `<button class="inbox-pin-icon" onclick="event.stopPropagation();togglePin('${phone}')" style="background:none;border:none;cursor:pointer;font-size:.78rem;padding:.1rem .15rem;opacity:${isPinned?'1':'0'};color:${isPinned?'var(--orange)':'var(--muted)'};transition:opacity .12s;flex-shrink:0" title="${isPinned?'Desafixar':'Fixar'}">📌</button>`;
+    const pinIcon    = `<button class="inbox-pin-icon" onclick="event.stopPropagation();togglePin('${escJs(phone)}')" style="background:none;border:none;cursor:pointer;font-size:.78rem;padding:.1rem .15rem;opacity:${isPinned?'1':'0'};color:${isPinned?'var(--orange)':'var(--muted)'};transition:opacity .12s;flex-shrink:0" title="${isPinned?'Desafixar':'Fixar'}">📌</button>`;
 
-    return `<div class="inbox-row${unreadCls}${sel}${isAlerta?' alerta':''}${isPinned?' pinned':''}" onclick="abrirChatInbox('${phone}')">
-      <div class="inbox-avatar${cliente?'':' unknown'}">${ini}${unreadRing}${avatarImg}</div>
+    return `<div class="inbox-row${unreadCls}${sel}${isAlerta?' alerta':''}${isPinned?' pinned':''}" onclick="abrirChatInbox('${escJs(phone)}')">
+      <div class="inbox-avatar${cliente?'':' unknown'}">${escH(ini)}${unreadRing}${avatarImg}</div>
       <div class="inbox-main">
         <div class="inbox-header-row">
           <div class="inbox-nome${cliente?'':' unknown'}">${escapeHtml(nome)}</div>
@@ -1746,7 +1749,7 @@ window.abrirChatInbox = function(phone) {
   document.getElementById('detAvatar').textContent = ini;
   document.getElementById('detNome').textContent = nome;
   document.getElementById('detSub').textContent = cliente ? `Cliente CRM · ${fmtPhone(phone)}` : `Não cadastrado · ${fmtPhone(phone)}`;
-  document.getElementById('detContacts').innerHTML = `<div class="detail-contact-item">📱 ${fmtPhone(phone)}</div>`;
+  document.getElementById('detContacts').innerHTML = `<div class="detail-contact-item">📱 ${escH(fmtPhone(phone))}</div>`;
   document.getElementById('detWppBtn').style.display = 'none';
   // Pipeline badge
   const badge2 = document.getElementById('detPipelineBadge');
@@ -1771,7 +1774,7 @@ window.abrirChatInbox = function(phone) {
   document.getElementById('iEmail').textContent   = cliente ? (cliente.email||'—') : '—';
   const tagClasses2 = {VIP:'tag-vip',Atacado:'tag-atacado',Varejo:'tag-varejo',Inadimplente:'tag-inadimplente'};
   document.getElementById('iTags').innerHTML = (cliente&&(cliente.tags||[]).length)
-    ? (cliente.tags||[]).map(t=>`<span class="tag ${tagClasses2[t]||''}">${t}</span>`).join('')
+    ? (cliente.tags||[]).map(t=>`<span class="tag ${tagClasses2[t]||''}">${escH(t)}</span>`).join('')
     : '<span style="font-size:.8rem;color:var(--muted)">Sem tags</span>';
 
   clienteAtualId = cliente ? cliente.id : null;
@@ -1840,14 +1843,14 @@ function renderPipeline() {
     const grupo = CLIENTES.filter(c => (c.pipeline||'lead') === stage.id);
     const cards = grupo.length
       ? grupo.map(c => {
-          const tags = (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}" style="font-size:.58rem">${t}</span>`).join('');
+          const tags = (c.tags||[]).map(t=>`<span class="tag ${tagClasses[t]||''}" style="font-size:.58rem">${escH(t)}</span>`).join('');
           const unread = temMsgNaoLida(c) ? `<div class="pipeline-card-unread">● msg não lida</div>` : '';
           const outros = PIPELINE_STAGES.filter(s=>s.id!==stage.id);
-          const moveBtns = outros.map(s=>`<button class="pipeline-move-btn" onclick="event.stopPropagation();moverPipeline('${c.id}','${s.id}')">${s.emoji} ${s.nome}</button>`).join('');
+          const moveBtns = outros.map(s=>`<button class="pipeline-move-btn" onclick="event.stopPropagation();moverPipeline('${escJs(c.id)}','${s.id}')">${s.emoji} ${s.nome}</button>`).join('');
           return `
-          <div class="pipeline-card" onclick="abrirDetalhe('${c.id}')">
-            <div class="pipeline-card-nome">${c.nome||'—'}</div>
-            <div class="pipeline-card-tel">${c.telefone||'—'}</div>
+          <div class="pipeline-card" onclick="abrirDetalhe('${escJs(c.id)}')">
+            <div class="pipeline-card-nome">${escH(c.nome||'—')}</div>
+            <div class="pipeline-card-tel">${escH(c.telefone||'—')}</div>
             ${tags?`<div class="pipeline-card-tags">${tags}</div>`:''}
             ${unread}
             <div class="pipeline-move">${moveBtns}</div>
@@ -1978,8 +1981,8 @@ function renderPainelCRM() {
               const cl = matchClientePorPhone(chat.phone);
               const lastTxt = chat.lastMessageBody || '';
               const hora = formatarHoraInbox(chat.lastMessageTime);
-              return `<div class="painel-item" onclick="setModo('inbox');setTimeout(()=>abrirChatInbox('${chat.phone}'),120)">
-                <div class="painel-item-av">${(cl?.nome||'?')[0].toUpperCase()}</div>
+              return `<div class="painel-item" onclick="setModo('inbox');setTimeout(()=>abrirChatInbox('${escJs(chat.phone)}'),120)">
+                <div class="painel-item-av">${escH((cl?.nome||'?')[0].toUpperCase())}</div>
                 <div style="flex:1;min-width:0">
                   <div class="painel-item-nome">${escapeHtml(cl?.nome||fmtPhone(chat.phone))}</div>
                   <div class="painel-item-sub">${escapeHtml((lastTxt||'Mensagem recebida').slice(0,38))}</div>
@@ -1998,11 +2001,11 @@ function renderPainelCRM() {
       </div>
       ${semContato3dList.length
         ? semContato3dList.slice(0,7).map(c => `
-          <div class="painel-item" onclick="abrirDetalhe('${c.id}')">
-            <div class="painel-item-av">${(c.nome||'?')[0].toUpperCase()}</div>
+          <div class="painel-item" onclick="abrirDetalhe('${escJs(c.id)}')">
+            <div class="painel-item-av">${escH((c.nome||'?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0">
               <div class="painel-item-nome">${escapeHtml(c.nome)}</div>
-              <div class="painel-item-sub">${c.telefone||'—'}</div>
+              <div class="painel-item-sub">${escH(c.telefone||'—')}</div>
             </div>
             <span class="painel-item-badge" style="background:#FEF3C7;color:#92400E">${diasSemContato(c)}d</span>
           </div>`).join('')
@@ -2025,9 +2028,9 @@ function renderPainelCRM() {
               const hora = formatarHoraInbox(chat.lastMessageTime);
               const unread = Number(chat.messagesUnread||chat.unread||0);
               const goldStyle = i < 3 ? 'background:linear-gradient(135deg,#F59E0B,#D97706)' : '';
-              return `<div class="painel-item" onclick="setModo('inbox');setTimeout(()=>abrirChatInbox('${chat.phone}'),120)">
+              return `<div class="painel-item" onclick="setModo('inbox');setTimeout(()=>abrirChatInbox('${escJs(chat.phone)}'),120)">
                 <span class="painel-rank" style="${i<3?'color:var(--yellow);font-weight:900':''}">${i+1}</span>
-                <div class="painel-item-av" style="${goldStyle}">${(cl?.nome||'?')[0].toUpperCase()}</div>
+                <div class="painel-item-av" style="${goldStyle}">${escH((cl?.nome||'?')[0].toUpperCase())}</div>
                 <div style="flex:1;min-width:0">
                   <div class="painel-item-nome">${escapeHtml(cl?.nome||fmtPhone(chat.phone))}</div>
                   <div class="painel-item-sub">Última msg: ${hora}</div>
@@ -2052,12 +2055,12 @@ function renderPainelCRM() {
                   ? chat.name : fmtPhone(chat.phone);
                 const hora = formatarHoraInbox(chat.lastMessageTime);
                 return `<div class="painel-item">
-                  <div class="painel-item-av" style="background:linear-gradient(135deg,#9CA3AF,#6B7280)">${(nome||'?')[0].toUpperCase()}</div>
+                  <div class="painel-item-av" style="background:linear-gradient(135deg,#9CA3AF,#6B7280)">${escH((nome||'?')[0].toUpperCase())}</div>
                   <div style="flex:1;min-width:0">
                     <div class="painel-item-nome">${escapeHtml(nome)}</div>
-                    <div class="painel-item-sub">${fmtPhone(chat.phone)} · ${hora}</div>
+                    <div class="painel-item-sub">${escH(fmtPhone(chat.phone))} · ${hora}</div>
                   </div>
-                  <button onclick="event.stopPropagation();criarClienteDoInbox('${chat.phone}','${(chat.name||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}');setModo('clientes')"
+                  <button onclick="event.stopPropagation();criarClienteDoInbox('${escJs(chat.phone)}','${escJs(chat.name||'')}');setModo('clientes')"
                     style="font-size:.62rem;padding:.18rem .48rem;border:1.5px solid var(--orange);border-radius:6px;background:none;cursor:pointer;color:var(--orange);font-family:'Inter',sans-serif;font-weight:600;flex-shrink:0">+ CRM</button>
                 </div>`;
               }),
@@ -2084,8 +2087,8 @@ function renderPainelCRM() {
       </div>
       ${topNotas.length
         ? topNotas.map(({cliente:cl, nota:n}) => `
-          <div class="painel-item" onclick="abrirDetalhe('${cl.id}');setTimeout(()=>showTab('notas'),150)">
-            <div class="painel-item-av">${(cl.nome||'?')[0].toUpperCase()}</div>
+          <div class="painel-item" onclick="abrirDetalhe('${escJs(cl.id)}');setTimeout(()=>showTab('notas'),150)">
+            <div class="painel-item-av">${escH((cl.nome||'?')[0].toUpperCase())}</div>
             <div style="flex:1;min-width:0">
               <div class="painel-item-nome">${escapeHtml(cl.nome)}</div>
               <div class="painel-item-sub">${escapeHtml((n.texto||'').slice(0,42))}</div>
@@ -2132,9 +2135,9 @@ function renderPainelCRM() {
       </div>
       <div style="padding:.25rem 0">
         ${ranking.map(([uf, cnt], i) => `
-          <div class="painel-bar-row" style="cursor:pointer" onclick="setModo('clientes');setFilter('estado:${uf}')">
+          <div class="painel-bar-row" style="cursor:pointer" onclick="setModo('clientes');setFilter('estado:${escJs(uf)}')">
             <span class="painel-bar-label" style="color:var(--text);font-weight:600;display:flex;align-items:center;gap:.35rem">
-              <span style="width:8px;height:8px;border-radius:50%;background:${cores[i%cores.length]};flex-shrink:0;display:inline-block"></span>${uf}
+              <span style="width:8px;height:8px;border-radius:50%;background:${cores[i%cores.length]};flex-shrink:0;display:inline-block"></span>${escH(uf)}
             </span>
             <div class="painel-bar-track">
               <div class="painel-bar-fill" style="background:${cores[i%cores.length]};width:${Math.round(cnt/max*100)}%"></div>
@@ -2493,7 +2496,7 @@ function renderVendas(c) {
             ${v.obs?`<div class="venda-data" style="color:var(--muted)">${escapeHtml(v.obs)}</div>`:''}
           </div>
           <span class="venda-val">R$ ${Number(v.valor||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-          <span class="venda-data">${v.data||'—'}</span>
+          <span class="venda-data">${escH(v.data||'—')}</span>
           <button class="venda-del" onclick="excluirVenda(${i})" title="Remover">✕</button>
         </div>`).join('')
     : '<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:.75rem 0">Nenhuma venda registrada ainda.<br><small>Use o formulário acima para registrar compras.</small></div>';
@@ -2546,7 +2549,7 @@ window.setFollowUp = async function(dateStr) {
     const isV = valido && dateStr < hojeStr, isH = valido && dateStr === hojeStr;
     const el = document.getElementById('iFollowUp');
     if(el) el.innerHTML = valido
-      ? `<span class="followup-indicator ${isV?'vencido':isH?'hoje':'futuro'}">${isV?'⚠️':'📅'} ${dateStr}</span>`
+      ? `<span class="followup-indicator ${isV?'vencido':isH?'hoje':'futuro'}">${isV?'⚠️':'📅'} ${escH(dateStr)}</span>`
       : '—';
     atualizarContadores();
     mostrarToast(valido ? 'Follow-up agendado!' : 'Follow-up removido!');
@@ -2560,7 +2563,7 @@ function renderCustomTagsModal() {
   const grid = document.getElementById('customTagsGrid');
   if(!grid) return;
   grid.innerHTML = CUSTOM_TAGS.map(t => `
-    <button type="button" class="tag-toggle" data-tag="${escapeHtml(t)}" onclick="toggleTag(this)">${escapeHtml(t)}<span class="custom-tag-del" onclick="event.stopPropagation();removerTagCustom('${escapeHtml(t)}')" title="Apagar tag">✕</span></button>`).join('');
+    <button type="button" class="tag-toggle" data-tag="${escH(t)}" onclick="toggleTag(this)">${escH(t)}<span class="custom-tag-del" onclick="event.stopPropagation();removerTagCustom('${escJs(t)}')" title="Apagar tag">✕</span></button>`).join('');
   // Reaplicar seleção ao editar
   const id = document.getElementById('editId').value;
   if(id) {

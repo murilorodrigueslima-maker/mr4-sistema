@@ -40,6 +40,7 @@ const LIMITE_QUEDA_PADRAO = 0.70;
 const MAX_PAGINAS         = 400;                    // trava de segurança: ABORTA (GC_LIMITE_PAGINAS), nunca trunca
 const gcCliente = gcHttp.criarCliente({ transporte: gcHttp.criarTransporteHttps(https), credenciais: { access: ACCESS_TOKEN, secret: SECRET_TOKEN } });
 const falhas = [];
+const naoPublicados = new Set();   // blocos que não publicaram sem contar como falha do sync (usado só pela pendência do webhook)
 const avisos = [];      // eventos de auditoria que NÃO são falha (ex.: vazio de Pedidos corroborado) — só códigos
 // A2.1 — leitura de vendas (30 dias) compartilhada com Pedidos como CORROBORAÇÃO do vazio. syncVendas SEMPRE resolve (finally).
 let _resolverVendas30; const vendas30Pronta = new Promise(r => { _resolverVendas30 = r; });
@@ -752,6 +753,7 @@ async function syncPerfil360() {
     const db = initFirestore();
     if (!db) {
       log.info('⚠️  Perfil360: Firestore indisponível — pulando incremental');
+      naoPublicados.add('perfil360');
       return;
     }
 
@@ -806,6 +808,7 @@ async function syncPerfil360() {
       const writer = db.bulkWriter();
       writer.onWriteError(err => {
         log.erro(`  [Perfil360 BulkWriter] falha de gravação codigo=${codigoSeguro(err)}`);
+        naoPublicados.add('perfil360');
         return false;
       });
       for (const venda of vendas) {
@@ -817,6 +820,7 @@ async function syncPerfil360() {
     const syncState = await firestoreGetSyncState();
     if (!syncState || syncState.status !== 'READY') {
       log.info('⚠️  Perfil360: sincronização-base não está READY — pulando');
+      naoPublicados.add('perfil360');
       return;
     }
 
@@ -837,6 +841,7 @@ async function syncPerfil360() {
     log.info(`✅ Perfil360: incremental concluído | cursor avançou=${result.cursorAdvanced === true}`);
   } catch(e) {
     log.erro(`❌ Perfil360 incremental falhou (isolado) codigo=${codigoSeguro(e)}`);
+    naoPublicados.add('perfil360');
   }
 }
 
@@ -915,9 +920,10 @@ function blocosSolicitados() {
   }
   let selFinal = sel;
   const modoSujos = process.env.MODO_SUJOS === '1';
+  const execucaoSujos = `${DETENTOR}-${Date.now()}`;
   try {
     if (modoSujos && db0) {   // execução disparada por webhook: relê SÓ os blocos marcados como desatualizados (fila gc_refresh_fila)
-      const sujos = await require('../functions/lib/refreshFila').reclamarSujos({ db: db0 });
+      const sujos = await require('../functions/lib/refreshFila').reclamarSujos({ db: db0, execucao: execucaoSujos });
       const semSujos = sujos.length === 0, parcialSujos = sujos.length !== TODOS_OS_BLOCOS.length;
       if (semSujos) {
         log.info('⏭️  SEM_BLOCOS_DESATUALIZADOS');
@@ -927,6 +933,7 @@ function blocosSolicitados() {
     }
     const inicioMs = Date.now();
     await executarSync(selFinal);
+    if (modoSujos && db0) await confirmarSujos(db0, selFinal.lista, execucaoSujos);
     if (travaOk && !selFinal.parcial) await reconciliarVendasOrigem(db0, inicioMs);
   } finally {
     if (travaOk) await liberarTrava(db0);
@@ -947,6 +954,14 @@ async function reconciliarVendasOrigem(db, inicioMs) {
     const codigo = r.status;
     if (codigo !== 'DESLIGADO') log.info(`  VEXC_SYNC status=${codigo}`);
   } catch (e) { log.aviso(`⚠️  VEXC_SYNC falhou (isolado) codigo=${codigoSeguro(e)}`); }
+}
+
+/** Webhook: a pendência de um bloco só é baixada depois que ELE publicou; o que falhou fica registrado para a próxima execução direcionada. */
+async function confirmarSujos(db, blocos, execucao) {
+  try {
+    const publicados = blocos.filter(b => !naoPublicados.has(b) && !falhas.some(f => f.bloco === b));
+    await require('../functions/lib/refreshFila').confirmarPublicados({ db, blocos: publicados, execucao });
+  } catch (e) { log.aviso(`⚠️  pendência de atualização não confirmada (codigo=${codigoSeguro(e)})`); }
 }
 
 /** Se chegaram eventos durante a execução, dispara OUTRA execução do próprio Job (a trava garante uma por vez). Falha é inócua: o sync de 2 h reconcilia. */

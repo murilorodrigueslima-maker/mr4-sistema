@@ -65,7 +65,22 @@ describe('MODO_SUJOS (disparado por webhook): relê só os blocos marcados', () 
   test('fila com vendas+pedidos ⇒ só esses blocos escrevem; a fila é zerada; heartbeat parcial', () => {
     const r = rodar({ ...base(), ...fila(['vendas', 'pedidos']) }, { ...CR, MODO_SUJOS: '1' });
     expect(r.exitCode).toBe(0); expect(r.writes).toContain('painel_cache/vendas'); expect(r.writes).toContain('pedidos_cache/latest'); expect(r.writes).not.toContain('painel_cache/estoque'); expect(r.writes).not.toContain('financeiro_cache/latest');
-    expect(r.state.gc_refresh_fila.lote.blocos).toEqual({}); expect(r.state.gc_sync_status.ultima.ultimaExecucao.parcial).toBe(true);
+    expect(r.state.gc_refresh_fila.lote.blocos).toEqual({}); expect(r.state.gc_refresh_fila.lote.emAndamento).toEqual({}); expect(r.state.gc_sync_status.ultima.ultimaExecucao.parcial).toBe(true);
+  });
+  test('publicação que falha NÃO perde a pendência: o bloco fica registrado e a execução seguinte publica e baixa', () => {
+    const r = rodar({ ...base(), ...fila(['vendas', 'pedidos']) }, { ...CR, MODO_SUJOS: '1', HARNESS_FALHA_ESCRITA: 'pedidos_cache/latest' });
+    expect(r.exitCode).not.toBe(0); expect(r.writes).toContain('painel_cache/vendas'); expect(r.writes).not.toContain('pedidos_cache/latest');
+    expect(Object.keys(r.state.gc_refresh_fila.lote.emAndamento)).toEqual(['pedidos']); expect(r.state.gc_refresh_fila.lote.blocos).toEqual({});
+    const r2 = rodar(r.state, { ...CR, MODO_SUJOS: '1' });
+    expect(r2.exitCode).toBe(0); expect(r2.writes).toContain('pedidos_cache/latest'); expect(r2.writes).not.toContain('painel_cache/vendas'); expect(r2.state.gc_refresh_fila.lote.emAndamento).toEqual({});
+  });
+  test('leitura do ERP falha: todos os blocos pedidos continuam pendentes', () => {
+    const r = rodar({ ...base(), ...fila(['financeiro']) }, { ...CR, MODO_SUJOS: '1' }, 'pagamentos_erro500');
+    expect(r.exitCode).not.toBe(0); expect(Object.keys(r.state.gc_refresh_fila.lote.emAndamento)).toEqual(['financeiro']);
+  });
+  test('Perfil360 que não publica sem marcar falha do sync também continua pendente', () => {
+    const r = rodar({ ...base(), ...fila(['perfil360']) }, { ...CR, MODO_SUJOS: '1' });          // sem sincronização-base READY: o bloco é pulado
+    expect(r.exitCode).toBe(0); expect(Object.keys(r.state.gc_refresh_fila.lote.emAndamento)).toEqual(['perfil360']);
   });
   test('fila vazia ⇒ nada a fazer (sem escrita de dados)', () => {
     const r = rodar({ ...base() }, { ...CR, MODO_SUJOS: '1' }); expect(r.log).toMatch(/SEM_BLOCOS_DESATUALIZADOS/); expect(r.writes.filter(w => !w.startsWith('gc_sync_lock') && !w.startsWith('gc_refresh_fila'))).toEqual([]);

@@ -14,10 +14,33 @@ describe('fila de bloco desatualizado', () => {
   });
   test('reclamar devolve os blocos e zera a fila (nova marcação depois é preservada para o próximo ciclo)', async () => {
     const db = fakeDb(); await F.marcarSujo({ db, evento: 'venda.cadastrada' });
-    expect((await F.reclamarSujos({ db })).sort()).toEqual(['pedidos', 'perfil360', 'vendas']); expect(await F.temSujos({ db })).toBe(false);
-    await F.marcarSujo({ db, evento: 'recebimento.baixado' }); expect(await F.temSujos({ db })).toBe(true); expect(await F.reclamarSujos({ db })).toEqual(['financeiro']);
+    expect((await F.reclamarSujos({ db, execucao: 'a' })).sort()).toEqual(['pedidos', 'perfil360', 'vendas']); expect(await F.temSujos({ db })).toBe(false);
+    await F.confirmarPublicados({ db, blocos: ['pedidos', 'perfil360', 'vendas'], execucao: 'a' });
+    await F.marcarSujo({ db, evento: 'recebimento.baixado' }); expect(await F.temSujos({ db })).toBe(true); expect(await F.reclamarSujos({ db, execucao: 'b' })).toEqual(['financeiro']);
   });
   test('fila vazia ⇒ nada a fazer', async () => { const db = fakeDb(); expect(await F.reclamarSujos({ db })).toEqual([]); });
+});
+
+describe('a pendência só sai depois da publicação', () => {
+  test('publicação falhou (ou a execução caiu): o bloco continua pendente e entra na próxima; sem disparo em laço', async () => {
+    const db = fakeDb(); await F.marcarSujo({ db, evento: 'venda.cadastrada', agoraMs: 100 });
+    await F.reclamarSujos({ db, execucao: 'e1', agoraMs: 200 });
+    await F.confirmarPublicados({ db, blocos: ['vendas', 'perfil360'], execucao: 'e1' });          // pedidos não publicou
+    expect(Object.keys(db.st.d.emAndamento)).toEqual(['pedidos']); expect(db.st.d.emAndamento.pedidos.sujoDesdeMs).toBe(100);
+    expect(await F.temSujos({ db })).toBe(false);                                                   // falha sozinha não dispara outra execução
+    await F.marcarSujo({ db, evento: 'recebimento.baixado', agoraMs: 300 });
+    expect(db.st.d.emAndamento.pedidos).toBeDefined();                                              // aviso novo não apaga a pendência
+    expect((await F.reclamarSujos({ db, execucao: 'e2' })).sort()).toEqual(['financeiro', 'pedidos']);   // execução e2 cai sem confirmar
+    expect((await F.reclamarSujos({ db, execucao: 'e3' })).sort()).toEqual(['financeiro', 'pedidos']);
+  });
+  test('aviso que chega DURANTE a execução é preservado; execução antiga não baixa pendência de outra', async () => {
+    const db = fakeDb(); await F.marcarSujo({ db, evento: 'recebimento.baixado' });
+    await F.reclamarSujos({ db, execucao: 'e1' }); await F.marcarSujo({ db, evento: 'pagamento.baixado' });
+    await F.confirmarPublicados({ db, blocos: ['financeiro'], execucao: 'e1' });
+    expect(db.st.d.emAndamento).toEqual({}); expect(db.st.d.blocos.financeiro.eventos).toBe(1); expect(await F.temSujos({ db })).toBe(true);
+    await F.reclamarSujos({ db, execucao: 'e2' }); await F.confirmarPublicados({ db, blocos: ['financeiro'], execucao: 'e1' });
+    expect(Object.keys(db.st.d.emAndamento)).toEqual(['financeiro']);
+  });
 });
 
 describe('efeito operacional só no modo ATIVO', () => {

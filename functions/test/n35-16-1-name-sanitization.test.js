@@ -32,12 +32,12 @@ describe('CPF', () => {
 describe('CNPJ', () => {
   test.each([
     ['nome + CNPJ formatado', `AUTO PECAS LTDA ${CNPJ_F}`, 'AUTO PECAS LTDA'],
-    ['CNPJ formatado + nome', `${CNPJ_F} JORGE LUIZ MUNIZ`, 'JORGE LUIZ MUNIZ'],
+    ['CNPJ formatado + nome', `${CNPJ_F} CLIENTE FICTICIO DE`, 'CLIENTE FICTICIO DE'],
     ['nome + CNPJ sem máscara', `OFICINA BOA ${CNPJ_R}`, 'OFICINA BOA'],
     ['CNPJ sem máscara + nome', `${CNPJ_R} OFICINA BOA`, 'OFICINA BOA'],
     ['CNPJ entre parênteses', `SOM & CIA (${CNPJ_F})`, 'SOM & CIA'],
     ['CNPJ após hífen', `SOM & CIA - ${CNPJ_R}`, 'SOM & CIA'],
-    ['raiz de CNPJ de MEI no início', `${CNPJ_RAIZ} JORGE LUIZ MUNIZ PEREIRA JUNIOR`, 'JORGE LUIZ MUNIZ PEREIRA JUNIOR'],
+    ['raiz de CNPJ de MEI no início', `${CNPJ_RAIZ} OUTRO CLIENTE FICTICIO DE TESTE`, 'OUTRO CLIENTE FICTICIO DE TESTE'],
     ['CNPJ com rótulo', `LOJA X CNPJ nº ${CNPJ_F}`, 'LOJA X'],
   ])('%s', (_, entrada, esperado) => {
     expect(san(entrada)).toBe(esperado);
@@ -136,7 +136,7 @@ describe('Adaptador GestãoClick', () => {
 });
 
 describe('Worklist V2', () => {
-  const FAB = 'UGXinD3KVXX0ouYEfamBWjizC5C2';
+  const VD2 = 'UidSinteticoC000000000000000';
   function dados(n = 15) {
     const vendas = [];
     for (let i = 0; i < n; i++) {
@@ -146,14 +146,14 @@ describe('Worklist V2', () => {
         vendas.push({ id: gc + 'v' + k, cliente_id: gc, data: d, nome_situacao: 'Concretizada', valor_total: '300', cadastrado_em: d + ' 10:00:00', vendedor_id: '1', produtos: [] });
       }
     }
-    return { perfis: [], clientes: [], vendas, estados: new Map(), users: new Map([[FAB, { ativo: true, role: 'funcionario' }]]), sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]) };
+    return { perfis: [], clientes: [], vendas, estados: new Map(), users: new Map([[VD2, { ativo: true, role: 'funcionario' }]]), sistema: new Map([[VD2, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]) };
   }
   const gerar = lookupNome => G.executarGeracaoWorklist({ db: null, now: new Date('2026-09-25T09:00:00.000Z'), mode: 'DRY_RUN', logger: { log() {} }, lookupNome, dados: dados() });
-  const mesmaSemNome = r => r.doc.vendedores[FAB].novas.map(x => x.opportunityInstanceId);
+  const mesmaSemNome = r => r.doc.vendedores[VD2].novas.map(x => x.opportunityInstanceId);
 
   test('WL-01 5 de 10 com documento → 10 nomes limpos, mesma seleção, contadores corretos', async () => {
     const r = await gerar(async gc => (Number(gc) % 2 ? `CLIENTE ${gc} ${CPF_F}` : `CLIENTE ${gc}`));
-    const novas = r.doc.vendedores[FAB].novas;
+    const novas = r.doc.vendedores[VD2].novas;
     expect(novas).toHaveLength(10);
     expect(novas.filter(x => contemDocumento(x.nomeCliente))).toHaveLength(0);
     expect(Object.values(r.doc.atribuicoes).filter(a => contemDocumento(a.nomeCliente))).toHaveLength(0);
@@ -167,7 +167,7 @@ describe('Worklist V2', () => {
   test('WL-02 nome que vira vazio → candidato substituído pelo próximo elegível', async () => {
     const vazios = new Set();
     const r = await gerar(async gc => { if (Number(gc) % 3 === 0) { vazios.add(gc); return CPF_F; } return `CLIENTE ${gc}`; });
-    const novas = r.doc.vendedores[FAB].novas;
+    const novas = r.doc.vendedores[VD2].novas;
     expect(novas).toHaveLength(10);
     expect(novas.every(x => /^CLIENTE \d+$/.test(x.nomeCliente))).toBe(true);
     expect(novas.some(x => vazios.has(x.commercialEntityId.split(':')[1]))).toBe(false);

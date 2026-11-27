@@ -331,27 +331,27 @@ describe('Teste 5 — registrarPonto E2E: sequência de 5 batidas', () => {
 // ═════════════════════════════════════════════════════════════════════════════
 
 describe('Teste 6 — Campos gravados no documento', () => {
-  const FUNC_CAM = 'func-campos-e2e';
-  const UID_CAM  = 'uid-campos-e2e';
+  const FUNC_RV4 = 'func-campos-e2e';
+  const UID_RV4  = 'uid-campos-e2e';
 
   beforeAll(async () => {
-    await db.collection('users').doc(UID_CAM).set({
-      role: 'funcionario', ativo: true, funcionarioId: FUNC_CAM, nome: 'Campos E2E',
+    await db.collection('users').doc(UID_RV4).set({
+      role: 'funcionario', ativo: true, funcionarioId: FUNC_RV4, nome: 'Campos E2E',
     });
-    await db.collection('funcionarios').doc(FUNC_CAM).set({
+    await db.collection('funcionarios').doc(FUNC_RV4).set({
       nome: 'Campos E2E', modalidade: 'PRESENCIAL',
     });
-    await limparRegistrosFunc(FUNC_CAM);
+    await limparRegistrosFunc(FUNC_RV4);
   });
 
   afterAll(async () => {
-    await limparRegistrosFunc(FUNC_CAM);
-    await db.collection('users').doc(UID_CAM).delete().catch(() => {});
-    await db.collection('funcionarios').doc(FUNC_CAM).delete().catch(() => {});
+    await limparRegistrosFunc(FUNC_RV4);
+    await db.collection('users').doc(UID_RV4).delete().catch(() => {});
+    await db.collection('funcionarios').doc(FUNC_RV4).delete().catch(() => {});
   });
 
   test('6 — documento contém todos os campos e classificação SERVIDOR/AUDITORIA está correta', async () => {
-    const r = await _registrarPontoHandler(req(UID_CAM, {
+    const r = await _registrarPontoHandler(req(UID_RV4, {
       ...GPS_DENTRO,
       horaCliente: '08:00:00',
       facialScore: 87,
@@ -362,8 +362,8 @@ describe('Teste 6 — Campos gravados no documento', () => {
     const d = snap.data();
 
     // ── CAMPOS SERVIDOR ────────────────────────────────────────────────────
-    expect(d.funcId).toBe(FUNC_CAM);                          // SERVIDOR
-    expect(d.authUid).toBe(UID_CAM);                          // SERVIDOR
+    expect(d.funcId).toBe(FUNC_RV4);                          // SERVIDOR
+    expect(d.authUid).toBe(UID_RV4);                          // SERVIDOR
     expect(d.funcNome).toBe('Campos E2E');                    // SERVIDOR
     expect(d.data).toMatch(/^\d{4}-\d{2}-\d{2}$/);           // SERVIDOR
     expect(d.hora).toMatch(/^\d{2}:\d{2}:\d{2}$/);           // SERVIDOR

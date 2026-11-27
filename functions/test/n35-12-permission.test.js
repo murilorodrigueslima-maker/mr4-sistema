@@ -4,7 +4,7 @@
  *
  * Cobre os 5 cenários exigidos:
  *   PA-01: gestor autorizado                       → ALLOW
- *   PA-02: funcionario + módulo fila-comercial     → ALLOW (Camila)
+ *   PA-02: funcionario + módulo fila-comercial     → ALLOW (Revisor4)
  *   PA-03: funcionario SEM módulo fila-comercial   → DENY
  *   PA-04: funcionario bloqueado/inativo           → DENY
  *   PA-05: não autenticado                         → DENY

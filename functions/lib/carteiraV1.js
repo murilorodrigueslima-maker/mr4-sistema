@@ -154,17 +154,18 @@ function previaMigracao({ clientes, mr4PorGc, uidPorGc, participantesGc, referen
 
 /**
  * M5 (prévia) para clientes de vendedor legado: ativos (< 120 d) → candidato só quando o relacionamento ATUAL é inequívoco
- * (última venda = predominante = Fabiana|Ademir); relacionamento ainda com o legado → KEEP; misto → MANUAL_REVIEW;
+ * (última venda = predominante = um dos candidatos configurados); relacionamento ainda com o legado → KEEP; misto → MANUAL_REVIEW;
  * inativos (>= 120 d) → REACTIVATION_OPEN (mantêm a carteira/origem histórica). Não executa nada.
  */
-function classificarM5(item, { gcFabiana, gcAdemir, referenceDate }) {
+function classificarM5(item, { candidatos = {}, referenceDate }) {
   const r = calcularReativacao({ ultimaCompraEm: item.ultimaData, referenceDate });
   if (r.reativacaoAberta) return 'REACTIVATION_OPEN';
   if (r.estado !== 'FECHADA') return 'MANUAL_REVIEW';
   const u = item.lastSaleSeller, p = item.predominantSeller;
   if (u === item.legacySeller && p === item.legacySeller) return 'KEEP';
-  if (u && u === p && u === gcFabiana) return 'CANDIDATE_FABIANA';
-  if (u && u === p && u === gcAdemir) return 'CANDIDATE_ADEMIR';
+  // candidatos: { CHAVE: idDoVendedor } vindo de configuração protegida (nenhum nome no código)
+  const achado = u && u === p && Object.keys(candidatos).find(k => candidatos[k] === u);
+  if (achado) return 'CANDIDATE_' + achado.toUpperCase();
   return 'MANUAL_REVIEW';
 }
 

@@ -1,19 +1,29 @@
 #!/usr/bin/env node
 'use strict';
-// Grava painel_mapeamento/vendedores (vendedor_id → chave). Auditado contra 4.718 vendas concretizadas jan–out/2026 (12/10/2026).
+// Grava painel_mapeamento/vendedores (vendedor_id → chave) a partir de um arquivo PRIVADO, fora do repositório.
 // NÃO toca painel_config (metas). Dry-run por padrão; --aplicar grava (create-only: recusa sobrescrever).
-const MAPA = {
-  vendedores: {
-    '948278': { chave: 'ademir', nomeConfig: 'Ademir', nomeGC: 'ADEMIR LOPES FURTADO' },
-    '1080453': { chave: 'fabiana', nomeConfig: 'Fabiana', nomeGC: 'fabiana andrade da silva' },
-  },
-  outrosConhecidos: { '559684': 'MURILO RODRIGUES LIMA', '791775': 'Swyanne Kethlyn', '1392140': 'Camila Silveira Silva' },
-  regra: 'vendedor_id mapeado ⇒ chave; qualquer outro id (ou sem id) ⇒ Outros. Nunca por nome.',
-  auditadoEm: '2026-10-12', fonte: 'GestaoClick /vendas situacao_id=3952593 (jan–out/2026)',
-};
-module.exports = { MAPA };
+//   node scripts/painel_mapeamento.js --arquivo <mapeamento.json> [--aplicar]
+// Formato: { "vendedores": { "<vendedor_id>": { "chave": "vend1", "nomeConfig": "Vend1", "ordem": 1 } },
+//            "outrosConhecidos": { "<vendedor_id>": "OUTRO_RESPONSAVEL" }, "auditadoEm": "AAAA-MM-DD", "fonte": "...", "regra": "..." }
+const { chavesDoMapa } = require('../lib/painelMetricas');
+function validar(mapa) {
+  const erros = [];
+  const ids = Object.keys((mapa && mapa.vendedores) || {});
+  if (!ids.length) erros.push('SEM_VENDEDORES');
+  if (ids.some(id => !/^\d+$/.test(id))) erros.push('VENDEDOR_ID_INVALIDO');
+  if (ids.some(id => !mapa.vendedores[id].chave || !mapa.vendedores[id].nomeConfig)) erros.push('ENTRADA_INCOMPLETA');
+  if (ids.length && chavesDoMapa(mapa.vendedores).length === 0) erros.push('SEM_CHAVES');
+  return erros;
+}
+module.exports = { validar };
 if (require.main === module) {
-  console.log(JSON.stringify({ modo: process.argv.includes('--aplicar') ? 'APLICAR' : 'DRY-RUN', mapa: MAPA }, null, 1));
+  const i = process.argv.indexOf('--arquivo'); const arquivo = i >= 0 ? process.argv[i + 1] : null;
+  if (!arquivo) { console.log(JSON.stringify({ ok: false, erro: 'USO: --arquivo <mapeamento.json> [--aplicar]' })); process.exit(2); }
+  const MAPA = JSON.parse(require('fs').readFileSync(require('path').resolve(arquivo), 'utf8'));
+  const erros = validar(MAPA);
+  // não imprime o conteúdo (dados de pessoas): só contagens
+  console.log(JSON.stringify({ modo: process.argv.includes('--aplicar') ? 'APLICAR' : 'DRY-RUN', vendedores: Object.keys(MAPA.vendedores || {}).length, outrosConhecidos: Object.keys(MAPA.outrosConhecidos || {}).length, erros }));
+  if (erros.length) process.exit(2);
   if (process.argv.includes('--aplicar')) {
     const admin = require('firebase-admin'); admin.initializeApp({ projectId: 'mr4-ponto', credential: admin.credential.applicationDefault() }); const db = admin.firestore();
     const ref = db.doc('painel_mapeamento/vendedores');

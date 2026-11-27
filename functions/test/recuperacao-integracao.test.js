@@ -11,7 +11,7 @@ const PREVIO = () => ({
 function rodar(estado, now, env = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rec-')), st = path.join(dir, 's.json'), out = path.join(dir, 'o.json'); fs.writeFileSync(st, JSON.stringify(estado));
   const r = spawnSync(process.execPath, ['-r', HARNESS, path.join(ROOT, 'scripts', 'sync-dados.js')], { cwd: ROOT, timeout: 120000, encoding: 'utf8',
-    env: { ...process.env, GC_ACCESS_TOKEN: 'tok-a-FAKE', GC_SECRET_ACCESS_TOKEN: 'tok-s-FAKE', HARNESS_MODE: 'vendas_queda', HARNESS_STATE: st, HARNESS_OUT: out, HARNESS_NOW: now, GOOGLE_APPLICATION_CREDENTIALS: '', FIREBASE_SERVICE_ACCOUNT: '', GITHUB_ACTOR: 'murilo', GITHUB_RUN_ID: '123456', ...env } });
+    env: { ...process.env, GC_ACCESS_TOKEN: 'tok-a-FAKE', GC_SECRET_ACCESS_TOKEN: 'tok-s-FAKE', HARNESS_MODE: 'vendas_queda', HARNESS_STATE: st, HARNESS_OUT: out, HARNESS_NOW: now, GOOGLE_APPLICATION_CREDENTIALS: '', FIREBASE_SERVICE_ACCOUNT: '', GITHUB_ACTOR: 'titular', GITHUB_RUN_ID: '123456', ...env } });
   return { ...JSON.parse(fs.readFileSync(out, 'utf8')), exitCode: r.status, log: String(r.stdout || '') + String(r.stderr || '') };
 }
 const t = h => new Date(Date.parse('2026-11-25T09:00:00-03:00') + h * 3600000).toISOString();

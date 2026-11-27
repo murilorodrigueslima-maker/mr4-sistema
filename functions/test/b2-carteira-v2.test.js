@@ -7,9 +7,9 @@ const db = admin.firestore(); const { FieldValue } = admin.firestore;
 const C2 = require('../lib/carteiraV2'); const H2 = require('../lib/carteiraHistoricoV2'); const ID = require('../lib/identidadeConflitos'); const OWN = require('../lib/carteiraOwnership');
 jest.setTimeout(240000);
 
-const ADE = 'b2-ade', FAB = 'b2-fab', CAM = 'b2-cam', GES = 'b2-ges', VEND = 'b2-vend', BLOQ = 'b2-bloq';
+const VD1 = 'b2-vd1', VD2 = 'b2-vd2', RV4 = 'b2-rv4', GES = 'b2-ges', VEND = 'b2-vend', BLOQ = 'b2-bloq';
 const T0 = '2026-09-26T13:59:45.769Z';
-const v1 = (gc, owner) => ({ schemaVersion: 'carteira-v1', portfolioId: 'GC:' + gc, ownerUid: owner, ownerDesde: T0, origemComercialUid: owner, origemComercialGestaoClickId: owner === ADE ? '111' : '222', criadoEm: T0, atualizadoEm: T0, versao: 1 });
+const v1 = (gc, owner) => ({ schemaVersion: 'carteira-v1', portfolioId: 'GC:' + gc, ownerUid: owner, ownerDesde: T0, origemComercialUid: owner, origemComercialGestaoClickId: owner === VD1 ? '111' : '222', criadoEm: T0, atualizadoEm: T0, versao: 1 });
 const ev1 = (gc, owner) => ({ ownerNovoUid: owner, portfolioId: 'GC:' + gc, operadorUid: GES, versao: 1, criadoEm: T0, motivo: 'Migração N35.26 — Onda 1', tipoEvento: 'CARTEIRA_CRIADA', identidadeUsada: 'GC_NATIVE:' + gc, chaveIdempotencia: 'MIGRACAO:N3526_ONDA1:GC:' + gc, ownerAnteriorUid: null });
 const NA = 25, NF = 15, BASE = 9000000;
 const idsA = Array.from({ length: NA }, (_, i) => String(BASE + 1 + i)), idsF = Array.from({ length: NF }, (_, i) => String(BASE + 100 + i));
@@ -24,12 +24,12 @@ beforeAll(async () => {
   assert_emulator();
   tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'b2-'));
   await limpar(['carteira_comercial', 'carteira_comercial_historico', 'clientes', 'vendas_gc', 'users', 'sistema_usuarios', 'carteira_comercial_config', 'carteira_comercial_decisoes_sombra', 'audit_log']);
-  for (const [uid, role, mods, nome] of [[ADE, 'funcionario', ['fila-comercial-operar'], 'Ademir B2'], [FAB, 'funcionario', ['fila-comercial-operar'], 'Fabiana B2'], [CAM, 'funcionario', ['fila-comercial-gestao'], 'Camila B2'],
+  for (const [uid, role, mods, nome] of [[VD1, 'funcionario', ['fila-comercial-operar'], 'Vend1 B2'], [VD2, 'funcionario', ['fila-comercial-operar'], 'Vend2 B2'], [RV4, 'funcionario', ['fila-comercial-gestao'], 'Revisor4 B2'],
     [GES, 'gestor', [], 'Gestor B2'], [VEND, 'funcionario', ['clientes'], 'Vend B2'], [BLOQ, 'funcionario', ['fila-comercial-operar'], 'Bloq B2']]) {
     await db.doc('users/' + uid).set({ role, ativo: true }); await db.doc('sistema_usuarios/' + uid).set({ nome, modulos: mods, admin: false, ...(uid === BLOQ ? { bloqueado: true } : {}) });
   }
-  for (const gc of idsA) { await db.doc('carteira_comercial/GC:' + gc).set(v1(gc, ADE)); await db.doc('carteira_comercial_historico/MIGRACAO_N3526_ONDA1_GC_' + gc).set(ev1(gc, ADE)); }
-  for (const gc of idsF) { await db.doc('carteira_comercial/GC:' + gc).set(v1(gc, FAB)); await db.doc('carteira_comercial_historico/MIGRACAO_N3526_ONDA1_GC_' + gc).set(ev1(gc, FAB)); }
+  for (const gc of idsA) { await db.doc('carteira_comercial/GC:' + gc).set(v1(gc, VD1)); await db.doc('carteira_comercial_historico/MIGRACAO_N3526_ONDA1_GC_' + gc).set(ev1(gc, VD1)); }
+  for (const gc of idsF) { await db.doc('carteira_comercial/GC:' + gc).set(v1(gc, VD2)); await db.doc('carteira_comercial_historico/MIGRACAO_N3526_ONDA1_GC_' + gc).set(ev1(gc, VD2)); }
   for (let i = 0; i < 6; i++) await db.doc('clientes/crm' + i).set({ nome: 'CRM ' + i, gestaoClickId: idsA[i] });
   await db.doc('carteira_comercial_config/regra').set({ modo: 'SOMBRA' });
   for (let i = 0; i < 5; i++) await db.doc('carteira_comercial_decisoes_sombra/d' + i).set({ decisao: 'MANTER' });
@@ -52,43 +52,43 @@ afterAll(async () => { await limpar(['carteira_comercial', 'carteira_comercial_h
 describe('B2 — schema v2 (puro)', () => {
   const ctx = { eventoInicialId: 'EV1', clienteMr4Id: 'crm1', conflito: null, loteId: 'L', agoraIso: '2026-10-07T12:00:00.000Z' };
   test('backfill é aditivo: ownership idêntico, só campos aprovados, documento v2 válido', () => {
-    const a = v1('123', ADE); const { patch, depois } = C2.montarPatchBackfillV2(a, ctx);
+    const a = v1('123', VD1); const { patch, depois } = C2.montarPatchBackfillV2(a, ctx);
     expect(C2.linhaOwnership(a)).toBe(C2.linhaOwnership(depois));
     expect(Object.keys(patch).sort()).toEqual([...C2.CAMPOS_ALTERADOS_BACKFILL].sort());
-    expect(depois).toMatchObject({ schemaVersion: 'carteira-v2', versao: 2, status: 'ATIVA', origem: 'MIGRACAO_ONDA1_N3526', cicloAncoraEm: null, clienteMr4Id: 'crm1', ultimoEventoId: 'EV1', ownerUid: ADE, ownerDesde: T0 });
+    expect(depois).toMatchObject({ schemaVersion: 'carteira-v2', versao: 2, status: 'ATIVA', origem: 'MIGRACAO_ONDA1_N3526', cicloAncoraEm: null, clienteMr4Id: 'crm1', ultimoEventoId: 'EV1', ownerUid: VD1, ownerDesde: T0 });
     expect(C2.validarDocCarteiraV2(depois)).toBeNull();
   });
   test('recusa: já v2, sem owner (não cria owner), sem evento inicial (não fabrica evento), versão inesperada', () => {
-    expect(() => C2.montarPatchBackfillV2({ ...v1('1', ADE), schemaVersion: 'carteira-v2' }, ctx)).toThrow(/carteira-v1/);
+    expect(() => C2.montarPatchBackfillV2({ ...v1('1', VD1), schemaVersion: 'carteira-v2' }, ctx)).toThrow(/carteira-v1/);
     expect(() => C2.montarPatchBackfillV2({ ...v1('1', null) }, ctx)).toThrow(/sem owner/);
-    expect(() => C2.montarPatchBackfillV2(v1('1', ADE), { ...ctx, eventoInicialId: null })).toThrow(/evento inicial/);
-    expect(() => C2.montarPatchBackfillV2({ ...v1('1', ADE), versao: 3 }, ctx)).toThrow(/versao/);
+    expect(() => C2.montarPatchBackfillV2(v1('1', VD1), { ...ctx, eventoInicialId: null })).toThrow(/evento inicial/);
+    expect(() => C2.montarPatchBackfillV2({ ...v1('1', VD1), versao: 3 }, ctx)).toThrow(/versao/);
   });
   test('conflito marca EM_REVISAO sem tocar o owner; validador rejeita PII e campos fora do schema', () => {
-    const conf = { grupoId: 'CG-0123456789ab', tipos: ['DOC_IGUAL'], forca: 'FORTE', relacionados: ['GC:2'], donosDiferentes: true, revisao: 'PENDENTE', revisores: ['PROPRIETARIO', 'CAMILA'], detectadoEm: null, origemDeteccao: 'B2_BACKFILL' };
-    const { depois } = C2.montarPatchBackfillV2(v1('1', FAB), { ...ctx, conflito: conf });
-    expect(depois.status).toBe('EM_REVISAO'); expect(depois.ownerUid).toBe(FAB);
+    const conf = { grupoId: 'CG-0123456789ab', tipos: ['DOC_IGUAL'], forca: 'FORTE', relacionados: ['GC:2'], donosDiferentes: true, revisao: 'PENDENTE', revisores: ['PROPRIETARIO', C2.PAPEL_REVISOR_GESTAO], detectadoEm: null, origemDeteccao: 'B2_BACKFILL' };
+    const { depois } = C2.montarPatchBackfillV2(v1('1', VD2), { ...ctx, conflito: conf });
+    expect(depois.status).toBe('EM_REVISAO'); expect(depois.ownerUid).toBe(VD2);
     expect(C2.validarDocCarteiraV2({ ...depois, telefone: '85' })).toMatch(/CAMPOS_NAO_PERMITIDOS/);
     expect(C2.validarDocCarteiraV2({ ...depois, status: 'EM_REVISAO', conflito: null })).toBe('REVISAO_SEM_CONFLITO');
     expect(C2.validarDocCarteiraV2({ ...depois, ownerUid: null })).toBe('OWNER_X_STATUS');
   });
   test('leitura compatível v1/v2 e histórico v1/v2', () => {
-    expect(C2.lerCarteira(v1('1', ADE))).toMatchObject({ ownerUid: ADE, status: 'ATIVA', schema: 'carteira-v1' });
-    const h1 = H2.normalizarEvento(ev1('1', ADE)); expect(h1).toMatchObject({ schema: 'historico-v1', tipoEvento: 'CARTEIRA_CRIADA', ownerNovoUid: ADE, origemOperacao: 'MIGRACAO', versaoDepois: 1 });
-    const e2 = H2.montarEventoHistoricoV2({ portfolioId: 'GC:1', tipoEvento: 'RENOVACAO_CICLO', ownerAnteriorUid: ADE, ownerNovoUid: ADE, motivo: 'm', operadorUid: GES, atorTipo: 'USER', origemOperacao: 'CALLABLE', criadoEm: T0, versaoCarteiraAntes: 2, versaoCarteiraDepois: 3, seq: 3, chaveIdempotencia: 'k' });
+    expect(C2.lerCarteira(v1('1', VD1))).toMatchObject({ ownerUid: VD1, status: 'ATIVA', schema: 'carteira-v1' });
+    const h1 = H2.normalizarEvento(ev1('1', VD1)); expect(h1).toMatchObject({ schema: 'historico-v1', tipoEvento: 'CARTEIRA_CRIADA', ownerNovoUid: VD1, origemOperacao: 'MIGRACAO', versaoDepois: 1 });
+    const e2 = H2.montarEventoHistoricoV2({ portfolioId: 'GC:1', tipoEvento: 'RENOVACAO_CICLO', ownerAnteriorUid: VD1, ownerNovoUid: VD1, motivo: 'm', operadorUid: GES, atorTipo: 'USER', origemOperacao: 'CALLABLE', criadoEm: T0, versaoCarteiraAntes: 2, versaoCarteiraDepois: 3, seq: 3, chaveIdempotencia: 'k' });
     expect(H2.normalizarEvento(e2)).toMatchObject({ schema: 'historico-v2', versaoAntes: 2, versaoDepois: 3, seq: 3 });
-    expect(() => H2.montarEventoHistoricoV2({ ...e2, tipoEvento: 'CONFLITO_RESOLVIDO', ownerNovoUid: FAB })).toThrow(/não pode alterar owner/);
+    expect(() => H2.montarEventoHistoricoV2({ ...e2, tipoEvento: 'CONFLITO_RESOLVIDO', ownerNovoUid: VD2 })).toThrow(/não pode alterar owner/);
   });
 });
 
 describe('B2 — conflitos de identidade (puro, sem PII)', () => {
   test('grupos, força, donos diferentes, irmão sem carteira; ninguém recebe owner', () => {
-    const cart = new Map([['GC:1', { ownerUid: ADE }], ['GC:2', { ownerUid: FAB }], ['GC:3', { ownerUid: ADE }]]);
+    const cart = new Map([['GC:1', { ownerUid: VD1 }], ['GC:2', { ownerUid: VD2 }], ['GC:3', { ownerUid: VD1 }]]);
     const cs = [{ id: '1', doc: 'd1', fones: [], email: null }, { id: '2', doc: 'd1', fones: [], email: null }, { id: '3', doc: null, fones: ['f1'], email: null }, { id: '4', doc: null, fones: ['f1'], email: null },
       { id: '5', doc: null, fones: [], email: 'e1' }, { id: '6', doc: null, fones: [], email: 'e1' }, { id: '7', doc: 'x', fones: [], email: null }];
     const r = ID.detectarConflitos(cs, cart, '2026-10-07T00:00:00Z');
     expect(r.resumo).toMatchObject({ grupos: 3, clientes: 6, comCarteiraDeDonosDiferentes: 1, comCarteiraEIrmaoSem: 1, semNenhumaCarteira: 1, carteirasMarcadas: 3 });
-    expect(r.porCarteira.get('GC:1')).toMatchObject({ forca: 'FORTE', donosDiferentes: true, revisao: 'PENDENTE', revisores: ['PROPRIETARIO', 'CAMILA'], relacionados: ['GC:2'] });
+    expect(r.porCarteira.get('GC:1')).toMatchObject({ forca: 'FORTE', donosDiferentes: true, revisao: 'PENDENTE', revisores: ['PROPRIETARIO', C2.PAPEL_REVISOR_GESTAO], relacionados: ['GC:2'] });
     expect(r.porCarteira.get('GC:3').relacionados).toEqual(['GC:4']);                            // irmão sem carteira só referenciado
     expect(r.porCarteira.has('GC:4')).toBe(false); expect(r.porCarteira.has('GC:5')).toBe(false);   // nenhuma carteira criada p/ quem não tem
     for (const g of r.grupos) expect(JSON.stringify(g)).not.toMatch(/ownerUid|vendedor/);
@@ -124,9 +124,9 @@ describe('B2 — script ponta a ponta no emulador (backup → dry-run → execut
     await db.doc('carteira_comercial_config/regra').set({ modo: 'ATIVO' });
     expect(rodar(['--mode=execute', `--backup-dir=${bdir}`, `--expected-signature=${sig}`, `--confirm=${NA + NF}`], { B2_GC_FIXTURE: fixture }).code).toBe(2);
     await db.doc('carteira_comercial_config/regra').set({ modo: 'SOMBRA' });
-    const alvo = 'carteira_comercial/GC:' + idsA[3]; await db.doc(alvo).update({ ownerUid: FAB });
+    const alvo = 'carteira_comercial/GC:' + idsA[3]; await db.doc(alvo).update({ ownerUid: VD2 });
     const r = rodar(['--mode=execute', `--backup-dir=${bdir}`, `--expected-signature=${sig}`, `--confirm=${NA + NF}`], { B2_GC_FIXTURE: fixture }); expect(r.code).toBe(2); expect(r.j.erro).toMatch(/ownership atual difere|alterada após/);
-    await db.doc(alvo).update({ ownerUid: ADE });                                          // restaura o estado do backup (mesmo conteúdo)
+    await db.doc(alvo).update({ ownerUid: VD1 });                                          // restaura o estado do backup (mesmo conteúdo)
     expect(Object.values((await lerCarteiras())).every(d => d.schemaVersion === 'carteira-v1')).toBe(true);
   });
   test('backup precisa refletir o estado atual: após o reparo manual o updateTime mudou → novo backup', async () => {
@@ -141,8 +141,8 @@ describe('B2 — script ponta a ponta no emulador (backup → dry-run → execut
     const depois = await lerCarteiras();
     for (const [k, a] of Object.entries(antes)) { const d = depois[k]; for (const f of C2.CAMPOS_OWNERSHIP) expect(d[f]).toBe(a[f]); expect(d.schemaVersion).toBe('carteira-v2'); expect(d.versao).toBe(2); expect(d.ultimoEventoId).toBe('MIGRACAO_N3526_ONDA1_GC_' + k.slice(3)); }
     // conflito não escolheu owner: os dois lados do grupo 1 mantêm seus donos e ambos EM_REVISAO
-    expect(depois['GC:' + idsA[0]]).toMatchObject({ status: 'EM_REVISAO', ownerUid: ADE, conflito: { donosDiferentes: true, forca: 'FORTE', relacionados: ['GC:' + idsF[0]] } });
-    expect(depois['GC:' + idsF[0]]).toMatchObject({ status: 'EM_REVISAO', ownerUid: FAB });
+    expect(depois['GC:' + idsA[0]]).toMatchObject({ status: 'EM_REVISAO', ownerUid: VD1, conflito: { donosDiferentes: true, forca: 'FORTE', relacionados: ['GC:' + idsF[0]] } });
+    expect(depois['GC:' + idsF[0]]).toMatchObject({ status: 'EM_REVISAO', ownerUid: VD2 });
     expect(depois['GC:' + idsA[1]].conflito.relacionados).toEqual(['GC:' + SEM[0]]);
     expect((await db.doc('carteira_comercial/GC:' + SEM[0]).get()).exists).toBe(false);          // irmão sem carteira: NADA criado
     for (const s of SEM) expect(depois['GC:' + s]).toBeUndefined();                              // clientes sem carteira continuam sem carteira

@@ -1,5 +1,5 @@
 // firestore.rules — MR4 Ponto Digital
-// Versão: 2026-10-07 (S5: users/sistema_usuarios só escrevem por ADMIN REAL; antes 2026-09-24 Camila dual-role ponto)
+// Versão: 2026-10-07 (S5: users/sistema_usuarios só escrevem por ADMIN REAL; antes 2026-09-24 Revisor4 dual-role ponto)
 //
 // ANTES DE PUBLICAR EM PRODUÇÃO:
 //   1. Execute os testes A-T no emulador (functions/test/).
@@ -918,7 +918,7 @@ service cloud.firestore {
     // Conteúdo: já sanitizado por prepararDadosUI() — sem CAMPOS_BLOQUEADOS.
     // BILLING: temModulo() = 2 leituras (users + sistema_usuarios).
 
-    // N35.12S: operar = vendedores (funcionario+operar); gestao = Camila (funcionario+gestao); gestores = isGestor().
+    // N35.12S: operar = vendedores (funcionario+operar); gestao = Revisor4 (funcionario+gestao); gestores = isGestor().
     // S1 (07/10/2026): worklist/worklist_preview contêm TODOS os vendedores → leitura só da gestão. O vendedor recebe a
     // própria worklist por crmConsulta { acao:'fila' } (escopo no servidor). `snapshot` (lista legada, sem dono por vendedor)
     // segue legível pelo vendedor — limitação documentada (DEFERRED_TO_PHASE_B/S4).
@@ -975,7 +975,7 @@ service cloud.firestore {
     // ── audit_log (S7) — trilha de auditoria APPEND-ONLY ───────────────────────
     // Escrita SOMENTE pelas Cloud Functions (Admin SDK, create com id determinístico). Nenhum cliente escreve, altera ou apaga —
     // nem vendedor, nem gestor, nem admin. Correção de erro = novo evento. Sem TTL.
-    // Leitura: role gestor (proprietário) vê tudo; gestão por módulo (Camila) só category=='COMMERCIAL' (a consulta precisa filtrar);
+    // Leitura: role gestor (proprietário) vê tudo; gestão por módulo (Revisor4) só category=='COMMERCIAL' (a consulta precisa filtrar);
     // vendedor/anônimo: nada.
     match /audit_log/{eventoId} {
       allow read:  if isGestor() || (temAcessoModulo('fila-comercial-gestao') && resource.data.category == 'COMMERCIAL');

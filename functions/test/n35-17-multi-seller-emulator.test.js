@@ -13,8 +13,8 @@ const G = require('../lib/worklistGenerator');
 const quiet = { log() {} };
 const NOW = new Date('2026-09-25T09:00:00.000Z');
 // uids de TESTE — nenhum deles existe no código da fila
-const FAB = 'emu-vendedora-1';
-const ADEMIR = 'emu-vendedor-2';
+const VD2 = 'emu-vendedora-1';
+const VEND1 = 'emu-vendedor-2';
 const V3 = 'VENDEDOR_TESTE_03';
 const GESTAO = 'emu-gestao';
 const FC = { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 };
@@ -51,8 +51,8 @@ beforeAll(async () => {
     }
   }
   await b.commit();
-  await setUser(FAB, 'funcionario', ['fila-comercial', 'fila-comercial-operar'], FC);
-  await setUser(ADEMIR, 'funcionario', ['fila-comercial', 'fila-comercial-operar'], null); // tem permissão, sem participação
+  await setUser(VD2, 'funcionario', ['fila-comercial', 'fila-comercial-operar'], FC);
+  await setUser(VEND1, 'funcionario', ['fila-comercial', 'fila-comercial-operar'], null); // tem permissão, sem participação
   await setUser(GESTAO, 'funcionario', ['fila-comercial-gestao'], null);
   await limparWorklist();
 }, 60000);
@@ -61,7 +61,7 @@ afterAll(async () => {
   const b = db.batch();
   for (const id of vendasIds) b.delete(db.doc(`vendas_gc/${id}`));
   await b.commit();
-  for (const uid of [FAB, ADEMIR, V3, GESTAO]) { await db.doc(`users/${uid}`).delete(); await db.doc(`sistema_usuarios/${uid}`).delete(); }
+  for (const uid of [VD2, VEND1, V3, GESTAO]) { await db.doc(`users/${uid}`).delete(); await db.doc(`sistema_usuarios/${uid}`).delete(); }
   await limparWorklist();
 }, 60000);
 
@@ -69,39 +69,39 @@ beforeEach(limparWorklist);
 
 test('EM-01 estado inicial: só a vendedora configurada recebe worklist; operar sem configuração não participa', async () => {
   const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'LIVE', logger: quiet, lookupNome: nome });
-  expect(r.doc.vendedoresAtivos).toEqual([FAB]);
-  expect(novas(r.doc, FAB)).toHaveLength(10);
-  expect(r.doc.vendedores[ADEMIR]).toBeUndefined();
+  expect(r.doc.vendedoresAtivos).toEqual([VD2]);
+  expect(novas(r.doc, VD2)).toHaveLength(10);
+  expect(r.doc.vendedores[VEND1]).toBeUndefined();
   expect(r.doc.vendedores[GESTAO]).toBeUndefined();
 }, 60000);
 
 test('EM-02 ativar o segundo vendedor = só configuração → listas independentes, sem duplicação', async () => {
-  await db.doc(`sistema_usuarios/${ADEMIR}`).update({ filaComercial: FC });
+  await db.doc(`sistema_usuarios/${VEND1}`).update({ filaComercial: FC });
   const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'LIVE', logger: quiet, lookupNome: nome });
-  expect(r.doc.vendedoresAtivos.sort()).toEqual([ADEMIR, FAB].sort());
-  const a = novas(r.doc, FAB), b = novas(r.doc, ADEMIR);
+  expect(r.doc.vendedoresAtivos.sort()).toEqual([VEND1, VD2].sort());
+  const a = novas(r.doc, VD2), b = novas(r.doc, VEND1);
   expect(a).toHaveLength(10); expect(b).toHaveLength(10);
   expect(a.filter(x => b.includes(x))).toHaveLength(0);
-  await db.doc(`sistema_usuarios/${ADEMIR}`).update({ filaComercial: admin.firestore.FieldValue.delete() }); // remove a simulação
+  await db.doc(`sistema_usuarios/${VEND1}`).update({ filaComercial: admin.firestore.FieldValue.delete() }); // remove a simulação
 }, 60000);
 
 test('EM-03 vendedor fictício novo (VENDEDOR_TESTE_03) recebe worklist só por configuração', async () => {
   await setUser(V3, 'funcionario', ['fila-comercial-operar'], { ...FC, limiteNovasPorDia: 4 });
   const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'LIVE', logger: quiet, lookupNome: nome });
   expect(novas(r.doc, V3)).toHaveLength(4);
-  expect(novas(r.doc, FAB)).toHaveLength(10);
-  expect(novas(r.doc, V3).filter(x => novas(r.doc, FAB).includes(x))).toHaveLength(0);
+  expect(novas(r.doc, VD2)).toHaveLength(10);
+  expect(novas(r.doc, V3).filter(x => novas(r.doc, VD2).includes(x))).toHaveLength(0);
   await db.doc(`sistema_usuarios/${V3}`).delete(); await db.doc(`users/${V3}`).delete();
 }, 60000);
 
 test('EM-04 pausar vendedor (recebeNovasOportunidades=false) sem remover acesso → 0 novas', async () => {
-  await db.doc(`sistema_usuarios/${FAB}`).update({ 'filaComercial.recebeNovasOportunidades': false });
+  await db.doc(`sistema_usuarios/${VD2}`).update({ 'filaComercial.recebeNovasOportunidades': false });
   const r = await G.executarGeracaoWorklist({ db, now: NOW, mode: 'LIVE', logger: quiet, lookupNome: nome });
-  expect(r.doc.vendedoresAtivos).toEqual([FAB]);
-  expect(novas(r.doc, FAB)).toHaveLength(0);
-  const sys = (await db.doc(`sistema_usuarios/${FAB}`).get()).data();
+  expect(r.doc.vendedoresAtivos).toEqual([VD2]);
+  expect(novas(r.doc, VD2)).toHaveLength(0);
+  const sys = (await db.doc(`sistema_usuarios/${VD2}`).get()).data();
   expect(sys.modulos).toContain('fila-comercial-operar');
-  await db.doc(`sistema_usuarios/${FAB}`).update({ 'filaComercial.recebeNovasOportunidades': true });
+  await db.doc(`sistema_usuarios/${VD2}`).update({ 'filaComercial.recebeNovasOportunidades': true });
 }, 60000);
 
 test('MV-12 duas gerações LIVE concorrentes → uma grava, a outra desiste; documento único e consistente', async () => {
@@ -111,7 +111,7 @@ test('MV-12 duas gerações LIVE concorrentes → uma grava, a outra desiste; do
   ]);
   expect([r1.status, r2.status].sort()).toEqual(['GERADA', 'JA_GERADA_HOJE']);
   const doc = (await db.doc('fila_comercial/worklist').get()).data();
-  expect(novas(doc, FAB)).toHaveLength(10);
+  expect(novas(doc, VD2)).toHaveLength(10);
   expect(new Set(Object.keys(doc.atribuicoes)).size).toBe(Object.keys(doc.atribuicoes).length);
 }, 60000);
 

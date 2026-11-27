@@ -6,8 +6,8 @@ const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializ
 const db = admin.firestore(); const { FieldValue } = admin.firestore;
 const R = require('../lib/reativacao120'); const OPS = require('../lib/reativacaoOps'); const CT = require('../lib/contatoReativacao'); const GC = require('../lib/contatoGc');
 jest.setTimeout(120000);
-const ADE = 'tel-ade', FAB = 'tel-fab', CAM = 'tel-cam', GES = 'tel-ges', SEM = 'tel-sem', BLOQ = 'tel-bloq', HOJE = '2026-10-08', T0 = '2026-09-26T13:59:45.769Z', dia = n => R.somarDias(HOJE, -n);
-const NUM_ADE = '85999912345', NUM_FAB = '85988776655';                                                                          // números sintéticos de teste
+const VD1 = 'tel-vd1', VD2 = 'tel-vd2', RV4 = 'tel-rv4', GES = 'tel-ges', SEM = 'tel-sem', BLOQ = 'tel-bloq', HOJE = '2026-10-08', T0 = '2026-09-26T13:59:45.769Z', dia = n => R.somarDias(HOJE, -n);
+const NUM_VD1 = '85999912345', NUM_VD2 = '85988776655';                                                                          // números sintéticos de teste
 const COLS = ['carteira_comercial', 'carteira_reativacoes', 'carteira_comercial_restricoes', 'users', 'sistema_usuarios', 'audit_log', 'carteira_comercial_historico', 'vendas_gc'];
 const limpar = async cols => { for (const c of cols) { const s = await db.collection(c).get(); await Promise.all(s.docs.map(d => d.ref.delete())); } };
 const v2 = (gc, owner) => ({ schemaVersion: 'carteira-v2', portfolioId: 'GC:' + gc, ownerUid: owner, ownerDesde: T0, origemComercialUid: owner, origemComercialGestaoClickId: '1', criadoEm: T0, atualizadoEm: T0, versao: 2, status: 'ATIVA', origem: 'MIGRACAO_ONDA1_N3526', cicloAncoraEm: null, clienteMr4Id: null, conflito: null, ultimoEventoId: 'E' });
@@ -17,9 +17,9 @@ const h = (uid, opp, extra = {}) => CT.contatoReativacaoHandler(req(uid, { oppor
 let O = {};
 beforeAll(async () => {
   await limpar(COLS);
-  for (const [uid, role, mods, ativo, bl] of [[ADE, 'funcionario', ['fila-comercial-operar'], true, false], [FAB, 'funcionario', ['fila-comercial-operar'], true, false], [CAM, 'funcionario', ['fila-comercial-gestao'], true, false], [GES, 'gestor', [], true, false], [SEM, 'funcionario', ['ponto'], true, false], [BLOQ, 'funcionario', ['fila-comercial-operar'], true, true]]) {
+  for (const [uid, role, mods, ativo, bl] of [[VD1, 'funcionario', ['fila-comercial-operar'], true, false], [VD2, 'funcionario', ['fila-comercial-operar'], true, false], [RV4, 'funcionario', ['fila-comercial-gestao'], true, false], [GES, 'gestor', [], true, false], [SEM, 'funcionario', ['ponto'], true, false], [BLOQ, 'funcionario', ['fila-comercial-operar'], true, true]]) {
     await db.doc('users/' + uid).set({ role, ativo }); await db.doc('sistema_usuarios/' + uid).set({ nome: uid, modulos: mods, admin: false, ...(bl ? { bloqueado: true } : {}) }); }
-  for (const [gc, dono, dest] of [[600, FAB, ADE], [601, ADE, FAB], [602, FAB, ADE], [603, FAB, ADE]]) {
+  for (const [gc, dono, dest] of [[600, VD2, VD1], [601, VD1, VD2], [602, VD2, VD1], [603, VD2, VD1]]) {
     await db.doc('carteira_comercial/GC:' + gc).set(v2(String(gc), dono));
     const r = await OPS.liberarReserva(db, FieldValue, { chave: R.chaveReativacao('GC:' + gc, dia(150)), portfolioId: 'GC:' + gc, ciclo: dia(150), tipo: 'CARTEIRA', ownerUid: dono, destinoUid: dest, liberadoEm: HOJE, nomeCliente: 'Cliente ' + gc, agoraIso: HOJE + 'T09:00:00Z' }); O[gc] = r.doc.opportunityInstanceId; }
 });
@@ -27,8 +27,8 @@ afterAll(async () => { await limpar(COLS); });
 
 describe('escolha do contato (puro)', () => {
   test('prioriza celular/WhatsApp; celular antigo de 10 dígitos ganha o 9; sem celular usa o comercial; nada válido ⇒ null', () => {
-    expect(GC.escolherContato({ celular: '(85) 99991-2345', telefone: '(85) 3222-1000' })).toEqual({ tipo: 'CELULAR', numero: NUM_ADE, exibicao: '(85) 99991-2345', whatsapp: '55' + NUM_ADE });
-    expect(GC.escolherContato({ telefone: '(85) 3222-1000', contatos: [{ contato: { celular: '85 98877-6655' } }] })).toMatchObject({ tipo: 'CELULAR', numero: NUM_FAB });
+    expect(GC.escolherContato({ celular: '(85) 99991-2345', telefone: '(85) 3222-1000' })).toEqual({ tipo: 'CELULAR', numero: NUM_VD1, exibicao: '(85) 99991-2345', whatsapp: '55' + NUM_VD1 });
+    expect(GC.escolherContato({ telefone: '(85) 3222-1000', contatos: [{ contato: { celular: '85 98877-6655' } }] })).toMatchObject({ tipo: 'CELULAR', numero: NUM_VD2 });
     expect(GC.escolherContato({ telefone: '(85) 8877-6655' })).toMatchObject({ tipo: 'CELULAR', numero: '85988776655', whatsapp: '5585988776655' });
     expect(GC.escolherContato({ telefone: '(85) 3222-1000' })).toEqual({ tipo: 'COMERCIAL', numero: '8532221000', exibicao: '(85) 3222-1000', whatsapp: null });
     expect(GC.escolherContato({ celular: '123', telefone: '', fax: '00000000000' })).toBeNull(); expect(GC.escolherContato(null)).toBeNull();
@@ -36,41 +36,41 @@ describe('escolha do contato (puro)', () => {
 });
 
 describe('autorização no backend', () => {
-  test('o vendedor reservado recebe o telefone; o outro vendedor NÃO (Ademir × Fabiana), sem consultar o GestãoClick', async () => {
+  test('o vendedor reservado recebe o telefone; o outro vendedor NÃO (Vend1 × Vend2), sem consultar o GestãoClick', async () => {
     chamadas.length = 0;
-    const r = await h(ADE, O[600]); expect(r).toEqual({ bloqueado: false, tipo: 'CELULAR', exibicao: '(85) 99991-2345', whatsapp: '5585999912345' }); expect(chamadas).toEqual(['600']);
-    chamadas.length = 0; expect(await erro(h(FAB, O[600]))).toBe('permission-denied'); expect(await erro(h(ADE, O[601]))).toBe('permission-denied'); expect(chamadas).toEqual([]);          // negado ⇒ lookup nunca chamado
-    expect((await h(FAB, O[601])).whatsapp).toBe('5585988776655');
+    const r = await h(VD1, O[600]); expect(r).toEqual({ bloqueado: false, tipo: 'CELULAR', exibicao: '(85) 99991-2345', whatsapp: '5585999912345' }); expect(chamadas).toEqual(['600']);
+    chamadas.length = 0; expect(await erro(h(VD2, O[600]))).toBe('permission-denied'); expect(await erro(h(VD1, O[601]))).toBe('permission-denied'); expect(chamadas).toEqual([]);          // negado ⇒ lookup nunca chamado
+    expect((await h(VD2, O[601])).whatsapp).toBe('5585988776655');
   });
-  test('gestão (proprietário e Camila) pode; sem módulo, bloqueado, anônimo, oportunidade inexistente e pedido inválido não', async () => {
-    for (const u of [GES, CAM]) expect((await h(u, O[600])).tipo).toBe('CELULAR');
+  test('gestão (proprietário e Revisor4) pode; sem módulo, bloqueado, anônimo, oportunidade inexistente e pedido inválido não', async () => {
+    for (const u of [GES, RV4]) expect((await h(u, O[600])).tipo).toBe('CELULAR');
     for (const u of [SEM, BLOQ]) expect(await erro(h(u, O[600]))).toBe('permission-denied'); expect(await erro(h(null, O[600]))).toBe('unauthenticated');
-    expect(await erro(h(ADE, 'abcdefabcdefabcd'))).toBe('permission-denied'); expect(await erro(h(ADE, 'xyz'))).toBe('invalid-argument');
-    expect(await erro(CT.contatoReativacaoHandler(req(ADE, { opportunityInstanceId: O[600], telefone: '1' }), { db, lookup }))).toBe('invalid-argument');
+    expect(await erro(h(VD1, 'abcdefabcdefabcd'))).toBe('permission-denied'); expect(await erro(h(VD1, 'xyz'))).toBe('invalid-argument');
+    expect(await erro(CT.contatoReativacaoHandler(req(VD1, { opportunityInstanceId: O[600], telefone: '1' }), { db, lookup }))).toBe('invalid-argument');
   });
   test('reserva vencida/encerrada deixa de liberar o contato ao vendedor (a gestão continua podendo consultar reservas ativas)', async () => {
-    expect(await erro(CT.contatoReativacaoHandler(req(ADE, { opportunityInstanceId: O[600] }), { db, lookup, now: () => new Date('2026-10-20T13:00:00Z') }))).toBe('permission-denied');
-    const ref = (await db.collection('carteira_reativacoes').where('portfolioId', '==', 'GC:602').get()).docs[0].ref; await ref.update({ estado: 'ENCERRADA' }); expect(await erro(h(ADE, O[602]))).toBe('permission-denied'); await ref.update({ estado: 'RESERVADA' });
+    expect(await erro(CT.contatoReativacaoHandler(req(VD1, { opportunityInstanceId: O[600] }), { db, lookup, now: () => new Date('2026-10-20T13:00:00Z') }))).toBe('permission-denied');
+    const ref = (await db.collection('carteira_reativacoes').where('portfolioId', '==', 'GC:602').get()).docs[0].ref; await ref.update({ estado: 'ENCERRADA' }); expect(await erro(h(VD1, O[602]))).toBe('permission-denied'); await ref.update({ estado: 'RESERVADA' });
   });
   test('NÃO CONTATAR: nada é retornado nem consultado; sem telefone cadastrado e falha do GestãoClick tratados', async () => {
-    await db.doc('carteira_comercial_restricoes/GC:602').set({ naoContatar: true }); chamadas.length = 0; expect(await h(ADE, O[602])).toEqual({ bloqueado: true, motivo: 'NAO_CONTATAR' }); expect(chamadas).toEqual([]); await db.doc('carteira_comercial_restricoes/GC:602').delete();
-    expect((await h(ADE, O[603])).tipo).toBe('SEM_TELEFONE'); expect((await h(ADE, O[602])).tipo).toBe('COMERCIAL');
+    await db.doc('carteira_comercial_restricoes/GC:602').set({ naoContatar: true }); chamadas.length = 0; expect(await h(VD1, O[602])).toEqual({ bloqueado: true, motivo: 'NAO_CONTATAR' }); expect(chamadas).toEqual([]); await db.doc('carteira_comercial_restricoes/GC:602').delete();
+    expect((await h(VD1, O[603])).tipo).toBe('SEM_TELEFONE'); expect((await h(VD1, O[602])).tipo).toBe('COMERCIAL');
     await db.collection('carteira_reativacoes').doc((await db.collection('carteira_reativacoes').where('portfolioId', '==', 'GC:603').get()).docs[0].id).update({ ultimoTeste: 1 });
-    expect(await erro(h(ADE, O[600], { lookup: async () => { throw new Error('GC fora do ar'); } }))).toBe('unavailable'); expect(await erro(h(ADE, O[600], { lookup: async () => null }))).toBe('unavailable');
+    expect(await erro(h(VD1, O[600], { lookup: async () => { throw new Error('GC fora do ar'); } }))).toBe('unavailable'); expect(await erro(h(VD1, O[600], { lookup: async () => null }))).toBe('unavailable');
   });
 });
 
 describe('o número não vaza para lugar nenhum', () => {
   test('nada gravado: nenhum documento do Firestore (reservas, carteiras, restrições, AUDITORIA) contém os números; auditoria só tem quem/quando/cliente', async () => {
-    await h(ADE, O[600]); await h(GES, O[601]); const todos = JSON.stringify(await Promise.all(COLS.map(async c => (await db.collection(c).get()).docs.map(d => d.data()))));
-    for (const n of [NUM_ADE, NUM_FAB, '99991-2345', '98877-6655', '3222-1000', '8532221000']) expect(todos).not.toContain(n);
+    await h(VD1, O[600]); await h(GES, O[601]); const todos = JSON.stringify(await Promise.all(COLS.map(async c => (await db.collection(c).get()).docs.map(d => d.data()))));
+    for (const n of [NUM_VD1, NUM_VD2, '99991-2345', '98877-6655', '3222-1000', '8532221000']) expect(todos).not.toContain(n);
     const aud = (await db.collection('audit_log').where('action', '==', 'REACTIVATION_CONTACT_VIEWED').get()).docs.map(d => d.data()); expect(aud.length).toBeGreaterThan(0);
     expect(aud.every(a => a.category === 'COMMERCIAL' && a.actorUid && a.metadata && Object.keys(a.metadata).join() === 'tipo')).toBe(true);
   });
   test('o código do backend não registra o número (sem console.* no módulo) e não altera owner/reservas/histórico', async () => {
     expect(fs.readFileSync(path.join(__dirname, '../lib/contatoReativacao.js'), 'utf8')).not.toMatch(/console\./); expect(fs.readFileSync(path.join(__dirname, '../lib/contatoGc.js'), 'utf8')).not.toMatch(/console\./);
     const antes = JSON.stringify((await db.collection('carteira_comercial').get()).docs.map(d => d.data())) + JSON.stringify((await db.collection('carteira_reativacoes').get()).docs.map(d => [d.id, d.data().estado, d.data().destinoUid]));
-    await h(ADE, O[600]); await h(FAB, O[601]); const depois = JSON.stringify((await db.collection('carteira_comercial').get()).docs.map(d => d.data())) + JSON.stringify((await db.collection('carteira_reativacoes').get()).docs.map(d => [d.id, d.data().estado, d.data().destinoUid]));
+    await h(VD1, O[600]); await h(VD2, O[601]); const depois = JSON.stringify((await db.collection('carteira_comercial').get()).docs.map(d => d.data())) + JSON.stringify((await db.collection('carteira_reativacoes').get()).docs.map(d => [d.id, d.data().estado, d.data().destinoUid]));
     expect(depois).toBe(antes); expect((await db.collection('carteira_comercial_historico').get()).size).toBe(0);
   });
 });

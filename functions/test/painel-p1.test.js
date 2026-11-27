@@ -31,12 +31,12 @@ describe('calendário comercial', () => {
 });
 
 describe('ritmo e projeção', () => {
-  const base = { cfg: CAL, mes: '2026-10', meta: 240000 };
-  test('exemplo real: 11/10 12:00, R$ 58.414,05 ⇒ média por dia equivalente, meta necessária e projeção; acumulado ≠ diário', () => {
-    const r = C.ritmoEProjecao({ ...base, hojeStr: '2026-10-11', hora: '12:00', acumulado: 58414.05 });
+  const base = { cfg: CAL, mes: '2026-10', meta: 200000 };
+  test('exemplo sintético: 11/10 12:00, R$ 50.000,00 ⇒ média por dia equivalente, meta necessária e projeção; acumulado ≠ diário', () => {
+    const r = C.ritmoEProjecao({ ...base, hojeStr: '2026-10-11', hora: '12:00', acumulado: 50000 });
     expect(r.diasEquivalentesDecorridos).toBeCloseTo(7.78, 2); expect(r.diasEquivalentesRestantes).toBeCloseTo(15.17, 2);
-    expect(r.mediaPorDiaUtil).toBeCloseTo(58414.05 / 7.7778, 0); expect(r.metaNecessariaPorDiaUtil).toBeCloseTo((240000 - 58414.05) / 15.1667, 0);
-    expect(r.projecaoFechamento).toBeCloseTo(58414.05 + 15.1667 * (58414.05 / 7.7778), -1);
+    expect(r.mediaPorDiaUtil).toBeCloseTo(50000 / 7.7778, 0); expect(r.metaNecessariaPorDiaUtil).toBeCloseTo((200000 - 50000) / 15.1667, 0);
+    expect(r.projecaoFechamento).toBeCloseTo(50000 + 15.1667 * (50000 / 7.7778), -1);
     expect(r).toMatchObject({ confiabilidade: 'MEDIA', estimativa: true, situacao: 'ABAIXO' });
   });
   test('início do mês: sem base ⇒ sem projeção (nada de números absurdos); 1–3 dias ⇒ BAIXA', () => {
@@ -51,8 +51,8 @@ describe('ritmo e projeção', () => {
     expect(fim.diasEquivalentesRestantes).toBe(0); expect(fim.metaNecessariaPorDiaUtil).toBeNull();
   });
   test('domingo/feriado não geram dias previstos nem consomem ritmo', () => {
-    const dom = C.ritmoEProjecao({ ...base, hojeStr: '2026-10-11', hora: '10:00', acumulado: 58414.05 });
-    const sab = C.ritmoEProjecao({ ...base, hojeStr: '2026-10-10', hora: '17:30', acumulado: 58414.05 });
+    const dom = C.ritmoEProjecao({ ...base, hojeStr: '2026-10-11', hora: '10:00', acumulado: 50000 });
+    const sab = C.ritmoEProjecao({ ...base, hojeStr: '2026-10-10', hora: '17:30', acumulado: 50000 });
     expect(dom.diasEquivalentesDecorridos).toBeCloseTo(sab.diasEquivalentesDecorridos, 6);
   });
 });
@@ -75,15 +75,15 @@ describe('comparativo com o mês anterior (mesmo período equivalente)', () => {
 describe('documento da TV (sync com GC falso)', () => {
   const COLS = ['display_metrics', 'display_metrics_gestor', 'display_metrics_ctl', 'painel_config', 'painel_mapeamento', 'painel_calendario'];
   const limpar = async () => { for (const c of COLS) { const s = await db.collection(c).get(); await Promise.all(s.docs.map(d => d.ref.delete())); } };
-  let seq = 5000; const v = (o = {}) => ({ id: String(++seq), situacao_id: '3952593', vendedor_id: '948278', data: '2026-10-09', valor_total: '100.00', valor_custo: '40.00', ...o });
+  let seq = 5000; const v = (o = {}) => ({ id: String(++seq), situacao_id: '3952593', vendedor_id: '900001', data: '2026-10-09', valor_total: '100.00', valor_custo: '40.00', ...o });
   const fake = (conc, canc = [], extra = {}) => async (url) => { const u = new URL(url); const sit = u.searchParams.get('situacao_id'), ini = u.searchParams.get('data_inicio'), fim = u.searchParams.get('data_fim');
     const todos = sit === '3952593' ? conc : sit === '3952594' ? canc : [];
     const lista = todos.filter(x => x.data >= ini && x.data <= fim);
     return { ok: true, status: 200, json: async () => ({ data: lista, meta: { total_paginas: 1, total_registros: lista.length } }) }; };
-  beforeEach(async () => { await limpar(); await db.doc('painel_config/default').set({ vendedores: [{ nome: 'Ademir', meta: 165000 }, { nome: 'Fabiana', meta: 75000 }], meta_equipe: 240000 }); await db.doc('painel_calendario/default').set(CAL); });
+  beforeEach(async () => { await limpar(); await db.doc('painel_config/default').set({ vendedores: [{ nome: 'Vend1', meta: 120000 }, { nome: 'Vend2', meta: 80000 }], meta_equipe: 200000 }); await db.doc('painel_mapeamento/vendedores').set({ vendedores: { '900001': { chave: 'vend1', nomeConfig: 'Vend1' }, '900002': { chave: 'vend2', nomeConfig: 'Vend2' } } }); await db.doc('painel_calendario/default').set(CAL); });
   afterAll(limpar);
   test('TV recebe série diária acumulada, calendário, ritmo, projeção e comparativo; sem custo/margem; Gestor recebe ritmo', async () => {
-    const conc = [v({ data: '2026-10-01', valor_total: '1000.00' }), v({ data: '2026-10-02', valor_total: '2000.50' }), v({ data: '2026-10-09', valor_total: '500.00', vendedor_id: '1080453' }),
+    const conc = [v({ data: '2026-10-01', valor_total: '1000.00' }), v({ data: '2026-10-02', valor_total: '2000.50' }), v({ data: '2026-10-09', valor_total: '500.00', vendedor_id: '900002' }),
       v({ data: '2026-09-01', valor_total: '1000.00' }), v({ data: '2026-09-02', valor_total: '1000.00' }), v({ data: '2026-09-03', valor_total: '1000.00' })];
     const agora = new Date('2026-10-09T18:00:00Z');                                // 15:00 em Fortaleza, sexta
     const r = await SY.sincronizar({ db, FieldValue, fetchImpl: fake(conc), agora, tokens: { access: 'a', secret: 's' } });
@@ -102,7 +102,7 @@ describe('documento da TV (sync com GC falso)', () => {
     expect(g.historico[g.historico.length - 1].diario).toBeTruthy();
   });
   test('totais continuam conciliados (soma das partes = geral) e a série acumulada fecha com o total do mês', async () => {
-    const conc = [v({ data: '2026-10-01', valor_total: '10.10' }), v({ data: '2026-10-03', valor_total: '20.20', vendedor_id: '1080453' }), v({ data: '2026-10-05', valor_total: '0.30', vendedor_id: '999' })];
+    const conc = [v({ data: '2026-10-01', valor_total: '10.10' }), v({ data: '2026-10-03', valor_total: '20.20', vendedor_id: '900002' }), v({ data: '2026-10-05', valor_total: '0.30', vendedor_id: '999' })];
     await SY.sincronizar({ db, FieldValue, fetchImpl: fake(conc), agora: new Date('2026-10-08T15:00:00Z'), tokens: { access: 'a', secret: 's' } });
     const tv = (await db.doc('display_metrics/painel_comercial').get()).data();
     const soma = tv.vendedores[0].totalMes + tv.vendedores[1].totalMes + tv.outros.totalMes;
@@ -123,9 +123,9 @@ describe('lógica do front (puro)', () => {
     expect(T.estadoDados({ idadeMin: 3 }).rotulo).not.toMatch(/DESATUALIZADOS/);
   });
   test('ranking por faturamento, com destaque do MAIOR % da meta (não favorece meta menor/maior)', () => {
-    const r = T.ranking([{ nome: 'Ademir', totalMes: 36234.28, meta: 165000 }, { nome: 'Fabiana', totalMes: 21779.77, meta: 75000 }]);
-    expect(r.map(x => x.nome)).toEqual(['Ademir', 'Fabiana']); expect(r[0].pctMeta).toBe(22); expect(r[1].pctMeta).toBe(29);
-    expect(r.find(x => x.melhorPctMeta).nome).toBe('Fabiana');
+    const r = T.ranking([{ nome: 'Vend1', totalMes: 30000, meta: 120000 }, { nome: 'Vend2', totalMes: 28000, meta: 80000 }]);
+    expect(r.map(x => x.nome)).toEqual(['Vend1', 'Vend2']); expect(r[0].pctMeta).toBe(25); expect(r[1].pctMeta).toBe(35);
+    expect(r.find(x => x.melhorPctMeta).nome).toBe('Vend2');
   });
   test('delta só para aumentos de total agregado; gráfico: acumulado real, meta esperada por peso e projeção só com base', () => {
     expect(T.delta(100, 100)).toBe(0); expect(T.delta(100, 99)).toBe(0); expect(T.delta(100, 150.5)).toBe(50.5);
@@ -166,9 +166,9 @@ describe('segurança e estático', () => {
     expect(prod).not.toMatch(/display_metrics_gestor|valor_custo|margem|comiss|access-token|gestaoclick/i);
   });
   test('P1.2: faltaEPorDia — falta, valor por dia útil, meta batida, sem meta e sem dias (sem divisão por zero)', () => {
-    expect(T.faltaEPorDia(36234.28, 165000, 15.17)).toEqual({ falta: 128765.72, porDia: 8488.18, batida: false });
-    expect(T.faltaEPorDia(21779.77, 75000, 15.17).falta).toBe(53220.23);
-    expect(T.faltaEPorDia(80000, 75000, 10)).toEqual({ falta: 0, porDia: 0, batida: true });
+    expect(T.faltaEPorDia(30000, 120000, 15.17)).toEqual({ falta: 90000, porDia: 5932.76, batida: false });
+    expect(T.faltaEPorDia(28000, 80000, 15.17).falta).toBe(52000);
+    expect(T.faltaEPorDia(90000, 80000, 10)).toEqual({ falta: 0, porDia: 0, batida: true });
     expect(T.faltaEPorDia(100, 0, 10)).toEqual({ falta: null, porDia: null, batida: false });
     expect(T.faltaEPorDia(100, 1000, 0).porDia).toBeNull();
     expect(T.faltaEPorDia(100, 1000, -1).porDia).toBeNull();

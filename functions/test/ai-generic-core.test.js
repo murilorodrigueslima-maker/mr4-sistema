@@ -15,7 +15,7 @@ const modelo = o => F.fetchModelo(typeof o === 'function' ? o : resp(o));
 
 describe('permissão por MÓDULO + piloto', () => {
   test('anônimo/inativo/sem módulo/admin sozinho/funcionário comum → DENY; gestor → ALLOW', async () => {
-    for (const u of [UID.INAT, UID.SEM, UID.ADM, UID.FAB]) { const m = modelo(); const x = await exec(u, Q, m); expect(x.e.tipo).toBe('permission-denied'); expect(m.chamadas.length).toBe(0); }
+    for (const u of [UID.INAT, UID.SEM, UID.ADM, UID.VD2]) { const m = modelo(); const x = await exec(u, Q, m); expect(x.e.tipo).toBe('permission-denied'); expect(m.chamadas.length).toBe(0); }
     expect((await exec(UID.GER, Q, modelo())).r.ia.status).toBe('OK');
   });
   test('piloto: padrão MANAGEMENT_ONLY; OFF/inválido = ninguém; allowlist de uids restringe', async () => {

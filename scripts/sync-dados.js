@@ -200,7 +200,7 @@ async function firestoreBatchSet(ops) {
 
 // ── SANITIZAÇÃO DE DADOS PESSOAIS ─────────────────────────────────────────────
 // Remove número de cadastro (CPF parcial / registro comercial) que precede o nome
-// do cliente. Ex: "52.011.584 PEDRO DE OLIVEIRA ARAUJO" → "PEDRO DE OLIVEIRA ARAUJO"
+// do cliente. Ex: "00.000.004 PESSOA EXEMPLO SINTETICA FICTICIA" → "PESSOA EXEMPLO SINTETICA FICTICIA"
 // LGPD Art. 6º: minimização de dados expostos no Firestore.
 function sanitizarCliente(nome) {
   if (!nome || nome === '—') return nome || '—';

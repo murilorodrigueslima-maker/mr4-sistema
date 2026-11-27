@@ -59,8 +59,8 @@ const HOJE = '2026-09-15'; // segunda-feira
 const ONTEM = '2026-09-14'; // domingo
 
 const funcBase = {
-  id: 'fAdemir',
-  nome: 'Ademir Lopes Furtado',
+  id: 'fVend1',
+  nome: 'Vend1 Exemplo',
   jornada: '8',
   controleBancoHoras: true,
   inicioBancoHoras: '2026-09-01',
@@ -68,7 +68,7 @@ const funcBase = {
 };
 
 function reg(tipo, hora, lancadoPorJustificativa = false) {
-  return { funcId: 'fAdemir', data: HOJE, tipo, hora, lancadoPorJustificativa };
+  return { funcId: 'fVend1', data: HOJE, tipo, hora, lancadoPorJustificativa };
 }
 
 // ─── DIA1–DIA5: ontem() — virada de dia, mês e ano ───────────────────────────

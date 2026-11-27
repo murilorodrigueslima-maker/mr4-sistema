@@ -55,7 +55,7 @@ function classeDaVenda(venda, vend) {
   const g = normalizeGestaoClickId(venda.vendedor_id);
   if (!g) return { classe: 'SEM_VENDEDOR', uid: null, elegivel: false };
   const e = vend.porGc.get(g);
-  if (!e) return { classe: 'GESTAO_OU_OUTRO', uid: null, elegivel: false };               // proprietário, Camila e demais funcionários
+  if (!e) return { classe: 'GESTAO_OU_OUTRO', uid: null, elegivel: false };               // proprietário, Revisor4 e demais funcionários
   return { classe: 'VENDEDOR_CARTEIRA', uid: e.uid, elegivel: e.elegivel === true, situacao: e.situacao };
 }
 

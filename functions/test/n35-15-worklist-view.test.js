@@ -3,16 +3,16 @@
 const path = require('path');
 const V = require(path.join(__dirname, '..', '..', 'modulos', 'fila-worklist-view.js'));
 
-const FAB = 'fab-uid', ADEMIR = 'ademir-uid', OUTRO = 'outro-uid';
+const VD2 = 'vd2-uid', VEND1 = 'vend1-uid', OUTRO = 'outro-uid';
 const HOJE = '2026-09-25';
 const AGORA = Date.parse('2026-09-25T15:00:00.000Z');
 const item = (n, o = {}) => ({ opportunityInstanceId: n.toString(16).padStart(16, '0'), commercialEntityId: 'GC_NATIVE:' + n, tipoOportunidade: 'REATIVACAO_120D', nomeCliente: 'Cliente ' + n, rank: n, ...o });
 function doc({ novas = [], followUps = [], emAtendimento = [], data = HOJE } = {}) {
-  return { schemaVersion: 'worklist-v2', dataReferencia: data, cap: 10, vendedoresAtivos: [FAB], vendedoresRotulos: { [FAB]: 'FABIANA' }, vendedores: { [FAB]: { novas, followUps, emAtendimento } }, atribuicoes: {} };
+  return { schemaVersion: 'worklist-v2', dataReferencia: data, cap: 10, vendedoresAtivos: [VD2], vendedoresRotulos: { [VD2]: 'VEND2' }, vendedores: { [VD2]: { novas, followUps, emAtendimento } }, atribuicoes: {} };
 }
 const op = (o) => ({ estado: 'DISPONIVEL', eventos: [], claimAtual: null, cooledUntil: null, nextFollowUpAt: null, ...o });
-const emAt = (uid, iso) => op({ estado: 'EM_ATENDIMENTO', claimAtual: { operadorId: uid, claimadoEm: iso, operadorNome: uid === FAB ? 'Fabiana' : 'Outro' } });
-const vend = (d, opMap = new Map(), extra = {}) => V.montarVisaoVendedor({ doc: d, uid: FAB, hoje: HOJE, agoraMs: AGORA, opMap, podeOperar: true, ...extra });
+const emAt = (uid, iso) => op({ estado: 'EM_ATENDIMENTO', claimAtual: { operadorId: uid, claimadoEm: iso, operadorNome: uid === VD2 ? 'Vend2' : 'Outro' } });
+const vend = (d, opMap = new Map(), extra = {}) => V.montarVisaoVendedor({ doc: d, uid: VD2, hoje: HOJE, agoraMs: AGORA, opMap, podeOperar: true, ...extra });
 
 describe('Vendedora', () => {
   test('VW-01 worklist de hoje: 10 novas, todas disponíveis com Iniciar (lazy, sem doc operacional)', () => {
@@ -22,7 +22,7 @@ describe('Vendedora', () => {
   });
   test('VW-02 vê SOMENTE a própria worklist (outro vendedor → null)', () => {
     const d = doc({ novas: [item(1)] });
-    expect(V.montarVisaoVendedor({ doc: d, uid: ADEMIR, hoje: HOJE, agoraMs: AGORA, opMap: new Map(), podeOperar: true })).toBeNull();
+    expect(V.montarVisaoVendedor({ doc: d, uid: VEND1, hoje: HOJE, agoraMs: AGORA, opMap: new Map(), podeOperar: true })).toBeNull();
   });
   test('VW-03 worklist de outro dia → null (tela volta ao snapshot)', () => {
     expect(vend(doc({ novas: [item(1)], data: '2026-09-24' }))).toBeNull();
@@ -32,19 +32,19 @@ describe('Vendedora', () => {
   });
   test('VW-05 claim próprio ativo → Em atendimento por você, com Registrar/Cancelar', () => {
     const it = item(1);
-    const v = vend(doc({ novas: [it] }), new Map([[it.opportunityInstanceId, emAt(FAB, '2026-09-25T14:00:00.000Z')]]));
+    const v = vend(doc({ novas: [it] }), new Map([[it.opportunityInstanceId, emAt(VD2, '2026-09-25T14:00:00.000Z')]]));
     expect(v.emAtendimento).toHaveLength(1);
     expect(v.emAtendimento[0].estado).toMatchObject({ codigo: 'EM_ATENDIMENTO_MEU', podeRegistrar: true, podeCancelar: true, podeIniciar: false });
     expect(v.novas).toHaveLength(0);
   });
   test('VW-06 claim expirado (>4h) → volta a Disponível com Iniciar', () => {
     const it = item(1);
-    const v = vend(doc({ novas: [it] }), new Map([[it.opportunityInstanceId, emAt(FAB, '2026-09-25T10:00:00.000Z')]]));
+    const v = vend(doc({ novas: [it] }), new Map([[it.opportunityInstanceId, emAt(VD2, '2026-09-25T10:00:00.000Z')]]));
     expect(v.novas[0].estado).toMatchObject({ codigo: 'DISPONIVEL', podeIniciar: true });
   });
   test('VW-07 SEM_RESPOSTA hoje → sai da lista ativa, vai para trabalhados com retorno agendado', () => {
     const it = item(1);
-    const o = op({ nextFollowUpAt: '2026-09-28', eventos: [{ tipo: 'OUTCOME_REGISTERED', outcome: 'SEM_RESPOSTA', operadorId: FAB }] });
+    const o = op({ nextFollowUpAt: '2026-09-28', eventos: [{ tipo: 'OUTCOME_REGISTERED', outcome: 'SEM_RESPOSTA', operadorId: VD2 }] });
     const v = vend(doc({ novas: [it] }), new Map([[it.opportunityInstanceId, o]]));
     expect(v.novas).toHaveLength(0);
     expect(v.trabalhadasHoje[0].estado).toMatchObject({ codigo: 'RETORNO_AGENDADO', detalhe: '2026-09-28', podeIniciar: false });
@@ -92,15 +92,15 @@ describe('Gestão (somente leitura)', () => {
   const ges = (d, opMap = new Map()) => V.montarVisaoGestao({ doc: d, hoje: HOJE, agoraMs: AGORA, opMap });
   test('VG-01 resumo por vendedor com rótulo e contagens', () => {
     const n = Array.from({ length: 10 }, (_, i) => item(i + 1));
-    const m = new Map([[n[0].opportunityInstanceId, emAt(FAB, '2026-09-25T14:30:00.000Z')], [n[1].opportunityInstanceId, op({ estado: 'CONCLUIDA', eventos: [] })]]);
+    const m = new Map([[n[0].opportunityInstanceId, emAt(VD2, '2026-09-25T14:30:00.000Z')], [n[1].opportunityInstanceId, op({ estado: 'CONCLUIDA', eventos: [] })]]);
     const g = ges(doc({ novas: n, followUps: [item(20)] }), m);
     expect(g).toHaveLength(1);
-    expect(g[0].rotulo).toBe('FABIANA');
+    expect(g[0].rotulo).toBe('VEND2');
     expect(g[0].contagens).toMatchObject({ novas: 10, retornos: 1, emAtendimento: 1, concluidas: 1, pendentes: 9 });
   });
   test('VG-02 nenhuma linha operável para gestão', () => {
     const it = item(1);
-    const g = ges(doc({ novas: [it, item(2)] }), new Map([[it.opportunityInstanceId, emAt(FAB, '2026-09-25T14:30:00.000Z')]]));
+    const g = ges(doc({ novas: [it, item(2)] }), new Map([[it.opportunityInstanceId, emAt(VD2, '2026-09-25T14:30:00.000Z')]]));
     expect(g[0].linhas.every(l => !l.estado.podeIniciar && !l.estado.podeRegistrar && !l.estado.podeCancelar)).toBe(true);
   });
   test('VG-03 sem worklist de hoje → null', () => {
@@ -114,8 +114,8 @@ describe('Datas', () => {
     expect(V.dataComercial(new Date('2026-09-26T03:00:00.000Z'))).toBe('2026-09-26');
   });
   test('DT-02 claim ativo até 4h, expirado depois', () => {
-    const o = emAt(FAB, '2026-09-25T11:00:01.000Z');
+    const o = emAt(VD2, '2026-09-25T11:00:01.000Z');
     expect(V.claimAtivo(o, AGORA)).toBe(true);
-    expect(V.claimAtivo(emAt(FAB, '2026-09-25T11:00:00.000Z'), AGORA)).toBe(false);
+    expect(V.claimAtivo(emAt(VD2, '2026-09-25T11:00:00.000Z'), AGORA)).toBe(false);
   });
 });

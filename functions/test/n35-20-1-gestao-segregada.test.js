@@ -20,10 +20,10 @@ const PROIBIDO = /ticket|faturamento|margem|lucro|custo|gestao/i;
 // Personas com a mesma forma de configuração de produção (uids de teste)
 const FC = { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 };
 const PESSOAS = {
-  fab: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Fabiana', admin: false, bloqueado: false, modulos: ['catalogo', 'clientes', 'demandas', 'fila-comercial', 'fila-comercial-operar'], filaComercial: FC } },
-  ade: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Ademir', admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'], filaComercial: FC } },
-  cam: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Camila', admin: false, bloqueado: false, modulos: ['catalogo', 'expedicao', 'ponto', 'garantia', 'demandas', 'fila-comercial-gestao'] } },
-  mur: { users: { role: 'gestor', ativo: true }, sys: { nome: 'Murilo', admin: true, modulos: ['ponto', 'vendas', 'catalogo', 'expedicao', 'marketing', 'garantia', 'admin', 'financeiro', 'compras', 'fila-comercial'] } },
+  vd2: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Vend2', admin: false, bloqueado: false, modulos: ['catalogo', 'clientes', 'demandas', 'fila-comercial', 'fila-comercial-operar'], filaComercial: FC } },
+  vd1: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Vend1', admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'], filaComercial: FC } },
+  rv4: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Revisor4', admin: false, bloqueado: false, modulos: ['catalogo', 'expedicao', 'ponto', 'garantia', 'demandas', 'fila-comercial-gestao'] } },
+  tit: { users: { role: 'gestor', ativo: true }, sys: { nome: 'Titular', admin: true, modulos: ['ponto', 'vendas', 'catalogo', 'expedicao', 'marketing', 'garantia', 'admin', 'financeiro', 'compras', 'fila-comercial'] } },
   opn: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Opera sem participar', admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] } },
   adm: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Admin sem gestão', admin: true, bloqueado: false, modulos: ['fila-comercial-operar'] } },
   camBloq: { users: { role: 'funcionario', ativo: true }, sys: { nome: 'Gestão bloqueada', admin: false, bloqueado: true, modulos: ['fila-comercial-gestao'] } },
@@ -64,27 +64,27 @@ afterAll(async () => { await env.clearFirestore(); await env.cleanup(); });
 
 describe('Rules — leitura', () => {
   test('SEC-01 (S1) vendedora NÃO lê a worklist direto = DENY (recebe a própria via crmConsulta fila)', async () => {
-    await assertFails(leitor('fab').doc('fila_comercial/worklist').get());
-    await assertFails(leitor('ade').doc('fila_comercial/worklist').get());
+    await assertFails(leitor('vd2').doc('fila_comercial/worklist').get());
+    await assertFails(leitor('vd1').doc('fila_comercial/worklist').get());
   });
   test('SEC-02 vendedora lê o documento gerencial = DENY (get e list)', async () => {
-    await assertFails(leitor('fab').doc('fila_comercial_gestao/worklist').get());
-    await assertFails(leitor('fab').collection('fila_comercial_gestao').get());
+    await assertFails(leitor('vd2').doc('fila_comercial_gestao/worklist').get());
+    await assertFails(leitor('vd2').collection('fila_comercial_gestao').get());
   });
   test('SEC-03 fila-comercial-operar sem participar da distribuição = DENY', async () => {
     await assertFails(leitor('opn').doc('fila_comercial_gestao/worklist').get());
   });
   test('SEC-04 vendedor participante da distribuição = DENY', async () => {
-    await assertFails(leitor('ade').doc('fila_comercial_gestao/worklist').get());
+    await assertFails(leitor('vd1').doc('fila_comercial_gestao/worklist').get());
   });
   test('SEC-05 admin=true sem módulo de gestão NÃO cria bypass = DENY', async () => {
     await assertFails(leitor('adm').doc('fila_comercial_gestao/worklist').get());
   });
-  test('SEC-06 gestor (Murilo) lê gestão = ALLOW', async () => {
-    await assertSucceeds(leitor('mur').doc('fila_comercial_gestao/worklist').get());
+  test('SEC-06 gestor (Titular) lê gestão = ALLOW', async () => {
+    await assertSucceeds(leitor('tit').doc('fila_comercial_gestao/worklist').get());
   });
-  test('SEC-07 fila-comercial-gestao (Camila) lê gestão = ALLOW', async () => {
-    await assertSucceeds(leitor('cam').doc('fila_comercial_gestao/worklist').get());
+  test('SEC-07 fila-comercial-gestao (Revisor4) lê gestão = ALLOW', async () => {
+    await assertSucceeds(leitor('rv4').doc('fila_comercial_gestao/worklist').get());
   });
   test('SEC-07b gestão bloqueada ou gestor inativo = DENY', async () => {
     await assertFails(leitor('camBloq').doc('fila_comercial_gestao/worklist').get());
@@ -98,14 +98,14 @@ describe('Rules — leitura', () => {
 
 describe('Rules — escrita', () => {
   test('SEC-09 vendedora não escreve gestão (set/update/delete) = DENY', async () => {
-    const db = leitor('fab');
+    const db = leitor('vd2');
     await assertFails(db.doc('fila_comercial_gestao/worklist').set({ itens: {} }));
     await assertFails(db.doc('fila_comercial_gestao/worklist').update({ x: 1 }));
     await assertFails(db.doc('fila_comercial_gestao/worklist').delete());
     await assertFails(db.doc('fila_comercial_gestao/novo').set({ itens: {} }));
   });
-  test('SEC-10 gestão pelo cliente (Camila/Murilo) não escreve gestão = DENY', async () => {
-    for (const uid of ['cam', 'mur']) {
+  test('SEC-10 gestão pelo cliente (Revisor4/Titular) não escreve gestão = DENY', async () => {
+    for (const uid of ['rv4', 'tit']) {
       await assertFails(leitor(uid).doc('fila_comercial_gestao/worklist').set({ itens: {} }));
       await assertFails(leitor(uid).doc('fila_comercial_gestao/worklist').delete());
     }
@@ -159,9 +159,9 @@ describe('Estrutura gerada pelo backend', () => {
 
 describe('RAW / DevTools — o que o navegador da vendedora recebe', () => {
   test('RAW-01 (S1) leitura bruta da worklist pela vendedora é negada; o conteúdo escopado é verificado em s1-fila-escopo', async () => {
-    for (const uid of ['fab', 'ade']) await assertFails(leitor(uid).doc('fila_comercial/worklist').get());
+    for (const uid of ['vd2', 'vd1']) await assertFails(leitor(uid).doc('fila_comercial/worklist').get());
     return;
-    for (const uid of ['fab', 'ade']) {
+    for (const uid of ['vd2', 'vd1']) {
       const snap = await assertSucceeds(leitor(uid).doc('fila_comercial/worklist').get());
       const achados = [];
       const walk = (o, p) => {
@@ -173,7 +173,7 @@ describe('RAW / DevTools — o que o navegador da vendedora recebe', () => {
     }
   });
   test('RAW-02 vendedora tenta o documento gerencial pela API = DENY', async () => {
-    for (const uid of ['fab', 'ade']) await assertFails(leitor(uid).doc('fila_comercial_gestao/worklist').get()); // SELLER_MANAGEMENT_READ=DENY
+    for (const uid of ['vd2', 'vd1']) await assertFails(leitor(uid).doc('fila_comercial_gestao/worklist').get()); // SELLER_MANAGEMENT_READ=DENY
   });
   test('RAW-03 frontend: leitura gerencial só por carregarDadosGestao, guardada por _canManageQueue; sem ticket em atributo HTML', () => {
     const usos = HTML.split("'fila_comercial_gestao'").length - 1;
@@ -189,12 +189,12 @@ describe('RAW / DevTools — o que o navegador da vendedora recebe', () => {
 });
 
 describe('Personas e defesa do gerador', () => {
-  test('PER-01 Murilo (gestor) não participa da distribuição nem ganha operação; Camila também não', () => {
+  test('PER-01 Titular (gestor) não participa da distribuição nem ganha operação; Revisor4 também não', () => {
     const sistema = new Map(Object.entries(PESSOAS).map(([u, p]) => [u, p.sys]));
     const users = new Map(Object.entries(PESSOAS).map(([u, p]) => [u, p.users]));
     const { participantes } = resolverParticipantes(sistema, users);
     const uids = participantes.map(p => p.uid).sort();
-    expect(uids).toEqual(['ade', 'fab']);
+    expect(uids).toEqual(['vd1', 'vd2']);
   });
   test('PER-02 gerador falha fechado se campo gerencial vazar para o documento operacional', () => {
     expect(C.camposGestaoExpostos({ vendedores: { a: { novas: [{ contextoComercial: { gestao: { ticketMedio: 1 } } }] } } })).toEqual([

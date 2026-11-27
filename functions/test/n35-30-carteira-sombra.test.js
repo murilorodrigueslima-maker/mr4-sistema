@@ -15,8 +15,8 @@ const JOB = require('../lib/carteiraRegraJob');
 const CORTE = '2026-09-28';
 const AGORA = '2026-10-05T12:00:00.000Z';
 const SOMBRA = { modo: 'SOMBRA', ativoDesde: CORTE };
-const FAB = 't30-fab', ADE = 't30-ade', MUR = 't30-mur';
-const GC = { [FAB]: '9200001', [ADE]: '9200002', [MUR]: '9200003' };
+const VD2 = 't30-vd2', VD1 = 't30-vd1', MUR = 't30-mur';
+const GC = { [VD2]: '9200001', [VD1]: '9200002', [MUR]: '9200003' };
 const OFICIAIS = ['carteira_comercial', 'carteira_comercial_historico', 'carteira_comercial_decisoes'];
 const criados = { vendas: new Set(), users: new Set() };
 
@@ -56,7 +56,7 @@ async function limpar() {
 }
 let logs;
 beforeEach(async () => {
-  await limpar(); await vendedor(FAB); await vendedor(ADE); await vendedor(MUR, { pode: false });
+  await limpar(); await vendedor(VD2); await vendedor(VD1); await vendedor(MUR, { pode: false });
   logs = []; jest.spyOn(console, 'log').mockImplementation((...a) => logs.push(a.join(' '))); jest.spyOn(console, 'error').mockImplementation((...a) => logs.push(a.join(' ')));
 });
 afterEach(() => jest.restoreAllMocks());
@@ -64,7 +64,7 @@ afterAll(limpar);
 
 describe('Modos e isolamento', () => {
   test('SH-01 DESLIGADO (ausente, inválido ou explícito): nenhuma escrita, nem sombra', async () => {
-    await carteira('8810001', FAB); await venda('8810001', '2026-03-01', FAB); await venda('8810001', '2026-09-30', ADE);
+    await carteira('8810001', VD2); await venda('8810001', '2026-03-01', VD2); await venda('8810001', '2026-09-30', VD1);
     for (const cfg of [null, { modo: 'SOMBRA' }, { modo: 'DESLIGADO', ativoDesde: CORTE }, { modo: 'LIGADO', ativoDesde: CORTE }]) {
       if (cfg) await regra(cfg); else await db.doc('carteira_comercial_config/regra').delete();
       const r = await job();
@@ -76,7 +76,7 @@ describe('Modos e isolamento', () => {
     expect((await db.collection('carteira_comercial_config').get()).docs.map(d => d.id)).toEqual(['regra']);   // nem checkpoint
   });
   test('SH-02 SOMBRA: venda que causaria R2 grava SÓ a decisão sombra; oficiais byte a byte iguais', async () => {
-    await carteira('8810002', FAB); await venda('8810002', '2026-04-01', FAB); await venda('8810002', '2026-09-30', ADE);
+    await carteira('8810002', VD2); await venda('8810002', '2026-04-01', VD2); await venda('8810002', '2026-09-30', VD1);
     await regra(SOMBRA);
     const antes = await oficiaisSnapshot();
     const r = await job();
@@ -86,8 +86,8 @@ describe('Modos e isolamento', () => {
   });
   test('SH-03 trava de código: config ATIVO + job publicado continua SOMBRA (OFFICIAL_WRITES=0)', async () => {
     expect(JOB.FORCAR_SOMBRA).toBe(true);
-    await carteira('8810003', FAB); await venda('8810003', '2026-04-01', FAB); await venda('8810003', '2026-09-30', ADE);
-    await venda('8810004', '2026-09-30', ADE);                                                  // primeira venda
+    await carteira('8810003', VD2); await venda('8810003', '2026-04-01', VD2); await venda('8810003', '2026-09-30', VD1);
+    await venda('8810004', '2026-09-30', VD1);                                                  // primeira venda
     await regra({ modo: 'ATIVO', ativoDesde: CORTE });
     const antes = await oficiaisSnapshot();
     const r = await job();
@@ -109,8 +109,8 @@ describe('Modos e isolamento', () => {
 
 describe('Payload e logs', () => {
   test('SH-05 whitelist: cada decisão sombra só com IDs/contagens; campos pessoais da venda nunca são copiados', async () => {
-    await carteira('8810005', FAB); await venda('8810005', '2026-04-01', FAB); await venda('8810005', '2026-09-30', ADE);
-    await venda('8810006', '2026-09-30', FAB); await venda('8810007', '2026-09-30', MUR);
+    await carteira('8810005', VD2); await venda('8810005', '2026-04-01', VD2); await venda('8810005', '2026-09-30', VD1);
+    await venda('8810006', '2026-09-30', VD2); await venda('8810007', '2026-09-30', MUR);
     await regra(SOMBRA); await job();
     const docs = await sombras();
     expect(docs).toHaveLength(3);
@@ -124,7 +124,7 @@ describe('Payload e logs', () => {
     expect(R.validarDecisao({ vendaId: '1', valor_total: '1' })).toMatch(/CAMPOS_NAO_PERMITIDOS/);
   });
   test('SH-06 log estruturado sem PII (runId, modo, versão, corte, checkpoints, contagens, duração)', async () => {
-    await venda('8810008', '2026-09-30', FAB);
+    await venda('8810008', '2026-09-30', VD2);
     await regra(SOMBRA); await job();
     const linha = logs.find(l => l.includes('"job":"processarCarteiraComercial"'));
     const j = JSON.parse(linha);
@@ -138,13 +138,13 @@ describe('Payload e logs', () => {
 
 describe('Idempotência e concorrência', () => {
   test('SH-07 1 venda = 1 decisão sombra (job 3x + 6 execuções simultâneas)', async () => {
-    await carteira('8810009', FAB); await venda('8810009', '2026-04-01', FAB);
-    const v = await venda('8810009', '2026-09-30', ADE);
+    await carteira('8810009', VD2); await venda('8810009', '2026-04-01', VD2);
+    const v = await venda('8810009', '2026-09-30', VD1);
     await regra(SOMBRA);
     await Promise.all(Array.from({ length: 6 }, () => R.reavaliarClienteSombra(db, { gcCliente: '8810009', agoraIso: AGORA, regra: R.lerRegra(SOMBRA), runId: 'c' })));
     await job(); await job(); await job();
     expect((await sombras()).filter(s => s.vendaId === v)).toHaveLength(1);
-    expect((await db.doc('carteira_comercial/GC:8810009').get()).data()).toMatchObject({ ownerUid: FAB, versao: 1 });
+    expect((await db.doc('carteira_comercial/GC:8810009').get()).data()).toMatchObject({ ownerUid: VD2, versao: 1 });
   });
 });
 
@@ -153,10 +153,10 @@ describe('Corte de ativação e checkpoint', () => {
     const b = db.batch();
     for (let i = 0; i < 60; i++) { const id = String(720000000 + i); criados.vendas.add(id);
       const data = '2026-0' + (1 + (i % 8)) + '-15';
-      b.set(db.doc('vendas_gc/' + id), { id, cliente_id: String(8811000 + (i % 7)), data, nome_situacao: 'Concretizada', valor_total: '10', vendedor_id: GC[ADE], cadastrado_em: data + ' 10:00:00', modificado_em: data + ' 10:00:00' }); }
+      b.set(db.doc('vendas_gc/' + id), { id, cliente_id: String(8811000 + (i % 7)), data, nome_situacao: 'Concretizada', valor_total: '10', vendedor_id: GC[VD1], cadastrado_em: data + ' 10:00:00', modificado_em: data + ' 10:00:00' }); }
     await b.commit();
-    await venda('8811000', '2026-09-27', ADE);                                                   // véspera do corte
-    const nova = await venda('8811001', '2026-09-28', FAB);                                     // dia do corte
+    await venda('8811000', '2026-09-27', VD1);                                                   // véspera do corte
+    const nova = await venda('8811001', '2026-09-28', VD2);                                     // dia do corte
     await regra(SOMBRA);
     const r = await job();
     expect(r).toMatchObject({ corte: CORTE, checkpointAntes: null, clientesReavaliados: 1, processadas: 1, checkpointDepois: '2026-09-28 12:00:00' });
@@ -167,7 +167,7 @@ describe('Corte de ativação e checkpoint', () => {
   });
   test('SH-09 checkpoint só avança com sucesso; falha no meio não perde venda', async () => {
     await regra(SOMBRA);
-    await venda('8811101', '2026-09-29', FAB); const v2 = await venda('8811102', '2026-10-02', ADE);
+    await venda('8811101', '2026-09-29', VD2); const v2 = await venda('8811102', '2026-10-02', VD1);
     let falhar = true;
     const store = { collection: n => db.collection(n), runTransaction: (f, o) => { if (falhar) throw new Error('falha simulada'); return db.runTransaction(f, o); } };
     const r1 = await R.processarVendasRecentes(store, { agoraIso: AGORA, forcarSombra: true, runId: 'x' });
@@ -180,8 +180,8 @@ describe('Corte de ativação e checkpoint', () => {
   });
   test('SH-10 venda atrasada dentro da janela ainda é avaliada; corte alterado descarta checkpoint', async () => {
     await regra(SOMBRA);
-    await venda('8811201', '2026-10-04', FAB); await job();
-    const atrasada = await venda('8811202', '2026-09-29', ADE, { mod: '2026-10-05 08:00:00' });  // lançada depois, data comercial antiga (>= corte)
+    await venda('8811201', '2026-10-04', VD2); await job();
+    const atrasada = await venda('8811202', '2026-09-29', VD1, { mod: '2026-10-05 08:00:00' });  // lançada depois, data comercial antiga (>= corte)
     const r = await job();
     expect(r).toMatchObject({ checkpointAntes: '2026-10-04 12:00:00', processadas: 1, checkpointDepois: '2026-10-05 08:00:00' });
     expect((await sombras()).map(s => s.vendaId)).toContain(atrasada);
@@ -192,61 +192,61 @@ describe('Corte de ativação e checkpoint', () => {
 
 describe('Cenários críticos em SOMBRA (bloqueantes)', () => {
   const um = async () => (await sombras())[0];
-  test('SH-11 cobertura: Fabiana em pausa, 150 dias, venda do Ademir → NAO_TRANSFERIR / COBERTURA_PAUSA_TEMPORARIA', async () => {
-    await vendedor(FAB, { pausa: true, pausaMotivo: 'FERIAS' });
-    await carteira('8812001', FAB); await venda('8812001', '2026-05-03', FAB); await venda('8812001', '2026-09-30', ADE);
+  test('SH-11 cobertura: Vend2 em pausa, 150 dias, venda do Vend1 → NAO_TRANSFERIR / COBERTURA_PAUSA_TEMPORARIA', async () => {
+    await vendedor(VD2, { pausa: true, pausaMotivo: 'FERIAS' });
+    await carteira('8812001', VD2); await venda('8812001', '2026-05-03', VD2); await venda('8812001', '2026-09-30', VD1);
     await regra(SOMBRA); await job();
-    expect(await um()).toMatchObject({ decisaoSombra: 'NAO_TRANSFERIR', motivo: 'COBERTURA_PAUSA_TEMPORARIA', diasSemComprar: 150, ownerAntesUid: FAB, ownerDepoisUid: FAB });
-    expect((await db.doc('carteira_comercial/GC:8812001').get()).data().ownerUid).toBe(FAB);
+    expect(await um()).toMatchObject({ decisaoSombra: 'NAO_TRANSFERIR', motivo: 'COBERTURA_PAUSA_TEMPORARIA', diasSemComprar: 150, ownerAntesUid: VD2, ownerDepoisUid: VD2 });
+    expect((await db.doc('carteira_comercial/GC:8812001').get()).data().ownerUid).toBe(VD2);
   });
-  test('SH-12 R2: Fabiana ativa, 150 dias, venda do Ademir → TRANSFERIRIA_R2 F→A; dono oficial continua Fabiana', async () => {
-    await carteira('8812002', FAB); await venda('8812002', '2026-05-03', FAB); await venda('8812002', '2026-09-30', ADE);
+  test('SH-12 R2: Vend2 ativa, 150 dias, venda do Vend1 → TRANSFERIRIA_R2 F→A; dono oficial continua Vend2', async () => {
+    await carteira('8812002', VD2); await venda('8812002', '2026-05-03', VD2); await venda('8812002', '2026-09-30', VD1);
     await regra(SOMBRA); await job();
-    expect(await um()).toMatchObject({ decisaoSombra: 'TRANSFERIRIA_R2', decisao: 'TRANSFERIR_R2', ownerAntesUid: FAB, ownerDepoisUid: ADE, diasSemComprar: 150, modo: 'SOMBRA' });
-    expect((await db.doc('carteira_comercial/GC:8812002').get()).data()).toMatchObject({ ownerUid: FAB, versao: 1 });
+    expect(await um()).toMatchObject({ decisaoSombra: 'TRANSFERIRIA_R2', decisao: 'TRANSFERIR_R2', ownerAntesUid: VD2, ownerDepoisUid: VD1, diasSemComprar: 150, modo: 'SOMBRA' });
+    expect((await db.doc('carteira_comercial/GC:8812002').get()).data()).toMatchObject({ ownerUid: VD2, versao: 1 });
     expect(await tamanho('carteira_comercial_historico')).toBe(0);
   });
   test('SH-12b bordas em SOMBRA: 119 não, 120 sim', async () => {
-    await carteira('8812003', FAB); await venda('8812003', '2026-06-02', FAB); await venda('8812003', '2026-09-29', ADE);   // 119
-    await carteira('8812004', FAB); await venda('8812004', '2026-06-01', FAB); await venda('8812004', '2026-09-29', ADE);   // 120
+    await carteira('8812003', VD2); await venda('8812003', '2026-06-02', VD2); await venda('8812003', '2026-09-29', VD1);   // 119
+    await carteira('8812004', VD2); await venda('8812004', '2026-06-01', VD2); await venda('8812004', '2026-09-29', VD1);   // 120
     await regra(SOMBRA); await job();
     const s = await sombras();
     expect(s.find(x => x.portfolioId === 'GC:8812003')).toMatchObject({ diasSemComprar: 119, decisaoSombra: 'NAO_TRANSFERIR' });
     expect(s.find(x => x.portfolioId === 'GC:8812004')).toMatchObject({ diasSemComprar: 120, decisaoSombra: 'TRANSFERIRIA_R2' });
   });
-  test('SH-13 primeira venda: nunca comprou, venda do Ademir → CRIARIA_CARTEIRA; nada criado', async () => {
-    await venda('8812005', '2026-09-30', ADE);
+  test('SH-13 primeira venda: nunca comprou, venda do Vend1 → CRIARIA_CARTEIRA; nada criado', async () => {
+    await venda('8812005', '2026-09-30', VD1);
     await regra(SOMBRA); await job();
-    expect(await um()).toMatchObject({ decisaoSombra: 'CRIARIA_CARTEIRA', ownerDepoisUid: ADE, ownerAntesUid: null });
+    expect(await um()).toMatchObject({ decisaoSombra: 'CRIARIA_CARTEIRA', ownerDepoisUid: VD1, ownerAntesUid: null });
     expect((await db.doc('carteira_comercial/GC:8812005').get()).exists).toBe(false);
   });
   test('SH-14 histórico sem carteira: 80 dias → NAO_CRIAR; 150 dias → CRIARIA_CARTEIRA_REATIVACAO; nada criado', async () => {
-    await venda('8812006', '2026-07-12', MUR); await venda('8812006', '2026-09-30', ADE);        // 80
-    await venda('8812007', '2026-05-03', MUR); await venda('8812007', '2026-09-30', ADE);        // 150
+    await venda('8812006', '2026-07-12', MUR); await venda('8812006', '2026-09-30', VD1);        // 80
+    await venda('8812007', '2026-05-03', MUR); await venda('8812007', '2026-09-30', VD1);        // 150
     await regra(SOMBRA); await job();
     const s = await sombras();
     expect(s.find(x => x.portfolioId === 'GC:8812006')).toMatchObject({ diasSemComprar: 80, decisaoSombra: 'NAO_CRIAR' });
-    expect(s.find(x => x.portfolioId === 'GC:8812007')).toMatchObject({ diasSemComprar: 150, decisaoSombra: 'CRIARIA_CARTEIRA_REATIVACAO', ownerDepoisUid: ADE });
+    expect(s.find(x => x.portfolioId === 'GC:8812007')).toMatchObject({ diasSemComprar: 150, decisaoSombra: 'CRIARIA_CARTEIRA_REATIVACAO', ownerDepoisUid: VD1 });
     expect(await tamanho('carteira_comercial')).toBe(0);
   });
-  test('SH-15 vendedor não habilitado (Murilo) e não configurado → REVISAO_GESTAO; nada criado/transferido', async () => {
+  test('SH-15 vendedor não habilitado (Titular) e não configurado → REVISAO_GESTAO; nada criado/transferido', async () => {
     await venda('8812008', '2026-09-30', MUR);
     await venda('8812009', '2026-09-30', null, { vendGc: '9299999' });
-    await carteira('8812010', FAB); await venda('8812010', '2026-04-01', FAB); await venda('8812010', '2026-09-30', MUR);
+    await carteira('8812010', VD2); await venda('8812010', '2026-04-01', VD2); await venda('8812010', '2026-09-30', MUR);
     await regra(SOMBRA); await job();
     const s = await sombras();
     expect(s.find(x => x.portfolioId === 'GC:8812008')).toMatchObject({ decisaoSombra: 'REVISAO_GESTAO', motivo: 'VENDEDOR_NAO_HABILITADO' });
     expect(s.find(x => x.portfolioId === 'GC:8812009')).toMatchObject({ decisaoSombra: 'REVISAO_GESTAO', motivo: 'VENDEDOR_NAO_RESOLVIDO' });
-    expect(s.find(x => x.portfolioId === 'GC:8812010')).toMatchObject({ decisaoSombra: 'REVISAO_GESTAO', ownerDepoisUid: FAB });
-    expect((await db.doc('carteira_comercial/GC:8812010').get()).data().ownerUid).toBe(FAB);
+    expect(s.find(x => x.portfolioId === 'GC:8812010')).toMatchObject({ decisaoSombra: 'REVISAO_GESTAO', ownerDepoisUid: VD2 });
+    expect((await db.doc('carteira_comercial/GC:8812010').get()).data().ownerUid).toBe(VD2);
     expect(await tamanho('carteira_comercial')).toBe(1);
   });
   test('SH-16 vendas inválidas (cancelada, orçamento, em aberto, valor zero, sem cliente) não geram decisão', async () => {
-    await venda('8812011', '2026-09-30', ADE, { situacao: 'Cancelada' });
-    await venda('8812011', '2026-09-30', ADE, { situacao: 'Orçamento' });
-    await venda('8812011', '2026-09-30', ADE, { situacao: 'Em aberto' });
-    await venda('8812011', '2026-09-30', ADE, { valor: '0.00' });
-    await venda('', '2026-09-30', ADE);
+    await venda('8812011', '2026-09-30', VD1, { situacao: 'Cancelada' });
+    await venda('8812011', '2026-09-30', VD1, { situacao: 'Orçamento' });
+    await venda('8812011', '2026-09-30', VD1, { situacao: 'Em aberto' });
+    await venda('8812011', '2026-09-30', VD1, { valor: '0.00' });
+    await venda('', '2026-09-30', VD1);
     await regra(SOMBRA);
     const r = await job();
     expect(r.processadas).toBe(0);
@@ -254,8 +254,8 @@ describe('Cenários críticos em SOMBRA (bloqueantes)', () => {
     expect(await sombras()).toHaveLength(0);
   });
   test('SH-17 venda cancelada após decisão sombra: nova revisão INVALIDADA na SOMBRA, nunca na coleção oficial', async () => {
-    await carteira('8812012', FAB); await venda('8812012', '2026-04-01', FAB);
-    const v = await venda('8812012', '2026-09-30', ADE);
+    await carteira('8812012', VD2); await venda('8812012', '2026-04-01', VD2);
+    const v = await venda('8812012', '2026-09-30', VD1);
     await regra(SOMBRA); await job();
     await db.doc('vendas_gc/' + v).update({ nome_situacao: 'Cancelada', modificado_em: '2026-10-05 08:00:00' });
     const r = await job();
@@ -270,10 +270,10 @@ describe('Cenários críticos em SOMBRA (bloqueantes)', () => {
 describe('Kill switch', () => {
   test('SH-18 SOMBRA → DESLIGADO: próxima execução 0 decisões novas e 0 escritas; volta a SOMBRA e processa', async () => {
     await regra(SOMBRA);
-    await venda('8813001', '2026-09-29', FAB); await job();
+    await venda('8813001', '2026-09-29', VD2); await job();
     expect(await sombras()).toHaveLength(1);
     await regra({ ...SOMBRA, modo: 'DESLIGADO' });
-    const nova = await venda('8813002', '2026-09-30', ADE);
+    const nova = await venda('8813002', '2026-09-30', VD1);
     const cpAntes = (await db.doc('carteira_comercial_config/checkpoint_sombra_v2').get()).data();
     const antes = await oficiaisSnapshot();
     expect((await job()).status).toBe('DESLIGADO');

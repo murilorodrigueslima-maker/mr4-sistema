@@ -87,8 +87,8 @@ test('MV-07 gestor → não participa, mesmo configurado e com operar', async ()
 });
 
 test('MV-08 fila-comercial-gestao → não participa (gestão não opera)', async () => {
-  const s = [['camila-x', { nome: 'C', modulos: ['fila-comercial-gestao', 'fila-comercial-operar'], filaComercial: fc() }]];
-  expect(resolverParticipantes(new Map(s), new Map([user('camila-x')])).rejeitados).toEqual([{ uid: 'camila-x', motivo: 'PERFIL_GESTAO' }]);
+  const s = [['revisor4-x', { nome: 'C', modulos: ['fila-comercial-gestao', 'fila-comercial-operar'], filaComercial: fc() }]];
+  expect(resolverParticipantes(new Map(s), new Map([user('revisor4-x')])).rejeitados).toEqual([{ uid: 'revisor4-x', motivo: 'PERFIL_GESTAO' }]);
 });
 
 test('MV-09 limite individual 5 → no máximo 5 (o outro continua 10)', async () => {
@@ -142,7 +142,7 @@ test('MV-16 nenhum uid, e-mail ou nome de vendedor no código da fila', () => {
   const src = arquivos.map(f => fs.readFileSync(path.join(LIB, f), 'utf8')).join('\n')
     + fs.readFileSync(path.join(__dirname, '..', '..', 'modulos', 'fila-comercial.html'), 'utf8')
     + fs.readFileSync(path.join(__dirname, '..', '..', 'modulos', 'fila-worklist-view.js'), 'utf8');
-  expect(src).not.toMatch(/fabiana|ademir|camila|UGXinD3KVXX0ouYEfamBWjizC5C2|G9JDOBsquwdth77qgwtXpcjSxYd2|wVtUJcgwIqQK4VOlYBlREWk8C1Y2/i);
+  expect(src).not.toMatch(/vend2|vend1|revisor4|UidSinteticoC000000000000000|UidSinteticoB000000000000000|UidSinteticoD000000000000000/i);
 });
 
 test('MV-17 algoritmo: distribuição justa e sem colisão com limites diferentes (5/10/3)', () => {

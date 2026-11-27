@@ -17,7 +17,7 @@
     return { nivel: 'ok', rotulo: 'Ao vivo', cor: 'green' };
   }
 
-  /** Ranking por faturamento (Ademir/Fabiana); sinaliza quem tem MAIOR % da meta para não favorecer a meta menor/maior. */
+  /** Ranking por faturamento (Vend1/Vend2); sinaliza quem tem MAIOR % da meta para não favorecer a meta menor/maior. */
   function ranking(vendedores) {
     var v = (vendedores || []).map(function (x) { return { nome: x.nome, totalMes: x.totalMes || 0, pctMeta: x.meta ? Math.round((x.totalMes / x.meta) * 1000) / 10 : 0, meta: x.meta || 0 }; });
     var porFat = v.slice().sort(function (a, b) { return b.totalMes - a.totalMes; });

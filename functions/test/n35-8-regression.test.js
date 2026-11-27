@@ -39,7 +39,7 @@ test('N35-8-REG-01: nome GC_NATIVE usa perfil360.nomeCliente como fallback', () 
   const clienteInfoMap = new Map();
 
   const gcDocId   = '31349459';
-  const perfilData = { nomeCliente: '51.908.552 MAGNO ERNESTO TEIXEIRA', source: 'GC_NATIVE' };
+  const perfilData = { nomeCliente: '00.000.002 PESSOA EXEMPLO SINTETICA', source: 'GC_NATIVE' };
 
   // Lógica ANTES do fix: info.nome || null
   const infoBefore = clienteInfoMap.get(gcDocId) || {};
@@ -49,7 +49,7 @@ test('N35-8-REG-01: nome GC_NATIVE usa perfil360.nomeCliente como fallback', () 
   // Lógica DEPOIS do fix: info.nome || doc.data().nomeCliente || null
   const infoAfter  = clienteInfoMap.get(gcDocId) || {};
   const nomeAfter   = infoAfter.nome || perfilData.nomeCliente || null;
-  expect(nomeAfter).toBe('51.908.552 MAGNO ERNESTO TEIXEIRA');
+  expect(nomeAfter).toBe('00.000.002 PESSOA EXEMPLO SINTETICA');
 });
 
 test('N35-8-REG-02: nome MR4_LINKED mantém precedência do clienteInfoMap', () => {
@@ -80,7 +80,7 @@ test('N35-8-REG-04: pipeline completo para GC_NATIVE sem regressão', () => {
     source:        'GC_NATIVE',
     gestaoClickId: '31349459',
     clienteMr4Id:  '31349459', // alias usado pelo pipeline
-    nomeCliente:   '51.908.552 MAGNO ERNESTO TEIXEIRA',
+    nomeCliente:   '00.000.002 PESSOA EXEMPLO SINTETICA',
     ultimaCompraEm: '2026-08-01',
   };
 

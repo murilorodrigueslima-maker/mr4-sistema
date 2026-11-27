@@ -284,7 +284,7 @@ test('N25-ADV-45: output APROVAR_PRAZO → BLOCK', () => {
 });
 
 test('N25-ADV-46: output ALTERAR_ENCARTEIRAMENTO → BLOCK', () => {
-  const o = mkOutputAgente({ tipo: 'SUGESTAO', conteudo: 'ALTERAR_ENCARTEIRAMENTO para Fabiana' });
+  const o = mkOutputAgente({ tipo: 'SUGESTAO', conteudo: 'ALTERAR_ENCARTEIRAMENTO para Vend2' });
   expect(() => validarOutputAgente(o)).toThrow(GuardrailViolationError);
 });
 

@@ -8,8 +8,8 @@ const { criarEstadoInicial, claimOportunidade, registrarOutcome } = require('../
 const { calcularPerfil360 } = require('../lib/perfil360');
 const { verificarCamposBloqueados, prepararDadosUI } = require('../lib/filaComercialUtils');
 
-const FAB = 'UGXinD3KVXX0ouYEfamBWjizC5C2';
-const ADEMIR = 'G9JDOBsquwdth77qgwtXpcjSxYd2';
+const VD2 = 'UidSinteticoC000000000000000';
+const VEND1 = 'UidSinteticoB000000000000000';
 const NOW = new Date('2026-09-25T09:00:00.000Z'); // sexta 06:00 America/Fortaleza
 const DR = '2026-09-25';
 const quiet = { log() {} };
@@ -24,10 +24,10 @@ function inativo(gcId, ultima = '2026-03-09', n = 6) {
   for (let i = 0; i < n; i++) { const d = new Date(base); d.setUTCDate(d.getUTCDate() - i * 20); datas.push(d.toISOString().slice(0, 10)); }
   return vendasDe(gcId, datas);
 }
-function usuarios({ fabAtiva = true, ademirConfigurado = false } = {}) {
-  const users = new Map([[FAB, { ativo: fabAtiva, role: 'funcionario' }], [ADEMIR, { ativo: true, role: 'funcionario' }]]);
-  const sistema = new Map([[FAB, { nome: 'FABIANA', modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }], [ADEMIR, { modulos: ['fila-comercial-operar'] }]]);
-  return { users, sistema, ademirConfigurado };
+function usuarios({ fabAtiva = true, vend1Configurado = false } = {}) {
+  const users = new Map([[VD2, { ativo: fabAtiva, role: 'funcionario' }], [VEND1, { ativo: true, role: 'funcionario' }]]);
+  const sistema = new Map([[VD2, { nome: 'VEND2', modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }], [VEND1, { modulos: ['fila-comercial-operar'] }]]);
+  return { users, sistema, vend1Configurado };
 }
 function dadosBase({ nGc = 25, estados = new Map(), extraVendas = [], perfis = [], clientes = [], u = usuarios() } = {}) {
   let vendas = [];
@@ -53,22 +53,22 @@ function fakeDb(inicial = {}) {
   return api;
 }
 const gerar = (o = {}) => G.executarGeracaoWorklist({ db: null, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: nomeMock, dados: dadosBase(), ...o });
-const minha = r => r.doc.vendedores[FAB];
+const minha = r => r.doc.vendedores[VD2];
 
 // ── Geração / CAP / vendedores ───────────────────────────────────────────────
 describe('Geração e CAP', () => {
-  test('GN-01 Fabiana recebe exatamente 10 novas com 25 candidatos', async () => {
+  test('GN-01 Vend2 recebe exatamente 10 novas com 25 candidatos', async () => {
     const r = await gerar();
     expect(minha(r).novas).toHaveLength(10);
     expect(r.doc.cap).toBe(10);
   });
-  test('GN-02 somente vendedores ativos da config: Fabiana sim, Ademir não', async () => {
+  test('GN-02 somente vendedores ativos da config: Vend2 sim, Vend1 não', async () => {
     const r = await gerar();
-    expect(r.doc.vendedoresAtivos).toEqual([FAB]);
-    expect(r.doc.vendedores[ADEMIR]).toBeUndefined();
-    expect(Object.values(r.doc.atribuicoes).every(a => a.uid === FAB)).toBe(true);
+    expect(r.doc.vendedoresAtivos).toEqual([VD2]);
+    expect(r.doc.vendedores[VEND1]).toBeUndefined();
+    expect(Object.values(r.doc.atribuicoes).every(a => a.uid === VD2)).toBe(true);
   });
-  test('GN-03 Fabiana inativa → nenhuma worklist gerada, vendedor rejeitado registrado', async () => {
+  test('GN-03 Vend2 inativa → nenhuma worklist gerada, vendedor rejeitado registrado', async () => {
     const r = await gerar({ dados: dadosBase({ u: usuarios({ fabAtiva: false }) }) });
     expect(r.doc.vendedoresAtivos).toEqual([]);
     expect(r.doc.contagens.vendedoresRejeitados).toBe(1);
@@ -78,16 +78,16 @@ describe('Geração e CAP', () => {
     const base = await gerar();
     const alvo = minha(base).novas[9];
     let e = { ...criarEstadoInicial(alvo.commercialEntityId, alvo.opportunityInstanceId, alvo.tipoOportunidade, '2026-09-22T12:00:00.000Z'), nomeCliente: 'Nome gravado no estado' };
-    e = registrarOutcome(claimOportunidade(e, FAB, '2026-09-22T12:01:00.000Z'), FAB, 'PEDIU_RETORNO', '2026-09-22T12:02:00.000Z', { scheduledFor: DR });
+    e = registrarOutcome(claimOportunidade(e, VD2, '2026-09-22T12:01:00.000Z'), VD2, 'PEDIU_RETORNO', '2026-09-22T12:02:00.000Z', { scheduledFor: DR });
     const r = await gerar({ dados: dadosBase({ estados: new Map([[alvo.opportunityInstanceId, e]]) }) });
     expect(minha(r).followUps.map(x => x.opportunityInstanceId)).toEqual([alvo.opportunityInstanceId]);
     expect(minha(r).novas).toHaveLength(10);
     expect(minha(r).novas.map(x => x.opportunityInstanceId)).not.toContain(alvo.opportunityInstanceId);
   });
-  test('GN-05 atendimento válido da Fabiana vem em emAtendimento, fora das novas', async () => {
+  test('GN-05 atendimento válido da Vend2 vem em emAtendimento, fora das novas', async () => {
     const base = await gerar();
     const alvo = minha(base).novas[0];
-    const e = claimOportunidade(criarEstadoInicial(alvo.commercialEntityId, alvo.opportunityInstanceId, alvo.tipoOportunidade, '2026-09-25T08:00:00.000Z'), FAB, '2026-09-25T08:30:00.000Z');
+    const e = claimOportunidade(criarEstadoInicial(alvo.commercialEntityId, alvo.opportunityInstanceId, alvo.tipoOportunidade, '2026-09-25T08:00:00.000Z'), VD2, '2026-09-25T08:30:00.000Z');
     const r = await gerar({ dados: dadosBase({ estados: new Map([[alvo.opportunityInstanceId, e]]) }) });
     expect(minha(r).emAtendimento.map(x => x.opportunityInstanceId)).toEqual([alvo.opportunityInstanceId]);
     expect(minha(r).novas.map(x => x.opportunityInstanceId)).not.toContain(alvo.opportunityInstanceId);
@@ -184,7 +184,7 @@ describe('Schema do documento', () => {
     expect(r.doc.schemaVersion).toBe('worklist-v2');
     expect(r.doc.versao).toBe('N35.18.1');
     expect(r.doc.dataReferencia).toBe('2026-09-25');
-    expect(r.doc.vendedoresRotulos).toEqual({ [FAB]: 'FABIANA' });
+    expect(r.doc.vendedoresRotulos).toEqual({ [VD2]: 'VEND2' });
   });
   test('SC-05 documento pequeno (< 20 KB)', async () => {
     const r = await gerar();
@@ -239,7 +239,7 @@ describe('Nomes', () => {
     const base = await gerar();
     const alvo = minha(base).novas[3];
     let e = { ...criarEstadoInicial(alvo.commercialEntityId, alvo.opportunityInstanceId, alvo.tipoOportunidade, '2026-09-22T12:00:00.000Z'), nomeCliente: 'Nome do estado' };
-    e = registrarOutcome(claimOportunidade(e, FAB, '2026-09-22T12:01:00.000Z'), FAB, 'SEM_RESPOSTA', '2026-09-24T12:02:00.000Z');
+    e = registrarOutcome(claimOportunidade(e, VD2, '2026-09-22T12:01:00.000Z'), VD2, 'SEM_RESPOSTA', '2026-09-24T12:02:00.000Z');
     const chamados = [];
     const r = await gerar({ dados: dadosBase({ estados: new Map([[alvo.opportunityInstanceId, e]]) }), lookupNome: async gc => { chamados.push(gc); return 'L' + gc; } });
     expect(minha(r).followUps[0].nomeCliente).toBe('Nome do estado');
@@ -306,7 +306,7 @@ describe('Regras operacionais aplicadas pelo gerador', () => {
     return { alvo, r, todos, e };
   }
   test('RG-01 SEM_RESPOSTA na sexta → volta na segunda como retorno, não antes', async () => {
-    const f = e => registrarOutcome(claimOportunidade(e, FAB, '2026-09-25T13:00:00.000Z'), FAB, 'SEM_RESPOSTA', '2026-09-25T13:05:00.000Z');
+    const f = e => registrarOutcome(claimOportunidade(e, VD2, '2026-09-25T13:00:00.000Z'), VD2, 'SEM_RESPOSTA', '2026-09-25T13:05:00.000Z');
     const sex = await comEstado(f, new Date('2026-09-25T20:00:00.000Z'));
     expect(sex.e.nextFollowUpAt).toBe('2026-09-28');
     expect(sex.todos.map(x => x.commercialEntityId)).not.toContain(sex.alvo.commercialEntityId);
@@ -317,7 +317,7 @@ describe('Regras operacionais aplicadas pelo gerador', () => {
   test('RG-02 3× SEM_RESPOSTA → cooldown, entidade fora da worklist', async () => {
     const f = e => {
       let s = e;
-      for (const d of ['2026-09-21', '2026-09-22', '2026-09-23']) s = registrarOutcome(claimOportunidade(s, FAB, d + 'T13:00:00.000Z'), FAB, 'SEM_RESPOSTA', d + 'T13:05:00.000Z');
+      for (const d of ['2026-09-21', '2026-09-22', '2026-09-23']) s = registrarOutcome(claimOportunidade(s, VD2, d + 'T13:00:00.000Z'), VD2, 'SEM_RESPOSTA', d + 'T13:05:00.000Z');
       return s;
     };
     const { alvo, r, todos, e } = await comEstado(f);
@@ -327,21 +327,21 @@ describe('Regras operacionais aplicadas pelo gerador', () => {
     expect(r.doc.contagens.excluidos.COOLDOWN).toBe(1);
   });
   test('RG-03 PEDIU_RETORNO futuro → não aparece antes da data', async () => {
-    const { alvo, todos } = await comEstado(e => registrarOutcome(claimOportunidade(e, FAB, '2026-09-24T13:00:00.000Z'), FAB, 'PEDIU_RETORNO', '2026-09-24T13:05:00.000Z', { scheduledFor: '2026-09-30' }));
+    const { alvo, todos } = await comEstado(e => registrarOutcome(claimOportunidade(e, VD2, '2026-09-24T13:00:00.000Z'), VD2, 'PEDIU_RETORNO', '2026-09-24T13:05:00.000Z', { scheduledFor: '2026-09-30' }));
     expect(todos.map(x => x.commercialEntityId)).not.toContain(alvo.commercialEntityId);
   });
   test('RG-04 conversa concluída → entidade suprimida por 30 dias', async () => {
-    const { alvo, todos, r } = await comEstado(e => registrarOutcome(claimOportunidade(e, FAB, '2026-09-24T13:00:00.000Z'), FAB, 'CONVERSA_REALIZADA', '2026-09-24T13:05:00.000Z'));
+    const { alvo, todos, r } = await comEstado(e => registrarOutcome(claimOportunidade(e, VD2, '2026-09-24T13:00:00.000Z'), VD2, 'CONVERSA_REALIZADA', '2026-09-24T13:05:00.000Z'));
     expect(todos.map(x => x.commercialEntityId)).not.toContain(alvo.commercialEntityId);
     expect(minha(r).novas).toHaveLength(10);
   });
   test('RG-05 atendimento expirado (>4h) volta como nova disponível', async () => {
-    const { alvo, r } = await comEstado(e => claimOportunidade(e, FAB, '2026-09-24T09:00:00.000Z'));
+    const { alvo, r } = await comEstado(e => claimOportunidade(e, VD2, '2026-09-24T09:00:00.000Z'));
     expect(minha(r).novas.map(x => x.commercialEntityId)).toContain(alvo.commercialEntityId);
     expect(minha(r).emAtendimento).toHaveLength(0);
   });
-  test('RG-06 atendimento de vendedor NÃO ativo (Ademir) não é entregue à Fabiana', async () => {
-    const { alvo, todos } = await comEstado(e => claimOportunidade(e, ADEMIR, '2026-09-25T08:30:00.000Z'));
+  test('RG-06 atendimento de vendedor NÃO ativo (Vend1) não é entregue à Vend2', async () => {
+    const { alvo, todos } = await comEstado(e => claimOportunidade(e, VEND1, '2026-09-25T08:30:00.000Z'));
     expect(todos.map(x => x.commercialEntityId)).not.toContain(alvo.commercialEntityId);
   });
 });

@@ -120,7 +120,7 @@ const SEED = async (db) => {
     atualizado_em: '2026-09-09T11:00:00',
     total: 3,
     pedidos: [
-      { numero: '1', data: '2026-09-09', cliente: 'PEDRO ARAUJO', vendedor: 'ADEMIR', valor: 500, itens: 2 },
+      { numero: '1', data: '2026-09-09', cliente: 'PEDRO ARAUJO', vendedor: 'VEND1', valor: 500, itens: 2 },
     ],
     _meta: { pedidosTotal: 3, sincronizadoEm: '2026-09-09T11:00:00' },
   });

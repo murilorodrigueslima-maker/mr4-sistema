@@ -41,19 +41,19 @@ const SEED = async db => {
   // Gestor direto
   await db.collection('users').doc(UID_GESTOR).set({ role: 'gestor', ativo: true });
   await db.collection('sistema_usuarios').doc(UID_GESTOR).set({
-    nome: 'Murilo', cargo: 'Gestor', modulos: ['ponto', 'demandas', 'garantia'], admin: false, bloqueado: false
+    nome: 'Titular', cargo: 'Gestor', modulos: ['ponto', 'demandas', 'garantia'], admin: false, bloqueado: false
   });
 
   // Dual-role: modulos=['demandas']
   await db.collection('users').doc(UID_DUAL_DEMANDAS).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-DR-01' });
   await db.collection('sistema_usuarios').doc(UID_DUAL_DEMANDAS).set({
-    nome: 'Fabiana', cargo: 'Vendedora', modulos: ['demandas'], admin: false, bloqueado: false
+    nome: 'Vend2', cargo: 'Vendedora', modulos: ['demandas'], admin: false, bloqueado: false
   });
 
   // Dual-role: modulos=['garantia']
   await db.collection('users').doc(UID_DUAL_GARANTIA).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-DR-02' });
   await db.collection('sistema_usuarios').doc(UID_DUAL_GARANTIA).set({
-    nome: 'Gutemberg', cargo: 'Técnico', modulos: ['garantia'], admin: false, bloqueado: false
+    nome: 'Estoq6', cargo: 'Técnico', modulos: ['garantia'], admin: false, bloqueado: false
   });
 
   // Dual-role: admin=true
@@ -176,7 +176,7 @@ describe('DR-11..DR-13 — ponto regressão (temModulo mantido)', () => {
 
   test('DR-13: gestor COM módulo ponto ACESSA registros (regressão gestor preservado)', async () => {
     await seed('sistema_usuarios', UID_GESTOR, {
-      nome: 'Murilo', cargo: 'Gestor', modulos: ['ponto'], admin: false, bloqueado: false
+      nome: 'Titular', cargo: 'Gestor', modulos: ['ponto'], admin: false, bloqueado: false
     });
     await seed('registros', 'reg-test-g', { funcId: 'FUNC-01', data: '2026-09-22' });
     await assertSucceeds(db(UID_GESTOR).collection('registros').doc('reg-test-g').get());
@@ -229,7 +229,7 @@ describe('DR-17 — fornecedores_custo: dual-role lê mas NÃO escreve', () => {
 describe('DR-18 — clientes: dual-role respeita proteção de campos GC', () => {
   test('DR-18a: dual-role clientes cria cliente (sem campos GC)', async () => {
     await seed('sistema_usuarios', UID_DUAL_DEMANDAS, {
-      nome: 'Fabiana', cargo: 'Vendedora', modulos: ['clientes'], admin: false, bloqueado: false
+      nome: 'Vend2', cargo: 'Vendedora', modulos: ['clientes'], admin: false, bloqueado: false
     });
     const UID_DUAL_CLIENTES = UID_DUAL_DEMANDAS; // reuse uid, update sistema_usuarios
     await assertSucceeds(
@@ -239,7 +239,7 @@ describe('DR-18 — clientes: dual-role respeita proteção de campos GC', () =>
 
   test('DR-18b: dual-role NÃO cria cliente com campo gestaoClickId', async () => {
     await seed('sistema_usuarios', UID_DUAL_DEMANDAS, {
-      nome: 'Fabiana', cargo: 'Vendedora', modulos: ['clientes'], admin: false, bloqueado: false
+      nome: 'Vend2', cargo: 'Vendedora', modulos: ['clientes'], admin: false, bloqueado: false
     });
     await assertFails(
       db(UID_DUAL_DEMANDAS).collection('clientes').doc('cli-gc').set({

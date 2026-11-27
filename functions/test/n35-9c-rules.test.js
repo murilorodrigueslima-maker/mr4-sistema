@@ -1,6 +1,6 @@
 'use strict';
 // N35.9C — Testes das Regras Operacionais V1
-// Decisões aprovadas por Murilo (2026-09-24):
+// Decisões aprovadas por Titular (2026-09-24):
 //   1. SEM_INTERESSE_AGORA → cooldown 30 dias
 //   2. 3× SEM_RESPOSTA consecutivos → cooldown 30 dias
 //   3. CLAIM_TIMEOUT_HOURS = 4

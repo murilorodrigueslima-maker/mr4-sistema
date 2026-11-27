@@ -14,13 +14,13 @@ const A = require('./auditoria');
 const COLL = 'carteira_comercial', COLL_HIST = 'carteira_comercial_historico';
 const err = (code, msg) => new HttpsError(code, msg);
 
-/** Revisor de conflito = role gestor (proprietário) OU módulo fila-comercial-gestao (Camila). Nunca vendedor; nunca exige admin. */
+/** Revisor de conflito = role gestor (proprietário) OU módulo fila-comercial-gestao (Revisor4). Nunca vendedor; nunca exige admin. */
 async function autorizarRevisor(store, uid) {
   const [u, s] = await Promise.all([store.collection('users').doc(uid).get(), store.collection('sistema_usuarios').doc(uid).get()]);
   if (!u.exists || !s.exists || !u.data().ativo || s.data().bloqueado === true) throw err('permission-denied', 'SEM_PERMISSAO');
   const gestor = u.data().role === 'gestor', gestao = Array.isArray(s.data().modulos) && s.data().modulos.includes('fila-comercial-gestao');
   if (!gestor && !gestao) throw err('permission-denied', 'SEM_PERMISSAO');
-  return { uid, role: u.data().role, papel: gestor ? 'PROPRIETARIO' : 'CAMILA' };
+  return { uid, role: u.data().role, papel: gestor ? 'PROPRIETARIO' : C2.PAPEL_REVISOR_GESTAO };
 }
 async function ownerValido(store, uid) {
   const [u, s] = await Promise.all([store.collection('users').doc(uid).get(), store.collection('sistema_usuarios').doc(uid).get()]);
@@ -133,7 +133,7 @@ function liberar(store, FieldValue, p) {
     return { doc: { ...antes, ownerUid: null, ownerDesde: null, status: 'LIBERADA', atualizadoEm: agoraIso, versao: antes.versao + 1 } };
   } });
 }
-/** Resolução de conflito de identidade: SOMENTE revisor autorizado (proprietário/Camila); NUNCA altera owner. */
+/** Resolução de conflito de identidade: SOMENTE revisor autorizado (proprietário/Revisor4); NUNCA altera owner. */
 async function resolverConflito(store, FieldValue, p) {
   const revisor = await autorizarRevisor(store, p.operadorUid);
   exigir(['MANTIDA_SEM_MERGE', 'DESCARTADO_FALSO_POSITIVO'].includes(p.resolucao), 'invalid-argument', 'resolucao inválida');

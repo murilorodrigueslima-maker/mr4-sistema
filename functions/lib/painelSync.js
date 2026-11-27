@@ -70,10 +70,15 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
     const cfgDoc = cfgSnap.exists ? cfgSnap.data() : {};
     const metaPorNome = {}; (Array.isArray(cfgDoc.vendedores) ? cfgDoc.vendedores : []).forEach(v => { if (v && v.nome) metaPorNome[v.nome] = Number(v.meta) || 0; });
     const mapaDoc = mapSnap.exists && mapSnap.data().vendedores ? mapSnap.data().vendedores : null;
-    const mapa = mapaDoc || M.MAPA_PADRAO;
-    const nomeDe = k => Object.values(mapa).find(m => m.chave === k)?.nomeConfig || (k === 'ademir' ? 'Ademir' : 'Fabiana');
+    const mapa = mapaDoc || {};
+    const chaves = M.chavesDoMapa(mapa);
+    // Sem mapeamento protegido nada é recalculado: falha explícita, últimos documentos válidos preservados.
+    if (!chaves.length) throw Object.assign(new Error('MAPEAMENTO_AUSENTE'), { codigo: 'MAPEAMENTO_AUSENTE' });
+    const porChave = fn => Object.fromEntries(chaves.map(k => [k, fn(k)]));
+    const cap = k => k.charAt(0).toUpperCase() + k.slice(1);
+    const nomeDe = k => Object.values(mapa).find(m => m.chave === k)?.nomeConfig || cap(k);
     const outrosConhecidos = mapSnap.exists && mapSnap.data().outrosConhecidos ? mapSnap.data().outrosConhecidos : {};
-    const cfg = { mapa, outrosConhecidos, metas: { ademir: metaPorNome[nomeDe('ademir')] || 0, fabiana: metaPorNome[nomeDe('fabiana')] || 0 }, metaGeral: Number(cfgDoc.meta_equipe) || 0 };
+    const cfg = { mapa, outrosConhecidos, metas: porChave(k => metaPorNome[nomeDe(k)] || 0), metaGeral: Number(cfgDoc.meta_equipe) || 0 };
     // 3) vendas do mês corrente (concretizadas) + canceladas do mês
     const conc = await buscarVendas({ fetchImpl, tokens, situacaoId: M.STATUS_CONCRETIZADOS[0], inicio: inicioMes, fim: hojeStr });
     const canc = await buscarVendas({ fetchImpl, tokens, situacaoId: M.STATUS_CANCELADA, inicio: inicioMes, fim: hojeStr });
@@ -98,15 +103,15 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
             await buscarVendas({ fetchImpl, tokens, situacaoId: M.STATUS_CANCELADA, inicio: m + '-01', fim: ultimoDia(m) })];
           const x = M.calcular({ vendas: c.vendas.concat(k.vendas), hojeStr: '0000-00-00', mes: m, cfg });
           if (!x.ok || !c.integra) throw Object.assign(new Error('HIST_DIVERGENCIA:' + m), { codigo: 'HIST_DIVERGENCIA' });
-          novo.push({ mes: m, geral: x.geral.totalMes, pedidos: x.geral.pedidosMes, ticket: x.geral.ticketMes, ademir: x.ademir.totalMes, fabiana: x.fabiana.totalMes, outros: x.outros.totalMes,
-            pedidosAdemir: x.ademir.pedidosMes, pedidosFabiana: x.fabiana.pedidosMes, pedidosOutros: x.outros.pedidosMes, cancelamentosQtd: x.cancelamentos.qtd, cancelamentosValor: x.cancelamentos.valor,
+          novo.push({ mes: m, geral: x.geral.totalMes, pedidos: x.geral.pedidosMes, ticket: x.geral.ticketMes, ...porChave(k => x[k].totalMes), outros: x.outros.totalMes,
+            ...Object.fromEntries(chaves.map(k => ['pedidos' + cap(k), x[k].pedidosMes])), pedidosOutros: x.outros.pedidosMes, cancelamentosQtd: x.cancelamentos.qtd, cancelamentosValor: x.cancelamentos.valor,
             custo: M.reais(x.custo.mesCentavos), coberturaCusto: x.custo.cobertura, diario: x.diario });
         }
         historico = novo; histEm = FieldValue.serverTimestamp();
       } catch (e) { histErro = e.codigo || 'HIST_FALHA'; }
     }
     // 5) publica TV (compatível com o formato antigo + novos campos) e Gestor
-    const vendedoresLegado = ['ademir', 'fabiana'].map(k => ({ nome: nomeDe(k), meta: r[k].meta, totalMes: r[k].totalMes, totalHoje: r[k].totalHoje, pedidosMes: r[k].pedidosMes, pedidosHoje: r[k].pedidosHoje,
+    const vendedoresLegado = chaves.map(k => ({ nome: nomeDe(k), meta: r[k].meta, totalMes: r[k].totalMes, totalHoje: r[k].totalHoje, pedidosMes: r[k].pedidosMes, pedidosHoje: r[k].pedidosHoje,
       ticketMes: r[k].ticketMes, ticketHoje: r[k].ticketHoje, pctMeta: r[k].pctMeta, restante: r[k].restante }));
     const g = r.geral;
     const equipeLegado = { totalHoje: g.totalHoje, totalMes: g.totalMes, pedidosHoje: g.pedidosHoje, pedidosMes: g.pedidosMes, ticketHoje: g.ticketHoje, ticketMes: g.ticketMes };
@@ -130,14 +135,14 @@ async function sincronizar({ db, FieldValue, fetchImpl, agora = new Date(), toke
       schemaVersao: 3, geral: { ...g }, outros: { ...r.outros }, qualidade: qualBasica, sincronizacao: sinc,
       ritmo, projecao: { fechamento: ritmo.projecaoFechamento, diferencaMeta: ritmo.diferencaProjetadaMeta, pctMeta: ritmo.pctProjetadoMeta, confiabilidade: ritmo.confiabilidade, situacao: ritmo.situacao, estimativa: true },
       serieDiaria, calendario, comparativoMesAnterior: comparativo };
-    const gest = { atualizadoEm: FieldValue.serverTimestamp(), periodo: { inicioMes, fim: hojeStr }, ritmo, comparativoMesAnterior: comparativo, geral: { ...g }, ademir: { ...r.ademir }, fabiana: { ...r.fabiana }, outros: { ...r.outros },
+    const gest = { atualizadoEm: FieldValue.serverTimestamp(), periodo: { inicioMes, fim: hojeStr }, ritmo, comparativoMesAnterior: comparativo, geral: { ...g }, ...porChave(k => ({ ...r[k] })), outros: { ...r.outros },
       custo: { mes: M.reais(r.custo.mesCentavos), margemBruta: M.reais(g.totalMes * 100 - r.custo.mesCentavos), margemPct: g.totalMes ? Math.round(1000 * (g.totalMes * 100 - r.custo.mesCentavos) / (g.totalMes * 100)) / 10 : 0,
         cobertura: r.custo.cobertura, porChave: Object.fromEntries(Object.entries(r.custo.porChave).map(([k, v]) => [k, M.reais(v)])) },
       cancelamentos: r.cancelamentos, historico, historicoAtualizadoEm: histEm, historicoErro: histErro,
       qualidade: { ...r.qualidade, paginacaoIntegra: conc.integra, totalRegistrosGC: conc.totalRegistros }, centavos: r.centavos, sincronizacao: sinc };
     await tvRef.set(tv); await gestRef.set(gest);
     await registrarStatus({ status: 'OK', erro: null, ultimoSucessoEm: FieldValue.serverTimestamp(), falhasConsecutivas: 0, duracaoMs: Date.now() - t0, vendasConsideradas: r.qualidade.vendasConsideradas, historicoErro: histErro });
-    return { status: 'OK', geral: g.totalMes, pedidos: g.pedidosMes, ademir: r.ademir.totalMes, fabiana: r.fabiana.totalMes, outros: r.outros.totalMes };
+    return { status: 'OK', geral: g.totalMes, pedidos: g.pedidosMes, ...porChave(k => r[k].totalMes), outros: r.outros.totalMes };
   } catch (e) {
     const cod = String(e && (e.codigo || e.message) || 'ERRO').replace(/[^A-Za-z0-9_:\-]/g, '').slice(0, 60);
     try { const prev = (await statusRef.get()).data() || {}; await registrarStatus({ status: 'FALHA', erro: cod, falhasConsecutivas: (prev.falhasConsecutivas || 0) + 1, duracaoMs: Date.now() - t0 }); } catch (_) { /* melhor esforço */ }

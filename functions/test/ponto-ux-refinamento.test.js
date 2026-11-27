@@ -78,23 +78,23 @@ function buildCardBancoCompacto(f, { trabMin, esperMin, saldo, diasTrab, pendenc
 // ─── UX1–UX4: Visão Geral — filtro controleBancoHoras ────────────────────────
 
 describe('UX1-UX4 — Visão Geral: filtro controleBancoHoras!==false', () => {
-  const fAdemir  = { id: 'f1', nome: 'Ademir',               controleBancoHoras: true  };
-  const fCamila  = { id: 'f2', nome: 'Camila'                                           }; // campo ausente
-  const fMurilo  = { id: 'fm', nome: 'murilo rodrigues lima', controleBancoHoras: false };
+  const fVend1  = { id: 'f1', nome: 'Vend1',               controleBancoHoras: true  };
+  const fRevisor4  = { id: 'f2', nome: 'Revisor4'                                           }; // campo ausente
+  const fTitular  = { id: 'fm', nome: 'Titular Exemplo', controleBancoHoras: false };
   const fTeste   = { id: 'ft', nome: 'FUNCIONARIO TESTE',     controleBancoHoras: false };
 
   test('UX1 — renderHoje exclui funcionários com controleBancoHoras===false', () => {
-    const todos = [fAdemir, fMurilo, fTeste];
+    const todos = [fVend1, fTitular, fTeste];
     const participantes = filtrarParticipantes(todos);
     expect(participantes).toHaveLength(1);
     expect(participantes[0].id).toBe('f1');
     expect(participantes.every(f => f.controleBancoHoras !== false)).toBe(true);
   });
 
-  test('UX2 — exclusão de Murilo é pela regra, não pelo nome', () => {
-    // Mesmo nome "murilo rodrigues lima" com controleBancoHoras=true → incluído
-    const muriloParticipante = { id: 'fm2', nome: 'murilo rodrigues lima', controleBancoHoras: true };
-    const lista = [fMurilo, muriloParticipante];
+  test('UX2 — exclusão de Titular é pela regra, não pelo nome', () => {
+    // Mesmo nome "Titular Exemplo" com controleBancoHoras=true → incluído
+    const titularParticipante = { id: 'fm2', nome: 'Titular Exemplo', controleBancoHoras: true };
+    const lista = [fTitular, titularParticipante];
     const participantes = filtrarParticipantes(lista);
     expect(participantes).toHaveLength(1);
     expect(participantes[0].id).toBe('fm2');
@@ -113,29 +113,29 @@ describe('UX1-UX4 — Visão Geral: filtro controleBancoHoras!==false', () => {
   });
 
   test('UX4 — métricas usam exatamente o mesmo array filtrado da tabela', () => {
-    const todos = [fAdemir, fCamila, fMurilo, fTeste];
+    const todos = [fVend1, fRevisor4, fTitular, fTeste];
     const participantes = filtrarParticipantes(todos);
-    // participantes = [fAdemir, fCamila] (2 funcionários)
+    // participantes = [fVend1, fRevisor4] (2 funcionários)
     expect(participantes).toHaveLength(2);
 
     const regsHoje = [
-      { funcId: 'f1', tipo: 'entrada', hora: '08:00:00' }, // Ademir presente
+      { funcId: 'f1', tipo: 'entrada', hora: '08:00:00' }, // Vend1 presente
     ];
     const metricas = calcMetricas(participantes, regsHoje);
 
     // Total = participantes.length = 2 (não 4)
     expect(metricas.total).toBe(2);
-    // Presentes = 1 (Ademir), Ausentes = 1 (Camila)
+    // Presentes = 1 (Vend1), Ausentes = 1 (Revisor4)
     expect(metricas.presentes).toBe(1);
     expect(metricas.ausentes).toBe(1);
-    // Murilo e FUNC_TESTE não aparecem nas métricas
+    // Titular e FUNC_TESTE não aparecem nas métricas
     expect(metricas.total).not.toBe(4);
     expect(metricas.ausentes).not.toBe(3);
   });
 
   test('UX4b — funcionário sem campo controleBancoHoras (undefined) é incluído', () => {
     // undefined !== false → incluído (regra: !== false, não === true)
-    const participantes = filtrarParticipantes([fCamila]);
+    const participantes = filtrarParticipantes([fRevisor4]);
     expect(participantes).toHaveLength(1);
     expect(participantes[0].id).toBe('f2');
   });
@@ -146,7 +146,7 @@ describe('UX1-UX4 — Visão Geral: filtro controleBancoHoras!==false', () => {
 describe('UX5-UX7 — Últimas batidas: Facial e Foto removidas', () => {
   const reg = {
     id:          'r1',
-    funcNome:    'Ademir',
+    funcNome:    'Vend1',
     tipoLabel:   'Entrada',
     data:        '2026-09-15',
     hora:        '08:00:00',
@@ -180,7 +180,7 @@ describe('UX5-UX7 — Últimas batidas: Facial e Foto removidas', () => {
 // ─── UX8–UX10: Banco de Horas — card compacto ────────────────────────────────
 
 describe('UX8-UX10 — Banco de Horas: card compacto com 4 métricas', () => {
-  const func = { id: 'f1', nome: 'Ademir Lopes Furtado', cargo: 'Vendedor', foto: null };
+  const func = { id: 'f1', nome: 'Vend1 Exemplo', cargo: 'Vendedor', foto: null };
   const resultado = {
     trabMin:    2368,
     esperMin:   5010,

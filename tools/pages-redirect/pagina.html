@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>MR4 Gestão mudou de endereço</title>
+<noscript><meta http-equiv="refresh" content="8; url=https://mr4-ponto.web.app/"></noscript>
+<style>
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0f172a; color: #e2e8f0; font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 26rem; padding: 24px 16px; text-align: center; }
+  a, button { display: block; width: 100%; box-sizing: border-box; margin-top: 12px; padding: 14px; border-radius: 10px; border: 0; font: inherit; font-weight: 700; text-decoration: none; cursor: pointer; }
+  a { background: #2563eb; color: #fff; }
+  button { background: #334155; color: #fff; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Mudamos de endereço</h1>
+  <p>O MR4 Gestão agora fica em <strong>mr4-ponto.web.app</strong>. Entre com o mesmo e-mail e a mesma senha e salve o novo endereço nos favoritos ou na tela inicial.</p>
+  <div id="dados" hidden>
+    <p>Este navegador guarda dados que existem <strong>somente aqui</strong> (por exemplo, o histórico do caixa). Baixe a cópia antes de continuar.</p>
+    <button id="baixar" type="button">Baixar cópia dos dados deste navegador</button>
+  </div>
+  <a id="ir" href="https://mr4-ponto.web.app/" rel="noreferrer">Abrir o novo endereço</a>
+</main>
+<script>
+(function () {
+  'use strict';
+  var NOVO = 'https://mr4-ponto.web.app';
+  var BASE = '/mr4-sistema';
+  var PAGINAS = /^\/(?:|index\.html|login\.html|painel-comercial(?:-preview)?\.html|modulos\/[A-Za-z0-9._-]+\.html)$/;
+  // somente dados do próprio sistema; nunca credenciais ou sessão
+  var CHAVES = ['mr4_caixa_historico', 'mr4_custom_tags', 'mr4_chat_pins', 'mr4_clientes_backup', 'mr4_clientes_backup_ts'];
+
+  function destino(loc) {
+    var p = loc.pathname;
+    p = p === BASE ? '/' : p.indexOf(BASE + '/') === 0 ? p.slice(BASE.length) : null;
+    return p !== null && PAGINAS.test(p) ? NOVO + p + loc.search + loc.hash : NOVO + '/';
+  }
+  function dadosLocais(armazenamento) {
+    var r = {};
+    CHAVES.forEach(function (k) {
+      var v = armazenamento.getItem(k);
+      if (v && v !== '[]' && v !== '{}') r[k] = v;
+    });
+    return r;
+  }
+  if (typeof module !== 'undefined' && module.exports) { module.exports = { destino: destino, dadosLocais: dadosLocais, CHAVES: CHAVES }; return; }
+
+  var url = destino(window.location);
+  document.getElementById('ir').href = url;
+  var dados = {};
+  try { dados = dadosLocais(window.localStorage); } catch (e) { /* armazenamento bloqueado: nada a preservar */ }
+  if (!Object.keys(dados).length) { setTimeout(function () { window.location.replace(url); }, 1500); return; }
+  document.getElementById('dados').hidden = false;
+  document.getElementById('baixar').addEventListener('click', function () {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 1)], { type: 'application/json' }));
+    a.download = 'mr4-dados-deste-navegador.json';
+    document.body.appendChild(a); a.click(); a.remove();
+  });
+})();
+</script>
+</body>
+</html>

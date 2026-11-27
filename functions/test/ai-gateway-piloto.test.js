@@ -23,7 +23,7 @@ describe('FEATURE GATE do piloto (backend) — AI_COMMERCIAL_PILOT=MANAGEMENT_ON
   });
   test('vendedor → DENY durante o piloto, em TODOS os modos (inclui contagens e acesso), sem tocar dados nem provedor', async () => {
     for (const modo of ['pergunta', 'resumo', 'contagens', 'acesso']) {
-      const m = respostaVazia(); const x = await rodar(UID.FAB, { agentType: 'commercial', modo, pergunta: 'x' }, m, { piloto: PREVIEW });
+      const m = respostaVazia(); const x = await rodar(UID.VD2, { agentType: 'commercial', modo, pergunta: 'x' }, m, { piloto: PREVIEW });
       expect(x.e && x.e.code).toBe('permission-denied'); expect(x.e.message).toBe('FORA_DO_PILOTO'); expect(m.chamadas.length).toBe(0); expect(x.db.st.ai_chamadas).toBeUndefined();
     }
   });
@@ -33,7 +33,7 @@ describe('FEATURE GATE do piloto (backend) — AI_COMMERCIAL_PILOT=MANAGEMENT_ON
   });
   test('padrão sem configuração = MANAGEMENT_ONLY (seguro); valor desconhecido ou OFF = ninguém', async () => {
     expect(GW.configPiloto({})).toEqual({ modo: 'MANAGEMENT_ONLY', uids: [] });
-    expect((await rodar(UID.FAB, P, respostaVazia(), { piloto: GW.configPiloto({}) })).e.code).toBe('permission-denied');
+    expect((await rodar(UID.VD2, P, respostaVazia(), { piloto: GW.configPiloto({}) })).e.code).toBe('permission-denied');
     expect((await rodar(UID.GER, P, respostaVazia(), { piloto: GW.configPiloto({ AI_COMMERCIAL_PILOT: 'OFF' }) })).e.code).toBe('permission-denied');
     expect((await rodar(UID.GER, P, respostaVazia(), { piloto: GW.configPiloto({ AI_COMMERCIAL_PILOT: 'qualquer-coisa' }) })).e.code).toBe('permission-denied');
   });
@@ -42,14 +42,14 @@ describe('FEATURE GATE do piloto (backend) — AI_COMMERCIAL_PILOT=MANAGEMENT_ON
     expect(cfg.uids).toEqual([UID.GER, 'outro']);
     expect((await rodar(UID.GMOD, P, respostaVazia(), { piloto: cfg })).e.code).toBe('permission-denied');
     expect((await rodar(UID.GER, P, respostaVazia(), { piloto: cfg })).r.ok).toBe(true);
-    expect((await rodar(UID.FAB, P, respostaVazia(), { piloto: { modo: 'MANAGEMENT_ONLY', uids: [UID.FAB] } })).e.code).toBe('permission-denied');
+    expect((await rodar(UID.VD2, P, respostaVazia(), { piloto: { modo: 'MANAGEMENT_ONLY', uids: [UID.VD2] } })).e.code).toBe('permission-denied');
   });
   test('o gate NÃO enfraquece o CRM: sem a regra normal do CRM, nem a configuração mais aberta libera', async () => {
     const aberto = { modo: 'MANAGEMENT_AND_SELLERS', uids: [] };
     for (const u of [UID.INAT, UID.SEM, UID.ADM]) expect((await rodar(u, P, respostaVazia(), { piloto: aberto })).e.code).toBe('permission-denied');
   });
   test('a arquitetura de isolamento por vendedor continua testada: quando liberado no futuro, vendedor só vê a própria carteira', async () => {
-    const m = respostaVazia(); const x = await rodar(UID.FAB, P, m, { piloto: { modo: 'MANAGEMENT_AND_SELLERS', uids: [] } });
+    const m = respostaVazia(); const x = await rodar(UID.VD2, P, m, { piloto: { modo: 'MANAGEMENT_AND_SELLERS', uids: [] } });
     expect(x.r.escopo).toBe('VENDEDOR_PROPRIO'); const body = JSON.stringify(m.chamadas[0].body); expect(body).not.toMatch(/faturamento|ticketMedio|responsavel/);
   });
   test('dentro do código não há regra de negócio por nome/e-mail específico; a Function não define a variável do piloto (usa o padrão seguro)', () => {
@@ -68,7 +68,7 @@ describe('PAYLOAD FINAL enviado ao modelo (capturado) — sem identidade', () =>
     expect(entrada.pergunta).toMatch(/^O que sabemos sobre o cliente C\d{3}\? Qual o telefone\?$/);                   // nome trocado pela ref opaca
     const dados = JSON.stringify({ clientes: entrada.contexto.clientes, clienteEmFoco: entrada.contexto.clienteEmFoco || null, rankings: entrada.contexto.rankings, resumoDia: entrada.contexto.resumoDia });   // dados por cliente
     expect(dados).not.toMatch(/\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b|\b\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}\b|@|gestaoClickId|GC_NATIVE|MR4_LINKED|commercialEntityId|nomeCliente|"entidade"|"gcId"|"uid"|"nota|"observ|"telefone|"email|"cpf|"cnpj|"endereco|token|secret|Bearer/i);
-    expect(txt).not.toMatch(/sk-TESTE|Bearer sk|AIza|GC_NATIVE|MR4_LINKED|u-ger|u-fab|u-ade/);   // nenhum segredo/ID interno em lugar nenhum do corpo (instruções inclusas)
+    expect(txt).not.toMatch(/sk-TESTE|Bearer sk|AIza|GC_NATIVE|MR4_LINKED|u-ger|u-vd2|u-vd1/);   // nenhum segredo/ID interno em lugar nenhum do corpo (instruções inclusas)
     expect(Object.keys(entrada.contexto.clientes).concat(entrada.contexto.clienteEmFoco ? [entrada.contexto.clienteEmFoco.ref] : []).every(r => /^C\d{3}$/.test(r))).toBe(true);
     const aud = AL.auditarContexto(entrada.contexto, { gestao: true }); expect(aud).toEqual({ ok: true, problemas: [] });
     expect(JSON.stringify(st)).toBeTruthy(); expect(body.store).toBe(false);
@@ -80,7 +80,7 @@ describe('PAYLOAD FINAL enviado ao modelo (capturado) — sem identidade', () =>
     expect(JSON.stringify(m.chamadas[0].body)).not.toContain('Auto Peças Alfa');
   });
   test('vendedor (quando liberado no futuro): payload sem nome, sem R$, sem responsável', async () => {
-    const m = respostaVazia(); await rodar(UID.FAB, P, m, { piloto: { modo: 'MANAGEMENT_AND_SELLERS', uids: [] } }); const t = JSON.stringify(m.chamadas[0].body);
+    const m = respostaVazia(); await rodar(UID.VD2, P, m, { piloto: { modo: 'MANAGEMENT_AND_SELLERS', uids: [] } }); const t = JSON.stringify(m.chamadas[0].body);
     expect(t).not.toMatch(/Alfa|Gama|Epsilon|faturamento|ticketMedio|responsavel/);
   });
 });

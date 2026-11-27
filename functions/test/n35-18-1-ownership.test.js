@@ -231,7 +231,7 @@ describe('Ownership entre dias', () => {
   });
 
   test('OW-18 nenhum UID real de vendedor no código da fila', () => {
-    const REAIS = ['UGXinD3KVXX0ouYEfamBWjizC5C2', 'G9JDOBsquwdth77qgwtXpcjSxYd2', 'wVtUJcgwIqQK4VOlYBlREWk8C1Y2', 'BN8skgBkkbbxQvY1kvsBDLCBo6b2'];
+    const REAIS = ['UidSinteticoC000000000000000', 'UidSinteticoB000000000000000', 'UidSinteticoD000000000000000', 'UidSinteticoA000000000000000'];
     const arquivos = ['dailyWorklist.js', 'worklistGenerator.js', 'filaQueueConfig.js', 'filaOperacional.js', 'worklistUniverso.js'];
     for (const f of arquivos) {
       const src = fs.readFileSync(path.join(__dirname, '../lib', f), 'utf8');

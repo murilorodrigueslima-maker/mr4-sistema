@@ -7,7 +7,7 @@ const R = require('../lib/reativacao120'); const OPS = require('../lib/reativaca
 const { agoraNoFusoGc } = require('../lib/carteiraRegra'); const FAKE = require('./helpers/fakeFirestore');
 jest.setTimeout(240000);
 
-const ADE = 'inc-ade', FAB = 'inc-fab', GES = 'inc-ges', CORTE = '2026-09-27', T0 = '2026-09-26T13:59:45.769Z', D0 = '2026-10-07';
+const VD1 = 'inc-vd1', VD2 = 'inc-vd2', GES = 'inc-ges', CORTE = '2026-09-27', T0 = '2026-09-26T13:59:45.769Z', D0 = '2026-10-07';
 const COMPARADAS = ['carteira_comercial', 'carteira_comercial_historico', 'carteira_reativacoes', 'carteira_reativacao_decisoes', 'carteira_comercial_revisoes', 'audit_log', 'carteira_comercial_config'];
 const TODAS = [...COMPARADAS, 'carteira_reativacao_decisoes_sombra', 'carteira_comercial_devolucoes', 'carteira_comercial_restricoes', 'identidade_conflitos', 'vendas_gc', 'users', 'sistema_usuarios', 'interacoes_fila', 'clientes', 'sync_state', 'reativacao_estado'];
 const dia = (base, n) => R.somarDias(base, n);
@@ -32,12 +32,12 @@ async function criarMundo(nome) {
   m.alterar = async (id, ex) => { await db.doc('vendas_gc/' + id).update({ modificado_em: carimbo(), ...ex }); await m.sync(); };
   m.excluir = async id => db.doc('vendas_gc/' + id).delete();
   m.devolucao = async (docId, vendaId, tipo) => db.doc('carteira_comercial_devolucoes/' + docId).set({ vendaId: String(vendaId), tipo });
-  m.carteira = async (gc, owner, ex = {}) => db.doc('carteira_comercial/GC:' + gc).set({ schemaVersion: 'carteira-v2', portfolioId: 'GC:' + gc, ownerUid: owner, ownerDesde: T0, origemComercialUid: owner, origemComercialGestaoClickId: owner === ADE ? '111' : '222', criadoEm: T0, atualizadoEm: T0, versao: 2,
+  m.carteira = async (gc, owner, ex = {}) => db.doc('carteira_comercial/GC:' + gc).set({ schemaVersion: 'carteira-v2', portfolioId: 'GC:' + gc, ownerUid: owner, ownerDesde: T0, origemComercialUid: owner, origemComercialGestaoClickId: owner === VD1 ? '111' : '222', criadoEm: T0, atualizadoEm: T0, versao: 2,
     status: 'ATIVA', origem: 'MIGRACAO_ONDA1_N3526', cicloAncoraEm: null, clienteMr4Id: null, conflito: null, ultimoEventoId: 'E', ...ex });
   m.reservar = async (gc, destino, owner, liberadoEm, ciclo) => OPS.liberarReserva(db, FV, { chave: R.chaveReativacao('GC:' + gc, ciclo), portfolioId: 'GC:' + gc, ciclo, tipo: owner ? 'CARTEIRA' : 'SEM_CARTEIRA', ownerUid: owner || null, destinoUid: destino, liberadoEm, nomeCliente: 'C' + gc, agoraIso: liberadoEm + 'T09:00:00.000Z' });
   m.cfg = async (extra = {}) => db.doc('carteira_comercial_config/reativacao').set({ modo: 'ATIVO', corte: CORTE, ...extra });
   await db.doc('carteira_comercial_config/motor').set({ motorAtivo: 'B3' });
-  for (const [uid, role, mods, cc] of [[ADE, 'funcionario', ['fila-comercial-operar'], '111'], [FAB, 'funcionario', ['fila-comercial-operar'], '222'], [GES, 'gestor', [], null]]) {
+  for (const [uid, role, mods, cc] of [[VD1, 'funcionario', ['fila-comercial-operar'], '111'], [VD2, 'funcionario', ['fila-comercial-operar'], '222'], [GES, 'gestor', [], null]]) {
     await db.doc('users/' + uid).set({ role, ativo: true });
     await db.doc('sistema_usuarios/' + uid).set({ nome: uid, modulos: mods, admin: false, ...(cc ? { carteiraComercial: { podePossuirCarteira: true, ativoComercialmente: true, gestaoClickVendedorId: cc, pausaTemporaria: false, desligado: false }, filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } } : {}) });
   }
@@ -75,9 +75,9 @@ async function criarPar() {
 /** Base comum: clientes com histórico antigo, um deles com reserva de reativação para a outra vendedora. */
 async function semear(par) {
   await par.ambos(async m => {
-    await m.carteira(300, ADE, { cicloAncoraEm: '2026-05-01' }); await m.venda(1, 300, dia(D0, -150), '111'); await m.reservar(300, FAB, ADE, dia(D0, -2), dia(D0, -150));
-    await m.carteira(301, ADE); await m.venda(2, 301, dia(D0, -60), '111');
-    await m.carteira(302, FAB); await m.venda(3, 302, dia(D0, -150), '222'); await m.reservar(302, ADE, FAB, dia(D0, -2), dia(D0, -150));
+    await m.carteira(300, VD1, { cicloAncoraEm: '2026-05-01' }); await m.venda(1, 300, dia(D0, -150), '111'); await m.reservar(300, VD2, VD1, dia(D0, -2), dia(D0, -150));
+    await m.carteira(301, VD1); await m.venda(2, 301, dia(D0, -60), '111');
+    await m.carteira(302, VD2); await m.venda(3, 302, dia(D0, -150), '222'); await m.reservar(302, VD1, VD2, dia(D0, -2), dia(D0, -150));
     for (let i = 0; i < 40; i++) await m.venda(1000 + i, 500 + (i % 8), dia('2025-01-01', i), '999', { modificado_em: '2025-03-01 10:00:00' });   // massa antiga
     m.cursor = agoraNoFusoGc(m.agora()); await m.sync();
   });
@@ -97,7 +97,7 @@ describe('equivalência: incremental × varredura completa', () => {
   test('venda nova (transfere pela reserva), venda do dono (renova) e venda da gestão (neutra)', async () => {
     const par = await prontos();
     await par.ambos(async m => { await m.venda(10, 300, m.hoje, '222'); await m.venda(11, 301, m.hoje, '111'); await m.venda(12, 301, m.hoje, '999'); });
-    const r = await par.rodar(); incremental(r); expect(r.b.aplicadas).toBe(2); expect(r.b.clientesAfetados).toBe(2); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(FAB);
+    const r = await par.rodar(); incremental(r); expect(r.b.aplicadas).toBe(2); expect(r.b.clientesAfetados).toBe(2); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(VD2);
     const r2 = await par.rodar(); incremental(r2); expect(r2.b.novas).toBe(0); expect(r2.b.clientesAfetados).toBe(0);
   });
   test('venda alterada: vendedor/data/valor mudam ⇒ nova revisão; regravação sem mudança não gera trabalho', async () => {
@@ -113,7 +113,7 @@ describe('equivalência: incremental × varredura completa', () => {
     const par = await prontos();
     await par.ambos(async m => { await m.venda(10, 300, m.hoje, '222'); await m.venda(11, 301, m.hoje, '111'); }); await par.rodar();
     await par.ambos(async m => { await m.alterar(10, { nome_situacao: 'Cancelada' }); await m.alterar(11, { nome_situacao: 'Cancelada' }); });
-    let r = await par.rodar(); incremental(r); expect(r.b.reversoes).toMatchObject({ executadas: 1, renovacoesInvalidadas: 1 }); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(ADE);
+    let r = await par.rodar(); incremental(r); expect(r.b.reversoes).toMatchObject({ executadas: 1, renovacoesInvalidadas: 1 }); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(VD1);
     r = await par.rodar(); incremental(r); r = await par.rodar(); incremental(r); expect((await todos(par.inc, 'carteira_comercial_revisoes')).length).toBe(2);
   });
   test('inválida antiga continua sendo reavaliada fora da janela de 72 h (a lista vem do estado)', async () => {
@@ -128,12 +128,12 @@ describe('equivalência: incremental × varredura completa', () => {
   test('reversão AMBÍGUA que depois fica possível: reavaliada fora da janela, sem a venda mudar, e executada como na completa', async () => {
     const par = await prontos();
     await par.ambos(m => m.venda(10, 300, m.hoje, '222')); await par.rodar();
-    await par.ambos(async m => { await m.db.doc('sistema_usuarios/' + ADE).update({ bloqueado: true }); await m.alterar(10, { nome_situacao: 'Cancelada' }); });
+    await par.ambos(async m => { await m.db.doc('sistema_usuarios/' + VD1).update({ bloqueado: true }); await m.alterar(10, { nome_situacao: 'Cancelada' }); });
     let r = await par.rodar(); incremental(r); expect(r.b.reversoes).toMatchObject({ ambiguas: 1, executadas: 0 });
     par.avancar(5); await par.ambos(m => m.venda(900, 600, m.hoje, '999')); await par.rodar();                      // o cursor avança: a venda 10 sai da janela
     r = await par.rodar(); incremental(r); expect(r.b.candidatas).toBe(1); expect(r.b.reversoes.ambiguas).toBe(1);
-    await par.ambos(m => m.db.doc('sistema_usuarios/' + ADE).update({ bloqueado: false })); r = await par.rodar(); incremental(r); expect(r.b.reversoes.executadas).toBe(1);
-    expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(ADE);
+    await par.ambos(m => m.db.doc('sistema_usuarios/' + VD1).update({ bloqueado: false })); r = await par.rodar(); incremental(r); expect(r.b.reversoes.executadas).toBe(1);
+    expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(VD1);
   });
   test('venda antiga modificada: pós-corte antiga volta pela marca d’água; pré-corte não gera nada', async () => {
     const par = await prontos();
@@ -156,8 +156,8 @@ describe('equivalência: incremental × varredura completa', () => {
     const par = await prontos();
     await par.ambos(m => m.venda(10, 300, m.hoje, '222')); await par.rodar();
     await par.ambos(async m => { await m.excluir(10); await m.venda(30, 600, m.hoje, '999'); });
-    const r = await par.rodar({ comparar: false }); incremental(r); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(FAB); expect((await dados(par.ref, 'carteira_comercial/GC:300')).ownerUid).toBe(ADE);
-    par.avancar(1); const c = await par.rodar({ comparar: false }); expect(c.b.motivo).toBe('RECONCILIACAO_DIARIA'); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(ADE);
+    const r = await par.rodar({ comparar: false }); incremental(r); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(VD2); expect((await dados(par.ref, 'carteira_comercial/GC:300')).ownerUid).toBe(VD1);
+    par.avancar(1); const c = await par.rodar({ comparar: false }); expect(c.b.motivo).toBe('RECONCILIACAO_DIARIA'); expect((await dados(par.inc, 'carteira_comercial/GC:300')).ownerUid).toBe(VD1);
   });
   test('fora de ordem: venda com data anterior a uma já decidida vai para a gestão', async () => {
     const par = await prontos();
@@ -188,7 +188,7 @@ describe('equivalência: incremental × varredura completa', () => {
   });
   test('conflito de identidade (carteira irmã e registro persistente) bloqueia igual nos dois modos', async () => {
     const par = await prontos();
-    await par.ambos(async m => { await m.carteira(400, ADE, { conflito: { revisao: 'PENDENTE', relacionados: ['GC:301'] } }); await m.db.doc('identidade_conflitos/c1').set({ status: 'PENDENTE', membros: ['GC:302'] });
+    await par.ambos(async m => { await m.carteira(400, VD1, { conflito: { revisao: 'PENDENTE', relacionados: ['GC:301'] } }); await m.db.doc('identidade_conflitos/c1').set({ status: 'PENDENTE', membros: ['GC:302'] });
       await m.venda(10, 301, m.hoje, '111'); await m.venda(11, 302, m.hoje, '222'); });
     const r = await par.rodar(); incremental(r); expect(r.b.decisoes).toEqual({ BLOQUEADO_CONFLITO: 2 });
   });
@@ -312,7 +312,7 @@ describe('equivalência aleatória (sequências com semente)', () => {
         else if (acao === 7) await par.ambos(m => m.alterar(id, { cliente_id: String(cli) }));
         else if (acao === 8) { const tipo = rnd(2) ? 'TOTAL' : 'PARCIAL', d = 'd' + rnd(4); await par.ambos(m => m.devolucao(d, id, tipo)); }
         else if (acao === 9 && k === 0) { excluiu = true; vivas.splice(vivas.indexOf(id), 1); await par.ambos(m => m.excluir(id)); }   // exclusão sozinha (ver LIMITE CONHECIDO)
-        else if (acao === 10) await par.ambos(async m => { const g = clientes[delta & 3]; if ((await dados(m, 'carteira_comercial/GC:' + g))) { try { await m.reservar(g, FAB, ADE, m.hoje, dia(D0, -150)); } catch (_) { /* recusa idêntica nos dois */ } } });
+        else if (acao === 10) await par.ambos(async m => { const g = clientes[delta & 3]; if ((await dados(m, 'carteira_comercial/GC:' + g))) { try { await m.reservar(g, VD2, VD1, m.hoje, dia(D0, -150)); } catch (_) { /* recusa idêntica nos dois */ } } });
       }
       const { a, b } = await par.rodar();
       contagem.passos++; contagem.incrementais += b.execucao === 'INCREMENTAL' ? 1 : 0; contagem.aplicadas += a.aplicadas || 0; contagem.reversoes += (a.reversoes && a.reversoes.executadas) || 0;

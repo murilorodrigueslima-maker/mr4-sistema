@@ -7,10 +7,10 @@
  * Invariante: UNAUTHORIZED_ACCESS_ESCAPES=0
  *
  * Personas testadas:
- *   CM-F  Fabiana   — funcionario, modulos=['demandas']
- *   CM-G  Gutemberg — funcionario, modulos=['garantia']
- *   CM-C  Camila    — funcionario, admin=true (superusuário)
- *   CM-S  Swyanne   — funcionario, modulos=['clientes']
+ *   CM-F  Vend2   — funcionario, modulos=['demandas']
+ *   CM-G  Estoq6 — funcionario, modulos=['garantia']
+ *   CM-C  Revisor4    — funcionario, admin=true (superusuário)
+ *   CM-S  Colab3   — funcionario, modulos=['clientes']
  *   CM-PP ponto-puro — funcionario, sem sistema_usuarios
  *   CM-D  display   — role='display', sem sistema_usuarios
  *   CM-I  inativo   — funcionario, ativo=false
@@ -30,10 +30,10 @@ const PROJECT_ID = 'mr4-ponto-cm-test';
 const RULES_PATH = resolve(__dirname, '../../modulos/firestore.rules');
 
 // ── UIDs ──────────────────────────────────────────────────────────────────────
-const UID_FABIANA    = 'cm-fabiana';
-const UID_GUTEMBERG  = 'cm-gutemberg';
-const UID_CAMILA     = 'cm-camila';
-const UID_SWYANNE    = 'cm-swyanne';
+const UID_VEND2    = 'cm-vend2';
+const UID_ESTOQ6  = 'cm-estoq6';
+const UID_REVISOR4     = 'cm-revisor4';
+const UID_COLAB3    = 'cm-colab3';
 const UID_PP         = 'cm-ponto-puro';
 const UID_DISPLAY    = 'cm-display';
 const UID_INATIVO    = 'cm-inativo';
@@ -43,21 +43,21 @@ const UID_ROLE_DESCONHECIDA = 'cm-role-desconhecida';
 let testEnv;
 
 const SEED = async db => {
-  // Fabiana — funcionario, modulos=['demandas']
-  await db.collection('users').doc(UID_FABIANA).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-01' });
-  await db.collection('sistema_usuarios').doc(UID_FABIANA).set({ nome: 'Fabiana', modulos: ['demandas'], admin: false, bloqueado: false });
+  // Vend2 — funcionario, modulos=['demandas']
+  await db.collection('users').doc(UID_VEND2).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-01' });
+  await db.collection('sistema_usuarios').doc(UID_VEND2).set({ nome: 'Vend2', modulos: ['demandas'], admin: false, bloqueado: false });
 
-  // Gutemberg — funcionario, modulos=['garantia']
-  await db.collection('users').doc(UID_GUTEMBERG).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-02' });
-  await db.collection('sistema_usuarios').doc(UID_GUTEMBERG).set({ nome: 'Gutemberg', modulos: ['garantia'], admin: false, bloqueado: false });
+  // Estoq6 — funcionario, modulos=['garantia']
+  await db.collection('users').doc(UID_ESTOQ6).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-02' });
+  await db.collection('sistema_usuarios').doc(UID_ESTOQ6).set({ nome: 'Estoq6', modulos: ['garantia'], admin: false, bloqueado: false });
 
-  // Camila — funcionario, admin=true
-  await db.collection('users').doc(UID_CAMILA).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-03' });
-  await db.collection('sistema_usuarios').doc(UID_CAMILA).set({ nome: 'Camila', modulos: [], admin: true, bloqueado: false });
+  // Revisor4 — funcionario, admin=true
+  await db.collection('users').doc(UID_REVISOR4).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-03' });
+  await db.collection('sistema_usuarios').doc(UID_REVISOR4).set({ nome: 'Revisor4', modulos: [], admin: true, bloqueado: false });
 
-  // Swyanne — funcionario, modulos=['clientes']
-  await db.collection('users').doc(UID_SWYANNE).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-04' });
-  await db.collection('sistema_usuarios').doc(UID_SWYANNE).set({ nome: 'Swyanne', modulos: ['clientes'], admin: false, bloqueado: false });
+  // Colab3 — funcionario, modulos=['clientes']
+  await db.collection('users').doc(UID_COLAB3).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-04' });
+  await db.collection('sistema_usuarios').doc(UID_COLAB3).set({ nome: 'Colab3', modulos: ['clientes'], admin: false, bloqueado: false });
 
   // ponto-puro — funcionario, sem sistema_usuarios
   await db.collection('users').doc(UID_PP).set({ role: 'funcionario', ativo: true, funcionarioId: 'FUNC-CM-05' });
@@ -96,9 +96,9 @@ const db   = uid => testEnv.authenticatedContext(uid).firestore();
 const seed = (col, id, data) =>
   testEnv.withSecurityRulesDisabled(ctx => ctx.firestore().collection(col).doc(id).set(data));
 
-// ── CM-F: Fabiana (demandas apenas) ──────────────────────────────────────────
+// ── CM-F: Vend2 (demandas apenas) ──────────────────────────────────────────
 
-describe('CM-F — Fabiana (modulos=[demandas])', () => {
+describe('CM-F — Vend2 (modulos=[demandas])', () => {
   beforeEach(async () => {
     await seed('demandas',  'doc-f1', { titulo: 'T' });
     await seed('garantias', 'doc-f2', { cliente: 'X' });
@@ -106,59 +106,59 @@ describe('CM-F — Fabiana (modulos=[demandas])', () => {
     await seed('compras_config', 'cfg', { v: 1 });
   });
 
-  test('CM-F1: Fabiana LÊ demandas (módulo correto)', async () => {
-    await assertSucceeds(db(UID_FABIANA).collection('demandas').doc('doc-f1').get());
+  test('CM-F1: Vend2 LÊ demandas (módulo correto)', async () => {
+    await assertSucceeds(db(UID_VEND2).collection('demandas').doc('doc-f1').get());
   });
-  test('CM-F2: Fabiana CRIA demanda', async () => {
-    await assertSucceeds(db(UID_FABIANA).collection('demandas').doc('nova').set({ titulo: 'Nova' }));
+  test('CM-F2: Vend2 CRIA demanda', async () => {
+    await assertSucceeds(db(UID_VEND2).collection('demandas').doc('nova').set({ titulo: 'Nova' }));
   });
-  test('CM-F3: Fabiana NÃO lê garantias (módulo errado) → ESCAPE=0', async () => {
-    await assertFails(db(UID_FABIANA).collection('garantias').doc('doc-f2').get());
+  test('CM-F3: Vend2 NÃO lê garantias (módulo errado) → ESCAPE=0', async () => {
+    await assertFails(db(UID_VEND2).collection('garantias').doc('doc-f2').get());
   });
-  test('CM-F4: Fabiana NÃO lê clientes (módulo errado) → ESCAPE=0', async () => {
-    await assertFails(db(UID_FABIANA).collection('clientes').doc('doc-f3').get());
+  test('CM-F4: Vend2 NÃO lê clientes (módulo errado) → ESCAPE=0', async () => {
+    await assertFails(db(UID_VEND2).collection('clientes').doc('doc-f3').get());
   });
-  test('CM-F5: Fabiana NÃO lê compras_config (módulo errado) → ESCAPE=0', async () => {
-    await assertFails(db(UID_FABIANA).collection('compras_config').doc('cfg').get());
+  test('CM-F5: Vend2 NÃO lê compras_config (módulo errado) → ESCAPE=0', async () => {
+    await assertFails(db(UID_VEND2).collection('compras_config').doc('cfg').get());
   });
-  test('CM-F6: Fabiana NÃO lê registros de outro func (ponto exige gestor) → ESCAPE=0', async () => {
+  test('CM-F6: Vend2 NÃO lê registros de outro func (ponto exige gestor) → ESCAPE=0', async () => {
     await seed('registros', 'reg-outro', { funcId: 'FUNC-CM-99', data: '2026-09-22' });
-    await assertFails(db(UID_FABIANA).collection('registros').doc('reg-outro').get());
+    await assertFails(db(UID_VEND2).collection('registros').doc('reg-outro').get());
   });
 });
 
-// ── CM-G: Gutemberg (garantia apenas) ─────────────────────────────────────────
+// ── CM-G: Estoq6 (garantia apenas) ─────────────────────────────────────────
 
-describe('CM-G — Gutemberg (modulos=[garantia])', () => {
+describe('CM-G — Estoq6 (modulos=[garantia])', () => {
   beforeEach(async () => {
     await seed('garantias',         'doc-g1', { cliente: 'X' });
     await seed('fornecedores_custo', 'forn-g1', { nome: 'Samsung', custo: 0.12 });
     await seed('demandas',          'doc-g2', { titulo: 'T' });
   });
 
-  test('CM-G1: Gutemberg LÊ garantias', async () => {
-    await assertSucceeds(db(UID_GUTEMBERG).collection('garantias').doc('doc-g1').get());
+  test('CM-G1: Estoq6 LÊ garantias', async () => {
+    await assertSucceeds(db(UID_ESTOQ6).collection('garantias').doc('doc-g1').get());
   });
-  test('CM-G2: Gutemberg LÊ fornecedores_custo (necessário para garantia)', async () => {
-    await assertSucceeds(db(UID_GUTEMBERG).collection('fornecedores_custo').doc('forn-g1').get());
+  test('CM-G2: Estoq6 LÊ fornecedores_custo (necessário para garantia)', async () => {
+    await assertSucceeds(db(UID_ESTOQ6).collection('fornecedores_custo').doc('forn-g1').get());
   });
-  test('CM-G3: Gutemberg NÃO ESCREVE fornecedores_custo (write=isGestor) → ESCAPE=0', async () => {
+  test('CM-G3: Estoq6 NÃO ESCREVE fornecedores_custo (write=isGestor) → ESCAPE=0', async () => {
     await assertFails(
-      db(UID_GUTEMBERG).collection('fornecedores_custo').doc('novo').set({ nome: 'LG', custo: 0.1 })
+      db(UID_ESTOQ6).collection('fornecedores_custo').doc('novo').set({ nome: 'LG', custo: 0.1 })
     );
   });
-  test('CM-G4: Gutemberg NÃO lê demandas (módulo errado) → ESCAPE=0', async () => {
-    await assertFails(db(UID_GUTEMBERG).collection('demandas').doc('doc-g2').get());
+  test('CM-G4: Estoq6 NÃO lê demandas (módulo errado) → ESCAPE=0', async () => {
+    await assertFails(db(UID_ESTOQ6).collection('demandas').doc('doc-g2').get());
   });
-  test('CM-G5: Gutemberg NÃO lê clientes → ESCAPE=0', async () => {
+  test('CM-G5: Estoq6 NÃO lê clientes → ESCAPE=0', async () => {
     await seed('clientes', 'cli-g', { nome: 'C' });
-    await assertFails(db(UID_GUTEMBERG).collection('clientes').doc('cli-g').get());
+    await assertFails(db(UID_ESTOQ6).collection('clientes').doc('cli-g').get());
   });
 });
 
-// ── CM-C: Camila (admin=true) ─────────────────────────────────────────────────
+// ── CM-C: Revisor4 (admin=true) ─────────────────────────────────────────────────
 
-describe('CM-C — Camila (admin=true)', () => {
+describe('CM-C — Revisor4 (admin=true)', () => {
   beforeEach(async () => {
     await seed('demandas',          'doc-c1', { titulo: 'T' });
     await seed('garantias',         'doc-c2', { cliente: 'X' });
@@ -169,45 +169,45 @@ describe('CM-C — Camila (admin=true)', () => {
     await seed('produto_equivalentes', 'eq-c', { grupo: 'G' });
   });
 
-  test('CM-C1: Camila LÊ demandas (admin=true)', async () => {
-    await assertSucceeds(db(UID_CAMILA).collection('demandas').doc('doc-c1').get());
+  test('CM-C1: Revisor4 LÊ demandas (admin=true)', async () => {
+    await assertSucceeds(db(UID_REVISOR4).collection('demandas').doc('doc-c1').get());
   });
-  test('CM-C2: Camila LÊ garantias', async () => {
-    await assertSucceeds(db(UID_CAMILA).collection('garantias').doc('doc-c2').get());
+  test('CM-C2: Revisor4 LÊ garantias', async () => {
+    await assertSucceeds(db(UID_REVISOR4).collection('garantias').doc('doc-c2').get());
   });
-  test('CM-C3 (S4): Camila (admin-flag, não gestor) NÃO lê clientes direto — legado só para a gestão (role gestor)', async () => {
-    await assertFails(db(UID_CAMILA).collection('clientes').doc('doc-c3').get());
+  test('CM-C3 (S4): Revisor4 (admin-flag, não gestor) NÃO lê clientes direto — legado só para a gestão (role gestor)', async () => {
+    await assertFails(db(UID_REVISOR4).collection('clientes').doc('doc-c3').get());
   });
-  test('CM-C4: Camila LÊ compras_config', async () => {
-    await assertSucceeds(db(UID_CAMILA).collection('compras_config').doc('cfg-c').get());
+  test('CM-C4: Revisor4 LÊ compras_config', async () => {
+    await assertSucceeds(db(UID_REVISOR4).collection('compras_config').doc('cfg-c').get());
   });
-  test('CM-C5: Camila LÊ expedicao_pedidos', async () => {
-    await assertSucceeds(db(UID_CAMILA).collection('expedicao_pedidos').doc('ped-c').get());
+  test('CM-C5: Revisor4 LÊ expedicao_pedidos', async () => {
+    await assertSucceeds(db(UID_REVISOR4).collection('expedicao_pedidos').doc('ped-c').get());
   });
-  test('CM-C6: Camila LÊ marketing_conteudos', async () => {
-    await assertSucceeds(db(UID_CAMILA).collection('marketing_conteudos').doc('mk-c').get());
+  test('CM-C6: Revisor4 LÊ marketing_conteudos', async () => {
+    await assertSucceeds(db(UID_REVISOR4).collection('marketing_conteudos').doc('mk-c').get());
   });
   // T1 (política validada): desde 24/09/2026 (7f462a9 "dual-role ponto" + comentário de temModulo/temAcessoModulo: "admin=true concede acesso a qualquer módulo")
   // o dual-role com admin=true LÊ registros e fila_comercial. Os testes antigos (22/09) diziam "exige role=gestor". Os limites que continuam valendo
   // estão abaixo (dual-role sem admin/módulo, bloqueado, funcionário comum, outros usuários) e na matriz permanente rules-matriz-perfil-bloqueio.test.js.
-  test('CM-C7: Camila (dual-role admin=true) LÊ registros de outro func (atalho admin=true, 7f462a9) — e um dual-role SEM admin/ponto continua negado', async () => {
+  test('CM-C7: Revisor4 (dual-role admin=true) LÊ registros de outro func (atalho admin=true, 7f462a9) — e um dual-role SEM admin/ponto continua negado', async () => {
     await seed('registros', 'reg-c', { funcId: 'FUNC-CM-99', data: '2026-09-22' });
-    await assertSucceeds(db(UID_CAMILA).collection('registros').doc('reg-c').get());
-    await assertFails(db(UID_FABIANA).collection('registros').doc('reg-c').get());      // modulos=['demandas'], sem ponto/admin
+    await assertSucceeds(db(UID_REVISOR4).collection('registros').doc('reg-c').get());
+    await assertFails(db(UID_VEND2).collection('registros').doc('reg-c').get());      // modulos=['demandas'], sem ponto/admin
     await assertFails(db(UID_PP).collection('registros').doc('reg-c').get());           // funcionário sem perfil administrativo
   });
-  test('CM-C8: Camila (dual-role admin=true) LÊ fila_comercial (atalho admin=true; fa488bd) — sem módulo de fila e sem admin continua negado', async () => {
+  test('CM-C8: Revisor4 (dual-role admin=true) LÊ fila_comercial (atalho admin=true; fa488bd) — sem módulo de fila e sem admin continua negado', async () => {
     await seed('fila_comercial', 'fila-c', { status: 'aberta' });
-    await assertSucceeds(db(UID_CAMILA).collection('fila_comercial').doc('fila-c').get());
-    await assertFails(db(UID_FABIANA).collection('fila_comercial').doc('fila-c').get());
-    await assertFails(db(UID_SWYANNE).collection('fila_comercial').doc('fila-c').get());
+    await assertSucceeds(db(UID_REVISOR4).collection('fila_comercial').doc('fila-c').get());
+    await assertFails(db(UID_VEND2).collection('fila_comercial').doc('fila-c').get());
+    await assertFails(db(UID_COLAB3).collection('fila_comercial').doc('fila-c').get());
     await assertFails(db(UID_BLOQUEADO).collection('fila_comercial').doc('fila-c').get());
   });
 });
 
-// ── CM-S: Swyanne (clientes apenas) ──────────────────────────────────────────
+// ── CM-S: Colab3 (clientes apenas) ──────────────────────────────────────────
 
-describe('CM-S — Swyanne (modulos=[clientes])', () => {
+describe('CM-S — Colab3 (modulos=[clientes])', () => {
   beforeEach(async () => {
     await seed('clientes',          'doc-s1', { nome: 'C' });
     await seed('conversas_resumo',  'conv-s', { ultimaMsg: 'ok' });
@@ -216,30 +216,30 @@ describe('CM-S — Swyanne (modulos=[clientes])', () => {
     await seed('garantias',         'doc-s3', { cliente: 'X' });
   });
 
-  test('CM-S1 (S4): Swyanne (módulo clientes) NÃO lê clientes direto — usa crmConsulta', async () => {
-    await assertFails(db(UID_SWYANNE).collection('clientes').doc('doc-s1').get());
+  test('CM-S1 (S4): Colab3 (módulo clientes) NÃO lê clientes direto — usa crmConsulta', async () => {
+    await assertFails(db(UID_COLAB3).collection('clientes').doc('doc-s1').get());
   });
-  test('CM-S2: Swyanne CRIA cliente (sem campos GC)', async () => {
+  test('CM-S2: Colab3 CRIA cliente (sem campos GC)', async () => {
     await assertSucceeds(
-      db(UID_SWYANNE).collection('clientes').doc('novo-cli').set({ nome: 'Novo', telefone: '88000000' })
+      db(UID_COLAB3).collection('clientes').doc('novo-cli').set({ nome: 'Novo', telefone: '88000000' })
     );
   });
-  test('CM-S3: Swyanne NÃO cria cliente com gestaoClickId → ESCAPE=0', async () => {
+  test('CM-S3: Colab3 NÃO cria cliente com gestaoClickId → ESCAPE=0', async () => {
     await assertFails(
-      db(UID_SWYANNE).collection('clientes').doc('cli-gc').set({ nome: 'X', gestaoClickId: 'GC-1' })
+      db(UID_COLAB3).collection('clientes').doc('cli-gc').set({ nome: 'X', gestaoClickId: 'GC-1' })
     );
   });
-  test('CM-S4 (S4): Swyanne NÃO lê conversas_resumo (sem dono confiável)', async () => {
-    await assertFails(db(UID_SWYANNE).collection('conversas_resumo').doc('conv-s').get());
+  test('CM-S4 (S4): Colab3 NÃO lê conversas_resumo (sem dono confiável)', async () => {
+    await assertFails(db(UID_COLAB3).collection('conversas_resumo').doc('conv-s').get());
   });
-  test('CM-S5 (S4): Swyanne NÃO lê chat_status', async () => {
-    await assertFails(db(UID_SWYANNE).collection('chat_status').doc('chat-s').get());
+  test('CM-S5 (S4): Colab3 NÃO lê chat_status', async () => {
+    await assertFails(db(UID_COLAB3).collection('chat_status').doc('chat-s').get());
   });
-  test('CM-S6: Swyanne NÃO lê demandas (módulo errado) → ESCAPE=0', async () => {
-    await assertFails(db(UID_SWYANNE).collection('demandas').doc('doc-s2').get());
+  test('CM-S6: Colab3 NÃO lê demandas (módulo errado) → ESCAPE=0', async () => {
+    await assertFails(db(UID_COLAB3).collection('demandas').doc('doc-s2').get());
   });
-  test('CM-S7: Swyanne NÃO lê garantias → ESCAPE=0', async () => {
-    await assertFails(db(UID_SWYANNE).collection('garantias').doc('doc-s3').get());
+  test('CM-S7: Colab3 NÃO lê garantias → ESCAPE=0', async () => {
+    await assertFails(db(UID_COLAB3).collection('garantias').doc('doc-s3').get());
   });
 });
 

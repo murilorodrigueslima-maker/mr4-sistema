@@ -63,11 +63,11 @@ const USER = { uid: 'uid_test', email: 'test@mr4.com' };
 
 const gestorDireto = {
   usersDoc: { role: 'gestor', ativo: true },
-  sysDoc:   { nome: 'Murilo', cargo: 'Gestor', modulos: ['ponto', 'catalogo'], admin: false, bloqueado: false },
+  sysDoc:   { nome: 'Titular', cargo: 'Gestor', modulos: ['ponto', 'catalogo'], admin: false, bloqueado: false },
 };
 const dualRoleValido = {
   usersDoc: { role: 'funcionario', ativo: true, funcionarioId: 'FUNC002' },
-  sysDoc:   { nome: 'Fabiana', cargo: 'Vendedora', modulos: ['catalogo', 'demandas'], admin: false, bloqueado: false },
+  sysDoc:   { nome: 'Vend2', cargo: 'Vendedora', modulos: ['catalogo', 'demandas'], admin: false, bloqueado: false },
 };
 const dualRoleSemSistema = {
   usersDoc: { role: 'funcionario', ativo: true, funcionarioId: 'FUNC003' },
@@ -99,7 +99,7 @@ const semUsersDoc = {
 };
 const dualRoleModulosLimitados = {
   usersDoc: { role: 'funcionario', ativo: true, funcionarioId: 'FUNC006' },
-  sysDoc:   { nome: 'Swyanne', cargo: 'Vendedora', modulos: ['catalogo'], admin: false, bloqueado: false },
+  sysDoc:   { nome: 'Colab3', cargo: 'Vendedora', modulos: ['catalogo'], admin: false, bloqueado: false },
 };
 
 // ─── Testes ──────────────────────────────────────────────────────────────────
@@ -181,11 +181,11 @@ describe('Guard index.html — dual-role e regressão (G-11..G-12)', () => {
 
   test('G-12: gestor válido (comportamento anterior ao P0 preservado) → allow', () => {
     // Regressão: o comportamento pré-commit 931b4ce para gestor não deve mudar.
-    // Murilo (role=gestor, ativo=true) deve continuar acessando normalmente.
+    // Titular (role=gestor, ativo=true) deve continuar acessando normalmente.
     expect(indexHtmlGuardDecision(
       USER,
       { role: 'gestor', ativo: true },
-      { nome: 'Murilo', cargo: 'Gestor', modulos: ['ponto', 'catalogo'], admin: false, bloqueado: false }
+      { nome: 'Titular', cargo: 'Gestor', modulos: ['ponto', 'catalogo'], admin: false, bloqueado: false }
     )).toBe('allow');
   });
 });

@@ -14,8 +14,8 @@ const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@fir
 // Grade de módulos do admin.html (cópia de MODULOS_DEF — só os ids)
 const TELA = ['vendas', 'estoque', 'financeiro', 'catalogo', 'expedicao', 'ponto', 'marketing', 'garantia', 'clientes', 'fila-comercial', 'demandas', 'admin'];
 const form = (o = {}) => ({ nome: 'X', cargo: 'Vendedor', email: 'x@t', isAdmin: false, bloqueado: false, idsDaTela: TELA, marcadosNaTela: [], filaOperar: false, filaGestao: false, filaParticipa: false, filaLimite: 10, ...o });
-const FAB_DOC = { nome: 'Fabiana', cargo: 'Vendedor', email: 'f@t', admin: false, bloqueado: false, modulos: ['catalogo', 'clientes', 'demandas', 'fila-comercial', 'fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } };
-const CAMILA_DOC = { nome: 'Camila', cargo: 'Aux. Adm.', email: 'c@t', admin: false, bloqueado: false, modulos: ['catalogo', 'expedicao', 'ponto', 'garantia', 'demandas', 'fila-comercial-gestao'] };
+const VD2_DOC = { nome: 'Vend2', cargo: 'Vendedor', email: 'f@t', admin: false, bloqueado: false, modulos: ['catalogo', 'clientes', 'demandas', 'fila-comercial', 'fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } };
+const REVISOR4_DOC = { nome: 'Revisor4', cargo: 'Aux. Adm.', email: 'c@t', admin: false, bloqueado: false, modulos: ['catalogo', 'expedicao', 'ponto', 'garantia', 'demandas', 'fila-comercial-gestao'] };
 // Reproduz o formulário exatamente como a tela o preenche a partir do documento
 function formDe(doc, extra = {}) {
   const e = L.estadoInicialFila(doc);
@@ -28,7 +28,7 @@ const salvarAntigo = (doc, marcados) => ({ ...doc, modulos: doc.admin ? TELA : m
 
 describe('Bug anterior (reprodução)', () => {
   test('BUG-01 lógica antiga apaga fila-comercial-operar e módulo futuro ao editar só o nome', () => {
-    const doc = { ...FAB_DOC, modulos: ['catalogo', 'clientes', 'fila-comercial-operar', 'MODULO_FUTURO_TESTE'] };
+    const doc = { ...VD2_DOC, modulos: ['catalogo', 'clientes', 'fila-comercial-operar', 'MODULO_FUTURO_TESTE'] };
     const antigo = salvarAntigo(doc, doc.modulos.filter(m => TELA.includes(m)));
     expect(antigo.modulos).not.toContain('fila-comercial-operar');
     expect(antigo.modulos).not.toContain('MODULO_FUTURO_TESTE');
@@ -39,34 +39,34 @@ describe('Bug anterior (reprodução)', () => {
 
 describe('ADM-Q — preservação e controles', () => {
   test('ADM-Q-01 módulo desconhecido é preservado', () => {
-    const doc = { ...CAMILA_DOC, modulos: [...CAMILA_DOC.modulos, 'MODULO_FUTURO_TESTE'] };
+    const doc = { ...REVISOR4_DOC, modulos: [...REVISOR4_DOC.modulos, 'MODULO_FUTURO_TESTE'] };
     expect(L.montarPayloadUsuario(doc, formDe(doc)).dados.modulos).toContain('MODULO_FUTURO_TESTE');
   });
   test('ADM-Q-02 fila-comercial-operar preservado em edição não relacionada', () => {
-    expect(L.montarPayloadUsuario(FAB_DOC, formDe(FAB_DOC, { cargo: 'Vendedora' })).dados.modulos).toContain('fila-comercial-operar');
+    expect(L.montarPayloadUsuario(VD2_DOC, formDe(VD2_DOC, { cargo: 'Vendedora' })).dados.modulos).toContain('fila-comercial-operar');
   });
   test('ADM-Q-03 fila-comercial-gestao preservado', () => {
-    expect(L.montarPayloadUsuario(CAMILA_DOC, formDe(CAMILA_DOC, { nome: 'Camila S.' })).dados.modulos).toContain('fila-comercial-gestao');
+    expect(L.montarPayloadUsuario(REVISOR4_DOC, formDe(REVISOR4_DOC, { nome: 'Revisor4 S.' })).dados.modulos).toContain('fila-comercial-gestao');
   });
   test('ADM-Q-04 adicionar operar funciona', () => {
-    const doc = { ...CAMILA_DOC, modulos: ['catalogo'] };
+    const doc = { ...REVISOR4_DOC, modulos: ['catalogo'] };
     expect(L.montarPayloadUsuario(doc, formDe(doc, { filaOperar: true })).dados.modulos).toEqual(['catalogo', 'fila-comercial-operar']);
   });
   test('ADM-Q-05 remover operar explicitamente funciona (e preserva a configuração, sem apagar)', () => {
-    const r = L.montarPayloadUsuario(FAB_DOC, formDe(FAB_DOC, { filaOperar: false })).dados;
+    const r = L.montarPayloadUsuario(VD2_DOC, formDe(VD2_DOC, { filaOperar: false })).dados;
     expect(r.modulos).not.toContain('fila-comercial-operar');
     expect(r.filaComercial).toBeUndefined(); // não grava → config existente fica como está
   });
   test('ADM-Q-06 adicionar gestão funciona', () => {
-    expect(L.montarPayloadUsuario(FAB_DOC, formDe(FAB_DOC, { filaGestao: true })).dados.modulos).toContain('fila-comercial-gestao');
+    expect(L.montarPayloadUsuario(VD2_DOC, formDe(VD2_DOC, { filaGestao: true })).dados.modulos).toContain('fila-comercial-gestao');
   });
   test('ADM-Q-07 remover gestão explicitamente funciona', () => {
-    const r = L.montarPayloadUsuario(CAMILA_DOC, formDe(CAMILA_DOC, { filaGestao: false })).dados;
+    const r = L.montarPayloadUsuario(REVISOR4_DOC, formDe(REVISOR4_DOC, { filaGestao: false })).dados;
     expect(r.modulos).not.toContain('fila-comercial-gestao');
     expect(r.modulos).toEqual(['catalogo', 'expedicao', 'ponto', 'garantia', 'demandas']);
   });
   test('ADM-Q-08 operar sem distribuição é válido (não cria configuração)', () => {
-    const doc = { nome: 'Ademir', modulos: ['fila-comercial', 'fila-comercial-operar'] };
+    const doc = { nome: 'Vend1', modulos: ['fila-comercial', 'fila-comercial-operar'] };
     const r = L.montarPayloadUsuario(doc, formDe(doc));
     expect(r.erro).toBeUndefined();
     expect(r.dados.modulos).toContain('fila-comercial-operar');
@@ -86,32 +86,32 @@ describe('ADM-Q — preservação e controles', () => {
     expect(r.erro).toMatch(/1 e 30|inteiro/);
     expect(r.dados).toBeUndefined();
   });
-  test('ADM-Q-14 gestão não recebe distribuição automaticamente (Camila)', () => {
-    const r = L.montarPayloadUsuario(CAMILA_DOC, formDe(CAMILA_DOC)).dados;
+  test('ADM-Q-14 gestão não recebe distribuição automaticamente (Revisor4)', () => {
+    const r = L.montarPayloadUsuario(REVISOR4_DOC, formDe(REVISOR4_DOC)).dados;
     expect(r.filaComercial).toBeUndefined();
-    expect(L.estadoInicialFila(CAMILA_DOC)).toMatchObject({ gestao: true, podeOperar: false, participa: false });
+    expect(L.estadoInicialFila(REVISOR4_DOC)).toMatchObject({ gestao: true, podeOperar: false, participa: false });
     // mesmo marcando "participa" (UI desabilitada), sem operar nada é criado
-    expect(L.montarPayloadUsuario(CAMILA_DOC, formDe(CAMILA_DOC, { filaParticipa: true })).dados.filaComercial).toBeUndefined();
+    expect(L.montarPayloadUsuario(REVISOR4_DOC, formDe(REVISOR4_DOC, { filaParticipa: true })).dados.filaComercial).toBeUndefined();
   });
   test('ADM-Q-15 pausar distribuição preserva a permissão operacional', () => {
-    const r = L.montarPayloadUsuario(FAB_DOC, formDe(FAB_DOC, { filaParticipa: false })).dados;
+    const r = L.montarPayloadUsuario(VD2_DOC, formDe(VD2_DOC, { filaParticipa: false })).dados;
     expect(r.modulos).toContain('fila-comercial-operar');
     expect(r.filaComercial.recebeNovasOportunidades).toBe(false);
     expect(r.filaComercial.ativo).toBe(true); // continua na worklist: mantém follow-ups
   });
   test('ADM-Q-16 pausar distribuição preserva o limite', () => {
-    const doc = { ...FAB_DOC, filaComercial: { ...FAB_DOC.filaComercial, limiteNovasPorDia: 7 } };
+    const doc = { ...VD2_DOC, filaComercial: { ...VD2_DOC.filaComercial, limiteNovasPorDia: 7 } };
     expect(L.montarPayloadUsuario(doc, formDe(doc, { filaParticipa: false, filaLimite: 99 })).dados.filaComercial.limiteNovasPorDia).toBe(7);
   });
-  test('ADM-Q-17 salvar Fabiana (edição não relacionada) preserva a configuração N35.17', () => {
-    const r = L.montarPayloadUsuario(FAB_DOC, formDe(FAB_DOC, { nome: 'Fabiana A.' })).dados;
-    expect(r.modulos).toEqual(FAB_DOC.modulos);
-    expect(r.filaComercial).toEqual(FAB_DOC.filaComercial);
+  test('ADM-Q-17 salvar Vend2 (edição não relacionada) preserva a configuração N35.17', () => {
+    const r = L.montarPayloadUsuario(VD2_DOC, formDe(VD2_DOC, { nome: 'Vend2 A.' })).dados;
+    expect(r.modulos).toEqual(VD2_DOC.modulos);
+    expect(r.filaComercial).toEqual(VD2_DOC.filaComercial);
     expect(r.admin).toBe(false);
   });
-  test('ADM-Q-18 salvar Camila preserva todos os módulos e não cria distribuição', () => {
-    const r = L.montarPayloadUsuario(CAMILA_DOC, formDe(CAMILA_DOC, { cargo: 'Supervisora' })).dados;
-    expect(r.modulos).toEqual(CAMILA_DOC.modulos);
+  test('ADM-Q-18 salvar Revisor4 preserva todos os módulos e não cria distribuição', () => {
+    const r = L.montarPayloadUsuario(REVISOR4_DOC, formDe(REVISOR4_DOC, { cargo: 'Supervisora' })).dados;
+    expect(r.modulos).toEqual(REVISOR4_DOC.modulos);
     expect(r.modulos).not.toContain('fila-comercial-operar');
     expect(r.filaComercial).toBeUndefined();
   });
@@ -122,7 +122,7 @@ describe('ADM-Q — preservação e controles', () => {
     expect(r.modulos).not.toContain('fila-comercial-operar'); // admin não concede operação
   });
   test('ADM-Q-20 usuário sem nenhuma configuração de fila continua funcionando', () => {
-    const doc = { nome: 'Gutemberg', cargo: 'estoquista', modulos: ['expedicao', 'garantia', 'demandas'] };
+    const doc = { nome: 'Estoq6', cargo: 'estoquista', modulos: ['expedicao', 'garantia', 'demandas'] };
     const r = L.montarPayloadUsuario(doc, formDe(doc, { marcadosNaTela: ['expedicao', 'garantia', 'demandas', 'catalogo'] })).dados;
     expect(r.modulos).toEqual(['expedicao', 'garantia', 'demandas', 'catalogo']);
     expect(r.filaComercial).toBeUndefined();

@@ -190,4 +190,4 @@ O trace registra spans de cada etapa do pipeline sem expor PII:
 - `FIRESTORE_PROD_WRITES = ZERO`
 - `GESTAOCLICK_WRITES = ZERO`
 - Não tocar em: `calcBancoMes`, `buildEspelhoSnapshot`, `canonicalizarSnapshot`, `calcRevisaoPeriodo`, `calcConcluirRevisao`, `VERSAO_ENGINE`
-- Dados protegidos: Ademir, Fabiana, Camila, Gutemberg, Swyanne, Murilo, FUNC_TESTE_001
+- Dados protegidos: Vend1, Vend2, Revisor4, Estoq6, Colab3, Titular, FUNC_TESTE_001

@@ -5,7 +5,7 @@ const path = require('path');
 const G = require('../lib/worklistGenerator');
 const QC = require('../lib/filaQueueConfig');
 
-const FAB = 'UGXinD3KVXX0ouYEfamBWjizC5C2';
+const VD2 = 'UidSinteticoC000000000000000';
 const NOW = new Date('2026-09-25T09:00:00.000Z');
 const quiet = { log() {} };
 const ROOT = path.join(__dirname, '..', '..');
@@ -23,8 +23,8 @@ function vendas(n) {
 }
 const dados = () => ({
   perfis: [], clientes: [], vendas: vendas(15), estados: new Map(),
-  users: new Map([[FAB, { ativo: true, role: 'funcionario' }]]),
-  sistema: new Map([[FAB, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]),
+  users: new Map([[VD2, { ativo: true, role: 'funcionario' }]]),
+  sistema: new Map([[VD2, { modulos: ['fila-comercial-operar'], filaComercial: { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 } }]]),
 });
 function fakeDb(inicial = {}) {
   const docs = new Map(Object.entries(inicial));
@@ -91,5 +91,5 @@ test('DR-08 a prévia só usa campos permitidos (mesma validação do LIVE)', as
   await G.executarGeracaoWorklist({ db, now: NOW, mode: 'DRY_RUN', logger: quiet, lookupNome: async gc => 'N' + gc, dados: dados() });
   const doc = db.docs.get('fila_comercial/worklist_preview');
   expect(JSON.stringify(doc)).not.toMatch(/prioridade|faturamento|cpf|cnpj|telefone|email|endereco/i);
-  expect(doc.vendedores[FAB].novas).toHaveLength(10);
+  expect(doc.vendedores[VD2].novas).toHaveLength(10);
 });

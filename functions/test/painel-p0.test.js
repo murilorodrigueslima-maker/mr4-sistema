@@ -8,27 +8,29 @@ const M = require('../lib/painelMetricas'); const SY = require('../lib/painelSyn
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 jest.setTimeout(120000);
 const root = path.resolve(__dirname, '../..');
-const CFG = { metas: { ademir: 165000, fabiana: 75000 }, metaGeral: 240000 };
+// mapeamento e metas SINTÉTICOS: em produção vêm de painel_mapeamento/vendedores e painel_config (dados protegidos)
+const MAPA = { '900001': { chave: 'vend1', nomeConfig: 'Vend1' }, '900002': { chave: 'vend2', nomeConfig: 'Vend2' } };
+const CFG = { mapa: MAPA, metas: { vend1: 120000, vend2: 80000 }, metaGeral: 200000 };
 let seq = 1000;
-const venda = (o = {}) => ({ id: String(++seq), situacao_id: '3952593', vendedor_id: '948278', data: '2026-10-10', valor_total: '100.00', valor_custo: '40.00', nome_vendedor: 'X', ...o });
+const venda = (o = {}) => ({ id: String(++seq), situacao_id: '3952593', vendedor_id: '900001', data: '2026-10-10', valor_total: '100.00', valor_custo: '40.00', nome_vendedor: 'X', ...o });
 const calc = (vendas, hojeStr = '2026-10-10', mes = '2026-10') => M.calcular({ vendas, hojeStr, mes, cfg: CFG });
 
 describe('apuração (pura)', () => {
-  test('Ademir, Fabiana, Outros e sem vendedor: soma exata e invariante', () => {
-    const r = calc([venda({ vendedor_id: '948278', valor_total: '200.00' }), venda({ vendedor_id: '1080453', valor_total: '150.50' }), venda({ vendedor_id: '559684', valor_total: '99.99' }),
+  test('Vend1, Vend2, Outros e sem vendedor: soma exata e invariante', () => {
+    const r = calc([venda({ vendedor_id: '900001', valor_total: '200.00' }), venda({ vendedor_id: '900002', valor_total: '150.50' }), venda({ vendedor_id: '900003', valor_total: '99.99' }),
       venda({ vendedor_id: '', valor_total: '0.01' }), venda({ vendedor_id: undefined, valor_total: '10.00' })]);
     expect(r.ok).toBe(true);
-    expect(r.ademir.totalMes).toBe(200); expect(r.fabiana.totalMes).toBe(150.5); expect(r.outros.totalMes).toBe(110); expect(r.outros.pedidosMes).toBe(3);
-    expect(r.geral.totalMes).toBe(460.5); expect(r.centavos.geral).toBe(r.centavos.ademir + r.centavos.fabiana + r.centavos.outros);
+    expect(r.vend1.totalMes).toBe(200); expect(r.vend2.totalMes).toBe(150.5); expect(r.outros.totalMes).toBe(110); expect(r.outros.pedidosMes).toBe(3);
+    expect(r.geral.totalMes).toBe(460.5); expect(r.centavos.geral).toBe(r.centavos.vend1 + r.centavos.vend2 + r.centavos.outros);
     expect(r.qualidade.vendasSemVendedor).toBe(2);
   });
-  test('NÃO depende de nome: nome "Ademir" com outro vendedor_id vai para Outros; nome diferente com o id certo fica com Ademir', () => {
-    const r = calc([venda({ nome_vendedor: 'Ademir Santos', vendedor_id: '555' }), venda({ nome_vendedor: 'qualquer coisa', vendedor_id: '948278' })]);
-    expect(r.ademir.pedidosMes).toBe(1); expect(r.outros.pedidosMes).toBe(1); expect(r.qualidade.vendedoresNaoMapeados).toBe(1);
+  test('NÃO depende de nome: nome "Vend1" com outro vendedor_id vai para Outros; nome diferente com o id certo fica com Vend1', () => {
+    const r = calc([venda({ nome_vendedor: 'Vend1 Pessoa4', vendedor_id: '555' }), venda({ nome_vendedor: 'qualquer coisa', vendedor_id: '900001' })]);
+    expect(r.vend1.pedidosMes).toBe(1); expect(r.outros.pedidosMes).toBe(1); expect(r.qualidade.vendedoresNaoMapeados).toBe(1);
   });
   test('responsável conhecido de "Outros" não conta como vendedor NÃO mapeado; id realmente desconhecido conta', () => {
-    const cfg = { ...CFG, outrosConhecidos: { '559684': 'Murilo' } };
-    const r = M.calcular({ vendas: [venda({ vendedor_id: '559684' }), venda({ vendedor_id: '999999' })], hojeStr: '2026-10-10', mes: '2026-10', cfg });
+    const cfg = { ...CFG, outrosConhecidos: { '900003': 'Titular' } };
+    const r = M.calcular({ vendas: [venda({ vendedor_id: '900003' }), venda({ vendedor_id: '999999' })], hojeStr: '2026-10-10', mes: '2026-10', cfg });
     expect(r.outros.pedidosMes).toBe(2); expect(r.qualidade.vendedoresNaoMapeados).toBe(1);
   });
   test('deduplicação por id (mesmo pedido em páginas diferentes) e conflito de valor vira divergência', () => {
@@ -60,10 +62,20 @@ describe('apuração (pura)', () => {
     expect(n.geral.totalMes).toBe(0); expect(n.geral.pedidosMes).toBe(0);
   });
   test('metas: % e restante; Outros sem meta presumida; ticket sem divisão por zero', () => {
-    const r = calc([venda({ valor_total: '16500.00' })]);
-    expect(r.ademir).toMatchObject({ meta: 165000, pctMeta: 10, restante: 148500 });
-    expect(r.geral).toMatchObject({ meta: 240000, pctMeta: 6.9 }); expect(r.outros).not.toHaveProperty('meta');
+    const r = calc([venda({ valor_total: '12000.00' })]);
+    expect(r.vend1).toMatchObject({ meta: 120000, pctMeta: 10, restante: 108000 });
+    expect(r.geral).toMatchObject({ meta: 200000, pctMeta: 6 }); expect(r.outros).not.toHaveProperty('meta');
     expect(calc([]).geral.ticketMes).toBe(0);
+  });
+});
+
+describe('mapeamento protegido (nenhum nome no código)', () => {
+  test('sem mapeamento a apuração não é aceita; chaves e ordem vêm da configuração', () => {
+    const r = M.calcular({ vendas: [venda()], hojeStr: '2026-10-10', mes: '2026-10', cfg: {} });
+    expect(r.ok).toBe(false); expect(r.erros).toContain('MAPEAMENTO_AUSENTE'); expect(r.outros.pedidosMes).toBe(1);
+    expect(M.chavesDoMapa(MAPA)).toEqual(['vend1', 'vend2']);
+    expect(M.chavesDoMapa({ '1': { chave: 'b', ordem: 2 }, '2': { chave: 'a', ordem: 1 }, '3': { chave: 'a' }, '4': { chave: 'geral' } })).toEqual(['a', 'b']);
+    expect(M).not.toHaveProperty('MAPA_PADRAO');
   });
 });
 
@@ -87,12 +99,29 @@ const sync = (f, extra = {}) => SY.sincronizar({ db, FieldValue, fetchImpl: f, a
 describe('sincronização (emulador, GC falso)', () => {
   beforeEach(async () => {
     await limpar();
-    await db.doc('painel_config/default').set({ vendedores: [{ nome: 'Ademir', meta: 165000 }, { nome: 'Fabiana', meta: 75000 }], meta_equipe: 240000 });
+    await db.doc('painel_config/default').set({ vendedores: [{ nome: 'Vend1', meta: 120000 }, { nome: 'Vend2', meta: 80000 }], meta_equipe: 200000 });
+    await db.doc('painel_mapeamento/vendedores').set({ vendedores: MAPA });
   });
   afterAll(limpar);
-  const conc = () => [venda({ id: 'A1', valor_total: '200.00' }), venda({ id: 'F1', vendedor_id: '1080453', valor_total: '100.00' }), venda({ id: 'C1', vendedor_id: '1392140', valor_total: '400.00' }),
+  const conc = () => [venda({ id: 'A1', valor_total: '200.00' }), venda({ id: 'F1', vendedor_id: '900002', valor_total: '100.00' }), venda({ id: 'C1', vendedor_id: '900005', valor_total: '400.00' }),
     venda({ id: 'A2', valor_total: '50.25', data: '2026-10-11' }), venda({ id: 'S1', vendedor_id: '', valor_total: '10.00' })];
 
+  test('documento de mapeamento ausente: FALHA explícita, não consulta o ERP e preserva o último conjunto válido', async () => {
+    await sync(gcFalso({ conc: conc() }));
+    const antes = JSON.stringify((await db.doc('display_metrics/painel_comercial').get()).data());
+    await db.doc('painel_mapeamento/vendedores').delete();
+    const ch = [];
+    const r = await sync(gcFalso({ conc: [], chamadas: ch }), { agora: new Date(AGORA.getTime() + 6 * 60000), runId: 'sem-mapa' });
+    expect(r).toEqual({ status: 'FALHA', erro: 'MAPEAMENTO_AUSENTE' }); expect(ch).toHaveLength(0);
+    expect(JSON.stringify((await db.doc('display_metrics/painel_comercial').get()).data())).toBe(antes);
+  });
+  test('formato gravado preservado: chaves por vendedor no Gestor e no histórico (pedidos<Chave>)', async () => {
+    await sync(gcFalso({ conc: conc() }));
+    const g = (await db.doc('display_metrics_gestor/painel').get()).data();
+    expect(Object.keys(g)).toEqual(expect.arrayContaining(['vend1', 'vend2', 'outros']));
+    expect(Object.keys(g.historico[0])).toEqual(expect.arrayContaining(['vend1', 'vend2', 'outros', 'pedidosVend1', 'pedidosVend2', 'pedidosOutros']));
+    expect(Object.keys(g.centavos).sort()).toEqual(['geral', 'outros', 'vend1', 'vend2']);
+  });
   test('paginação (3 páginas), publica TV (formato antigo + novos campos) e Gestor; status OK; metas intactas', async () => {
     const metaAntes = JSON.stringify((await db.doc('painel_config/default').get()).data());
     const ch = [];
@@ -101,12 +130,12 @@ describe('sincronização (emulador, GC falso)', () => {
     expect(ch.filter(u => /situacao_id=3952593/.test(u) && /data_inicio=2026-10-01/.test(u)).length).toBe(3);   // 5 vendas / 2 por página (o histórico usa outros períodos)
     const tv = (await db.doc('display_metrics/painel_comercial').get()).data();
     expect(tv.equipe).toMatchObject({ totalMes: 760.25, pedidosMes: 5, totalHoje: 50.25, pedidosHoje: 1 });          // legado = GERAL
-    expect(tv.vendedores.map(v => v.nome)).toEqual(['Ademir', 'Fabiana']);
-    expect(tv.vendedores[0]).toMatchObject({ meta: 165000, totalMes: 250.25, pedidosMes: 2 });
+    expect(tv.vendedores.map(v => v.nome)).toEqual(['Vend1', 'Vend2']);
+    expect(tv.vendedores[0]).toMatchObject({ meta: 120000, totalMes: 250.25, pedidosMes: 2 });
     expect(tv.outros).toMatchObject({ totalMes: 410, pedidosMes: 2 });
-    expect(tv.geral).toMatchObject({ meta: 240000, totalMes: 760.25 });
+    expect(tv.geral).toMatchObject({ meta: 200000, totalMes: 760.25 });
     expect(tv.qualidade).toMatchObject({ vendasSemVendedor: 1, duplicidadesDetectadas: 0, reconciliado: true });
-    expect(tv.configuracao).toEqual({ metaEquipe: 240000 });
+    expect(tv.configuracao).toEqual({ metaEquipe: 200000 });
     expect(tv.vendedores[0].totalMes + tv.vendedores[1].totalMes + tv.outros.totalMes).toBeCloseTo(tv.geral.totalMes, 2);
     const st = (await db.doc('display_metrics/painel_status').get()).data();
     expect(st).toMatchObject({ status: 'OK', falhasConsecutivas: 0, intervaloMinutos: 5 }); expect(st.ultimoSucessoEm).toBeTruthy();
@@ -158,8 +187,8 @@ describe('sincronização (emulador, GC falso)', () => {
     const tv = (await db.doc('display_metrics/painel_comercial').get()).data();
     expect(tv.geral.totalMes).toBe(360.25); expect(tv.outros.pedidosMes).toBe(1);
   });
-  test('mapeamento auditado em painel_mapeamento é respeitado (id novo vira Ademir sem mexer em código)', async () => {
-    await db.doc('painel_mapeamento/vendedores').set({ vendedores: { '948278': { chave: 'ademir', nomeConfig: 'Ademir' }, '1080453': { chave: 'fabiana', nomeConfig: 'Fabiana' }, '1392140': { chave: 'fabiana', nomeConfig: 'Fabiana' } } });
+  test('mapeamento auditado em painel_mapeamento é respeitado (id novo vira Vend1 sem mexer em código)', async () => {
+    await db.doc('painel_mapeamento/vendedores').set({ vendedores: { '900001': { chave: 'vend1', nomeConfig: 'Vend1' }, '900002': { chave: 'vend2', nomeConfig: 'Vend2' }, '900005': { chave: 'vend2', nomeConfig: 'Vend2' } } });
     await sync(gcFalso({ conc: conc() }));
     const tv = (await db.doc('display_metrics/painel_comercial').get()).data();
     expect(tv.vendedores[1].pedidosMes).toBe(2); expect(tv.outros.pedidosMes).toBe(1);

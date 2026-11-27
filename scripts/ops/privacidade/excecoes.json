@@ -1,0 +1,7 @@
+{
+  "observacao": "Ocorrências mantidas DE PROPÓSITO (arquivo + categoria). Cada uma tem pendência em PLANO-MESTRE-2027/EXEC3/07. Não amplie sem registrar o motivo.",
+  "excecoes": [
+    { "arquivo": "functions/lib/carteiraV2.js", "categorias": ["P4"], "motivo": "papel de revisor GRAVADO nos documentos; único ponto do código; troca exige migração de dados" },
+    { "arquivo": "modulos/ponto.html", "categorias": ["TITULAR_NOME"], "motivo": "assinatura impressa no espelho de ponto; mover exige configuração gravada em produção antes do código" }
+  ]
+}

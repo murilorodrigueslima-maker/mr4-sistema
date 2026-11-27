@@ -399,7 +399,7 @@ test('N35-9B-GC-01: GC_NATIVE gera opportunityInstanceId válido para operaçõe
   const gcPerfil = {
     source: 'GC_NATIVE',
     gestaoClickId: '31349459',
-    nomeCliente: '51.908.552 MAGNO ERNESTO TEIXEIRA',
+    nomeCliente: '00.000.002 PESSOA EXEMPLO SINTETICA',
     tipoOportunidade: 'REATIVACAO_120D',
     ultimaCompraEm: '2026-01-15',
   };

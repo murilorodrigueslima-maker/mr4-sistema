@@ -1,7 +1,7 @@
 'use strict';
 /**
  * B3.1-C — Devoluções. NÃO há fonte confiável no GestãoClick (nenhum vínculo determinístico devolução↔venda): o registro é uma OPERAÇÃO CONTROLADA da gestão
- * (proprietário/Camila) com referência OBJETIVA à venda. Nunca capturado de texto financeiro. TOTAL invalida a renovação; PARCIAL mantém.
+ * (proprietário/Revisor4) com referência OBJETIVA à venda. Nunca capturado de texto financeiro. TOTAL invalida a renovação; PARCIAL mantém.
  * Coleção carteira_comercial_devolucoes/{dv_<sha1(requestId)>} (append-only; Rules write:false).
  */
 const { HttpsError } = require('firebase-functions/v2/https');

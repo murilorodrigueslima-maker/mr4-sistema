@@ -78,7 +78,7 @@ O sistema está em shadow mode. O pipeline executa completamente com MockProvide
 - `calcRevisaoPeriodo` — INTACTO
 - `calcConcluirRevisao` — INTACTO
 - `VERSAO_ENGINE` — INTACTO
-- Dados de: Ademir, Fabiana, Camila, Gutemberg, Swyanne, Murilo, FUNC_TESTE_001 — INTACTOS
+- Dados de: Vend1, Vend2, Revisor4, Estoq6, Colab3, Titular, FUNC_TESTE_001 — INTACTOS
 - Worker `mr4-webhook` — INTACTO
 - `AI_FINANCIAL_AUTHORITY` — permanece `'NONE'`
 - `MARCADORES_PROIBIDOS` — apenas pode crescer, nunca encolher

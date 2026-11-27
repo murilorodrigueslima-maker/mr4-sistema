@@ -9,13 +9,13 @@ const { readFileSync } = require('fs');
 const { resolve } = require('path');
 
 const RULES_PATH = process.env.S2_RULES_PATH || resolve(__dirname, '../../modulos/firestore.rules');
-const A = 'uid-s2-ademir', B = 'uid-s2-fabiana', GEST = 'uid-s2-gestor', CAM = 'uid-s2-camila', ADM = 'uid-s2-admin', SEMMOD = 'uid-s2-semmod';
+const A = 'uid-s2-vend1', B = 'uid-s2-vend2', GEST = 'uid-s2-gestor', RV4 = 'uid-s2-revisor4', ADM = 'uid-s2-admin', SEMMOD = 'uid-s2-semmod';
 let env;
 const SEED = async db => {
   const u = (id, d, s) => Promise.all([db.collection('users').doc(id).set(d), db.collection('sistema_usuarios').doc(id).set(s)]);
   await u(A, { role: 'funcionario', ativo: true, funcionarioId: 'fa' }, { admin: false, modulos: ['clientes', 'fila-comercial-operar'] });
   await u(B, { role: 'funcionario', ativo: true, funcionarioId: 'fb' }, { admin: false, modulos: ['clientes', 'fila-comercial-operar'] });
-  await u(CAM, { role: 'funcionario', ativo: true, funcionarioId: 'fc' }, { admin: false, modulos: ['clientes', 'fila-comercial-gestao'] });
+  await u(RV4, { role: 'funcionario', ativo: true, funcionarioId: 'fc' }, { admin: false, modulos: ['clientes', 'fila-comercial-gestao'] });
   await u(SEMMOD, { role: 'funcionario', ativo: true, funcionarioId: 'fd' }, { admin: false, modulos: ['fila-comercial-operar'] });
   await u(GEST, { role: 'gestor', ativo: true }, { admin: false, modulos: [] });
   await u(ADM, { role: 'gestor', ativo: true }, { admin: true, modulos: [] });
@@ -37,7 +37,7 @@ const anon = () => env.unauthenticatedContext().firestore();
 const cli = (db, id) => db.collection('clientes').doc(id);
 
 // [quem, cliente próprio, cliente do outro]
-const PARES = [['A (Ademir)', A, 'cA', 'cB'], ['B (Fabiana)', B, 'cB', 'cA']];
+const PARES = [['A (Vend1)', A, 'cA', 'cB'], ['B (Vend2)', B, 'cB', 'cA']];
 for (const [nome, uid, meu, alheio] of PARES) {
   describe(`S2 — vendedor ${nome}`, () => {
     test('updates legítimos no cliente próprio (pipeline, notas, followUp, ultimoContato, vendas)', async () => {
@@ -103,9 +103,9 @@ describe('S2 — gestão e anônimo', () => {
     await assertSucceeds(cli(as(ADM), 'cB').update({ arquivado: true }));
     await assertSucceeds(cli(as(GEST), 'cB').update({ cpf_cnpj: '333' }));
   });
-  test('gestão explícita (Camila, com módulo clientes) edita cliente de qualquer carteira', async () => {
-    await assertSucceeds(cli(as(CAM), 'cA').update({ pipeline: 'x' }));
-    await assertSucceeds(cli(as(CAM), 'cB').update({ pipeline: 'x' }));
+  test('gestão explícita (Revisor4, com módulo clientes) edita cliente de qualquer carteira', async () => {
+    await assertSucceeds(cli(as(RV4), 'cA').update({ pipeline: 'x' }));
+    await assertSucceeds(cli(as(RV4), 'cB').update({ pipeline: 'x' }));
   });
   test('gestão NÃO escreve ownership/GC pelo SDK (só backend)', async () => {
     await assertFails(cli(as(GEST), 'cA').update({ ownerUid: B }));
@@ -125,7 +125,7 @@ describe('S2 — gestão e anônimo', () => {
 
 describe('S2 — regressões S3 e S5', () => {
   test('S3: ninguém apaga cliente (nem dono, nem gestor, nem admin, nem anônimo)', async () => {
-    for (const u of [as(B), as(A), as(GEST), as(ADM), as(CAM), anon()]) await assertFails(cli(u, 'cDeletar').delete());
+    for (const u of [as(B), as(A), as(GEST), as(ADM), as(RV4), anon()]) await assertFails(cli(u, 'cDeletar').delete());
     await assertFails(as(A).doc('conversas/55').delete());
   });
   test('S5: gestor comum e vendedor não se promovem; admin real continua podendo', async () => {

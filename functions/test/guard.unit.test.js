@@ -131,12 +131,12 @@ describe('guard.js verificarAcessoAdmin — FAIL CLOSED por erro (GU-8..GU-9)', 
 });
 
 describe('guard.js verificarAcessoAdmin — regressão gestor (GU-10)', () => {
-  test('GU-10: gestor original (Murilo) continua passando', async () => {
+  test('GU-10: gestor original (Titular) continua passando', async () => {
     const db = makeDb({
       usersData: { role: 'gestor', ativo: true },
       sysData:   { modulos: ['ponto', 'catalogo'], admin: false, bloqueado: false },
     });
-    expect(await verificarAcessoAdmin(db, 'uid-murilo')).toBe(true);
+    expect(await verificarAcessoAdmin(db, 'uid-titular')).toBe(true);
   });
 });
 
@@ -184,7 +184,7 @@ describe('guard.js verificarAcessoModulo — ALLOW (GM-1..GM-5)', () => {
 // ─── verificarAcessoModulo — BLOCK ────────────────────────────────────────────
 
 describe('guard.js verificarAcessoModulo — BLOCK (GM-6..GM-10)', () => {
-  test('GM-6: Swyanne (modulos=[clientes]) tenta financeiro → false (ESCAPE=0)', async () => {
+  test('GM-6: Colab3 (modulos=[clientes]) tenta financeiro → false (ESCAPE=0)', async () => {
     const db = makeDb({
       usersData: { role: 'funcionario', ativo: true },
       sysData:   { modulos: ['clientes'], admin: false, bloqueado: false },
@@ -192,7 +192,7 @@ describe('guard.js verificarAcessoModulo — BLOCK (GM-6..GM-10)', () => {
     expect(await verificarAcessoModulo(db, 'uid-sw', 'financeiro')).toBe(false);
   });
 
-  test('GM-7: Swyanne tenta garantia → false (ESCAPE=0)', async () => {
+  test('GM-7: Colab3 tenta garantia → false (ESCAPE=0)', async () => {
     const db = makeDb({
       usersData: { role: 'funcionario', ativo: true },
       sysData:   { modulos: ['clientes'], admin: false, bloqueado: false },
@@ -200,12 +200,12 @@ describe('guard.js verificarAcessoModulo — BLOCK (GM-6..GM-10)', () => {
     expect(await verificarAcessoModulo(db, 'uid-sw', 'garantia')).toBe(false);
   });
 
-  test('GM-8: Fabiana (demandas) tenta clientes → false (ESCAPE=0)', async () => {
+  test('GM-8: Vend2 (demandas) tenta clientes → false (ESCAPE=0)', async () => {
     const db = makeDb({
       usersData: { role: 'funcionario', ativo: true },
       sysData:   { modulos: ['demandas'], admin: false, bloqueado: false },
     });
-    expect(await verificarAcessoModulo(db, 'uid-fab', 'clientes')).toBe(false);
+    expect(await verificarAcessoModulo(db, 'uid-vd2', 'clientes')).toBe(false);
   });
 
   test('GM-9: bloqueado com modulo correto → false (ESCAPE=0)', async () => {

@@ -4,7 +4,7 @@
  * Sinais só DETECTAM conflito; NUNCA escolhem owner nem fundem cadastros. Saída sem PII (ids técnicos + hash agregado).
  */
 const crypto = require('crypto');
-const { grupoIdDe } = require('./carteiraV2');
+const { grupoIdDe, REVISORES_CONFLITO } = require('./carteiraV2');
 
 const h = s => crypto.createHash('sha256').update('mr4id|' + s).digest('hex').slice(0, 16);
 const dig = s => String(s == null ? '' : s).replace(/\D/g, '');
@@ -59,7 +59,7 @@ function detectarConflitos(clientes, carteiras = new Map(), agoraIso = null) {
   const porCarteira = new Map();
   for (const g of grupos) for (const id of g.comCarteira)
     porCarteira.set('GC:' + id, { grupoId: g.grupoId, tipos: g.tipos, forca: g.forca, relacionados: g.ids.filter(x => x !== id).map(x => 'GC:' + x), donosDiferentes: g.donosDiferentes,
-      revisao: 'PENDENTE', revisores: ['PROPRIETARIO', 'CAMILA'], detectadoEm: agoraIso, origemDeteccao: 'B2_BACKFILL' });
+      revisao: 'PENDENTE', revisores: [...REVISORES_CONFLITO], detectadoEm: agoraIso, origemDeteccao: 'B2_BACKFILL' });
   return { grupos, porCarteira, resumo: { grupos: grupos.length, clientes: grupos.reduce((a, g) => a + g.ids.length, 0), comCarteiraDeDonosDiferentes: grupos.filter(g => g.donosDiferentes).length,
     comCarteiraEIrmaoSem: grupos.filter(g => g.comCarteira.length && g.semCarteira.length).length, semNenhumaCarteira: grupos.filter(g => !g.comCarteira.length).length, carteirasMarcadas: porCarteira.size } };
 }

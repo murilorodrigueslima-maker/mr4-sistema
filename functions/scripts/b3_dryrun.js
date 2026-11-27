@@ -59,11 +59,15 @@ const cnt = a => a.length; const val = (v, n) => Object.fromEntries(Object.entri
   // impacto de vendas novas / cancelamentos / devoluções desde o corte (SIMULAÇÃO: modo DRY forçado, ZERO escritas)
   const imp = CORTE ? await PV.processarVendas(db, admin.firestore.FieldValue, { agoraIso: new Date().toISOString(), forcarDry: true, cfgOverride: { modo: 'DRY', corte: CORTE } }) : null;
   let canceladasDesdeCorte = 0, vendasDesdeCorte = 0; for (const vs of vendasPorCliente.values()) for (const v of vs) if (String(v.data).slice(0, 10) >= (CORTE || '9999')) { vendasDesdeCorte++; if (v.nome_situacao !== 'Concretizada') canceladasDesdeCorte++; }
+  // chaves dos vendedores do painel: documento protegido (somente leitura); sem ele os campos por vendedor ficam vazios
+  const mapaPainel = ((await db.doc('painel_mapeamento/vendedores').get()).data() || {}).vendedores || {};
+  const porVendedorPainel = Object.fromEntries(require('../lib/painelMetricas').chavesDoMapa(mapaPainel).map((c, i) =>
+    [`${String.fromCharCode(66 + i)}_para_${c}`, pCart.porDestino[Object.keys(nome).find(k => nome[k] === c.toUpperCase())] || 0]));
   const relat = {
     ok: true, hoje: HOJE, escritasEmProducao: 0,
     carteiras: carteiras.size, owners: val(Object.fromEntries(Object.entries(require('../lib/carteiraV2').contagemPorOwner(Object.fromEntries([...carteiras].map(([k, v]) => [k, v])), nome)).map(([k, v]) => [k, v])), {}),
     A_carteiras_ge120: { b3: aberta, ingenuo_qualquer_venda: abertaNaive, abertas_somente_porque_ultima_venda_foi_da_gestao: soPorGestao, porOwner: owners },
-    elegiveis_carteiras_apos_bloqueios: pCart.candidatosElegiveis, B_para_ademir: pCart.porDestino[Object.keys(nome).find(k => nome[k] === 'ADEMIR')] || 0, C_para_fabiana: pCart.porDestino[Object.keys(nome).find(k => nome[k] === 'FABIANA')] || 0,
+    elegiveis_carteiras_apos_bloqueios: pCart.candidatosElegiveis, ...porVendedorPainel,
     D_sem_carteira_compradores_ge120: semAbertos.length, D_sem_carteira_elegiveis_apos_bloqueios: semLiberaveis,
     E_bloqueados_conflito: { carteiras: pCart.bloqueados.CONFLITO.length, semCarteira: pSem.bloqueados.CONFLITO.length - pCart.bloqueados.CONFLITO.length },
     F_bloqueados_nao_contatar: pSem.bloqueados.NAO_CONTATAR.length, G_bloqueados_cooldown: pSem.bloqueados.COOLDOWN.length, G_bloqueados_followup: pSem.bloqueados.FOLLOWUP.length,

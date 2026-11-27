@@ -1,6 +1,6 @@
 'use strict';
 // N35.9C — Configuração operacional V1
-// Decisões de negócio aprovadas por Murilo (2026-09-24)
+// Decisões de negócio aprovadas por Titular (2026-09-24)
 // NÃO criar Firestore config. NÃO usar remote config.
 
 const OPERATIONAL_CONFIG_V1 = Object.freeze({

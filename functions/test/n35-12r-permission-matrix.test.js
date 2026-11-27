@@ -13,8 +13,8 @@
  *   PM-02: vendedor + operar → outcome (owner) ALLOW
  *   PM-03: vendedor + operar → read fila ALLOW
  *   PM-04: vendedor sem módulo operar → claim DENY
- *   PM-05: Camila (gestao) → claim DENY
- *   PM-06: Camila (gestao) → outcome DENY
+ *   PM-05: Revisor4 (gestao) → claim DENY
+ *   PM-06: Revisor4 (gestao) → outcome DENY
  *   PM-07: gestor (sem módulo) → read ALLOW [via isGestor — testado via callable se admin=true]
  *   PM-08: gestor (sem módulo operar) → claim DENY
  *   PM-09: funcionário comum → claim DENY
@@ -53,7 +53,7 @@ const T0     = '2026-09-24T10:00:00.000Z';
 const UID = {
   VENDEDOR_OK:       'pm-vendedor-ok',
   VENDEDOR_SEM_MOD:  'pm-vendedor-sem-mod',
-  CAMILA_GESTAO:     'pm-camila-gestao',
+  REVISOR4_GESTAO:     'pm-revisor4-gestao',
   GESTOR_SEM_OPERAR: 'pm-gestor-sem-operar',
   FUNC_COMUM:        'pm-func-comum',
   INATIVO:           'pm-inativo',
@@ -97,10 +97,10 @@ beforeAll(async () => {
     { ativo: true, role: 'funcionario', email: 'vendedor2@mr4.local' },
     { admin: false, modulos: ['fila-comercial'], nome: 'Vendedor Sem Operar' }
   );
-  // PM-05,06,15: Camila com módulo gestao
-  await seedUser(UID.CAMILA_GESTAO,
-    { ativo: true, role: 'funcionario', email: 'camila@mr4.local' },
-    { admin: true, modulos: ['catalogo','expedicao','ponto','garantia','demandas','fila-comercial-gestao'], nome: 'Camila Gestao' }
+  // PM-05,06,15: Revisor4 com módulo gestao
+  await seedUser(UID.REVISOR4_GESTAO,
+    { ativo: true, role: 'funcionario', email: 'revisor4@mr4.local' },
+    { admin: true, modulos: ['catalogo','expedicao','ponto','garantia','demandas','fila-comercial-gestao'], nome: 'Revisor4 Gestao' }
   );
   // PM-08: gestor sem módulo operar
   await seedUser(UID.GESTOR_SEM_OPERAR,
@@ -163,26 +163,26 @@ describe('PM-04: vendedor sem fila-comercial-operar → claim DENY', () => {
   }, 15000);
 });
 
-// ── PM-05: Camila (gestao) → claim DENY ──────────────────────────────────────
+// ── PM-05: Revisor4 (gestao) → claim DENY ──────────────────────────────────────
 
-describe('PM-05: Camila com fila-comercial-gestao → claim DENY', () => {
+describe('PM-05: Revisor4 com fila-comercial-gestao → claim DENY', () => {
   test('claim rejeitado (supervisão não opera)', async () => {
-    await expect(claimOpportunityHandler(req(UID.CAMILA_GESTAO))).rejects.toMatchObject({
+    await expect(claimOpportunityHandler(req(UID.REVISOR4_GESTAO))).rejects.toMatchObject({
       code: 'permission-denied',
     });
-    console.log('PM_05_CAMILA_GESTAO_CLAIM_DENY=PASS');
+    console.log('PM_05_REVISOR4_GESTAO_CLAIM_DENY=PASS');
   }, 15000);
 });
 
-// ── PM-06: Camila (gestao) → outcome DENY ────────────────────────────────────
+// ── PM-06: Revisor4 (gestao) → outcome DENY ────────────────────────────────────
 
-describe('PM-06: Camila com fila-comercial-gestao → outcome DENY', () => {
+describe('PM-06: Revisor4 com fila-comercial-gestao → outcome DENY', () => {
   test('outcome rejeitado antes do claim', async () => {
     // Sem claim, outcome deve falhar (não é owner)
-    await expect(registerOutcomeHandler(req(UID.CAMILA_GESTAO, { outcome: OUTCOMES.SEM_RESPOSTA }))).rejects.toMatchObject({
+    await expect(registerOutcomeHandler(req(UID.REVISOR4_GESTAO, { outcome: OUTCOMES.SEM_RESPOSTA }))).rejects.toMatchObject({
       code: 'permission-denied',
     });
-    console.log('PM_06_CAMILA_GESTAO_OUTCOME_DENY=PASS');
+    console.log('PM_06_REVISOR4_GESTAO_OUTCOME_DENY=PASS');
   }, 15000);
 });
 
@@ -268,10 +268,10 @@ describe('PM-14: vendedor não-owner → outcome DENY', () => {
 
 // ── PM-15: Supervisor não-owner → outcome DENY ───────────────────────────────
 
-describe('PM-15: supervisor (Camila) não-owner → outcome DENY', () => {
+describe('PM-15: supervisor (Revisor4) não-owner → outcome DENY', () => {
   test('outcome rejeitado para supervisor sem operação', async () => {
     await claimOpportunityHandler(req(UID.VENDEDOR_OK));
-    await expect(registerOutcomeHandler(req(UID.CAMILA_GESTAO, { outcome: OUTCOMES.SEM_RESPOSTA }))).rejects.toMatchObject({
+    await expect(registerOutcomeHandler(req(UID.REVISOR4_GESTAO, { outcome: OUTCOMES.SEM_RESPOSTA }))).rejects.toMatchObject({
       code: 'permission-denied',
     });
     console.log('PM_15_SUPERVISOR_NON_OWNER_DENY=PASS');
@@ -289,13 +289,13 @@ describe('PM-R03: vendedor owner → release ALLOW', () => {
   }, 15000);
 });
 
-// ── PM-R07: Camila (gestao) → release DENY ───────────────────────────────────
+// ── PM-R07: Revisor4 (gestao) → release DENY ───────────────────────────────────
 
-describe('PM-R07: supervisor (Camila) → release DENY', () => {
+describe('PM-R07: supervisor (Revisor4) → release DENY', () => {
   test('release rejeitado (supervisão não opera)', async () => {
-    await expect(releaseOpportunityHandler(req(UID.CAMILA_GESTAO))).rejects.toMatchObject({
+    await expect(releaseOpportunityHandler(req(UID.REVISOR4_GESTAO))).rejects.toMatchObject({
       code: 'permission-denied',
     });
-    console.log('PM_R07_CAMILA_GESTAO_RELEASE_DENY=PASS');
+    console.log('PM_R07_REVISOR4_GESTAO_RELEASE_DENY=PASS');
   }, 15000);
 });

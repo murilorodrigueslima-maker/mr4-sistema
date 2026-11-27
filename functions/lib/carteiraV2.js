@@ -27,6 +27,10 @@ const isoOk = s => typeof s === 'string' && !isNaN(Date.parse(s));
 const sha = s => crypto.createHash('sha256').update(s).digest('hex');
 const grupoIdDe = ids => 'CG-' + sha([...ids].sort().join('|')).slice(0, 12);
 
+// Papéis de revisão de conflito GRAVADOS nos documentos. O segundo valor é legado e identifica uma pessoa:
+// fica só aqui até a migração dos dados para um papel neutro (PENDÊNCIA documentada em EXEC3/07).
+const PAPEL_REVISOR_GESTAO = 'CAMILA';
+const REVISORES_CONFLITO = Object.freeze(['PROPRIETARIO', PAPEL_REVISOR_GESTAO]);
 function validarConflito(c) {
   if (c === null) return null;
   if (!c || typeof c !== 'object') return 'CONFLITO_FORMATO';
@@ -38,7 +42,7 @@ function validarConflito(c) {
   if (!Array.isArray(c.relacionados) || !c.relacionados.every(r => ANCORA_RE.test(r))) return 'CONFLITO_RELACIONADOS';
   if (typeof c.donosDiferentes !== 'boolean') return 'CONFLITO_DONOS';
   if (!['PENDENTE', 'RESOLVIDO'].includes(c.revisao)) return 'CONFLITO_REVISAO';
-  if (!Array.isArray(c.revisores) || !c.revisores.every(r => ['PROPRIETARIO', 'CAMILA'].includes(r))) return 'CONFLITO_REVISORES';
+  if (!Array.isArray(c.revisores) || !c.revisores.every(r => REVISORES_CONFLITO.includes(r))) return 'CONFLITO_REVISORES';
   return null;
 }
 
@@ -104,4 +108,4 @@ function lerCarteira(d) {
 }
 
 module.exports = { SCHEMA_V2, SCHEMA_V1, ANCORA_RE, STATUS, ORIGENS, TIPOS_CONFLITO, FORCAS, CAMPOS_OWNERSHIP, CAMPOS_ADITIVOS, CAMPOS_CARTEIRA_V2, CAMPOS_ALTERADOS_BACKFILL,
-  validarDocCarteiraV2, validarConflito, montarPatchBackfillV2, impressaoOwnership, linhaOwnership, contagemPorOwner, lerCarteira, grupoIdDe, sha };
+  validarDocCarteiraV2, validarConflito, PAPEL_REVISOR_GESTAO, REVISORES_CONFLITO, montarPatchBackfillV2, impressaoOwnership, linhaOwnership, contagemPorOwner, lerCarteira, grupoIdDe, sha };

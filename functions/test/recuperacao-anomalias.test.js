@@ -57,7 +57,7 @@ const MOTIVO = 'Queda real confirmada pelo gestor: loja fechou filial';
 
 describe('aceite em duas etapas', () => {
   const e0 = estavel(), sig = e0.leituras[e0.leituras.length - 1].assinatura8, AG = T0 + 10 * H;
-  const pedir = (extra = {}) => R.solicitarAceite(e0, { assinatura8: sig, motivo: MOTIVO, ator: 'murilo', agoraMs: AG, runId: '1', ...extra });
+  const pedir = (extra = {}) => R.solicitarAceite(e0, { assinatura8: sig, motivo: MOTIVO, ator: 'titular', agoraMs: AG, runId: '1', ...extra });
   test('solicitar: exige AGUARDANDO, assinatura igual à última leitura e motivo ≥ 20 caracteres', () => {
     expect(pedir().ok).toBe(true);
     expect(pedir({ assinatura8: 'deadbeef' }).codigo).toBe('ASSINATURA_DIFERENTE'); expect(pedir({ assinatura8: 'XYZ' }).codigo).toBe('ASSINATURA_INVALIDA');
@@ -73,7 +73,7 @@ describe('aceite em duas etapas', () => {
     expect(R.solicitarAceite(ex2, { assinatura8: s2, motivo: MOTIVO + ' CONFIRMO-QUEDA-EXTREMA', ator: 'a', agoraMs: T0 + 10 * H }).ok).toBe(true);
   });
   const pend = pedir().estado, ap = pend.aprovacao, atual = { completa: true, assinatura8: sig, particaoOk: true };
-  const conf = (extra = {}) => R.confirmarAceite(pend, { id: ap.id, assinatura8: sig, ator: 'murilo', agoraMs: AG + 31 * 60000, leituraAtual: atual, runId: '2', ...extra });
+  const conf = (extra = {}) => R.confirmarAceite(pend, { id: ap.id, assinatura8: sig, ator: 'titular', agoraMs: AG + 31 * 60000, leituraAtual: atual, runId: '2', ...extra });
   test('confirmar válido: publica, consome, audita e o bloco volta a NORMAL', () => {
     const r = conf(); expect(r.ok).toBe(true); expect(r.publicar).toBe(true); expect(r.estado.estado).toBe('NORMAL'); expect(r.aprovacaoConsumida.consumidoEm).toBeGreaterThan(0);
     expect(r.eventos.map(e => e.evento)).toEqual(expect.arrayContaining(['APROVACAO_CONFIRMADA', 'SAIU_QUARENTENA']));
@@ -91,7 +91,7 @@ describe('aceite em duas etapas', () => {
     const r = conf({ agoraMs: AG + 25 * H }); expect(r.codigo).toBe('APROVACAO_EXPIRADA'); expect(r.estado.estado).toBe('AGUARDANDO_CONFIRMACAO'); expect(r.estado.aprovacao).toBeNull();
   });
   test('uso único: depois de consumida não confirma de novo (estado NORMAL ⇒ sem aprovação pendente)', () => {
-    const r1 = conf(); const r2 = R.confirmarAceite(r1.estado, { id: ap.id, assinatura8: sig, ator: 'murilo', agoraMs: AG + 40 * 60000, leituraAtual: atual }); expect(r2.ok).toBe(false); expect(r2.codigo).toBe('SEM_APROVACAO_PENDENTE');
+    const r1 = conf(); const r2 = R.confirmarAceite(r1.estado, { id: ap.id, assinatura8: sig, ator: 'titular', agoraMs: AG + 40 * 60000, leituraAtual: atual }); expect(r2.ok).toBe(false); expect(r2.codigo).toBe('SEM_APROVACAO_PENDENTE');
     const consumida = { ...pend, aprovacao: { ...ap, consumidoEm: 1 } }; expect(R.confirmarAceite(consumida, { id: ap.id, assinatura8: sig, ator: 'a', agoraMs: AG + 40 * 60000, leituraAtual: atual }).codigo).toBe('APROVACAO_JA_CONSUMIDA');
   });
   test('segundo ator opcional: exigido ⇒ mesmo ator rejeitado; padrão (false) aceita', () => {

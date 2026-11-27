@@ -16,7 +16,7 @@ const { COLL, COLL_HIST } = M;
 
 const LOTE = 'TESTE_N3526';
 const base = { loteId: LOTE, operadorUid: 'op-migracao', motivo: 'Migração teste', agoraIso: '2026-09-26T15:00:00.000Z' };
-const item = (gc, owner, extra = {}) => ({ portfolioId: 'GC:' + gc, identidadeAtual: 'GC_NATIVE:' + gc, proposedOwnerUid: owner, origemComercialUid: owner, origemComercialGestaoClickId: '1080453', ...extra });
+const item = (gc, owner, extra = {}) => ({ portfolioId: 'GC:' + gc, identidadeAtual: 'GC_NATIVE:' + gc, proposedOwnerUid: owner, origemComercialUid: owner, origemComercialGestaoClickId: '900002', ...extra });
 const ITENS = [item('7001', 'F'), item('7002', 'A'), item('7003', 'F')];
 const contar = async c => (await db.collection(c).get()).size;
 const limpar = async () => { for (const c of [COLL, COLL_HIST]) for (const d of (await db.collection(c).get()).docs) await d.ref.delete(); await db.doc('clientes/mr4n3526').delete(); };
@@ -35,7 +35,7 @@ describe('Executor da Onda 1 (MG)', () => {
     expect(await contar(COLL)).toBe(3); expect(await contar(COLL_HIST)).toBe(3);
     const d = (await db.doc(`${COLL}/GC:7002`).get()).data();
     expect(d).toEqual({ schemaVersion: 'carteira-v1', portfolioId: 'GC:7002', ownerUid: 'A', ownerDesde: base.agoraIso, origemComercialUid: 'A',
-      origemComercialGestaoClickId: '1080453', criadoEm: base.agoraIso, atualizadoEm: base.agoraIso, versao: 1 });
+      origemComercialGestaoClickId: '900002', criadoEm: base.agoraIso, atualizadoEm: base.agoraIso, versao: 1 });
     expect(V1.validarDocCarteiraV1(d)).toBeNull();
     const h = (await db.doc(`${COLL_HIST}/${M.idEventoMigracao(LOTE, 'GC:7002')}`).get()).data();
     expect(h).toMatchObject({ portfolioId: 'GC:7002', tipoEvento: 'CARTEIRA_CRIADA', ownerAnteriorUid: null, ownerNovoUid: 'A', versao: 1, chaveIdempotencia: 'MIGRACAO:' + LOTE + ':GC:7002' });
@@ -58,7 +58,7 @@ describe('Executor da Onda 1 (MG)', () => {
   });
   test('MG-05 origem divergente e evento órfão (sem carteira) são conflitos', async () => {
     await M.executarOndaMigracao(db, { ...base, itens: [item('7001', 'F')] });
-    const r = await M.executarOndaMigracao(db, { ...base, itens: [item('7001', 'F', { origemComercialGestaoClickId: '948278' })] });
+    const r = await M.executarOndaMigracao(db, { ...base, itens: [item('7001', 'F', { origemComercialGestaoClickId: '900001' })] });
     expect(r.conflitos).toEqual([{ portfolioId: 'GC:7001', tipo: 'CONFLICT_ORIGIN' }]);
     await db.doc(`${COLL_HIST}/${M.idEventoMigracao(LOTE, 'GC:7009')}`).set({ x: 1 });
     const r2 = await M.executarOndaMigracao(db, { ...base, itens: [item('7009', 'A')], dryRun: true });
@@ -95,29 +95,29 @@ describe('Rules carteira_comercial / _historico (MG)', () => {
     const RULES = fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8');
     const env = await initializeTestEnvironment({ projectId: 'mr4-n3526-rules', firestore: { rules: RULES, host: 'localhost', port: 8080 } });
     const P = {
-      fab: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] }],
-      ade: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] }],
-      cam: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial-gestao'] }],
-      mur: [{ role: 'gestor', ativo: true }, { admin: true, modulos: ['fila-comercial'] }],
+      vd2: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] }],
+      vd1: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] }],
+      rv4: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial-gestao'] }],
+      tit: [{ role: 'gestor', ativo: true }, { admin: true, modulos: ['fila-comercial'] }],
       adm: [{ role: 'funcionario', ativo: true }, { admin: true, bloqueado: false, modulos: ['ponto'] }],
     };
     try {
       await env.withSecurityRulesDisabled(async ctx => {
         const f = ctx.firestore();
         for (const [k, [u, s]] of Object.entries(P)) { await f.doc('users/' + k).set(u); await f.doc('sistema_usuarios/' + k).set(s); }
-        await f.doc(`${COLL}/GC:1`).set({ ownerUid: 'fab', versao: 1 });
+        await f.doc(`${COLL}/GC:1`).set({ ownerUid: 'vd2', versao: 1 });
         await f.doc(`${COLL_HIST}/h1`).set({ portfolioId: 'GC:1' });
       });
       const as = k => (k ? env.authenticatedContext(k) : env.unauthenticatedContext()).firestore();
-      await assertSucceeds(as('fab').doc(`${COLL}/GC:1`).get());
-      await assertFails(as('ade').doc(`${COLL}/GC:1`).get());
-      await assertSucceeds(as('cam').doc(`${COLL}/GC:1`).get());
-      await assertSucceeds(as('mur').doc(`${COLL}/GC:1`).get());
+      await assertSucceeds(as('vd2').doc(`${COLL}/GC:1`).get());
+      await assertFails(as('vd1').doc(`${COLL}/GC:1`).get());
+      await assertSucceeds(as('rv4').doc(`${COLL}/GC:1`).get());
+      await assertSucceeds(as('tit').doc(`${COLL}/GC:1`).get());
       await assertFails(as('adm').doc(`${COLL}/GC:1`).get());
       await assertFails(as(null).doc(`${COLL}/GC:1`).get());
-      for (const k of ['cam', 'mur']) await assertSucceeds(as(k).doc(`${COLL_HIST}/h1`).get());
-      for (const k of ['fab', 'ade', 'adm', null]) await assertFails(as(k).doc(`${COLL_HIST}/h1`).get());
-      for (const k of ['fab', 'ade', 'cam', 'mur', 'adm', null]) {
+      for (const k of ['rv4', 'tit']) await assertSucceeds(as(k).doc(`${COLL_HIST}/h1`).get());
+      for (const k of ['vd2', 'vd1', 'adm', null]) await assertFails(as(k).doc(`${COLL_HIST}/h1`).get());
+      for (const k of ['vd2', 'vd1', 'rv4', 'tit', 'adm', null]) {
         await assertFails(as(k).doc(`${COLL}/GC:2`).set({ ownerUid: 'x' }));
         await assertFails(as(k).doc(`${COLL}/GC:1`).update({ ownerUid: 'x' }));
         await assertFails(as(k).doc(`${COLL}/GC:1`).delete());

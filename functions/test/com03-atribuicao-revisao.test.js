@@ -10,7 +10,7 @@ const R = require('../lib/atribuicaoRevisao');
 const V = require('../../modulos/crm-atribuicao-view');
 jest.setTimeout(120000);
 
-const VEND = 'com03-vendedor', OUTRO = 'com03-outro', GEST = 'com03-gestor', CAM = 'com03-camila', BLOQ = 'com03-bloqueado';
+const VEND = 'com03-vendedor', OUTRO = 'com03-outro', GEST = 'com03-gestor', CAM = 'com03-revisor4', BLOQ = 'com03-bloqueado';
 const AGORA = '2026-11-26T15:00:00.000Z';
 const opts = { db, now: () => new Date(AGORA) };
 const pedir = (uid, data, o = opts) => R.atribuicaoRevisaoHandler({ auth: uid ? { uid } : null, data }, o);

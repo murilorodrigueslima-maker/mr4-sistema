@@ -19,10 +19,10 @@ const { resolverNomesSelecionados } = require('../lib/filaNomes');
 const QC = require('../lib/filaQueueConfig');
 const config = require('../lib/operationalConfig');
 
-const FAB = 'UGXinD3KVXX0ouYEfamBWjizC5C2';
-const ADEMIR = 'G9JDOBsquwdth77qgwtXpcjSxYd2';
-const CAMILA = 'wVtUJcgwIqQK4VOlYBlREWk8C1Y2';
-const MURILO = 'BN8skgBkkbbxQvY1kvsBDLCBo6b2';
+const VD2 = 'UidSinteticoC000000000000000';
+const VEND1 = 'UidSinteticoB000000000000000';
+const REVISOR4 = 'UidSinteticoD000000000000000';
+const TITULAR = 'UidSinteticoA000000000000000';
 const DR = '2026-09-25'; // sexta-feira
 
 let seq = 1;
@@ -43,7 +43,7 @@ function cand(o = {}) {
   };
 }
 const muitos = (k, o = {}) => Array.from({ length: k }, (_, i) => cand({ ...o, dsc: 1000 - i }));
-const wl = (o) => gerarWorklistPorVendedor({ estados: new Map(), vendedoresAtivos: [FAB], dataReferencia: DR, ...o });
+const wl = (o) => gerarWorklistPorVendedor({ estados: new Map(), vendedoresAtivos: [VD2], dataReferencia: DR, ...o });
 const ids = arr => arr.map(x => x.opportunityInstanceId);
 function estadoDe(c, passos, t0 = '2026-09-24T12:00:00.000Z') {
   let e = criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, t0);
@@ -67,13 +67,13 @@ describe('Canário humano (a31a49b109172b18)', () => {
     commercialEntityId: 'MR4_LINKED:AimKwxONryOZPpnUVOUH', opportunityInstanceId: 'a31a49b109172b18',
     tipoOportunidade: 'REATIVACAO_120D', estado: 'DISPONIVEL', claimAtual: null, cooledUntil: null, nextFollowUpAt: null,
     eventos: [
-      { tipo: 'CLAIMED', operadorId: FAB, estadoAntes: 'DISPONIVEL', estadoDepois: 'EM_ATENDIMENTO', timestamp: '2026-09-25T15:43:26.089Z' },
-      { tipo: 'RELEASED', operadorId: FAB, estadoAntes: 'EM_ATENDIMENTO', estadoDepois: 'DISPONIVEL', timestamp: '2026-09-25T15:44:40.424Z' },
+      { tipo: 'CLAIMED', operadorId: VD2, estadoAntes: 'DISPONIVEL', estadoDepois: 'EM_ATENDIMENTO', timestamp: '2026-09-25T15:43:26.089Z' },
+      { tipo: 'RELEASED', operadorId: VD2, estadoAntes: 'EM_ATENDIMENTO', estadoDepois: 'DISPONIVEL', timestamp: '2026-09-25T15:44:40.424Z' },
     ],
   };
-  test('HC-01 claim e release pela Fabiana, uma vez cada', () => {
-    expect(REAL.eventos.filter(e => e.tipo === 'CLAIMED').map(e => e.operadorId)).toEqual([FAB]);
-    expect(REAL.eventos.filter(e => e.tipo === 'RELEASED').map(e => e.operadorId)).toEqual([FAB]);
+  test('HC-01 claim e release pela Vend2, uma vez cada', () => {
+    expect(REAL.eventos.filter(e => e.tipo === 'CLAIMED').map(e => e.operadorId)).toEqual([VD2]);
+    expect(REAL.eventos.filter(e => e.tipo === 'RELEASED').map(e => e.operadorId)).toEqual([VD2]);
   });
   test('HC-02 estado final DISPONIVEL, sem outcome, sem cooldown, sem follow-up', () => {
     expect(REAL.estado).toBe('DISPONIVEL');
@@ -84,8 +84,8 @@ describe('Canário humano (a31a49b109172b18)', () => {
   });
   test('HC-03 máquina de estados reproduz o mesmo histórico (claim → release)', () => {
     let e = criarEstadoInicial(REAL.commercialEntityId, REAL.opportunityInstanceId, REAL.tipoOportunidade, '2026-09-24T22:21:04.505Z');
-    e = claimOportunidade(e, FAB, REAL.eventos[0].timestamp);
-    e = releaseOportunidade(e, FAB, REAL.eventos[1].timestamp);
+    e = claimOportunidade(e, VD2, REAL.eventos[0].timestamp);
+    e = releaseOportunidade(e, VD2, REAL.eventos[1].timestamp);
     expect(e.estado).toBe(REAL.estado);
     expect(e.eventos.map(x => [x.tipo, x.operadorId, x.estadoAntes, x.estadoDepois, x.timestamp])).toEqual(REAL.eventos.map(x => [x.tipo, x.operadorId, x.estadoAntes, x.estadoDepois, x.timestamp]));
   });
@@ -93,8 +93,8 @@ describe('Canário humano (a31a49b109172b18)', () => {
     const c = cand({ ent: REAL.commercialEntityId, opp: REAL.opportunityInstanceId });
     const r = wl({ candidatos: [c, ...muitos(12)], estados: new Map([[c.opportunityInstanceId, REAL]]), canaryIds: QC.CANARY_OPPORTUNITY_IDS });
     expect(ids(r.canarios)).toEqual([c.opportunityInstanceId]);
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(10);
-    expect(ids(r.porVendedor[FAB].newOpportunities)).not.toContain(c.opportunityInstanceId);
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(10);
+    expect(ids(r.porVendedor[VD2].newOpportunities)).not.toContain(c.opportunityInstanceId);
   });
 });
 
@@ -133,38 +133,38 @@ describe('Snapshot — opportunityInstanceId', () => {
 // ── Vendedores ativos ─────────────────────────────────────────────────────────
 describe('Ativação de vendedores', () => {
   const users = new Map([
-    [FAB, { ativo: true, role: 'funcionario' }], [ADEMIR, { ativo: true, role: 'funcionario' }],
-    [CAMILA, { ativo: true, role: 'funcionario' }], [MURILO, { ativo: true, role: 'gestor' }],
+    [VD2, { ativo: true, role: 'funcionario' }], [VEND1, { ativo: true, role: 'funcionario' }],
+    [REVISOR4, { ativo: true, role: 'funcionario' }], [TITULAR, { ativo: true, role: 'gestor' }],
   ]);
   const FC = { ativo: true, recebeNovasOportunidades: true, limiteNovasPorDia: 10 };
   const sys = new Map([
-    [FAB, { nome: 'Fabiana', modulos: ['catalogo', 'fila-comercial', 'fila-comercial-operar'], admin: false, filaComercial: FC }],
-    [ADEMIR, { modulos: ['fila-comercial', 'fila-comercial-operar'], admin: false }],
-    [CAMILA, { modulos: ['ponto', 'fila-comercial-gestao'], admin: false }],
-    [MURILO, { modulos: ['fila-comercial'], admin: true }],
+    [VD2, { nome: 'Vend2', modulos: ['catalogo', 'fila-comercial', 'fila-comercial-operar'], admin: false, filaComercial: FC }],
+    [VEND1, { modulos: ['fila-comercial', 'fila-comercial-operar'], admin: false }],
+    [REVISOR4, { modulos: ['ponto', 'fila-comercial-gestao'], admin: false }],
+    [TITULAR, { modulos: ['fila-comercial'], admin: true }],
   ]);
   // N35.17: participação vem da configuração sistema_usuarios.filaComercial (sem lista no código)
-  test('SA-01 somente quem tem configuração ativa participa (Fabiana)', () => {
+  test('SA-01 somente quem tem configuração ativa participa (Vend2)', () => {
     expect(QC.ACTIVE_QUEUE_SELLERS).toBeUndefined();
-    expect(resolverParticipantes(sys, users).participantes.map(p => p.uid)).toEqual([FAB]);
+    expect(resolverParticipantes(sys, users).participantes.map(p => p.uid)).toEqual([VD2]);
   });
-  test('SA-02 Ademir tem fila-comercial-operar mas sem configuração → não participa', () => {
-    expect(resolverParticipantes(sys, users).participantes.map(p => p.uid)).not.toContain(ADEMIR);
+  test('SA-02 Vend1 tem fila-comercial-operar mas sem configuração → não participa', () => {
+    expect(resolverParticipantes(sys, users).participantes.map(p => p.uid)).not.toContain(VEND1);
   });
-  test('SA-03 Camila (gestão) configurada por engano é rejeitada: SEM_MODULO_OPERAR', () => {
-    const s2 = new Map(sys); s2.set(CAMILA, { ...sys.get(CAMILA), filaComercial: FC });
+  test('SA-03 Revisor4 (gestão) configurada por engano é rejeitada: SEM_MODULO_OPERAR', () => {
+    const s2 = new Map(sys); s2.set(REVISOR4, { ...sys.get(REVISOR4), filaComercial: FC });
     const r = resolverParticipantes(s2, users);
-    expect(r.participantes.map(p => p.uid)).not.toContain(CAMILA);
-    expect(r.rejeitados).toContainEqual({ uid: CAMILA, motivo: 'SEM_MODULO_OPERAR' });
+    expect(r.participantes.map(p => p.uid)).not.toContain(REVISOR4);
+    expect(r.rejeitados).toContainEqual({ uid: REVISOR4, motivo: 'SEM_MODULO_OPERAR' });
   });
-  test('SA-04 gestor (Murilo) configurado não participa: ROLE_NAO_VENDEDOR', () => {
-    const s2 = new Map(sys); s2.set(MURILO, { ...sys.get(MURILO), modulos: ['fila-comercial-operar'], filaComercial: FC });
-    expect(resolverParticipantes(s2, users).rejeitados).toContainEqual({ uid: MURILO, motivo: 'ROLE_NAO_VENDEDOR' });
+  test('SA-04 gestor (Titular) configurado não participa: ROLE_NAO_VENDEDOR', () => {
+    const s2 = new Map(sys); s2.set(TITULAR, { ...sys.get(TITULAR), modulos: ['fila-comercial-operar'], filaComercial: FC });
+    expect(resolverParticipantes(s2, users).rejeitados).toContainEqual({ uid: TITULAR, motivo: 'ROLE_NAO_VENDEDOR' });
   });
   test('SA-05 vendedor configurado bloqueado ou inativo é rejeitado', () => {
-    const s2 = new Map(sys); s2.set(FAB, { ...sys.get(FAB), bloqueado: true });
+    const s2 = new Map(sys); s2.set(VD2, { ...sys.get(VD2), bloqueado: true });
     expect(resolverParticipantes(s2, users).rejeitados[0].motivo).toBe('BLOQUEADO');
-    const u2 = new Map(users); u2.set(FAB, { ativo: false, role: 'funcionario' });
+    const u2 = new Map(users); u2.set(VD2, { ativo: false, role: 'funcionario' });
     expect(resolverParticipantes(sys, u2).rejeitados[0].motivo).toBe('INATIVO');
   });
   test('SA-06 vendedor não ativo recebe 0 mesmo existindo candidatos', () => {
@@ -184,15 +184,15 @@ describe('Ordenação canônica', () => {
   });
   test('OR-04 20 entradas embaralhadas → mesma worklist byte a byte', () => {
     const pop = Array.from({ length: 60 }, (_, i) => cand({ prio: [100, 90, 90, 80][i % 4], dsc: [200, 200, 150][i % 3] }));
-    const ref = JSON.stringify(wl({ candidatos: pop }).porVendedor[FAB].worklist);
+    const ref = JSON.stringify(wl({ candidatos: pop }).porVendedor[VD2].worklist);
     let divergencias = 0;
-    for (let s = 1; s <= 20; s++) if (JSON.stringify(wl({ candidatos: embaralhar(pop, s) }).porVendedor[FAB].worklist) !== ref) divergencias++;
+    for (let s = 1; s <= 20; s++) if (JSON.stringify(wl({ candidatos: embaralhar(pop, s) }).porVendedor[VD2].worklist) !== ref) divergencias++;
     expect(divergencias).toBe(0);
   });
   test('OR-05 snapshot HOJE e worklist usam a MESMA ordem', () => {
     const pop = Array.from({ length: 30 }, (_, i) => cand({ prio: [100, 90][i % 2], dsc: [200, 150, 150][i % 3] }));
     const hoje = filtrarOrdenarFilaHoje(embaralhar(pop, 7));
-    const w = wl({ candidatos: embaralhar(pop, 11), cap: 30 }).porVendedor[FAB].newOpportunities;
+    const w = wl({ candidatos: embaralhar(pop, 11), cap: 30 }).porVendedor[VD2].newOpportunities;
     expect(ids(w)).toEqual(ids(hoje));
   });
   test('OR-06 compararPrioridade legado = canônica para AGIR_AGORA', () => {
@@ -207,28 +207,28 @@ describe('CAP por vendedor', () => {
     expect(WORKLIST_CAP).toBe(10);
     expect(config.FOLLOWUPS_COUNT_TOWARD_CAP).toBe(false);
   });
-  test('CP-02 Fabiana sozinha: no máximo 10 novas', () => {
+  test('CP-02 Vend2 sozinha: no máximo 10 novas', () => {
     const r = wl({ candidatos: muitos(40) });
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(10);
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(10);
     expect(r.backlog).toHaveLength(30);
   });
   test('CP-03 10 novas + 3 follow-ups vencidos = 13', () => {
     const fu = muitos(3, { prio: 40 });
-    const est = new Map(fu.map(c => [c.opportunityInstanceId, estadoDe(c, [[FAB, OUTCOMES.PEDIU_RETORNO, { scheduledFor: DR }]])]));
+    const est = new Map(fu.map(c => [c.opportunityInstanceId, estadoDe(c, [[VD2, OUTCOMES.PEDIU_RETORNO, { scheduledFor: DR }]])]));
     const r = wl({ candidatos: [...fu, ...muitos(20)], estados: est });
-    const g = r.porVendedor[FAB];
+    const g = r.porVendedor[VD2];
     expect(g.newOpportunities).toHaveLength(10);
     expect(g.dueFollowUps).toHaveLength(3);
     expect(g.worklist).toHaveLength(13);
     expect(ids(g.worklist.slice(0, 3)).sort()).toEqual(ids(fu).sort());
   });
   test('CP-04 dois vendedores (sintético): ≤10 cada, sem colisão', () => {
-    const r = wl({ candidatos: muitos(30), vendedoresAtivos: [FAB, ADEMIR] });
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(10);
-    expect(r.porVendedor[ADEMIR].newOpportunities).toHaveLength(10);
+    const r = wl({ candidatos: muitos(30), vendedoresAtivos: [VD2, VEND1] });
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(10);
+    expect(r.porVendedor[VEND1].newOpportunities).toHaveLength(10);
     expect(() => indiceAtribuicoes(r)).not.toThrow();
-    const f = new Set(ids(r.porVendedor[FAB].newOpportunities));
-    expect(ids(r.porVendedor[ADEMIR].newOpportunities).filter(x => f.has(x))).toHaveLength(0);
+    const f = new Set(ids(r.porVendedor[VD2].newOpportunities));
+    expect(ids(r.porVendedor[VEND1].newOpportunities).filter(x => f.has(x))).toHaveLength(0);
   });
   test('CP-05 CAP inválido lança erro', () => {
     expect(() => wl({ candidatos: [], cap: 0 })).toThrow();
@@ -250,62 +250,62 @@ describe('SEM_RESPOSTA e follow-up', () => {
     expect(dataComercial('2026-09-26T01:30:00.000Z')).toBe('2026-09-25');
   });
   test('SR-03 SEM_RESPOSTA #1 → próximo dia útil, estado DISPONIVEL, sem cooldown', () => {
-    const e = estadoDe(cand(), [[FAB, OUTCOMES.SEM_RESPOSTA]], '2026-09-25T13:00:00.000Z');
+    const e = estadoDe(cand(), [[VD2, OUTCOMES.SEM_RESPOSTA]], '2026-09-25T13:00:00.000Z');
     expect(e.nextFollowUpAt).toBe('2026-09-28');
     expect(e.estado).toBe(ESTADOS.DISPONIVEL);
     expect(e.cooledUntil).toBeNull();
   });
   test('SR-04 SEM_RESPOSTA #2 → próximo dia útil novamente', () => {
-    const e = estadoDe(cand(), [[FAB, OUTCOMES.SEM_RESPOSTA], [FAB, OUTCOMES.SEM_RESPOSTA]], '2026-09-28T13:00:00.000Z');
+    const e = estadoDe(cand(), [[VD2, OUTCOMES.SEM_RESPOSTA], [VD2, OUTCOMES.SEM_RESPOSTA]], '2026-09-28T13:00:00.000Z');
     expect(e.nextFollowUpAt).toBe('2026-09-29');
     expect(e.cooledUntil).toBeNull();
   });
   test('SR-05 SEM_RESPOSTA #3 → cooldown 30 dias e SEM follow-up', () => {
-    const e = estadoDe(cand(), [[FAB, OUTCOMES.SEM_RESPOSTA], [FAB, OUTCOMES.SEM_RESPOSTA], [FAB, OUTCOMES.SEM_RESPOSTA]], '2026-09-28T13:00:00.000Z');
+    const e = estadoDe(cand(), [[VD2, OUTCOMES.SEM_RESPOSTA], [VD2, OUTCOMES.SEM_RESPOSTA], [VD2, OUTCOMES.SEM_RESPOSTA]], '2026-09-28T13:00:00.000Z');
     expect(e.nextFollowUpAt).toBeNull();
     const dias = (Date.parse(e.cooledUntil) - Date.parse(e.eventos[e.eventos.length - 1].timestamp)) / 86400000;
     expect(dias).toBe(config.SEM_RESPOSTA_COOLDOWN_DAYS);
   });
   test('SR-06 retry vencido → mesmo vendedor, fora do CAP', () => {
     const c = cand({ prio: 40 });
-    const e = estadoDe(c, [[FAB, OUTCOMES.SEM_RESPOSTA]], '2026-09-24T13:00:00.000Z'); // retry em 25/09
+    const e = estadoDe(c, [[VD2, OUTCOMES.SEM_RESPOSTA]], '2026-09-24T13:00:00.000Z'); // retry em 25/09
     const r = wl({ candidatos: [c, ...muitos(15)], estados: new Map([[c.opportunityInstanceId, e]]) });
-    expect(ids(r.porVendedor[FAB].dueFollowUps)).toEqual([c.opportunityInstanceId]);
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(10);
-    expect(ids(r.porVendedor[FAB].newOpportunities)).not.toContain(c.opportunityInstanceId);
+    expect(ids(r.porVendedor[VD2].dueFollowUps)).toEqual([c.opportunityInstanceId]);
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(10);
+    expect(ids(r.porVendedor[VD2].newOpportunities)).not.toContain(c.opportunityInstanceId);
   });
   test('SR-07 retry ainda não vencido → fora de follow-ups E de novas', () => {
     const c = cand({ prio: 100 });
-    const e = estadoDe(c, [[FAB, OUTCOMES.SEM_RESPOSTA]], '2026-09-25T13:00:00.000Z'); // retry em 28/09
+    const e = estadoDe(c, [[VD2, OUTCOMES.SEM_RESPOSTA]], '2026-09-25T13:00:00.000Z'); // retry em 28/09
     const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]) });
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
     expect(r.excluidos.FOLLOWUP_FUTURO).toEqual([c.opportunityInstanceId]);
   });
   test('SR-08 follow-up de outro vendedor não aparece para quem não é o dono', () => {
     const c = cand();
-    const e = estadoDe(c, [[ADEMIR, OUTCOMES.PEDIU_RETORNO, { scheduledFor: DR }]]);
-    const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]), vendedoresAtivos: [FAB, ADEMIR] });
-    expect(ids(r.porVendedor[ADEMIR].dueFollowUps)).toEqual([c.opportunityInstanceId]);
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
+    const e = estadoDe(c, [[VEND1, OUTCOMES.PEDIU_RETORNO, { scheduledFor: DR }]]);
+    const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]), vendedoresAtivos: [VD2, VEND1] });
+    expect(ids(r.porVendedor[VEND1].dueFollowUps)).toEqual([c.opportunityInstanceId]);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
   });
   test('SR-09 follow-up vencido de dono inativo fica separado (sem reatribuição automática)', () => {
     const c = cand();
-    const e = estadoDe(c, [[ADEMIR, OUTCOMES.PEDIU_RETORNO, { scheduledFor: DR }]]);
+    const e = estadoDe(c, [[VEND1, OUTCOMES.PEDIU_RETORNO, { scheduledFor: DR }]]);
     const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]) });
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
-    expect(r.followUpsSemDonoAtivo.map(x => x.donoOriginal)).toEqual([ADEMIR]);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
+    expect(r.followUpsSemDonoAtivo.map(x => x.donoOriginal)).toEqual([VEND1]);
   });
   test('SR-10 follow-up pendente bloqueia a entidade como nova mesmo com nova instância', () => {
     const velho = cand({ ent: 'GC_NATIVE:700', tipo: 'JANELA_DE_RECOMPRA' });
     const novo = cand({ ent: 'GC_NATIVE:700', tipo: 'REATIVACAO_120D' });
-    const e = estadoDe(velho, [[FAB, OUTCOMES.PEDIU_RETORNO, { scheduledFor: '2026-10-05' }]]);
+    const e = estadoDe(velho, [[VD2, OUTCOMES.PEDIU_RETORNO, { scheduledFor: '2026-10-05' }]]);
     const r = wl({ candidatos: [novo], estados: new Map([[velho.opportunityInstanceId, e]]) });
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
   });
   test('SR-11 legado: follow-up futuro não reaparece como nova (bug N35.13 corrigido)', () => {
     const c = cand();
-    const e = estadoDe(c, [[FAB, OUTCOMES.PEDIU_RETORNO, { scheduledFor: '2026-09-30' }]]);
-    const r = gerarDailyWorklist({ clientesHoje: [c], estadosOperacionais: new Map([[c.opportunityInstanceId, e]]), operadorId: FAB, dataReferencia: '2026-09-26' });
+    const e = estadoDe(c, [[VD2, OUTCOMES.PEDIU_RETORNO, { scheduledFor: '2026-09-30' }]]);
+    const r = gerarDailyWorklist({ clientesHoje: [c], estadosOperacionais: new Map([[c.opportunityInstanceId, e]]), operadorId: VD2, dataReferencia: '2026-09-26' });
     expect(r.newOpportunities).toHaveLength(0);
   });
 });
@@ -315,38 +315,38 @@ describe('Supressão por entidade (RECONTACT_SUPPRESSION_DAYS=30)', () => {
   const cenario = (diaIso) => {
     const janela = cand({ ent: 'MR4_LINKED:xCKommcUFF6ULOIFbTN2', tipo: 'JANELA_DE_RECOMPRA' });
     const reat = cand({ ent: 'MR4_LINKED:xCKommcUFF6ULOIFbTN2', tipo: 'REATIVACAO_120D' });
-    const e = estadoDe(janela, [[FAB, OUTCOMES.CONVERSA_REALIZADA]], '2026-09-01T12:00:00.000Z');
+    const e = estadoDe(janela, [[VD2, OUTCOMES.CONVERSA_REALIZADA]], '2026-09-01T12:00:00.000Z');
     return { reat, r: wl({ candidatos: [reat], estados: new Map([[janela.opportunityInstanceId, e]]), dataReferencia: diaIso }) };
   };
   test('SU-01 config', () => { expect(config.RECONTACT_SUPPRESSION_DAYS).toBe(30); });
   test('SU-02 dia 10: tipo muda (novo opportunityInstanceId) → continua suprimido', () => {
     const { reat, r } = cenario('2026-09-11');
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(0);
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(0);
     expect(r.excluidos.RECONTACT_SUPPRESSION).toEqual([reat.opportunityInstanceId]);
   });
-  test('SU-03 dia 29: ainda suprimido', () => { expect(cenario('2026-09-30').r.porVendedor[FAB].newOpportunities).toHaveLength(0); });
+  test('SU-03 dia 29: ainda suprimido', () => { expect(cenario('2026-09-30').r.porVendedor[VD2].newOpportunities).toHaveLength(0); });
   test('SU-04 dia 31: volta a ser elegível', () => {
     const { reat, r } = cenario('2026-10-02');
-    expect(ids(r.porVendedor[FAB].newOpportunities)).toEqual([reat.opportunityInstanceId]);
+    expect(ids(r.porVendedor[VD2].newOpportunities)).toEqual([reat.opportunityInstanceId]);
   });
   test('SU-05 a mesma instância encerrada nunca reaparece (máquina não permite novo claim)', () => {
     const c = cand();
-    const e = estadoDe(c, [[FAB, OUTCOMES.CONVERSA_REALIZADA]], '2026-08-01T12:00:00.000Z');
+    const e = estadoDe(c, [[VD2, OUTCOMES.CONVERSA_REALIZADA]], '2026-08-01T12:00:00.000Z');
     const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]) });
     expect(r.excluidos.CONCLUIDA_MESMA_INSTANCIA).toEqual([c.opportunityInstanceId]);
   });
   test('SU-06 SEM_INTERESSE suprime a entidade inteira', () => {
     const a = cand({ ent: 'GC_NATIVE:808', tipo: 'QUEDA_DE_COMPRAS' });
     const b = cand({ ent: 'GC_NATIVE:808', tipo: 'REATIVACAO_120D' });
-    const e = estadoDe(a, [[FAB, OUTCOMES.SEM_INTERESSE_AGORA]]);
-    expect(wl({ candidatos: [b], estados: new Map([[a.opportunityInstanceId, e]]) }).porVendedor[FAB].worklist).toHaveLength(0);
+    const e = estadoDe(a, [[VD2, OUTCOMES.SEM_INTERESSE_AGORA]]);
+    expect(wl({ candidatos: [b], estados: new Map([[a.opportunityInstanceId, e]]) }).porVendedor[VD2].worklist).toHaveLength(0);
   });
   test('SU-07 3× SEM_RESPOSTA suprime a entidade inteira por 30 dias', () => {
     const a = cand({ ent: 'GC_NATIVE:909' });
     const b = cand({ ent: 'GC_NATIVE:909', tipo: 'QUEDA_DE_COMPRAS' });
-    const e = estadoDe(a, [[FAB, OUTCOMES.SEM_RESPOSTA], [FAB, OUTCOMES.SEM_RESPOSTA], [FAB, OUTCOMES.SEM_RESPOSTA]]);
+    const e = estadoDe(a, [[VD2, OUTCOMES.SEM_RESPOSTA], [VD2, OUTCOMES.SEM_RESPOSTA], [VD2, OUTCOMES.SEM_RESPOSTA]]);
     const r = wl({ candidatos: [a, b], estados: new Map([[a.opportunityInstanceId, e]]) });
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
     expect(r.excluidos.COOLDOWN).toHaveLength(1);
   });
 });
@@ -356,45 +356,45 @@ describe('Concorrência / claim', () => {
   test('CC-01 EM_ATENDIMENTO por A: aparece só para A (emAtendimento), nunca para B', () => {
     const c = cand({ prio: 100 });
     let e = criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, '2026-09-25T12:00:00.000Z');
-    e = claimOportunidade(e, ADEMIR, '2026-09-25T12:00:00.000Z');
-    const r = wl({ candidatos: [c, ...muitos(3)], estados: new Map([[c.opportunityInstanceId, e]]), vendedoresAtivos: [FAB, ADEMIR], agoraIso: '2026-09-25T13:00:00.000Z' });
-    expect(ids(r.porVendedor[ADEMIR].emAtendimento)).toEqual([c.opportunityInstanceId]);
-    expect(ids(r.porVendedor[FAB].worklist)).not.toContain(c.opportunityInstanceId);
-    expect(ids(r.porVendedor[ADEMIR].newOpportunities)).not.toContain(c.opportunityInstanceId);
+    e = claimOportunidade(e, VEND1, '2026-09-25T12:00:00.000Z');
+    const r = wl({ candidatos: [c, ...muitos(3)], estados: new Map([[c.opportunityInstanceId, e]]), vendedoresAtivos: [VD2, VEND1], agoraIso: '2026-09-25T13:00:00.000Z' });
+    expect(ids(r.porVendedor[VEND1].emAtendimento)).toEqual([c.opportunityInstanceId]);
+    expect(ids(r.porVendedor[VD2].worklist)).not.toContain(c.opportunityInstanceId);
+    expect(ids(r.porVendedor[VEND1].newOpportunities)).not.toContain(c.opportunityInstanceId);
   });
   test('CC-02 EM_ATENDIMENTO por vendedor não ativo: não disponível para ninguém', () => {
     const c = cand();
     let e = criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, '2026-09-25T12:00:00.000Z');
-    e = claimOportunidade(e, ADEMIR, '2026-09-25T12:00:00.000Z');
+    e = claimOportunidade(e, VEND1, '2026-09-25T12:00:00.000Z');
     const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]), agoraIso: '2026-09-25T13:00:00.000Z' });
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
     expect(r.excluidos.EM_ATENDIMENTO).toEqual([c.opportunityInstanceId]);
   });
   test('CC-03 claim expirado (>4h) volta a ser elegível', () => {
     const c = cand();
     let e = criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, '2026-09-25T08:00:00.000Z');
-    e = claimOportunidade(e, ADEMIR, '2026-09-25T08:00:00.000Z');
+    e = claimOportunidade(e, VEND1, '2026-09-25T08:00:00.000Z');
     const r = wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]), agoraIso: '2026-09-25T12:30:00.000Z' });
-    expect(ids(r.porVendedor[FAB].newOpportunities)).toEqual([c.opportunityInstanceId]);
+    expect(ids(r.porVendedor[VD2].newOpportunities)).toEqual([c.opportunityInstanceId]);
   });
   test('CC-04 release sem outcome devolve à fila de novas', () => {
     const c = cand();
-    const e = estadoDe(c, [[FAB, 'RELEASE']]);
-    expect(ids(wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]) }).porVendedor[FAB].newOpportunities)).toEqual([c.opportunityInstanceId]);
+    const e = estadoDe(c, [[VD2, 'RELEASE']]);
+    expect(ids(wl({ candidatos: [c], estados: new Map([[c.opportunityInstanceId, e]]) }).porVendedor[VD2].newOpportunities)).toEqual([c.opportunityInstanceId]);
   });
   test('CC-05 legado sem operadorId: atendimento em curso NÃO aparece como disponível (bug N35.13)', () => {
     const c = cand();
     let e = criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, '2026-09-25T12:00:00.000Z');
-    e = claimOportunidade(e, ADEMIR, '2026-09-25T12:00:00.000Z');
+    e = claimOportunidade(e, VEND1, '2026-09-25T12:00:00.000Z');
     const r = gerarDailyWorklist({ clientesHoje: [c], estadosOperacionais: new Map([[c.opportunityInstanceId, e]]), dataReferencia: DR });
     expect(r.newOpportunities).toHaveLength(0);
   });
   test('CC-06 documento de worklist: só IDs, atribuição única por oportunidade', () => {
-    const r = wl({ candidatos: muitos(12), vendedoresAtivos: [FAB, ADEMIR] });
+    const r = wl({ candidatos: muitos(12), vendedoresAtivos: [VD2, VEND1] });
     const doc = montarDocumentoWorklist(r, '2026-09-25T09:00:00.000Z');
     expect(Object.keys(doc.atribuicoes)).toHaveLength(12);
     expect(JSON.stringify(doc)).not.toMatch(/nomeCliente|cpf|cnpj|telefone|email/i);
-    for (const a of Object.values(doc.atribuicoes)) expect([FAB, ADEMIR]).toContain(a.uid);
+    for (const a of Object.values(doc.atribuicoes)) expect([VD2, VEND1]).toContain(a.uid);
   });
 });
 
@@ -407,7 +407,7 @@ describe('Duplicidades GC', () => {
   test('DU-02 os 22 IDs GC_NATIVE são excluídos', () => {
     const cands = QC.DUPLICATE_GC_IDS.map(id => cand({ ent: `GC_NATIVE:${id}` }));
     const r = wl({ candidatos: cands, duplicateGcIds: QC.DUPLICATE_GC_IDS });
-    expect(r.porVendedor[FAB].worklist).toHaveLength(0);
+    expect(r.porVendedor[VD2].worklist).toHaveLength(0);
     expect(r.excluidos.DUPLICATA_GC).toHaveLength(22);
   });
   test('DU-03 MR4_LINKED vinculado a GC duplicado também é excluído', () => {
@@ -416,15 +416,15 @@ describe('Duplicidades GC', () => {
   });
   test('DU-04 MR4_LINKED com GC NÃO duplicado permanece (sem exclusão indevida)', () => {
     const r = wl({ candidatos: [cand({ ent: 'MR4_LINKED:abcdefghijABCDEFGHIJ', gc: '12345678' })], duplicateGcIds: QC.DUPLICATE_GC_IDS });
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(1);
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(1);
   });
   test('DU-05 mesma entidade com duas instâncias → uma só (a melhor)', () => {
     const r = wl({ candidatos: [cand({ ent: 'GC_NATIVE:5', prio: 60 }), cand({ ent: 'GC_NATIVE:5', prio: 99, tipo: 'QUEDA_DE_COMPRAS' })] });
-    expect(r.porVendedor[FAB].newOpportunities.map(x => x.prioridade)).toEqual([99]);
+    expect(r.porVendedor[VD2].newOpportunities.map(x => x.prioridade)).toEqual([99]);
   });
   test('DU-06 nomes iguais em entidades diferentes → ambas; identidade inválida → excluída', () => {
     const r = wl({ candidatos: [cand({ nome: 'JOSE' }), cand({ nome: 'JOSE' }), cand({ opp: 'NAO-HEX' }), cand({ ent: 'FOO:1' })] });
-    expect(r.porVendedor[FAB].newOpportunities).toHaveLength(2);
+    expect(r.porVendedor[VD2].newOpportunities).toHaveLength(2);
     expect(r.excluidos.IDENTIDADE_INVALIDA).toHaveLength(2);
   });
 });
@@ -474,20 +474,20 @@ describe('D+1', () => {
     const base = muitos(30);
     const D0 = '2026-09-24'; // quinta
     const d0 = wl({ candidatos: base, dataReferencia: D0 });
-    const F = d0.porVendedor[FAB].newOpportunities;
+    const F = d0.porVendedor[VD2].newOpportunities;
     const est = new Map();
     const t = h => `${D0}T${h}:00:00.000Z`;
     const aplicar = (c, fn) => est.set(c.opportunityInstanceId, fn(criarEstadoInicial(c.commercialEntityId, c.opportunityInstanceId, c.tipoOportunidade, t('11'))));
-    aplicar(F[0], e => registrarOutcome(claimOportunidade(e, FAB, t('12')), FAB, OUTCOMES.SEM_RESPOSTA, t('13')));
-    aplicar(F[1], e => registrarOutcome(claimOportunidade(e, FAB, t('12')), FAB, OUTCOMES.PEDIU_RETORNO, t('13'), { scheduledFor: '2026-09-25' }));
-    aplicar(F[2], e => registrarOutcome(claimOportunidade(e, FAB, t('12')), FAB, OUTCOMES.PEDIU_RETORNO, t('13'), { scheduledFor: '2026-10-01' }));
-    aplicar(F[3], e => registrarOutcome(claimOportunidade(e, FAB, t('12')), FAB, OUTCOMES.CONVERSA_REALIZADA, t('13')));
-    aplicar(F[4], e => claimOportunidade(e, FAB, '2026-09-25T13:30:00.000Z'));
+    aplicar(F[0], e => registrarOutcome(claimOportunidade(e, VD2, t('12')), VD2, OUTCOMES.SEM_RESPOSTA, t('13')));
+    aplicar(F[1], e => registrarOutcome(claimOportunidade(e, VD2, t('12')), VD2, OUTCOMES.PEDIU_RETORNO, t('13'), { scheduledFor: '2026-09-25' }));
+    aplicar(F[2], e => registrarOutcome(claimOportunidade(e, VD2, t('12')), VD2, OUTCOMES.PEDIU_RETORNO, t('13'), { scheduledFor: '2026-10-01' }));
+    aplicar(F[3], e => registrarOutcome(claimOportunidade(e, VD2, t('12')), VD2, OUTCOMES.CONVERSA_REALIZADA, t('13')));
+    aplicar(F[4], e => claimOportunidade(e, VD2, '2026-09-25T13:30:00.000Z'));
     const trocaTipo = { ...F[3], tipoOportunidade: 'REATIVACAO_120D', opportunityInstanceId: buildOpportunityInstanceId(F[3].commercialEntityId, 'REATIVACAO_120D', '2026-01-01') };
     const novosClientes = muitos(5, { prio: 99 });
     const cands1 = [...base.filter(c => c !== F[3]), trocaTipo, ...novosClientes];
     const r = wl({ candidatos: cands1, estados: est, dataReferencia: '2026-09-25', agoraIso: '2026-09-25T14:00:00.000Z' });
-    const g = r.porVendedor[FAB];
+    const g = r.porVendedor[VD2];
     const tem = (arr, c) => ids(arr).includes(c.opportunityInstanceId);
     expect(tem(g.dueFollowUps, F[0])).toBe(true);                       // SEM_RESPOSTA próximo dia útil, mesmo vendedor
     expect(tem(g.newOpportunities, F[0])).toBe(false);                  // fora do CAP

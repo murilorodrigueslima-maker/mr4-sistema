@@ -5,14 +5,18 @@
  *  • Vendedor por `vendedor_id` (mapeamento auditado); id desconhecido ou ausente ⇒ "Outros". Nunca por nome.
  *  • Deduplicação por `id` estável; o mesmo id com VALORES diferentes é divergência (não publica).
  *  • Só entram vendas cuja situacao_id ∈ STATUS_CONCRETIZADOS; canceladas contadas à parte.
- *  • Invariante: ademir + fabiana + outros == geral (em centavos).
+ *  • Chaves de vendedor vêm do mapeamento protegido (painel_mapeamento/vendedores); nenhum nome fica no código.
+ *  • Invariante: soma das chaves + outros == geral (em centavos). Sem mapeamento ⇒ erro (nada é publicado).
  */
 const STATUS_CONCRETIZADOS = ['3952593'];       // "Concretizada" (vendas). 3952589/3952597 pertencem a orçamentos/OS (não são /vendas) e não têm vendas em 2026.
 const STATUS_CANCELADA = '3952594';             // "Cancelada" (vendas)
-const MAPA_PADRAO = {                           // vendedor_id → { chave, nomeConfig } (auditado em 12/10/2026 contra 4.718 vendas jan–out)
-  '948278': { chave: 'ademir', nomeConfig: 'Ademir' },
-  '1080453': { chave: 'fabiana', nomeConfig: 'Fabiana' },
-};
+const RESERVADAS = ['geral', 'outros'];
+/** Chaves do mapeamento { vendedor_id → { chave, nomeConfig, ordem? } }, sem repetição. Ordem: campo `ordem`; senão a do objeto (ids numéricos ⇒ crescente). */
+function chavesDoMapa(mapa) {
+  const itens = Object.values(mapa || {}).filter(m => m && typeof m.chave === 'string' && m.chave && !RESERVADAS.includes(m.chave));
+  const peso = m => (Number.isFinite(m.ordem) ? m.ordem : Number.MAX_SAFE_INTEGER);
+  return [...new Set(itens.sort((a, b) => peso(a) - peso(b)).map(m => m.chave))];
+}
 
 const reDin = /^\d+(\.\d{1,2})?$/;
 function centavos(v) {
@@ -33,16 +37,18 @@ function saida(b) {
 
 /**
  * vendas: registros do GC (qualquer situação); hojeStr 'YYYY-MM-DD' (America/Fortaleza); mes 'YYYY-MM' alvo.
- * cfg: { mapa, metas:{ademir,fabiana}, metaGeral, nomes:{ademir,fabiana} }
- * Retorna { ok, erros[], geral, ademir, fabiana, outros, qualidade, cancelamentos }.
+ * cfg: { mapa, metas:{<chave>}, metaGeral, outrosConhecidos }
+ * Retorna { ok, erros[], geral, <uma entrada por chave do mapa>, outros, qualidade, cancelamentos }.
  */
 function calcular({ vendas, hojeStr, mes, cfg }) {
-  const mapa = (cfg && cfg.mapa) || MAPA_PADRAO;
-  const erros = [];
+  const mapa = (cfg && cfg.mapa) || {};
+  const chaves = chavesDoMapa(mapa);
+  const erros = chaves.length ? [] : ['MAPEAMENTO_AUSENTE'];
   const q = { vendasLidas: 0, vendasConsideradas: 0, vendasSemVendedor: 0, vendedoresNaoMapeados: 0, duplicidadesDetectadas: 0, conflitosDeDuplicidade: 0,
     valoresInvalidos: 0, foraDoPeriodo: 0, naoConcretizadas: 0, canceladasQtd: 0, canceladasCentavos: 0, semCusto: 0 };
   const vistos = new Map();
-  const b = { geral: vazio(), ademir: vazio(), fabiana: vazio(), outros: vazio() };
+  const b = Object.fromEntries(['geral', ...chaves, 'outros'].map(k => [k, vazio()]));
+  const porChave = fn => Object.fromEntries(chaves.map(k => [k, fn(k)]));
   const canc = new Map();
   const diario = {};
   (vendas || []).forEach(v => {
@@ -71,8 +77,8 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
     const vid = v.vendedor_id === undefined || v.vendedor_id === null || String(v.vendedor_id).trim() === '' ? null : String(v.vendedor_id);
     let alvo = 'outros';
     if (vid === null) q.vendasSemVendedor++;
-    else if (mapa[vid]) alvo = mapa[vid].chave === 'ademir' ? 'ademir' : mapa[vid].chave === 'fabiana' ? 'fabiana' : 'outros';
-    else if (!(cfg && cfg.outrosConhecidos && cfg.outrosConhecidos[vid])) q.vendedoresNaoMapeados++;   // id conhecido de outro responsável (Murilo, Swyanne, Camila…) não é "não mapeado"
+    else if (mapa[vid]) alvo = chaves.includes(mapa[vid].chave) ? mapa[vid].chave : 'outros';
+    else if (!(cfg && cfg.outrosConhecidos && cfg.outrosConhecidos[vid])) q.vendedoresNaoMapeados++;   // id conhecido de outro responsável (gestão, apoio…) não é "não mapeado"
     const custo = centavos(v.valor_custo);
     if (custo === null || custo === 0) q.semCusto++;
     diario[data] = diario[data] || { v: 0, p: 0 }; diario[data].v += c; diario[data].p += 1;
@@ -83,8 +89,8 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
     }
   });
   // invariantes de reconciliação (em centavos)
-  const soma = b.ademir.totalMes + b.fabiana.totalMes + b.outros.totalMes;
-  const pedidos = b.ademir.pedidosMes + b.fabiana.pedidosMes + b.outros.pedidosMes;
+  const soma = chaves.reduce((s, k) => s + b[k].totalMes, 0) + b.outros.totalMes;
+  const pedidos = chaves.reduce((s, k) => s + b[k].pedidosMes, 0) + b.outros.pedidosMes;
   if (soma !== b.geral.totalMes) erros.push('SOMA_NAO_FECHA_VALOR');
   if (pedidos !== b.geral.pedidosMes) erros.push('SOMA_NAO_FECHA_PEDIDOS');
   if (q.vendasConsideradas !== vistos.size) erros.push('CONTAGEM_INCONSISTENTE');
@@ -92,18 +98,18 @@ function calcular({ vendas, hojeStr, mes, cfg }) {
   const comMeta = (bk, meta) => { const o = saida(b[bk]); o.meta = meta || 0; o.pctMeta = meta ? Math.round((b[bk].totalMes / 100 / meta) * 1000) / 10 : 0; o.restante = meta ? Math.max(0, Math.round((meta * 100 - b[bk].totalMes)) / 100) : 0; return o; };
   const out = {
     ok: erros.length === 0, erros,
-    geral: comMeta('geral', metaGeral), ademir: comMeta('ademir', metas.ademir), fabiana: comMeta('fabiana', metas.fabiana),
+    geral: comMeta('geral', metaGeral), ...porChave(k => comMeta(k, metas[k])),
     outros: saida(b.outros),                                            // sem meta presumida
     custo: { mesCentavos: b.geral.custoMes, cobertura: q.vendasConsideradas ? Math.round(1000 * (q.vendasConsideradas - q.semCusto) / q.vendasConsideradas) / 10 : 0,
-      porChave: { ademir: b.ademir.custoMes, fabiana: b.fabiana.custoMes, outros: b.outros.custoMes } },
+      porChave: { ...porChave(k => b[k].custoMes), outros: b.outros.custoMes } },
     cancelamentos: { qtd: q.canceladasQtd, valor: reais(q.canceladasCentavos) },
     qualidade: { vendasConsideradas: q.vendasConsideradas, vendasSemVendedor: q.vendasSemVendedor, vendedoresNaoMapeados: q.vendedoresNaoMapeados,
       duplicidadesDetectadas: q.duplicidadesDetectadas, conflitosDeDuplicidade: q.conflitosDeDuplicidade, valoresInvalidos: q.valoresInvalidos,
       foraDoPeriodo: q.foraDoPeriodo, naoConcretizadas: q.naoConcretizadas, divergencias: erros.length, reconciliado: erros.length === 0 },
-    centavos: { geral: b.geral.totalMes, ademir: b.ademir.totalMes, fabiana: b.fabiana.totalMes, outros: b.outros.totalMes },
+    centavos: { geral: b.geral.totalMes, ...porChave(k => b[k].totalMes), outros: b.outros.totalMes },
     diario,
   };
   return out;
 }
 
-module.exports = { calcular, centavos, reais, STATUS_CONCRETIZADOS, STATUS_CANCELADA, MAPA_PADRAO };
+module.exports = { calcular, chavesDoMapa, centavos, reais, STATUS_CONCRETIZADOS, STATUS_CANCELADA };

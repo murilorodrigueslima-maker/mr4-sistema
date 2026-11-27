@@ -1,6 +1,6 @@
 'use strict';
 /**
- * B3.1 — callable de GESTÃO da reativação (proprietário = role gestor; Camila = módulo fila-comercial-gestao; NUNCA vendedor, NUNCA exige admin).
+ * B3.1 — callable de GESTÃO da reativação (proprietário = role gestor; Revisor4 = módulo fila-comercial-gestao; NUNCA vendedor, NUNCA exige admin).
  * Ações: naoContatar | devolucao | reversao. Identidade só de request.auth.uid; payload estrito; todas as mudanças server-side, idempotentes (requestId),
  * auditadas (S7). Não cria oportunidades, não ativa motor, não distribui carteira.
  */

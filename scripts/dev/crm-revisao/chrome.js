@@ -14,10 +14,11 @@ async function abrirChrome(dir) {
   const alvo = (await (await fetch(`http://127.0.0.1:${porta}/json/list`)).json()).find(t => t.type === 'page');
   const ws = new WebSocket(alvo.webSocketDebuggerUrl);
   await new Promise((ok, erro) => { ws.onopen = ok; ws.onerror = erro; });
-  let seq = 0; const pend = new Map(), erros = [], hosts = new Set(), pedidos = new Map();
+  let seq = 0; const pend = new Map(), erros = [], hosts = new Set(), pedidos = new Map(), ouvintes = [];
   ws.onmessage = ev => {
     const m = JSON.parse(ev.data);
     if (m.id) { const p = pend.get(m.id); pend.delete(m.id); return m.error ? p.erro(new Error(m.error.message)) : p.ok(m.result); }
+    for (const f of ouvintes) f(m);                                // eventos brutos para quem mede (peso, requisições)
     if (m.method === 'Runtime.exceptionThrown') erros.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
     if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') erros.push(m.params.args.map(a => a.value || a.description || '').join(' '));
     if (m.method === 'Network.requestWillBeSent' && /^(https?|wss?):/.test(m.params.request.url)) { const u = new URL(m.params.request.url); hosts.add(u.host); pedidos.set(m.params.requestId, u.host + u.pathname); }
@@ -31,7 +32,8 @@ async function abrirChrome(dir) {
   const tocar = async (seletorJs, rotulo) => {
     await ate(`!!(${seletorJs})`, rotulo);
     const medir = () => js(`(() => { const el = ${seletorJs}; if (!el) return null; el.scrollIntoView({block:'center'}); const r = el.getBoundingClientRect(), x = r.left + r.width/2, y = r.top + r.height/2;
-      const topo = document.elementFromPoint(x, y); return { x, y, livre: !!topo && (topo === el || el.contains(topo)) }; })()`);
+      const topo = document.elementFromPoint(x, y), v = window.visualViewport;   // página mais larga que o celular desloca a área visível
+      return { x: (x - (v ? v.offsetLeft : 0)) * (v ? v.scale : 1), y: (y - (v ? v.offsetTop : 0)) * (v ? v.scale : 1), livre: !!topo && (topo === el || el.contains(topo)) }; })()`);
     // espera a posição estabilizar (painéis deslizam) e exige que nada cubra o elemento
     let p = null; const fim = Date.now() + 5000;
     for (;;) {
@@ -51,7 +53,8 @@ async function abrirChrome(dir) {
     await Promise.race([saiu, espera(5000)]); proc.kill('SIGKILL'); ws.close();
     try { fs.rmSync(perfil, { recursive: true, force: true, maxRetries: 3 }); } catch (_) { /* limpeza do perfil temporário */ }
   };
-  return { cmd, js, ate, tocar, tela, viewport, ir, erros, hosts, pedidos, fechar };
+  const ouvir = f => ouvintes.push(f);
+  return { cmd, js, ate, tocar, tela, viewport, ir, erros, hosts, pedidos, ouvir, fechar };
 }
 
 module.exports = { abrirChrome, espera };

@@ -277,6 +277,7 @@ test('F21 — env GC_ACCESS_TOKEN ausente → internal', async () => {
   const savedSecret = process.env.GC_SECRET_ACCESS_TOKEN;
   delete process.env.GC_ACCESS_TOKEN;
   delete process.env.GC_SECRET_ACCESS_TOKEN;
+  require('../lib/segredosRuntime')._limparCache();   // sem cache; o Secret Manager é inalcançável pela trava de rede
 
   try {
     await expectError(

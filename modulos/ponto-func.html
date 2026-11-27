@@ -985,6 +985,14 @@ window._fbSetOwn = async function(colName, id, data) {
   await setDoc(doc(db, colName, id), data, {merge: true});
 };
 
+// Assinatura do espelho. A gravação fica NESTE módulo: o script clássico não enxerga setDoc/doc/db/serverTimestamp
+// (a assinatura falhava com ReferenceError). Não injeta authUid: as Rules aceitam só os campos de assinatura, e
+// vinculam a assinatura ao usuário autenticado. assinadoEm é sempre a hora do servidor.
+window._assinarEspelho = async function(espelhoId, dados) {
+  if (!window._authUid || !window._funcAtivo) throw new Error('Não autenticado');
+  await setDoc(doc(db, 'espelhos', espelhoId), { ...dados, assinadoEm: serverTimestamp() }, {merge: true});
+};
+
 // ── Auth state ──────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = 'ponto-login-func.html'; return; }
@@ -1720,20 +1728,21 @@ window.exportarEspelhoPDF=exportarEspelhoPDF;
 async function confirmarAssinatura(){
   if(!assinaturaCanvas){notif('Erro na assinatura','vermelho');return;}
   const assinaturaImg=assinaturaCanvas.toDataURL('image/png');
-  // Assinatura: usa setDoc direto (sem _fbSetOwn) para NÃO injetar authUid.
-  // Futuras Rules de espelhos permitirão update apenas com
-  // hasOnly(['assinado','assinaturaImg','assinadoEm','assinadoPor','status']).
+  // As Rules aceitam somente os campos de assinatura (ver window._assinarEspelho).
   //
   // LIMITAÇÃO: a finalização de v1 (revisaoEmAndamento→false, substituido→true)
-  // exige permissão de gestor e NÃO é feita aqui.
-  // Deverá ser implementada via Cloud Function (onUpdate trigger) ou ação explícita
-  // do gestor em ponto.html. Enquanto isso, v1 continua com revisaoEmAndamento:true.
-  await setDoc(doc(db, 'espelhos', espelhoAtualFuncId), {
-    assinado: true, assinaturaImg, status: 'assinado',
-    hashAssinado: hashEspelhoAberto,  // prova do conteúdo visto: as Rules exigem == hashSnapshot atual do documento
-    assinadoEm: serverTimestamp(),  // serverTimestamp validado pelas Rules (request.time)
-    assinadoPor: funcAtivo.nome
-  }, {merge: true});
+  // exige permissão de gestor e NÃO é feita aqui: é da Cloud Function concluirRevisaoEspelho.
+  try{
+    await window._assinarEspelho(espelhoAtualFuncId, {
+      assinado: true, assinaturaImg, status: 'assinado',
+      hashAssinado: hashEspelhoAberto,  // prova do conteúdo visto: as Rules exigem == hashSnapshot atual do documento
+      assinadoPor: funcAtivo.nome
+    });
+  }catch(err){
+    console.error('Erro ao assinar espelho:',err);
+    notif(err&&err.code==='permission-denied'?'Não foi possível assinar: o espelho mudou ou já foi assinado. Atualize a página e confira.':'Não foi possível assinar. Verifique a conexão e tente novamente.','vermelho');
+    return;
+  }
   fecharModal('modal-assinar');notif('Espelho assinado com sucesso!');delete _funcCache['espelhos'];renderEspelhosFunc();
 }
 window.confirmarAssinatura=confirmarAssinatura;

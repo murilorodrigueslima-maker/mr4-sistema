@@ -69,7 +69,8 @@ describe('admin (ponto.html)', () => {
     await c.fbGet('registros'); await c.fbRegistrosMes('2026-09'); await c.fbJustifPendentes(); await c.fbJustifMes('2026-09');
     await c.fbSet('registros', 'r1', {}); expect(Object.keys(c.__c).filter(k => k.startsWith('registros'))).toEqual([]);
     expect(Object.keys(c.__c).filter(k => k.startsWith('justificativas')).length).toBe(2);
-    await c.fbDel('justificativas', 'j1'); expect(Object.keys(c.__c).filter(k => k.startsWith('justificativas'))).toEqual([]);
+    await c.fbSet('justificativas', 'j1', {}); expect(Object.keys(c.__c).filter(k => k.startsWith('justificativas'))).toEqual([]);
+    expect(ADMIN).not.toMatch(/fbDel\(/);   // INTEGRIDADE: a tela não apaga documentos do ponto
   });
   test('primeira tela (renderHoje + badge) não baixa registros/justificativas inteiros', () => {
     const h = corpo(ADMIN, 'renderHoje'); expect(h).toMatch(/fbRegistrosDia\(hoje\(\)\)/); expect(h).not.toMatch(/fbGet\('registros'\)/);

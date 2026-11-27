@@ -62,34 +62,24 @@ describe('CONTROLE — fusos', () => {
 });
 
 describe('Consistência entre telas e caminhos', () => {
-  test('CONFIRMADO D04 (efeito): com dois créditos no mesmo dia, o resultado depende da ordem; Registros e mês podem divergir', () => {
+  test('CORRIGIDO D04 (E3): com dois créditos legados no mesmo dia, Registros e mês escolhem o mesmo', () => {
     const d = '2026-09-15';
     const a = { id: 'a', funcId: 'fx', data: d, minutos: 480, motivo: 'Atestado médico' };
     const b = { id: 'b', funcId: 'fx', data: d, minutos: 0, motivo: 'Folga compensatória' };
     const saldo = creds => M.calcMes(F, [], creds, [], '2026-09', d).dias.find(x => x.data === d).saldoMin;
-    expect([saldo([a, b]), saldo([b, a])]).toEqual([-480, 0]);
-    const telaRegistros = M.calcDia(F, d, [], [a, b].find(c => c.data === d), []).saldoMin;      // ponto.html usa .find (o primeiro)
-    expect(telaRegistros).not.toBe(saldo([a, b]));                                                // o mês usa o último
-    expect(GESTOR).toContain('credTodos.find(c=>c.funcId===funcId&&c.data===data)');
+    expect(M.calcDia(F, d, [], M.creditoDoDia([a, b], 'fx', d), []).saldoMin).toBe(saldo([a, b]));
+    expect(GESTOR).toContain('creditoDoDia(credTodos,funcId,data)');
   });
-  test('CONFIRMADO D19: espelho com folga compensatória do banco nunca fica "equivalente" para o funcionário (não assina)', () => {
-    const d = '2026-09-15', func = { ...F, inicioBancoHoras: d };
-    const gerar = () => M.buildEspelhoSnapshot(func, [], [], [], '2026-09', d);
-    const doGestor = gerar();
-    expect(M.snapshotsEquivalentes(doGestor, gerar())).toBe(true);                                // controle
-    const dia = doGestor.dias.find(x => x.data === d);
-    dia.ocorrencia = 'Folga compensatória (banco de horas) dia inteiro';                          // anotação feita só em ponto.html
-    expect(M.snapshotsEquivalentes(doGestor, gerar())).toBe(false);
-    expect(GESTOR).toContain("dd.ocorrencia='Folga compensatória (banco de horas) '");
-    expect(FUNC).not.toContain('Folga compensatória (banco de horas)');
+  test('CORRIGIDO D19 (E3): a folga do banco é anotada só na exibição, nas duas telas', () => {
+    expect(GESTOR).not.toContain("dd.ocorrencia='Folga compensatória (banco de horas) '");
+    for (const t of [GESTOR, FUNC]) expect(t).toContain('anotarFolgasExibicao(');
   });
-  test('CONFIRMADO D20: antes da primeira batida do dia, funcionário vê falta no saldo do mês e o gestor não', () => {
+  test('CORRIGIDO D20 (E3): as duas telas usam o mesmo corte do saldo do mês', () => {
     const regs = cheio('2026-09-14'), func = { ...F, inicioBancoHoras: '2026-09-14' };
-    const telaFunc = M.calcBancoMes(func, regs, [], '2026-09', '2026-09-15', []).saldo;           // ponto-func: sempre hoje
-    const telaGestor = M.calcBancoMes(func, regs, [], '2026-09', '2026-09-14', []).saldo;         // ponto.html: ontem se hoje está aberto
-    expect([telaFunc, telaGestor]).toEqual([-480, 0]);
-    expect(FUNC).toContain('calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justF)');
-    expect(GESTOR).toContain('if(calcTotal(eH,saH,raH,sH)===null)hojeParaBanco=_ontemStr;');
+    const corte = M.corteBancoMes([], '2026-09-15', '2026-09-14');
+    expect(M.calcBancoMes(func, regs, [], '2026-09', corte, []).saldo).toBe(0);
+    for (const t of [GESTOR, FUNC]) expect(t).toContain('corteBancoMes(');
+    expect(FUNC).not.toContain('calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justF)');
   });
   test('CONFIRMADO D21: crédito lançado pela tela ignora a escala individual; o do servidor respeita', () => {
     const d = '2026-09-14';                                                                       // segunda
@@ -102,11 +92,11 @@ describe('Consistência entre telas e caminhos', () => {
     expect(GESTOR).toContain('creditarJornada(funcId,func.nome,dataIni,jornadaParaData(dataIni,jornMin),tipo)');
     expect(ler('functions/lib/pontoJustificativa.js')).toContain('M.escalaDoDia(D.func, data, dow)');
   });
-  test('CONFIRMADO D22: painel "Hoje" não aplica as opções do motor (sábado com intervalo nulo aparece sem total)', () => {
+  test('CORRIGIDO D22 (E3): painel "Hoje" usa o motor do dia', () => {
     const d = M.K.SABADO_V2_DESDE;
     const regs = [reg(d, 'entrada', '08:30'), reg(d, 'saida_almoco', '12:00'), reg(d, 'retorno_almoco', '12:00'), reg(d, 'saida', '12:00')];
     expect(M.calcDia(F, d, regs, null, []).trabalhadoMin).toBe(210);
-    expect(M.calcTotal('08:30', '12:00', '12:00', '12:00')).toBeNull();
-    expect(GESTOR).toContain('const total=calcTotal(e,sa,ra,s);');
+    expect(GESTOR).toContain('const dh=calcDia(f,hoje(),rf,null,[]);');
+    expect(GESTOR).not.toContain('const total=calcTotal(e,sa,ra,s);');
   });
 });

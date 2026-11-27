@@ -990,7 +990,13 @@ window._fbSetOwn = async function(colName, id, data) {
 // vinculam a assinatura ao usuário autenticado. assinadoEm é sempre a hora do servidor.
 window._assinarEspelho = async function(espelhoId, dados) {
   if (!window._authUid || !window._funcAtivo) throw new Error('Não autenticado');
-  await setDoc(doc(db, 'espelhos', espelhoId), { ...dados, assinadoEm: serverTimestamp() }, {merge: true});
+  const ref = doc(db, 'espelhos', espelhoId), base = () => ({ ...dados, assinadoEm: serverTimestamp() });
+  try {
+    await setDoc(ref, { ...base(), assinadoPorUid: window._authUid }, {merge: true});   // identidade autenticada gravada no documento
+  } catch (e) {
+    if (!e || e.code !== 'permission-denied') throw e;
+    await setDoc(ref, base(), {merge: true});   // Rules anteriores à etapa E1 não aceitam assinadoPorUid
+  }
 };
 
 // ── Auth state ──────────────────────────────────────────────────────────────
@@ -1052,7 +1058,7 @@ onAuthStateChanged(auth, async user => {
 });
 </script>
 
-<script src="ponto-regras.js?v=4.0.0"></script>
+<script src="ponto-regras.js?v=4.1.0"></script>
 
 <script>
 const EMP_LAT=-3.7603154, EMP_LNG=-38.5634329, RAIO=200;
@@ -1456,7 +1462,8 @@ async function renderBancoFunc(){
   const regs=(await fbRegistrosMes(mes)).filter(r=>r.funcId===funcAtivo.id&&r.data.startsWith(mes));   // PERFORMANCE P0: só o mês
   const credF=(await fbGet('creditos_jornada')).filter(c=>c.funcId===funcAtivo.id&&c.data.startsWith(mes));
   const justF=(await fbGet('justificativas')).filter(j=>j.funcId===funcAtivo.id&&j.data&&j.data.startsWith(mes));
-  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,hoje(),justF);
+  const _h=hoje();const corte=mes===mesAtual()?corteBancoMes(regs.filter(r=>r.data===_h),_h,ontemStr()):_h;   // D20: mesmo corte do painel da gestão
+  const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(funcAtivo,regs,credF,mes,corte,justF);
   const saldoCls=saldo>=0?'positivo':'negativo';
   const saldoStr=(saldo>=0?'+':'')+fmtMin(saldo);
   let pendHtml='';
@@ -1534,7 +1541,7 @@ async function renderJustifFunc(){
   el.innerHTML=justifs.map(j=>`
     <div class="justif-item">
       <div class="justif-header">
-        <span class="justif-titulo">${fmtData(j.data)} — ${esc(j.motivo)}</span>
+        <span class="justif-titulo">${fmtData(j.data)} — ${esc(j.motivo)}${j.lancadoPorGestor?' <small>(lançada pela gestão)</small>':''}</span>
         <span class="badge ${j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado'}">${j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovada':'Rejeitada'}</span>
       </div>
       ${j.descricao?`<div class="justif-desc">${esc(j.descricao)}</div>`:''}
@@ -1654,7 +1661,9 @@ async function gerarEspelhoFuncHTML(funcId,mes,mesLabel,espDoc){
   }
 
   const origem=regsOrigem?buildOrigemBatidas(regsOrigem.filter(r=>r.funcId===funcId||!r.funcId),mes):null;   // P5
-  const rows=renderEspelhoRowsHTML(snap,origem);
+  // D19: folga compensatória do banco anotada só na exibição (o documento assinado não muda)
+  let lanc=[];try{lanc=(await fbGet('banco_horas_lancamentos',funcId)).filter(l=>l.funcId===funcId);}catch(e){lanc=[];}
+  const rows=renderEspelhoRowsHTML(anotarFolgasExibicao(snap,lanc,espDoc&&espDoc.assinado?' — informativo':''),origem);
   const saldoTotal=snap.totais.saldo;
   return `<div style="background:white;color:#111;padding:1rem;border-radius:8px;font-family:'Inter',sans-serif;font-size:11px;border:1px solid #ddd;overflow-x:auto;">
     <div style="text-align:center;margin-bottom:.75rem;padding-bottom:.75rem;border-bottom:2px solid #333;">

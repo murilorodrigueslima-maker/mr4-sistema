@@ -367,12 +367,13 @@ tr:hover td{background:rgba(26,115,232,.04);}
           <select id="esp-func" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;"><option value="">Selecione funcionário</option></select>
           <div style="display:flex;align-items:center;gap:4px;">
             <button class="btn-ghost" onclick="mudarMes('esp-mes',-1)" style="padding:6px 10px;font-size:14px;">◀</button>
-            <input type="month" id="esp-mes" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;">
+            <input type="month" id="esp-mes" onchange="renderFechamento()" style="background:#fff;border:1px solid var(--cinza-borda);color:var(--branco);border-radius:7px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif;">
             <button class="btn-ghost" onclick="mudarMes('esp-mes',1)" style="padding:6px 10px;font-size:14px;">▶</button>
           </div>
           <button class="btn-novo" onclick="gerarEspelho()">Gerar espelho</button>
         </div>
       </div><br>
+      <div id="fechamento-mes"></div>
       <div id="espelho-conteudo"></div>
     </div>
 
@@ -600,7 +601,7 @@ onAuthStateChanged(auth, async user => {
 });
 </script>
 
-<script src="ponto-regras.js?v=4.0.0"></script>
+<script src="ponto-regras.js?v=4.1.0"></script>
 
 <script>
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -648,7 +649,10 @@ const fbRegistrosMes=mes=>{const[i,f]=limitesMes(mes);return fbQuery('registros'
 const fbJustifMes=mes=>{const[i,f]=limitesMes(mes);return fbQuery('justificativas','mes:'+mes,[['data','>=',i],['data','<=',f]]);};
 const fbJustifPendentes=()=>fbQuery('justificativas','pendentes',[['status','==','pendente']]);
 async function fbSet(c,id,data){await window._setDoc(docRef(c,id),data,{merge:true});invalidarCache(c);}
-async function fbDel(c,id){await window._deleteDoc(docRef(c,id));invalidarCache(c);}
+// INTEGRIDADE (E3): todo lançamento manual identifica o responsável e a hora do SERVIDOR (as Rules conferem o uid).
+function autoria(){return {lancadoPorUid:window._userUid,lancadoPorEmail:window._userEmail||'',lancadoEm:window._serverTimestamp()};}
+// cadastro inativado: histórico mantido, fora dos painéis e dos novos lançamentos (o servidor recusa a batida)
+const ativos=lista=>(lista||[]).filter(f=>f.inativo!==true);
 
 // Navegar meses com ◀ ▶
 function mudarMes(inputId,delta){
@@ -657,6 +661,7 @@ function mudarMes(inputId,delta){
   const[y,m]=inp.value.split('-').map(Number);
   const d=new Date(y,m-1+delta,1);
   inp.value=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  if(inputId==='esp-mes')renderFechamento().catch(()=>{});
 }
 window.mudarMes=mudarMes;
 
@@ -715,7 +720,7 @@ async function atualizarBadgeJustif(){
 async function renderHoje(){
   // PERFORMANCE P0: só os registros de hoje (antes: TODOS os registros, com a foto de cada batida)
   const funcsAll=await fbGet('funcionarios');const regsHoje=await fbRegistrosDia(hoje());
-  const funcs=funcsAll.filter(f=>f.controleBancoHoras!==false);
+  const funcs=ativos(funcsAll).filter(f=>f.controleBancoHoras!==false);
   let presentes=0,ausentes=0,atrasados=0;
   funcs.forEach(f=>{
     const rf=regsHoje.filter(r=>r.funcId===f.id);
@@ -731,9 +736,9 @@ async function renderHoje(){
   if(!funcs.length){document.getElementById('tbody-hoje').innerHTML='<tr><td colspan="7" class="vazio">Nenhum funcionário.</td></tr>';return;}
   document.getElementById('tbody-hoje').innerHTML=funcs.map(f=>{
     const rf=regsHoje.filter(r=>r.funcId===f.id);
-    const get=tipo=>{const j=rf.find(r=>r.tipo===tipo&&r.lancadoPorJustificativa);if(j)return j.hora.slice(0,5);const r=rf.find(r=>r.tipo===tipo);return r?r.hora.slice(0,5):null;};
-    const e=get('entrada'),sa=get('saida_almoco'),ra=get('retorno_almoco'),s=get('saida');
-    const total=calcTotal(e,sa,ra,s);
+    const dh=calcDia(f,hoje(),rf,null,[]);   // motor único: mesmas batidas e mesmo total de Registros, Banco e Espelho
+    const e=dh.entrada,sa=dh.saidaAlmoco,ra=dh.retornoAlmoco,s=dh.saida;
+    const total=dh.trabalhadoMin;
     const atrasou=e&&toMin(e)>toMin('08:05');
     const status=rf.length===0?'ausente':atrasou?'atrasou':'presente';
     const labels={presente:'Presente',ausente:'Ausente',atrasou:'Atrasou'};
@@ -771,7 +776,7 @@ async function renderRegistros(){
   document.getElementById('tbody-registros').innerHTML=rows.map(({funcId,funcNome,data,regs})=>{
     // Motor único: mesmas batidas vigentes, mesmo total e mesmo saldo do Banco e do Espelho
     const func=funcs.find(f=>f.id===funcId)||{jornada:8};
-    const dr=calcDia(func,data,regs,credTodos.find(c=>c.funcId===funcId&&c.data===data)||null,justTodas.filter(j=>j.funcId===funcId&&j.data===data));
+    const dr=calcDia(func,data,regs,creditoDoDia(credTodos,funcId,data),justTodas.filter(j=>j.funcId===funcId&&j.data===data));
     const e=dr.entrada,sa=dr.saidaAlmoco,ra=dr.retornoAlmoco,s=dr.saida;
     const total=dr.trabalhadoMin;
     const saldo=dr.contaNoSaldo?dr.saldoMin:null;
@@ -780,7 +785,9 @@ async function renderRegistros(){
     const scores=regs.map(r=>r.facialScore).filter(s=>s!=null);
     const facialScore=scores.length?Math.min(...scores):null;
     const fb=facialBadge(facialScore);
-    return `<tr><td>${esc(funcNome)}</td><td>${fmtData(data)}</td><td>${e||'—'}</td><td>${sa||'—'}</td><td>${ra||'—'}</td><td>${s||'—'}</td><td>${dr.pendente?`<span class="badge atrasou" title="${esc(dr.ocorrencia||'')}">${dr.status==='inconsistente'?'Inconsistência':'Pendente'}</span>`:dr.status==='fora_periodo'?'<span style="color:var(--cinza-texto);">fora do período</span>':fmtMin(total)}</td><td>${saldo!==null?`<span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span>`:'—'}</td><td>${dentroRaio===true?'<span class="badge dentro">Dentro</span>':dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span style="color:${fb.cor};font-size:11px;">${fb.txt}</span></td><td>${fotoReg?`<button class="btn-acao" onclick="verFoto('${sid(fotoReg.id)}')">Ver</button>`:'—'}</td></tr>`;
+    // ajuste administrativo identificado (J): a batida original continua guardada
+    const hm=(tipo,v)=>v?v+(regs.some(r=>r.tipo===tipo&&r.lancadoPorJustificativa)?' <sup title="Lançada por justificativa (ajuste); o original é preservado" style="color:var(--laranja);font-weight:700;">J</sup>':''):'—';
+    return `<tr><td>${esc(funcNome)}</td><td>${fmtData(data)}</td><td>${hm('entrada',e)}</td><td>${hm('saida_almoco',sa)}</td><td>${hm('retorno_almoco',ra)}</td><td>${hm('saida',s)}</td><td>${dr.pendente?`<span class="badge atrasou" title="${esc(dr.ocorrencia||'')}">${dr.status==='inconsistente'?'Inconsistência':'Pendente'}</span>`:dr.status==='fora_periodo'?'<span style="color:var(--cinza-texto);">fora do período</span>':fmtMin(total)}</td><td>${saldo!==null?`<span class="badge ${saldo>=0?'extra':'debito'}">${saldo>=0?'+':''}${fmtMin(saldo)}</span>`:'—'}</td><td>${dentroRaio===true?'<span class="badge dentro">Dentro</span>':dentroRaio===false?'<span class="badge fora">Fora</span>':'—'}</td><td><span style="color:${fb.cor};font-size:11px;">${fb.txt}</span></td><td>${fotoReg?`<button class="btn-acao" onclick="verFoto('${sid(fotoReg.id)}')">Ver</button>`:'—'}</td></tr>`;
   }).join('');
 }
 window.renderRegistros=renderRegistros;
@@ -791,7 +798,7 @@ async function renderBanco(){
   const justifsTodas=await fbJustifMes(mesAtual());   // motor único: justificativas participam do resultado do dia (R3/R5)
   if(!funcs.length){document.getElementById('banco-cards').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Nenhum funcionário.</div>';document.getElementById('metrics-banco').innerHTML='';return;}
   let totalPos=0,totalNeg=0;
-  const funcsAtivas=funcs.filter(f=>f.controleBancoHoras!==false);
+  const funcsAtivas=ativos(funcs).filter(f=>f.controleBancoHoras!==false);
   const _mesFiltro=mesAtual(); // pré-filtra por mês uma vez só, fora do loop
   const _regsDoMes=regs.filter(r=>r.data.startsWith(_mesFiltro));
   const _credDoMes=creditos.filter(c=>c.data.startsWith(_mesFiltro));
@@ -800,7 +807,7 @@ async function renderBanco(){
     const regsF=_regsDoMes.filter(r=>r.funcId===f.id);
     const credF=_credDoMes.filter(c=>c.funcId===f.id);
     const justF=justifsTodas.filter(j=>j.funcId===f.id&&j.data&&j.data.startsWith(_mesFiltro));
-    let hojeParaBanco=_hojeStr;if(_ehMesAtual){const rHF=_regsHoje.filter(r=>r.funcId===f.id);const eH=(rHF.find(r=>r.tipo==='entrada'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='entrada'))?.hora?.slice(0,5);const saH=(rHF.find(r=>r.tipo==='saida_almoco'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='saida_almoco'))?.hora?.slice(0,5);const raH=(rHF.find(r=>r.tipo==='retorno_almoco'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='retorno_almoco'))?.hora?.slice(0,5);const sH=(rHF.find(r=>r.tipo==='saida'&&r.lancadoPorJustificativa)||rHF.find(r=>r.tipo==='saida'))?.hora?.slice(0,5);if(calcTotal(eH,saH,raH,sH)===null)hojeParaBanco=_ontemStr;}
+    const hojeParaBanco=_ehMesAtual?corteBancoMes(_regsHoje.filter(r=>r.funcId===f.id),_hojeStr,_ontemStr):_hojeStr;
     const {trabMin,esperMin,saldo,diasTrab,pendencias}=calcBancoMes(f,regsF,credF,_mesFiltro,hojeParaBanco,justF);
     if(saldo>0)totalPos+=saldo;else totalNeg+=saldo;
     const pct=esperMin>0?Math.min(100,Math.round(trabMin/esperMin*100)):0;
@@ -1002,7 +1009,7 @@ async function renderRegularizacao(forcar){
     const [funcs,cred,esp,estados,decis]=await Promise.all([fbGet('funcionarios'),fbGet('creditos_jornada'),fbGet('espelhos'),fbGet('ponto_pendencias_estado'),fbGet('ponto_pendencias_decisoes')]);
     const h=hoje();const mAtual=mesAtual();
     const todos=[];
-    const funcsOk=funcs.filter(f=>f.controleBancoHoras!==false);
+    const funcsOk=ativos(funcs).filter(f=>f.controleBancoHoras!==false);
     const inicioGlobal=funcsOk.map(f=>f.inicioBancoHoras).filter(Boolean).sort()[0]||mAtual+'-01';
     const meses=_mesesEntre(inicioGlobal,mAtual);
     const regsPorMes={},justPorMes={};
@@ -1017,7 +1024,7 @@ async function renderRegularizacao(forcar){
       const J=justTodas.filter(j=>j.funcId===f.id);
       datas.forEach(d=>{
         const jd=J.filter(j=>j.data===d);
-        const r=calcDia(f,d,R.filter(x=>x.data===d),cred.find(c=>c.funcId===f.id&&c.data===d)||null,jd);
+        const r=calcDia(f,d,R.filter(x=>x.data===d),creditoDoDia(cred,f.id,d),jd);
         if(!r.pendente)return;
         const c=classificarPendenciaDia(f,r,{espelhos:esp,justificativas:J,medianaEntradaSabado:med});
         const est=estados.find(e=>e.id===f.id+'_'+d);
@@ -1105,7 +1112,7 @@ async function proporMarcacao(idx){
   const rot={entrada:'Entrada',saida_almoco:'Saída almoço',retorno_almoco:'Retorno almoço',saida:'Saída'}[tipo];
   const id=uid();
   try{
-    await fbSet('justificativas',id,{id,funcId:x.f.id,funcNome:x.f.nome,data:x.data,motivo:`Ponto não batido — ${rot} às ${hora}`,descricao:'Proposta pela gestão (fila de regularização). Evidência: '+evid,tipoPonto:tipo,horarioPonto:hora,evidenciaGestao:evid,status:'pendente',lancadoPorGestor:true,origemFila:true,propostoPorUid:window._userUid||'',propostoPorEmail:window._userEmail||'',criadoEm:new Date().toISOString()});
+    await fbSet('justificativas',id,{id,funcId:x.f.id,funcNome:x.f.nome,data:x.data,motivo:`Ponto não batido — ${rot} às ${hora}`,descricao:'Proposta pela gestão (fila de regularização). Evidência: '+evid,tipoPonto:tipo,horarioPonto:hora,evidenciaGestao:evid,status:'pendente',lancadoPorGestor:true,origemFila:true,propostoPorUid:window._userUid||'',propostoPorEmail:window._userEmail||'',criadoEm:new Date().toISOString(),...autoria()});
     invalidarCache('justificativas');notif('Proposta enviada para aprovação em Justificativas.','verde');fecharModal('modal-pend');_reg.carregado=false;atualizarBadgeJustif();renderRegularizacao(false);
   }catch(e){msg('Não foi possível enviar: '+((e&&e.code==='permission-denied')?'sem permissão.':(e&&e.message)||'erro'));}
 }
@@ -1119,7 +1126,7 @@ async function renderEscalas(){
   const [funcs,escs]=await Promise.all([fbGet('funcionarios'),fbGet('ponto_escalas')]);
   const h=hoje();
   const blocos=[];
-  for(const f of funcs.filter(x=>x.controleBancoHoras!==false)){
+  for(const f of ativos(funcs).filter(x=>x.controleBancoHoras!==false)){
     const vers=escs.filter(e=>e.funcId===f.id).sort((a,b)=>a.vigenteDesde<b.vigenteDesde?1:a.vigenteDesde>b.vigenteDesde?-1:(b.rev||0)-(a.rev||0));
     const ef={...f,escalas:vers};
     const linhas=_DIAS_SEM.map(([k,n])=>{const dt=new Date(h+'T12:00:00');const w=dt.getDay();const delta=(parseInt(k,10)-w+7)%7;const d2=new Date(Date.UTC(dt.getFullYear(),dt.getMonth(),dt.getDate()+delta,12)).toISOString().slice(0,10);
@@ -1170,7 +1177,7 @@ async function anexarContextoJustificativa(j,det,proprio,decidida){
   const [funcs,esp,todas,credTodos,regs,regsMesTodos]=await Promise.all([fbGet('funcionarios'),fbGet('espelhos'),fbGet('justificativas'),fbGet('creditos_jornada'),window._getRegistrosDia(j.funcId,j.data),fbRegistrosMes(j.data.slice(0,7)).catch(()=>[])]);
   const f=funcs.find(x=>x.id===j.funcId)||{id:j.funcId,jornada:8};
   const efet=registrosEfetivos(regs);
-  const cred=credTodos.find(c=>c.funcId===j.funcId&&c.data===j.data)||null;
+  const cred=creditoDoDia(credTodos,j.funcId,j.data);
   const doDia=todas.filter(x=>x.funcId===j.funcId&&x.data===j.data);
   const aprov=doDia.filter(x=>x.status==='aprovado');
   const outras=doDia.filter(x=>x.id!==j.id);
@@ -1260,7 +1267,7 @@ function abrirFeriados2026(){
   const lista=FERIADOS_2026.map(f=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--cinza-borda);font-size:13px;gap:10px;"><div><span style="font-weight:600;">${fmtData(f.data)}</span><span style="color:var(--cinza-texto);margin-left:8px;">${f.nome}</span></div><span class="badge ${f.tipo.includes('nacional')?'presente':f.tipo.includes('estadual')?'atrasou':'pendente'}" style="font-size:10px;">${f.tipo.replace('Feriado ','')}</span></div>`).join('');
   document.getElementById('foto-reg-img').style.display='none';
   document.getElementById('modal-foto-reg').querySelector('.modal').innerHTML=`<div class="modal-titulo"><span>Feriados 2026 — Fortaleza/CE</span><button class="modal-fechar" onclick="fecharFeriados()">×</button></div><div style="font-size:12px;color:var(--cinza-texto);margin-bottom:12px;">Selecione funcionário e clique em "Aplicar para todos".</div><div style="max-height:400px;overflow-y:auto;">${lista}</div><div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap;"><select id="feriado-func-sel" style="flex:1;background:var(--cinza-medio);border:1px solid var(--cinza-borda);border-radius:7px;padding:8px 10px;font-size:13px;color:var(--branco);font-family:'Inter',sans-serif;"><option value="todos">Todos os funcionários</option></select><button class="btn-novo" onclick="aplicarFeriados2026()">Aplicar todos feriados</button></div><div id="feriados-status" style="font-size:12px;color:var(--cinza-texto);margin-top:8px;"></div><div class="modal-footer"><button class="btn-cancelar" onclick="fecharFeriados()">Fechar</button></div>`;
-  fbGet('funcionarios').then(funcs=>{const sel=document.getElementById('feriado-func-sel');funcs.filter(f=>f.id!==window._meuFuncId).forEach(f=>sel.innerHTML+=`<option value="${esc(f.id)}">${esc(f.nome)}</option>`);});
+  fbGet('funcionarios').then(funcs=>{const sel=document.getElementById('feriado-func-sel');ativos(funcs).filter(f=>f.id!==window._meuFuncId).forEach(f=>sel.innerHTML+=`<option value="${esc(f.id)}">${esc(f.nome)}</option>`);});
   document.getElementById('modal-foto-reg').classList.add('aberto');
 }
 window.abrirFeriados2026=abrirFeriados2026;
@@ -1271,10 +1278,10 @@ window.fecharFeriados=fecharFeriados;
 async function aplicarFeriados2026(){
   const funcSel=document.getElementById('feriado-func-sel').value;
   const funcs=await fbGet('funcionarios');
-  const alvo=funcSel==='todos'?funcs:funcs.filter(f=>f.id===funcSel);
+  const alvo=funcSel==='todos'?ativos(funcs).filter(f=>f.id!==window._meuFuncId):funcs.filter(f=>f.id===funcSel);
   const status=document.getElementById('feriados-status');status.textContent='Aplicando...';
   let count=0;
-  for(const func of alvo){for(const fer of FERIADOS_2026){const id=uid();await fbSet('justificativas',id,{id,funcId:func.id,funcNome:func.nome,data:fer.data,motivo:fer.tipo,descricao:fer.nome,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(func.id,func.nome,fer.data,jornadaParaData(fer.data,jornMin),fer.tipo);count++;}}
+  for(const func of alvo){for(const fer of FERIADOS_2026){const id=uid();await fbSet('justificativas',id,{id,funcId:func.id,funcNome:func.nome,data:fer.data,motivo:fer.tipo,descricao:fer.nome,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString(),...autoria()});const jornMin=(parseFloat(func.jornada)||8)*60;await creditarJornada(func.id,func.nome,fer.data,jornadaParaData(fer.data,jornMin),fer.tipo);count++;}}
   status.textContent=`${count} feriados aplicados para ${alvo.length} funcionário(s)!`;status.style.color='var(--verde)';renderJustificativas();
 }
 window.aplicarFeriados2026=aplicarFeriados2026;
@@ -1305,7 +1312,7 @@ async function lancarOcorrenciaGestor(){
       if(cur.getDay()!==0){ // pula domingo
         const d=cur.toISOString().slice(0,10);
         const id=uid();
-        await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data:d,motivo:'Férias',descricao:obs||'Férias',status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
+        await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data:d,motivo:'Férias',descricao:obs||'Férias',status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString(),...autoria()});
         await creditarJornada(funcId,func.nome,d,jornadaParaData(d,jornMin),'Férias');
         total++;
       }
@@ -1316,7 +1323,7 @@ async function lancarOcorrenciaGestor(){
     info.textContent=`✓ Férias lançadas para ${func.nome}: ${total} dia(s)`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',5000);
     notif(`Férias lançadas — ${total} dia(s)`);
   } else {
-    const id=uid();await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data:dataIni,motivo:tipo,descricao:obs||tipo,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString()});
+    const id=uid();await fbSet('justificativas',id,{id,funcId,funcNome:func.nome,data:dataIni,motivo:tipo,descricao:obs||tipo,status:'aprovado',lancadoPorGestor:true,criadoEm:new Date().toISOString(),...autoria()});
     await creditarJornada(funcId,func.nome,dataIni,jornadaParaData(dataIni,jornMin),tipo);
     document.getElementById('gest-data').value='';document.getElementById('gest-tipo').value='';document.getElementById('gest-obs').value='';
     info.textContent=`✓ ${tipo} lançado para ${func.nome} em ${fmtData(dataIni)}`;info.style.color='var(--verde)';setTimeout(()=>info.textContent='',4000);
@@ -1339,14 +1346,21 @@ async function renderJustificativas(){
     const sClass=j.status==='pendente'?'pendente':j.status==='aprovado'?'aprovado':'rejeitado';
     const sLabel=j.status==='pendente'?'Pendente':j.status==='aprovado'?'Aprovado':'Rejeitado';
     const origem=j.lancadoPorGestor?'<span style="font-size:10px;color:var(--laranja);margin-left:6px;">pelo gestor</span>':'';
-    return `<div class="justif-card"><div class="justif-header"><div><div class="justif-nome">${esc(j.funcNome)}${origem}</div><div class="justif-info">${fmtData(j.data)} · ${esc(j.motivo)}</div></div><span class="badge ${sClass}">${sLabel}</span></div>${j.descricao&&j.descricao!==j.motivo?`<div class="justif-motivo">${esc(j.descricao)}</div>`:''} ${j.anexoNome?`<div style="margin-bottom:8px;"><button class="btn-acao" onclick="verAnexo('${sid(j.id)}')">📎 ${esc(j.anexoNome)}</button></div>`:''} ${j.obsGestor?`<div style="font-size:12px;color:var(--cinza-texto);margin-bottom:8px;">Obs: ${esc(j.obsGestor)}</div>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;">${j.status==='pendente'&&!j.lancadoPorGestor?`<button class="btn-acao success" onclick="abrirJustifGestor('${sid(j.id)}')">Analisar</button>`:''}${j.status==='pendente'?`<button class="btn-acao danger" onclick="excluirOcorrencia('${sid(j.id)}')">Excluir</button>`:''}</div></div>`;
+    return `<div class="justif-card"><div class="justif-header"><div><div class="justif-nome">${esc(j.funcNome)}${origem}</div><div class="justif-info">${fmtData(j.data)} · ${esc(j.motivo)}</div></div><span class="badge ${sClass}">${sLabel}</span></div>${j.descricao&&j.descricao!==j.motivo?`<div class="justif-motivo">${esc(j.descricao)}</div>`:''} ${j.anexoNome?`<div style="margin-bottom:8px;"><button class="btn-acao" onclick="verAnexo('${sid(j.id)}')">📎 ${esc(j.anexoNome)}</button></div>`:''} ${j.obsGestor?`<div style="font-size:12px;color:var(--cinza-texto);margin-bottom:8px;">Obs: ${esc(j.obsGestor)}</div>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;">${j.status==='pendente'?`<button class="btn-acao success" onclick="abrirJustifGestor('${sid(j.id)}')">Analisar</button>`:''}${j.status==='pendente'&&j.funcId!==window._meuFuncId?`<button class="btn-acao danger" onclick="cancelarOcorrencia('${sid(j.id)}')">Cancelar</button>`:''}</div></div>`;
   }).join('');
   atualizarBadgeJustif();
 }
 window.renderJustificativas=renderJustificativas;
 
-async function excluirOcorrencia(id){if(!confirm('Excluir esta ocorrência?'))return;await fbDel('justificativas',id);renderJustificativas();notif('Excluído','vermelho');}
-window.excluirOcorrencia=excluirOcorrencia;
+// Pedido pendente não é apagado: é encerrado como REJEITADO pelo servidor, com motivo e responsável (fica no histórico).
+async function cancelarOcorrencia(id){
+  const motivo=(prompt('Cancelar este pedido pendente? Ele continua no histórico como rejeitado.\n\nMotivo (obrigatório, o funcionário verá):')||'').trim();
+  if(motivo.length<5){notif('Informe o motivo (mínimo 5 caracteres).','vermelho');return;}
+  try{await _decidirJustif([id],'REJEITAR',('Cancelada pela gestão: '+motivo).slice(0,300));}
+  catch(e){notif('Não foi possível cancelar: '+_erroJustif(e),'vermelho');return;}
+  renderJustificativas();notif('Pedido cancelado (mantido no histórico).','laranja');
+}
+window.cancelarOcorrencia=cancelarOcorrencia;
 
 async function verAnexo(justifId){
   const snap=await window._getDoc(docRef('justificativas',justifId));
@@ -1438,7 +1452,7 @@ async function creditarJornada(funcId,funcNome,data,jornMin,motivo){
   // Folga compensatória: minutos=0 → trabMin não sobe; esperMin sobe → saldo cai.
   const minutos=motivo==='Folga compensatória'?0:jornMin;
   const id='cred_'+funcId+'_'+data;
-  await fbSet('creditos_jornada',id,{id,funcId,funcNome,data,minutos,motivo,criadoEm:new Date().toISOString()});
+  await fbSet('creditos_jornada',id,{id,funcId,funcNome,data,minutos,motivo,criadoEm:new Date().toISOString(),...autoria()});
 }
 
 // ── Espelho ───────────────────────────────────────────────────────────────────
@@ -1463,14 +1477,9 @@ async function gerarEspelho(){
 
   // buildEspelhoSnapshot usa os mesmos primitivos do motor de cálculo.
   const snap=buildEspelhoSnapshot(func,regsDoMes,creditosFuncMes,justifDoMes,mes,hojeStr);
-  // Folga compensatória aprovada aparece no espelho (informativo; o débito do banco é do razão, nunca duplicado aqui).
-  try{
-    const lancF=(await fbGet('banco_horas_lancamentos')).filter(l=>l.funcId===funcId);
-    compensacoesVigentes(lancF).filter(l=>l.tipo==='FOLGA_COMPENSATORIA'&&String(l.data).startsWith(mes)).forEach(l=>{
-      const dd=snap.dias.find(x=>x.data===l.data);
-      if(dd&&!dd.ocorrencia)dd.ocorrencia='Folga compensatória (banco de horas) '+(l.periodo==='HORAS'?fmtMin(l.minutos):'dia inteiro');
-    });
-  }catch(e){/* sem permissão/coleção: espelho segue sem a anotação */}
+  // Folga compensatória aprovada aparece no espelho só NA EXIBIÇÃO (D19): o snapshot enviado para assinatura não é alterado.
+  let lancFunc=[];
+  try{lancFunc=(await fbGet('banco_horas_lancamentos')).filter(l=>l.funcId===funcId);}catch(e){/* sem permissão/coleção: espelho segue sem a anotação */}
   snap.geradoEm=new Date().toISOString();
   snap.funcId=funcId;
   window._espelhoSnapshot=snap;
@@ -1494,7 +1503,7 @@ async function gerarEspelho(){
     ?`<div style="margin:8px 0;padding:8px 10px;border:1px solid #e67e22;border-radius:6px;background:#fff4e5;color:#633;font-size:11px;">${snap.totais.pendencias} pendência(s) no período (ponto incompleto ou inconsistência administrativa). O funcionário não conseguirá assinar enquanto houver pendência.</div>`
     :'';
   const origem=buildOrigemBatidas(regsDoMes,mes);   // P5: só exibição (J = lançada por justificativa; horário original)
-  const rows=renderEspelhoRowsHTML(snapExib,origem);
+  const rows=renderEspelhoRowsHTML(anotarFolgasExibicao(snapExib,lancFunc,congelado?' — informativo':''),origem);
   const saldoTotal=snapExib.totais.saldo;
   const saldoColor=saldoTotal>=0?'#4ade80':'#f87171';
   const espelhoHTML=`<div class="espelho-preview" id="espelho-html"><div class="espelho-header"><div style="font-size:16px;font-weight:700;color:#1a73e8;">MR4 DISTRIBUIDORA</div><div class="espelho-titulo">Espelho de Ponto — ${nomeMes}/${ano}</div><div class="espelho-sub">${esc(fExib.nome)} · ${esc(fExib.cargo||'')} · Jornada: ${esc(fExib.jornada||8)}h/dia</div></div>${avisoEspelho}<table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${rows}</tbody><tfoot><tr style="background:#222;"><td colspan="5" style="color:white;font-weight:700;padding:8px;">TOTAIS DO MÊS</td><td style="color:white;font-weight:700;">${fmtMin(snapExib.totais.trabMin)}</td><td style="color:${saldoColor};font-weight:700;">${saldoTotal>=0?'+':''}${fmtMin(saldoTotal)}</td><td></td></tr></tfoot></table>${renderLegendaOrigemHTML(origem)}<div class="espelho-assinatura"><div class="assin-box"><div class="assin-linha">${espExist?.assinado&&espExist?.assinaturaImg?`<img src="${esc(espExist.assinaturaImg)}" style="height:38px;max-width:100%;object-fit:contain;">`:'&nbsp;'}</div><div class="assin-label">${esc(fExib.nome)}<br>${espExist?.assinado?'Assinado em '+fmtData(dataIsoDe(espExist.assinadoEm)):'Assinatura do funcionário'}</div></div><div class="assin-box"><div class="assin-linha">&nbsp;</div><div class="assin-label">Murilo Rodrigues Lima<br>Gestor — MR4 Distribuidora</div></div></div></div>`;
@@ -1502,9 +1511,63 @@ async function gerarEspelho(){
   const btnAcao=espExist?.assinado
     ?`<button class="btn-ghost" style="border-color:#1a73e8;color:#1a73e8;" onclick="iniciarRevisaoPeriodo('${sid(funcId)}','${mes}')">Revisar Período (Gestor)</button>`
     :`<button class="btn-ghost" onclick="enviarParaAssinar('${sid(espId)}','${funcId}','${mes}','${nomeMes}/${ano}')">Enviar para funcionário assinar</button>`;
-  document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button>${btnAcao}</div>${espelhoHTML}`;
+  document.getElementById('espelho-conteudo').innerHTML=`<div style="display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;">${statusAssin}<button class="btn-novo" onclick="exportarEspelhoPDF()">Exportar PDF</button>${btnAcao}<button class="btn-ghost" onclick="verHistoricoPonto('${sid(funcId)}','${sid(mes)}')">Histórico de alterações</button></div>${espelhoHTML}${htmlVersoes(doPeriodo)}<div id="espelho-extra"></div>`;
+  renderFechamento().catch(()=>{});
 }
 window.gerarEspelho=gerarEspelho;
+
+// ── Fechamento mensal (somente leitura: situação derivada dos espelhos) ───────────────────────────
+const _quando=v=>{const t=tsMillis(v);return t==null?'—':new Date(t).toLocaleString('pt-BR',{timeZone:'America/Fortaleza'});};
+function situacaoFechamento(espelhosDoMes){
+  const l=(espelhosDoMes||[]).filter(e=>!e.invalidado).sort((a,b)=>(b.versao||1)-(a.versao||1));
+  if(!l.length)return {chave:'NAO_ENVIADO',rotulo:'Não enviado para assinatura',detalhe:''};
+  const u=l[0],v=u.versao||1;
+  if(u.assinado)return {chave:'FECHADO',rotulo:'Fechado — v'+v+' assinada',detalhe:'em '+_quando(u.assinadoEm)};
+  if(l.some(e=>e.assinado))return {chave:'REABERTO',rotulo:'Reaberto — v'+v+' aguardando assinatura',detalhe:'Justificativa: '+(u.motivoRevisao||'—')};
+  return {chave:'AGUARDANDO',rotulo:'Aguardando assinatura — v'+v,detalhe:''};
+}
+async function renderFechamento(){
+  const box=document.getElementById('fechamento-mes');if(!box)return;
+  const mes=document.getElementById('esp-mes').value;if(!mes){box.innerHTML='';return;}
+  const [funcs,esp]=await Promise.all([fbGet('funcionarios'),fbGet('espelhos')]);
+  const linhas=funcs.filter(f=>f.inativo!==true||esp.some(e=>e.funcId===f.id&&e.mes===mes)).map(f=>{
+    const s=situacaoFechamento(esp.filter(e=>e.funcId===f.id&&e.mes===mes));
+    return `<tr><td>${esc(f.nome)}</td><td><span class="badge ${s.chave==='FECHADO'?'assinado':s.chave==='NAO_ENVIADO'?'ausente':'aguardando'}">${esc(s.rotulo)}</span></td><td style="font-size:12px;">${esc(s.detalhe)}</td></tr>`;
+  }).join('');
+  box.innerHTML=`<details class="ficha" style="padding:10px 14px;margin-bottom:1rem;" open><summary style="cursor:pointer;font-weight:600;">Fechamento do mês ${esc(mes.split('-').reverse().join('/'))}</summary><div class="tabela-wrap" style="margin-top:8px;"><table><thead><tr><th>Funcionário</th><th>Situação</th><th>Detalhe</th></tr></thead><tbody>${linhas||'<tr><td colspan="3">Nenhum funcionário.</td></tr>'}</tbody></table></div></details>`;
+}
+window.renderFechamento=renderFechamento;
+
+// Todas as versões do período continuam guardadas e podem ser consultadas.
+function htmlVersoes(lista){
+  if(!lista||!lista.length)return '';
+  const linhas=[...lista].sort((a,b)=>(b.versao||1)-(a.versao||1)).map(e=>`<tr><td>v${esc(e.versao||1)}</td><td>${e.assinado?'Assinada em '+esc(_quando(e.assinadoEm)):'Não assinada'}${e.substituido?' · substituída':''}</td><td style="font-size:12px;">${esc(e.motivoRevisao&&(e.versao||1)>1?e.motivoRevisao:'—')}</td><td><button class="btn-acao" onclick="verVersaoEspelho('${sid(e.id)}')">Ver</button></td></tr>`).join('');
+  return `<div style="margin-top:1rem;"><div style="font-weight:600;font-size:13px;margin-bottom:4px;">Versões deste espelho</div><div class="tabela-wrap"><table><thead><tr><th>Versão</th><th>Situação</th><th>Justificativa da reabertura</th><th></th></tr></thead><tbody>${linhas}</tbody></table></div></div>`;
+}
+async function verVersaoEspelho(id){
+  const box=document.getElementById('espelho-extra');if(!box)return;
+  const s=await window._getDoc(docRef('espelhos',id));if(!s.exists())return;
+  const e=s.data();
+  if(!e.snapshot||!e.snapshot.dias||!e.snapshot.totais){box.innerHTML='<div class="vazio">Esta versão não guarda cópia congelada.</div>';return;}
+  box.innerHTML=`<div class="espelho-preview" style="margin-top:1rem;"><div class="espelho-titulo">Versão v${esc(e.versao||1)} — cópia guardada (${e.assinado?'assinada':'não assinada'}) · gerada em ${esc(_quando(e.snapshot.geradoEm))}</div><table class="espelho-table"><thead><tr><th>Dia</th><th>Entrada</th><th>S.Almoço</th><th>Retorno</th><th>Saída</th><th>Total</th><th>Saldo</th><th>Ocorrência</th></tr></thead><tbody>${renderEspelhoRowsHTML(e.snapshot,null)}</tbody></table>${e.assinado&&e.assinaturaImg?`<div style="margin-top:6px;"><img src="${esc(e.assinaturaImg)}" style="height:38px;max-width:100%;object-fit:contain;"> <span style="font-size:11px;">${esc(e.assinadoPor||'')}</span></div>`:''}</div>`;
+}
+window.verVersaoEspelho=verVersaoEspelho;
+
+// Trilha append-only gravada pelo servidor (gestão: somente leitura).
+const _EVENTOS_PONTO={BATIDA_REGISTRADA:'Batida registrada',CORRECAO_REGISTRADA:'Ajuste registrado (correção)',REGISTRO_SUBSTITUIDO_POR_CORRECAO:'Batida original marcada como corrigida',PEDIDO_DO_FUNCIONARIO:'Pedido do funcionário',LANCAMENTO_DA_GESTAO:'Lançamento da gestão',JUSTIFICATIVA_DECIDIDA:'Justificativa decidida',JUSTIFICATIVA_ALTERADA:'Justificativa alterada',JUSTIFICATIVA_EXCLUIDA:'Justificativa excluída',CREDITO_LANCADO:'Crédito lançado',CREDITO_ALTERADO:'Crédito alterado',CREDITO_EXCLUIDO:'Crédito excluído',ESPELHO_ENVIADO:'Espelho enviado',ESPELHO_REENVIADO:'Espelho reenviado',ESPELHO_ASSINADO:'Espelho assinado',MES_REABERTO:'Mês reaberto',REVISAO_CRIADA:'Nova versão criada',REVISAO_CONCLUIDA:'Revisão concluída'};
+async function verHistoricoPonto(funcId,mes){
+  const box=document.getElementById('espelho-extra');if(!box)return;
+  box.innerHTML='<div class="vazio">Carregando histórico…</div>';
+  try{
+    const docs=await window._qDocs('ponto_trilha',[['funcId','==',funcId],['mes','==',mes]]);
+    let users=[];try{users=await fbGet('users');}catch(e){/* sem permissão: mostra o identificador */}
+    const quem=t=>{if(!t.autorUid)return t.autorAuthId&&t.autorTipo!=='SYSTEM'?t.autorAuthId:'Sistema';const u=users.find(x=>x.id===t.autorUid);return u?(u.nome||u.email||t.autorUid):t.autorUid;};
+    const batidas=docs.filter(t=>t.evento==='BATIDA_REGISTRADA').length;   // as batidas originais já aparecem no espelho e em Registros
+    const linhas=docs.filter(t=>t.evento!=='BATIDA_REGISTRADA').sort((a,b)=>(tsMillis(a.criadoEm)||0)-(tsMillis(b.criadoEm)||0)).map(t=>`<tr><td style="font-size:12px;">${esc(_quando(t.criadoEm))}</td><td>${esc(_EVENTOS_PONTO[t.evento]||t.evento)}${t.assinatura&&!t.assinatura.hashConfere?' <span class="badge ausente">conteúdo não confere com o hash</span>':''}</td><td>${esc(t.data?fmtData(t.data):'—')}</td><td>${esc(quem(t))}</td><td style="font-size:12px;">${esc(Object.values(t.justificativa||{}).join(' · '))}</td></tr>`).join('');
+    box.innerHTML=`<div style="margin-top:1rem;"><div style="font-weight:600;font-size:13px;margin-bottom:4px;">Histórico de alterações (registrado a partir da ativação da trilha)</div><div class="tabela-wrap"><table><thead><tr><th>Quando</th><th>O quê</th><th>Dia</th><th>Quem</th><th>Justificativa</th></tr></thead><tbody>${linhas||'<tr><td colspan="5">Nenhuma alteração registrada para este mês.</td></tr>'}</tbody></table></div>${batidas?`<div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">${batidas} batida(s) original(is) registrada(s) na trilha, não listadas aqui.</div>`:''}</div>`;
+  }catch(e){box.innerHTML='<div class="vazio">Histórico indisponível: '+esc((e&&e.code==='permission-denied')?'sem permissão.':(e&&e.message)||'erro')+'</div>';}
+}
+window.verHistoricoPonto=verHistoricoPonto;
 
 async function enviarParaAssinar(espId,funcId,mes,mesLabel){
   const snap=window._espelhoSnapshot;
@@ -1526,7 +1589,7 @@ async function enviarParaAssinar(espId,funcId,mes,mesLabel){
       id:newId,funcId,mes,mesLabel,
       versao:1,versaoAnteriorId:null,versaoSucessoraId:null,
       invalidado:false,invalidadoEm:null,motivoInvalidacao:null,
-      geradoEm:snap.geradoEm,geradoPor:'Gestor',
+      geradoEm:snap.geradoEm,geradoPor:'Gestor',geradoPorUid:window._userUid,
       snapshot:snap,hashSnapshot:hashSnap,
       assinado:false,assinadoEm:null,assinadoPor:null,assinaturaImg:null,
       criadoEm:agora,
@@ -1536,7 +1599,7 @@ async function enviarParaAssinar(espId,funcId,mes,mesLabel){
     // Atualiza snapshot da versão corrente (ainda não assinada)
     await fbSet('espelhos',espExist.id,{
       snapshot:snap,hashSnapshot:hashSnap,
-      geradoEm:snap.geradoEm,geradoPor:'Gestor',mesLabel,
+      geradoEm:snap.geradoEm,geradoPor:'Gestor',geradoPorUid:window._userUid,mesLabel,
     });
     notif('Espelho atualizado e disponível para assinatura!');
   }else{
@@ -1577,8 +1640,8 @@ async function iniciarRevisaoPeriodo(funcId,mes){
   // Operação atômica: criar v2 e atualizar v1 numa única transação.
   // Se qualquer escrita falhar, nenhuma persiste.
   const batch=window._writeBatch();
-  batch.set(docRef('espelhos',novoId),resultado.v2Doc);
-  batch.update(docRef('espelhos',espExist.id),resultado.v1Update);
+  batch.set(docRef('espelhos',novoId),{...resultado.v2Doc,geradoPorUid:window._userUid});
+  batch.update(docRef('espelhos',espExist.id),{...resultado.v1Update,revisaoAbertaPorUid:window._userUid});
   await batch.commit();
   delete _fbCache['espelhos'];
   notif(`Revisão v${resultado.v2Doc.versao} criada. Aguardando assinatura do funcionário.`,'laranja');
@@ -1608,7 +1671,7 @@ async function renderFuncionarios(){
   document.getElementById('lista-funcionarios').innerHTML=funcs.map(f=>{
     const av=avals.find(a=>a.id===f.id);const estrelas=av?.nota?'★'.repeat(av.nota)+'☆'.repeat(5-av.nota):'☆☆☆☆☆';
     const temFoto=f.foto?`<span style="font-size:11px;color:var(--verde);">✓ Foto</span>`:`<span style="font-size:11px;color:var(--vermelho);">⚠ Sem foto</span>`;
-    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div><div class="ficha-nome">${esc(f.nome)}</div><div class="ficha-cargo">${esc(f.cargo||'Sem cargo')} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${esc(f.cpf||'—')}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${esc(f.telefone||'—')}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${esc(f.jornada||8)}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${esc(f.endereco||'—')}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${sid(f.id)}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${sid(f.id)}')">Avaliação</button><button class="btn-acao danger" onclick="removerFunc('${sid(f.id)}')">Remover</button></div></div>`;
+    return `<div class="ficha"><div class="ficha-header"><div class="ficha-avatar">${f.foto?`<img data-src="${esc(f.foto)}" class="lazy-foto">`:''}${!f.foto?esc(iniciais(f.nome)):''}</div><div><div class="ficha-nome">${esc(f.nome)}${f.inativo===true?' <span class="badge ausente" title="'+esc(f.motivoInativacao||'')+'">Inativo</span>':''}</div><div class="ficha-cargo">${esc(f.cargo||'Sem cargo')} ${f.admissao?'· Desde '+fmtData(f.admissao):''}</div><div style="margin-top:4px;">${temFoto}</div><div style="color:var(--laranja);font-size:14px;">${estrelas}</div></div></div><div class="ficha-grid"><div class="ficha-campo"><div class="fc-label">CPF</div><div class="fc-valor">${esc(f.cpf||'—')}</div></div><div class="ficha-campo"><div class="fc-label">Telefone</div><div class="fc-valor">${esc(f.telefone||'—')}</div></div><div class="ficha-campo"><div class="fc-label">Nascimento</div><div class="fc-valor">${fmtData(f.nascimento)}</div></div><div class="ficha-campo"><div class="fc-label">Salário</div><div class="fc-valor">${f.salario?'R$ '+parseFloat(f.salario).toLocaleString('pt-BR',{minimumFractionDigits:2}):'—'}</div></div><div class="ficha-campo"><div class="fc-label">Jornada</div><div class="fc-valor">${esc(f.jornada||8)}h/dia</div></div><div class="ficha-campo" style="grid-column:1/-1"><div class="fc-label">Endereço</div><div class="fc-valor">${esc(f.endereco||'—')}</div></div></div><div class="ficha-acoes"><button class="btn-acao" onclick="editarFunc('${sid(f.id)}')">Editar</button><button class="btn-acao" onclick="abrirFicha('${sid(f.id)}')">Avaliação</button>${f.id===window._meuFuncId?'':f.inativo===true?`<button class="btn-acao success" onclick="reativarFunc('${sid(f.id)}')">Reativar</button>`:`<button class="btn-acao danger" onclick="inativarFunc('${sid(f.id)}')">Inativar</button>`}</div></div>`;
   }).join('');
   aplicarLazyFotos(document.getElementById('lista-funcionarios'));
   // detecta perfil monitor pelo email do usuário logado
@@ -1623,7 +1686,7 @@ async function renderFuncionarios(){
     const val=sel.value;
     // no select gest-func, exclui o próprio funcionário monitor
     // F0 (P1-05): em lançamentos (gest-func) o próprio vínculo também sai — ninguém lança ocorrência no próprio ponto
-    const lista=sid==='gest-func'?funcs.filter(f=>f.id!==window._monitorFuncId&&f.id!==window._meuFuncId):funcs;
+    const lista=sid==='gest-func'?ativos(funcs).filter(f=>f.id!==window._monitorFuncId&&f.id!==window._meuFuncId):funcs;
     sel.innerHTML='<option value="">'+( sid==='esp-func'?'Selecione funcionário':'Todos')+'</option>'+lista.map(f=>`<option value="${esc(f.id)}">${esc(f.nome)}</option>`).join('');
     sel.value=val;
   });
@@ -1633,7 +1696,7 @@ async function renderLinks(){
   const funcs=await fbGet('funcionarios');
   const funcUrl=new URL('./ponto-func.html',window.location.href).href;
   if(!funcs.length){document.getElementById('lista-links').innerHTML='<div style="color:var(--cinza-texto);font-size:14px;">Cadastre funcionários primeiro.</div>';return;}
-  document.getElementById('lista-links').innerHTML=funcs.map(f=>{const url=`${funcUrl}?f=${f.id}`;return `<div class="link-card"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">${esc(f.nome)}</div><div class="link-url">${esc(url)}</div></div><button class="btn-copiar" onclick="copiarLink('${sjs(url)}',this)">Copiar</button></div>`;}).join('');
+  document.getElementById('lista-links').innerHTML=ativos(funcs).map(f=>{const url=`${funcUrl}?f=${f.id}`;return `<div class="link-card"><div><div style="font-size:13px;font-weight:600;margin-bottom:4px;">${esc(f.nome)}</div><div class="link-url">${esc(url)}</div></div><button class="btn-copiar" onclick="copiarLink('${sjs(url)}',this)">Copiar</button></div>`;}).join('');
 }
 function copiarLink(url,btn){navigator.clipboard.writeText(url).then(()=>{btn.textContent='Copiado!';setTimeout(()=>btn.textContent='Copiar',2000);});}
 window.copiarLink=copiarLink;
@@ -1685,8 +1748,18 @@ async function salvarFuncionario(){
 }
 window.salvarFuncionario=salvarFuncionario;
 
-async function removerFunc(id){if(!confirm('Remover este funcionário?'))return;await fbDel('funcionarios',id);renderFuncionarios();notif('Removido','vermelho');}
-window.removerFunc=removerFunc;
+// O cadastro nunca é apagado: é inativado, com motivo e responsável (marcações e histórico continuam).
+async function _situacaoFunc(id,inativo,pergunta){
+  const motivo=(prompt(pergunta)||'').trim();
+  if(motivo.length<5){notif('Informe o motivo (mínimo 5 caracteres).','vermelho');return;}
+  try{
+    await fbSet('funcionarios',id,{inativo,motivoInativacao:motivo.slice(0,300),inativadoPorUid:window._userUid,inativadoEm:window._serverTimestamp()});
+  }catch(e){notif('Não foi possível salvar: '+((e&&e.code==='permission-denied')?'sem permissão.':(e&&e.message)||'erro'),'vermelho');return;}
+  await renderFuncionarios();notif(inativo?'Funcionário inativado (histórico mantido).':'Funcionário reativado.',inativo?'laranja':'verde');
+}
+async function inativarFunc(id){await _situacaoFunc(id,true,'Inativar este funcionário? Cadastro e histórico são mantidos e ele deixa de registrar ponto.\n\nMotivo (obrigatório):');}
+async function reativarFunc(id){await _situacaoFunc(id,false,'Reativar este funcionário?\n\nMotivo (obrigatório):');}
+window.inativarFunc=inativarFunc;window.reativarFunc=reativarFunc;
 
 async function abrirFicha(id){
   avalFuncId=id;const snap=await window._getDoc(docRef('funcionarios',id));const f=snap.data();
@@ -1716,7 +1789,7 @@ async function renderContas(){
   let users=[];try{users=await fbGet('users');}catch{}
   if(!funcs.length){el.innerHTML='<div class="vazio">Nenhum funcionário cadastrado.</div>';return;}
   const userMap={};users.forEach(u=>{if(u.funcionarioId)userMap[u.funcionarioId]=u;});
-  el.innerHTML=funcs.map(f=>{
+  el.innerHTML=ativos(funcs).map(f=>{
     const u=userMap[f.id];
     const statusHtml=u
       ?`<span class="badge aprovado">Conta ativa</span><div style="font-size:11px;color:var(--cinza-texto);margin-top:4px;">${u.email||''}</div>`
@@ -1766,7 +1839,7 @@ function mudarSecao(id,el){
   if(id==='regularizacao')renderRegularizacao(false);
   if(id==='escalas')renderEscalas();
   if(id==='justificativas')renderJustificativas();
-  if(id==='espelho'){document.getElementById('esp-mes').value=mesAtual();renderFuncionarios();}
+  if(id==='espelho'){document.getElementById('esp-mes').value=mesAtual();renderFuncionarios();renderFechamento().catch(()=>{});}
   if(id==='funcionarios')renderFuncionarios();
   if(id==='links')renderLinks();
   if(id==='contas')renderContas();

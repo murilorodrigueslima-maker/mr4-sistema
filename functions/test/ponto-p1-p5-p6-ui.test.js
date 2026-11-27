@@ -52,8 +52,8 @@ describe('P1 · botão "Encerrar expediente" (tela do funcionário)', () => {
 
 describe('P5 · espelho usa a origem das batidas (gestor e funcionário)', () => {
   test('admin e funcionário constroem a origem e passam ao renderizador + legenda; snapshot assinado não é alterado', () => {
-    expect(ADM).toMatch(/const origem=buildOrigemBatidas\(regsDoMes,mes\)/); expect(ADM).toMatch(/renderEspelhoRowsHTML\(snapExib,origem\)/); expect(ADM).toMatch(/renderLegendaOrigemHTML\(origem\)/);
-    expect(FUNC).toMatch(/buildOrigemBatidas\(regsOrigem/); expect(FUNC).toMatch(/renderEspelhoRowsHTML\(snap,origem\)/); expect(FUNC).toMatch(/renderLegendaOrigemHTML\(origem\)/);
+    expect(ADM).toMatch(/const origem=buildOrigemBatidas\(regsDoMes,mes\)/); expect(ADM).toMatch(/renderEspelhoRowsHTML\((anotarFolgasExibicao\(snapExib,[^;]*?\)|snapExib),origem\)/); expect(ADM).toMatch(/renderLegendaOrigemHTML\(origem\)/);
+    expect(FUNC).toMatch(/buildOrigemBatidas\(regsOrigem/); expect(FUNC).toMatch(/renderEspelhoRowsHTML\(anotarFolgasExibicao\(snap,[^;]*?\),origem\)/); expect(FUNC).toMatch(/renderLegendaOrigemHTML\(origem\)/);
     expect(ADM).toMatch(/const snap=buildEspelhoSnapshot\(func,regsDoMes,creditosFuncMes,justifDoMes,mes,hojeStr\)/);   // cálculo do snapshot inalterado
     expect(ADM).toMatch(/canonicalizarSnapshot\(snap\)/);
   });

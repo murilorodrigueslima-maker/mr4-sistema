@@ -245,7 +245,7 @@ describe('Telas consomem o motor único (inspeção estática)', () => {
   const G = fs.readFileSync(path.resolve(__dirname, '../../modulos/ponto.html'), 'utf8');
   const FN = fs.readFileSync(path.resolve(__dirname, '../../modulos/ponto-func.html'), 'utf8');
   test('as duas telas carregam o motor 4.0.0 (sem mistura com motor antigo em cache)', () => {
-    for (const src of [G, FN]) expect(src).toContain('<script src="ponto-regras.js?v=4.0.0"></script>');
+    for (const src of [G, FN]) expect(src).toContain('<script src="ponto-regras.js?v=4.1.0"></script>');
   });
   test('toda chamada ao Banco passa as justificativas (mesmas entradas do Espelho)', () => {
     for (const src of [G, FN]) {
@@ -263,7 +263,7 @@ describe('Telas consomem o motor único (inspeção estática)', () => {
   test('gestor: espelho assinado exibe o snapshot congelado; legado sem snapshot exibe aviso', () => {
     const g = G.slice(G.indexOf('async function gerarEspelho'), G.indexOf('window.gerarEspelho'));
     expect(g).toMatch(/const congelado=espExist\?\.assinado&&espExist\.snapshot/);
-    expect(g).toMatch(/renderEspelhoRowsHTML\(snapExib(,origem)?\)/);   // P5: o 2º argumento (origem das batidas) é só exibição; continua renderizando o snapshot congelado
+    expect(g).toMatch(/renderEspelhoRowsHTML\((anotarFolgasExibicao\(snapExib,[^;]*?\)|snapExib)(,origem)?\)/);   // P5: o 2º argumento (origem das batidas) é só exibição; continua renderizando o snapshot congelado
     expect(g).toMatch(/LEGACY_SIGNED_NO_SNAPSHOT/);
   });
   test('funcionário: assinatura bloqueia espelho desatualizado e envia hashAssinado', () => {

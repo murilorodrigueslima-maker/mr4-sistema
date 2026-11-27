@@ -390,6 +390,19 @@ const GC_OPERACOES = {
   },
 };
 
+// O que sai para o NAVEGADOR (revisão técnica de 27/11/2026, achados 14/15). O `dto` acima segue completo para uso interno
+// (expedicaoSyncPedidos). Só sai daqui o que NENHUMA tela publicada lê: custo por item (todos); para quem não é gestor
+// (expedição), também o código do cliente no ERP e o preço por item; o nome do cliente dos recebimentos.
+function dtoParaNavegador(operacao, dto, perfil) {
+  if (operacao === 'LISTAR_VENDAS') {
+    const gestor = perfil.role === 'gestor';
+    const { cliente_id, produtos, ...venda } = dto;
+    return { ...venda, ...(gestor ? { cliente_id } : {}), produtos: produtos.map(({ valor_custo, valor_venda, ...p }) => (gestor ? { ...p, valor_venda } : p)) };
+  }
+  if (operacao === 'LISTAR_RECEBIMENTOS') { const { cliente, ...titulo } = dto; return titulo; }
+  return dto;
+}
+
 async function gcQueryHandler(request) {
   // 1. Autenticação obrigatória
   if (!request.auth) {
@@ -485,21 +498,26 @@ async function gcQueryHandler(request) {
       },
     });
   } catch (e) {
-    throw new HttpsError('unavailable', 'Erro de rede ao chamar GestãoClick: ' + e.message);
+    console.warn(JSON.stringify({ evento: 'gc_query_erro', operacao, tipo: 'REDE' }));
+    throw new HttpsError('unavailable', 'Erro de rede ao chamar GestãoClick.');
   }
 
+  // O corpo de erro do ERP pode trazer dados internos: nunca vai ao navegador nem ao log — só o status.
   if (!gcResp.ok) {
-    const txt = await gcResp.text();
-    throw new HttpsError('unavailable', `GestãoClick retornou ${gcResp.status}: ${txt.slice(0, 200)}`);
+    console.warn(JSON.stringify({ evento: 'gc_query_erro', operacao, status: gcResp.status }));
+    throw new HttpsError('unavailable', `GestãoClick retornou ${gcResp.status}.`);
   }
 
-  const rawJson = await gcResp.json();
+  let rawJson;
+  try { rawJson = await gcResp.json(); }
+  catch (_) { throw new HttpsError('unavailable', 'Resposta inválida do GestãoClick.'); }
 
   // 10. Aplicar DTO mínimo — nunca retornar raw ao browser
+  const paraNavegador = item => dtoParaNavegador(operacao, config.dto(item), perfil);
   // Resposta paginada ou item único
   if (rawJson.data && Array.isArray(rawJson.data)) {
     return {
-      data:     rawJson.data.map(config.dto),
+      data:     rawJson.data.map(paraNavegador),
       meta:     {
         pagina_atual:   rawJson.meta?.pagina_atual   || 1,
         total_paginas:  rawJson.meta?.total_paginas  || 1,
@@ -508,8 +526,10 @@ async function gcQueryHandler(request) {
     };
   }
 
-  // Item único
-  return { data: config.dto(rawJson) };
+  // Item único. O detalhe é consultado sem filtro de loja: a loja DECLARADA na resposta precisa ser a ativa.
+  const { declaraOutraLoja } = require('./lib/lojaAtiva');
+  if (declaraOutraLoja(rawJson) || declaraOutraLoja(rawJson.data)) throw new HttpsError('failed-precondition', 'Registro de outra loja.');
+  return { data: paraNavegador(rawJson) };
 }
 
 // ── Handler: syncPainelDisplay ────────────────────────────────────────────────

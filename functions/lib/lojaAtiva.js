@@ -24,4 +24,17 @@ function aplicarLojaNosParams(params, recurso) {
   return params;
 }
 
-module.exports = { LOJA_ATIVA_ID, aplicarLojaNaUrl, aplicarLojaNosParams };
+const NOME_LOJA_ATIVA = 'MR4 DISTRIBUIDORA';
+const preenchido = v => v !== undefined && v !== null && String(v).trim() !== '';
+const nomeNormalizado = v => String(v).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().toUpperCase();
+
+/** Registro de DETALHE que DECLARA outra loja (loja_id ou, sem ele, nome_loja). Registro sem declaração não é rejeitado. */
+function declaraOutraLoja(registro) {
+  const r = registro && (registro.Produto || registro);
+  if (!r || typeof r !== 'object') return false;
+  if (preenchido(r.loja_id)) return String(r.loja_id).trim() !== LOJA_ATIVA_ID;
+  if (preenchido(r.nome_loja)) return nomeNormalizado(r.nome_loja) !== NOME_LOJA_ATIVA;
+  return false;
+}
+
+module.exports = { LOJA_ATIVA_ID, aplicarLojaNaUrl, aplicarLojaNosParams, declaraOutraLoja };

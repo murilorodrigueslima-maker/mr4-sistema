@@ -143,6 +143,34 @@ function registrosEfetivos(registros) {
   return (registros || []).filter(r => r && !r.substituidoPor);
 }
 
+// ── Consistência entre telas (E3 · integridade) — só selecionam/anotam dados; não mudam nenhuma regra de cálculo ──────────
+// D04: havendo mais de um crédito no mesmo dia (legado), todas as telas usam o MESMO que o mês usa em calcMes (o último).
+function creditoDoDia(creditos, funcId, data) {
+  const doDia = (creditos || []).filter(c => c && c.data === data && (!funcId || c.funcId === funcId));
+  return doDia.length ? doDia[doDia.length - 1] : null;
+}
+// D20: no mês corrente, hoje só entra no saldo quando o dia fecha (critério já usado no painel da gestão, agora nas duas telas).
+function corteBancoMes(regsHojeDoFunc, hojeStr, ontemStr) {
+  const hora = tipo => {
+    const l = (regsHojeDoFunc || []).filter(r => r.tipo === tipo);
+    const r = l.find(x => x.lancadoPorJustificativa) || l[0];
+    return r && r.hora ? r.hora.slice(0, 5) : undefined;
+  };
+  return calcTotal(hora('entrada'), hora('saida_almoco'), hora('retorno_almoco'), hora('saida')) === null ? ontemStr : hojeStr;
+}
+// D19: a folga compensatória do banco é anotada SÓ NA EXIBIÇÃO. Devolve uma cópia; o snapshot (e o hash assinado) não muda.
+function anotarFolgasExibicao(snap, lancamentos, sufixo) {
+  if (!snap || !snap.dias) return snap;
+  const folgas = compensacoesVigentes(lancamentos || []).filter(l => l.tipo === 'FOLGA_COMPENSATORIA');
+  if (!folgas.length) return snap;
+  const dias = snap.dias.map(d => {
+    const l = folgas.find(x => x.dataAusencia === d.data);
+    if (!l || d.ocorrencia) return d;
+    return { ...d, ocorrencia: 'Folga compensatória (banco de horas) ' + (l.periodo === 'HORAS' ? fmtMin(l.minutos) : 'dia inteiro') + (sufixo || '') };
+  });
+  return { ...snap, dias };
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // MOTOR ÚNICO DO DIA — engine 4.0.0 (PONTO 2.0 · unificação Banco × Espelho)
 //

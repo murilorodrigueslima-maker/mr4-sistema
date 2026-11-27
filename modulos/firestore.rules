@@ -529,6 +529,26 @@ service cloud.firestore {
       }
     }
 
+    // POLÍTICA 1.4 EM SOMBRA — entradas do SIMULADOR de orçamento (custo, preço, fornecedor): só gestão
+    // (GESTOR + (admin | módulo 'estoque'), não bloqueado). Escrita só pelo backend; a tela de simulação não grava nada.
+    match /compras_sombra_14/{docId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+      allow write: if false;
+    }
+
+    // PLANEJAMENTO DE COMPRA — LEITURA dos cadastros usados pelo simulador (mesmo critério do custo: GESTOR + (admin | módulo
+    // 'estoque'), não bloqueado). Aqui só `read`: a ESCRITA destas coleções pertence ao módulo de cadastros. [início leitura-planejamento]
+    match /compras_fornecedor_parametros/{fornecedorId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+    }
+    match /compras_pendencias_confirmacao/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+    }
+    match /compras_origem/{compraId} {
+      allow read:  if temModulo('estoque') && naoBloqueado();
+    }
+    // [fim leitura-planejamento]
+
     // ── Coleção: expedicao_pedidos ─────────────────────────────────────────────
     // Pedidos do módulo de expedição. Frontend filtra por sistema_usuarios.modulos.
 

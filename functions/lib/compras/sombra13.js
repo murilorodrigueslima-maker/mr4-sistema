@@ -17,14 +17,18 @@ const DOC_BYTES_MAX = 900 * 1024;
 const DIAS_DE_SERIE = 400;            // cobre a janela de 365 dias com folga
 
 // ── Leitura (somente get) ───────────────────────────────────────────────────────────────────────────────────────
-async function lerEntradas(db) {
+/** `snapshotsDesde` (AAAA-MM-DD) limita a leitura dos saldos diários aos que o cálculo usa; ausente = todos. */
+async function lerEntradas(db, { snapshotsDesde = null } = {}) {
   const { carregarBase } = require('./snapshot');
-  const todos = async c => (await db.collection(c).get()).docs.map(d => [d.id, d.data()]);
+  const ler = async q => (await q.get()).docs.map(d => [d.id, d.data()]);
+  const todos = c => ler(db.collection(c));
   const meta = (await db.collection('compras_n0').doc('meta').get()).data();
   if (!meta || !meta.data_comercial) throw new Error('SEM_SNAPSHOT_DE_COMPRAS');
   const base = await carregarBase(db);
   if (!base) throw new Error('BASE_AUSENTE');
-  const [produtos, custos, snaps] = [await todos('compras_n0_produtos'), await todos('compras_n0_custos'), await todos('estoque_snapshots')];
+  const saldos = db.collection('estoque_snapshots');
+  const [produtos, custos, snaps] = [await todos('compras_n0_produtos'), await todos('compras_n0_custos'),
+    await ler(snapshotsDesde ? saldos.orderBy(require('firebase-admin/firestore').FieldPath.documentId()).startAt(snapshotsDesde) : saldos)];
   const { isoladas } = await require('./origem').lerControle(db);
   return { ...montarEntradas({ meta, vendas: base.vendas, compras: base.compras, produtos, custos, snaps }), comprasIsoladas: isoladas };
 }
@@ -38,7 +42,7 @@ function montarEntradas({ meta, vendas, compras, produtos, custos, snaps }) {
     return { product_id: m.product_id, code: m.code || null, active: m.active, moves_stock: m.moves_stock, has_composition: !!m.kit, current_stock: m.current_stock,
       registered_cost_cents: c.registered_cost_cents ?? null, sale_price_cents: c.sale_price_cents ?? null,
       // a base operacional não guarda a data de cadastro: quando confiável, a 1ª evidência é equivalente para o motor
-      created_at: m.created_at_reliable ? m.first_evidence_date : null, created_at_reliable: !!m.created_at_reliable, erp_min_stock: null };
+      created_at: m.created_at_reliable ? m.first_evidence_date : null, created_at_reliable: !!m.created_at_reliable, erp_min_stock: null, group_id: m.group_id || null };
   });
   const gravado = new Map(operacionais.map(m => [m.product_id, m.suggestion ? m.suggestion.suggested_qty : 0]));
   return { hoje: meta.data_comercial, geradoEm: meta.ultima_sincronizacao_ok, produtos: lista, vendas, compras,

@@ -1,0 +1,5 @@
+{
+  "aviso": "Usuarios FICTICIOS, validos somente no emulador local (demo-mr4-sim14).",
+  "gestor": { "email": "gestor@teste.local", "senha": "somente-emulador-gestor", "nome": "Gestor de Teste", "perfil": { "role": "gestor", "ativo": true }, "sistema": { "nome": "Gestor de Teste", "modulos": ["estoque", "compras"], "admin": false } },
+  "funcionario": { "email": "vendedor@teste.local", "senha": "somente-emulador-vendedor", "nome": "Vendedor de Teste", "perfil": { "role": "funcionario", "ativo": true, "funcionarioId": "FT1" }, "sistema": { "nome": "Vendedor de Teste", "modulos": ["estoque", "compras"], "admin": false } }
+}

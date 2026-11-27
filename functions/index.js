@@ -871,6 +871,11 @@ exports.gestaoComprasParametrosSalvar    = onCall(OPC_GESTAO_COMPRAS, req => _ge
 exports.gestaoComprasPendenciaConfirmar  = onCall(OPC_GESTAO_COMPRAS, req => _gestaoCompras().confirmarPendenciaHandler(req, { db }));
 exports.gestaoComprasOrigemConfirmar     = onCall(OPC_GESTAO_COMPRAS, req => _gestaoCompras().confirmarOrigemHandler(req, { db }));
 
+// Planejamento de compra (simulador): atualiza SOMENTE a base própria compras_sombra_14, a pedido da tela da gestão. Sem segredos,
+// sem agenda, sem GestãoClick; não participa do sync nem da Política 1.2. Autorização (gestor com módulo Estoque) no handler.
+exports.planejamentoComprasAtualizar = onCall({ region: REGION, timeoutSeconds: 300, memory: '1GiB', concurrency: 1, maxInstances: 1 },
+  req => require('./lib/comprasSimuladorCallable').handler(req));
+
 // Agente Financeiro MR4 — Fase 2: sync FULL (GestãoClick SOMENTE GET) → fin_n1 protegido (geração + ponteiro). Sem HTTP, sem callable.
 // Agenda 3/3 h (min 40, America/Fortaleza); trava com lease em fin_n1_ctl/lock; falha preserva a geração ativa.
 const financeiroEntrypoints = require('./lib/financeiro/entrypoints');

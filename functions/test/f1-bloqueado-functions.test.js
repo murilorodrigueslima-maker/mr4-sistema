@@ -83,6 +83,7 @@ describe('registro estático: TODA callable/onRequest do index.js tem guarda de 
     pontoBancoCompensar: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoEstornar: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoLancamento: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/],
     pontoPendenciaDecidir: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoEscalaDefinir: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoFolga: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoBancoExcecao: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/], pontoJustificativaDecidir: ['lib/pontoBanco.js', /s\.data\(\)\.bloqueado === true/],
     ...Object.fromEntries(['gestaoComprasDados', 'gestaoComprasParametrosSalvar', 'gestaoComprasPendenciaConfirmar', 'gestaoComprasOrigemConfirmar'].map(n => [n, ['lib/comprasGestao.js', /await exigirNaoBloqueado\(db, uid\)/]])),   // guarda dentro de autorizar()
+    planejamentoComprasAtualizar: ['lib/comprasSimuladorCallable.js', /await exigirNaoBloqueado\(db, uid\)/],
     comprasSyncManual: ['index.js', /invoker:\s+'private'/],    // onRequest sem chamada de usuário final: só IAM
   };
   const exportadas = [...idx.matchAll(/^exports\.(\w+)\s*=\s*(onCall|onRequest)\(/gm)].map(m => m[1]);

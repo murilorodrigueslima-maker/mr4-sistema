@@ -1,7 +1,7 @@
 'use strict';
 // INF-02 — EQUIVALÊNCIA (EMULADOR): as consultas escopadas de crmConsulta devolvem o mesmo resultado que a leitura da coleção
 // inteira (oráculo = regra original sobre TODOS os documentos), lendo menos. Dados sintéticos com semente fixa. + Rules do sinalizador.
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+
 process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin');

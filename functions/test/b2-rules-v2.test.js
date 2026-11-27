@@ -6,7 +6,7 @@ const VD1 = 'b2r-vd1', VD2 = 'b2r-vd2', RV4 = 'b2r-rv4', GES = 'b2r-ges';
 let env;
 const dv2 = (gc, o, ex = {}) => ({ schemaVersion: 'carteira-v2', portfolioId: 'GC:' + gc, ownerUid: o, ownerDesde: 'x', versao: 2, status: 'ATIVA', origem: 'MIGRACAO_ONDA1_N3526', cicloAncoraEm: null, conflito: null, ...ex });
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => {
     const d = c.firestore(); const u = (id, r, m) => Promise.all([d.doc('users/' + id).set({ role: r, ativo: true }), d.doc('sistema_usuarios/' + id).set({ admin: false, modulos: m })]);
     await u(VD1, 'funcionario', ['fila-comercial-operar', 'clientes']); await u(VD2, 'funcionario', ['fila-comercial-operar']); await u(RV4, 'funcionario', ['fila-comercial-gestao']); await u(GES, 'gestor', []);

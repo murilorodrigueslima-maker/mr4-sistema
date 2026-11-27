@@ -10,11 +10,10 @@
  *   PA-05: não autenticado                         → DENY
  *
  * INVARIANTES: PROD_WRITES=0 | usa apenas emulador
- * Pré-requisito: firebase emulators rodando em localhost:8080 (Firestore)
+ * Pré-requisito: firebase emulators rodando em emulador isolado (Firestore)
  */
 
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 
 const admin = require('firebase-admin');

@@ -1,6 +1,6 @@
 'use strict';
 // CCT CE000233/2026 — banco de horas por norma versionada. Lógica pura + backend (emulador). Dados sintéticos; nada de produção.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();

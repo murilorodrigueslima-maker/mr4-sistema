@@ -1,6 +1,6 @@
 'use strict';
 // Fase 4.5 — validação operacional: gatilho de proteção, caminhos alternativos em mês assinado, uso exclusivo do callable. Sintético.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

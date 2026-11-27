@@ -1,7 +1,7 @@
 'use strict';
 // N35.26 — Executor da Onda 1 (carteiraMigracao) + Rules de carteira_comercial/_historico. EMULADOR. PROD_WRITES=0.
 // Depende SÓ dos módulos publicados na N35.26 (carteiraMigracao, carteiraV1, carteiraComercial, commercialIdentity, rules).
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 
 const path = require('path');
@@ -93,7 +93,7 @@ describe('Executor da Onda 1 (MG)', () => {
 describe('Rules carteira_comercial / _historico (MG)', () => {
   test('MG-09 matriz: vendedor lê só a própria; gestão/gestor leem tudo e histórico; admin sem gestão e anônimo negados; ninguém escreve', async () => {
     const RULES = fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8');
-    const env = await initializeTestEnvironment({ projectId: 'mr4-n3526-rules', firestore: { rules: RULES, host: 'localhost', port: 8080 } });
+    const env = await initializeTestEnvironment({ projectId: 'mr4-n3526-rules', firestore: { rules: RULES, ...require('./_ambiente/emulador').firestore() } });
     const P = {
       vd2: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] }],
       vd1: [{ role: 'funcionario', ativo: true }, { admin: false, bloqueado: false, modulos: ['fila-comercial', 'fila-comercial-operar'] }],

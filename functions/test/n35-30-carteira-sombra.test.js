@@ -1,6 +1,6 @@
 'use strict';
 // N35.30 — Regra da carteira em MODO SOMBRA: isolamento, corte de ativação, checkpoint, idempotência, kill switch. EMULADOR.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 
 const path = require('path');

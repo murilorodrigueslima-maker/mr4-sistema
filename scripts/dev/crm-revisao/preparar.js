@@ -12,14 +12,14 @@ for (const d of [site, emu]) fs.rmSync(d, { recursive: true, force: true });
 fs.mkdirSync(path.join(site, 'modulos'), { recursive: true }); fs.mkdirSync(path.join(site, 'js'), { recursive: true }); fs.mkdirSync(fns, { recursive: true });
 
 const trocar = t => t
-  .replace(/'localhost', 8080\)/g, `'localhost', ${PORTAS.firestore})`)
-  .replace(/localhost:9099/g, `localhost:${PORTAS.auth}`)
-  .replace(/'localhost', 5001\)/g, `'localhost', ${PORTAS.functions})`)
+  .replace(/'localhost', 8710\)/g, `'localhost', ${PORTAS.firestore})`)
+  .replace(/localhost:9710/g, `localhost:${PORTAS.auth}`)
+  .replace(/'localhost', 5710\)/g, `'localhost', ${PORTAS.functions})`)
   .replace(/AIza[0-9A-Za-z_-]{20,}/g, 'chave-ficticia-do-emulador')
   .replace(/mr4-ponto/g, PROJETO);
 const copiar = rel => {
   const t = trocar(fs.readFileSync(path.join(RAIZ, rel), 'utf8'));
-  if (/mr4-ponto|AIza|'localhost', (8080|5001)\)|localhost:9099/.test(t)) throw new Error('referência de produção/porta padrão em ' + rel);
+  if (/mr4-ponto|AIza|'localhost', (8080|5001|8710|5710)\)|localhost:(9099|9710)/.test(t)) throw new Error('referência de produção/porta padrão em ' + rel);
   // tela do roteiro sem ligação com o emulador falaria com serviço real: interrompe antes de abrir o navegador
   if (/crm[^/]*\.html$|fila-comercial\.html$|login\.html$/.test(rel) && /getAuth\(/.test(t) && !/connectAuthEmulator\(auth/.test(t)) throw new Error('tela sem emulador: ' + rel);
   fs.writeFileSync(path.join(site, rel), t);

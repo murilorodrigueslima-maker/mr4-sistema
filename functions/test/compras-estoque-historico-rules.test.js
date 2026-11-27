@@ -5,7 +5,7 @@ const { readFileSync } = require('fs');
 const { resolve } = require('path');
 jest.setTimeout(60000);
 let env;
-const [host, port] = (process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080').split(':');
+const [host, port] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
 const PERFIS = {
   admin:            { users: { role: 'gestor', ativo: true }, sys: { modulos: [], admin: true } },
   gestorComEstoque: { users: { role: 'gestor', ativo: true }, sys: { modulos: ['estoque'] } },

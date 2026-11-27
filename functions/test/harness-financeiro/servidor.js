@@ -64,9 +64,9 @@ async function semear() {
 // ── servidor estático com lista permitida ──
 const ARQUIVOS = { '/modulos/financeiro-v2.html': 'text/html', '/modulos/financeiro-view.js': 'text/javascript', '/modulos/agente-ia-widget.js': 'text/javascript', '/js/vivo.js': 'text/javascript', '/assets/logo.png': 'image/png' };
 const TROCAS = [
-  ["connectFirestoreEmulator(db, 'localhost', 8080)", "connectFirestoreEmulator(db, 'localhost', 8230)"],
-  ["'http://localhost:9099'", "'http://localhost:9230'"],
-  ["connectFunctionsEmulator(funcs, 'localhost', 5001)", "connectFunctionsEmulator(funcs, 'localhost', 5239)"],   // sem emulador de Functions: a aba Agente fica oculta
+  ["connectFirestoreEmulator(db, 'localhost', 8710)", "connectFirestoreEmulator(db, 'localhost', 8230)"],
+  ["'http://localhost:9710'", "'http://localhost:9230'"],
+  ["connectFunctionsEmulator(funcs, 'localhost', 5710)", "connectFunctionsEmulator(funcs, 'localhost', 5239)"],   // sem emulador de Functions: a aba Agente fica oculta
   [/apiKey:"[^"]+"/, 'apiKey:"chave-ficticia"'],
   [/projectId:"[^"]+"/, `projectId:"${PROJETO}"`],
   [/authDomain:"[^"]+"/, `authDomain:"${PROJETO}.firebaseapp.com"`],

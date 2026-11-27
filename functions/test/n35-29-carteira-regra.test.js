@@ -1,6 +1,6 @@
 'use strict';
 // N35.29 — Regra definitiva da carteira (R2 + pausa + primeira venda + desligamento). EMULADOR. PROD_WRITES=0.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 
 const path = require('path');

@@ -20,7 +20,7 @@ const SEED = async db => {
   await db.doc('conversas/' + PH).set({ nome: 'x' }); await db.doc(`conversas/${PH}/msgs/m1`).set({ texto: 'oi' });
   await db.doc('conversas_resumo/' + PH).set({ ultima: 'oi' }); await db.doc('chat_status/' + PH).set({ status: 'ok' });
 };
-beforeAll(async () => { env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(RULES, 'utf8'), host: 'localhost', port: 8080 } }); });
+beforeAll(async () => { env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(RULES, 'utf8'), ...require('./_ambiente/emulador').firestore() } }); });
 afterAll(async () => { await env.cleanup(); });
 beforeEach(async () => { await env.clearFirestore(); await env.withSecurityRulesDisabled(async c => { await SEED(c.firestore()); }); });
 const as = uid => env.authenticatedContext(uid).firestore(); const anon = () => env.unauthenticatedContext().firestore();

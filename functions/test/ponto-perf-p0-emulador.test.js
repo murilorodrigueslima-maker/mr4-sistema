@@ -28,7 +28,7 @@ const FX = fixture();
 const efetivos = l => l.filter(r => !r.substituidoPor);
 
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => {
     const db = c.firestore();
     await db.collection('users').doc(U.gestor).set({ role: 'gestor', ativo: true });

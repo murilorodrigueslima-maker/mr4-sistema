@@ -1,8 +1,8 @@
 'use strict';
-// CRM MR4 2.0 — Fase 1. Testes puros + EMULADOR (localhost:8080). PROD_WRITES=0.
+// CRM MR4 2.0 — Fase 1. Testes puros + EMULADOR (isolado). PROD_WRITES=0.
 // Cobre: REGISTER_OUTCOME, OBSERVATION, FOLLOWUP, FOLLOWUP_OWNER_PROTECTION, FORTALEZA_TIMEZONE, AGENDA, CUSTOMER_360, TIMELINE,
 //        CONTACT_TO_SALE, RECOVERED_CUSTOMER, SELLER_HOME, OPPORTUNITY_CARD.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 
 const admin = require('firebase-admin');

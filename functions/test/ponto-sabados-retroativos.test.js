@@ -1,6 +1,6 @@
 'use strict';
 // Fase 4.1 — correção retroativa dos sábados: classificação (pura), idempotência e preservação do histórico (emulador). Dados sintéticos.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

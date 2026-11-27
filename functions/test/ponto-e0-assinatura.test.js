@@ -2,9 +2,9 @@
 /**
  * E0 — a tela do funcionário PUBLICADA não conseguia assinar: o script clássico chamava setDoc/doc/db/serverTimestamp,
  * que só existem no <script type="module">. Aqui a PÁGINA REAL roda contra o emulador (Rules reais). Dados fictícios.
- *   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-e0
+ *   node scripts/testes/rodar.js -- test/ponto-e0
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
+
 const { initializeTestEnvironment } = require('@firebase/rules-unit-testing');
 const crypto = require('crypto'), vm = require('vm');
 const { abrirPagina, assentar, ler, REF_TELAS_ANTIGAS } = require('./helpers/ponto-pagina');

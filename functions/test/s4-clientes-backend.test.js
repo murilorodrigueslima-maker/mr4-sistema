@@ -1,6 +1,6 @@
 'use strict';
 // S4 — crmConsulta { clientesMeus | clienteBusca } (EMULADOR): escopo, minimização, anti-enumeração, limite, auditoria.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();
 const Q = require('../lib/crmConsulta'); const CC = require('../lib/crmClientes');

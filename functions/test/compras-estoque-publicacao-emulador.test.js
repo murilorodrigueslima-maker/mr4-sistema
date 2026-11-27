@@ -33,8 +33,8 @@ function criarPortao() {
 
 beforeAll(async () => {
   hostAnterior = process.env.FIRESTORE_EMULATOR_HOST;
-  process.env.FIRESTORE_EMULATOR_HOST = '127.0.0.1:8080';
-  env = await initializeTestEnvironment({ projectId: PROJETO, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: '127.0.0.1', port: 8080 } });
+  process.env.FIRESTORE_EMULATOR_HOST = `127.0.0.1:${require('./_ambiente/emulador').firestore().port}`;
+  env = await initializeTestEnvironment({ projectId: PROJETO, firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.clearFirestore();
   app = admin.initializeApp({ projectId: PROJETO }, 'compras-e2e-' + Date.now());
   db = app.firestore();

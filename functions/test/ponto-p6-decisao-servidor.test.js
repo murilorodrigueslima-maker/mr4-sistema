@@ -1,6 +1,6 @@
 'use strict';
 // PONTO — P6 no SERVIDOR: aprovar correção de batida ANTIGA exige evidência (da justificativa ou registrada pelo gestor). EMULADOR. PROD_WRITES=0.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();
 const J = require('../lib/pontoJustificativa');

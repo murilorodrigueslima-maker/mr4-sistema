@@ -1,6 +1,6 @@
 'use strict';
-// PONTO — P1: encerramento direto no sábado (entrada → saída, sem batidas fictícias de almoço). EMULADOR (localhost:8080). PROD_WRITES=0.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+// PONTO — P1: encerramento direto no sábado (entrada → saída, sem batidas fictícias de almoço). EMULADOR (isolado). PROD_WRITES=0.
+
 process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const admin = require('firebase-admin');

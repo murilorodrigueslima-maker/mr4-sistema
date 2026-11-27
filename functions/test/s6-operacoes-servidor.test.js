@@ -1,6 +1,6 @@
 'use strict';
 // S6 — claim/release/outcome: identidade do servidor, payload estrito, concorrência, idempotência, auditoria, bypass direto. (EMULADOR)
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;
 const { claimOpportunityHandler: claim, registerOutcomeHandler: outcome, releaseOpportunityHandler: release } = require('../lib/canaryCallable');

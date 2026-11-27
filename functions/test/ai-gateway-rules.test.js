@@ -5,7 +5,7 @@ const { readFileSync } = require('fs'); const { resolve } = require('path');
 jest.setTimeout(60000); let env;
 const U = { gestor: ['gestor', []], func: ['funcionario', ['fila-comercial-operar']], gest2: ['funcionario', ['fila-comercial-gestao']], admin: ['gestor', [], true] };
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => { const d = c.firestore(); for (const [id, [role, mods, adm]] of Object.entries(U)) { await d.doc('users/' + id).set({ role, ativo: true }); await d.doc('sistema_usuarios/' + id).set({ modulos: mods, admin: !!adm }); } for (const p of ['ai_rate/u', 'ai_uso/2026-09-30__u', 'ai_chamadas/x']) await d.doc(p).set({ fixture: true }); });
 });
 afterAll(async () => { if (env) await env.cleanup(); });

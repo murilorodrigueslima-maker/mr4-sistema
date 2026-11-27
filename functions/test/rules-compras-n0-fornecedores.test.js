@@ -26,7 +26,7 @@ const P = {
 };
 const nomes = Object.keys(P); const uid = n => 'c' + nomes.indexOf(n);
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-compras-n0', firestore: { rules: RULES, host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-compras-n0', firestore: { rules: RULES, ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => { const d = c.firestore();
     for (const n of nomes) { const p = P[n]; if (!p) continue; await d.collection('users').doc(uid(n)).set(p.u); if (p.s) await d.collection('sistema_usuarios').doc(uid(n)).set(p.s); }
     for (const id of ['unidades', 'valores', 'outro']) await d.collection('compras_n0_fornecedores').doc(id).set({ x: 1 }); });

@@ -32,7 +32,7 @@ const SEED = async db => {
   await db.doc('perfis_360/p1').set({ x: 1 });
   await db.doc('clientes/cDeletar').set({ nome: 'x', gestaoClickId: '2' });
 };
-beforeAll(async () => { env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(RULES_PATH, 'utf8'), host: 'localhost', port: 8080 } }); });
+beforeAll(async () => { env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(RULES_PATH, 'utf8'), ...require('./_ambiente/emulador').firestore() } }); });
 afterAll(async () => { await env.cleanup(); });
 beforeEach(async () => { await env.clearFirestore(); await env.withSecurityRulesDisabled(async c => { await SEED(c.firestore()); }); });
 const as = uid => env.authenticatedContext(uid).firestore();

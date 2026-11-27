@@ -1,7 +1,7 @@
 'use strict';
 // Atualização da base do planejamento contra o Firestore Emulator (127.0.0.1:8320): coleções gravadas pelo próprio snapshot do
-// sistema, dados 100 % fictícios. Sem emulador o arquivo é ignorado (rode: sh functions/test/harness14/rodar.sh rules).
-const temEmulador = process.env.FIRESTORE_EMULATOR_HOST === '127.0.0.1:8320';
+// sistema, dados 100 % fictícios. Sem emulador o arquivo é ignorado (rode: node scripts/testes/rodar.js -- test/compras-planejamento-emulador).
+const temEmulador = require('./_ambiente/emulador').ativo();
 const d = temEmulador ? describe : describe.skip;
 
 d('atualizarBase no emulador', () => {

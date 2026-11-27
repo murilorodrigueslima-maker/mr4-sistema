@@ -6,7 +6,7 @@
  * (5) fila_comercial_gestao e clientes/conversas/painel_config NÃO têm atalho admin para dual-role.
  * Os valores esperados vêm da POLÍTICA (comentários das regras, commits 7f462a9/fa488bd/S4) — não foram ajustados para "fazer passar".
  * R1: o bloqueio vale também para role=gestor.
- * Executa com o emulador do Firestore (porta 8080).
+ * Executa com o emulador do Firestore (node scripts/testes/rodar.js).
  */
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const { readFileSync } = require('fs');
@@ -70,7 +70,7 @@ const ESPERADO = {
 
 const uidDe = nome => 'u' + Object.keys(PERFIS).indexOf(nome);
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-matriz-bloqueio', firestore: { rules: RULES, host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-matriz-bloqueio', firestore: { rules: RULES, ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => {
     const d = c.firestore();
     for (const [n, p] of Object.entries(PERFIS)) { if (!p) continue; await d.collection('users').doc(uidDe(n)).set(p.u); if (p.s) await d.collection('sistema_usuarios').doc(uidDe(n)).set(p.s); }

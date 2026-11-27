@@ -1,9 +1,9 @@
 'use strict';
 /**
  * PONTO INTEGRIDADE E3 — telas (páginas REAIS contra Rules + handlers reais; EMULADOR; dados fictícios).
- *   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-e3
+ *   node scripts/testes/rodar.js -- test/ponto-e3
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
+
 const { initializeTestEnvironment } = require('@firebase/rules-unit-testing');
 const adminSdk = require('firebase-admin');
 const crypto = require('crypto'), vm = require('vm');

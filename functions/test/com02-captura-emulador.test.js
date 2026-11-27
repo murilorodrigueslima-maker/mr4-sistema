@@ -1,6 +1,5 @@
 'use strict';
-// COM-02 — callable registerOutcome com a captura mínima. EMULADOR (localhost:8080, ou FIRESTORE_EMULATOR_HOST local). PROD_WRITES=0.
-if (!/^(localhost|127\.0\.0\.1):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST || '')) process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+// COM-02 — callable registerOutcome com a captura mínima. EMULADOR (emulador isolado). PROD_WRITES=0.
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 
 const admin = require('firebase-admin');

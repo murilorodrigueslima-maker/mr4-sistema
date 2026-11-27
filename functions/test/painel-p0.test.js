@@ -1,6 +1,6 @@
 'use strict';
 // Painel Comercial P0 — fidelidade dos dados: apuração, reconciliação, falhas, concorrência, TV × gestor. fetch SEMPRE mockado (nunca o GestãoClick real).
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

@@ -28,7 +28,7 @@ beforeAll(async () => {
   const compra = { Compra: { id: 'C1', data_emissao: '2026-01-01', nome_situacao: 'Confirmada', fornecedor_id: 'F1', valor_produtos: '10.00', produtos: [{ produto: { produto_id: 'P1', quantidade: '1', valor_custo: '10' } }] } };
   const r = Forn.montarFornecedores({ fatosVenda: [venda('2026-08-10', 'P1', 3, 123.45)].flatMap(K.fatosDeVenda), fatosCompra: K.fatosDeCompra(compra), hoje: '2026-10-22', agora: new Date('2026-10-22T19:00:00Z'), nomes: { F1: 'FORNECEDOR TESTE' } });
   DOCS = { unidades: r.unidades, valores: r.valores };
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async c => {
     const db = c.firestore();

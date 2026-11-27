@@ -28,10 +28,13 @@
     ]
   },
   "emulators": {
-    "auth":      { "port": 9099 },
-    "firestore": { "port": 8080 },
-    "functions": { "port": 5001 },
-    "ui":        { "enabled": true, "port": 4000 },
+    "auth":      { "host": "127.0.0.1", "port": 9710 },
+    "firestore": { "host": "127.0.0.1", "port": 8710, "websocketPort": 9810 },
+    "functions": { "host": "127.0.0.1", "port": 5710 },
+    "hub":       { "host": "127.0.0.1", "port": 4710 },
+    "logging":   { "host": "127.0.0.1", "port": 4810 },
+    "eventarc":  { "host": "127.0.0.1", "port": 9830 },
+    "ui":        { "enabled": true, "port": 4610 },
     "singleProjectMode": true
   }
 }

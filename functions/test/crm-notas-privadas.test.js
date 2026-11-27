@@ -1,6 +1,6 @@
 'use strict';
 // CRM MR4 2.0 — notas livres PRIVADAS (crm_notas_privadas). Emulador. Texto da nota nunca em documento legível por outro vendedor.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const admin = require('firebase-admin');
 if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
@@ -43,7 +43,7 @@ beforeAll(async () => {
     [ADM, 'funcionario', [], true, true], [DUAL, 'gestor', ['fila-comercial-operar'], true, true], [NOMOD, 'funcionario', ['ponto'], false, true], [INAT, 'funcionario', ['fila-comercial-operar'], false, false]]) {
     await db.doc('users/' + uid).set({ role, ativo }); await db.doc('sistema_usuarios/' + uid).set({ nome: 'Nome ' + uid.slice(4), bloqueado: false, modulos: mods, admin: admin_ });
   }
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
 });
 beforeEach(limpar);
 afterAll(async () => {

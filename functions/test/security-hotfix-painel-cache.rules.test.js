@@ -46,7 +46,7 @@ const ESPERADO = {
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
     projectId: 'mr4-ponto',
-    firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 },
+    firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() },
   });
   await testEnv.clearFirestore();
   await testEnv.withSecurityRulesDisabled(async ctx => {

@@ -14,12 +14,11 @@
  *   F. IDEMPOTÊNCIA
  *   G. ENTITY SUPPRESSION (canário B obrigatório)
  *
- * Pré-requisito: firebase emulators rodando em localhost:8080 (Firestore) + localhost:9099 (Auth)
+ * Pré-requisito: firebase emulators rodando em emulador isolado (Firestore) + emulador isolado (Auth)
  */
 
 // ── Admin SDK → emulador ──────────────────────────────────────────────────────
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 
 const admin = require('firebase-admin');
@@ -434,8 +433,7 @@ describe('C. Regras Firestore (proposed rules com interacoes_fila)', () => {
       projectId: 'mr4-ponto',
       firestore: {
         rules: PROPOSED_RULES,
-        host:  'localhost',
-        port:  8080,
+        ...require('./_ambiente/emulador').firestore(),
       },
     });
 

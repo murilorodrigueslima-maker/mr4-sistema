@@ -19,7 +19,7 @@ const PODE = { admin: true, gestorComFin: true, funcComFin: true };   // demais:
 const DOCS = [['fin_n1', 'active'], ['fin_n1', 'meta'], ['fin_n1_resumo', 'g1__resumo'], ['fin_n1_resumo', 'g1__entidades'], ['fin_n1_titulos', 'g1__PAGAR__VENCIDO__000']];
 
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async c => {
     const db = c.firestore();

@@ -9,7 +9,7 @@
  *   clientes    — regras existentes não regridem (09)
  *   gestaoClickId — proteção existente não regride (10)
  *
- * Pré-requisito: Firebase emulators rodando (firestore na porta 8080).
+ * Pré-requisito: Firebase emulators rodando (firestore por node scripts/testes/rodar.js).
  *   cd functions && npm test -- --testPathPattern=rules360
  */
 
@@ -56,7 +56,7 @@ const SEED = async (db) => {
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
     projectId: PROJECT_ID,
-    firestore: { rules: readFileSync(RULES_PATH, 'utf8'), host: 'localhost', port: 8080 },
+    firestore: { rules: readFileSync(RULES_PATH, 'utf8'), ...require('./_ambiente/emulador').firestore() },
   });
   await testEnv.withSecurityRulesDisabled(async ctx => { await SEED(ctx.firestore()); });
 });

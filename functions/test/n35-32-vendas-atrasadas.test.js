@@ -1,6 +1,6 @@
 'use strict';
 // N35.32 — SOMBRA segura para vendas atrasadas: marca d'água por modificado_em, ordem comercial, revisões. EMULADOR.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 
 const admin = require('firebase-admin');

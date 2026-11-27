@@ -1,6 +1,6 @@
 'use strict';
-// S7 — gatilhos de auditoria (EMULADOR localhost:8080): autor derivado do servidor, idempotência, PII mínima, append-only no código.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+// S7 — gatilhos de auditoria (EMULADOR emulador isolado: autor derivado do servidor, idempotência, PII mínima, append-only no código.
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

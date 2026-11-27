@@ -41,3 +41,5 @@ mr4-relatorios-privados/
 dist/
 .firebase/
 functions/node_modules
+# configuração temporária do executor isolado de testes
+firebase.testes-*.json

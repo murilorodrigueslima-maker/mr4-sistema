@@ -1,6 +1,6 @@
 'use strict';
 // B2 — carteira-v2: schema, backfill aditivo (zero mudança de owner), conflitos de identidade, histórico v1/v2, operações transacionais, script ponta a ponta (EMULADOR).
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), os = require('os'), path = require('path'), cp = require('child_process');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

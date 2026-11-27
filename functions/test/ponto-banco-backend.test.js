@@ -1,6 +1,6 @@
 'use strict';
 // Compensação/estorno no BACKEND (transação atômica). Emulador; dados 100% sintéticos; nada de produção.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();

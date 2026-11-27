@@ -2,10 +2,10 @@
 /**
  * COMPATIBILIDADE — as PÁGINAS REAIS (a publicada, em cache nos aparelhos = commit 890594c, e a do repositório) executam o
  * fluxo legítimo de hoje contra as Rules do repositório e os handlers reais das Functions. Emuladores; dados fictícios.
- *   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-e1-compat
+ *   node scripts/testes/rodar.js -- test/ponto-e1-compat
  * RULES_REF=<commit> usa as Rules daquele commit (para provar cada etapa separadamente).
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
+
 const { initializeTestEnvironment } = require('@firebase/rules-unit-testing');
 const adminSdk = require('firebase-admin');
 const { abrirPagina, assentar, ler, REF_TELAS_ANTIGAS } = require('./helpers/ponto-pagina');

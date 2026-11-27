@@ -6,8 +6,7 @@
  *     callable nova sem classificação FALHA o teste (impede reintroduzir a lacuna).
  * Executar: firebase emulators:exec --only firestore,auth "npx jest test/f1-bloqueado-functions.test.js"
  */
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 process.env.GC_ACCESS_TOKEN = 'mock-access-token-test'; process.env.GC_SECRET_ACCESS_TOKEN = 'mock-secret-token-test';
 const fs = require('fs'), path = require('path');

@@ -1,6 +1,5 @@
 'use strict';
-// COM-03 — callable crmAtribuicaoRevisao. EMULADOR local (FIRESTORE_EMULATOR_HOST; padrão localhost:8370). Dados sintéticos; PROD_WRITES=0.
-if (!/^(localhost|127\.0\.0\.1):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST || '')) process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8370';
+// COM-03 — callable crmAtribuicaoRevisao. EMULADOR local (FIRESTORE_EMULATOR_HOST; padrão emulador isolado. Dados sintéticos; PROD_WRITES=0.
 process.env.GCLOUD_PROJECT = 'demo-mr4-com03';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin');

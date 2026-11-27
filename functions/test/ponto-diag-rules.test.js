@@ -8,7 +8,7 @@
  * Nenhuma regra trabalhista é avaliada aqui — só quem consegue escrever o quê e com que trilha.
  *
  * Porta padrão 8310 (nunca a 8080). Rodar:
- *   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-diag
+ *   node scripts/testes/rodar.js -- test/ponto-diag
  */
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const { serverTimestamp } = require('@firebase/firestore');
@@ -17,7 +17,7 @@ const { resolve } = require('path');
 const fs = require('fs'), path = require('path'), vm = require('vm');
 jest.setTimeout(60000);
 
-const [HOST, PORT] = (process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310').split(':');
+const [HOST, PORT] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
 if (!['localhost', '127.0.0.1'].includes(HOST)) throw new Error('Este diagnóstico só roda no emulador local.');
 const PROJECT_ID = 'demo-ponto-diag-rules';
 const RULES = readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8');

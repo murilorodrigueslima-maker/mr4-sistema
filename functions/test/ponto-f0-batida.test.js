@@ -1,7 +1,7 @@
 'use strict';
-// PONTO MR4 2.0 — Fase 0 · P0-01 — batida idempotente por intenção. EMULADOR (localhost:8080). PROD_WRITES=0.
+// PONTO MR4 2.0 — Fase 0 · P0-01 — batida idempotente por intenção. EMULADOR (isolado). PROD_WRITES=0.
 // Invariante: ONE_INTENT = ONE_PUNCH. Nova batida legítima (intenção nova e coerente) continua funcionando.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = 'mr4-ponto';
 process.env.PONTO_COOLDOWN_MS       = '0';            // sequência rápida nos testes; o cooldown é testado à parte
 

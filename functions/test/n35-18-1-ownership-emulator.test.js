@@ -1,8 +1,7 @@
 'use strict';
 // N35.18.1 — Ownership entre dias no EMULADOR, pelo caminho real (carregarDados lê a worklist LIVE anterior
 // do Firestore; escrita LIVE transacional). PROD_WRITES=0.
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 
 const admin = require('firebase-admin');

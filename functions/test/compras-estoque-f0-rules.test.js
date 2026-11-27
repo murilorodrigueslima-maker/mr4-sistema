@@ -20,7 +20,7 @@ const LE_OPER = { admin: true, gestorComEstoque: true, funcComEstoque: true };
 const LE_CUSTO = { admin: true, gestorComEstoque: true };   // funcionário com estoque NÃO vê custo
 
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async c => {
     const db = c.firestore();

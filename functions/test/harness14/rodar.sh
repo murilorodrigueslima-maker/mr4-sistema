@@ -14,8 +14,8 @@ export GOOGLE_APPLICATION_CREDENTIALS="$FALSA"
 # com a máquina ocupada, ler o index.js pode passar dos 10 s padrão
 export FUNCTIONS_DISCOVERY_TIMEOUT="${FUNCTIONS_DISCOVERY_TIMEOUT:-90}"
 if [ "$1" = "rules" ]; then
-  exec "$FIREBASE" emulators:exec --config firebase.harness14.json --project demo-mr4-sim14 --only firestore \
-    "cd functions && FIRESTORE_EMULATOR_HOST=127.0.0.1:8320 npx jest test/compras-politica-14-rules.test.js test/compras-politica-13-rules.test.js test/compras-planejamento-emulador.test.js --runInBand --forceExit"
+  # testes: pelo executor isolado (portas exclusivas, trava de rede, projeto demo-)
+  exec node scripts/testes/rodar.js -- test/compras-politica-14-rules.test.js test/compras-politica-13-rules.test.js test/compras-planejamento-emulador.test.js --forceExit
 fi
 exec "$FIREBASE" emulators:exec --config firebase.harness14.json --project demo-mr4-sim14 --only firestore,auth,functions \
   "cd functions && FIRESTORE_EMULATOR_HOST=127.0.0.1:8320 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9320 node test/harness14/semear.js && node test/harness14/servidor.js"

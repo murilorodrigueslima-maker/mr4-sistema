@@ -1,8 +1,7 @@
 'use strict';
 // N35.17.1 — Administração da Fila Comercial: preservação de módulos, controles da fila,
 // fluxo de vendedor novo (emulador) e regras (vendedor não se auto-configura). PROD_WRITES=0.
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 
 const path = require('path');
 const { readFileSync } = require('fs');
@@ -188,7 +187,7 @@ describe('Regras do Firestore (sistema_usuarios)', () => {
   let env;
   const SELLER = 'rules-seller', GESTOR = 'rules-gestor';
   beforeAll(async () => {
-    env = await initializeTestEnvironment({ projectId: 'mr4-n35171-rules', firestore: { rules: readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+    env = await initializeTestEnvironment({ projectId: 'mr4-n35171-rules', firestore: { rules: readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
     await env.withSecurityRulesDisabled(async ctx => {
       const f = ctx.firestore();
       await f.doc(`users/${SELLER}`).set({ role: 'funcionario', ativo: true, funcionarioId: 'F1' });

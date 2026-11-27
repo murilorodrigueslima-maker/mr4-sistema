@@ -1,9 +1,9 @@
 'use strict';
 /**
  * PONTO INTEGRIDADE E2 — trilha append-only e correções de servidor (EMULADOR; dados fictícios).
- *   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-e2
+ *   node scripts/testes/rodar.js -- test/ponto-e2
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
+
 if (!/^(localhost|127\.0\.0\.1):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST)) throw new Error('Só roda no emulador local.');
 const PROJECT = 'demo-ponto-e2';
 process.env.GCLOUD_PROJECT = PROJECT; process.env.PONTO_COOLDOWN_MS = '0';

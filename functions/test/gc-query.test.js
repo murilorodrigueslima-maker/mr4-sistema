@@ -31,8 +31,7 @@
  *   cd functions && npm test -- --testPathPattern=gc-query
  */
 
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 
 // Credenciais GC mockadas — nunca chegam ao GestãoClick real

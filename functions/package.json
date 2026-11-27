@@ -7,11 +7,12 @@
     "node": "22"
   },
   "scripts": {
-    "test": "jest --testPathPattern=test/ --forceExit --runInBand",
-    "test:rules": "jest --testPathPattern=rules.test --forceExit",
-    "test:unit": "jest --testPathPattern=functions.unit.test --forceExit",
-    "test:e2e": "jest --testPathPattern=emulator.e2e.test --forceExit --testTimeout=60000",
-    "test:timezone": "jest --testPathPattern=timezone.test --forceExit"
+    "test": "node ../scripts/testes/rodar.js",
+    "test:rules": "node ../scripts/testes/rodar.js -- --testPathPattern=rules.test --forceExit",
+    "test:unit": "node ../scripts/testes/rodar.js --puro -- --testPathPattern=functions.unit.test --forceExit",
+    "test:e2e": "node ../scripts/testes/rodar.js -- --testPathPattern=emulator.e2e.test --forceExit --testTimeout=60000",
+    "test:timezone": "node ../scripts/testes/rodar.js --puro -- --testPathPattern=timezone.test --forceExit",
+    "test:puro": "node ../scripts/testes/rodar.js --puro"
   },
   "dependencies": {
     "firebase-admin": "^12.3.0",
@@ -24,7 +25,11 @@
   },
   "jest": {
     "testEnvironment": "node",
-    "testTimeout": 30000
+    "testTimeout": 30000,
+    "setupFiles": [
+      "<rootDir>/test/_ambiente/guarda.js"
+    ],
+    "globalSetup": "<rootDir>/test/_ambiente/identidade.js"
   },
   "private": true
 }

@@ -1,6 +1,6 @@
 'use strict';
 // Fase 5 — ativação controlada: visualização gerencial provisória LIGADA; compensação/folga reais DESLIGADAS (sem acordo coletivo). Sintético.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), cp = require('child_process');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();

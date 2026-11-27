@@ -2,7 +2,7 @@
 // PONTO MR4 2.0 — concorrência ENTRE tipos de batida (handler real + transações reais do EMULADOR; PROD_WRITES=0).
 // Invariantes, para qualquer intercalação: (1) cada tipo no máximo 1× por dia; (2) o estado final é um PREFIXO válido da sequência
 // entrada → saída almoço → retorno → saída; (3) nenhum request aceito fica fora de ordem; (4) só há recusas "esperadas" (estado atual informado).
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT = 'mr4-ponto';
 process.env.PONTO_COOLDOWN_MS = '0';
 const admin = require('firebase-admin');

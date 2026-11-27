@@ -1,6 +1,6 @@
 'use strict';
 // B3.3 — ativação piloto: limites persistentes (5), corte por instante, saúde/disjuntor, kill switch, agendadores desligados por padrão. EMULADOR.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

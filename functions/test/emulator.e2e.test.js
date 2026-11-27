@@ -6,15 +6,14 @@
  *
  * Pré-requisito:
  *   firebase emulators:start --only auth,firestore
- *   (portas: firestore=8080, auth=9099)
+ *   (portas: node scripts/testes/rodar.js)
  *
  * Executar:
  *   cd functions && npm run test:e2e
  */
 
 // !! DEVE ser definido ANTES de qualquer require do firebase-admin !!
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 // Cooldown 0 para testes de sequência; o teste de concorrência redefine para 10000
 process.env.PONTO_COOLDOWN_MS = '0';

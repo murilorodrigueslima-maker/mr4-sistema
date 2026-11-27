@@ -3,7 +3,7 @@
 // Cobre: matriz de transições (ALLOW/DENY), compare-and-set de versão, evento obrigatório e imutável, cliente ANTIGO
 // (payloads exatos da página em produção) bloqueado, duas telas (stale), criação concorrente, auditoria
 // exatamente-uma-vez, falha de escrita sem efeito, sync central e escopo/leitura dos listeners.
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+
 const [EMU_HOST, EMU_PORTA] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const firebase = require('firebase/compat/app'); require('firebase/compat/firestore');

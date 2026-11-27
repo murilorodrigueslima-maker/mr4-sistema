@@ -19,7 +19,7 @@ const SEED = async db => {
   await db.doc('interacoes_fila/o1').set({ eventos: [] });
   await db.doc('clientes/cx').set({ nome: 'x', gestaoClickId: '2' }); await db.doc('carteira_comercial/GC:2').set({ ownerUid: VD2 });
 };
-beforeAll(async () => { env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(RULES, 'utf8'), host: 'localhost', port: 8080 } }); });
+beforeAll(async () => { env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(RULES, 'utf8'), ...require('./_ambiente/emulador').firestore() } }); });
 afterAll(async () => { await env.cleanup(); });
 beforeEach(async () => { await env.clearFirestore(); await env.withSecurityRulesDisabled(async c => { await SEED(c.firestore()); }); });
 const as = uid => env.authenticatedContext(uid).firestore();

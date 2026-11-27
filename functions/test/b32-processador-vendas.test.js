@@ -1,6 +1,6 @@
 'use strict';
 // B3.2 — processador de vendas (DRY/SOMBRA/ATIVO): idempotência, corte (sem retroativo), cancelamento, devolução, fora de ordem, concorrência. EMULADOR.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;
 const R = require('../lib/reativacao120'); const OPS = require('../lib/reativacaoOps'); const PV = require('../lib/reativacaoVendas'); const JOB = require('../lib/reativacaoJob'); const Q = require('../lib/crmConsulta');

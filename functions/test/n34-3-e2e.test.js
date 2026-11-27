@@ -9,13 +9,13 @@
  *
  * INVARIANTES:
  *   OPENAI_CALLS=0         (provider=null, sem LLM)
- *   PROD_WRITES=0          (db aponta para emulador localhost:8080)
+ *   PROD_WRITES=0          (db aponta para emulador emulador isolado
  *   REAL_CUSTOMER_DATA=NO  (apenas dados sintéticos N34-3-SYNT-*)
  *   PRODUCTION_SYNC_CONNECTED=NO (pipeline não está conectado ao sync real)
  *
  * Pré-requisito:
  *   firebase emulators:start --only firestore
- *   (porta padrão: 8080)
+ *   (portas: node scripts/testes/rodar.js)
  *
  * Executar:
  *   cd functions && npm run test:e2e
@@ -23,7 +23,7 @@
  */
 
 // !! DEVE ser definido ANTES de qualquer require do firebase-admin !!
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+
 process.env.GCLOUD_PROJECT           = 'mr4-ponto';
 
 const admin = require('firebase-admin');

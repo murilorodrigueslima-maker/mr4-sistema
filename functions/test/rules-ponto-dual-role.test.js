@@ -12,7 +12,7 @@
  *
  * Pré-requisito:
  *   firebase emulators:start --only firestore
- *   (porta padrão: 8080)
+ *   (portas: node scripts/testes/rodar.js)
  *
  * Executar:
  *   cd functions && npm test -- --testPathPattern=rules-ponto-dual-role
@@ -123,8 +123,7 @@ beforeAll(async () => {
     projectId: PROJECT_ID,
     firestore: {
       rules: readFileSync(RULES_PATH, 'utf8'),
-      host: 'localhost',
-      port: 8080,
+      ...require('./_ambiente/emulador').firestore(),
     },
   });
   await testEnv.withSecurityRulesDisabled(async ctx => {

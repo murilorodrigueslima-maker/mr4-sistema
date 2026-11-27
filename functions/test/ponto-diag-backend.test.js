@@ -4,7 +4,7 @@
  * "CONFIRMADO Dxx" = comportamento atual considerado defeito (inverter ao corrigir). "CONTROLE" = proteção que funciona.
  * Porta padrão 8270. Projeto "demo-*": o SDK nunca alcança um projeto real.
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
+
 if (!/^(localhost|127\.0\.0\.1):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST)) throw new Error('Este diagnóstico só roda no emulador local.');
 const admin = require('firebase-admin');
 const { HttpsError } = require('firebase-functions/v2/https');

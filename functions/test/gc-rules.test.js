@@ -26,7 +26,7 @@
  *   cd functions && npm test -- --testPathPattern=gc-rules
  *
  * Pré-requisito:
- *   Firebase emulators rodando: firestore (8080)
+ *   Firebase emulators rodando: firestore (node scripts/testes/rodar.js)
  */
 
 const {
@@ -70,7 +70,7 @@ const SEED = async (db) => {
 beforeAll(async () => {
   testEnv = await initializeTestEnvironment({
     projectId: PROJECT_ID,
-    firestore: { rules: readFileSync(RULES_PATH, 'utf8'), host: 'localhost', port: 8080 },
+    firestore: { rules: readFileSync(RULES_PATH, 'utf8'), ...require('./_ambiente/emulador').firestore() },
   });
   await testEnv.withSecurityRulesDisabled(async ctx => { await SEED(ctx.firestore()); });
 });

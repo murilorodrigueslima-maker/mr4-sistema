@@ -1,8 +1,7 @@
 'use strict';
 // N35.17 — Prova no EMULADOR: ativar vendedores só por configuração em sistema_usuarios,
 // gerando pelo caminho real (carregarDados → Firestore) e com escrita LIVE transacional. PROD_WRITES=0.
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 
 const admin = require('firebase-admin');

@@ -6,7 +6,7 @@ const VD1 = 'b3r-vd1', VD2 = 'b3r-vd2', RV4 = 'b3r-rv4', GES = 'b3r-ges';
 const COLS_B3 = ['carteira_reativacoes', 'carteira_comercial_restricoes', 'carteira_comercial_devolucoes', 'identidade_conflitos', 'carteira_comercial_restricoes_hist', 'carteira_comercial_revisoes'];
 let env;
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: fs.readFileSync(path.resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => { const d = c.firestore(); const u = (id, r, m) => Promise.all([d.doc('users/' + id).set({ role: r, ativo: true }), d.doc('sistema_usuarios/' + id).set({ admin: false, modulos: m })]);
     await u(VD1, 'funcionario', ['fila-comercial-operar']); await u(VD2, 'funcionario', ['fila-comercial-operar']); await u(RV4, 'funcionario', ['fila-comercial-gestao']); await u(GES, 'gestor', []);
     for (const col of COLS_B3) await d.doc(col + '/x').set({ destinoUid: VD2, naoContatar: true }); });

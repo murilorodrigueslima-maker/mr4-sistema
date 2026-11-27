@@ -528,7 +528,7 @@ describe('Versionamento — semântica revisão', () => {
 const { podeAssinarEspelho } = ctx;  // função pura de ponto-regras.js
 
 // Importa a função de validação pura do handler (sem init do Firebase Admin)
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080';
+
 process.env.GCLOUD_PROJECT          = process.env.GCLOUD_PROJECT          || 'mr4-ponto';
 const { _validateConcluirRevisao: validate } = require('../index.js');
 

@@ -1,9 +1,9 @@
 'use strict';
 /**
  * PONTO INTEGRIDADE E1 — Rules (EMULADOR; dados fictícios). Manipulação DIRETA pelo SDK (sem a tela) por funcionário,
- * gestor, dual-role e administrador.   FIRESTORE_EMULATOR_HOST=localhost:8310 npx jest --runInBand test/ponto-e1
+ * gestor, dual-role e administrador.   node scripts/testes/rodar.js -- test/ponto-e1
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
+
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const { serverTimestamp } = require('@firebase/firestore');
 const { ler } = require('./helpers/ponto-pagina');

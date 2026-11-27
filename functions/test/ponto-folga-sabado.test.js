@@ -1,6 +1,6 @@
 'use strict';
 // Fase 4: sábado (turno contínuo, escala individual) e folga compensatória no backend. Emulador; dados sintéticos.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), vm = require('vm'), crypto = require('crypto');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();

@@ -5,7 +5,7 @@ const { readFileSync } = require('fs'); const { resolve } = require('path');
 let env; jest.setTimeout(60000);
 const U = { vd2A: 'r-vd2', vd1B: 'r-vd1', semMod: 'r-semmod', inativo: 'r-inativo', gestor: 'r-gestor', gestaoMod: 'r-gestaomod', adminFlag: 'r-adminflag', dual: 'r-dual', func: 'r-func' };
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async ctx => {
     const d = ctx.firestore(); const W = (p, x) => d.doc(p).set(x);
     const user = (id, role, ativo = true) => W('users/' + id, { role, ativo });

@@ -3,7 +3,7 @@
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const { readFileSync } = require('fs'); const { resolve } = require('path');
 const RULES = readFileSync(process.env.RULES_FILE || resolve(__dirname, '../../modulos/firestore.rules'), 'utf8');
-const [host, porta] = (process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8080').split(':');
+const [host, porta] = process.env.FIRESTORE_EMULATOR_HOST.split(':');
 let env;
 const P = {
   'gestor módulos=[estoque]': { u: { role: 'gestor', ativo: true }, s: { modulos: ['estoque'], admin: false }, le: true },

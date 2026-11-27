@@ -33,7 +33,7 @@ async function seed(db) {
   await jus('j-e-1', F_E); await jus('j-e-2', F_E, { horarioPonto: '07:58' });
   await jus('j-d-1', F_D); await jus('j-gf-1', F_GF);
 }
-beforeAll(async () => { testEnv = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: RULES, host: 'localhost', port: 8080 } }); });
+beforeAll(async () => { testEnv = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: RULES, ...require('./_ambiente/emulador').firestore() } }); });
 beforeEach(async () => { await testEnv.clearFirestore(); await testEnv.withSecurityRulesDisabled(async c => seed(c.firestore())); });
 afterAll(async () => { await testEnv.clearFirestore(); await testEnv.cleanup(); });
 

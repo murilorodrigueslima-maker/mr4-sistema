@@ -1,7 +1,7 @@
 'use strict';
 /**
  * N35.11.1 — Testes de integração FASES 4-11
- * Admin SDK → emulador (localhost:8080 / localhost:9099)
+ * Admin SDK → emulador (emulador isolado)
  * PROD_WRITES=0 | usa apenas emulador
  *
  * Cobre: concorrência real, ownership, SEM_RESPOSTA×3, SEM_INTERESSE_AGORA,
@@ -9,8 +9,7 @@
  */
 
 // ── Admin SDK → emulador ──────────────────────────────────────────────────────
-process.env.FIRESTORE_EMULATOR_HOST     = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+
 process.env.GCLOUD_PROJECT              = 'mr4-ponto';
 
 const admin = require('firebase-admin');

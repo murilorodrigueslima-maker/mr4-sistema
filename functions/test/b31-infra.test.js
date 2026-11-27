@@ -1,6 +1,6 @@
 'use strict';
 // B3.1 — infraestrutura operacional da reativação (EMULADOR). Nada disto é acionado automaticamente em produção.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;
 const R = require('../lib/reativacao120'); const OPS = require('../lib/reativacaoOps'); const REV = require('../lib/reativacaoReversao'); const RESTR = require('../lib/restricoes'); const DEV = require('../lib/devolucoes');

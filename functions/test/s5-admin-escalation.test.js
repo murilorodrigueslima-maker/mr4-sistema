@@ -32,7 +32,7 @@ const SEED = async db => {
   await db.collection('sistema_usuarios').doc(OUTRO).set({ admin: false, modulos: [] });
 };
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(RULES_PATH, 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: PROJECT_ID, firestore: { rules: readFileSync(RULES_PATH, 'utf8'), ...require('./_ambiente/emulador').firestore() } });
 });
 afterAll(async () => { await env.cleanup(); });
 beforeEach(async () => { await env.clearFirestore(); await env.withSecurityRulesDisabled(async c => { await SEED(c.firestore()); }); });

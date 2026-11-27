@@ -1,6 +1,6 @@
 'use strict';
-// S1 — crmConsulta { acao:'fila' }: escopo no servidor (EMULADOR localhost:8080) + garantias estáticas do frontend migrado.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+// S1 — crmConsulta { acao:'fila' }: escopo no servidor (EMULADOR emulador isolado + garantias estáticas do frontend migrado.
+
 process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin');

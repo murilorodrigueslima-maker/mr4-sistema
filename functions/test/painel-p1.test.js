@@ -1,6 +1,6 @@
 'use strict';
 // Painel Comercial P1 — calendário, ritmo, projeção, comparativo, documento da TV, lógica do front e segurança. fetch mockado; sem GestãoClick real.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore(); const { FieldValue } = admin.firestore;

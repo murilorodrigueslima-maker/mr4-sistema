@@ -1,6 +1,6 @@
 'use strict';
 // Fase 4.4 — decisão de justificativas NO SERVIDOR: concorrência, duplicidade, mês assinado, conflitos, par de almoço, permissões. Dados sintéticos.
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080'; process.env.GCLOUD_PROJECT = 'mr4-ponto';
+process.env.GCLOUD_PROJECT = 'mr4-ponto';
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const admin = require('firebase-admin'); if (!admin.apps.length) admin.initializeApp({ projectId: 'mr4-ponto' });
 const db = admin.firestore();

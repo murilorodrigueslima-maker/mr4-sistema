@@ -5,7 +5,7 @@ const { readFileSync } = require('fs'); const { resolve } = require('path');
 const VD1 = 's6b-vd1', VD2 = 's6b-vd2', GES = 's6b-ges', ADM = 's6b-adm';
 let env;
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: 'mr4-ponto', firestore: { rules: readFileSync(resolve(__dirname, '../../modulos/firestore.rules'), 'utf8'), ...require('./_ambiente/emulador').firestore() } });
   await env.withSecurityRulesDisabled(async c => {
     const d = c.firestore(); const u = (id, x, y) => Promise.all([d.doc('users/' + id).set(x), d.doc('sistema_usuarios/' + id).set(y)]);
     await u(VD1, { role: 'funcionario', ativo: true }, { admin: false, modulos: ['fila-comercial-operar', 'clientes'] });

@@ -45,9 +45,9 @@ let env, adminDb, gerado;
 const leitor = uid => (uid ? env.authenticatedContext(uid) : env.unauthenticatedContext()).firestore();
 
 beforeAll(async () => {
-  env = await initializeTestEnvironment({ projectId: PROJECT, firestore: { rules: RULES, host: 'localhost', port: 8080 } });
+  env = await initializeTestEnvironment({ projectId: PROJECT, firestore: { rules: RULES, ...require('./_ambiente/emulador').firestore() } });
   await env.clearFirestore();
-  process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
+  process.env.FIRESTORE_EMULATOR_HOST = `127.0.0.1:${require('./_ambiente/emulador').firestore().port}`;
   const app = admin.apps.find(a => a && a.name === 'n35201') || admin.initializeApp({ projectId: PROJECT }, 'n35201');
   adminDb = app.firestore();
   const vendas = [];

@@ -39,7 +39,7 @@ describe('P6 · servidor', () => {
     expect(tr.length).toBe(2); expect(tr.every(t => t.obs === 'Conferi com o gerente e as câmeras do dia' && t.decisao === 'APROVAR')).toBe(true);
   });
   test('antiga com descrição do funcionário (≥ 15), com anexo ou com evidência da gestão ⇒ aprovada sem observação extra', async () => {
-    for (const [i, extra] of [['d', { descricao: 'Esqueci de bater; saí para o almoço às 12:00' }], ['a', { anexo: 'data:image/png;base64,AAAA', anexoTipo: 'image/png' }], ['g', { evidenciaGestao: 'imagem da câmera 3' }]].entries()) {
+    for (const [i, extra] of [['d', { descricao: 'Esqueci de bater; saí para o almoço às 12:00' }], ['a', { anexo: 'data:image/png;base64,AAAA', anexoTipo: 'image/png' }], ['g', { evidenciaGestao: 'imagem da câmera 3', lancadoPorGestor: true }]].entries()) {
       const dia = '2026-10-0' + (i + 2); await reg('e' + i, dia, 'entrada', '08:00'); await reg('s' + i, dia, 'saida', '17:00'); await reg('x' + i, dia, 'saida_almoco', '17:01'); await reg('y' + i, dia, 'retorno_almoco', '17:02');
       await just('js' + i, dia, 'saida_almoco', '12:00', extra[1] ? extra[1] : extra); await just('jr' + i, dia, 'retorno_almoco', '13:00', extra[1] ? extra[1] : extra);
     }

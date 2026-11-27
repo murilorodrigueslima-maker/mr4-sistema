@@ -4,7 +4,7 @@
  * "CONFIRMADO Dxx" = comportamento atual considerado defeito (inverter ao corrigir). "CONTROLE" = proteção que funciona.
  * Porta padrão 8270. Projeto "demo-*": o SDK nunca alcança um projeto real.
  */
-process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8270';
+process.env.FIRESTORE_EMULATOR_HOST = process.env.FIRESTORE_EMULATOR_HOST || 'localhost:8310';
 if (!/^(localhost|127\.0\.0\.1):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST)) throw new Error('Este diagnóstico só roda no emulador local.');
 const admin = require('firebase-admin');
 const { HttpsError } = require('firebase-functions/v2/https');
@@ -85,19 +85,17 @@ describe('Decisão de justificativas', () => {
   const o = { db, now: () => new Date('2026-10-20T15:00:00Z') };
   const pedido = { funcId: 'FX', funcNome: 'FX', data: '2026-10-07', motivo: 'Ponto não batido', descricao: '', tipoPonto: 'saida', horarioPonto: '18:00', status: 'pendente', lancadoPorGestor: false };
 
-  test('CONFIRMADO D11 (efeito): campo evidenciaGestao enviado pelo funcionário dispensa a evidência exigida para correção antiga', async () => {
-    await db.doc('justificativas/j1').set({ ...pedido, id: 'j1' });
+  test('CORRIGIDO D11 (E2): campo evidenciaGestao em pedido do funcionário não dispensa a evidência', async () => {
+    await db.doc('justificativas/j1').set({ ...pedido, id: 'j1', evidenciaGestao: 'x' });
     expect(await erro(J.decidirJustificativaHandler(req({ ids: ['j1'], decisao: 'APROVAR' }), o))).toBe('EVIDENCIA_OBRIGATORIA_JUSTIFICATIVA_ANTIGA');
-    await db.doc('justificativas/j1').update({ evidenciaGestao: 'x' });          // as Rules permitem isso na criação pelo funcionário
-    expect(await J.decidirJustificativaHandler(req({ ids: ['j1'], decisao: 'APROVAR' }), o)).toMatchObject({ ok: true, status: 'aprovado' });
   });
-  test('CONFIRMADO D18: aprovar ocorrência sobrescreve o crédito do dia e a trilha não guarda o valor anterior', async () => {
+  test('CORRIGIDO D18 (E2): a trilha da decisão guarda o crédito sobrescrito', async () => {
     await db.doc('creditos_jornada/cred_FX_2026-10-07').set({ funcId: 'FX', data: '2026-10-07', minutos: 240, motivo: 'Feriado municipal', criadoEm: '2026-10-01T00:00:00Z' });
     await db.doc('justificativas/j2').set({ id: 'j2', funcId: 'FX', data: '2026-10-07', motivo: 'Atestado médico', status: 'pendente', lancadoPorGestor: false });
     await J.decidirJustificativaHandler(req({ ids: ['j2'], decisao: 'APROVAR' }), o);
     expect((await db.doc('creditos_jornada/cred_FX_2026-10-07').get()).data()).toMatchObject({ minutos: 480, motivo: 'Atestado médico' });
-    const trilha = JSON.stringify((await db.collection('ponto_justificativas_decisoes').get()).docs.map(d => d.data()));
-    expect(trilha).not.toMatch(/Feriado municipal|240/);
+    const trilha = (await db.collection('ponto_justificativas_decisoes').get()).docs[0].data();
+    expect(trilha.creditoAnterior).toMatchObject({ minutos: 240, motivo: 'Feriado municipal' });
   });
 });
 
@@ -115,7 +113,7 @@ describe('Batida — idempotência e duplicidade', () => {
     const r = await bater({ requestId: 'hora-servidor-1' });
     expect((await db.doc('registros/' + r.id).get()).data()).toMatchObject({ hora: '08:00:00', horaCliente: '03:00:00' });
   });
-  test('CONFIRMADO D01 (efeito): batida marcada como substituída sem correção impede o funcionário de registrar de novo', async () => {
+  test('D01 (efeito, agora só alcançável com Admin SDK — as Rules da E1 negam ao cliente): marcação sem correção impede registrar de novo', async () => {
     const r = await bater({ requestId: 'antes-de-ocultar' });
     await db.doc('registros/' + r.id).update({ substituidoPor: 'inexistente' });   // o que as Rules permitem ao gestor
     expect(await erro(bater({ requestId: 'depois-de-ocultar' }))).toBe('JA_REGISTRADO');

@@ -91,6 +91,10 @@ async function registrarPontoHandler(request) {
     throw new HttpsError('not-found', 'Funcionário não encontrado. Contate o gestor.');
   }
   const func      = funcDoc.data();
+  // E2/D06: cadastro inativado não registra ponto (substitui a exclusão do cadastro, que tinha o mesmo efeito)
+  if (func.inativo === true) {
+    throw new HttpsError('failed-precondition', 'Cadastro inativo. Contate o gestor.');
+  }
   const modalidade = func.modalidade || 'PRESENCIAL';
 
   // 4. Payload do cliente (campos controlados pelo servidor são ignorados se enviados)
@@ -947,3 +951,15 @@ exports.pontoProtegerMesAssinado = onDocumentWritten({ document: 'espelhos/{espe
   const { getFirestore, FieldValue } = require('firebase-admin/firestore');   // API modular: independe do namespace legado
   return require('./lib/pontoProtecao').protegerMesAssinado(getFirestore(), FieldValue, dep, ev.params.espelhoId);
 });
+
+// Ponto (E2): trilha APPEND-ONLY por gatilho (antes, depois, autor do contexto de autenticação). Só adiciona — ver lib/pontoTrilha.js.
+const _gatilhoTrilhaPonto = colecao => onDocumentWrittenWithAuthContext({ document: colecao + '/{id}', region: REGION, retry: true, maxInstances: 10, memory: '256MiB' }, ev => {
+  const fs = require('firebase-admin/firestore');
+  return require('./lib/pontoTrilha').registrar(ev, colecao, { db: fs.getFirestore(), FieldValue: fs.FieldValue });
+});
+exports.pontoTrilhaRegistros      = _gatilhoTrilhaPonto('registros');
+exports.pontoTrilhaJustificativas = _gatilhoTrilhaPonto('justificativas');
+exports.pontoTrilhaCreditos       = _gatilhoTrilhaPonto('creditos_jornada');
+exports.pontoTrilhaFuncionarios   = _gatilhoTrilhaPonto('funcionarios');
+exports.pontoTrilhaEspelhos       = _gatilhoTrilhaPonto('espelhos');
+exports.pontoTrilhaConfigBanco    = _gatilhoTrilhaPonto('banco_horas_config');

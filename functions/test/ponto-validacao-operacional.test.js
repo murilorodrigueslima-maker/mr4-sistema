@@ -76,10 +76,10 @@ describe('caminhos alternativos em mês assinado (regras do banco de dados)', ()
     await assertFails(ctx('g').doc('ponto_meses_protegidos/F1_2026-05').delete());
     await assertFails(ctx('g').doc('ponto_meses_protegidos/F1_2026-06').set({ funcId: 'F1', mes: '2026-06' }));
   });
-  test('competência NÃO assinada segue operando (sem regressão): criar/ajustar créditos e rejeitar', async () => {
+  test('competência NÃO assinada: criar crédito segue; decisão pelo cliente é negada (E1: só o servidor)', async () => {
     await env.withSecurityRulesDisabled(async c => { await c.firestore().doc('justificativas/jn').set({ id: 'jn', funcId: 'F1', data: '2026-10-06', motivo: 'Atestado médico', status: 'pendente', lancadoPorGestor: false }); });
-    await assertSucceeds(ctx('g2').doc('creditos_jornada/c9').set({ funcId: 'F1', data: '2026-10-06', minutos: 480, motivo: 'Atestado médico' }));
-    await assertSucceeds(ctx('g2').doc('justificativas/jn').update({ status: 'rejeitado', obsGestor: 'sem prova', respondidoPorUid: 'g2', respondidoPorEmail: 'g2@x', respondidoEm: serverTimestamp() }));
+    await assertSucceeds(ctx('g2').doc('creditos_jornada/cred_F1_2026-10-06').set({ funcId: 'F1', data: '2026-10-06', minutos: 480, motivo: 'Atestado médico' }));
+    await assertFails(ctx('g2').doc('justificativas/jn').update({ status: 'rejeitado', obsGestor: 'sem prova', respondidoPorUid: 'g2', respondidoPorEmail: 'g2@x', respondidoEm: serverTimestamp() }));
   });
 });
 

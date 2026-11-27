@@ -334,10 +334,9 @@ describe('CM-B — bloqueado (bloqueado=true em sistema_usuarios)', () => {
   test('CM-B3: bloqueado NÃO lê clientes → ESCAPE=0', async () => {
     await assertFails(db(UID_BLOQUEADO).collection('clientes').doc('doc-b3').get());
   });
-  test('CM-B4: bloqueado LÊ o PRÓPRIO registro de ponto (isFuncionario não checa bloqueado)', async () => {
-    // isFuncionario() só checa users/{uid}.ativo — bloqueado está em sistema_usuarios
+  test('CM-B4: bloqueado NÃO lê o próprio registro de ponto (E1/D15)', async () => {
     await seed('registros', 'reg-b', { funcId: 'FUNC-CM-08', data: '2026-09-22' });
-    await assertSucceeds(db(UID_BLOQUEADO).collection('registros').doc('reg-b').get());
+    await assertFails(db(UID_BLOQUEADO).collection('registros').doc('reg-b').get());
   });
 });
 

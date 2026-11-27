@@ -163,18 +163,17 @@ test('F — gestor tenta sobrescrever hashSnapshot de espelho assinado → DENIE
   );
 });
 
-test('G — gestor atualiza campos de revisão em espelho assinado → ALLOWED', async () => {
+test('G — gestor abre revisão de espelho assinado (nova versão no mesmo lote, com justificativa) → ALLOWED', async () => {
   await testEnv.withSecurityRulesDisabled(async ctx => {
     await ctx.firestore().collection('espelhos').doc('esp-s').set(ESP_SIGNED);
   });
-  await assertSucceeds(
-    ctxGestor().firestore().collection('espelhos').doc('esp-s').update({
-      versaoSucessoraId:  'esp-v2-id',
-      revisaoEmAndamento: true,
-      revisaoAbertaEm:    '2026-09-10T09:00:00.000Z',
-      motivoRevisao:      'Correção de horário',
-    })
-  );
+  const db = ctxGestor().firestore();
+  const abre = { versaoSucessoraId: 'esp-v2-id', revisaoEmAndamento: true, revisaoAbertaEm: '2026-09-10T09:00:00.000Z', motivoRevisao: 'Correção de horário' };
+  await assertFails(db.collection('espelhos').doc('esp-s').update(abre));            // sem a nova versão
+  const b = db.batch();
+  b.set(db.collection('espelhos').doc('esp-v2-id'), { ...ESP_UNSIGNED, versao: 2, versaoAnteriorId: 'esp-s', motivoRevisao: 'Correção de horário' });
+  b.update(db.collection('espelhos').doc('esp-s'), abre);
+  await assertSucceeds(b.commit());
 });
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -343,11 +342,11 @@ test('L4 — gestor não pode alterar versaoAnteriorId após create → DENIED',
 
 // ── Gestor pode excluir/não-excluir ──────────────────────────────────────────
 
-test('H-excluir — gestor exclui espelho não-assinado → ALLOWED', async () => {
+test('H-excluir — gestor NÃO exclui espelho (versões preservadas) → DENIED', async () => {
   await testEnv.withSecurityRulesDisabled(async ctx => {
     await ctx.firestore().collection('espelhos').doc('esp-del').set(ESP_UNSIGNED);
   });
-  await assertSucceeds(
+  await assertFails(
     ctxGestor().firestore().collection('espelhos').doc('esp-del').delete()
   );
 });

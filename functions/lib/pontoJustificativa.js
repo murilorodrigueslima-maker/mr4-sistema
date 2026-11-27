@@ -18,6 +18,9 @@ const idOk = v => typeof v === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(v);
 const estrito = (d, chaves) => { if (!d || typeof d !== 'object' || Array.isArray(d) || Object.keys(d).some(k => !chaves.includes(k))) throw new HttpsError('invalid-argument', 'Payload inválido.'); };
 const falha = c => new HttpsError('failed-precondition', c);
 
+/** E2/D11: "evidência da gestão" só vale em pedido lançado pela gestão (as Rules antigas deixavam o funcionário gravar o campo). */
+const paraEvidencia = x => (x.lancadoPorGestor === true ? x : { ...x, evidenciaGestao: null });
+
 /** aplica as batidas propostas sobre as marcações efetivas do dia (substitui a do mesmo tipo) */
 function aplicar(efetivos, lista, funcId, data) {
   let alt = efetivos.slice();
@@ -53,7 +56,8 @@ async function decidirJustificativaHandler(request, opts = {}) {
   const ator = await autorizar(store, uid, funcId);
   const lockRef = store.collection('ponto_justificativas_lock').doc(funcId + '_' + data);
   return store.runTransaction(async tx => {
-    const [lock, protegido, D] = await Promise.all([tx.get(lockRef), tx.get(store.collection('ponto_meses_protegidos').doc(funcId + '_' + data.slice(0, 7))), lerFuncionario(tx, store, funcId)]);
+    const [lock, protegido, D, credDoDia] = await Promise.all([tx.get(lockRef), tx.get(store.collection('ponto_meses_protegidos').doc(funcId + '_' + data.slice(0, 7))), lerFuncionario(tx, store, funcId),
+      tx.get(store.collection('creditos_jornada').doc('cred_' + funcId + '_' + data))]);
     const atuais = d.ids.map(i => D.just.find(x => x.id === i));
     if (atuais.some(x => !x)) throw new HttpsError('not-found', 'Justificativa inexistente.');
     const alvo = { APROVAR: 'aprovado', REJEITAR: 'rejeitado', SOLICITAR_INFO: 'pendente' }[d.decisao];
@@ -63,13 +67,14 @@ async function decidirJustificativaHandler(request, opts = {}) {
     const assinado = !!protegido.exists || D.esp.some(e => e.mes === data.slice(0, 7) && e.assinado && !e.substituido);
     const efetivos = D.regs.filter(r => r.data === data);
     let corrIds = [];
+    let creditoAnterior = null, creditosAnteriores = null; const creditosNovos = {};
     if (d.decisao === 'APROVAR') {
       if (assinado) throw falha('MES_COM_ESPELHO_ASSINADO');
       if (data > hoje) throw falha('DATA_FUTURA');
       const doDia = D.just.filter(x => x.data === data);
       const ponto = atuais.filter(x => x.tipoPonto);
       // P6: correção de batida ANTIGA exige evidência (da justificativa ou registrada pelo gestor na decisão). Correção legítima segue possível.
-      if (ponto.some(x => M.exigeEvidenciaJustificativa(x, hoje) && !M.evidenciaSuficiente(x, obs))) throw falha('EVIDENCIA_OBRIGATORIA_JUSTIFICATIVA_ANTIGA');
+      if (ponto.some(x => M.exigeEvidenciaJustificativa(x, hoje) && !M.evidenciaSuficiente(paraEvidencia(x), obs))) throw falha('EVIDENCIA_OBRIGATORIA_JUSTIFICATIVA_ANTIGA');
       if (ponto.some(x => !x.horarioPonto || !/^\d{2}:\d{2}$/.test(x.horarioPonto) || !TIPOS[x.tipoPonto])) throw falha('JUSTIFICATIVA_SEM_HORARIO_VALIDO');
       if (new Set(ponto.map(x => x.tipoPonto)).size !== ponto.length) throw falha('IDS_COM_MESMA_BATIDA');
       if (ponto.length && ponto.length !== atuais.length) throw falha('MISTURA_DE_CORRECAO_E_OCORRENCIA');
@@ -99,11 +104,17 @@ async function decidirJustificativaHandler(request, opts = {}) {
           tx.create(store.collection('registros').doc(regId), { id: regId, funcId, funcNome: x.funcNome || D.func.nome || null, data, hora: x.horarioPonto + ':00', tipo: x.tipoPonto, tipoLabel: TIPOS[x.tipoPonto],
             lat: null, lng: null, dentroRaio: null, foto: null, facialScore: null, lancadoPorJustificativa: true, justificativaId: x.id, correcaoDe: originais.map(o => o.id), valorOriginal: originais,
             valorProposto: x.horarioPonto + ':00', motivoCorrecao: x.motivo || null, descricaoCorrecao: x.descricao || null, solicitadoPorFuncId: funcId, solicitadoEm: x.criadoEm || null,
-            aprovadoPorUid: uid, aprovadoPorEmail: ator.email, aprovadoEm: FV.serverTimestamp(), origem: 'pontoJustificativaDecidir', criadoEm: agora.toISOString() });
+            aprovadoPorUid: uid, aprovadoPorEmail: ator.email, aprovadoEm: FV.serverTimestamp(), origem: 'pontoJustificativaDecidir', criadoEm: agora.toISOString(),
+            // E2: ajuste administrativo identificado como inserção manual (a batida original continua gravada, só marcada)
+            inseridoManualmente: true, origemSolicitacao: x.lancadoPorGestor === true ? 'GESTAO' : 'FUNCIONARIO', propostoPorUid: (x.lancadoPorGestor === true && x.propostoPorUid) || null, observacaoAprovacao: obs || null });
           corrIds.push({ id: x.id, regId, originais });
         });
       } else {
         // ocorrência (atestado, férias, falta...): crédito de jornada como no fluxo legado
+        // E2/D18: o crédito que existia no dia vai para a trilha da decisão antes de ser sobrescrito
+        const resumo = c => ({ minutos: c.minutos === undefined ? null : c.minutos, motivo: c.motivo || null, criadoEm: c.criadoEm || null, lancadoPorUid: c.lancadoPorUid || null });
+        creditoAnterior = credDoDia.exists ? { id: credDoDia.id, ...resumo(credDoDia.data()) } : null;
+        creditosAnteriores = D.cred.filter(c => c.data === data).map(c => ({ id: c.id || null, ...resumo(c) }));
         atuais.forEach(x => {
           if (SEM_CREDITO.includes(x.motivo)) return;
           const dow = new Date(data + 'T12:00:00').getDay();
@@ -111,7 +122,9 @@ async function decidirJustificativaHandler(request, opts = {}) {
           const jornMin = (parseFloat(D.func.jornada) || 8) * 60;
           const minutos = x.motivo === 'Folga compensatória' ? 0 : (esc !== null ? esc : (dow === 6 ? M.JORNADA_SABADO_MIN : jornMin));
           const credId = 'cred_' + funcId + '_' + data;
-          tx.set(store.collection('creditos_jornada').doc(credId), { id: credId, funcId, funcNome: x.funcNome || D.func.nome || null, data, minutos, motivo: x.motivo, criadoEm: agora.toISOString() }, { merge: true });
+          creditosNovos[x.id] = { id: credId, minutos, motivo: x.motivo };
+          tx.set(store.collection('creditos_jornada').doc(credId), { id: credId, funcId, funcNome: x.funcNome || D.func.nome || null, data, minutos, motivo: x.motivo, criadoEm: agora.toISOString(),
+            lancadoPorUid: uid, lancadoPorEmail: ator.email, lancadoEm: FV.serverTimestamp() }, { merge: true });
         });
       }
     }
@@ -125,7 +138,8 @@ async function decidirJustificativaHandler(request, opts = {}) {
             ...(c ? { registroEfetivoId: c.regId, registrosOriginais: c.originais } : {}), ...(d.ids.length > 1 ? { decididaEmConjuntoCom: d.ids.filter(i => i !== x.id) } : {}) };
       tx.update(refs[k], base);
       tx.create(store.collection('ponto_justificativas_decisoes').doc(x.id + '_' + versao + '_' + k), { justificativaId: x.id, funcId, data, decisao: d.decisao, statusAnterior: x.status, statusResultante: alvo,
-        obs, autorUid: uid, autorEmail: ator.email, conjunto: d.ids, tipoPonto: x.tipoPonto || null, horarioPonto: x.horarioPonto || null, mesProtegido: assinado, criadoEm: FV.serverTimestamp() });
+        obs, autorUid: uid, autorEmail: ator.email, conjunto: d.ids, tipoPonto: x.tipoPonto || null, horarioPonto: x.horarioPonto || null, mesProtegido: assinado, criadoEm: FV.serverTimestamp(),
+        ...(creditosNovos[x.id] ? { creditoAnterior, creditosAnteriores, creditoNovo: creditosNovos[x.id] } : {}) });
     });
     tx.set(lockRef, { funcId, data, versao, atualizadoEm: FV.serverTimestamp() });
     return { ok: true, repetido: false, status: alvo, versao, conjunto: d.ids.length };

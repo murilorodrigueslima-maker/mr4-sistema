@@ -201,9 +201,9 @@ describe('DR-2: funcionário dual-role (ponto em modulos) → ALLOW admin', () =
   });
   // PONTO 2.0 F0 (P1-05): antes o teste criava registro para o PRÓPRIO funcId (autoedição) e esperava ALLOW.
   // Agora: registro de OUTRO funcionário → ALLOW; o próprio → DENY (ninguém lança/corrige o próprio ponto).
-  test('cria registro de outro funcionário → ALLOW', async () => {
+  test('cria registro de outro funcionário → DENY (E1: só o servidor grava registros)', async () => {
     const db = testEnv.authenticatedContext(UID_DR_DUAL).firestore();
-    await assertSucceeds(
+    await assertFails(
       db.collection('registros').doc('dr-reg-new').set({
         funcId: FUNC_ID_COMUM, data: '2026-09-03', tipo: 'entrada', hora: '08:00:00',
       })
@@ -234,8 +234,8 @@ describe('DR-2: funcionário dual-role (ponto em modulos) → ALLOW admin', () =
   test('escreve creditos_jornada → ALLOW', async () => {
     const db = testEnv.authenticatedContext(UID_DR_DUAL).firestore();
     await assertSucceeds(
-      db.collection('creditos_jornada').doc('dr-cred-dual-adm').set({
-        funcId: FUNC_ID_COMUM, minutos: 480, motivo: 'Feriado nacional',
+      db.collection('creditos_jornada').doc('cred_' + FUNC_ID_COMUM + '_2026-09-03').set({
+        funcId: FUNC_ID_COMUM, data: '2026-09-03', minutos: 480, motivo: 'Feriado nacional',
       })
     );
   });
@@ -271,9 +271,9 @@ describe('DR-3: funcionário dual-role bloqueado → DENY admin', () => {
     const db = testEnv.authenticatedContext(UID_DR_BLOQUEADO).firestore();
     await assertFails(db.collection('registros').doc('dr-reg-dual').get());
   });
-  test('lê registros/{próprio} → ALLOW (isFuncionario path preservado)', async () => {
+  test('lê registros/{próprio} → DENY (E1/D15: bloqueado não lê nem o próprio ponto)', async () => {
     const db = testEnv.authenticatedContext(UID_DR_BLOQUEADO).firestore();
-    await assertSucceeds(db.collection('registros').doc('dr-reg-bloq').get());
+    await assertFails(db.collection('registros').doc('dr-reg-bloq').get());
   });
   test('lê avaliacoes → DENY (bloqueado=true)', async () => {
     const db = testEnv.authenticatedContext(UID_DR_BLOQUEADO).firestore();

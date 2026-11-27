@@ -493,28 +493,31 @@ describe('gestor — todas as operações legítimas continuam funcionando', () 
     await assertSucceeds(db.collection('funcionarios').doc('func-novo').set({ nome: 'Novo', cargo: 'Vendedor', modalidade: 'PRESENCIAL' }));
   });
 
-  test('G2 — gestor cria registro manual', async () => {
+  test('G2 — gestor NÃO cria registro pelo cliente (correção é só pelo servidor)', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await assertSucceeds(db.collection('registros').doc('reg-gestor-g2').set({
+    await assertFails(db.collection('registros').doc('reg-gestor-g2').set({
       funcId: FUNC_ID, authUid: UID_GESTOR, data: '2026-09-09', hora: '08:00:00', tipo: 'entrada', tipoLabel: 'Entrada', lancadoPorGestor: true,
     }));
   });
 
   test('G3 — gestor lê registros de qualquer funcionário', async () => {
-    // Gestor tem write em registros — semear sem bypass de regras
+    // registros só o servidor grava: semeia sem Rules
+    await testEnv.withSecurityRulesDisabled(async ctx => {
+      const adm = ctx.firestore();
+      await adm.collection('registros').doc('reg-g3').set({ funcId: FUNC_ID, tipo: 'entrada', tipoLabel: 'Entrada', data: '2026-09-09', hora: '08:00:00' });
+      await adm.collection('registros').doc('reg-g3b').set({ funcId: FUNC_ID2, tipo: 'entrada', tipoLabel: 'Entrada', data: '2026-09-09', hora: '08:00:00' });
+    });
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await db.collection('registros').doc('reg-g3').set({ funcId: FUNC_ID, lancadoPorGestor: true, tipo: 'entrada', tipoLabel: 'Entrada', data: '2026-09-09', hora: '08:00:00', authUid: UID_GESTOR });
-    await db.collection('registros').doc('reg-g3b').set({ funcId: FUNC_ID2, lancadoPorGestor: true, tipo: 'entrada', tipoLabel: 'Entrada', data: '2026-09-09', hora: '08:00:00', authUid: UID_GESTOR });
     await assertSucceeds(db.collection('registros').doc('reg-g3').get());
     await assertSucceeds(db.collection('registros').doc('reg-g3b').get());
   });
 
-  test('G4 — gestor aprova justificativa (update status)', async () => {
+  test('G4 — gestor NÃO decide justificativa pelo cliente (só o servidor)', async () => {
     await testEnv.withSecurityRulesDisabled(async ctx => {
       await ctx.firestore().collection('justificativas').doc('just-g4').set({ funcId: FUNC_ID, status: 'pendente', lancadoPorGestor: false });
     });
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await assertSucceeds(db.collection('justificativas').doc('just-g4').update({ status: 'aprovado', aprovadoPor: UID_GESTOR }));
+    await assertFails(db.collection('justificativas').doc('just-g4').update({ status: 'aprovado', aprovadoPor: UID_GESTOR }));
   });
 
   test('G5 — gestor cria e lê espelho', async () => {
@@ -525,7 +528,8 @@ describe('gestor — todas as operações legítimas continuam funcionando', () 
 
   test('G6 — gestor escreve creditos_jornada', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await assertSucceeds(db.collection('creditos_jornada').doc('cred-g6').set({ funcId: FUNC_ID, horas: 2, motivo: 'Horas extras' }));
+    await assertFails(db.collection('creditos_jornada').doc('cred-g6').set({ funcId: FUNC_ID, horas: 2, motivo: 'Horas extras' }));
+    await assertSucceeds(db.collection('creditos_jornada').doc('cred_' + FUNC_ID + '_2026-09-09').set({ funcId: FUNC_ID, data: '2026-09-09', minutos: 480, motivo: 'Atestado médico' }));
   });
 
   test('G7 — gestor lê e escreve avaliacoes', async () => {
@@ -632,9 +636,9 @@ describe('assinatura de espelho — Rule hasOnly([...4 campos])', () => {
     }));
   });
 
-  test('E8 — gestor pode atualizar espelho livremente (não restrito a hasOnly) → PASS', async () => {
+  test('E8 — gestor NÃO atualiza campos livres do espelho (lista fechada) → DENY', async () => {
     const db = testEnv.authenticatedContext(UID_GESTOR).firestore();
-    await assertSucceeds(db.collection('espelhos').doc(ESP_PROPRIO).update({
+    await assertFails(db.collection('espelhos').doc(ESP_PROPRIO).update({
       assinado: false, horas: '168h', observacoes: 'Corrigido',
     }));
   });

@@ -77,8 +77,8 @@ describe('regras: aprovar, rejeitar, solicitar informação (fluxo existente)', 
   });
   const ctx = uid => env.authenticatedContext(uid, { email: uid + '@x' }).firestore();
 
-  test('solicitar informações: gestão grava a solicitação, status segue pendente; funcionário não grava; outro funcionário não lê', async () => {
-    await assertSucceeds(ctx(GES).doc('justificativas/j1').update({ infoSolicitada: 'Informe o horário e quem presenciou', infoSolicitadaPorUid: GES, infoSolicitadaEm: serverTimestamp() }));
+  test('solicitar informações: só o servidor grava (E1); funcionário não grava; outro funcionário não lê', async () => {
+    await assertFails(ctx(GES).doc('justificativas/j1').update({ infoSolicitada: 'Informe o horário e quem presenciou', infoSolicitadaPorUid: GES, infoSolicitadaEm: serverTimestamp() }));
     await assertFails(ctx(FUN).doc('justificativas/j1').update({ infoSolicitada: 'x' }));
     await assertSucceeds(ctx(FUN).doc('justificativas/j1').get());
     await assertFails(ctx(FUN2).doc('justificativas/j1').get());
@@ -93,9 +93,9 @@ describe('regras: aprovar, rejeitar, solicitar informação (fluxo existente)', 
     await env.withSecurityRulesDisabled(async c => { await c.firestore().doc('justificativas/j1').update({ status: 'aprovado', respondidoPorUid: 'servidor' }); });
     await assertFails(ctx(GES2).doc('justificativas/j1').update({ status: 'rejeitado', respondidoPorUid: GES2, respondidoPorEmail: GES2 + '@x', respondidoEm: serverTimestamp() }));   // já decidida
   });
-  test('rejeitar: registra autor e motivo; personificar aprovador é negado', async () => {
+  test('rejeitar pelo cliente é negado (E1: decisão só no servidor), com ou sem personificação', async () => {
     await assertFails(ctx(GES).doc('justificativas/j1').update({ status: 'rejeitado', obsGestor: 'x', respondidoPorUid: 'outro', respondidoPorEmail: GES + '@x', respondidoEm: serverTimestamp() }));
-    await assertSucceeds(ctx(GES).doc('justificativas/j1').update({ status: 'rejeitado', obsGestor: 'Sem evidência', respondidoPorUid: GES, respondidoPorEmail: GES + '@x', respondidoEm: serverTimestamp() }));
+    await assertFails(ctx(GES).doc('justificativas/j1').update({ status: 'rejeitado', obsGestor: 'Sem evidência', respondidoPorUid: GES, respondidoPorEmail: GES + '@x', respondidoEm: serverTimestamp() }));
   });
   test('NÃO há autoaprovação: funcionário não decide; gestão não decide sobre o próprio ponto', async () => {
     await assertFails(ctx(FUN).doc('justificativas/j1').update({ status: 'aprovado', respondidoPorUid: FUN, respondidoPorEmail: FUN + '@x', respondidoEm: serverTimestamp() }));

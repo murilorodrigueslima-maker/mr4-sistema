@@ -1,6 +1,6 @@
 'use strict';
-// PONTO MR4 2.0 — Fase 0 · Rules (EMULADOR). P0-02 correção aditiva / original imutável / trilha; P1-05 autoedição.
-// Reproduz exatamente as escritas que ponto.html faz na aprovação (batch: marca original + cria correção + decide justificativa).
+// PONTO MR4 2.0 — Fase 0 · Rules (EMULADOR). P0-02 original imutável; P1-05 autoedição.
+// `aprovarCorrecao` reproduz o antigo lote do cliente, que desde a E1 é negado para todos.
 const { initializeTestEnvironment, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
 const { serverTimestamp } = require('@firebase/firestore');
 const { readFileSync } = require('fs');
@@ -63,41 +63,24 @@ describe('FASE 4.4 — aprovação de correção de batida só pelo servidor', (
   });
 });
 
-describe('P0-02 — correção aditiva: original preservado + trilha', () => {
-  test('CORR-01 aprovação: original continua existindo (hora intacta) e marcado; correção guarda ORIGINAL/PEDIDO/SOLICITANTE/APROVADOR/QUANDO', async () => {
-    await assertSucceeds(aprovarCorrecao(ctx(UID_G), UID_G, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }]));
-    const orig = await ler('registros/r-e-ent'), corr = await ler('registros/corr_j-e-1'), j = await ler('justificativas/j-e-1');
-    expect(orig).toMatchObject({ hora: '08:05:00', tipo: 'entrada', substituidoPor: 'corr_j-e-1', substituidoPorJustificativa: 'j-e-1' });
-    expect(orig.substituidoEm).toBeTruthy();
-    expect(corr).toMatchObject({ hora: '08:00:00', valorOriginal: [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }], valorProposto: '08:00:00', motivoCorrecao: 'Ponto não batido',
-      solicitadoPorFuncId: F_E, aprovadoPorUid: UID_G, justificativaId: 'j-e-1' });
-    expect(corr.aprovadoEm).toBeTruthy();
-    expect(j).toMatchObject({ status: 'pendente' });   // a decisão da justificativa é do servidor (fase 4.4); aqui só a trilha em registros
+describe('P0-02 — original preservado: nenhuma correção pelo cliente (PONTO INTEGRIDADE E1)', () => {
+  // A correção aditiva (original marcado + registro corr_*) é feita só pela Cloud Function — coberta em
+  // ponto-justificativa-servidor, ponto-justificativas-decisao e ponto-e2-servidor.
+  test('CORR-01 o lote de correção do cliente é negado para todos; o original fica intacto', async () => {
+    for (const uid of [UID_G, UID_D, UID_E]) await assertFails(aprovarCorrecao(ctx(uid), uid, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }]));
+    expect(await ler('registros/corr_j-e-1')).toBeNull();
+    expect((await ler('registros/r-e-ent')).substituidoPor).toBeUndefined();
   });
   test('CORR-02 original NUNCA pode ser apagado pelo cliente (gestor, dual-role, funcionário)', async () => {
     for (const uid of [UID_G, UID_D, UID_E]) await assertFails(ctx(uid).collection('registros').doc('r-e-ent').delete());
   });
-  test('CORR-03 original imutável: não pode mudar hora/tipo; substituição só uma vez e só com os campos de substituição', async () => {
+  test('CORR-03 original imutável: nem hora/tipo, nem marcação de substituição', async () => {
     await assertFails(ctx(UID_G).collection('registros').doc('r-e-ent').update({ hora: '08:00:00' }));
-    await assertFails(ctx(UID_G).collection('registros').doc('r-e-ent').update({ substituidoPor: 'x', hora: '08:00:00' }));
-    await assertSucceeds(ctx(UID_G).collection('registros').doc('r-e-ent').update({ substituidoPor: 'corr_a', substituidoEm: serverTimestamp(), substituidoPorJustificativa: 'a' }));
-    await assertFails(ctx(UID_G).collection('registros').doc('r-e-ent').update({ substituidoPor: 'corr_b' }));   // 2ª vez
+    await assertFails(ctx(UID_G).collection('registros').doc('r-e-ent').update({ substituidoPor: 'corr_a', substituidoEm: serverTimestamp(), substituidoPorJustificativa: 'a' }));
   });
-  test('CORR-04 segunda correção NÃO apaga a primeira: a 1ª correção vira "substituída" e as três versões continuam', async () => {
-    await assertSucceeds(aprovarCorrecao(ctx(UID_G), UID_G, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }]));
-    await assertSucceeds(aprovarCorrecao(ctx(UID_D), UID_D, 'j-e-2', { funcId: F_E, horarioPonto: '07:58' }, [{ id: 'corr_j-e-1', hora: '08:00:00', tipo: 'entrada' }]));
-    const [o, c1, c2] = [await ler('registros/r-e-ent'), await ler('registros/corr_j-e-1'), await ler('registros/corr_j-e-2')];
-    expect([o.hora, c1.hora, c2.hora]).toEqual(['08:05:00', '08:00:00', '07:58:00']);
-    expect([o.substituidoPor, c1.substituidoPor, c2.substituidoPor]).toEqual(['corr_j-e-1', 'corr_j-e-2', undefined]);
-    expect(c2).toMatchObject({ aprovadoPorUid: UID_D, valorOriginal: [{ id: 'corr_j-e-1', hora: '08:00:00', tipo: 'entrada' }] });
-  });
-  test('CORR-05 rejeição registra quem/quando; decisão só a partir de "pendente" (não aprova 2× nem reverte em silêncio)', async () => {
-    await assertSucceeds(ctx(UID_G).collection('justificativas').doc('j-e-1').update({ status: 'rejeitado', obsGestor: 'sem prova', respondidoPorUid: UID_G, respondidoPorEmail: UID_G + '@mr4.test', respondidoEm: serverTimestamp() }));
-    const j = await ler('justificativas/j-e-1');
-    expect(j).toMatchObject({ status: 'rejeitado', respondidoPorUid: UID_G });
-    await assertFails(ctx(UID_G).collection('justificativas').doc('j-e-1').update({ status: 'aprovado' }));
-    await assertFails(aprovarCorrecao(ctx(UID_D), UID_D, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }], true));
-    expect((await ler('registros/r-e-ent')).substituidoPor).toBeUndefined();   // batch atômico: nada aplicado
+  test('CORR-05 rejeição pelo cliente é negada (decisão só no servidor)', async () => {
+    await assertFails(ctx(UID_G).collection('justificativas').doc('j-e-1').update({ status: 'rejeitado', obsGestor: 'sem prova', respondidoPorUid: UID_G, respondidoPorEmail: UID_G + '@mr4.test', respondidoEm: serverTimestamp() }));
+    expect((await ler('justificativas/j-e-1')).status).toBe('pendente');
   });
 });
 
@@ -119,8 +102,8 @@ describe('P1-05 — ninguém edita/aprova/corrige o próprio ponto (chamada dire
     await assertFails(g.collection('creditos_jornada').doc('c-gf').set({ id: 'c-gf', funcId: F_GF, data: DIA, minutos: 480, motivo: 'Atestado médico' }));
   });
   test('SELF-03 os mesmos usuários CONTINUAM podendo decidir sobre o ponto dos OUTROS', async () => {
-    await assertSucceeds(aprovarCorrecao(ctx(UID_D), UID_D, 'j-e-1', { funcId: F_E, horarioPonto: '08:00' }, [{ id: 'r-e-ent', hora: '08:05:00', tipo: 'entrada' }]));
-    await assertSucceeds(ctx(UID_GF).collection('creditos_jornada').doc('cred_' + F_E2 + '_' + DIA).set({ id: 'c', funcId: F_E2, data: DIA, minutos: 480, motivo: 'Atestado médico' }));
+    await assertSucceeds(ctx(UID_D).collection('justificativas').doc('j-dg').set({ id: 'j-dg', funcId: F_E, data: DIA, motivo: 'Atestado médico', status: 'aprovado', lancadoPorGestor: true }));
+    await assertSucceeds(ctx(UID_GF).collection('creditos_jornada').doc('cred_' + F_E2 + '_' + DIA).set({ id: 'cred_' + F_E2 + '_' + DIA, funcId: F_E2, data: DIA, minutos: 480, motivo: 'Atestado médico' }));
     await assertSucceeds(ctx(UID_G).collection('espelhos').doc('esp-e').set({ funcId: F_E, mes: '2026-09', assinado: false }));
   });
   test('SELF-04 caminho do funcionário intacto: cria a própria justificativa pendente; não aprova nada', async () => {

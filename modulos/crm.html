@@ -6,7 +6,8 @@
 <title>CRM · Hoje — MR4</title>
 <link rel="icon" type="image/png" href="../assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<!-- só os ícones usados (ordem alfabética, exigida pelo serviço). Ícone novo na tela ⇒ acrescentar em icon_names (há teste). -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0&icon_names=arrow_back,chat,close,refresh,smart_toy,support_agent,task_alt&display=block" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -52,6 +53,16 @@ main{max-width:1180px;margin:0 auto;padding:1.1rem 1.25rem 3rem}
 .sec-vazia{font-size:.8rem;color:var(--faint);padding:.2rem 0 .4rem}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:.7rem}
 .aviso{background:var(--amber-lt);border:1px solid #f6d7a7;color:var(--amber);border-radius:var(--radius);padding:.6rem .8rem;font-size:.82rem;margin-bottom:1rem}
+/* atalhos do topo e seção recolhida */
+.atalhos{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.8rem}.atalhos:empty{display:none}
+.atalho{border:1px solid var(--border);background:var(--white);border-radius:99px;padding:.4rem .8rem;min-height:40px;font-size:.82rem;font-weight:600;color:var(--text)}
+.atalho b{margin-left:.15rem}
+.atalho.atrasados{border-color:var(--red);color:var(--red)}
+.atalho.novas{background:var(--blue-lt);border-color:var(--blue);color:var(--blue-dk)}
+.btn.mais{width:100%;justify-content:center;min-height:44px;margin-top:.6rem;color:var(--blue-dk)}
+.oferta{font-size:.8rem;background:var(--bg);border-radius:8px;padding:.4rem .55rem;display:flex;flex-direction:column;gap:.2rem;overflow-wrap:anywhere}
+.oferta small{color:var(--muted);font-size:.72rem}
+.of-l{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.02em;color:var(--blue-dk);margin-right:.2rem}
 /* card */
 .card{background:var(--white);border:1px solid var(--border-lt);border-radius:var(--radius);padding:.8rem .9rem;display:flex;flex-direction:column;gap:.45rem}
 .card.atrasado{border-left:3px solid var(--red)}
@@ -61,6 +72,8 @@ main{max-width:1180px;margin:0 auto;padding:1.1rem 1.25rem 3rem}
 .card-nome{font-weight:700;font-size:.93rem;flex:1;min-width:0;overflow-wrap:anywhere}
 .pill{font-size:.68rem;font-weight:700;padding:.12rem .45rem;border-radius:99px;background:var(--blue-lt);color:var(--blue-dk);white-space:nowrap}
 .pill.valor{background:var(--purple-lt);color:var(--purple)}
+/* avisos longos de reativação quebram a linha: sem isso o cartão alargava a página no celular */
+.hist .pill{white-space:normal}.contato{align-items:center}
 .motivo{font-size:.82rem;color:var(--text)}
 .dados{display:flex;flex-wrap:wrap;gap:.25rem .8rem;font-size:.76rem;color:var(--muted)}
 .dados b{color:var(--text);font-weight:600}
@@ -186,6 +199,7 @@ td{padding:.38rem .4rem;border-bottom:1px solid var(--border-lt)}
 
 <main id="app"><div class="carregando" id="carregando">Carregando…</div>
   <section id="viewHoje" hidden>
+    <nav class="atalhos" id="atalhos" aria-label="Ir para uma parte da lista"></nav>
     <div class="kpis" id="kpis"></div>
     <div id="avisoHoje"></div>
     <div id="secoes"></div>
@@ -255,7 +269,7 @@ const FW = window.FilaWorklistView || {};
 const perguntasCaptura = r => (FW.perguntasDoResultado ? FW.perguntasDoResultado(r) : []);
 
 const S = { contatos: {}, uid: null, nome: '', podeOperar: false, gestao: false, doc: null, docCarregado: false, opCarregado: false, opMap: new Map(), extras: {}, extrasPedidos: new Set(),
-  indicadores: null, aba: 'hoje', aberto: null, sel: {}, enviando: new Set(), erros: {} };
+  indicadores: null, aba: 'hoje', aberto: null, sel: {}, enviando: new Set(), erros: {}, expandida: {} };
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 function toast(msg, err) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); t.style.display = 'block'; clearTimeout(toast._t); toast._t = setTimeout(() => t.style.display = 'none', 3200); }
@@ -291,6 +305,7 @@ const SECOES = [
 function renderHoje() {
   if (!S.docCarregado || !S.opCarregado) {                      // ainda carregando: não afirmar que a lista "não foi gerada"
     document.getElementById('avisoHoje').innerHTML = ''; document.getElementById('secoes').innerHTML = '<div class="carregando">Carregando a sua lista…</div>';
+    document.getElementById('atalhos').innerHTML = '';
     renderKpis(); return;
   }
   const agoraMs = Date.now();
@@ -298,15 +313,41 @@ function renderHoje() {
   const v = S.visao;
   document.getElementById('avisoHoje').innerHTML = v.worklistDeHoje ? '' :
     '<div class="aviso">A lista de hoje ainda não foi gerada (ela sai às 06:00, de segunda a sexta). Abaixo aparecem só os seus retornos.</div>';
+  // crm-view.js pode estar em cache logo após uma publicação: sem as funções novas, lista inteira e sem atalhos (como antes).
+  const desenhados = [];
   const html = SECOES.map(([k, titulo, cls, vazio]) => {
     const itens = v[k] || [];
     if ((k === 'trabalhadasHoje' || k === 'reativacoes') && !itens.length) return '';
+    const recolhivel = k === 'pendentes' && !!V.recorteSecao && itens.length > V.LIMITE_RECOLHIDA;
+    const vis = recolhivel ? V.recorteSecao(itens, S.expandida[k], S.sel) : itens;
+    if (k !== 'trabalhadasHoje' && k !== 'reativacoes') desenhados.push(...vis);      // mesmas seções de antes
+    const mais = !recolhivel ? '' : S.expandida[k]
+      ? `<button type="button" class="btn mais" data-a="mais" data-sec="${k}" aria-expanded="true">Mostrar só os ${V.LIMITE_RECOLHIDA} primeiros</button>`
+      : itens.length > vis.length ? `<button type="button" class="btn mais" data-a="mais" data-sec="${k}" aria-expanded="false">Mostrar todos os ${itens.length} (mais ${itens.length - vis.length})</button>` : '';
     return `<section class="sec ${k}"><div class="sec-h"><h2>${titulo}</h2><span class="n">${itens.length}</span></div>`
-      + (itens.length ? `<div class="grid">${itens.map(x => cartao(x, cls)).join('')}</div>` : `<div class="sec-vazia">${vazio}</div>`) + '</section>';
+      + (itens.length ? `<div class="grid">${vis.map(x => cartao(x, cls)).join('')}</div>${mais}` : `<div class="sec-vazia">${vazio}</div>`) + '</section>';
   }).join('');
+  document.getElementById('atalhos').innerHTML = (V.atalhosDaLista ? V.atalhosDaLista(v) : []).map(a =>
+    `<button type="button" class="atalho ${a.secao}" data-a="ir" data-sec="${a.secao}">${esc(a.rotulo)} <b>${a.n}</b></button>`).join('');
   document.getElementById('secoes').innerHTML = html;
   renderKpis();
-  pedirExtras([].concat(v.atrasados, v.retornosHoje, v.emAtendimento, v.pendentes, v.novas).map(x => x.item.commercialEntityId));
+  pedirExtras(desenhados.map(x => x.item.commercialEntityId));            // só os cartões visíveis; o resto é pedido ao expandir
+}
+
+// ── Navegação na própria página ─────────────────────────────────────────────────────────────────────
+function rolarAte(el) {
+  const topo = document.querySelector('.topbar');
+  window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - (topo ? topo.offsetHeight : 0) - 8);
+}
+function irPara(secao) {
+  const s = document.querySelector(`.sec.${CSS.escape(secao)}`); if (!s) return;
+  rolarAte(s); const h = s.querySelector('h2'); h.tabIndex = -1; h.focus({ preventScroll: true });
+}
+/** Depois de Iniciar o cartão muda de seção: acompanha, para o vendedor não precisar procurá-lo. */
+function mostrarCartao(id) {
+  if (S.aba !== 'hoje') return;
+  const c = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`); if (!c) return;
+  rolarAte(c); const b = c.querySelector('[data-a="registrar"]'); if (b) b.focus({ preventScroll: true });
 }
 
 
@@ -355,12 +396,20 @@ function cartao(v, cls) {
     ${rt ? `<div class="hist">${rt.semCarteira ? '<span class="pill">Sem carteira — a reserva não cria carteira</span>' : '<span class="pill">Carteira de outro vendedor — só muda com venda válida na reserva</span>'}<span>Reserva até <b>${esc(V.dataBR(rt.reservaAte))}</b></span>${rt.followUpAte ? `<span>Follow-up até <b>${esc(V.dataBR(rt.followUpAte))}</b></span>` : ''}${rt.bloqueadoContato ? '<span class="pill valor">NÃO CONTATAR — bloqueado pela gestão</span>' : ''}</div>` : ''}
     ${rt ? `<div class="hist contato">${contatoHtml(id)}</div>` : ''}
     ${m.motivo ? `<div class="motivo">${esc(m.motivo)}</div>` : ''}
+    ${m.oferta ? ofertaHtml(m.oferta) : ''}
     ${dados ? `<div class="dados">${dados}</div>` : ''}
     ${hist ? `<div class="hist">${hist}</div>` : ''}
     ${e.rotulo && e.codigo !== 'DISPONIVEL' ? `<div><span class="st ${esc(e.codigo)}">${esc(e.rotulo)}</span></div>` : ''}
     <div class="acoes">${acoes}</div>
     ${aberto ? painelRegistro(id) : ''}
   </article>`;
+}
+
+// O que o cliente já compra (histórico que veio no item da lista) — é referência para a conversa, não recomendação calculada.
+function ofertaHtml(o) {
+  const linha = (rotulo, itens) => itens.length ? `<div><span class="of-l">${rotulo}</span> ${itens.join(' · ')}</div>` : '';
+  return `<div class="oferta">${linha('Compra com frequência', o.recorrentes.map(p => `${esc(p.nome)}${p.pedidos ? ` <small>(${esc(p.pedidos)} pedidos)</small>` : ''}`))}${
+    linha(o.recorrentes.length ? 'Também na última compra' : 'Na última compra', o.ultimaCompra.map(n => esc(n)))}</div>`;
 }
 
 function painelRegistro(id) {
@@ -447,9 +496,11 @@ async function atualizarAgora(botao) {
 async function iniciar(id) {
   if (S.enviando.has(id)) return;
   S.enviando.add(id); render();
-  try { await fnClaim({ opportunityInstanceId: id }); toast('Atendimento iniciado.'); }
+  let iniciado = false;
+  try { await fnClaim({ opportunityInstanceId: id }); iniciado = true; toast('Atendimento iniciado.'); }
   catch (e) { toast(msgErro(e), true); }
   finally { S.enviando.delete(id); await carregarFila(false); }
+  if (iniciado) mostrarCartao(id);
 }
 async function cancelar(id) {
   if (S.enviando.has(id)) return;
@@ -552,6 +603,8 @@ document.addEventListener('click', e => {
   else if (a === 'iniciar') iniciar(id);
   else if (a === 'cancelar') cancelar(id);
   else if (a === 'contato') carregarContato(id);
+  else if (a === 'ir') irPara(b.dataset.sec);
+  else if (a === 'mais') { const k = b.dataset.sec; S.expandida[k] = !S.expandida[k]; render(); if (!S.expandida[k]) irPara(k); }
   else if (a === 'cliente') abrirCliente(b.dataset.ent);
   else if (a === 'copiar') { navigator.clipboard && navigator.clipboard.writeText(b.dataset.v).then(() => toast('Telefone copiado.'), () => {}); }
 });

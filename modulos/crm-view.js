@@ -8,6 +8,8 @@
   var FWV = root.FilaWorklistView || (typeof require === 'function' ? require('./fila-worklist-view.js') : null);
   var TZ = 'America/Fortaleza';
   var NOTA_MAX = 280;
+  var LIMITE_RECOLHIDA = 5;      // "Pendentes" mostra os primeiros N (mesma ordem); o resto abre com 1 toque
+  var MAX_PRODUTOS_CARTAO = 2;
 
   var RESULTADOS = [
     { codigo: 'CONVERSA_REALIZADA',  rotulo: 'Contato realizado',  curto: 'Falei',          exigeData: false },
@@ -112,6 +114,37 @@
     return out;
   }
 
+  var ATALHOS = [['reativacoes', 'Reativação'], ['atrasados', 'Atrasados'], ['retornosHoje', 'Retornos hoje'], ['emAtendimento', 'Em atendimento'], ['pendentes', 'Pendentes'], ['novas', 'Novas']];
+  /** Atalhos do topo: uma entrada por seção COM itens, na mesma ordem da tela. Só navegação: não filtra nem reordena. */
+  function atalhosDaLista(visao) {
+    return ATALHOS.map(function (a) { return { secao: a[0], rotulo: a[1], n: ((visao && visao[a[0]]) || []).length }; }).filter(function (a) { return a.n > 0; });
+  }
+  /**
+   * Cartões a desenhar numa seção recolhível: expandida ⇒ todos; recolhida ⇒ os primeiros LIMITE_RECOLHIDA e qualquer
+   * cartão com registro aberto (rascunho nunca some). A ordem recebida é preservada; nada é removido da lista.
+   */
+  function recorteSecao(itens, expandida, abertos) {
+    if (expandida) return itens.slice();
+    return itens.filter(function (v, i) { return i < LIMITE_RECOLHIDA || !!(abertos && abertos[v.item.opportunityInstanceId]); });
+  }
+
+  /**
+   * O QUE OFERECER — só o histórico que o servidor JÁ entrega no item (contexto V1: produtos recorrentes e da última compra).
+   * Nada é calculado, ordenado ou recomendado aqui. Sem produtos ⇒ null (o cartão fica como antes).
+   */
+  function ofertaDoHistorico(ctx) {
+    var p = (ctx && ctx.produtos) || {};
+    var comNome = function (x) { return !!(x && x.nome); };
+    var rec = (p.recorrentes || []).filter(comNome).slice(0, MAX_PRODUTOS_CARTAO).map(function (x) { return { nome: String(x.nome), pedidos: x.pedidos || null }; });
+    var ult = (p.ultimaCompra || []).filter(comNome).map(function (x) { return String(x.nome); })
+      .filter(function (n) { return !rec.some(function (r) { return r.nome === n; }); }).slice(0, MAX_PRODUTOS_CARTAO);
+    return rec.length || ult.length ? { recorrentes: rec, ultimaCompra: ult } : null;
+  }
+  /** true quando o texto do motivo JÁ diz o mesmo número (evita repetir o dado logo abaixo). */
+  function motivoJaDiz(motivo, antes, n) {
+    return !!motivo && n != null && new RegExp('(^|\\s)' + antes + ' ' + n + ' dias?(?![0-9])').test(motivo);
+  }
+
   /**
    * CARTÃO — só campos com dado confiável (ausente ⇒ não aparece).
    * extras (opcional, de crmConsulta 'cartoes'): { categorias[], faixaValor, frequenciaDias, ticketMedio180d?, faturamento180d? }
@@ -123,17 +156,18 @@
     var h = ctx.historico || {};
     var u = ultimoOutcome(op);
     var linhas = [];
-    if (h.diasSemComprar != null) linhas.push({ k: 'Dias sem comprar', v: String(h.diasSemComprar) });
+    var motivo = base && base.motivo ? base.motivo : null;
+    if (h.diasSemComprar != null && !motivoJaDiz(motivo, 'há', h.diasSemComprar)) linhas.push({ k: 'Dias sem comprar', v: String(h.diasSemComprar) });
     if (h.ultimaCompraEm) linhas.push({ k: 'Última compra', v: dataBR(h.ultimaCompraEm) });
     if (h.pedidosTotal != null) linhas.push({ k: 'Pedidos', v: String(h.pedidosTotal) });
     var freq = (h.cicloHabitualDias != null) ? h.cicloHabitualDias : (extras && extras.frequenciaDias != null ? extras.frequenciaDias : null);
-    if (freq != null) linhas.push({ k: 'Compra a cada', v: '~' + freq + ' dias' });
+    if (freq != null && !motivoJaDiz(motivo, 'a cada', freq)) linhas.push({ k: 'Compra a cada', v: '~' + freq + ' dias' });
     if (ctx.tendencia && ROTULO_TENDENCIA[ctx.tendencia]) linhas.push({ k: 'Tendência', v: ROTULO_TENDENCIA[ctx.tendencia] });
     if (extras && extras.categorias && extras.categorias.length) linhas.push({ k: 'Categorias', v: extras.categorias.join(', ') });
     if (extras && extras.ticketMedio180d != null) linhas.push({ k: 'Ticket 180d', v: moedaBR(extras.ticketMedio180d) });
     return {
       opportunityInstanceId: item.opportunityInstanceId, entidade: item.commercialEntityId,
-      nome: item.nomeCliente || 'Cliente', tipo: ctx.rotuloTipo || item.labelOp || null, motivo: base && base.motivo ? base.motivo : null,
+      nome: item.nomeCliente || 'Cliente', tipo: ctx.rotuloTipo || item.labelOp || null, motivo: motivo, oferta: ofertaDoHistorico(ctx),
       linhas: linhas, altoValor: !!(extras && extras.faixaValor === 'ALTO_VALOR'),
       ultimoResultado: u ? { rotulo: ROTULO_RESULTADO[u.outcome] || u.outcome, em: u.timestamp, temNota: !!(u.meta && u.meta.temNota) } : null,
       proximoRetorno: (op && op.nextFollowUpAt && op.estado !== 'CONCLUIDA') ? op.nextFollowUpAt : (v.dataRetorno || null),
@@ -167,6 +201,7 @@
     RESULTADOS: RESULTADOS, ROTULO_RESULTADO: ROTULO_RESULTADO, NOTA_MAX: NOTA_MAX,
     dataComercial: dataComercial, somarDias: somarDias, fimDaSemana: fimDaSemana, ultimoOutcome: ultimoOutcome, donoDoRetorno: donoDoRetorno,
     montarHoje: montarHoje, montarAgenda: montarAgenda, modeloCartao: modeloCartao, validarNota: validarNota, limitesRetorno: limitesRetorno,
+    atalhosDaLista: atalhosDaLista, recorteSecao: recorteSecao, ofertaDoHistorico: ofertaDoHistorico, LIMITE_RECOLHIDA: LIMITE_RECOLHIDA,
     dataBR: dataBR, moedaBR: moedaBR, horaBR: horaBR, rotuloDia: rotuloDia,
   };
   root.CrmView = api;
